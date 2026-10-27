@@ -293,7 +293,7 @@ Rückgängig-Historie. Die bisherigen Ausgaben bleiben erhalten.
 
 Die folgende ausführliche CAD-Anleitung gilt weiterhin für CAD-Körper.
 
-Formnaro 0.12.2 – lokaler CAD-Editor
+Formnaro – lokaler CAD-Editor (Versionsnummer siehe Programm / package.json)
 
 Aktuelle Ausgabe: STL-Konverter 0.10 mit Flächenfarben und Bearbeitung.
 Die Mausauswahl überspringt verdeckte Körper und prüft Darstellungsgrenzen vor

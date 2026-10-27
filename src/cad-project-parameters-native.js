@@ -19,7 +19,7 @@ function sketchSlot(sketch,field){
  if(field.startsWith('sketch.constraints.')){const relation=sketch.constraints?.find(c=>'sketch.constraints.'+c.id+'.value'===field);if(!relation||!['length','distance','radius','angle'].includes(relation.type))throw Error('Skizzenbedingungsmaß fehlt.');return {object:relation,key:'value'};}
  if(field.startsWith('sketch.variables.')){const variable=sketch.variables.find(v=>v.name===field.slice(17));if(!variable)throw Error('Das gebundene Skizzenmaß fehlt.');return {object:variable,key:'value'};}
  if(field.startsWith('sketch.dimensions.'))return {object:sketch.dimensions,key:field.slice(18)};
- const match=field.match(/^sketch\.elements\.(.+)\.(diameter|start|through|end|center)(?:\.([01]))?$/),element=match&&sketch.elements?.find(e=>e.id===match[1]);if(!element)throw Error('Das gebundene Skizzenelement fehlt.');
+ const match=field.match(/^sketch\.elements\.(.+)\.(diameter|start|through|end|center|control(?:[1-9]|1[0-4]))(?:\.([01]))?$/),element=match&&sketch.elements?.find(e=>e.id===match[1]);if(!element)throw Error('Das gebundene Skizzenelement fehlt.');
  if(match[2]==='diameter'&&match[3]===undefined)return {object:element,key:'diameter'};if(match[2]!=='diameter'&&match[3]!==undefined&&Array.isArray(element[match[2]]))return {object:element[match[2]],key:Number(match[3])};throw Error('Unbekanntes Skizzenmaß.');
 }
 /** Shared collected binding builder, also used by retained personal templates.
@@ -44,7 +44,7 @@ export async function buildCadBoundSubset(input,bindings,{service,editRecipe,sig
  for(const edit of edits.values()){
   const node=cadSelectionContext(draft,edit.target).node;
   if(Object.keys(edit.params).length){const recipe=await editRecipe({...node,locked:false},{params:edit.params});aborted(signal);if(!same(recipe,node.recipe)){node.recipe=recipe;edit.preserveMinimum=true;}else geometry.delete(node.id);}
-  if(edit.sketch){if(edit.sketch.version===3){const result=solveSketchConstraints(edit.sketch,{signal});if(!result.ok)throw Object.assign(Error(result.message),{code:result.code,conflicts:result.conflicts});edit.sketch=result.sketch;}const recipe=cadSketchRecipe(edit.sketch);if(!same(recipe,node.recipe))node.recipe=recipe;else geometry.delete(node.id);}
+  if(edit.sketch){if(edit.sketch.version>=3){const result=solveSketchConstraints(edit.sketch,{signal});if(!result.ok)throw Object.assign(Error(result.message),{code:result.code,conflicts:result.conflicts});edit.sketch=result.sketch;}const recipe=cadSketchRecipe(edit.sketch);if(!same(recipe,node.recipe))node.recipe=recipe;else geometry.delete(node.id);}
   if(edit.modeling){const {sourceSignature,...operation}=edit.modeling;node.modeling={version:1,...validateCadModelingOperation(operation),...(sourceSignature?{sourceSignature}:{})};if(same(node.modeling,edit.original.modeling))geometry.delete(node.id);}
  }
  // Only unknown final resizes need this persisted strict budget. Ordinary

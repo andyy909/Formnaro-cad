@@ -6,7 +6,7 @@ import {surfaceSuites,unitSuites,testInventory} from '../scripts/all-functions-c
 
 test('Every real application verification entry has a catalogued current suite',()=>{
  const source=fs.readFileSync('electron.cjs','utf8'),flags=new Set([...source.matchAll(/startsWith\('--verify-([\w-]+)='/g)].map(m=>m[1]));
- for(const helper of ['all-phase','release-reopen'])flags.delete(helper);
+ for(const helper of ['all-phase','release-reopen','fnpack-phase'])flags.delete(helper);
  for(const flag of flags)assert(surfaceSuites.some(s=>s.flag===flag),'Uncatalogued application entry '+flag);
  assert.equal(new Set(surfaceSuites.map(s=>s.id)).size,surfaceSuites.length);
  assert(surfaceSuites.every(s=>s.timeoutMs>0));

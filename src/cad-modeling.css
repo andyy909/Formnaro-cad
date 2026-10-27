@@ -1,4 +1,5 @@
 .cad-modeling-panel{max-height:calc(100% - 84px);overflow:auto;width:min(340px,calc(100% - 28px));box-sizing:border-box;}
+.edge-tool-panel.cad-modeling-panel[hidden]{display:none}
 .cad-modeling-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .cad-modeling-panel header button{flex:0 0 auto;}
 .cad-modeling-panel [data-modeling-target],.cad-modeling-panel [data-modeling-face],.cad-modeling-panel [role=status]{overflow-wrap:anywhere;}
@@ -14,3 +15,25 @@
 .cad-modeling-panel.cad-modeling-picking{max-height:180px;}
 .cad-modeling-picking>.small-note,.cad-modeling-picking>.dialog-label,.cad-modeling-picking>[data-modeling-face],.cad-modeling-picking>[data-modeling-repick],.cad-modeling-picking>[data-contour-manage],.cad-modeling-picking>.edge-actions{display:none;}
 .cad-modeling-picking>[data-modeling-target]{max-height:35px;overflow:hidden;margin:5px 0;}
+
+.cad-loft-order-row{display:flex;align-items:center;gap:5px;margin:7px 0}.cad-loft-order-row>span{flex:1;overflow-wrap:anywhere}.cad-modeling-panel [data-modeling-composite] table{width:100%;table-layout:fixed}.cad-modeling-panel [data-modeling-composite] th:first-child{width:52px}.cad-modeling-panel [data-modeling-composite] input{width:100%;min-width:0;box-sizing:border-box}.cad-modeling-panel [data-modeling-composite] fieldset{min-width:0;margin:10px 0;padding:7px}.cad-modeling-panel [data-modeling-composite] button{margin:4px 2px}
+
+.cad-modeling-panel.cad-modeling-extended{display:flex;flex-direction:column;top:64px;bottom:20px;overflow:hidden;max-height:calc(100% - 84px)}
+.cad-modeling-extended>header,.cad-modeling-extended>.edge-actions,.cad-modeling-extended>[data-modeling-status]{flex-shrink:0}
+.cad-modeling-extended>.cad-modeling-body{overflow:auto;min-height:0;flex:1;padding-right:3px}
+.cad-modeling-extended>[data-modeling-status]{max-height:18vh;overflow:auto}
+.cad-modeling-panel.cad-modeling-compact{bottom:auto;width:min(260px,calc(100% - 28px));max-height:calc(100% - 84px)}
+body .solid-operation-host:has(>.cad-modeling-extended:not([hidden])),body .fusion-operation-host:has(>.cad-modeling-extended:not([hidden])){display:flex;flex:1;flex-direction:column;min-height:0;overflow:hidden}
+body .solid-operation-host .cad-modeling-extended,body .fusion-operation-host .cad-modeling-extended{flex:1;height:auto;min-height:0;max-height:100%;overflow:hidden}
+.cad-modeling-compact>.cad-modeling-body{display:none}
+.cad-modeling-extended>[data-advanced-status]{flex-shrink:0;max-height:18vh;overflow:auto}
+.cad-composite-coordinates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.cad-composite-coordinates input{width:100%;min-width:0;box-sizing:border-box}
+#cad-freecad-advanced-panel input[type=checkbox]{width:auto}
+#cad-freecad-advanced-panel [data-advanced-faces]>div{font-size:12px;overflow-wrap:anywhere;margin:7px 0}
+@media(max-width:1200px){body.fusion-workbench .fusion-task-pane.fusion-operation-active:has(.cad-modeling-extended:not([hidden])){grid-area:auto}}
+.cad-modeling-extended>[data-surface-status]{flex-shrink:0;max-height:18vh;overflow:auto}
+#cad-surfaces-panel input:not([type=checkbox]),#cad-surfaces-panel textarea,#cad-surfaces-panel select{width:100%;min-width:0;box-sizing:border-box}
+#cad-surfaces-panel input[type=checkbox]{width:auto}
+#cad-surfaces-panel fieldset{min-width:0;margin:10px 0;padding:6px}
+#cad-surfaces-panel [data-surface-faces]>div{overflow-wrap:anywhere;font-size:12px;margin:6px 0}

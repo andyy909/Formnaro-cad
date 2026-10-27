@@ -6,27 +6,37 @@ Mit Formnaro konstruierst du technische Teile, bearbeitest 3D-Modelle und bereit
 
 ## Herunterladen
 
-### [Formnaro 0.111.0-r2 für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.111.0-r2/Formnaro-v0.111.0-r2-Windows.zip)
+### [Formnaro 0.113.1-r5 für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.113.1-r5/Formnaro-v0.113.1-r5-Windows.zip)
 
-**Windows · 64 Bit · portable · ZIP ca, 1,05 GB · entpackt ca, 1,81 GiB**
+**Windows · 64 Bit · portable**
 
-[Versionshinweise, Prüfbericht und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.111.0-r2) · [Alle Versionen](https://github.com/andyy909/Formnaro-cad/releases)
+[Versionshinweise, Prüfbericht und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.113.1-r5) · [Alle Versionen](https://github.com/andyy909/Formnaro-cad/releases)
 
-1. Die ZIP-Datei herunterladen und **vollständig in einen eigenen Ordner entpacken**.
-2. Im entpackten Ordner **`App/Formnaro.exe`** starten. Eine Installation ist nicht erforderlich.
-3. Die mitgelieferten Unterordner, Laufzeiten, Anleitungen und Lizenzen zusammenlassen. Die EXE allein reicht nicht aus.
+1. ZIP-Datei herunterladen und vollständig in einen eigenen Ordner entpacken.
+2. `App/Formnaro.exe` starten. Alle Unterordner, Laufzeiten und Lizenzen zusammenlassen.
+3. Eigene Einstellungen und Werkzeuge bei Bedarf über den bisherigen Datenordner mitnehmen.
 
-Beim Versionswechsel den bisherigen eigenen **Datenordner** mit Einstellungen und Werkzeugen mitnehmen. Persönliche Modelle, Profile und Zugangsdaten sind im Download nicht enthalten.
+Persönliche Modelle, Profile und Zugangsdaten sind nicht enthalten. FreeCAD-Funktionen benötigen weiterhin eine separate lokale FreeCAD-Installation.
 
-## Neu in 0.111.0-r2
+## Neu in 0.113.1-r5
 
-- **Feste KI-Auftragsvorgaben:** Zielmaße, Annahmen, geschützte Teile und Prüfungen vor dem Senden festlegen und mit dem Auftrag speichern.
-- **Unterbrochene Arbeit fortsetzen:** Gespeicherte Aufträge nach einem Neustart mit ihrem verbleibenden Budget wieder aufnehmen.
-- **Bessere Entwürfe behalten:** Den letzten besser geprüften Kandidaten erneut prüfen und als Vorschau wiederherstellen; auch nach Budgetende ohne weitere Anbieteranfrage.
-- **Bezüge erhalten:** Modellbasis, Fotos, Kalibrierung, Analyseprogramme und Messbefunde sichern. Geänderte Modelle oder Merkmalsbezüge sperren eine unpassende Fortsetzung.
-- **Erfolglose Schleifen stoppen:** Wiederholte identische Fehler, fehlender Fortschritt und doppelte Fortsetzung werden abgefangen.
+- **Mehr Modellfläche:** kompakte Kopf- und Werkzeugleisten in Solid und Fusion.
+- **Dateiaktionen oben:** Neu, Öffnen, Speichern, Projekte, Import, Export und Einstellungen zwischen Modellname und Modusauswahl.
+- **Zusatzfunktionen im Menü:** KI-Werkstatt, Projektfotos und Merkmalsfunktionen unter Extras beziehungsweise Dienstprogramme.
+- **Eine gemeinsame Zeile:** Schnellaktionen und Werkzeugregister nebeneinander.
+- **Modusname Fusion:** vertraute Befehle und bisherige Bedienung erhalten.
+- **Fehlerkorrekturen enthalten:** robuster Start, geschützte Speicherdateien, verbesserte Theme-Umschaltung und lokale Skriptausführung.
+- **CAD-Erweiterungen seit 0.111:** Bézier-/B-Spline-Kurven, Mehrprofil-Lofts, zusammengesetzte Sweeps sowie Flächen und Prägung/Vertiefung.
 
-Die Funktionen liegen im KI-Chat unter **Modell & Einstellungen**. Anleitung: `App/docs/KI-AUFTRAEGE.md`. Native FreeCAD-Merkmale, Programmparameter, Varianten, FCStd-Import und die bisherigen Werkzeuge bleiben enthalten. Zusätzliche FreeCAD-Funktionen benötigen eine separate lokale FreeCAD-Installation.
+Die letzte Layoutänderung besteht **39 gezielte Prüfgruppen an der tatsächlichen Windows-EXE** und vier visuelle Paketprüfungen. Vorherige Wartungs- und Oberflächenprüfungen sind im Prüfbericht getrennt aufgeführt. Kein erneut ausgeführter allgemeiner Gesamttest für diese Layoutänderung.
+
+### Aktuelle Oberfläche: Solid und Fusion
+
+Diese Aufnahmen stammen aus der geprüften Windows-Ausgabe 0.113.1-r5.
+
+![Kompakte Solid-Oberfläche mit Dateiaktionen neben dem Modellnamen](bilder/solid-r5.png)
+
+![Fusion mit gemeinsamer Schnellaktions- und Registerzeile](bilder/fusion-r5.png)
 
 ## Was du mit Formnaro machen kannst
 
@@ -57,7 +67,7 @@ Die vereinfachte Oberfläche bietet eine Formenpalette, direkte Größenfelder u
 
 ### Solid – Werkzeuge und Modellbaum
 
-Vier Bedienmodi stehen zur Wahl: **Easy Tinker, Normal, Solid und Fusion 360**. Hier ist der Solid-Modus mit dunkler Darstellung zu sehen.
+Vier Bedienmodi stehen zur Wahl: **Easy Tinker, Normal, Solid und Fusion**. Hier ist der Solid-Modus mit dunkler Darstellung zu sehen.
 
 ![Solid-Modus mit Werkzeugregistern, Modellbaum und ausgewähltem CAD-Körper](bilder/solid-modus.png)
 

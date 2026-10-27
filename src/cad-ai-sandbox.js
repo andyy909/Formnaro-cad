@@ -58,6 +58,9 @@ export function runCadAIScript({code,modules,call,signal,timeoutMs=120000,worker
   }
   win.addEventListener('message',receive);signal?.addEventListener('abort',cancel,{once:true});
   if(signal?.aborted){cancel();return;}
-  frame.srcdoc=sandboxFrameSource(channel,workerSource?{bootstrap:workerSource,blobConnections:true}:undefined);doc.body.append(frame);
+  // A separate document retains an opaque origin without inheriting the main
+  // renderer's ban on dynamic code. Neither frame nor Worker has a desktop API.
+  frame.onload=()=>{if(!stopped)frame.contentWindow.postMessage({channel,type:'init',bootstrap:workerSource??`(${sandboxWorkerMain.toString()})();`},'*');};
+  frame.src=new URL('./cad-sandbox-frame.html',import.meta.url).href;doc.body.append(frame);
  });
 }

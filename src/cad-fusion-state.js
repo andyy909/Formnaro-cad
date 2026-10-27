@@ -16,6 +16,8 @@ export function fusionShortcut(event){
   return ({s:'search',e:'extrude',f:'round',h:'drill',m:'mode-translate',i:'measure',j:'joints'})[event.key.toLowerCase()]??null;
 }
 export const FUSION_LABELS={
+  'cad-draft':['Entformungsschräge','Draft'],'cad-defeature':['Merkmale entfernen','Defeature'],'cad-revolution':['Rotation','Revolve'],'cad-helix':['Helix','Helix'],
+  'cad-surface-fill':['Randkurvenfläche','Boundary surface'],'cad-surface-transition':['Flächenübergang','Surface transition'],'cad-surface-sew':['Flächen vernähen','Sew surfaces'],'cad-surface-relief':['Prägung / Vertiefung','Emboss / engrave'],
   solid:['Volumenkörper','Solid'],sketch:['Skizze','Sketch'],mesh:['Netz','Mesh'],tools:['Werkzeuge','Tools'],
   model:['Browser','Browser'],properties:['Eigenschaften','Properties'],library:['Einfügen','Insert'],workspace:['Dokument','Document'],
   create:['Erstellen','Create'],modify:['Ändern','Modify'],assemble:['Zusammenfügen','Assemble'],construct:['Konstruieren','Construct'],inspect:['Prüfen','Inspect'],insert:['Einfügen','Insert'],

@@ -5,16 +5,14 @@ const WRITE_ERROR='Daten konnten nicht im Programmordner gespeichert werden. Bit
 function dataDirectory(app,{root,verificationPath}={}){
   return verificationPath?path.join(path.dirname(verificationPath),'portable-data'):path.join(root||(app.isPackaged?path.dirname(app.getPath('exe')):path.resolve(__dirname,'..')),'Daten');
 }
-function writeAtomicSync(target,value){
-  const temp=path.join(path.dirname(target),'.formnaro-'+crypto.randomUUID()+'.tmp');let fd;
-  try{fd=fs.openSync(temp,'wx',0o600);fs.writeFileSync(fd,value);fs.fsyncSync(fd);fs.closeSync(fd);fd=undefined;fs.renameSync(temp,target);}
-  finally{if(fd!==undefined)fs.closeSync(fd);fs.rmSync(temp,{force:true});}
-}
+// Settings, credentials and libraries need the same Windows file-lock handling
+// as durable tasks. Only the final atomic rename retries; old data stays intact.
+function writeAtomicSync(target,value,options){return require('./ai-task-atomic.cjs').writeTaskAtomicSync(target,value,options);}
 const revision=bytes=>bytes===null?'missing':crypto.createHash('sha256').update(bytes).digest('hex');
 function cadOnlyForVersion(version){const match=String(version).match(/^(\d+)\.(\d+)(?:\.|-|\+|$)/);return !!match&&(Number(match[1])>0||Number(match[2])>=11);}
 function createProgramStore(directory,{legacyAIFile,write=writeAtomicSync,cadOnly=false}={}){
   if(typeof cadOnly!=='boolean')throw Error('Ungültige Datenauswahl.');
-  directory=path.resolve(directory);let initialized=false;
+  directory=path.resolve(directory);let initialized=false;const unavailable={};
   const allowed=key=>Object.hasOwn(entries,key)&&(!cadOnly||!entries[key].legacyMesh);
   function marker(){
     try{const file=path.join(directory,MARKER);if(fs.statSync(file).size>1024)throw Error();const value=JSON.parse(fs.readFileSync(file,'utf8'));if(value.format!==FORMAT.format||value.version!==FORMAT.version)throw Error();}
@@ -34,7 +32,7 @@ function createProgramStore(directory,{legacyAIFile,write=writeAtomicSync,cadOnl
       cadOnly=true;legacy=legacy.values;
     }
     let migrated=false;
-    if(!fs.existsSync(directory)){
+    if(!fs.existsSync(path.join(directory,MARKER))){
       if(!legacy||typeof legacy!=='object'||Array.isArray(legacy)||Object.keys(legacy).some(k=>!Object.hasOwn(entries,k)))throw Error('Ungültige Datenübernahme.');
       const keys=Object.keys(legacy).filter(allowed);
       if(keys.some(k=>typeof legacy[k]!=='string'||Buffer.byteLength(legacy[k])>entries[k].limit))throw Error('Ungültige Datenübernahme.');
@@ -49,23 +47,39 @@ function createProgramStore(directory,{legacyAIFile,write=writeAtomicSync,cadOnl
         write(path.join(stage,MARKER),JSON.stringify(FORMAT,null,2)+'\n');
         // Commit the complete import; an existing portable folder always wins.
         try{fs.renameSync(stage,directory);migrated=keys.length>0;}
-        catch(e){if(!fs.existsSync(directory))throw e;}
+        catch(e){
+          if(!fs.statSync(directory).isDirectory())throw e;
+          // Logging/AI setup can create Daten before the renderer initializes.
+          // Merge only absent files; exclusive copies also work on portable
+          // drives/network filesystems without hard-link support.
+          for(const name of fs.readdirSync(stage).filter(name=>name!==MARKER).concat(MARKER)){
+            try{fs.copyFileSync(path.join(stage,name),path.join(directory,name),fs.constants.COPYFILE_EXCL);}
+            catch(error){if(error.code!=='EEXIST')throw error;}
+          }
+          migrated=keys.length>0;
+        }
       }catch{throw Error(WRITE_ERROR);}
       finally{fs.rmSync(stage,{recursive:true,force:true});}
     }
     marker();const values={},revisions={};
-    for(const key of Object.keys(entries)){if(!allowed(key))continue;const item=read(key);if(item.value!==null)values[key]=item.value;revisions[key]=item.revision;}
-    initialized=true;return {values,revisions,directory,migrated,cadOnly};
+    for(const key of Object.keys(unavailable))delete unavailable[key];
+    for(const key of Object.keys(entries)){
+      if(!allowed(key))continue;
+      try{const item=read(key);if(item.value!==null)values[key]=item.value;revisions[key]=item.revision;}
+      catch(error){unavailable[key]=error.message;}
+    }
+    initialized=true;return {values,revisions,directory,migrated,cadOnly,unavailable:{...unavailable}};
   }
   function change(args){
     if(!initialized)throw Error('Portable Daten wurden noch nicht geladen.');marker();
     if(!args||typeof args!=='object'||Array.isArray(args)||Object.keys(args).length!==3||!allowed(args.key)||typeof args.revision!=='string'||(args.value!==null&&typeof args.value!=='string'))throw Error('Ungültiger Datenbefehl.');
     const {key,value}=args;if(value!==null&&Buffer.byteLength(value)>entries[key].limit)throw Error('Daten sind zu groß.');
+    if(unavailable[key])throw Error('Diese Datei konnte nicht geladen werden und bleibt zum Schutz der vorhandenen Daten gesperrt. '+unavailable[key]);
     const previous=read(key);if(args.revision!==previous.revision)throw Error('Die portablen Daten wurden inzwischen geändert. Bitte die Anwendung neu starten.');
     // Compare after reading and checking CAS, so an unchanged local write can
     // never hide an external edit or bypass the profile/size checks.
     if(previous.value===value&&previous.revision===revision(value===null?null:Buffer.from(value)))return previous;
-    try{if(value===null)fs.rmSync(path.join(directory,entries[key].file),{force:true});else write(path.join(directory,entries[key].file),value);}
+    try{const target=path.join(directory,entries[key].file);if(previous.value!==null)write(target+'.vorher',fs.readFileSync(target));if(value===null)fs.rmSync(target,{force:true});else write(target,value);}
     catch{throw Error(WRITE_ERROR);}
     return {value,revision:revision(value===null?null:Buffer.from(value))};
   }

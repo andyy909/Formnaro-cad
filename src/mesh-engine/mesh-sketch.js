@@ -5,7 +5,7 @@ const IDENT=/^[A-Za-z_][A-Za-z0-9_]{0,39}$/;
 export const expression=sketchExpression;
 export function defaultSketch(kind='rectangle'){return {version:1,kind,variables:[{name:'breite',value:'40'},{name:'tiefe',value:'30'},{name:'wand',value:'2'},{name:'innen',value:'breite - 2 * wand'},{name:'hoehe',value:'6'}],dimensions:{width:'breite',depth:'tiefe',diameter:'tiefe',height:'hoehe'},points:[['-20','-15'],['20','-15'],['20','15'],['-20','15']]};}
 export function resolveSketch(s,segments=64){
- if([2,3].includes(s?.version))return resolveSketchProfile(s,expression,{segments});
+ if([2,3,4].includes(s?.version))return resolveSketchProfile(s,expression,{segments});
  if(/\b(?:sind|cosd)\s*\(/.test(JSON.stringify(s)))throw Error('Winkelformeln benötigen erweiterte Konturen (Version 2).');
  if(!s||Object.keys(s).some(k=>!['version','kind','variables','dimensions','points'].includes(k))||s.version!==1||!['rectangle','circle','polygon'].includes(s.kind)||!Array.isArray(s.variables)||s.variables.length>40||!s.dimensions||typeof s.dimensions!=='object'||Object.keys(s.dimensions).some(k=>!['width','depth','diameter','height'].includes(k)))throw Error('Ungültige Skizze.');
  const defs=new Map(),values=Object.create(null),visiting=new Set();for(const v of s.variables){if(!v||Object.keys(v).some(k=>!['name','value'].includes(k))||!IDENT.test(v.name)||defs.has(v.name)||['__proto__','constructor','prototype'].includes(v.name))throw Error('Maßnamen: eindeutig, Buchstaben/Ziffern/Unterstrich; mit Buchstaben beginnen.');defs.set(v.name,v.value);}

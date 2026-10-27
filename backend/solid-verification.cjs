@@ -1,5 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 exports.verifySolid=async function(win,{directory,dataPath}){
+ if(process.env.FORMNARO_VERIFY_COMPACT_ONLY==='1')return require('./workbench-compact-verification.cjs').verifyCompact(win,{directory,dataPath},'solid');
  const checks=[],run=code=>win.webContents.executeJavaScript(code),pause=()=>new Promise(r=>setTimeout(r,120));fs.mkdirSync(directory,{recursive:true});
  const until=async code=>{for(let i=0;i<500;i++){if(await run(code))return;await pause();}throw Error('Timeout '+code);};
  const proof=async(name,code)=>{fs.writeFileSync(path.join(directory,'progress.json'),JSON.stringify({checks,pending:name}));await run(`(async()=>{const a=window.__cadTest,check=(v,m)=>{if(!v)throw Error(m);};${code}})()`);checks.push(name);};

@@ -9,6 +9,14 @@ export const AI_PROGRAM_SCHEMAS=[
 ];
 export const AI_PROGRAM_TOOLS={
  version:1,
+ surfaceModeling:{
+  purpose:'Boundary surfaces, G0 transitions, sewing and planar/outer-cylinder polygon embossing or pockets are available in the desktop CAD tools. The same native FreeCAD Python API is available to every configured provider. Preserve originals and use ordinary unapplied Preview/Apply with one Undo.',
+  boundaries:'The surface tool builds an exact bicubic Coons patch from four ordered closed cubic Bezier boundaries, with explicit material height and direction. This is directional height, not normal wall thickness. FreeCAD uses a BezierSurface, explicit translated caps and ruled side faces, then native sewing and solid/BOP/STEP checks. Open surfaces are retained inside the archived construction, not imported as pretend solids.',
+  transitions:'Two separated outer wires without inner loops produce a checked solid loft. Position gaps and adjacent normal angles are measured separately with bounded samples; G0 does not imply G1 or G2. Never claim tangent or curvature continuity from body validity or smooth rendering.',
+  sewing:'Sew explicit selected native faces and require a single closed shell with zero free boundary edges before making a solid. Missing faces, disconnected shells and ambiguous selections reject; no automatic general repair promise.',
+  relief:'Initially polygon contours with holes on planes and outer circular cylinders only. Cylinder contours must be rectilinear in the UV plane, with edges along arc or axis and rotations in90degree steps; oblique UV edges reject because STEP readback is not yet reliable. For cylinders use exact UV line segments on Part.Cylinder: local X is arc length at the source radius, Y follows its axis; height/depth is radial, less than half the radius and profile width below half the circumference. The complete mapped patch must lie inside the selected trimmed face. Other curved faces and bores reject. Validate material change, body validity and STEP readback separately.',
+  archive:'UI-generated results archive formnaro_surfaces_v1.py and the full parameters with the FCStd. Native Depth/Thickness edits recompute the archived FeaturePython object; program rerun uses its preserved script and modules. Static copied inputs do not recreate earlier source history. A separate local FreeCAD installation is still needed until package6a is implemented.'
+ },
  computation:AI_COMPUTATION_TOOLS,
  freecadPython:{
   purpose:'Full installed FreeCAD Python API, without a modelling-function whitelist. Use this when the legacy freecad data plan lacks an operation. Available to every configured provider on Windows desktop. The FreeCAD installation supplies the actual modules; discover their real members instead of inventing commands.',

@@ -1,3 +1,4 @@
+import {profilePointFields} from './cad-curves.js';
 import {FREECAD_PARAMETER_PREFIX} from './cad-freecad-parameter-data.js';
 import {SCHEMAS} from './parameters.js';
 import {cadSelectionContext,cadFormLocalDimensions,cadInterfaceLocalBounds} from './cad-interface-state.js';
@@ -24,10 +25,10 @@ export function cadProjectParameterCatalog(project,{targets}={}){
      for(const relation of sketch.constraints??[])if(['length','distance','radius','angle'].includes(relation.type))add('sketch.constraints.'+relation.id+'.value','Skizzenbedingung '+relation.type,relation.value,{unit:relation.type==='angle'?'°':'mm'});
      for(const variable of sketch.variables??[])add('sketch.variables.'+variable.name,'Skizzenmaß '+variable.name,variable.value);
      for(const key of localFields)if(sketch.dimensions?.[key]!==undefined)add('sketch.dimensions.'+key,'Skizze '+({width:'Breite',depth:'Tiefe',diameter:'Durchmesser',height:'Extrusionshöhe'}[key]),sketch.dimensions[key]);
-     if([2,3].includes(sketch.version))for(const [index,element] of (sketch.elements??[]).entries()){
+     if([2,3,4].includes(sketch.version))for(const [index,element] of (sketch.elements??[]).entries()){
       const label='Konturelement '+(index+1);
       if(element.diameter!==undefined)add('sketch.elements.'+element.id+'.diameter',label+' · Durchmesser',element.diameter);
-      for(const key of ['start','through','end','center'])if(Array.isArray(element[key]))for(let axis=0;axis<2;axis++)add('sketch.elements.'+element.id+'.'+key+'.'+axis,label+' · '+({start:'Anfang',through:'Bogenpunkt',end:'Ende',center:'Mittelpunkt'}[key])+' '+['X','Y'][axis],element[key][axis]);
+      for(const key of profilePointFields(element))if(Array.isArray(element[key]))for(let axis=0;axis<2;axis++)add('sketch.elements.'+element.id+'.'+key+'.'+axis,label+' · '+({start:'Anfang',through:'Bogenpunkt',end:'Ende',center:'Mittelpunkt'}[key]??'Kontrollpunkt '+key.slice(7))+' '+['X','Y'][axis],element[key][axis]);
      }
     }
    }

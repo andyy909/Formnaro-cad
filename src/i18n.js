@@ -566,7 +566,6 @@ Sperrung bearbeiten|Edit lock
 Neuer Layer|New layer
 Neuer Ordner|New folder
 Name|Name
-Übernehmen|Apply
 Auswahl zuordnen|Assign selection
 Ziel|Destination
 Zuordnen|Assign
@@ -783,7 +782,6 @@ Maße und Position einzeln bearbeiten. Farbe und Körpertyp gelten für die Ausw
 Importiertes Mesh|Imported mesh
 Grundform|Basic shape
 gesperrt|locked
-Die proportionalen Maße liegen außerhalb von 0,01 bis 10000 mm.|Proportional dimensions are outside 0.01 to 10000 mm.
 Eine einzelne entsperrte Grundform auswählen.|Select one unlocked basic shape.
 Mindestens zwei Formen auswählen; mindestens eine muss entsperrt sein.|Select at least two shapes; at least one must be unlocked.
 Zum Ausrichten mindestens zwei Formen auswählen.|Select at least two shapes to align.
@@ -794,8 +792,6 @@ Auswahl kopiert.|Selection copied.
 Der Text darf nicht leer sein.|Text cannot be empty.
 Bezugsobjekt entfernt: Arbeitsebene erneut auf eine Fläche setzen.|Reference object removed: select a new workplane face.
 Bezugsfläche geändert: Arbeitsebene erneut auf eine Fläche setzen.|Reference face changed: select a new workplane face.
-Sperrung am übergeordneten Layer oder Ordner aufheben.|Unlock the parent layer or folder.
-Das übergeordnete Layer oder den Ordner zuerst entsperren.|Unlock the parent layer or folder first.
 Die Form hat keine räumliche Ausdehnung.|The shape has no three-dimensional extent.
 Qualität: 3 bis 512 Segmente.|Quality: 3 to 512 segments.
 Gewinde zu komplex: Qualität oder Länge verringern.|Thread too complex: reduce quality or length.
@@ -839,7 +835,6 @@ Formparameter:|Shape parameters:
 Arbeitsebene:|Workplane:
 Formen links anklicken oder auf die Arbeitsfläche ziehen. Einheiten: Millimeter. Alle Berechnungen laufen auf deinem Computer.|Click shapes on the left or drag them onto the workspace. Units: millimetres. All calculations run on your computer.
 Griffe arbeiten beim Verschieben entlang der Arbeitsebene oder Weltachsen. Drehen und Skalieren verändern die lokalen Formachsen vor der Gruppenskalierung.|Move handles use workplane or world axes. Rotate and scale change the shape's local axes before group scaling.
-Formenpakete|Shape packs
 Formen und Vorlagen|Shapes and templates
 Gruppenbearbeitung|Group editing
 Modellhistorie · Quellen mit Griffen bearbeiten|Model history · edit sources with handles
@@ -875,7 +870,6 @@ Parametername|Parameter name
 Standardmaß|Default dimension
 Gesteuertes Maß|Linked dimension
 Maßformel|Dimension formula
-Einfügen|Insert
 Deckkraft (%)|Opacity (%)
 Quellenfarben erhalten|Keep source colors
 Modellnotiz|Model note
@@ -914,7 +908,6 @@ Kanten ...|Edges ...
 Passung …|Fit …
 Passung ...|Fit ...
 Abbrechen|Cancel
-Übernehmen|Apply
 Vorlagenname|Preset name
 CAD-Kanten|CAD edges
 Kantenvorschau|Edge preview
@@ -931,12 +924,10 @@ Teil mit Magnet aufgesetzt.|Part placed with magnet.
 Für den Magnet zuerst „Zur fertigen Gruppe“ wählen.|Choose “Back to finished group” before using the magnet.
 Kanten anklicken oder mit gedrückter linker Maustaste einen Rahmen ziehen.|Click edges or hold the left mouse button and drag a selection rectangle.
 Rahmen: ersetzt die Auswahl. Umschalt: hinzufügen. Alt: entfernen. Vollständig eingeschlossene Kanten werden ausgewählt, auch auf der Rückseite. Maximal 128 Kanten.|Rectangle: replaces selection. Shift: add. Alt: remove. Fully enclosed edges are selected, including edges on the back. Maximum 128 edges.
-Abrundung|Fillet
 Fase|Chamfer
 Radius|Radius
 Radius / Fasenmaß (mm)|Radius / chamfer size (mm)
 Bei bereits bearbeiteten Gruppen gilt das Maß vor deren Skalierung. Quellen bleiben im Objektbaum bearbeitbar.|For finished groups, this size applies before group scaling. Sources remain editable in the object tree.
-Alle Kanten|All edges
 Auswahl leeren|Clear selection
 Letzte Kantenoperation entfernen|Remove last edge operation
 Vorschau berechnen|Compute preview
@@ -987,7 +978,6 @@ Auflage|Support plane
 Aktuelle Arbeitsebene|Current workplane
 Grundebene Z = 0|Ground plane Z = 0
 Auflagefläche auswählen.|Choose a support face.
-Andere Fläche wählen|Choose another face
 Native Auflage wird geprüft …|Checking native support …
 Native Auflage geprüft. Vorschau übernehmen oder abbrechen.|Native support verified. Apply or cancel the preview.
 CAD-Teil auf die gewählte Fläche gelegt.|CAD part placed on the selected face.
@@ -1016,7 +1006,6 @@ Flächenschwerpunkte|Face centroids
 Fangziele|Snap targets
 Alle|All
 Neu wählen|Pick again
-Vorschau berechnen|Compute preview
 Bohrung|Bore
 Normale Bohrung|Plain bore
 Kegelige Senkung|Countersink
@@ -1027,9 +1016,7 @@ Tiefe (mm)|Depth (mm)
 Kopf / Senkung Ø (mm)|Head / sink diameter (mm)
 Kopftiefe (mm)|Head depth (mm)
 Senkwinkel (°)|Countersink angle (°)
-Spiel je Seite (mm)|Clearance per side (mm)
 Passungsvorlage|Fit preset
-Eigener Wert|Custom value
 Arbeitsebenenursprung als Ziel|Workplane origin as target
 Eigenen Bezugspunkt oder freien Flächenpunkt wählen.|Choose an own reference or free face point.
 Zielteil anklicken, dann seinen Bezugspunkt wählen. Die Drehung bleibt erhalten.|Click the target part, then choose its reference point. Rotation is retained.
@@ -1050,7 +1037,6 @@ Sichtbare Modellstelle anklicken.|Click a visible model surface point.
 Sichtbare Modellstelle anklicken. Flächenbezüge werden nativ geprüft; verlorene Hinweise bleiben als veraltet sichtbar.|Click a visible model point. Face references are checked natively; lost notes remain visible as stale.
 Modellstellen mit Hinweis, Farbe und Radius markieren; Flächenbezüge nativ prüfen.|Annotate model points with a note, color and radius; check face references natively.
 Hinweis|Note
-Radius (mm)|Radius (mm)
 Veraltet|Stale
 Fläche mehrdeutig|Ambiguous face
 Fläche verloren|Lost face

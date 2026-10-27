@@ -30,6 +30,7 @@
 [data-theme=dark] #thread-preset{background:#285565}
 [data-theme=dark] #empty-hint h1{color:#d5e4ee}
 [data-theme=dark] #empty-hint p{color:#9db2c4}
+[data-theme=dark] #empty-hint button{background:#2b3c4e;color:#e1eaf2;border-color:#485c70}
 [data-theme=dark] .warning{background:#574329;color:#f3d9af}
 [data-theme=dark] dialog::backdrop{background:#08121aaa}
 [data-theme=dark] #toast{background:#36536b}

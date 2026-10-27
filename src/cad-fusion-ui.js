@@ -3,7 +3,7 @@ import {createFusionSettings,fusionLabel,fusionShortcut,FUSION_TABS,fusionSource
 
 const $=id=>document.getElementById(id);
 const tabCommands={
-  solid:[['create',['extrude','cut','cad-loft','cad-sweep']],['modify',['round','chamfer','drill','cad-shell','cad-face-offset']],['assemble',['group','joints','align']],['construct',['workplane-set']],['inspect',['measure','section']],['insert',['array','mirror','project-parameters']]],
+  solid:[['create',['extrude','cut','cad-loft','cad-sweep','cad-revolution','cad-helix','cad-surface-fill','cad-surface-transition','cad-surface-sew','cad-surface-relief']],['modify',['round','chamfer','drill','cad-shell','cad-face-offset','cad-draft','cad-defeature']],['assemble',['group','joints','align']],['construct',['workplane-set']],['inspect',['measure','section']],['insert',['array','mirror','project-parameters']]],
   sketch:[['create',['sketch','sketch-on-part','sketch-templates']],['modify',['cad-contour','linked-contours']],['construct',['workplane-set','workplane-top','reset-plane']]],
   mesh:[['create',['mesh-tools','mesh-select','mesh-inspector']],['modify',['mesh-repair','mesh-close-hole','mesh-reduce','mesh-curved-reduce','mesh-sculpt','mesh-hollow','mesh-features']],['insert',['cad-to-mesh','mesh-to-cad','stl-to-step']]],
   tools:[['inspect',['measure','ruler','section','thickness','inspect','model-compare']],['assemble',['group','ungroup','bundle','align','reference-place','lay-on-face','joints','assembly-only','assembly-load','assembly-all']],['modify',['cad-edit-modeling','project-parameters']],['insert',['drawing','functions']]]
@@ -90,15 +90,15 @@ export function createCadFusionUI({storage,controls,toolbar,header,tools,safe,t=
   function mount(){
     mounted=true;activeTab=settings.get().defaultTab;
     document.body.classList.add('fusion-workbench');
-    menubar=make('nav',undefined,'fusion-menubar');menubar.setAttribute('aria-label',word('Hauptmenü','Main menu'));toolbar.before(menubar);
+    menubar=make('nav',undefined,'fusion-menubar');menubar.setAttribute('aria-label',word('Hauptmenü','Main menu'));header.closest('header').before(menubar);
     const act=key=>()=>{const b=controls.get(key)||document.querySelector(`[data-action="${key}"]`);if(b&&!b.disabled)b.click();},tab=key=>()=>selectTab(key);
     menu('file',[[t('Neues Projekt'),act('new')],[t('Öffnen'),act('open')],[t('Speichern'),act('save')],[t('Speichern unter …'),()=>executeCommand('save-as')],[t('Importieren'),act('import')],[t('Exportieren'),act('export')]]);
     menu('edit',[[t('Rückgängig'),act('undo')],[t('Wiederholen'),act('redo')],[t('Kopieren'),act('copy')],[t('Einfügen'),act('paste')],[t('Duplizieren'),act('duplicate')],[t('Entfernen'),act('delete')]]);
     menu('view',[[label('orientation'),orientation],[word('Einpassen','Zoom to fit'),act('fit')],[word('Perspektive / Orthografisch','Perspective / Orthographic'),act('projection')],[t('Schnittansicht'),act('section')],[word('Modellbaum','Model tree'),()=>selectManager('model')],[t('Eigenschaften'),()=>selectManager('properties')]]);
     menu('insert',[[label('extrude'),()=>executeCommand('extrude')],[label('cut'),()=>executeCommand('cut')],[label('sketch'),tab('sketch')],[label('mesh'),tab('mesh')],[t('Technische Zeichnung'),act('drawing')]]);
-    const assigned=new Set([...Object.values(tabCommands).flatMap(groups=>groups.flatMap(([,keys])=>keys)),'new','open','save','save-as','projects','import','export','ai','settings','help','undo','redo','copy','paste','duplicate','delete','projection','fit','coordinates','magnet','view-iso','view-top','view-front','view-right','mode-translate','mode-scale','mode-rotate']);
+    const assigned=new Set([...Object.values(tabCommands).flatMap(groups=>groups.flatMap(([,keys])=>keys)),'new','open','save','save-as','projects','import','export','ai','photo-project-open','ai-feature-open','freecad-document-open','settings','help','undo','redo','copy','paste','duplicate','delete','projection','fit','coordinates','magnet','view-iso','view-top','view-front','view-right','mode-translate','mode-scale','mode-rotate']);
     const remaining=[...controls].filter(([key,node])=>!assigned.has(key)&&node.matches('button')).map(([key,node])=>[node.title||node.textContent.trim(),act(key)]);
-    menu('extras',[[label('tools'),tab('tools')],[label('project-parameters'),act('project-parameters')],[label('options'),()=>{openSettings();$('settings-tab-fusion')?.click();}],[t('Einstellungen'),openSettings],...remaining]);
+    menu('extras',[[label('tools'),tab('tools')],[label('project-parameters'),act('project-parameters')],[label('options'),()=>{openSettings();$('settings-tab-fusion')?.click();}],[t('Einstellungen'),openSettings],[word('KI-Werkstatt','AI workshop'),act('ai')],[t('Projektfotos'),act('photo-project-open')],[t('KI-Merkmalsbezüge'),act('ai-feature-open')],[t('FreeCAD-Merkmale'),act('freecad-document-open')],...remaining]);
     menu('help',[[word('Fusion-Einstieg','Getting started with Fusion'),()=>selectManager('model')],[t('Hilfe'),act('help')]]);
     const modeNote=make('span',word('KONSTRUKTION','DESIGN'),'fusion-mode-note');menubar.append(modeNote);
     const quick=make('div',undefined,'fusion-quick-tools');tools.append(quick);
@@ -109,6 +109,7 @@ export function createCadFusionUI({storage,controls,toolbar,header,tools,safe,t=
       const b=button(label(key),()=>selectTab(key));b.id='fusion-tab-'+key;b.dataset.fusionTab=key;b.setAttribute('role','tab');b.setAttribute('aria-controls','fusion-panel-'+key);tabs.append(b);
       const panel=make('div',undefined,'fusion-command-panel');panel.id='fusion-panel-'+key;panel.dataset.fusionPanel=key;panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',b.id);ribbon.append(panel);
     }
+    const commandRow=make('div',undefined,'cad-command-row');ribbon.prepend(commandRow);commandRow.append(quick,tabs);
     tabs.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const i=FUSION_TABS.indexOf(activeTab);selectTab(FUSION_TABS[e.key==='Home'?0:e.key==='End'?FUSION_TABS.length-1:(i+(e.key==='ArrowLeft'?-1:1)+FUSION_TABS.length)%FUSION_TABS.length],{focus:true});};
     const originalLibrary=$('sidebar-library-content'),originalInspector=$('sidebar-inspector-content');
     manager=make('aside',undefined,'fusion-manager');manager.id='fusion-manager';manager.setAttribute('aria-label',word('Modell und Eigenschaften','Model and properties'));document.querySelector('main').prepend(manager);

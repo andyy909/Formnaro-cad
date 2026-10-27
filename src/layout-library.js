@@ -2,8 +2,8 @@ import {LAYOUT_KEY,loadLayout} from './layout-preferences.js';
 import {emptyLayouts,validateLayouts,changeLayouts} from '../backend/layout-data.mjs';
 export const LAYOUT_LIBRARY_KEY='offlinecad-layout-library-v1';
 export function createLayoutLibrary({storage,desktop,onChange=()=>{}}){
-  const native=typeof desktop?.getLayouts==='function';let data=emptyLayouts(loadLayout(storage)),revision=null,directory=null;
-  function accept(result){data=validateLayouts(result.data);revision=result.revision;directory=result.directory||null;onChange(data.current);return structuredClone(data);}
+  const native=typeof desktop?.getLayouts==='function';let data=emptyLayouts(loadLayout(storage)),revision=null,directory=null,recoveryRequired=false,warning='';
+  function accept(result){data=validateLayouts(result.data);revision=result.revision;directory=result.directory||null;recoveryRequired=!!result.recoveryRequired;warning=result.warning||'';onChange(data.current);return structuredClone(data);}
   async function reload(){
     if(native){
       let result=await desktop.getLayouts();
@@ -23,5 +23,5 @@ export function createLayoutLibrary({storage,desktop,onChange=()=>{}}){
     if(native)return accept(await desktop.changeLayouts({revision,command}));
     const next=changeLayouts(data,command,()=>crypto.randomUUID());storage.setItem(LAYOUT_LIBRARY_KEY,JSON.stringify(next));try{storage.setItem(LAYOUT_KEY,JSON.stringify(next.current));}catch{}return accept({data:next});
   }
-  return {reload,change,current:()=>structuredClone(data.current),data:()=>structuredClone(data),native,directory:()=>directory,openFolder:()=>desktop.openLayoutsFolder()};
+  return {reload,change,current:()=>structuredClone(data.current),data:()=>structuredClone(data),native,recoveryRequired:()=>recoveryRequired,warning:()=>warning,directory:()=>directory,openFolder:()=>desktop.openLayoutsFolder()};
 }

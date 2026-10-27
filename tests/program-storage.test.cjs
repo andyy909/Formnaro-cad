@@ -3,6 +3,19 @@ const {createProgramStore,dataDirectory,installProgramStorage,writeAtomicSync}=r
 const entries=require('../backend/program-data.json');
 const temp=()=>fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-portable-'));
 const settings='offlinecad-settings-v1',library='offlinecad-library-v1';
+test('Generic atomic settings writer retries a short Windows lock without exposing a partial settings file',t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-atomic-settings-')),file=path.join(root,'ai-settings.json');fs.writeFileSync(file,'old settings');t.after(()=>{assert.equal(path.dirname(root),os.tmpdir());fs.rmSync(root,{recursive:true,force:true});});let calls=0;const delays=[];
+ writeAtomicSync(file,'new settings',{platform:'win32',wait:ms=>delays.push(ms),rename:(from,to)=>{assert.equal(fs.readFileSync(file,'utf8'),'old settings');assert.equal(fs.readFileSync(from,'utf8'),'new settings');if(++calls<3)throw Object.assign(Error('Temporary Windows lock'),{code:'EPERM'});fs.renameSync(from,to);}});
+ assert.equal(calls,3);assert.deepEqual(delays,[10,20]);assert.equal(fs.readFileSync(file,'utf8'),'new settings');assert.deepEqual(fs.readdirSync(root),['ai-settings.json']);
+});
+test('Generic atomic settings writer bounds permanent Windows locks and keeps the old settings exact',t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-atomic-settings-')),file=path.join(root,'ai-settings.json');fs.writeFileSync(file,'old settings');t.after(()=>{assert.equal(path.dirname(root),os.tmpdir());fs.rmSync(root,{recursive:true,force:true});});let calls=0,total=0;
+ assert.throws(()=>writeAtomicSync(file,'new settings',{platform:'win32',wait:ms=>total+=ms,rename:()=>{calls++;throw Object.assign(Error('Permanent lock'),{code:'EBUSY'});}}),{code:'EBUSY'});assert.equal(calls,6);assert.equal(total,310);assert.equal(fs.readFileSync(file,'utf8'),'old settings');assert.deepEqual(fs.readdirSync(root),['ai-settings.json']);
+});
+test('Generic atomic settings writer does not retry disk-full or non-Windows permission errors',t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-atomic-settings-')),file=path.join(root,'ai-settings.json');fs.writeFileSync(file,'old settings');t.after(()=>{assert.equal(path.dirname(root),os.tmpdir());fs.rmSync(root,{recursive:true,force:true});});
+ for(const [platform,code]of [['win32','ENOSPC'],['linux','EPERM']]){let calls=0;assert.throws(()=>writeAtomicSync(file,'new settings',{platform,wait:()=>assert.fail('No retry'),rename:()=>{calls++;throw Object.assign(Error(code),{code});}}),{code});assert.equal(calls,1);assert.equal(fs.readFileSync(file,'utf8'),'old settings');assert.deepEqual(fs.readdirSync(root),['ai-settings.json']);}
+});
 test('Portable data follows the EXE, with isolated development and verification locations',()=>{
   const root=temp(),app={isPackaged:true,getPath:name=>name==='exe'?path.join(root,'Formnaro.exe'):path.join(root,'elsewhere')};
   assert.equal(dataDirectory(app),path.join(root,'Daten'));assert.equal(dataDirectory(app,{root:path.join(root,'dev')}),path.join(root,'dev','Daten'));
@@ -55,11 +68,11 @@ test('Identical writes still verify disk revision but skip atomic writes and nev
  const directory=path.join(temp(),'Daten');let writes=0;const store=createProgramStore(directory,{write:(file,value)=>{writes++;writeAtomicSync(file,value);}}),initial=store.initialize({[settings]:'same'}),baseline=writes;
  assert.deepEqual(store.change({key:settings,value:'same',revision:initial.revisions[settings]}),store.read(settings));assert.equal(writes,baseline);
  fs.writeFileSync(path.join(directory,entries[settings].file),'external');assert.throws(()=>store.change({key:settings,value:'same',revision:initial.revisions[settings]}),/inzwischen geändert/);assert.equal(store.read(settings).value,'external');
- const current=store.read(settings);store.change({key:settings,value:'same',revision:current.revision});assert.equal(writes,baseline+1);
+ const current=store.read(settings);store.change({key:settings,value:'same',revision:current.revision});assert.equal(writes,baseline+2);
 });
 
 
 test('Decoded UTF-8 equality does not suppress repairing different actual file bytes',()=>{
  const directory=path.join(temp(),'Daten');let writes=0;const store=createProgramStore(directory,{write:(file,value)=>{writes++;writeAtomicSync(file,value);}});store.initialize({[settings]:'test'});fs.writeFileSync(path.join(directory,entries[settings].file),Buffer.from([0xff]));const current=store.read(settings),before=writes;
- store.change({key:settings,value:current.value,revision:current.revision});assert.equal(writes,before+1);assert.deepEqual(fs.readFileSync(path.join(directory,entries[settings].file)),Buffer.from(current.value));
+ store.change({key:settings,value:current.value,revision:current.revision});assert.equal(writes,before+2);assert.deepEqual(fs.readFileSync(path.join(directory,entries[settings].file)),Buffer.from(current.value));
 });

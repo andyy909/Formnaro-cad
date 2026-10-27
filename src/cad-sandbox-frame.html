@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob:; worker-src blob:; connect-src blob:; base-uri 'none'; form-action 'none'">
+<script>
+// This separately loaded opaque-origin page has its own policy. A srcdoc
+// frame would inherit the main page's stricter CSP and could not run scripts.
+let channel=null,worker=null;
+addEventListener('message',event=>{
+ if(event.source!==parent)return;
+ const message=event.data;
+ if(!worker){
+  if(message?.type!=='init'||typeof message.channel!=='string'||!/^[0-9a-f-]{36}$/.test(message.channel)||typeof message.bootstrap!=='string'||message.bootstrap.length>200000)return;
+  channel=message.channel;
+  const url=URL.createObjectURL(new Blob([message.bootstrap],{type:'text/javascript'}));
+  worker=new Worker(url);URL.revokeObjectURL(url);
+  worker.onmessage=event=>parent.postMessage({channel,...event.data},'*');
+  worker.onerror=event=>parent.postMessage({channel,type:'failed',error:{message:'Lokale Berechnung fehlgeschlagen. '+String(event.message||''),code:'AI_SCRIPT'}},'*');
+  parent.postMessage({channel,type:'ready'},'*');
+ }else if(message?.channel===channel)worker.postMessage(message);
+});
+</script>

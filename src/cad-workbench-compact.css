@@ -1,0 +1,42 @@
+/* Compact CAD chrome; keep the established command groups and docking intact. */
+body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header{display:grid;grid-template-columns:auto minmax(140px,200px) minmax(0,1fr) auto;min-height:0;height:auto;gap:4px 12px;padding:6px 12px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header .brand{font-size:18px;gap:8px;min-width:0}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header .brand-icon{width:30px;height:30px;font-size:24px;border-radius:7px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header #app-version{display:none}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header .project{min-width:0;max-width:none}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header #workbench-mode{grid-column:4;grid-row:1;margin:0;padding:2px;gap:2px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header #workbench-mode button{padding:5px 9px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header .file-actions{grid-column:3;grid-row:1;min-width:0;max-width:100%;width:100%;gap:5px;padding:0;flex-wrap:wrap}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header .file-actions button{padding:5px 9px;min-height:30px;font-size:12px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench)>.toolbar{display:none}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench) .cad-command-row{display:flex;align-items:center;gap:10px;padding-left:12px;min-width:0}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench) .cad-command-row>:is(.solid-quick-tools,.fusion-quick-tools){flex:none}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench) .cad-command-row>:is(.solid-tabs,.fusion-tabs){min-width:0;flex:1;padding-left:0;border-bottom:0}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench)>nav{border-top:0;border-bottom:1px solid var(--line);min-height:28px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench) :is(.solid-command-panel,.fusion-command-panel){min-height:0;padding:4px 12px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench) :is(.solid-ribbon,.fusion-ribbon) :is(.solid-command,.fusion-command){min-height:56px;gap:3px;padding:4px 7px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench) :is(.solid-command-icon,.fusion-command-icon){font-size:23px;min-height:25px;line-height:25px}
+body.workbench-organized.fusion-workbench .fusion-group-menu-panel .fusion-command{min-height:36px;padding:5px;gap:10px}
+body.workbench-organized.fusion-workbench .fusion-group-menu-panel .fusion-command-icon{font-size:19px;min-height:24px;line-height:24px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench) :is(.solid-tabs,.fusion-tabs) button{padding:6px 14px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench) main{grid-template-columns:clamp(240px,20vw,280px) minmax(0,1fr) auto}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench) :is(.solid-manager-content,.fusion-manager-content){padding:8px 10px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench) :is(.solid-manager,.fusion-manager) .panel-heading{padding:10px 12px 8px}
+body.workbench-organized:is(.solid-workbench,.fusion-workbench) :is(.solid-manager,.fusion-manager) .sidebar-bottom{padding:8px;gap:4px}
+body.workbench-organized.fusion-workbench .fusion-source-strip{height:44px;padding:4px 10px;gap:8px}
+body.workbench-organized.fusion-workbench .fusion-source-strip>strong{max-width:none;white-space:nowrap}
+body.workbench-organized.fusion-workbench #canvas-host{bottom:84px}
+body.workbench-organized.fusion-workbench .mode-switch,body.workbench-organized.fusion-workbench .fusion-navigation{bottom:94px}
+body.workbench-organized.fusion-workbench #measure-label{bottom:137px}
+@media(max-width:1100px){body.workbench-organized.fusion-workbench .fusion-navigation{bottom:136px}}
+@media(max-width:1100px){
+ body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header{grid-template-columns:auto minmax(80px,1fr) auto}
+ body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header #workbench-mode{grid-column:3}
+ body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header .file-actions{grid-column:1/-1;grid-row:2}
+}
+@media(max-width:850px){
+ body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header{gap:4px 8px;padding:5px 8px;grid-template-columns:auto minmax(80px,1fr) auto}
+ body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header .brand{font-size:15px}
+ body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header #workbench-mode button{padding:5px 6px;font-size:11px}
+ body.workbench-organized:is(.solid-workbench,.fusion-workbench)>header .brand small{display:none}
+}

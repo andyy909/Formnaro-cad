@@ -1,14 +1,16 @@
 {
   "name": "formnaro",
   "productName": "Formnaro",
-  "version": "0.111.0",
+  "version": "0.113.1",
   "private": true,
   "author": "Andreas Klisch",
   "license": "SEE LICENSE IN LICENSE.txt",
-  "description": "Lokaler 3D-Editor fÃ¼r Modellbau und 3D-Druck",
+  "description": "Lokaler 3D-Editor für Modellbau und 3D-Druck",
   "type": "module",
   "main": "electron.cjs",
   "scripts": {
+    "package:advanced-modeling": "node scripts/package-advanced-modeling.mjs",
+    "test:advanced-modeling": "node --test --test-concurrency=1 tests/cad-curves.test.mjs tests/cad-composite-path.test.mjs tests/cad-advanced-profiles.test.mjs tests/cad-freecad-advanced.test.mjs tests/freecad-advanced.test.cjs tests/advanced-modeling-release-config.test.mjs",
     "package:feature-references": "node scripts/package-feature-references.mjs",
     "test:feature-references": "node --test --test-concurrency=1 tests/cad-ai-feature-references.test.mjs tests/cad-ai-feature-dependencies.test.mjs tests/cad-ai-feature-structure.test.mjs tests/feature-release-config.test.mjs",
     "test:photo": "node --test --test-concurrency=1 tests/cad-photo.test.mjs tests/cad-photo-perspective.test.mjs tests/cad-photo-project.test.mjs",
@@ -48,7 +50,7 @@
     "dev:cloud": "vite --host 0.0.0.0 --port 5173 --strictPort",
     "build": "vite build --base ./",
     "start": "electron .",
-    "package": "node scripts/package-cad-release.mjs",
+    "package": "node scripts/current-release.mjs package",
     "test": "node --test tests/geometry.test.mjs tests/anchored-size.test.mjs tests/parameters.test.mjs tests/workplane.test.mjs tests/organization.test.mjs tests/history.test.mjs tests/feature-transforms.test.mjs tests/preferences-plugins.test.mjs tests/automation.test.mjs tests/ai-backend.test.cjs tests/extensions.test.mjs tests/v09.test.mjs tests/files.test.cjs tests/cad.test.mjs tests/layout.test.mjs tests/layout-files.test.cjs tests/program-storage.test.cjs tests/program-storage-ipc.test.cjs tests/edit-menu.test.cjs tests/exchange-formats.test.mjs",
     "test:parameters": "electron tests/parameters-desktop.cjs",
     "test:scene": "electron tests/scene-tools.test.cjs",
@@ -79,7 +81,7 @@
     "build:cad-app-proof": "vite build --config tests/cad-app.config.mjs",
     "test:cad-app": "npm run build:cad-app-proof && electron tests/cad-app-desktop.cjs && electron tests/cad-app-imports-desktop.cjs && electron tests/cad-app-gestures-desktop.cjs && electron tests/cad-app-tools-desktop.cjs && electron tests/cad-app-placement-desktop.cjs && electron tests/cad-app-editing-desktop.cjs",
     "test:cad-interface": "vite build --config tests/cad-interface-proof.config.mjs && electron tests/cad-interface-browser.cjs",
-    "test:cad-release": "node scripts/run-cad-release-gates.mjs",
+    "test:cad-release": "node scripts/current-release.mjs test",
     "test:cad-move": "node --test tests/cad-move-performance.test.mjs",
     "test:cad-move-ui": "npm run build:cad-app-proof && electron tests/cad-app-move-desktop.cjs",
     "test:cad-align-ui": "npm run build:cad-app-proof && electron tests/cad-app-align-desktop.cjs",
@@ -190,7 +192,9 @@
     "package:freecad-document": "node scripts/package-freecad-document.mjs",
     "test:freecad-document": "node --test --test-concurrency=1 tests/freecad-document.test.cjs tests/freecad-pad-document.test.cjs tests/freecad-document-edit.test.mjs tests/freecad-rerun.test.mjs tests/freecad-project-parameters.test.mjs tests/freecad-document-followups.test.mjs tests/freecad-bound-rerun.test.mjs tests/freecad-feature-followups.test.mjs tests/freecad-import.test.mjs tests/freecad-document-release-config.test.mjs",
     "package:ai-tasks": "node scripts/package-ai-tasks.mjs",
-    "test:ai-task-restart": "node scripts/verify-ai-task-restart.mjs"
+    "test:ai-task-restart": "node scripts/verify-ai-task-restart.mjs",
+    "package:surfaces": "node scripts/package-surfaces.mjs",
+    "test:surfaces": "node --test --test-concurrency=1 tests/cad-surfaces.test.mjs tests/freecad-surfaces.test.cjs tests/surfaces-release-config.test.mjs"
   },
   "dependencies": {
     "fflate": "0.8.3",

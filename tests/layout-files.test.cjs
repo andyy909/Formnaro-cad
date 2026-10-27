@@ -15,7 +15,7 @@ test('multiple Unicode layouts, current layout and last selected name travel wit
   assert.equal(r.data.profiles[0].name,'Rechts 日本語');r=await store.change({revision:r.revision,command:{action:'save',name:'Standard',layout:defaultLayout()}});
   r=await store.change({revision:r.revision,command:{action:'load',id}});assert.equal(r.data.current.librarySide,'right');
   const destination=path.join(root,'Portable B','Layouts');await fs.cp(store.directory,destination,{recursive:true});assert.deepEqual((await createLayoutStore(destination).read()).data,r.data);
-  const bytes=await fs.readFile(path.join(destination,'layouts.json'),'utf8');assert.ok(!bytes.includes(root));assert.deepEqual(await fs.readdir(destination),['layouts.json']);
+  const bytes=await fs.readFile(path.join(destination,'layouts.json'),'utf8');assert.ok(!bytes.includes(root));assert.deepEqual(await fs.readdir(destination),['layouts.json','layouts.json.vorher']);
 });
 test('rename, explicit replacement and deletion preserve unrelated profiles and the current arrangement',async()=>{
   const {defaultLayout}=await schema,store=createLayoutStore(await temporary());let r=await store.read();const change=async command=>r=await store.change({revision:r.revision,command});

@@ -144,7 +144,7 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
           node.modeling={version:1,...operation,...(node.modeling.sourceSignature?{sourceSignature:node.modeling.sourceSignature}:{})};alias(command,node.id,aliases);dirtyGeometry=true;break;
         }
         case 'profileModeling':{
-          fields(command,['op','targets','kind','path','as']);await verified();const operation=validateCadModelingOperation({kind:command.kind,...(command.path!==undefined?{path:command.path}:{})});
+          fields(command,['op','targets','kind','path','orientation','profileOrder','as']);await verified();const operation=validateCadModelingOperation({kind:command.kind,...Object.fromEntries(['path','orientation','profileOrder'].filter(key=>command[key]!==undefined).map(key=>[key,command[key]]))});
           if(!['loft','sweep'].includes(operation.kind)||!Array.isArray(command.targets)||operation.kind==='sweep'&&command.targets.length!==1||command.targets.length<1||command.targets.length>8||operation.kind==='loft'&&command.targets.length<2)fail('INVALID_COMMAND','Loft benötigt 2–8 Skizzen, Sweep eine Skizze.');
           const contexts=command.targets.map(target=>address(project,target,aliases));if(new Set(contexts.map(c=>c.node.id)).size!==contexts.length)fail('INVALID_COMMAND','Verschiedene Skizzenprofile auswählen.');
           for(const context of contexts){editable(context);if(context.parent||context.node.kind!=='cad'||!context.node.solid||context.node.source!=='native'||context.node.recipe?.type!=='sketch'||containerFlags(project,context.node).hidden)fail('INVALID_COMMAND','Sichtbare fertige native Skizzen als Profile auswählen.');}

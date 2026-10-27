@@ -8,7 +8,20 @@ const projectId=file=>digest(process.platform==='win32'?file.toLowerCase():file)
 function projectDirectory(app,{verificationPath}={}){return verificationPath?path.join(path.dirname(verificationPath),'Projekte'):path.join(app.isPackaged?path.dirname(app.getPath('exe')):path.resolve(__dirname,'..'),'Projekte');}
 function createProjectFiles({directory,cacheDirectory=path.join(path.dirname(directory),'Daten','Vorschaubilder'),win,dialog,shell,write=writeAtomic,onPackRead=()=>{}}={}){
   directory=path.resolve(directory);cacheDirectory=path.resolve(cacheDirectory);const index=path.join(directory,'.letzte-projekte.json'),allowed=new Map(),opened=new Map(),packs=createFnpackStore({recoveryFile:path.join(path.dirname(cacheDirectory),'Paket-Autosicherung.fnpack'),onRead:onPackRead});let active=false;
-  async function recent(){try{if((await fs.stat(index)).size>65536)throw Error();const value=JSON.parse(await fs.readFile(index,'utf8'));if(value.version!==1||!Array.isArray(value.items)||value.items.length>MAX_RECENT||value.items.some(v=>typeof v.path!=='string'||!path.isAbsolute(v.path)||!Number.isFinite(v.usedAt)||!projectExtension(v.path)))throw Error();return value.items;}catch(e){if(e.code==='ENOENT')return [];throw Error('Die Liste der letzten Projekte konnte nicht gelesen werden.');}}
+  async function recent(){
+    let bytes;try{if((await fs.stat(index)).size>65536)throw Error('Liste ist zu groß.');bytes=await fs.readFile(index);if(bytes.length>65536)throw Error('Liste ist zu groß.');}
+    catch(e){if(e.code==='ENOENT')return [];throw Error('Die Liste der letzten Projekte konnte nicht gelesen werden.');}
+    let value;try{value=JSON.parse(bytes.toString('utf8'));}catch{/* Retain damaged bytes before rebuilding the index. */}
+    const supported=value?.version===1&&Array.isArray(value.items);
+    if(Number.isInteger(value?.version)&&value.version>1)throw Error('Die Projektliste benötigt eine neuere Programmversion.');
+    const valid=item=>item&&typeof item.path==='string'&&path.isAbsolute(item.path)&&Number.isFinite(item.usedAt)&&projectExtension(item.path);
+    const items=supported?value.items.filter(valid).slice(0,MAX_RECENT):[];
+    if(!supported||items.length!==value.items.length){await write(index+'.vorher',bytes);await write(index,Buffer.from(JSON.stringify({version:1,items})));}
+    return items;
+  }
+  async function readProject(file){
+    const handle=await fs.open(file,'r');try{const stat=await handle.stat();if(!stat.isFile()||stat.size>MAX_BYTES)throw Error('Projektdatei ist größer als 50 MB oder keine Datei.');const bytes=await handle.readFile();if(bytes.length>MAX_BYTES)throw Error('Projektdatei ist größer als 50 MB.');return bytes;}finally{await handle.close();}
+  }
   async function remember(file){try{const items=(await recent()).filter(v=>projectId(v.path)!==projectId(file));items.unshift({path:file,usedAt:Date.now()});await write(index,Buffer.from(JSON.stringify({version:1,items:items.slice(0,MAX_RECENT)})));return null;}catch(e){return 'Projektdatei ist gespeichert/geöffnet; die Liste konnte nicht aktualisiert werden: '+e.message;}}
   function allow(file){file=path.resolve(file);const id=projectId(file);allowed.set(id,file);return id;}
   async function metadata(file,usedAt){const id=allow(file);let stat;try{stat=await fs.stat(file);}catch(e){if(e.code!=='ENOENT')throw e;}return {id,name:path.basename(file),path:file,exists:!!stat?.isFile(),modifiedAt:stat?.mtimeMs??null,previewStamp:stat?[stat.mtimeMs,stat.ctimeMs,stat.size].join('/'):null,...(usedAt===undefined?{}:{usedAt})};}
@@ -28,10 +41,12 @@ function createProjectFiles({directory,cacheDirectory=path.join(path.dirname(dir
     if(active)throw Error('Ein Projekt wird bereits gespeichert oder geöffnet.');active=true;
     try{
       if(!args||typeof args.filename!=='string'||args.filename.length>220||/[<>:"/\\|?*\x00-\x1f]/.test(args.filename)||path.extname(args.filename).toLowerCase()!=='.ocad'||!(args.bytes instanceof Uint8Array)||args.bytes.length>MAX_BYTES)throw Error('Ungültige Projektdaten.');
-      await fs.mkdir(directory,{recursive:true});let file;
-      if(args.id&&!args.saveAs){file=allowed.get(args.id);if(!file||!opened.has(args.id))throw Error('Das Projekt muss vor dem Speichern geöffnet werden.');const current=await fs.readFile(file);if(digest(current)!==opened.get(args.id))throw Error('Die Projektdatei wurde außerhalb von Formnaro geändert. Bitte „Speichern unter …“ verwenden.');}
+      await fs.mkdir(directory,{recursive:true});let file,expected;
+      if(args.id&&!args.saveAs){file=allowed.get(args.id);if(!file||typeof opened.get(args.id)!=='string')throw Error('Das Projekt muss vor dem Speichern geöffnet werden.');expected=opened.get(args.id);if(digest(await readProject(file))!==expected)throw Error('Die Projektdatei wurde außerhalb von Formnaro geändert. Bitte „Speichern unter …“ verwenden.');}
       else{const previous=allowed.get(args.id),result=await dialog.showSaveDialog(win,{title:'Projekt speichern',defaultPath:previous??path.join(directory,args.filename),filters:[{name:'Formnaro-Projekt',extensions:['ocad']}]});if(result.canceled||!result.filePath)return {saved:false};file=path.resolve(result.filePath);if(path.extname(file).toLowerCase()!=='.ocad')file+='.ocad';}
-      await write(file,args.bytes);const id=allow(file);opened.set(id,digest(args.bytes));const warning=await remember(file);return {saved:true,file:await metadata(file),warning};
+      if(expected===undefined){try{expected=digest(await readProject(file));}catch(error){if(error.code==='ENOENT')expected='missing';else throw error;}}
+      const shouldCommit=async()=>{try{return digest(await readProject(file))===expected;}catch(error){if(error.code==='ENOENT')return expected==='missing';throw error;}};
+      await write(file,args.bytes,{shouldCommit});const id=allow(file);opened.set(id,digest(args.bytes));const warning=await remember(file);return {saved:true,file:await metadata(file),warning};
     }finally{active=false;}
   }
   async function savePack(args){

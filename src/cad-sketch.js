@@ -8,7 +8,7 @@ function formula(value){if(typeof value==='number')value=String(value);if(typeof
 export const cadSketchExpression=sketchExpression;
 export function defaultCadSketch(kind='rectangle'){return {version:1,kind,variables:[{name:'breite',value:'40'},{name:'tiefe',value:'30'},{name:'wand',value:'2'},{name:'innen',value:'breite - 2 * wand'},{name:'hoehe',value:'6'}],dimensions:{width:'breite',depth:'tiefe',diameter:'tiefe',height:'hoehe'},points:[['-20','-15'],['20','-15'],['20','15'],['-20','15']]};}
 export function resolveCadSketch(input){
-  if([2,3].includes(input?.version))return resolveSketchProfile(input,cadSketchExpression);
+  if([2,3,4].includes(input?.version))return resolveSketchProfile(input,cadSketchExpression);
   fields(input,['version','kind','variables','dimensions','points']);if(input.version!==1||!['rectangle','circle','polygon'].includes(input.kind)||!Array.isArray(input.variables)||input.variables.length>40)throw Error('Eine Skizze mit höchstens 40 benannten Maßen erforderlich.');
   fields(input.dimensions,['width','depth','diameter','height']);
   const sketch={version:1,kind:input.kind,variables:[],dimensions:{},points:[]},defs=new Map(),values=Object.create(null),visiting=new Set();

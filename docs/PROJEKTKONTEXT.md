@@ -1,23 +1,67 @@
 # Technischer Projektkontext
 
-Stand: Formnaro 0.111.0-r2 – gespeicherte KI-Aufträge und sichere Fortsetzung technisch abgenommen und veröffentlicht am 27.10.2026; Foto-/Mehransichten-, Merkmals- und FreeCAD-Parameterfunktionen enthalten.
+Verbindliche Nutzerentscheidung vom 27.10.2026 zur weiteren Prüfung:
+Je Planpunkt gezielte Tests der Änderung und ihrer direkten Abhängigkeiten;
+keine routinemäßige Vollprüfung nach jedem Punkt oder jeder Versionsnummer.
+Am Ende der beauftragten Folge eine große allgemeine Prüfung des gesamten
+zusammengeführten Stands. Fehlernachprüfungen nach tatsächlicher Betroffenheit
+auswählen. Details im [aktuellen Ausbauplan](AUSBAUPLAN-AB-0.106.md).
+
+Wartung 0.113.1-r2 vom 27.10.2026 lokal vollständig abgenommen: Die bestätigten
+Fehlerpfade der Nachprüfung wurden korrigiert. Umfang und Schutzregeln stehen
+in [FEHLERKORREKTUREN-0.113.1.md](FEHLERKORREKTUREN-0.113.1.md), aktuelle
+Windows-Bauvorbereitung und Standardbefehle in [BUILD.md](BUILD.md).
+687 Tests der eingefrorenen breiten Basis bestanden. Nach der letzten Sandbox-/
+CSP-Integration wurden 82 gezielte Nachprüfungen am endgültigen Quellstand
+ausgeführt; unveränderte Bereiche sind per Hash an die Basis gebunden. Zusätzlich
+987 Prüfgruppen in 24 Läufen der tatsächlichen neuen Windows-EXE bestanden,
+darunter 8 Start-/Theme-/Sandbox-Prüfgruppen. Alle 23 vorherigen EXE-Suiten
+enthalten, 9 Paketbilder visuell geprüft, 150 alte Programmdateien unverändert.
+Quellvergleich: 2135 Dateien, 2133 bytegleich, package/version nur formatiert;
+spätere Plan-/Abnahmedokumentation separat erfasst. Keine Cloud-Modellaufrufe.
+Ausgabe: output/Fehlerkorrekturen-v0.113.1-r2/Formnaro-win32-x64/Formnaro.exe.
+Freigabe.json und Pruefbericht.txt liegen daneben. Nur lokale Bereitstellung;
+kein neuer GitHub-Upload oder Push in dieser Wartungsrunde. 0.113.0-r3 bleibt
+die letzte private Online-Veröffentlichung. Paket 6a und Pakete 8–10 bleiben offen.
+
+## Historischer Stand vor der Wartung
+
+Stand: Formnaro 0.113.0-r3 – Flächen und Prägungen am 27.10.2026 technisch abgenommen; Bereitstellung zunächst im privaten Projekt.
+Nachprüfung vom 27.10.2026 anhand eines externen Quellcodeprüfberichts:
+Auch im hashbestätigten 0.113.0-r3-Paket bestehen Fehlerpfade bei markerlosen
+Datenordnern (z. B. durch vorzeitiges Fehlerlogging) und beim initialen
+Autosave-Schreibfehler; außerdem unvollständige Theme-/Systemanbindung und ein
+Konfliktfenster beim Speichern von .ocad-Dateien. Noch keine Reparatur vorgenommen.
+Windows-Rename-Retry im allgemeinen Store ist dagegen bereits enthalten.
+Vier zuvor veraltete Projektformat-Tests bestehen nun mit Format24; lokale
+Font-/Lizenzpins stimmen. Katalogtest (speech) und Netz-Anzeigetest (index=null)
+schlagen weiterhin fehl. Neuer gezielter Lauf: 39 Tests, 37 bestanden, 2 rot.
+Die bisherigen 640 Release-Tests sind eine explizite Teilmenge und enthalten
+diese beiden roten Testdateien nicht; die 23 vorhandenen EXE-Abnahmen wurden
+bei dieser Nachprüfung nicht komplett erneut ausgeführt. Alte Standardbefehle
+package/test:cad-release sind weiterhin auf 0.12.0 begrenzt; aktueller P7-Bau
+verwendet package-surfaces und benötigt lokale historische Artefakte.
+Lokale Detailbelege: work/audit-github-v113/Pruefbericht.txt und evidence.json.
+
+Aktueller Ausbauplan: Pakete 0–6 abgeschlossen. Auf den Folgeauftrag „bei 7 bitte
+weiter“ wurde Paket 7 vorgezogen und ist nun abgeschlossen. Paket 6a zur
+integrierten FreeCAD-Laufzeit bleibt separat offen, ebenso Pakete 8–10.
+Verbindlicher Umfang und Abnahme: [Ausbauplan ab 0.106](AUSBAUPLAN-AB-0.106.md).
+
+Planergänzung vom 27.10.2026: Paket 6a liefert die benötigten FreeCAD-Komponenten
+und Abhängigkeiten versioniert mit Formnaro aus. Ziel sind ein Download, ein
+Programmstart und die vorhandene Formnaro-Oberfläche, ohne separate Installation
+oder Laufzeitnachladen. Die integrierte Version muss automatisch gewählt werden;
+bisherige Python-/FCStd-/Merkmalfunktionen und Prozessisolierung bleiben erhalten.
+Abnahme an der gepackten Windows-Ausgabe ohne externes FreeCAD/Python, einschließlich
+alter Quellen, Exporte, Undo/Redo, Abbruch und Laufzeitintegrität. Der genaue
+Komponentenumfang wird durch Prüfung bestimmt. Paket 6a ist geplant, noch nicht
+umgesetzt oder abgenommen. Der anschließende Nutzerauftrag zieht Paket 7 vor;
+bis 6a wird dafür die vorhandene lokale FreeCAD-Anbindung verwendet. Die geprüfte
+Ausgabe 0.112.0-r2 bleibt unverändert. Weitere Aktualisierungen zuerst privat.
+
 Die lokale Entwicklungshistorie unter `work/kontext.txt` bleibt auf dem
 jeweiligen Rechner; diese Datei enthält den gemeinsamen technischen Stand.
-
-## Öffentliche Projektkopie vom 27.10.2026
-
-Auf ausdrücklichen Wunsch des Projekteigentümers enthält
-https://github.com/andyy909/Formnaro-cad jetzt den vollständigen aktuellen
-Projektstand einschließlich Quellcode, Tests, Buildskripten, Anleitungen und
-Mini-Versionen. Grundlage ist der geprüfte Stand 0.111.0-r2 aus dem privaten
-Original (Quellcommit `7d1900d9fae24ad95a85acc60b5803392f47d5a3`). Die Kopie
-hat eine eigene Git-Historie; das ursprüngliche Repository bleibt privat und
-wird durch Änderungen dieser Kopie nicht verändert. Die unten dokumentierte
-frühere Beschränkung auf reine Downloads ist damit für diese öffentliche Kopie
-überholt. Bestehende Windows-Releases und Bildschirmbilder bleiben erhalten.
-Lokale Arbeitsdateien, persönliche Datenordner, Profile und Zugangsdaten werden
-nicht übernommen. Anwendungscode und Fremdkomponenten behalten ihre vorhandenen
-Lizenzen.
 
 ## CAD-Ausbau und Zeichnungsblätter 0.82.0
 
@@ -4220,7 +4264,7 @@ zu unterscheiden.
 ### Öffentliches Download-Repository (27.10.2026)
 
 Fertige Windows-Pakete werden getrennt vom privaten Entwicklungsrepository unter
-https://github.com/andyy909/Formnaro-cad bereitgestellt. Die Startseite enthält
+https://github.com/andyy909/Formnaro-Downloads bereitgestellt. Die Startseite enthält
 eine deutsche Beschreibung, Startanleitung und vier echte Bildschirmbilder der
 geprüften Ausgabe. Zuerst veröffentlicht wurde die letzte freigegebene Version
 0.108.0 mit unverändertem Windows-Archiv, Prüfbericht und passender SHA-256-Liste.
@@ -4382,4 +4426,83 @@ zweiten asynchronen Öffnen des Fotodialogs unvollständig. Nur der Testablauf
 wurde korrigiert; der neue r2-Lauf ist vollständig bestanden. Alte Ausgaben und
 ihre ursprünglichen Prüfbelege bleiben erhalten. Paket 6–10 sind weiterhin offen.
 
-Die Windows-Ausgabe ist am 27.10.2026 als [v0.111.0-r2](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.111.0-r2) veröffentlicht. Öffentliche Assets sind Windows-ZIP, Prüfbericht und Prüfsummen; alle drei GitHub-Digests und Größen stimmen mit den lokalen Dateien überein. Der anonyme Download ist erreichbar. Der Entwicklungsquellstand samt Historie bleibt privat; das öffentliche Git-Repository enthält nur Beschreibung und fünf Bildschirmbilder.
+Die Windows-Ausgabe ist am 27.10.2026 als [v0.111.0-r2](https://github.com/andyy909/Formnaro-Downloads/releases/tag/v0.111.0-r2) veröffentlicht. Öffentliche Assets sind Windows-ZIP, Prüfbericht und Prüfsummen; alle drei GitHub-Digests und Größen stimmen mit den lokalen Dateien überein. Der anonyme Download ist erreichbar. Der Entwicklungsquellstand samt Historie bleibt privat; das öffentliche Git-Repository enthält nur Beschreibung und fünf Bildschirmbilder.
+
+### Aktualisierungen zuerst privat (Nutzerentscheidung 27.10.2026)
+
+Neue Entwicklungen und allgemeine Aufträge zum Aktualisieren werden zuerst im
+privaten Repository `andyy909/Formnaro` gesichert und aktualisiert. Die öffentliche
+Kopie `andyy909/Formnaro-Downloads` wird nicht automatisch synchronisiert.
+Öffentliche Quellcode- oder Download-Veröffentlichungen erfolgen erst auf einen
+zusätzlichen ausdrücklichen Nutzerauftrag. Diese Regel ersetzt frühere Notizen,
+die eine öffentliche Veröffentlichung unmittelbar nach jedem Paketabschluss
+vorsahen. Bestehende öffentliche Stände bleiben bis dahin erhalten.
+
+
+### Paket 6: Kurven und erweiterte CAD-Merkmale
+
+Skizze V4 erhält kubische Bézier- und geklemmte gleichmäßige kubische B-Spline-Kurven (4–16 Pole), Kontrollformeln und vorhandene Bedingungen. Analytische Fläche/Extrema und native Kurvenkanten bleiben unabhängig von Anzeigetessellierung. Projektformat 24 wird nur bei neuen Kurven oder erweiterten Loft-/Sweep-Rezepten erforderlich. Mehrprofil-Lofts führen eine ausdrückliche Profilreihenfolge und Orientierungswahl; zusammengesetzte G1-Pfade enthalten Linien, Bögen und kubische Kurven mit begrenzten konservativen Krümmungs-/Kontaktprüfungen.
+
+FreeCAD-Funktionen werden durch tatsächliche Objekterzeugung beziehungsweise Shape.defeaturing geprüft. Neue getrennte Konstruktionen erhalten statische STEP-Basen, keine erfundene alte Historie: nativer PartDesign-Draft, geeignete statische Merkmalentfernung, native Revolution und native Helix mit verknüpftem FeaturePython-Kreisprofil/Sweep. Archivierte versionierte Helfermodule ermöglichen native Parameteränderungen nach FCStd-Wiederöffnung. Flächen werden nach STEP-Transfer eindeutig über Punkt und Normale zugeordnet. Das Original bleibt erhalten; ausdrückliches Ausblenden wird mit dem neuen Teil in einem Undo übernommen.
+
+Gezielte native Tests einschließlich FreeCAD 1.1.4, echter Winkel-/Steigungsänderungen, ungültiger Helix, statischer Quellenkennzeichnung, PartDesign-Sichtbarkeit und physischem FNPACK24/STEP sind bestanden. Die abgeschlossene Prüfung der gepackten Windows-Ausgabe ist im folgenden Abschnitt dokumentiert. Bedienung und Grenzen: CAD-KURVEN.md. Paket 7–10 bleiben offen. Neue Quellen und Ausgaben werden gemäß Nutzerentscheidung zunächst privat aktualisiert.
+
+
+### Paket 6: abgeschlossene Windows-Abnahme 0.112.0-r2
+
+627 Tests am eingefrorenen Quellstand und 962 Prüfgruppen in 22 Läufen der gepackten Windows-Anwendung bestanden. Die neue Suite umfasst 33 Gruppen; die bisherigen 21 Suiten bleiben erhalten. Zehn aktuelle Kurven-/Loft-/Sweep-/FreeCAD-Aufnahmen wurden visuell geprüft. Alle 146 geschützten Dateien älterer Ausgaben sind unverändert. Die separate Freigabe bindet Abnahme und Bilder an EXE, ASAR und Dateimanifest. Statische übernommene Basen und statische Merkmalentfernung bleiben ehrlich gekennzeichnet. Keine echte Cloud-Inferenz. Der erste r1-Paketlauf wurde wegen des alten 700.000-Zeichen-Limits der Kontextgrößenanzeige gestoppt. Die Anzeige akzeptiert jetzt höchstens 2 MiB UTF-8 und zählt weiterhin die tatsächlich verwendete deduplizierte Anbieterdarstellung. Ein Regressionstest mit dem vollständigen aktuellen CAD-Kontext verhindert Wiederholung. Der neue r2-Stand wurde vollständig geprüft; r1 bleibt unfreigegeben erhalten. Abschlussdokumentation wurde nach der Abnahme ergänzt; funktionale Programmquellen bleiben unverändert. Paket 7–10 bleiben offen.
+
+Die öffentliche Kopie Formnaro-Downloads enthält seit dem 27.10.2026 auch den freigegebenen getrackten Quellstand von 0.111 aus privatem Commit 7d1900d, als unabhängigen Snapshot ohne private Git-Historie. Frühere Beschreibungen als reines Download-Repository sind historisch. Neue Änderungen ab diesem Stand werden gemäß Nutzerentscheidung zuerst privat aktualisiert; die öffentliche Kopie wird nicht automatisch synchronisiert.
+
+
+Die geprüfte Windows-Ausgabe ist im privaten Repository als [Formnaro 0.112.0-r2](https://github.com/andyy909/Formnaro/releases/tag/v0.112.0-r2) bereitgestellt. Quelltag v0.112.0-r2 bindet den funktionalen Stand an Commit e43773c; die Abschlussdokumentation wird danach separat ergänzt. Das Windows-ZIP enthält 1.830 vollständig zurückgelesene und SHA-geprüfte Dateien (1.817 Laufzeitdateien). GitHub-Größen und SHA-256-Digests aller drei Assets entsprechen den lokalen Dateien. Die separate öffentliche Kopie wird dadurch nicht aktualisiert.
+
+
+### Paket 7: Flächen und Prägungen 0.113.0-r3 abgenommen
+
+640 Tests am eingefrorenen Quellstand und 979 Prüfgruppen in 23 Läufen der gepackten Windows-Anwendung bestanden, darunter 17 Flächenprüfgruppen. Die bisherigen 22 Suiten bleiben erhalten. Alle 148 geschützten Dateien älterer Ausgaben sind unverändert. Acht aktuelle Flächenaufnahmen wurden visuell geprüft. Keine echte Cloud-Inferenz.
+
+Vier kubische Bézier-Ränder bilden eine exakte bikubische Coons-Fläche mit gerichteter Materialhöhe. G0-Übergänge melden Randabstände und Normalenwinkel getrennt von Körpergültigkeit. Vollständige Hüllen werden mit Freikantendiagnose vernäht. Prägung/Vertiefung unterstützt Polygonkonturen mit Öffnungen auf Ebenen und orthogonale UV-Konturen auf äußeren Kreiszylindern; schräge UV-Kanten, Bohrungsflächen und andere gekrümmte Flächen bleiben ausgeschlossen. STEP-Rücklesen, archivierte FeaturePython-Helfer, native Tiefen-/Höhenänderung, physisches FNPACK, Vorschau/Abbruch/Undo und unbeteiligte Quellen sind geprüft.
+
+Neue Module: cad-surfaces-data/ui und backend/freecad-surfaces.py, eingebunden in den bisherigen FreeCAD-Werkzeuglebenszyklus. Kein zweiter Undo- oder Geometriestack, keine neue Projektformatgeneration. Statische Basen erhalten ein festes InputName unabhängig von FreeCADs automatisch umbenannten Labels. Der Vorschauersatz vermeidet doppelte Originalflächen, Sichtbarkeit wird nur auf ausdrückliche Wahl zusammen mit dem neuen Teil übernommen. Die 0.112.0-r2-Ausgabe bleibt unverändert. Paket 6a ist weiterhin offen; Paket 8–10 noch nicht begonnen. Anleitung CAD-FLAECHEN.md.
+
+Abnahmebedingte Stabilitätskorrekturen in 0.113.0-r3: Der synchrone Programmspeicher verwendet für Einstellungen, Zugangsdaten und Bibliotheken den bereits vorhandenen atomaren Task-Writer. Ausschließlich vorübergehende Windows-Sperren beim abschließenden Umbenennen werden begrenzt wiederholt; bestehende Dateien und ursprüngliche Fehler bleiben erhalten. Drei zusätzliche Tests prüfen vorübergehende und dauerhafte Sperren sowie nicht wiederholbare Fehler. Der Desktop-Prüfhelfer wartet nach Fensteränderungen auf eine stabile SVG-Bildschirmtransformation, bevor er echte B-Spline-Mausklicks ausführt. Geometrieprüfungen bleiben unverändert streng.
+
+Private Bereitstellung abgeschlossen: [Formnaro 0.113.0-r3](https://github.com/andyy909/Formnaro/releases/tag/v0.113.0-r3), Quellstand `1e094a028ff9c2fd6251d02f59f649b14ca7db03`. Windows-ZIP, Prüfbericht und Prüfsummen sind hochgeladen; Größen und GitHub-SHA-256 stimmen mit den lokalen Dateien überein. Die öffentliche Kopie wurde nicht aktualisiert. Paket 6a bleibt offen.
+
+
+### Kompakte Solid-/Fusion-Oberfläche (27.10.2026)
+
+Die Hauptmenüs beider CAD-Modi stehen direkt über dem Anwendungskopf. Gemeinsame,
+auf Solid und Fusion begrenzte Regeln in `src/cad-workbench-compact.css` reduzieren
+Kopfzeilen, Werkzeugabstände, Browserbreite und die Fusion-Konstruktionsschrittleiste.
+Werkzeuggruppen, Register, Befehle und gespeicherte Normal-/Easy-Layouts bleiben erhalten.
+Der sichtbare Modusname lautet auf Nutzerwunsch überall „Fusion“; interne Kennungen
+und Einstellungsdateien verwenden unverändert `fusion`.
+Die gezielte Abnahme umfasst vier Fenstergrößen in beiden Themes, Menüs/Register,
+Moduswechsel, Docking, unverändertes Modell/Undo und die bestehenden Solid-/Fusion-
+Bedienprüfungen. Kein allgemeiner Gesamttest für diese Oberflächenänderung.
+`backend/workbench-compact-verification.cjs` verwendet isolierte Prüfprofile;
+`scripts/package-compact-ui.mjs` erstellt eine separate Ausgabe auf Basis der
+abgenommenen 0.113.1-r2-Laufzeit. Vorherige Ausgaben bleiben erhalten.
+
+Gezielte Windows-Abnahme abgeschlossen: Ausgabe `Kompakte-Oberflaeche-v0.113.1-r4`,
+13 Zustandstests und 100 tatsächliche EXE-Prüfgruppen bestanden. Vier finale
+Paketbilder visuell geprüft, vorherige 0.113.1-r2-EXE/ASAR unverändert.
+Der Zwischenstand r3 ist durch r4 mit kompakten Fusion-Gruppenmenüs ersetzt.
+
+
+### Kopfzeile und Register weiter zusammengelegt (27.10.2026)
+
+Auf ausdrücklichen Folgeauftrag stehen die Dateiaktionen einschließlich Einstellungen
+in Solid und Fusion zwischen Modellname und Modusauswahl. Unter 1100 CSS-Pixeln
+weichen sie geordnet in eine zweite Kopfzeile aus. KI-Werkstatt, Projektfotos,
+KI-Merkmalsbezüge und FreeCAD-Merkmale sind über Extras beziehungsweise die
+Fusion-Dienstprogramme erreichbar und nicht mehr oben sichtbar. Die Menüeinträge
+lösen weiterhin die ursprünglichen Schaltflächenhandler aus.
+Schnellaktionen und Werkzeugregister teilen sich eine Zeile im Ribbon. Beim
+Moduswechsel werden die Originalsteuerelemente und die übrigen Layouts wiederhergestellt.
+Die Folgeabnahme verwendet ausschließlich den gezielten Oberflächenprüfer;
+keine allgemeinen oder vollständigen Solid-/Fusion-Werkzeugsuiten.
+
+Die gezielte Windows-Abnahme dieser Folgeänderung ist als `Kompakte-Oberflaeche-v0.113.1-r5` abgeschlossen: 39 Oberflächenprüfgruppen, vier visuell geprüfte Paketbilder. Keine allgemeinen Tests oder vollständigen Werkzeugsuiten wiederholt; vorherige r4-EXE und ASAR unverändert.

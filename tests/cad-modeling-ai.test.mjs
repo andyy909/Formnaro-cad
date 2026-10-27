@@ -15,7 +15,7 @@ const batch=commands=>({kind:'batch',commands}),near=(a,b)=>assert.ok(Math.abs(a
 
 test('AI schema publishes bounded root-only modeling and editing while preserving the existing API',()=>{
  const context=cadAIContext(),schemas=context.commandSchema.properties.commands.items.oneOf,find=op=>schemas.find(schema=>schema.properties.op.const===op);
- assert.equal(context.apiVersion,1);assert.equal(context.projectVersion,18);assert.deepEqual(context.supportedProjectVersions,[5,7,8,9,10,11,12,13,14,15,16,17,18]);
+ assert.equal(context.apiVersion,1);assert.equal(context.projectVersion,24);assert.deepEqual(context.supportedProjectVersions,[5,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]);
  for(const op of ['modeling','editModeling','profileModeling'])assert.ok(find(op),op);
  const create=find('modeling'),edit=find('editModeling'),profiles=find('profileModeling');assert.equal(create.additionalProperties,false);assert.equal(create.properties.target.oneOf[1].properties.path.maxItems,0);
  assert.deepEqual(create.properties.operation.oneOf.map(schema=>schema.properties.kind.const),['face-offset','shell']);assert.deepEqual(edit.properties.operation.oneOf.map(schema=>schema.properties.kind.const),['face-offset','shell','loft','sweep']);

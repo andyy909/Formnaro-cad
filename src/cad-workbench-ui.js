@@ -1,4 +1,5 @@
 import './cad-workbench.css';
+import './cad-workbench-compact.css';
 import {createCadSolidUI} from './cad-solid-ui.js';
 import {createCadFusionUI} from './cad-fusion-ui.js';
 
@@ -6,7 +7,7 @@ export const WORKBENCH_MODE_KEY='offlinecad-workbench-mode-v1';
 const categories=[
   ['edit','Bearbeiten',['duplicate','copy','paste','delete','bundle']],
   ['arrange','Anordnen',['group','ungroup','align','mirror','center','drop','lay-on-face','reference-place','workplane-set','workplane-top','reset-plane']],
-  ['cad','CAD-Werkzeuge',['edges','general-fit','sketch','sketch-on-part','sketch-templates','cad-contour','linked-contours','cad-face-offset','cad-shell','cad-loft','cad-sweep','cad-edit-modeling','joints','drawing','project-parameters','split','extract','drill']],
+  ['cad','CAD-Werkzeuge',['edges','general-fit','sketch','sketch-on-part','sketch-templates','cad-contour','linked-contours','cad-face-offset','cad-shell','cad-loft','cad-sweep','cad-draft','cad-defeature','cad-revolution','cad-helix','cad-surface-fill','cad-surface-transition','cad-surface-sew','cad-surface-relief','cad-edit-modeling','joints','drawing','project-parameters','split','extract','drill']],
   ['mesh','Netz-Werkzeuge',['mesh-tools','mesh-select','mesh-inspector','mesh-repair','mesh-close-hole','mesh-connectors','mesh-reduce','mesh-curved-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill','mesh-make-solid','mesh-hollow','mesh-features','mesh-more']],
   ['convert','Umwandeln',['cad-to-mesh','mesh-to-cad','stl-to-step']],
   ['extras','Extras',['marks','functions','help']]
@@ -33,7 +34,7 @@ export function createCadWorkbenchUI({storage,layoutUI,safe,t=v=>v,canSwitch=()=
   for(const node of [plane,ruler])originals.set(node,{parent:node.parentElement,next:node.nextSibling});
   let mode='normal';try{const saved=storage.getItem(WORKBENCH_MODE_KEY);if(['easy','solid','fusion'].includes(saved))mode=saved;}catch{/* Default to the full workbench. */}
   const switcher=document.createElement('div');switcher.id='workbench-mode';switcher.setAttribute('role','group');switcher.setAttribute('aria-label',t('Bedienmodus'));
-  for(const [value,label]of [['easy','Easy Tinker'],['normal','Normal'],['solid','Solid'],['fusion','Fusion 360']]){
+  for(const [value,label]of [['easy','Easy Tinker'],['normal','Normal'],['solid','Solid'],['fusion','Fusion']]){
     const button=document.createElement('button');button.type='button';button.dataset.workbenchMode=value;button.textContent=t(label);button.onclick=()=>safe(()=>setMode(value));switcher.append(button);
   }
   header.before(switcher);
@@ -130,7 +131,7 @@ export function createCadWorkbenchUI({storage,layoutUI,safe,t=v=>v,canSwitch=()=
     if(editing)return;
     if(['solid','fusion'].includes(mode)){
       for(const [key,node]of controls)hidden.append(node);
-      for(const key of ['new','open','save','projects','import','export','ai','settings']){const node=controls.get(key);if(node)header.append(node);}
+      for(const key of ['new','open','save','projects','import','export','settings']){const node=controls.get(key);if(node)header.append(node);}
       for(const key of cameraKeys){const node=controls.get(key);if(node)document.querySelector('.view-controls').append(node);}
       for(const key of ['mode-translate','mode-rotate','mode-scale']){const node=controls.get(key);if(node)document.querySelector('.mode-switch').append(node);}
       (mode==='solid'?solid:fusion).mount();
@@ -142,7 +143,7 @@ export function createCadWorkbenchUI({storage,layoutUI,safe,t=v=>v,canSwitch=()=
       for(const key of order.filter(key=>easyActions.includes(key))){const node=controls.get(key);if(node)tools.append(node);}
       for(const key of cameraKeys){const node=controls.get(key);if(node)document.querySelector('.view-controls').append(node);}
       for(const key of ['mode-translate','mode-scale','mode-rotate']){const node=controls.get(key);if(node)document.querySelector('.mode-switch').append(node);}
-      menu(tools,'drawing-tools','Zeichnen & Netz',['sketch','sketch-templates','sketch-on-part','cad-contour','linked-contours','cad-face-offset','cad-shell','cad-loft','cad-sweep','cad-edit-modeling','joints','drawing','project-parameters','mesh-select','mesh-features','mesh-reduce','mesh-curved-reduce','mesh-repair'].map(key=>controls.get(key)).filter(Boolean));
+      menu(tools,'drawing-tools','Zeichnen & Netz',['sketch','sketch-templates','sketch-on-part','cad-contour','linked-contours','cad-face-offset','cad-shell','cad-loft','cad-sweep','cad-draft','cad-defeature','cad-revolution','cad-helix','cad-surface-fill','cad-surface-transition','cad-surface-sew','cad-surface-relief','cad-edit-modeling','joints','drawing','project-parameters','mesh-select','mesh-features','mesh-reduce','mesh-curved-reduce','mesh-repair'].map(key=>controls.get(key)).filter(Boolean));
       // Read-only inspection and view tools share the same top menu in both modes.
       cameraAndViewTools();
       // Keep the project/file-format entry reachable at compact widths.
@@ -151,7 +152,7 @@ export function createCadWorkbenchUI({storage,layoutUI,safe,t=v=>v,canSwitch=()=
       directCommands();
       // Present the original controls without rewriting a stored custom layout.
       cameraAndViewTools();
-      const toolbarNodes=[...tools.children].filter(node=>node.matches('button')),headerExtras=[...header.querySelectorAll('button')].filter(node=>!['new','open','save','projects','import','export','ai','settings'].includes(node.dataset.layoutKey));
+      const toolbarNodes=[...tools.children].filter(node=>node.matches('button')),headerExtras=[...header.querySelectorAll('button')].filter(node=>!['new','open','save','projects','import','export','settings'].includes(node.dataset.layoutKey));
       for(const [key,label,actions]of categories){const nodes=toolbarNodes.filter(node=>actions.includes(node.dataset.action));menu(tools,key,label,nodes);}
       const uncategorized=toolbarNodes.filter(node=>node.parentElement===tools&&!['undo','redo'].includes(node.dataset.action));
       menu(tools,'more','Weitere Werkzeuge',uncategorized);menu(header,'file-extras','Weitere',headerExtras);
@@ -159,7 +160,7 @@ export function createCadWorkbenchUI({storage,layoutUI,safe,t=v=>v,canSwitch=()=
       for(const key of ['redo','undo']){const node=controls.get(key);if(node?.parentElement===tools)tools.prepend(node);}
     }
     const viewMenu=groups.find(group=>group.dataset.toolCategory==='view-tools'),extras=groups.find(group=>group.dataset.toolCategory==='extras');if(viewMenu){if(extras)tools.insertBefore(viewMenu,extras);else tools.append(viewMenu);}
-    for(const key of ['photo-project-open','ai-feature-open','freecad-document-open']){const node=controls.get(key);if(node)header.append(node);}
+    for(const key of (['solid','fusion'].includes(mode)?[]:['photo-project-open','ai-feature-open','freecad-document-open'])){const node=controls.get(key);if(node)header.append(node);}
     window.dispatchEvent(new Event('resize'));
   }
   function setMode(value){

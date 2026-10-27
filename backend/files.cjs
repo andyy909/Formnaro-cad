@@ -7,7 +7,7 @@ async function writeAtomic(target,bytes,{shouldCommit=()=>true,rename=fs.rename,
   // and retry only the atomic rename; never delete it to make a write succeed.
   const delays=[10,20,40,80,160];
   for(let attempt=0;;attempt++){
-   if(!shouldCommit())throw Object.assign(Error('Dateiausgabe abgebrochen.'),{code:'ABORTED'});
+   if(!await shouldCommit())throw Object.assign(Error('Dateiausgabe abgebrochen oder Zieldatei inzwischen geändert.'),{code:'ABORTED'});
    try{await rename(temporary,target);break;}
    catch(error){if(platform!=='win32'||!['EPERM','EACCES','EBUSY'].includes(error.code)||attempt>=delays.length)throw error;await wait(delays[attempt]);}
   }

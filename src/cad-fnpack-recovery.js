@@ -6,6 +6,7 @@ export function createFnpackRecovery({desktop,storage,files,legacy,getProject,pr
  let blocked=false,writing=null;
  const packageMode=()=>preferPack()||hasGeometryRefs(getProject());
  async function load(verify){
+  try{storage.checkReadable?.(PACK_RECOVERY_KIND);}catch(error){blocked=true;throw error;}
   if(storage.getItem(PACK_RECOVERY_KIND)!=='fnpack')return legacy.load(verify);
   try{const result=await desktop?.openPackRecovery?.();if(!result?.opened)throw Error('Die Paket-Autosicherung fehlt.');files.register(result.fnpack);return await verify(result.project);}catch(error){blocked=true;throw error;}
  }

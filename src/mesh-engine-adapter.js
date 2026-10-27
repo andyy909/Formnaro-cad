@@ -292,7 +292,7 @@ export function createMeshEngineAdapter({kernel}={}){
     finally{if(remaining!==final)remaining.delete();final.delete();}
   }
   function outlinedNode(op){
-    if(op.shape==='sketch'){const n=makeNode('sketch',[0,0,0],{...(op.name!==undefined?{name:op.name}:{})});applySketch(n,prepareConstrainedSketch(op.sketch),{preserveScale:false});n.pos=[2,3].includes(op.sketch?.version)?resolveSketch(n.sketch).center:[0,0,n.size[2]/2];return n;}
+    if(op.shape==='sketch'){const n=makeNode('sketch',[0,0,0],{...(op.name!==undefined?{name:op.name}:{})});applySketch(n,prepareConstrainedSketch(op.sketch),{preserveScale:false});n.pos=[2,3,4].includes(op.sketch?.version)?resolveSketch(n.sketch).center:[0,0,n.size[2]/2];return n;}
     if(op.shape==='plugin'){
       const manifest=parsePlugin(op.manifest),shape=manifest.shapes.find(s=>s.id===op.shapeId);if(!shape)throw Error('Formpaket-Vorlage fehlt.');
       const nodes=shape.nodes.map(spec=>{const n=makeNode(spec.type,spec.pos,{...structuredClone(spec)});if(spec.params)fitParameters(n);if(!validNode(n))throw Error('Ungültige Netzvorlage.');return n;});const result=nodes.length===1?nodes[0]:groupNodes(nodes);result.name=label(shape.name,'de');return result;

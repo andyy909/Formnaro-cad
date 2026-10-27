@@ -65,7 +65,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
           const {sourceSignature,version,...operation}=node.modeling;
           if(['loft','sweep'].includes(operation.kind)){
             const profiles=node.children.map(child=>({sketch:child.recipe.sketch,frame:child.transform}));
-            shape=cadProfileModelingNative(oc,operation.kind==='loft'?{kind:'loft',profiles}:{kind:'sweep',profile:profiles[0],path:operation.path});
+            shape=cadProfileModelingNative(oc,operation.kind==='loft'?{...operation,profiles}:{kind:'sweep',profile:profiles[0],path:operation.path});
           }else{
             const child=node.children[0],local=readCadBrep(oc,child.brep.data);let input;
             try{input=transformCad(oc,local,child.transform);shape=cadModelingNative(oc,input,operation);}finally{input?.delete();local.delete();}

@@ -7,4 +7,10 @@ const relations=['coincident','horizontal','vertical','parallel','perpendicular'
  return {type:'object',additionalProperties:false,required:['id','type','refs',...(dim||fixed?['value']:[])],properties:{id,type:{const:type},refs:{type:'array',minItems:count,maxItems:count,items:reference},...(dim?{value:expression}:{}),...(fixed?{value:{oneOf:[numericPoint,{type:'object',additionalProperties:false,properties:{start:numericPoint,end:numericPoint,through:numericPoint,center:numericPoint,diameter:{type:'number',minimum:.01,maximum:10000}},oneOf:[{required:['start','end'],not:{anyOf:[{required:['center']},{required:['diameter']}]}},{required:['center','diameter'],not:{anyOf:[{required:['start']},{required:['end']},{required:['through']}]}}]}]}}:{}),...(type==='tangent'?{mode:{enum:['external','internal']}}:{})}};
 });
 const profileV3=structuredClone(profileV2);profileV3.required.push('constraints');profileV3.properties.version={const:3};profileV3.properties.constraints={type:'array',maxItems:256,items:{oneOf:relations}};
-export const SKETCH_PROFILE_SCHEMA={oneOf:[profileV2,profileV3]};
+const profileV4=structuredClone(profileV3);profileV4.properties.version={const:4};
+const controls=Object.fromEntries(Array.from({length:14},(_,i)=>['control'+(i+1),point]));
+profileV4.properties.elements.items.oneOf.push(element('bezier',{start:point,control1:point,control2:point,end:point}));
+const spline=element('bspline',{start:point,control1:point,control2:point,end:point});Object.assign(spline.properties,controls);profileV4.properties.elements.items.oneOf.push(spline);
+function extendCurveReferences(value){if(!value||typeof value!=='object')return;if(value.properties?.element&&value.properties?.point?.enum)value.properties.point.enum.push(...Object.keys(controls));if(value.properties?.start&&value.properties?.end&&value.properties?.diameter)Object.assign(value.properties,Object.fromEntries(Object.keys(controls).map(key=>[key,numericPoint])));for(const child of Object.values(value))if(Array.isArray(child))child.forEach(extendCurveReferences);else extendCurveReferences(child);}
+extendCurveReferences(profileV4.properties.constraints);
+export const SKETCH_PROFILE_SCHEMA={oneOf:[profileV2,profileV3,profileV4]};

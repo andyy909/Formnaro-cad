@@ -1,3 +1,4 @@
+import {profilePointFields,isCadCurve,curveControlKeys} from './cad-curves.js';
 // Version-3 sketch relations. This module is deliberately kernel/DOM free.
 import {sketchExpression} from './sketch-expression.js';
 
@@ -6,7 +7,7 @@ export const SKETCH_CONSTRAINT_TYPES=Object.freeze(['coincident','horizontal','v
 export const sketchLiteral=value=>typeof value==='number'||typeof value==='string'&&/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value.trim());
 const fail=message=>{throw Object.assign(Error('Skizzenbedingung: '+message),{code:'SKETCH_CONSTRAINT_INVALID'});};
 const object=(v,keys)=>{if(!v||![Object.prototype,null].includes(Object.getPrototypeOf(v))||Object.keys(v).some(k=>!keys.includes(k)))fail('Ungültige Felder.');};
-export const sketchPointFields=e=>e.type==='circle'?['center']:e.type==='arc'?['start','through','end']:['start','end'];
+export const sketchPointFields=profilePointFields;
 export function sketchConstraintValues(sketch){
  const defs=new Map(),values=Object.create(null),visiting=new Set();
  if(!Array.isArray(sketch.variables)||sketch.variables.length>40)fail('Höchstens 40 benannte Maße.');
@@ -16,12 +17,12 @@ export function sketchConstraintValues(sketch){
 }
 export function validateSketchConstraints(sketch){
  object(sketch,['version','kind','variables','dimensions','elements','loops','constraints']);
- if(sketch.version!==3)fail('Version 3 erforderlich.');
+ if(![3,4].includes(sketch.version))fail('Version 3 oder 4 erforderlich.');
  if(sketch.kind!=='profile'||!Array.isArray(sketch.loops)||sketch.loops.length>64)fail('Ungültige Profilkonturen.');object(sketch.dimensions,['height']);
  if(!Array.isArray(sketch.elements)||sketch.elements.length>128||!Array.isArray(sketch.constraints)||sketch.constraints.length>256)fail('Höchstens 128 Elemente und 256 Bedingungen.');
- const map=new Map();for(const e of sketch.elements){if(!e||typeof e.id!=='string'||!e.id||e.id.length>100||map.has(e.id)||!['line','arc','circle'].includes(e.type))fail('Ungültige Elementkennung.');map.set(e.id,e);}
+ const map=new Map();for(const e of sketch.elements){if(!e||typeof e.id!=='string'||!e.id||e.id.length>100||map.has(e.id)||!['line','arc','circle',...(sketch.version===4?['bezier','bspline']:[])].includes(e.type))fail('Ungültige Elementkennung.');map.set(e.id,e);}
  const ids=new Set(),{scalar}=sketchConstraintValues(sketch);scalar(sketch.dimensions.height);
- for(const e of sketch.elements){object(e,['id','type','construction',...sketchPointFields(e),...(e.type==='circle'?['diameter']:[])]);if(e.construction!==undefined&&typeof e.construction!=='boolean')fail('Ungültige Konstruktion.');for(const field of sketchPointFields(e)){if(!Array.isArray(e[field])||e[field].length!==2)fail('Punkt benötigt zwei Koordinaten.');e[field].forEach(scalar);}if(e.type==='circle')scalar(e.diameter);}
+ let pointCount=0;for(const e of sketch.elements){if(isCadCurve(e)){const controls=curveControlKeys(e);if(controls.length<2||controls.length>14||controls.some((k,i)=>k!=='control'+(i+1))||e.type==='bezier'&&controls.length!==2)fail('Ungültige Kurvenkontrollpunkte.');}pointCount+=sketchPointFields(e).length;if(pointCount>384)fail('Höchstens 384 Skizzenpunkte.');object(e,['id','type','construction',...sketchPointFields(e),...(e.type==='circle'?['diameter']:[])]);if(e.construction!==undefined&&typeof e.construction!=='boolean')fail('Ungültige Konstruktion.');for(const field of sketchPointFields(e)){if(!Array.isArray(e[field])||e[field].length!==2)fail('Punkt benötigt zwei Koordinaten.');e[field].forEach(scalar);}if(e.type==='circle')scalar(e.diameter);}
  const loopIds=new Set();for(const loop of sketch.loops){object(loop,['id','role','elements']);if(typeof loop.id!=='string'||!loop.id||loop.id.length>100||loopIds.has(loop.id)||!['outer','hole'].includes(loop.role)||!Array.isArray(loop.elements)||!loop.elements.length||loop.elements.length>128||new Set(loop.elements).size!==loop.elements.length||loop.elements.some(id=>!map.has(id)))fail('Ungültiger Konturbezug.');loopIds.add(loop.id);}
  return sketch.constraints.map(c=>{
   object(c,['id','type','refs','value','mode']);if(typeof c.id!=='string'||!c.id||c.id.length>100||ids.has(c.id)||!SKETCH_CONSTRAINT_TYPES.includes(c.type)||!Array.isArray(c.refs))fail('Ungültige oder doppelte Bedingungskennung.');ids.add(c.id);
@@ -41,7 +42,7 @@ export function validateSketchConstraints(sketch){
  });
 }
 export function upgradeSketchConstraints(profile){
- if(profile.version===3){validateSketchConstraints(profile);return structuredClone(profile);}
+ if([3,4].includes(profile.version)){validateSketchConstraints(profile);return structuredClone(profile);}
  if(profile.version!==2)fail('Zuerst erweiterte Konturen einschalten.');const out={...structuredClone(profile),version:3,constraints:[]};
  const map=new Map(out.elements.map(e=>[e.id,e]));
  // Explicit stable endpoint relations preserve wire closure through later edits.

@@ -41,8 +41,16 @@ try:
             value=doc.addObject('Part::Feature','Result');value.Shape=shape
         if 'FormnaroPython' not in value.PropertiesList:value.addProperty('App::PropertyString','FormnaroPython','Formnaro')
         value.FormnaroPython=data['script']['code']
+        # A PartDesign result also needs its containing Body visible. Conversely,
+        # returning a Body requires its Tip visible, not the static base/history.
+        visible_names={value.Name}
+        if value.isDerivedFrom('PartDesign::Body') and value.Tip:
+            visible_names.add(value.Tip.Name)
+        for obj in doc.Objects:
+            if obj.isDerivedFrom('PartDesign::Body') and any(member.Name in visible_names for member in obj.Group):
+                visible_names.add(obj.Name)
         if App.GuiUp:
-            for obj in doc.Objects:obj.ViewObject.Visibility=(obj.Name==value.Name)
+            for obj in doc.Objects:obj.ViewObject.Visibility=(obj.Name in visible_names)
         doc.recompute();doc.saveAs(str(job/'result.FCStd'))
         # Headless FreeCAD writes no GUI state. Store only final-body visibility
         # so editable construction sources do not obscure the model on opening.
@@ -53,7 +61,7 @@ try:
                 vp=ET.SubElement(providers,'ViewProvider',name=obj.Name)
                 props=ET.SubElement(vp,'Properties',Count='1')
                 prop=ET.SubElement(props,'Property',name='Visibility',type='App::PropertyBool')
-                ET.SubElement(prop,'Bool',value='true' if obj.Name==value.Name else 'false')
+                ET.SubElement(prop,'Bool',value='true' if obj.Name in visible_names else 'false')
             file=job/'result.FCStd'
             with zipfile.ZipFile(file) as z:entries={n:z.read(n) for n in z.namelist() if n!='GuiDocument.xml'}
             with zipfile.ZipFile(file,'w',zipfile.ZIP_DEFLATED) as z:

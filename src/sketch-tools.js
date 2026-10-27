@@ -1,9 +1,10 @@
+import {profilePointFields,isCadCurve} from './cad-curves.js';
 import {resolveSketchProfile,profileId,appendProfileLoop} from './sketch-profile.js';
 import {sketchExpression} from './sketch-expression.js';
 import {sketchLiteral} from './sketch-constraints-data.js';
 const distance=(a,b)=>Math.hypot(...a.map((v,k)=>v-b[k])),TAU=Math.PI*2,mod=a=>(a%TAU+TAU)%TAU;
 const number=v=>String(Number(v.toPrecision(13))),pair=p=>p.map(number);
-const fields=e=>e.type==='circle'?['center']:e.type==='arc'?['start','through','end']:['start','end'];
+const fields=profilePointFields;
 const geometry=s=>resolveSketchProfile(s,sketchExpression,{geometryOnly:true});
 const value=(s,input)=>{const r=geometry(s);return sketchExpression(input,n=>{if(!Object.hasOwn(r.values,n))throw Error('Unbekanntes Maß: '+n);return r.values[n];});};
 function element(s,id){const e=geometry(s).elements.find(e=>e.id===id);if(!e)throw Error('Konturelement fehlt.');return e;}
@@ -21,13 +22,13 @@ export function lineDimensionTerms(e){
  return terms[0].length===terms[1].length&&terms[0].angle===terms[1].angle?terms[0]:null;
 }
 export function sketchElementDimensions(s,id){
- const e=element(s,id),stored=s.elements.find(e=>e.id===id),result=e.type==='line'?{length:number(distance(e.start,e.end)),angle:number(Math.atan2(e.end[1]-e.start[1],e.end[0]-e.start[0])*180/Math.PI),...lineDimensionTerms(stored)}:e.type==='circle'?{diameter:stored.diameter,radius:'('+stored.diameter+')/2'}:{radius:number(e.radius)};
- if(s.version===3)for(const c of s.constraints)if(c.refs.length===1&&c.refs[0].element===id&&['length','angle','radius'].includes(c.type)){result[c.type]=c.value;if(e.type==='circle'&&c.type==='radius')result.diameter='2*('+c.value+')';}
+ const e=element(s,id),stored=s.elements.find(e=>e.id===id);if(isCadCurve(e))return {};const result=e.type==='line'?{length:number(distance(e.start,e.end)),angle:number(Math.atan2(e.end[1]-e.start[1],e.end[0]-e.start[0])*180/Math.PI),...lineDimensionTerms(stored)}:e.type==='circle'?{diameter:stored.diameter,radius:'('+stored.diameter+')/2'}:{radius:number(e.radius)};
+ if(s.version>=3)for(const c of s.constraints)if(c.refs.length===1&&c.refs[0].element===id&&['length','angle','radius'].includes(c.type)){result[c.type]=c.value;if(e.type==='circle'&&c.type==='radius')result.diameter='2*('+c.value+')';}
  return result;
 }
 export function dimensionSketchElement(s,id,dimension,input){
  const e=element(s,id),stored=s.elements.find(e=>e.id===id),n=value(s,input);if(!Number.isFinite(n)||dimension!=='angle'&&(n<.005||n>10000))throw Error('Maß außerhalb des gültigen Bereichs.');let out=structuredClone(s);
- if(s.version===3){const type=dimension==='diameter'?'radius':dimension;if(!['length','angle','radius'].includes(type)||e.type==='line'&&!['length','angle'].includes(type)||e.type!=='line'&&type!=='radius')throw Error('Unpassende Maßart.');const old=out.constraints.find(c=>c.type===type&&c.refs.length===1&&c.refs[0].element===id);const c={id:old?.id??profileId('dimension'),type,refs:[{element:id}],value:dimension==='diameter'?'('+input+')/2':String(input)};if(old)out.constraints[out.constraints.indexOf(old)]=c;else out.constraints.push(c);return out;}
+ if(s.version>=3){const type=dimension==='diameter'?'radius':dimension;if(!['length','angle','radius'].includes(type)||e.type==='line'&&!['length','angle'].includes(type)||e.type!=='line'&&type!=='radius')throw Error('Unpassende Maßart.');const old=out.constraints.find(c=>c.type===type&&c.refs.length===1&&c.refs[0].element===id);const c={id:old?.id??profileId('dimension'),type,refs:[{element:id}],value:dimension==='diameter'?'('+input+')/2':String(input)};if(old)out.constraints[out.constraints.indexOf(old)]=c;else out.constraints.push(c);return out;}
  if(e.type==='line'){
   if(!['length','angle'].includes(dimension))throw Error('Linie: Länge oder Winkel wählen.');const terms=sketchElementDimensions(s,id);terms[dimension]=String(input);let newEnd=stored.start.map((v,k)=>'('+v+')+('+terms.length+')*'+(k===0?'cosd':'sind')+'('+terms.angle+')');if([...stored.start,terms.length,terms.angle].every(v=>/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(String(v).trim())))newEnd=newEnd.map(v=>number(sketchExpression(v)));out=replacePoint(s,e.end,newEnd);
  }else if(e.type==='circle'){
@@ -40,8 +41,8 @@ export function dimensionSketchElement(s,id,dimension,input){
 export function editSketchCoordinate(s,id,field,axis,input){const e=element(s,id);if(!fields(e).includes(field)||![0,1].includes(axis))throw Error('Ungültige Punktkoordinate.');value(s,input);const stored=s.elements.find(e=>e.id===id),p=[...stored[field]];p[axis]=String(input);return replacePoint(s,e[field],p);}
 export function mirrorSketch(s,{loopId=null,axis='x',offset=0}={}){
  if(!['x','y'].includes(axis)||!Number.isFinite(offset))throw Error('Spiegelachse und Abstand wählen.');const out=structuredClone(s),loop=loopId?s.loops.find(l=>l.id===loopId):null;if(loopId&&!loop)throw Error('Kontur fehlt.');
- const ids=new Set(loop?.elements??s.elements.map(e=>e.id)),map=new Map(),coordinate=axis==='x'?1:0,reflect=x=>s.version===3&&sketchLiteral(x)?number(2*offset-Number(x)):'2*('+number(offset)+')-('+x+')',copies=s.elements.filter(e=>ids.has(e.id)).map(e=>{const c=structuredClone(e);map.set(e.id,c.id=profileId(e.type));for(const key of fields(c))c[key][coordinate]=reflect(c[key][coordinate]);return c;});
- if(s.version===3){if(s.constraints.some(c=>c.refs.some(r=>ids.has(r.element))&&!c.refs.every(r=>ids.has(r.element))))throw Error('Die Spiegelkopie benötigt die ganze verbundene Bedingungsgruppe.');const copied=s.constraints.filter(c=>c.refs.every(r=>ids.has(r.element))).map(c=>{const next=structuredClone(c);next.id=profileId('condition');next.refs=next.refs.map(r=>({...r,element:map.get(r.element)}));if(c.type==='angle')next.value=axis==='x'?'-('+c.value+')':'180-('+c.value+')';if(c.type==='fixed'){if(c.refs[0].point)next.value[coordinate]=2*offset-next.value[coordinate];else for(const key of fields(s.elements.find(e=>e.id===c.refs[0].element)))next.value[key][coordinate]=2*offset-next.value[key][coordinate];}return next;});out.constraints=loop?[...out.constraints,...copied]:copied;}
+ const ids=new Set(loop?.elements??s.elements.map(e=>e.id)),map=new Map(),coordinate=axis==='x'?1:0,reflect=x=>s.version>=3&&sketchLiteral(x)?number(2*offset-Number(x)):'2*('+number(offset)+')-('+x+')',copies=s.elements.filter(e=>ids.has(e.id)).map(e=>{const c=structuredClone(e);map.set(e.id,c.id=profileId(e.type));for(const key of fields(c))c[key][coordinate]=reflect(c[key][coordinate]);return c;});
+ if(s.version>=3){if(s.constraints.some(c=>c.refs.some(r=>ids.has(r.element))&&!c.refs.every(r=>ids.has(r.element))))throw Error('Die Spiegelkopie benötigt die ganze verbundene Bedingungsgruppe.');const copied=s.constraints.filter(c=>c.refs.every(r=>ids.has(r.element))).map(c=>{const next=structuredClone(c);next.id=profileId('condition');next.refs=next.refs.map(r=>({...r,element:map.get(r.element)}));if(c.type==='angle')next.value=axis==='x'?'-('+c.value+')':'180-('+c.value+')';if(c.type==='fixed'){if(c.refs[0].point)next.value[coordinate]=2*offset-next.value[coordinate];else for(const key of fields(s.elements.find(e=>e.id===c.refs[0].element)))next.value[key][coordinate]=2*offset-next.value[key][coordinate];}return next;});out.constraints=loop?[...out.constraints,...copied]:copied;}
  if(loop){if(loop.role!=='hole')throw Error('Außenkontur als ganze Skizze spiegeln und als neues Teil übernehmen.');out.elements.push(...copies);out.loops.push({id:profileId('loop'),role:'hole',elements:loop.elements.map(id=>map.get(id))});}
  else{out.elements=copies;out.loops=s.loops.map(l=>({id:profileId('loop'),role:l.role,elements:l.elements.map(id=>map.get(id))}));}
  geometry(out);return out;

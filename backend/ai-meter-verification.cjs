@@ -3,6 +3,14 @@ exports.verifyAIMeter=async(win,{directory})=>{
  const run=s=>win.webContents.executeJavaScript(s),checks=[],check=(value,label)=>{assert(value,label);checks.push(label);},original=global.fetch,usage={input_tokens:10000,output_tokens:1000,input_tokens_details:{cached_tokens:8000},output_tokens_details:{reasoning_tokens:900}};
  let calls=0,badHelp=false;
  const until=async expr=>{const start=Date.now();while(Date.now()-start<60000){if(await run(expr))return;await new Promise(r=>setTimeout(r,30));}throw Error('AI meter timeout: '+expr);};
+ async function capture(name){
+  await run('window.__cadTest.view.renderReady()');
+  await run('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+  for(let attempt=0;attempt<3;attempt++){
+   try{fs.writeFileSync(path.join(directory,name+'.png'),(await win.webContents.capturePage()).toPNG());return;}
+   catch(error){if(!String(error.message).includes('UnknownVizError')||attempt===2)throw error;await new Promise(r=>setTimeout(r,250));}
+  }
+ }
  const ledgerFile=path.join(directory,'portable-data','KI-Verbrauch.json'),config={baseUrl:'https://api.openai.com/v1',model:'gpt-6.1-sol',authMode:'chatgpt'};
  require('./ai-usage-ledger.cjs').createAIUsageLedger({file:ledgerFile}).record({config,provider:'chatgpt',taskId:'isolated-subscription-fixture',args:{prompt:'Wo finde ich das Menü?'},usage:require('./ai-usage.cjs').aiUsage({usage},config,1)});
  global.fetch=async(url,options)=>{
@@ -28,13 +36,13 @@ exports.verifyAIMeter=async(win,{directory})=>{
   await run('window.__cadTest.ui.settings.open();document.querySelector(\'[data-settings-tab="ai"]\').click();void 0');await until("!!document.querySelector('#ai-usage-meter table tbody tr')");
   const text=await run("document.getElementById('ai-usage-meter').textContent");check(text.includes('STL nachbauen')&&text.includes('Bedienhilfe')&&text.includes('60.000'),'Actual settings show category statistics and formatted reported input tokens');
   await run("document.getElementById('ai-meter-scope').value='all';document.getElementById('ai-meter-scope').dispatchEvent(new Event('change'));void 0");await until("document.getElementById('ai-meter-usage').textContent.includes('keine zusätzliche Abo-Abrechnung')");await new Promise(r=>setTimeout(r,200));check(await run("document.getElementById('ai-meter-scope').value==='all'&&document.getElementById('ai-meter-usage').textContent.includes('keine zusätzliche Abo-Abrechnung')"),'Subscription equivalent stays explicitly separate from API expenses after filtering');
-  await run("document.getElementById('ai-usage-meter').scrollIntoView({block:'start'});void 0");fs.writeFileSync(path.join(directory,'meter-light.png'),(await win.webContents.capturePage()).toPNG());
+  await run("document.getElementById('ai-usage-meter').scrollIntoView({block:'start'});void 0");await capture('meter-light');
   await run("document.getElementById('ai-meter-context-tab').click();void 0");await until("document.getElementById('ai-meter-context').textContent.includes('4 Zeichen')");
   const m=await run('window.offlinecadDesktop.getAIContextMetrics({context:window.__cadTest.access.context()})');check(m.files.length===4&&m.total.estimatedTokens>1000&&m.total.estimatedInputCostUSD.max>0,'Actual context metrics measure bundled files and compact request parts with input-only price estimate');
   check(calls===6,'Opening and refreshing context metrics sends no provider request');
-  fs.writeFileSync(path.join(directory,'context-light.png'),(await win.webContents.capturePage()).toPNG());
-  await run("document.documentElement.dataset.theme='dark';document.getElementById('ai-usage-meter').scrollIntoView({block:'start'});void 0");fs.writeFileSync(path.join(directory,'context-dark.png'),(await win.webContents.capturePage()).toPNG());
-  win.setSize(900,850);await new Promise(r=>setTimeout(r,200));check(await run("(()=>{const e=document.getElementById('ai-usage-meter'),r=e.getBoundingClientRect();return r.width>0&&r.width<innerWidth;})()"),'Meter fits a smaller desktop window with scrollable tables');fs.writeFileSync(path.join(directory,'context-small.png'),(await win.webContents.capturePage()).toPNG());
+  await capture('context-light');
+  await run("document.documentElement.dataset.theme='dark';document.getElementById('ai-usage-meter').scrollIntoView({block:'start'});void 0");await capture('context-dark');
+  win.setSize(900,850);await new Promise(r=>setTimeout(r,200));check(await run("(()=>{const e=document.getElementById('ai-usage-meter'),r=e.getBoundingClientRect();return r.width>0&&r.width<innerWidth;})()"),'Meter fits a smaller desktop window with scrollable tables');await capture('context-small');
   check(await run('window.__cadTest.serialize()')===before,'Usage/context inspection preserves original model');
   fs.writeFileSync(path.join(directory,'meter-proof.json'),JSON.stringify({checks,stats,metrics:m,providerCalls:calls,liveCloudRequests:0},null,2));return checks;
  }finally{global.fetch=original;}

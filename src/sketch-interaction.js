@@ -19,5 +19,5 @@ export function moveSketchPoints(sketch,indices,delta){
 }
 export function createSketchCamera(){
  let box=null;
- return {fit(points=[],diameter=0){const extent=Math.max(50,diameter,...points.flat().filter(Number.isFinite).map(v=>Math.abs(v)*1.15));box=[-extent,-extent,extent*2,extent*2];return [...box];},view:()=>box&&[...box],pan(dx,dy){if(box){box[0]+=dx;box[1]+=dy;}return [...box];},zoom(factor,point){if(!box)return null;const width=Math.max(.02,Math.min(200000,box[2]*factor)),ratio=width/box[2];box=[point[0]+(box[0]-point[0])*ratio,point[1]+(box[1]-point[1])*ratio,width,box[3]*ratio];return [...box];}};
+ return {fit(points=[],diameter=0,{minimum=50}={}){const extent=Math.max(minimum,diameter,...points.flat().filter(Number.isFinite).map(v=>Math.abs(v)*1.15));box=[-extent,-extent,extent*2,extent*2];return [...box];},view:()=>box&&[...box],pan(dx,dy){if(box){box[0]+=dx;box[1]+=dy;}return [...box];},zoom(factor,point){if(!box)return null;const width=Math.max(.02,Math.min(200000,box[2]*factor)),ratio=width/box[2];box=[point[0]+(box[0]-point[0])*ratio,point[1]+(box[1]-point[1])*ratio,width,box[3]*ratio];return [...box];}};
 }

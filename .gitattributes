@@ -8,3 +8,7 @@
 
 # Preserve the exact bytes covered by the CAD runtime integrity manifest.
 cad-kernel-build/runtime/** -text
+
+# License/font hashes cover original upstream bytes, including line endings.
+licenses/** -text
+src/fonts/** -text

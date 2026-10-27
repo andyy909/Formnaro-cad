@@ -11,11 +11,13 @@ export function createProgramStorage(legacy,desktop,{cadOnly=false}={}){
   const old={};for(const key of Object.keys(entries)){if(!allowed(key))continue;try{const value=legacy.getItem(key);if(value!==null)old[key]=value;}catch{}}
   const request=cadOnly?{format:'FormnaroProgramDataInitialization',version:1,cadOnly:true,values:old}:old;
   const info=desktop.initializeProgramData(request),values={},revisions={};
+  const check=key=>{if(info.unavailable?.[key])throw Error('Gespeicherte Datei bleibt unverändert gesperrt: '+info.unavailable[key]);};
   for(const key of Object.keys(entries)){if(!allowed(key))continue;if(Object.hasOwn(info.values,key))values[key]=info.values[key];if(Object.hasOwn(info.revisions,key))revisions[key]=info.revisions[key];}
   function change(key,value){
+    check(key);
     if(!allowed(key))throw Error('Ungültiger Datenbefehl.');
     const saved=desktop.changeProgramData({key,value,revision:revisions[key]});
     if(saved.value===null)delete values[key];else values[key]=saved.value;revisions[key]=saved.revision;
   }
-  return {getItem:key=>allowed(key)&&Object.hasOwn(values,key)?values[key]:null,setItem:(key,value)=>change(key,String(value)),removeItem:key=>change(key,null),info:()=>({...info,values:undefined,revisions:undefined})};
+  return {getItem:key=>allowed(key)&&Object.hasOwn(values,key)?values[key]:null,checkReadable:check,setItem:(key,value)=>change(key,String(value)),removeItem:key=>change(key,null),info:()=>({...info,values:undefined,revisions:undefined})};
 }

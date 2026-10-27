@@ -35,7 +35,7 @@ export function createLayoutUI({storage,desktop=window.offlinecadDesktop,safe,to
     try{await fn();return true;}catch(e){lastError=e.message;toast(e.message);return false;}
     finally{busy=false;refreshManager();}
   }
-  const ready=run(async()=>{await library.reload();}).then(()=>{loaded=true;refreshManager();});
+  const ready=run(async()=>{await library.reload();loaded=true;}).then(()=>refreshManager());
   function apply(value){
     for(const [zone,keys]of Object.entries(value.zones))for(const key of keys)if(items.has(key))zones[zone].append(items.get(key));
     for(const [key,node]of items)node.dataset.layoutHidden=String(value.hiddenTools.includes(key));
@@ -202,8 +202,10 @@ export function createLayoutUI({storage,desktop=window.offlinecadDesktop,safe,to
       for(const p of data.profiles){const option=document.createElement('option');option.value=p.id;option.textContent=p.name;option.dataset.noTranslate='';select.append(option);}
       select.value=data.profiles.some(p=>p.id===old)?old:data.activeId||'';
       for(const id of ['layout-load','layout-update','layout-rename','layout-delete'])settingsRoot.querySelector('#'+id).disabled=busy||!loaded||!select.value;
-      for(const id of ['layout-save-new','layout-start','layout-reset','layout-reload','layout-swap-sides'])settingsRoot.querySelector('#'+id).disabled=busy||!loaded;
-      const status=settingsRoot.querySelector('.layout-storage-error');status.textContent=t(lastError);status.hidden=!lastError;
+      for(const id of ['layout-save-new','layout-start','layout-swap-sides'])settingsRoot.querySelector('#'+id).disabled=busy||!loaded||library.recoveryRequired();
+      settingsRoot.querySelector('#layout-reload').disabled=busy;
+      const reset=settingsRoot.querySelector('#layout-reset');reset.disabled=busy||!loaded;reset.textContent=t(library.recoveryRequired()?'Layoutdatei sichern und zurücksetzen':'Anordnung zurücksetzen');
+      const status=settingsRoot.querySelector('.layout-storage-error');status.textContent=t(lastError||library.warning());status.hidden=!(lastError||library.warning());
       const note=settingsRoot.querySelector('#layout-storage-note');note.textContent=t(library.native?'Layouts liegen im Ordner „Layouts“ neben Formnaro.exe. Diesen Ordner beim PC-Wechsel mitkopieren.':'Layouts werden in diesem Browser gespeichert.');
       note.title=library.directory()||'';settingsRoot.querySelector('#layout-folder').hidden=!library.native;settingsRoot.querySelector('#layout-folder').disabled=busy;
     }
@@ -225,8 +227,8 @@ export function createLayoutUI({storage,desktop=window.offlinecadDesktop,safe,to
     root.querySelector('#layout-update').onclick=()=>run(async()=>{await library.change({action:'replace',id:select.value,layout:saved});toast('Layout aktualisiert.');});
     root.querySelector('#layout-rename').onclick=()=>run(async()=>{await library.change({action:'rename',id:select.value,name:name.value});toast('Layout umbenannt.');});
     remove.onclick=()=>{if(deleteId!==select.value){deleteId=select.value;remove.textContent=t('Löschen bestätigen');return;}void run(async()=>{await library.change({action:'delete',id:deleteId});deleteId=null;remove.textContent=t('Löschen');toast('Layout gelöscht.');});};
-    root.querySelector('#layout-reset').onclick=()=>run(async()=>{if(isBusy())throw Error('Bearbeitung zuerst abschließen oder abbrechen.');prepare();await library.change({action:'reset'});toast('Standardanordnung wiederhergestellt.');});
-    root.querySelector('#layout-reload').onclick=()=>run(()=>library.reload());root.querySelector('#layout-folder').onclick=()=>run(()=>library.openFolder());refreshManager();
+    root.querySelector('#layout-reset').onclick=()=>run(async()=>{if(isBusy())throw Error('Bearbeitung zuerst abschließen oder abbrechen.');prepare();await library.change({action:library.recoveryRequired()?'recover':'reset'});toast('Standardanordnung wiederhergestellt.');});
+    root.querySelector('#layout-reload').onclick=()=>run(async()=>{await library.reload();loaded=true;});root.querySelector('#layout-folder').onclick=()=>run(()=>library.openFolder());refreshManager();
   }
   apply(saved);
   return {mountSettings,begin,cancel,togglePanel,openPanel:key=>togglePanel(key,true),syncPanels:()=>apply(draft||saved),ready:()=>ready,isSaving:()=>busy,isActive:()=>!!draft,state:()=>structuredClone(draft||saved),restore:async value=>{await library.change({action:'current',layout:validateLayout(value)});},profiles:()=>library.data().profiles};

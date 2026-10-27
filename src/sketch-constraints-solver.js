@@ -80,5 +80,5 @@ export function assertSketchConstraints(sketch){
  if(bad.length||!tangentContactsValid(sketch,constraints))throw Object.assign(Error('Skizzenbedingungen zuerst lösen. Widersprüchliche oder nicht erfüllte Beziehungen: '+bad.join(', ')),{code:'SKETCH_CONSTRAINT_CONFLICT',conflicts:bad});return constraints;
 }
 export function prepareConstrainedSketch(sketch,options){
- if(sketch?.version!==3)return sketch;const result=solveSketchConstraints(sketch,options);if(!result.ok)throw Object.assign(Error(result.message),{code:result.code,conflicts:result.conflicts});return result.sketch;
+ if(![3,4].includes(sketch?.version))return sketch;const result=solveSketchConstraints(sketch,options);if(!result.ok)throw Object.assign(Error(result.message),{code:result.code,conflicts:result.conflicts});return result.sketch;
 }

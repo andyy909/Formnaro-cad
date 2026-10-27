@@ -7,7 +7,7 @@ export const MIXED_AUTOSAVE_KEY='offlinecad-autosave-v8';
 // the exact bytes of both generations for deliberate external recovery.
 export function createCadRecovery(storage){
   let blocked=false,read=false,lastChecked;
-  const values=()=>[MIXED_AUTOSAVE_KEY,CAD_AUTOSAVE_KEY,CAD_LEGACY_AUTOSAVE_KEY].map(key=>storage.getItem(key));
+  const values=()=>[MIXED_AUTOSAVE_KEY,CAD_AUTOSAVE_KEY,CAD_LEGACY_AUTOSAVE_KEY].map(key=>{storage.checkReadable?.(key);return storage.getItem(key);});
   const equal=(a,b)=>a&&b&&a.every((v,i)=>v===b[i]);
   function candidate(){const all=values(),index=all.findIndex(v=>v!==null);if(index<0)return null;const project=parseCadProject(all[index]);if(index===2&&project.version!==5)throw Error('Alte CAD-Autosicherung muss Format 5 verwenden.');return project;}
   async function load(verify){try{const before=values(),project=candidate(),result=project===null?null:cadProjectSnapshot(await verify(project));if(!equal(values(),before))throw Error('CAD-Autosicherung wurde während der Prüfung geändert.');read=true;lastChecked=before;return result;}catch(error){blocked=true;read=true;throw error;}}

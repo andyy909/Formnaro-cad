@@ -1,3 +1,6 @@
+import {curveBeziers} from './cad-curves.js';
+import {inspectCompositePath} from './cad-composite-path.js';
+import {isCadCurve} from './cad-curves.js';
 // These operations run only on explicit preview/rebuild. Results are normal BReps.
 import {cadVolume,validateCadSolid,readCadBrep,writeCadBrep,cadBoolean,transformCad} from './cad-native-kernel.js';
 import {validateAffineMatrix} from './cad-project.js';
@@ -67,7 +70,7 @@ function profileData(profile){if(!profile||Object.keys(profile).some(key=>!['ske
   else if(resolved.kind==='circle')segments=[{kind:'ellipse',center:[0,0],rx:resolved.diameter/2,ry:resolved.diameter/2,startAngle:0,endAngle:TAU}];
   else segments=resolved.points.map((start,i)=>({kind:'line',start,end:resolved.points[(i+1)%resolved.points.length]}));
   if(!segments.length||segments.length>128)fail('Ein Profil benötigt höchstens 128 Konturelemente.');
-  const radialBound=Math.max(...segments.map(segment=>segment.kind==='line'?Math.max(Math.hypot(...segment.start),Math.hypot(...segment.end)):segment.kind==='ellipse'?Math.hypot(...segment.center)+Math.max(segment.rx,segment.ry):(()=>{const arc=circleThrough(segment.start,segment.through,segment.end);return Math.hypot(...arc.center)+arc.radius;})()));
+  const radialBound=Math.max(...segments.map(segment=>segment.kind==='bezier'?Math.max(...segment.points.map(p=>Math.hypot(...p))):segment.kind==='line'?Math.max(Math.hypot(...segment.start),Math.hypot(...segment.end)):segment.kind==='ellipse'?Math.hypot(...segment.center)+Math.max(segment.rx,segment.ry):(()=>{const arc=circleThrough(segment.start,segment.through,segment.end);return Math.hypot(...arc.center)+arc.radius;})()));
   return {frame,resolved,segments,radialBound};
 }
 function placedWire(oc,s,wire,frame){
@@ -78,13 +81,13 @@ function placedWire(oc,s,wire,frame){
   else{const tr=s.keep(new oc.gp_GTrsf());for(let row=0;row<3;row++)for(let col=0;col<4;col++)tr.SetValue(row+1,col+1,frame[col*4+row]);tr.SetForm();raw=s.keep(oc.FormnaroCadBridge.Transform(wire,tr));}
   return s.keep(oc.TopoDS.Wire(raw));
 }
-function loft(oc,s,profiles){
-  if(!Array.isArray(profiles)||profiles.length<2||profiles.length>8)fail('Loft benötigt zwei bis acht getrennte Skizzenprofile.');const maker=s.keep(new oc.BRepOffsetAPI_ThruSections(true,false,1e-7));maker.CheckCompatibility(true);
+function loft(oc,s,profiles,operation){
+  if(!Array.isArray(profiles)||profiles.length<2||profiles.length>8)fail('Loft benötigt zwei bis acht getrennte Skizzenprofile.');if(operation.profileOrder){if(operation.profileOrder.length!==profiles.length)fail('Loftreihenfolge passt nicht mehr zu den vorhandenen Profilen.');profiles=operation.profileOrder.map(i=>profiles[i]);}if(operation.orientation){const a=profiles[0].frame??cadIdentity(),b=profiles.at(-1).frame??cadIdentity(),axis=[12,13,14].map(i=>b[i]-a[i]),length=Math.hypot(...axis);if(length<1e-7)fail('Loftanfang und Loftende dürfen nicht zusammenfallen.');const unit=axis.map(x=>x/length);let previous=-Infinity;for(const profile of profiles){const data=profileData(profile),origin=data.frame.slice(12,15),projection=origin.reduce((n,v,k)=>n+v*unit[k],0);if(projection<=previous+1e-7)fail('Loftprofile laufen zurück oder stehen in falscher Reihenfolge. Reihenfolge korrigieren.');previous=projection;const x=data.frame.slice(0,3),y=data.frame.slice(4,7),normal=[x[1]*y[2]-x[2]*y[1],x[2]*y[0]-x[0]*y[2],x[0]*y[1]-x[1]*y[0]],alignment=Math.abs(normal.reduce((n,v,k)=>n+v*unit[k],0))/Math.hypot(...normal);if(alignment<.25)fail('Loftprofil steht nahezu längs zum Übergang. Profile neu ausrichten.');}}const maker=s.keep(new oc.BRepOffsetAPI_ThruSections(true,false,1e-7));maker.CheckCompatibility(operation.orientation!=='preserve');
   const frames=[];for(const item of profiles){const data=profileData(item),wire=s.keep(buildCadWire(oc,data.segments)),placed=placedWire(oc,s,wire,data.frame);if(frames.some(frame=>frame.every((value,i)=>Math.abs(value-data.frame[i])<1e-9)))fail('Loftprofile benötigen verschiedene Platzierungen.');frames.push(data.frame);maker.AddWire(placed);}
   maker.Build();if(!maker.IsDone())fail('Die gewählten Profile lassen sich nicht zu einem Loft verbinden.');return s.keep(maker.Shape());
 }
 function sweep(oc,s,profile,path){
-  const data=profileData(profile),wire=s.keep(buildCadWire(oc,data.segments));let edge;
+  const data=profileData(profile),wire=s.keep(buildCadWire(oc,data.segments));if(path.kind==='segments')return compositeSweep(oc,s,data,wire,path);let edge;
   if(path.kind==='line'){const start=s.keep(new oc.gp_Pnt(0,0,0)),end=s.keep(new oc.gp_Pnt(0,0,path.length)),maker=s.keep(new oc.BRepBuilderAPI_MakeEdge(start,end));edge=s.keep(maker.Edge());}
   else{
     if(path.radius<=data.radialBound+1e-7)fail('Der Biegeradius muss größer als der gesamte Profilabstand vom Skizzenursprung sein.');
@@ -93,8 +96,13 @@ function sweep(oc,s,profile,path){
   const pathBuilder=s.keep(new oc.BRepBuilderAPI_MakeWire(edge)),spine=s.keep(pathBuilder.Wire()),faceBuilder=s.keep(new oc.BRepBuilderAPI_MakeFace(wire,true)),face=s.keep(faceBuilder.Face()),builder=s.keep(new oc.BRepOffsetAPI_MakePipe(spine,face));
   if(!builder.IsDone())fail('Das Profil lässt sich nicht entlang dieses Pfads führen.');const local=s.keep(builder.Shape());validateCadSolid(oc,local);return s.keep(transformCad(oc,local,data.frame));
 }
+function compositeSweep(oc,s,data,profile,path){
+ inspectCompositePath(path,data.radialBound);const wire=s.keep(new oc.BRepBuilderAPI_MakeWire()),point=p=>s.keep(new oc.gp_Pnt(...p));
+ for(const segment of path.segments){if(segment.kind==='line'){wire.Add(s.keep(s.keep(new oc.BRepBuilderAPI_MakeEdge(point(segment.start),point(segment.end))).Edge()));}else if(segment.kind==='arc'){const arc=s.keep(new oc.GC_MakeArcOfCircle(point(segment.start),point(segment.through),point(segment.end)));wire.Add(s.keep(s.keep(new oc.BRepBuilderAPI_MakeEdge(s.keep(arc.Value()))).Edge()));}else for(const points of curveBeziers(segment)){const poles=s.keep(new oc.NCollection_Array1_gp_Pnt(1,4));points.forEach((p,i)=>poles.SetValue(i+1,point(p)));const curve=s.keep(new oc.Geom_BezierCurve(poles));wire.Add(s.keep(s.keep(new oc.BRepBuilderAPI_MakeEdge(curve)).Edge()));}if(!wire.IsDone())fail('Pfad besitzt nicht verbundene native Kanten.');}
+ const spine=s.keep(wire.Wire()),builder=s.keep(new oc.BRepOffsetAPI_MakePipeShell(spine));builder.SetMode(path.orientation==='frenet');builder.Add(profile,false,false);builder.Build();if(!builder.IsDone()||!builder.MakeSolid())fail('Zusammengesetzter Pfad ergibt keinen geschlossenen Sweep. Orientierung oder Kontrollpunkte ändern.');const local=s.keep(builder.Shape());validateCadSolid(oc,local);return s.keep(transformCad(oc,local,data.frame));
+}
 /** Loft profiles keep their individual frames. Sweep follows its profile's frame. */
 export function cadProfileModelingNative(oc,requested){
-  if(!requested||Object.keys(requested).some(key=>!['kind','profiles','profile','path'].includes(key)))fail('Ungültige Profil-Modellierdaten.');
-  const operation=validateCadModelingOperation(requested.kind==='loft'?{kind:'loft'}:{kind:requested.kind,path:requested.path});if(!['loft','sweep'].includes(operation.kind))fail('Loft oder Sweep wählen.');const s=scope();try{const result=operation.kind==='loft'?loft(oc,s,requested.profiles):sweep(oc,s,requested.profile,operation.path),proof=validateCadSolid(oc,result);if(proof.solids!==1||proof.bounds.size.some(value=>value>20000))fail('Das Profilwerkzeug benötigt einen gültigen einzelnen Körper innerhalb der Modellgrenzen.');return s.release(result);}finally{s.close();}
+  if(!requested||Object.keys(requested).some(key=>!['kind','profiles','profile','path','orientation','profileOrder'].includes(key)))fail('Ungültige Profil-Modellierdaten.');
+  if(requested.kind==='loft'&&(requested.path!==undefined||requested.profile!==undefined)||requested.kind==='sweep'&&(requested.profiles!==undefined||requested.orientation!==undefined||requested.profileOrder!==undefined))fail('Unpassende Felder für das Profilwerkzeug.');const operation=validateCadModelingOperation(requested.kind==='loft'?{kind:'loft',...(requested.orientation!==undefined?{orientation:requested.orientation}:{}),...(requested.profileOrder!==undefined?{profileOrder:requested.profileOrder}:{})}:{kind:requested.kind,path:requested.path});if(!['loft','sweep'].includes(operation.kind))fail('Loft oder Sweep wählen.');const s=scope();try{const result=operation.kind==='loft'?loft(oc,s,requested.profiles,operation):sweep(oc,s,requested.profile,operation.path),proof=validateCadSolid(oc,result);if(proof.solids!==1||proof.bounds.size.some(value=>value>20000))fail('Das Profilwerkzeug benötigt einen gültigen einzelnen Körper innerhalb der Modellgrenzen.');return s.release(result);}finally{s.close();}
 }

@@ -6,6 +6,7 @@ import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
 import {integrationManifest} from './stl-integration-manifest.mjs';
 import {surfaceSuites,unitSuites,testInventory} from './all-functions-catalog.mjs';
+import {createSpeechFixture} from './speech-fixture.mjs';
 
 const args=process.argv.slice(2),options={mode:'source',suite:'all',output:'F:/Formnaro-Buildtemp/Gesamtpruefung-0.49.2/runs'};
 if(args.includes('--help')){console.log('test:all-functions --mode source|packaged --suite all|unit|surface|<comma-separated IDs> --output <new run parent> [--exe <absolute EXE>] [--exploratory] [--list]');process.exit(0);}
@@ -28,6 +29,7 @@ const write=()=>fs.writeFileSync(path.join(directory,'summary.json'),JSON.string
 function killTree(pid){if(process.platform==='win32'){try{execFileSync('taskkill',['/PID',String(pid),'/T','/F'],{windowsHide:true,stdio:'ignore'});}catch{}}else{try{process.kill(pid,'SIGKILL');}catch{}}}
 async function execute(suite,command,argv,report){
  const dir=path.join(directory,suite.id.replaceAll(':','-'));fs.mkdirSync(dir,{recursive:true});
+ if(suite.flag==='speech')createSpeechFixture(path.join(dir,'fixture.wav'));
  const log=path.join(dir,'process.log'),stream=fs.createWriteStream(log),begin=Date.now(),env={...process.env};delete env.ELECTRON_RUN_AS_NODE;
  env.TEMP=path.dirname(directory);env.TMP=path.dirname(directory);env.PYTHONDONTWRITEBYTECODE='1';
  const receipt={id:suite.id,ok:false,command:path.basename(command),args:argv,startedAt:new Date(begin).toISOString(),...identity};

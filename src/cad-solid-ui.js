@@ -3,7 +3,7 @@ import {createSolidSettings,solidLabel,solidShortcut,SOLID_TABS} from './cad-sol
 
 const $=id=>document.getElementById(id);
 const tabCommands={
-  features:[['extrude','cut'],['round','chamfer','drill'],['cad-shell','cad-loft','cad-sweep'],['array','mirror','cad-face-offset'],['cad-edit-modeling','project-parameters']],
+  features:[['extrude','cut'],['round','chamfer','drill'],['cad-shell','cad-loft','cad-sweep'],['cad-draft','cad-defeature','cad-revolution','cad-helix'],['cad-surface-fill','cad-surface-transition','cad-surface-sew','cad-surface-relief'],['array','mirror','cad-face-offset'],['cad-edit-modeling','project-parameters']],
   sketch:[['sketch','sketch-on-part'],['cad-contour','linked-contours'],['sketch-templates','project-parameters'],['workplane-set','workplane-top','reset-plane']],
   evaluate:[['measure','ruler'],['section','thickness'],['inspect','model-compare'],['drawing']],
   assembly:[['group','ungroup','bundle'],['align','reference-place','lay-on-face'],['joints','array','mirror'],['assembly-only','assembly-load','assembly-all']],
@@ -78,15 +78,15 @@ export function createCadSolidUI({storage,controls,toolbar,header,tools,safe,t=x
   function mount(){
     mounted=true;activeTab=settings.get().defaultTab;
     document.body.classList.add('solid-workbench');
-    menubar=make('nav',undefined,'solid-menubar');menubar.setAttribute('aria-label',word('Hauptmenü','Main menu'));toolbar.before(menubar);
+    menubar=make('nav',undefined,'solid-menubar');menubar.setAttribute('aria-label',word('Hauptmenü','Main menu'));header.closest('header').before(menubar);
     const act=key=>()=>{const b=controls.get(key)||document.querySelector(`[data-action="${key}"]`);if(b&&!b.disabled)b.click();},tab=key=>()=>selectTab(key);
     menu('file',[[t('Neues Projekt'),act('new')],[t('Öffnen'),act('open')],[t('Speichern'),act('save')],[t('Speichern unter …'),()=>executeCommand('save-as')],[t('Importieren'),act('import')],[t('Exportieren'),act('export')]]);
     menu('edit',[[t('Rückgängig'),act('undo')],[t('Wiederholen'),act('redo')],[t('Kopieren'),act('copy')],[t('Einfügen'),act('paste')],[t('Duplizieren'),act('duplicate')],[t('Entfernen'),act('delete')]]);
     menu('view',[[label('orientation'),orientation],[word('Einpassen','Zoom to fit'),act('fit')],[word('Perspektive / Orthografisch','Perspective / Orthographic'),act('projection')],[t('Schnittansicht'),act('section')],[word('Modellbaum','Model tree'),()=>selectManager('model')],[t('Eigenschaften'),()=>selectManager('properties')]]);
     menu('insert',[[label('extrude'),()=>executeCommand('extrude')],[label('cut'),()=>executeCommand('cut')],[label('features'),tab('features')],[label('sketch'),tab('sketch')],[label('assembly'),tab('assembly')],[t('Technische Zeichnung'),act('drawing')]]);
-    const assigned=new Set([...Object.values(tabCommands).flat(2),'new','open','save','save-as','projects','import','export','ai','settings','help','undo','redo','copy','paste','duplicate','delete','projection','fit','coordinates','magnet','view-iso','view-top','view-front','view-right','mode-translate','mode-scale','mode-rotate']);
+    const assigned=new Set([...Object.values(tabCommands).flat(2),'new','open','save','save-as','projects','import','export','ai','photo-project-open','ai-feature-open','freecad-document-open','settings','help','undo','redo','copy','paste','duplicate','delete','projection','fit','coordinates','magnet','view-iso','view-top','view-front','view-right','mode-translate','mode-scale','mode-rotate']);
     const remaining=[...controls].filter(([key,node])=>!assigned.has(key)&&node.matches('button')).map(([key,node])=>[node.title||node.textContent.trim(),act(key)]);
-    menu('extras',[[label('evaluate'),tab('evaluate')],[label('project-parameters'),act('project-parameters')],[label('options'),()=>{openSettings();$('settings-tab-solid')?.click();}],[t('Einstellungen'),openSettings],...remaining]);
+    menu('extras',[[label('evaluate'),tab('evaluate')],[label('project-parameters'),act('project-parameters')],[label('options'),()=>{openSettings();$('settings-tab-solid')?.click();}],[t('Einstellungen'),openSettings],[word('KI-Werkstatt','AI workshop'),act('ai')],[t('Projektfotos'),act('photo-project-open')],[t('KI-Merkmalsbezüge'),act('ai-feature-open')],[t('FreeCAD-Merkmale'),act('freecad-document-open')],...remaining]);
     menu('help',[[word('Solid-Einstieg','Getting started with Solid'),()=>selectManager('model')],[t('Hilfe'),act('help')]]);
     const modeNote=make('span',word('TEILE KONSTRUIEREN','PART DESIGN'),'solid-mode-note');menubar.append(modeNote);
     const quick=make('div',undefined,'solid-quick-tools');tools.append(quick);
@@ -97,6 +97,7 @@ export function createCadSolidUI({storage,controls,toolbar,header,tools,safe,t=x
       const b=button(label(key),()=>selectTab(key));b.id='solid-tab-'+key;b.dataset.solidTab=key;b.setAttribute('role','tab');b.setAttribute('aria-controls','solid-panel-'+key);tabs.append(b);
       const panel=make('div',undefined,'solid-command-panel');panel.id='solid-panel-'+key;panel.dataset.solidPanel=key;panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',b.id);ribbon.append(panel);
     }
+    const commandRow=make('div',undefined,'cad-command-row');ribbon.prepend(commandRow);commandRow.append(quick,tabs);
     tabs.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const i=SOLID_TABS.indexOf(activeTab);selectTab(SOLID_TABS[e.key==='Home'?0:e.key==='End'?SOLID_TABS.length-1:(i+(e.key==='ArrowLeft'?-1:1)+SOLID_TABS.length)%SOLID_TABS.length],{focus:true});};
     const originalLibrary=$('sidebar-library-content'),originalInspector=$('sidebar-inspector-content');
     manager=make('aside',undefined,'solid-manager');manager.id='solid-manager';manager.setAttribute('aria-label',word('Modell und Eigenschaften','Model and properties'));document.querySelector('main').prepend(manager);
