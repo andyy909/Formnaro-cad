@@ -19,9 +19,9 @@ bereits selbst ausführt. Für einzelne Arbeitspunkte die betroffenen Testdateie
 und passenden Verifikationsflags aus scripts/all-functions-catalog.mjs auswählen.
 
 Jeder Lauf friert eigene Quellen ein und erzeugt eigene Prüfprotokolle unter
-work/maintenance-fix. Ein vorhandener Ausgabeordner wird nicht überschrieben;
+work/current-release. Ein vorhandener Ausgabeordner wird nicht überschrieben;
 für einen weiteren Paketlauf r2, r3 usw. angeben. Die Ausgabe liegt unter
-output/Fehlerkorrekturen-v<VERSION>-r<N>. Frühere Releases sind keine
+output/Formnaro-v<VERSION>-r<N>. Frühere Releases sind keine
 Buildvoraussetzung. Wenn die letzte lokale Freigabe vorhanden ist, werden deren
 geschützte Programmdateien zusätzlich vor und nach dem Bau auf Änderungen geprüft.
 
@@ -57,8 +57,12 @@ WASM-Kern unter cad-kernel-build/runtime und die folgenden lokalen Laufzeiten:
   bewusst nicht durch Git bereitgestellt.
 - speech-runtime: Die gepinnten Dateien werden mit
   node scripts/setup-speech-runtime.mjs vorbereitet und per SHA256 geprüft.
-- Eine lokale FreeCAD-Installation für native FreeCAD-/FCStd-Prüfungen. Das
-  vollständige Mitliefern dieser Laufzeit bleibt Ausbaupaket 6a.
+- Die integrierte CAD-Laufzeit mit `npm run setup:cad-runtime` vorbereiten.
+  Dies lädt beim Bau das fest gepinnte offizielle FreeCAD-1.1.4-Paket und
+  dessen Quellarchiv. Native Tests verwenden diese Laufzeit. Allgemeine
+  Paketläufe liefern sie ebenfalls mit; keine externe Installation als
+  unbemerkter Ersatz. Die saubere Windows-Abnahme von Paket 6a bleibt bis
+  zum protokollierten Abschluss offen. Details: INTEGRIERTE-CAD-LAUFZEIT.md.
 - Eine lokale deutsche Windows-Systemstimme für die synthetische Sprachprüfung.
   Die Testaufnahme wird pro Lauf erzeugt; keine Datei aus einem alten work-Ordner
   und keine Mikrofonaufnahme des Nutzers sind erforderlich.

@@ -1,3 +1,6 @@
+// If a future runtime disables Node mode, fail closed before opening any
+// normal application profile when the internal integrity child is launched.
+if(process.env.FORMNARO_INTEGRITY_CHILD==='1')process.exit(125);
 const { app, BrowserWindow, Menu, session } = require('electron');
 const path = require('path');
 const fs = require('node:fs');

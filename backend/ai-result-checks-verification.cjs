@@ -2,6 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {radialClearanceFixture}=require('./radial-clearance-fixture.cjs');
 async function verifyAIResultChecks(win,{directory,files}){
+ if(process.env.FORMNARO_VERIFY_CAD_RUNTIME_ONLY==='1')return {ok:true,checks:await require('./freecad-runtime-verification.cjs').verifyFreeCADRuntime(win,{directory}),cloudRequests:0};
  if(process.env.FORMNARO_VERIFY_SURFACES_ONLY==='1')return {ok:true,checks:await require('./surfaces-verification.cjs').verifySurfaces(win,{directory}),cloudRequests:0};
  if(process.env.FORMNARO_VERIFY_ADVANCED_MODELING_ONLY==='1')return {ok:true,checks:await require('./advanced-modeling-verification.cjs').verifyAdvancedModeling(win,{directory}),cloudRequests:0};
  if(process.env.FORMNARO_VERIFY_TASK_RESTART_ONLY==='1')return {ok:true,checks:await require('./ai-task-restart-verification.cjs').verifyTaskRestart(win,{directory,files}),cloudRequests:0};

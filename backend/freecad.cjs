@@ -2,18 +2,15 @@ const fs=require('node:fs/promises'),sync=require('node:fs'),path=require('node:
 const {validatePlan}=require('./freecad-plan.cjs');
 const {validateScript,runPythonJob}=require('./freecad-python.cjs');
 const LIMIT=32*1024*1024;
-function executable(){
- const roots=[process.env.ProgramFiles,process.env['ProgramFiles(x86)']].filter(Boolean);
- for(const root of roots){let names=[];try{names=sync.readdirSync(root).filter(n=>/^FreeCAD(?:[ ._-]|$)/i.test(n)).sort().reverse();}catch{}
-  for(const n of names){const file=path.join(root,n,'bin','FreeCADCmd.exe');if(sync.existsSync(file))return file;}}
- return null;
-}
-function status(){const file=executable();return {available:!!file,executable:file,engine:'FreeCAD',externalInstallation:true,pythonAPI:!!file&&process.platform==='win32',pythonIsolation:process.platform==='win32'?'windows-appcontainer':null};}
+const runtime=require('./freecad-runtime.cjs');
+function executable(){return runtime.resolveRuntime().executable;}
+function status(){const s=runtime.resolveRuntime();return {...s,engine:'FreeCAD',pythonAPI:s.available&&process.platform==='win32',pythonIsolation:process.platform==='win32'?'windows-appcontainer':null};}
 function failure(message,code='FREECAD_FAILED'){return Object.assign(Error(message),{code});}
 async function run({plan,script,inputs=[],inspectOnly=false,document}, {signal,exe=executable(),timeout=300000}={}){
  if(document!==undefined){if(plan!==undefined||script!==undefined||!Array.isArray(inputs)||inputs.length||inspectOnly!==false)throw failure('Dokumentmerkmale getrennt von Skript-/Planaufträgen bearbeiten.','FREECAD_DOCUMENT_INPUT');return require('./freecad-document.cjs').runDocument(document,{signal,exe,timeout});}
  if(typeof inspectOnly!=='boolean')throw failure('Ungültiger Prüfmodus.','FREECAD_PLAN_INVALID');
- if(!exe)throw failure('FreeCAD ist nicht installiert. FreeCAD 1.1 installieren und Formnaro erneut öffnen.','FREECAD_UNAVAILABLE');
+ if(!exe)throw failure(runtime.message,'FREECAD_UNAVAILABLE');
+ await runtime.prepareRuntime(exe,{signal});
  if(!Array.isArray(inputs)||inputs.length>8)throw failure('Maximal acht Geometriequellen.','FREECAD_PLAN_INVALID');
  let bytes=0;const files=inputs.map((item,i)=>{
   if(!item||Object.keys(item).some(k=>!['name','format','base64'].includes(k))||!['step','stl'].includes(item.format)||typeof item.base64!=='string'||item.base64.length>LIMIT*4/3+4)throw failure('Ungültige Geometrieeingabe.','FREECAD_PLAN_INVALID');
@@ -38,6 +35,9 @@ async function run({plan,script,inputs=[],inspectOnly=false,document}, {signal,e
   await fs.writeFile(path.join(job,'input.json'),JSON.stringify({plan,inspectOnly,inputs:files.map(({data,...f})=>f)}));
   // ASAR Python is not a host filesystem path. Extract only the trusted worker.
   await fs.writeFile(path.join(job,'worker.py'),await fs.readFile(path.join(__dirname,'freecad-worker.py')));
+  if(runtime.resolveRuntime().bundled){
+   await runPythonJob({job,exe,script:{version:1,code:''},inputs:[],inspectOnly,signal,timeout,planJob:{plan,inspectOnly,inputs:files.map(({data,...f})=>f)}});
+  }else{
   const env={...process.env,FORMNARO_FREECAD_JOB:job,FREECAD_USER_HOME:path.join(job,'user'),FREECAD_USER_DATA:path.join(job,'user'),FREECAD_USER_TEMP:path.join(job,'temp'),PYTHONDONTWRITEBYTECODE:'1'};
   delete env.PYTHONPATH;delete env.PYTHONHOME;
   await new Promise((resolve,reject)=>{
@@ -47,6 +47,7 @@ async function run({plan,script,inputs=[],inspectOnly=false,document}, {signal,e
    const clean=()=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);};
    child.once('error',e=>{clean();reject(e);});child.once('close',code=>{clean();if(signal?.aborted)reject(failure('FreeCAD-Berechnung abgebrochen.','ABORTED'));else if(timedOut)reject(failure('FreeCAD-Zeitlimit nach fünf Minuten erreicht.','FREECAD_TIMEOUT'));else if(code!==0)reject(failure('FreeCAD-Prozess fehlgeschlagen: '+log));else resolve();});
   });
+  }
   const result=JSON.parse(await fs.readFile(path.join(job,'result.json'),'utf8'));
   if(!result.ok){const error=failure('FreeCAD Schritt '+result.step+' ('+result.operation+'): '+result.error);if(result.diagnostics)error.feedback={geometryCheck:result.diagnostics};throw error;}
   if(inspectOnly)return {...result,plan};

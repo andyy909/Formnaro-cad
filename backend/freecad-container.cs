@@ -42,6 +42,15 @@ class CadContainer {
    if((args.Length!=3&&args.Length!=4)||!System.Text.RegularExpressions.Regex.IsMatch(name,"^formnaro[.]cad[.][a-f0-9]{32}$"))throw new ArgumentException("Expected executable, job directory, worker filename, optional package name");
    string exe=Path.GetFullPath(args[0]),dir=Path.GetFullPath(args[1]),worker=Path.GetFullPath(args[2]);
    if(!worker.StartsWith(dir+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase)||!File.Exists(exe))throw new ArgumentException("Invalid CAD job");
+   // Portable copies below Downloads/OneDrive do not inherit the Program Files
+   // AppContainer read permission. Grant read/execute only to the CAD bundle;
+   // never to its parent application, profile, or user directories.
+   string runtime=Path.GetDirectoryName(Path.GetDirectoryName(exe));
+   if(File.Exists(Path.Combine(runtime,"manifest.json"))){
+    var packages=new SecurityIdentifier("S-1-15-2-1");var runtimeAcl=Directory.GetAccessControl(runtime);bool readable=false;
+    foreach(FileSystemAccessRule rule in runtimeAcl.GetAccessRules(true,true,typeof(SecurityIdentifier)))if(rule.IdentityReference.Equals(packages)&&rule.AccessControlType==AccessControlType.Allow&&(rule.FileSystemRights&FileSystemRights.ReadAndExecute)==FileSystemRights.ReadAndExecute&&(rule.InheritanceFlags&(InheritanceFlags.ContainerInherit|InheritanceFlags.ObjectInherit))==(InheritanceFlags.ContainerInherit|InheritanceFlags.ObjectInherit))readable=true;
+    if(!readable){runtimeAcl.AddAccessRule(new FileSystemAccessRule(packages,FileSystemRights.ReadAndExecute,InheritanceFlags.ContainerInherit|InheritanceFlags.ObjectInherit,PropagationFlags.None,AccessControlType.Allow));Directory.SetAccessControl(runtime,runtimeAcl);}
+   }
    // The host executes this launcher again for cleanup. Its binary must never
    // be inside, or writable from, the untrusted CAD working directory.
    string host=Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory);

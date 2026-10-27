@@ -1,3 +1,15 @@
+Formnaro 0.114.0-r7 – Integrierte CAD-Laufzeit, 27.10.2026
+
+Das vollständige ZIP entpacken und Formnaro/Formnaro.exe starten.
+FreeCAD 1.1.4 und Python 3.11 sind enthalten; keine separate Installation
+oder Pfadeinrichtung erforderlich. Alle Unterordner und Lizenzen mitnehmen.
+Persönliche Modelle, Einstellungen und Zugangsdaten sind nicht enthalten.
+
+Paket 6a ist auf frischem Windows ohne externe FreeCAD-/Python-Installation
+abgenommen. Details: docs/INTEGRIERTE-CAD-LAUFZEIT.md.
+
+Nachfolgend historische Funktions- und Versionshinweise.
+
 Formnaro 0.103.1 – aktueller Stand 26.10.2026
 
 Vier Bedienmodi (Easy Tinker, Normal, Solid, Fusion 360), lokale Python-/JavaScript-Analyse, zusätzliche FreeCAD-Engine und eine dauerhafte gemeinsame KI-Werkzeugbibliothek. GPT und DeepSeek erhalten dieselben lokalen Modellierwerkzeuge. GPT zeigt einen geschätzten API-Gegenwert; beim Abo ist dies keine zusätzliche Abrechnung.

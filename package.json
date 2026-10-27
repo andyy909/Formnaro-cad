@@ -1,7 +1,7 @@
 {
   "name": "formnaro",
   "productName": "Formnaro",
-  "version": "0.113.1",
+  "version": "0.114.0",
   "private": true,
   "author": "Andreas Klisch",
   "license": "SEE LICENSE IN LICENSE.txt",
@@ -9,6 +9,9 @@
   "type": "module",
   "main": "electron.cjs",
   "scripts": {
+    "setup:cad-runtime": "node scripts/setup-freecad-runtime.mjs",
+    "test:cad-runtime": "node --test --test-concurrency=1 tests/freecad-runtime.test.cjs",
+    "package:cad-runtime": "node scripts/package-integrated-cad.mjs",
     "package:advanced-modeling": "node scripts/package-advanced-modeling.mjs",
     "test:advanced-modeling": "node --test --test-concurrency=1 tests/cad-curves.test.mjs tests/cad-composite-path.test.mjs tests/cad-advanced-profiles.test.mjs tests/cad-freecad-advanced.test.mjs tests/freecad-advanced.test.cjs tests/advanced-modeling-release-config.test.mjs",
     "package:feature-references": "node scripts/package-feature-references.mjs",

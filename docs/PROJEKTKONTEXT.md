@@ -1,5 +1,30 @@
 # Technischer Projektkontext
 
+Paket 6a wurde am 27.10.2026 mit **0.114.0-r7** gezielt abgenommen.
+FreeCAD 1.1.4 und Python 3.11 sind vollständig portabel integriert; Nutzer
+benötigen keine separate Installation und keinen Laufzeitdownload. Die gepackte
+Anwendung verwendet ausschließlich ihre interne Laufzeit; beschädigte Pakete
+werden mit erhaltener Modell-/Undo-Geometrie zurückgewiesen. AppContainer und
+vorab kompilierter Starter bleiben aktiv, auch für integrierte Datenpläne.
+
+92 lokale EXE-Prüfgruppen und 167 Prüfgruppen in sechs Läufen auf einer
+frischen Windows-11-Enterprise-Evaluation-VM ohne externe FreeCAD/Python bestanden.
+Die saubere Prüfung umfasste alle 35.586 Laufzeitdateien, unsichtbare GUI-Module,
+Python, FCStd-Merkmale, native Exporte und Flächen. Verschobene Umlautpfade,
+alte FCStd-/Helperquellen, Abbruch sowie aktuelle Paketbilder sind geprüft.
+Native Basis und abschließende Integritätsänderungen sind getrennt per SHA
+gebunden; kein allgemeiner Gesamttest für diesen Einzelpunkt.
+[Details](INTEGRIERTE-CAD-LAUFZEIT.md). Private Ausgabe: https://github.com/andyy909/Formnaro/releases/tag/v0.114.0-r7.
+Auf ausdrücklichen Folgeauftrag wird derselbe geprüfte Windows-Download auch
+im öffentlichen Repository Formnaro-cad als 0.114.0-r7 bereitgestellt:
+https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7.
+Der Produktcode bleibt zum abgenommenen Stand unverändert; die nachträgliche
+Veröffentlichungsdokumentation wird separat gepflegt. Neue Folgeänderungen
+weiter zuerst privat, weitere öffentliche Updates nur auf Nutzerauftrag.
+Pakete 0–6, 6a und 7 abgeschlossen; 8–10 offen.
+
+## Vorherige Entwicklung und Abnahmen
+
 Verbindliche Nutzerentscheidung vom 27.10.2026 zur weiteren Prüfung:
 Je Planpunkt gezielte Tests der Änderung und ihrer direkten Abhängigkeiten;
 keine routinemäßige Vollprüfung nach jedem Punkt oder jeder Versionsnummer.

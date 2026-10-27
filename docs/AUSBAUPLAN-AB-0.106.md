@@ -13,12 +13,12 @@ außerhalb dieses Plans. Keine persönliche Modell-/Profil-/Zugangsdaten überne
 
 ## Reihenfolge, Abhängigkeiten und Status
 
-**Aktueller Gesamtstand (27.10.2026): Pakete 0–6 und Paket 7 sind abgeschlossen.**
-Mit dem anschließenden Auftrag „bei 7 bitte weiter“ hat der Nutzer **Paket 7
-vorgezogen**. Paket **6a: integrierte FreeCAD-Laufzeit ohne separate Installation**
-bleibt als eigener offener Auslieferungsschritt erhalten. Paket 7 wurde mit der vorhandenen lokalen FreeCAD-Anbindung abgenommen.
-Als nächster Auslieferungsschritt bleibt Paket 6a vorgesehen. Pakete
-8–10 sind offen; 11–13 bleiben später optional. Die Paketnummern bleiben erhalten.
+**Aktueller Gesamtstand (27.10.2026): Pakete 0–6, 6a und 7 sind abgeschlossen.**
+Paket 6a ist als 0.114.0-r7 gezielt an der gepackten Windows-Ausgabe abgenommen,
+einschließlich einer frischen Windows-11-VM ohne externe FreeCAD-/Python-Installation.
+Paket 7 war auf Nutzerauftrag vorgezogen worden. Pakete 8–10 sind offen;
+11–13 bleiben später optional. Die Paketnummern bleiben erhalten.
+Paket 8 (lokale Bearbeitung gekrümmter Netze) ist der nächste offene Planpunkt.
 
 | Paket | Ergebnis und verbindliche Abnahme | Voraussetzungen | Status |
 | --- | --- | --- | --- |
@@ -29,8 +29,8 @@ Als nächster Auslieferungsschritt bleibt Paket 6a vorgesehen. Pakete
 | 4 | FCStd-Merkmalsbaum mit Eigenschaften/Abhängigkeiten; Projektparameter-/Variantenbindung; getrennte Wege Skript-Neulauf und native Merkmaländerung/Neuberechnung; statische Shapes ausdrücklich ohne erfundene Historie | 3 | Abgenommen und als 0.110.0-r1 veröffentlicht: native Bearbeitung, getrennter Skript-Neulauf, globale Programmparameter/Varianten, Import und physische Exporte |
 | 5 | Persistente Ziele, Annahmen, Schutz und Prüfungen; bester geprüfter Kandidat/Neustart; Fortsetzung revisions-/prüfsummengebunden; doppelte Fortsetzung und identische Fehler ohne Fortschritt stoppen; technische und generative Qualitätskriterien unterscheiden | 4 | Abgenommen und veröffentlicht als 0.111.0-r2: 524 Tests und 929 Prüfgruppen in 21 Läufen der gepackten Windows-EXE; zwei echte Prozessstarts, selbstständige Paketbasis, Fotos/Referenzen und physische Exporte geprüft |
 | 6 | Editierbare B-Splines/Bézier; Mehrprofil-Loftoberfläche/zusammengesetzter Sweep; Orientierung/Verdrehung/Selbstschnitt prüfen; Schräge/Merkmalentfernung/Rotation/Helix über verfügbare FreeCAD-Version | 5 | Abgeschlossen: 0.112.0-r2, 627 Tests am eingefrorenen Quellstand und 962 Prüfgruppen in 22 Läufen der gepackten Windows-Anwendung bestanden; neue Kurven, Loft/Sweep und FreeCAD-Werkzeuge einschließlich Vorschau/Undo, FNPACK24/STEP und vier Bedienmodi abgenommen. Zunächst private Bereitstellung |
-| 6a | Benötigte FreeCAD-Komponenten als festen Bestandteil von Formnaro ausliefern: ein Download, ein Programmstart, keine separate FreeCAD-Installation; vorhandene Python-, FCStd- und Modellierfunktionen mit der integrierten Laufzeit prüfen | 6 | Offen; auf Nutzerwunsch Paket 7 vorgezogen |
-| 7 | Randkurvenflächen, Übergänge und Vernähen; Prägung/Vertiefung auf Ebenen/Zylindern; Anschlussqualität getrennt von Körpergültigkeit; andere gekrümmte Flächen erst nach Abnahme | 6; integrierte Auslieferung folgt mit 6a | Abgeschlossen: 0.113.0-r3, 640 Tests und 979 Prüfgruppen in 23 Windows-Läufen; G0-Anschlussdiagnose, geschlossenes Vernähen und begrenzte Ebenen-/Zylinderprägung abgenommen. Private Bereitstellung |
+| 6a | Benötigte FreeCAD-Komponenten als festen Bestandteil von Formnaro ausliefern: ein Download, ein Programmstart, keine separate FreeCAD-Installation; vorhandene Python-, FCStd- und Modellierfunktionen mit der integrierten Laufzeit prüfen | 6 | Abgeschlossen: 0.114.0-r7; FreeCAD 1.1.4/Python 3.11 integriert, 92 lokale EXE-Prüfgruppen und 167 Prüfgruppen in sechs Läufen auf frischem Windows ohne externe Installation; vollständige Laufzeitintegrität, alte Quellen, Exporte, Umlautpfad und Fehlerfälle geprüft. Private und auf Folgeauftrag öffentliche Bereitstellung |
+| 7 | Randkurvenflächen, Übergänge und Vernähen; Prägung/Vertiefung auf Ebenen/Zylindern; Anschlussqualität getrennt von Körpergültigkeit; andere gekrümmte Flächen erst nach Abnahme | 6; integrierte Auslieferung seit 6a | Abgeschlossen: 0.113.0-r3, 640 Tests und 979 Prüfgruppen in 23 Windows-Läufen; G0-Anschlussdiagnose, geschlossenes Vernähen und begrenzte Ebenen-/Zylinderprägung abgenommen. Private Bereitstellung |
 | 8 | Lokales Split/Collapse/Flip/Glätten gekrümmter Netze; Formkanten/Schutz/Öffnungsränder erhalten; Pinsel mit lokaler Verfeinerung; Formabweichung, Dreiecksqualität und Körperprüfung vergleichen | 7 | Offen |
 | 9 | Gekrümmte Lochfüllung, zwei explizite Randringe verbinden; Selbstschnitte lokalisieren/gezielt ersetzen; Flächenextrusion/-versatz/Schrift/Relief; automatische Reparatur nur für belegte Fallgruppen | 8 | Offen |
 | 10 | Flächenfarben/Materialgruppen und unterstützte Exporte; explizite Dichte für Masse/Schwerpunkt; Stückliste; gespeicherte Explosion mit Abstandsregler ohne Montageänderung; Cache an Geometrie/Einstellungen/Engine binden | 9 | Offen |
@@ -53,7 +53,7 @@ zusammen mit Formnaro ausgeliefert. Nutzer laden nur Formnaro herunter, starten
 `Formnaro.exe` und bedienen alle Funktionen in dessen Oberfläche. Eine separate
 FreeCAD-Installation, ein zweiter Download oder eine manuelle Pfadeinrichtung
 sind für die bisherigen FreeCAD-Funktionen nicht mehr erforderlich. Paket 6
-bleibt abgeschlossen; die Integration ist ein eigenes, noch offenes Paket.
+bleibt abgeschlossen; die Integration wurde mit 0.114.0-r7 separat abgenommen.
 
 ### Umsetzung
 
@@ -305,7 +305,7 @@ Die geprüfte Ausgabe ist als [Formnaro 0.111.0-r2](https://github.com/andyy909/
 
 ## Paket 6: Windows-Abnahme 0.112.0-r2
 
-627 Tests am eingefrorenen Quellstand und 962 Prüfgruppen in 22 Läufen der gepackten Windows-Anwendung bestanden. Die 21 bisherigen Suiten bleiben enthalten; die neue CAD-Suite umfasst 33 tatsächliche Desktop-Prüfgruppen. Native Bézier-/B-Spline-Konstruktionen, Reihenfolge und Orientierung von Lofts, zusammengesetzte Sweeps, echte FreeCAD-Merkmale und archivierte Helfer sind geprüft. Quellen, Undo/Redo, Wiederöffnen, physisches FNPACK24 und native STEP-Ausgabe sind abgedeckt. Zehn neue Aufnahmen wurden am gepackten Programm visuell geprüft. Alle 146 geschützten Dateien älterer Ausgaben bleiben unverändert. Keine echte Cloud-Inferenz. Details: CAD-KURVEN.md und Freigabe.json der neuen Ausgabe. Neue Aktualisierungen werden zuerst privat bereitgestellt; Paket 7–10 bleiben offen.
+627 Tests am eingefrorenen Quellstand und 962 Prüfgruppen in 22 Läufen der gepackten Windows-Anwendung bestanden. Die 21 bisherigen Suiten bleiben enthalten; die neue CAD-Suite umfasst 33 tatsächliche Desktop-Prüfgruppen. Native Bézier-/B-Spline-Konstruktionen, Reihenfolge und Orientierung von Lofts, zusammengesetzte Sweeps, echte FreeCAD-Merkmale und archivierte Helfer sind geprüft. Quellen, Undo/Redo, Wiederöffnen, physisches FNPACK24 und native STEP-Ausgabe sind abgedeckt. Zehn neue Aufnahmen wurden am gepackten Programm visuell geprüft. Alle 146 geschützten Dateien älterer Ausgaben bleiben unverändert. Keine echte Cloud-Inferenz. Details: CAD-KURVEN.md und Freigabe.json der neuen Ausgabe. Zum damaligen Paket-6-Abschluss blieben Pakete 7–10 offen. Paket 7 und die gesonderte Integration 6a sind inzwischen ebenfalls abgenommen; aktueller Gesamtstand am Anfang dieses Plans.
 
 
 ## Paket 7: Windows-Abnahme 0.113.0-r3
@@ -314,6 +314,19 @@ Die geprüfte Ausgabe ist als [Formnaro 0.111.0-r2](https://github.com/andyy909/
 
 Vier kubische Bézier-Ränder bilden eine exakte bikubische Coons-Fläche mit gerichteter Materialhöhe. G0-Übergänge melden Randabstände und Normalenwinkel getrennt von Körpergültigkeit. Vollständige Hüllen werden mit Freikantendiagnose vernäht. Prägung/Vertiefung unterstützt Polygonkonturen mit Öffnungen auf Ebenen und orthogonale UV-Konturen auf äußeren Kreiszylindern; schräge UV-Kanten, Bohrungsflächen und andere gekrümmte Flächen bleiben ausgeschlossen. STEP-Rücklesen, archivierte FeaturePython-Helfer, native Tiefen-/Höhenänderung, physisches FNPACK, Vorschau/Abbruch/Undo und unbeteiligte Quellen sind geprüft.
 
-Die explizit vorgezogene Arbeit an Paket 7 ist abgeschlossen. Paket 6a bleibt als Auslieferungsintegration offen; bis zu dessen Abnahme ist eine zusätzliche lokale FreeCAD-Installation erforderlich. Pakete 8–10 bleiben offen. Bedienung und Grenzen: [CAD-FLAECHEN.md](CAD-FLAECHEN.md). Neue Quellen und Ausgaben werden zuerst privat bereitgestellt.
+Die explizit vorgezogene Arbeit an Paket 7 ist abgeschlossen. Zum damaligen Abschluss war Paket 6a noch offen und eine zusätzliche FreeCAD-Installation erforderlich. Paket 6a wurde anschließend mit 0.114.0-r7 abgenommen; die separate Installation entfällt. Pakete 8–10 bleiben offen. Bedienung und Grenzen: [CAD-FLAECHEN.md](CAD-FLAECHEN.md). Neue Quellen und Ausgaben werden zuerst privat bereitgestellt.
 
-Private Bereitstellung abgeschlossen: [Formnaro 0.113.0-r3](https://github.com/andyy909/Formnaro/releases/tag/v0.113.0-r3), Quellstand `1e094a028ff9c2fd6251d02f59f649b14ca7db03`. Windows-ZIP, Prüfbericht und Prüfsummen sind hochgeladen; Größen und GitHub-SHA-256 stimmen mit den lokalen Dateien überein. Die öffentliche Kopie wurde nicht aktualisiert. Paket 6a bleibt offen.
+Private Bereitstellung abgeschlossen: [Formnaro 0.113.0-r3](https://github.com/andyy909/Formnaro/releases/tag/v0.113.0-r3), Quellstand `1e094a028ff9c2fd6251d02f59f649b14ca7db03`. Windows-ZIP, Prüfbericht und Prüfsummen sind hochgeladen; Größen und GitHub-SHA-256 stimmen mit den lokalen Dateien überein. Zum damaligen Paket-7-Abschluss wurde die öffentliche Kopie nicht aktualisiert und Paket 6a war noch offen. Der aktuelle Integrations- und Veröffentlichungsstand folgt unten.
+
+
+## Paket 6a: Windows-Abnahme 0.114.0-r7
+
+**Abgeschlossen am 27.10.2026.** FreeCAD 1.1.4 und Python 3.11 werden im vollständigen Formnaro-Download mitgeliefert. Separate Installation, weiterer Laufzeitdownload und manuelle Pfadeinrichtung entfallen.
+
+92 lokale EXE-Prüfgruppen und 167 Prüfgruppen in sechs Läufen auf einer frischen Windows-11-VM ohne externe FreeCAD-/Python-Installation bestanden. Vollständige Integrität aller 35.586 Laufzeitdateien, unsichtbare GUI-Module, native FCStd-Bearbeitung, archivierte Helfer, STEP/STL/FCStd/FNPACK-Exporte, vier Bedienmodi, verschobene Umlautpfade, Abbruch und Undo sind geprüft. Aktuelle Paketbilder wurden visuell geprüft. Die nativen Quellphasen und die abschließende Integritätsprüfung sind getrennt per SHA gebunden; überlappende Phasen werden nicht addiert. Es erfolgte die gezielte 6a-Abnahme gemäß Prüfstrategie.
+
+Windows-ZIP: 1.883.314.641 Bytes, SHA-256 641aeff7bdb49ad5644422dc47d3edba2fac7b1a0bd0b69e686fe819b7130f09. Alle 37.380 ZIP-Einträge wurden nach dem Packen vollständig zurückgelesen und geprüft.
+
+[Private Ausgabe](https://github.com/andyy909/Formnaro/releases/tag/v0.114.0-r7) veröffentlicht und serverseitig geprüft. Die öffentliche Übernahme ist auf ausdrücklichen Folgeauftrag beauftragt und läuft. Bedienung, Messungen und Grenzen: [Integrierte CAD-Laufzeit](INTEGRIERTE-CAD-LAUFZEIT.md).
+
+Pakete 8–10 bleiben offen; 11–13 sind weiterhin optional. Die große allgemeine Gesamtprüfung folgt am Ende der beauftragten Folge.

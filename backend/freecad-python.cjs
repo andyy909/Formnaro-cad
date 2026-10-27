@@ -21,21 +21,25 @@ async function execute(exe,args,{cwd,env,signal,timeout=300000}={}){
  const clean=()=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);};child.once('error',e=>{clean();reject(e);});child.once('close',code=>{clean();if(signal?.aborted)reject(failure('FreeCAD-Python abgebrochen.','ABORTED'));else if(timedOut)reject(failure('FreeCAD-Python-Zeitlimit erreicht.','FREECAD_TIMEOUT'));else if(code!==0)reject(failure('FreeCAD-Python-Prozess ('+code+'): '+log,'FREECAD_PYTHON_FAILED'));else resolve(log);});
  });
 }
-async function runPythonJob({job,exe,script,inputs,inspectOnly,signal,timeout,documentJob}){
+async function runPythonJob({job,exe,script,inputs,inspectOnly,signal,timeout,documentJob,planJob}){
  if(process.platform!=='win32')throw failure('Die vollständige lokale FreeCAD-Python-Umgebung benötigt zurzeit Windows. Die vorhandenen CAD-Pläne bleiben verfügbar.','FREECAD_PYTHON_UNAVAILABLE');
  const host=await fs.mkdtemp(path.join(path.dirname(job),'formnaro-cad-host-'));
  try{
+ const runtime=await require('./freecad-runtime.cjs').prepareRuntime(exe,{signal});
+ if(runtime.bundled)await fs.copyFile(path.join(runtime.root,'formnaro-container.exe'),path.join(host,'container.exe'));
+ else{
  const source=await fs.readFile(path.join(__dirname,'freecad-container.cs'));await fs.writeFile(path.join(host,'container.cs'),source);
  const compiler=path.join(process.env.WINDIR||'C:/Windows','Microsoft.NET','Framework64','v4.0.30319','csc.exe');if(!sync.existsSync(compiler))throw failure('Die Windows-CAD-Laufzeit (.NET Framework) fehlt.','FREECAD_PYTHON_UNAVAILABLE');
  await execute(compiler,['/nologo','/out:'+path.join(host,'container.exe'),path.join(host,'container.cs')],{cwd:host,signal,timeout:30000});
- const workerName=documentJob?'freecad-document-worker.py':'freecad-python-worker.py';
+ }
+ const workerName=planJob?'freecad-worker.py':documentJob?'freecad-document-worker.py':'freecad-python-worker.py';
  for(const file of [workerName,'formnaro_freecad.py'])await fs.writeFile(path.join(job,file===workerName?'worker.py':file),await fs.readFile(path.join(__dirname,file)));
  for(const [name,code]of Object.entries(script.modules??{}))await fs.writeFile(path.join(job,name),code);
- await fs.writeFile(path.join(job,'user.py'),script.code);await fs.writeFile(path.join(job,'input.json'),JSON.stringify(documentJob?{documentJob}:{script,inspectOnly,inputs}));
+ await fs.writeFile(path.join(job,'user.py'),script.code);await fs.writeFile(path.join(job,'input.json'),JSON.stringify(planJob??(documentJob?{documentJob}:{script,inspectOnly,inputs})));
  // Deliberately create a fresh minimal environment: provider credentials and
  // unrelated application variables never reach the native Python process.
  const env={};for(const k of ['SystemRoot','WINDIR','SystemDrive','ComSpec','ProgramData','ProgramFiles','ProgramFiles(x86)','LOCALAPPDATA','USERPROFILE','USERNAME','USERDOMAIN','OS','PROCESSOR_ARCHITECTURE','NUMBER_OF_PROCESSORS','PATHEXT'])if(process.env[k])env[k]=process.env[k];
- Object.assign(env,{PATH:path.dirname(exe)+';'+path.join(process.env.WINDIR,'System32'),TEMP:job,TMP:job,HOME:job,APPDATA:job,FREECAD_USER_HOME:job,FREECAD_USER_DATA:job,FREECAD_USER_TEMP:job,PYTHONDONTWRITEBYTECODE:'1',QT_QPA_PLATFORM:'offscreen'});
+ Object.assign(env,{PATH:path.dirname(exe)+';'+path.join(process.env.WINDIR,'System32'),TEMP:job,TMP:job,HOME:job,APPDATA:job,FREECAD_USER_HOME:job,FREECAD_USER_DATA:job,FREECAD_USER_TEMP:job,FORMNARO_FREECAD_JOB:job,PYTHONDONTWRITEBYTECODE:'1',QT_QPA_PLATFORM:'offscreen'});
  let worker=path.join(job,'worker.py');if(script.gui){exe=path.join(path.dirname(exe),'FreeCAD.exe');worker=path.join(job,'worker.FCMacro');await fs.writeFile(worker,"from pathlib import Path\nexec(compile((Path.cwd()/'worker.py').read_text(encoding='utf-8'),str(Path.cwd()/'worker.py'),'exec'),{'__file__':str(Path.cwd()/'worker.py'),'__name__':'__main__'})\nimport FreeCADGui\nfrom PySide import QtCore\nQtCore.QTimer.singleShot(0,FreeCADGui.getMainWindow().close)\n");}
  const containerName='formnaro.cad.'+require('node:crypto').randomUUID().replaceAll('-','');
  try{await execute(path.join(host,'container.exe'),[exe,job,worker,containerName],{cwd:job,env,signal,timeout});}

@@ -35,7 +35,8 @@ bleiben erhalten. „Modell ansehen“ verkleinert den Dialog für die Vorschau.
 
 ## FreeCAD-Werkzeuge
 
-Die Desktop-Ausgabe benötigt eine lokale FreeCAD-Installation. Formnaro prüft
+Ab 0.114.0 enthält die Desktop-Ausgabe die passende FreeCAD-/Python-Laufzeit.
+Eine separate Installation ist nicht nötig. Formnaro prüft
 die tatsächlichen Objekttypen beziehungsweise die native Defeaturing-Funktion.
 Eine fehlende Funktion wird im Dialog gemeldet.
 

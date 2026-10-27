@@ -22,7 +22,7 @@ function validateDocumentRequest(value){
 }
 async function runDocument(value,{signal,exe,timeout=300000}={}){
  const documentJob=validateDocumentRequest(value);exe??=require('./freecad.cjs').executable();
- if(!exe)throw Object.assign(Error('FreeCAD ist nicht installiert.'),{code:'FREECAD_UNAVAILABLE'});
+ if(!exe)throw Object.assign(Error(require('./freecad-runtime.cjs').message),{code:'FREECAD_UNAVAILABLE'});
  signal?.throwIfAborted();const job=await fs.mkdtemp(path.join(os.tmpdir(),'formnaro-fcstd-'));
  try{
   await runPythonJob({job,exe,script:{version:1,code:'',gui:documentJob.action==='edit',modules:documentJob.modules},inputs:[],inspectOnly:documentJob.action==='inspect',signal,timeout,documentJob});

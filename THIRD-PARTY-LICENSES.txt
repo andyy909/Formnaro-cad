@@ -1,3 +1,12 @@
+INTEGRATED CAD RUNTIME – FreeCAD 1.1.4 / Python 3.11 (0.114.0)
+The complete official portable Windows distribution is delivered separately
+under resources/freecad. It is governed by its own upstream licenses; the
+Formnaro license does not replace them. See resources/freecad/SOURCE-NOTICE.txt,
+packages.txt, doc/LICENSE.html, doc/ThirdPartyLibraries.html, share/licenses,
+share/doc and individual Python package notices. The corresponding FreeCAD
+source archive and isolation launcher source are included under
+resources/freecad/sources. Package versions and build strings are in packages.txt.
+
 Ergaenzung 18.10.2026 / Formnaro 0.61.0: nativer STEPCAF/XCAF-Leser in der MIT-Bridge; gleiche OCCT-/OpenCascade.js-Quellen und Lizenzbedingungen. Aktuelles Quellenarchiv: Formnaro-CAD-Quellen-v0.61.0.zip; aktuelle App-Quellen: Formnaro-Quellcode-v0.61.0.zip. Provenienz und native Lizenztexte: licenses/cad-kernel/.
 
 Formnaro 0.11 — Drittanbieterhinweise für die native CAD-Ausgabe

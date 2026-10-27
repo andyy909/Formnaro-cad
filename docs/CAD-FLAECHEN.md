@@ -1,9 +1,9 @@
 # Flächen und Prägungen
 
 Paket 7 ergänzt vier Werkzeuge unter **CAD-Werkzeuge**. Sie stehen in Normal,
-Easy Tinker, Solid und Fusion zur Verfügung. Die Desktop-Ausgabe benötigt
-weiterhin eine lokale FreeCAD-Installation. Die integrierte Laufzeit ist das
-getrennte, noch offene Paket 6a. Andere gekrümmte Trägerflächen als die unten
+Easy Tinker, Solid und Fusion zur Verfügung. Ab 0.114.0 enthält die Desktop-
+Ausgabe die passende FreeCAD-/Python-Laufzeit; Paket 6a ist abgenommen.
+Eine separate Installation ist nicht nötig. Andere gekrümmte Trägerflächen als die unten
 genannten sind noch nicht freigegeben.
 
 ## Randkurvenfläche

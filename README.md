@@ -6,19 +6,32 @@ Mit Formnaro konstruierst du technische Teile, bearbeitest 3D-Modelle und bereit
 
 ## Herunterladen
 
-### [Formnaro 0.113.1-r5 für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.113.1-r5/Formnaro-v0.113.1-r5-Windows.zip)
+### [Formnaro 0.114.0-r7 für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows.zip)
 
 **Windows · 64 Bit · portable**
 
-[Versionshinweise, Prüfbericht und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.113.1-r5) · [Alle Versionen](https://github.com/andyy909/Formnaro-cad/releases)
+[Versionshinweise, Prüfbericht und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7) · [Alle Versionen](https://github.com/andyy909/Formnaro-cad/releases)
 
 1. ZIP-Datei herunterladen und vollständig in einen eigenen Ordner entpacken.
-2. `App/Formnaro.exe` starten. Alle Unterordner, Laufzeiten und Lizenzen zusammenlassen.
+2. `Formnaro/Formnaro.exe` starten. Alle Unterordner, Laufzeiten und Lizenzen zusammenlassen.
 3. Eigene Einstellungen und Werkzeuge bei Bedarf über den bisherigen Datenordner mitnehmen.
 
-Persönliche Modelle, Profile und Zugangsdaten sind nicht enthalten. FreeCAD-Funktionen benötigen weiterhin eine separate lokale FreeCAD-Installation.
+Persönliche Modelle, Profile und Zugangsdaten sind nicht enthalten. FreeCAD 1.1.4 und Python 3.11 sind integriert; eine separate Installation oder Pfadeinrichtung entfällt.
 
-## Neu in 0.113.1-r5
+## Neu in 0.114.0-r7
+
+- **Ein vollständiger Download:** FreeCAD 1.1.4, Python 3.11 und die benötigten Module werden mit Formnaro ausgeliefert.
+- **Automatische Laufzeitwahl:** Python, native FCStd-Merkmale, Kurven- und Flächenwerkzeuge verwenden die integrierte Version.
+- **Geprüft auf frischem Windows:** 167 Prüfgruppen in sechs Läufen ohne externe FreeCAD-/Python-Installation bestanden; zusätzlich 92 lokale EXE-Prüfgruppen.
+- **Portabel und isoliert:** verschobene Umlautpfade, AppContainer, unsichtbare GUI-Module, alte Quellen, Exporte, Abbruch und Undo geprüft.
+
+Der Download umfasst ungefähr **1,88 GB**, der entpackte Programmordner ungefähr **4,36 GB**. [Abnahme und Einzelheiten](docs/INTEGRIERTE-CAD-LAUFZEIT.md).
+
+Die folgende Aufnahme stammt aus der frischen Windows-Prüf-VM und zeigt einen synthetischen nativen Python-Prüfkörper in 0.114.0-r7.
+
+![Native CAD-Modellierung mit integrierter FreeCAD-/Python-Laufzeit](bilder/integrierte-cad-laufzeit.png)
+
+## Bisherige Oberflächenverbesserungen in 0.113.1-r5
 
 - **Mehr Modellfläche:** kompakte Kopf- und Werkzeugleisten in Solid und Fusion.
 - **Dateiaktionen oben:** Neu, Öffnen, Speichern, Projekte, Import, Export und Einstellungen zwischen Modellname und Modusauswahl.
@@ -28,7 +41,7 @@ Persönliche Modelle, Profile und Zugangsdaten sind nicht enthalten. FreeCAD-Fun
 - **Fehlerkorrekturen enthalten:** robuster Start, geschützte Speicherdateien, verbesserte Theme-Umschaltung und lokale Skriptausführung.
 - **CAD-Erweiterungen seit 0.111:** Bézier-/B-Spline-Kurven, Mehrprofil-Lofts, zusammengesetzte Sweeps sowie Flächen und Prägung/Vertiefung.
 
-Die letzte Layoutänderung besteht **39 gezielte Prüfgruppen an der tatsächlichen Windows-EXE** und vier visuelle Paketprüfungen. Vorherige Wartungs- und Oberflächenprüfungen sind im Prüfbericht getrennt aufgeführt. Kein erneut ausgeführter allgemeiner Gesamttest für diese Layoutänderung.
+Die vorherige Layoutänderung bestand **39 gezielte Prüfgruppen an der tatsächlichen Windows-EXE** und vier visuelle Paketprüfungen. Vorherige Wartungs- und Oberflächenprüfungen sind im Prüfbericht getrennt aufgeführt. Kein erneut ausgeführter allgemeiner Gesamttest für diese Layoutänderung.
 
 ### Aktuelle Oberfläche: Solid und Fusion
 
@@ -45,7 +58,7 @@ Diese Aufnahmen stammen aus der geprüften Windows-Ausgabe 0.113.1-r5.
 - **3D-Druck-Modelle bearbeiten:** STL- und andere Netzmodelle importieren, prüfen, gezielt reparieren und mit Netzwerkzeugen bearbeiten; CAD über STEP austauschen.
 - **Zeichnungen erstellen:** Technische Ansichten und Bemaßungen anlegen und als PDF, SVG oder DXF ausgeben.
 - **Mit Referenzbildern arbeiten:** Projektfotos speichern, ebene Bilder entzerren und bestätigte Vorder-, Seiten- und Draufsichten zu einer bearbeitbaren CAD-Variante verbinden.
-- **Optional KI nutzen:** Modellieraufträge, Foto-Unterstützung und Programmhilfe über einen eingerichteten Anbieter verwenden. Lokale Python-Werkzeuge sind enthalten; FreeCAD-Funktionen benötigen eine zusätzliche lokale FreeCAD-Installation.
+- **Optional KI nutzen:** Modellieraufträge, Foto-Unterstützung und Programmhilfe über einen eingerichteten Anbieter verwenden. Python und FreeCAD sind im Windows-Download als lokale Laufzeiten enthalten.
 
 Änderungen lassen sich vor der Übernahme in einer Vorschau prüfen und anschließend rückgängig machen. Für KI-Anfragen an einen Cloud-Anbieter wird eine Internetverbindung benötigt; abhängig vom eingerichteten Zugang können Anbietergebühren anfallen.
 
@@ -87,13 +100,15 @@ Bilder zeigen nur sichtbare Konturen. Verdeckte Innengeometrie und die spätere 
 
 ## Geprüfte Ausgabe
 
-**0.111.0-r2** ist die aktuelle veröffentlichte Programmversion. Die technische Abnahme umfasst **524 Tests am eingefrorenen Quellstand und 929 Prüfgruppen in 21 Läufen der tatsächlichen Windows-Anwendung**, darunter 19 Auftrags-UI- und 41 Neustartprüfungen über zwei echte Anwendungsprozesse. Die ursprüngliche Projektpaketdatei wurde zwischen den Prozessstarts entfernt; die gesicherte Basis und ihre Referenzen bleiben wiederherstellbar. KI-Anbieterantworten wurden simuliert. Der [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.111.0-r2/Pruefergebnis.json) beschreibt Umfang und Grenzen. Die weiteren Ausbaupakete 6–10 sind noch offen.
+**0.114.0-r7** ist die aktuelle veröffentlichte Programmversion. Paket 6a wurde gezielt mit 92 lokalen EXE-Prüfgruppen und 167 Prüfgruppen in sechs Läufen auf frischem Windows abgenommen. Alle 35.586 CAD-Laufzeitdateien wurden dort vollständig geprüft. Die nativen Quelltests und die abschließenden Integritätsprüfungen sind getrennt per SHA gebunden; überlappende Phasen werden nicht addiert. Aktuelle Paketbilder wurden visuell geprüft. KI-Anbieterantworten wurden simuliert.
 
-Die Anleitungen liegen im Download unter `App/docs` und hier im Verzeichnis [docs](docs).
+Der [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Pruefergebnis.json) beschreibt Umfang und Grenzen. Pakete 0–6, 6a und 7 sind abgeschlossen, 8–10 bleiben offen. Die gemeinsame allgemeine Gesamtprüfung folgt am Ende der beauftragten Folge.
+
+Die Anleitungen liegen im Download unter `Formnaro/docs` und hier im Verzeichnis [docs](docs).
 
 ## Vollständiges Projekt und Entwicklung
 
-Dieses Repository enthält außerdem eine eigenständige Kopie des vollständigen Projektstands **0.111.0-r2**: Anwendung, beide Mini-Versionen, CAD-Kern, Tests, Buildskripte, Anleitungen und Lizenzen. Die Kopie ist vom privaten Original unabhängig. Änderungen an diesem Repository verändern das private Original nicht.
+Dieses Repository enthält außerdem eine eigenständige Kopie des vollständigen Projektstands **0.114.0-r7**: Anwendung, beide Mini-Versionen, CAD-Kern, Tests, Buildskripte, Anleitungen und Lizenzen. Die Kopie ist vom privaten Original unabhängig. Änderungen an diesem Repository verändern das private Original nicht.
 
 | Verzeichnis | Inhalt |
 | --- | --- |
@@ -113,8 +128,8 @@ npm run build
 npm start
 ```
 
-Zusätzliche Konverter-, Sprach- und FreeCAD-Funktionen benötigen die in ihren Anleitungen beschriebenen Laufzeiten. Wer das fertige Programm nutzen möchte, verwendet den Windows-Download oben.
+Für FreeCAD-Funktionen im Entwicklungscheckout bereitet `npm run setup:cad-runtime` die fest gepinnte portable Laufzeit vor. Weitere Bauvoraussetzungen stehen in [BUILD.md](docs/BUILD.md). Wer das fertige Programm nutzen möchte, verwendet den vollständigen Windows-Download oben.
 
-Die [bisherige ausführliche Projektbeschreibung](README-Entwicklung.md) enthält die Entwicklungshistorie; einzelne ältere Versionsangaben sind dort historisch. Der [technische Projektkontext](docs/PROJEKTKONTEXT.md) beschreibt den Stand 0.111.0-r2.
+Die [bisherige ausführliche Projektbeschreibung](README-Entwicklung.md) enthält die Entwicklungshistorie; einzelne ältere Versionsangaben sind dort historisch. Der [technische Projektkontext](docs/PROJEKTKONTEXT.md) beschreibt den aktuellen abgenommenen Stand.
 
 Der eigene Anwendungscode steht unter der [PolyForm Noncommercial License 1.0.0](LICENSE.txt). Fremdkomponenten behalten ihre jeweiligen Lizenzen; siehe [Drittanbieterhinweise](THIRD-PARTY-LICENSES.txt). Persönliche Datenordner, Profile, Zugangsdaten und lokale Arbeitsdateien sind nicht Teil der Projektkopie.

@@ -43,3 +43,4 @@ Thumbs.db
 /speech-runtime/*.exe
 /speech-runtime/*.dll
 /speech-runtime/*.bin
+/freecad-runtime/runtime/

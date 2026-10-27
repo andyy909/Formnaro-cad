@@ -1,14 +1,14 @@
 # FreeCAD und erweiterte KI-Arbeitsschritte
 
-Formnaro kann eine auf dem PC installierte FreeCAD-Ausgabe als zusätzliche lokale CAD-Engine benutzen. Unter Windows wird `FreeCADCmd.exe` in den FreeCAD-Installationen unter Programme gesucht. Getestet wird FreeCAD 1.1. Die Engine wird ohne sichtbares FreeCAD-Fenster gestartet; ihre Arbeitsdateien liegen in einem eigenen temporären Ordner und werden anschließend entfernt.
+Die neue Ausgabe 0.114.0 enthält FreeCAD 1.1.4 und die passende Python-Laufzeit im eigenen Programmordner. Sie wählt diese Laufzeit automatisch; ein separater Download oder eine manuelle Pfadeinstellung ist nicht erforderlich. Paket 6a ist mit 0.114.0-r7 auch auf frischem Windows ohne externe Installation abgenommen. Ältere Ausgaben bis 0.113.1 benötigen weiterhin eine zusätzliche lokale FreeCAD-Installation. Die Engine wird ohne sichtbares FreeCAD-Fenster gestartet; ihre Arbeitsdateien liegen in einem eigenen temporären Ordner und werden anschließend entfernt.
 
-In **Einstellungen → KI / API** zeigt Formnaro die erkannte Installation und das Arbeitsbudget. Standard sind **24 KI-Anfragen pro Auftrag**, einstellbar von 7 bis 80. Messungen, Korrekturen und Bildprüfungen teilen sich dieses Budget. Weitere Schritte benötigen gegebenenfalls mehr Zeit und Tokens. Die bisherige Grenze von zwei Messrunden und zwei Korrekturen gilt für den kurzen Modus mit sieben Schritten; längere Aufträge können wiederholt messen und nachbessern. Modell, Denkaufwand und persönliche Anbieterkontexte werden weiter unabhängig gewählt.
+In **Einstellungen → KI / API** zeigt Formnaro die verwendete CAD-Laufzeit und das Arbeitsbudget. Standard sind **24 KI-Anfragen pro Auftrag**, einstellbar von 7 bis 80. Messungen, Korrekturen und Bildprüfungen teilen sich dieses Budget. Weitere Schritte benötigen gegebenenfalls mehr Zeit und Tokens. Die bisherige Grenze von zwei Messrunden und zwei Korrekturen gilt für den kurzen Modus mit sieben Schritten; längere Aufträge können wiederholt messen und nachbessern. Modell, Denkaufwand und persönliche Anbieterkontexte werden weiter unabhängig gewählt.
 
 ## Werkzeuge
 
 ### Vollständige FreeCAD-Python-API
 
-Zusätzlich zu den bisherigen Datenplänen kann die KI eigene Python-Programme in der installierten FreeCAD-Laufzeit ausführen. Es gibt dabei keine Liste zugelassener Modellierfunktionen. Funktionen, Klassen und Objekttypen lassen sich über `dir`, `help`, `doc.supportedTypes()` und den eingebauten API-Katalog erkunden. Das gilt für alle eingerichteten KI-Anbieter.
+Zusätzlich zu den bisherigen Datenplänen kann die KI eigene Python-Programme in der mitgelieferten FreeCAD-Laufzeit ausführen. Es gibt dabei keine Liste zugelassener Modellierfunktionen. Funktionen, Klassen und Objekttypen lassen sich über `dir`, `help`, `doc.supportedTypes()` und den eingebauten API-Katalog erkunden. Das gilt für alle eingerichteten KI-Anbieter.
 
 ```json
 {"op":"tool","engine":"freecad","as":"result","operation":{"kind":"build","script":{"version":1,"name":"Parametrischer Körper","code":"base=doc.addObject('Part::Cylinder','Base')\nbase.Radius=parameters['radius']\nbase.Height=12\ndoc.recompute()\nresult=base","parameters":{"radius":8}}}}
@@ -47,6 +47,6 @@ Bei späteren Fehlern bleibt ein berechenbarer Entwurf mit Warnung verfügbar. E
 
 Native Python-Programme laufen unter Windows in einem eigenen AppContainer. Er erhält Zugriff auf die übergebenen Arbeitskopien und die installierte Laufzeit; fremde Nutzerdaten und Netzwerkzugriffe bleiben außerhalb dieses Rechenprozesses. Der Interpreter hat die vollständige verfügbare FreeCAD-API, keine Python-Funktionsfilter. Abbruch und Zeitlimit beenden seinen gesamten Prozessbaum. Ohne diese Windows-Isolation wird fremder Python-Code nicht im Benutzerprozess ausgeführt. Die bisherigen Datenpläne bleiben kompatibel und erlauben weiterhin bis zu 128 Schritte. Für Skripte gibt es keine solche Operationsanzahl; es gelten ein Rechenzeitlimit von fünf Minuten, acht Geometrieeingänge sowie ausgewiesene Datei- und Auftragsgrößen.
 
-Auf anderen PCs wird eine installierte FreeCAD-Ausgabe benötigt. Die Web-Ausgabe stellt diese Desktop-Engine nicht bereit. Ältere Formnaro-Ausgaben kennen die neue FreeCAD-Quellmetadaten nicht; solche Projekte mit der neuen Ausgabe öffnen.
+Den vollständigen Formnaro-Ordner einschließlich resources/freecad auf den anderen PC mitnehmen; eine separate FreeCAD-/Python-Installation ist ab 0.114.0 nicht nötig. Die Web-Ausgabe stellt diese Desktop-Engine nicht bereit. Ältere Formnaro-Ausgaben kennen die neue FreeCAD-Quellmetadaten nicht; solche Projekte mit der neuen Ausgabe öffnen.
 
 Technische Referenzen: [FreeCAD Part API](https://github.com/FreeCAD/FreeCAD-documentation/blob/main/wiki/Part_API.md), [TopoShape API](https://github.com/FreeCAD/FreeCAD-documentation/blob/main/wiki/TopoShape_API.md).

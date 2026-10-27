@@ -12,8 +12,9 @@ diese Funktionen noch nicht.
 
 Ein mit FreeCAD erstelltes Teil oder eine erhaltene Quelle auswählen und
 **FreeCAD-Merkmale** öffnen. Der Eintrag ist in allen vier Bedienmodi vorhanden.
-Die lokal installierte FreeCAD-Version liest das im Projekt archivierte
-FCStd-Dokument in der bestehenden isolierten CAD-Umgebung.
+Die ab 0.114.0 mitgelieferte FreeCAD-Laufzeit liest das im Projekt archivierte
+FCStd-Dokument in der bestehenden isolierten CAD-Umgebung. Eine separate
+FreeCAD-/Python-Installation ist nicht erforderlich.
 
 Der Baum beginnt beim eindeutig gespeicherten Ergebniskörper. Er zeigt die
 tatsächlichen FreeCAD-Objektkennungen, Typen, verwendeten Quellen und abhängigen
