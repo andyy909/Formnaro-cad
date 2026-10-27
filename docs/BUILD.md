@@ -68,3 +68,11 @@ historischen Prüfberichte oder Ausgaben von einem anderen Rechner.
 
 Ältere versionsgebundene Paketskripte bleiben für die Nachvollziehbarkeit
 historischer Ausgaben erhalten. Sie sind keine aktuellen Standard-Einstiege.
+Die früheren allgemeinen Einstiege `scripts/run-cad-release-gates.mjs` und
+`scripts/package-cad-release.mjs` leiten dagegen auf `current-release.mjs`
+weiter, auch bei direktem Aufruf. Sie verwenden damit die Version aus
+`package.json` und erzeugen aktuelle Prüfbelege selbst; historische
+`work/cad-v011`-Berichte, Quellarchive oder generierte Bindings sind keine
+Eingaben mehr. `work/` bleibt lediglich ein lokal erzeugter Arbeits-/Belegordner.
+Die oben beschriebene Laufzeitvorbereitung bleibt erforderlich; ein bytegleiches
+Nachbauen des veröffentlichten ZIPs wird dadurch nicht zugesichert.

@@ -4506,3 +4506,15 @@ Die Folgeabnahme verwendet ausschließlich den gezielten Oberflächenprüfer;
 keine allgemeinen oder vollständigen Solid-/Fusion-Werkzeugsuiten.
 
 Die gezielte Windows-Abnahme dieser Folgeänderung ist als `Kompakte-Oberflaeche-v0.113.1-r5` abgeschlossen: 39 Oberflächenprüfgruppen, vier visuell geprüfte Paketbilder. Keine allgemeinen Tests oder vollständigen Werkzeugsuiten wiederholt; vorherige r4-EXE und ASAR unverändert.
+
+### Allgemeine Release-Einstiege vereinheitlicht (27.10.2026)
+
+Die alten Dateieinstiege scripts/run-cad-release-gates.mjs und
+scripts/package-cad-release.mjs delegieren jetzt auf die aktuelle Pipeline
+current-release.mjs (test beziehungsweise package). Damit gelten die Version
+in package.json und die aktuelle Abnahme auch bei direktem Aufruf. Die feste
+0.12.0-Sperre und historische work/cad-v011-Buildinputs entfallen dort.
+Die npm-Zuordnung war bereits aktuell. Laufzeitvorbereitung siehe BUILD.md;
+kein byteidentischer ZIP-Neubau zugesichert. Fünf gezielte Einstiegstests mit
+0.113.1/0.114.0 und ohne historischen work-Ordner bestanden; keine vollständige
+CAD-/EXE-Abnahme für diese Skriptkorrektur wiederholt.
