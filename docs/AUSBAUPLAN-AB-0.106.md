@@ -173,4 +173,4 @@ visuell geprüft. 144 geschützte Dateien älterer Ausgaben sind unverändert.
 sind in diesen Prüfungen simuliert; keine neue Aussage zur Cloud-Modellqualität.
 Paket 6–10 bleiben offen.
 
-Die geprüfte Ausgabe ist als [Formnaro 0.111.0-r2](https://github.com/andyy909/Formnaro-Downloads/releases/tag/v0.111.0-r2) öffentlich verfügbar. Das Download-Repository enthält Beschreibung und Bilder; der Entwicklungsquellstand und seine Historie bleiben im privaten Repository.
+Die geprüfte Ausgabe ist als [Formnaro 0.111.0-r2](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.111.0-r2) öffentlich verfügbar. Das Download-Repository enthält Beschreibung und Bilder; der Entwicklungsquellstand und seine Historie bleiben im privaten Repository.

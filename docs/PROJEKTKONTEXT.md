@@ -7,7 +7,7 @@ jeweiligen Rechner; diese Datei enthält den gemeinsamen technischen Stand.
 ## Öffentliche Projektkopie vom 27.10.2026
 
 Auf ausdrücklichen Wunsch des Projekteigentümers enthält
-https://github.com/andyy909/Formnaro-Downloads jetzt den vollständigen aktuellen
+https://github.com/andyy909/Formnaro-cad jetzt den vollständigen aktuellen
 Projektstand einschließlich Quellcode, Tests, Buildskripten, Anleitungen und
 Mini-Versionen. Grundlage ist der geprüfte Stand 0.111.0-r2 aus dem privaten
 Original (Quellcommit `7d1900d9fae24ad95a85acc60b5803392f47d5a3`). Die Kopie
@@ -4220,7 +4220,7 @@ zu unterscheiden.
 ### Öffentliches Download-Repository (27.10.2026)
 
 Fertige Windows-Pakete werden getrennt vom privaten Entwicklungsrepository unter
-https://github.com/andyy909/Formnaro-Downloads bereitgestellt. Die Startseite enthält
+https://github.com/andyy909/Formnaro-cad bereitgestellt. Die Startseite enthält
 eine deutsche Beschreibung, Startanleitung und vier echte Bildschirmbilder der
 geprüften Ausgabe. Zuerst veröffentlicht wurde die letzte freigegebene Version
 0.108.0 mit unverändertem Windows-Archiv, Prüfbericht und passender SHA-256-Liste.
@@ -4382,4 +4382,4 @@ zweiten asynchronen Öffnen des Fotodialogs unvollständig. Nur der Testablauf
 wurde korrigiert; der neue r2-Lauf ist vollständig bestanden. Alte Ausgaben und
 ihre ursprünglichen Prüfbelege bleiben erhalten. Paket 6–10 sind weiterhin offen.
 
-Die Windows-Ausgabe ist am 27.10.2026 als [v0.111.0-r2](https://github.com/andyy909/Formnaro-Downloads/releases/tag/v0.111.0-r2) veröffentlicht. Öffentliche Assets sind Windows-ZIP, Prüfbericht und Prüfsummen; alle drei GitHub-Digests und Größen stimmen mit den lokalen Dateien überein. Der anonyme Download ist erreichbar. Der Entwicklungsquellstand samt Historie bleibt privat; das öffentliche Git-Repository enthält nur Beschreibung und fünf Bildschirmbilder.
+Die Windows-Ausgabe ist am 27.10.2026 als [v0.111.0-r2](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.111.0-r2) veröffentlicht. Öffentliche Assets sind Windows-ZIP, Prüfbericht und Prüfsummen; alle drei GitHub-Digests und Größen stimmen mit den lokalen Dateien überein. Der anonyme Download ist erreichbar. Der Entwicklungsquellstand samt Historie bleibt privat; das öffentliche Git-Repository enthält nur Beschreibung und fünf Bildschirmbilder.

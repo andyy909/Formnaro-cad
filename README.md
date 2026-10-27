@@ -6,11 +6,11 @@ Mit Formnaro konstruierst du technische Teile, bearbeitest 3D-Modelle und bereit
 
 ## Herunterladen
 
-### [Formnaro 0.111.0-r2 für Windows herunterladen](https://github.com/andyy909/Formnaro-Downloads/releases/download/v0.111.0-r2/Formnaro-v0.111.0-r2-Windows.zip)
+### [Formnaro 0.111.0-r2 für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.111.0-r2/Formnaro-v0.111.0-r2-Windows.zip)
 
 **Windows · 64 Bit · portable · ZIP ca, 1,05 GB · entpackt ca, 1,81 GiB**
 
-[Versionshinweise, Prüfbericht und Prüfsummen](https://github.com/andyy909/Formnaro-Downloads/releases/tag/v0.111.0-r2) · [Alle Versionen](https://github.com/andyy909/Formnaro-Downloads/releases)
+[Versionshinweise, Prüfbericht und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.111.0-r2) · [Alle Versionen](https://github.com/andyy909/Formnaro-cad/releases)
 
 1. Die ZIP-Datei herunterladen und **vollständig in einen eigenen Ordner entpacken**.
 2. Im entpackten Ordner **`App/Formnaro.exe`** starten. Eine Installation ist nicht erforderlich.
@@ -77,7 +77,7 @@ Bilder zeigen nur sichtbare Konturen. Verdeckte Innengeometrie und die spätere 
 
 ## Geprüfte Ausgabe
 
-**0.111.0-r2** ist die aktuelle veröffentlichte Programmversion. Die technische Abnahme umfasst **524 Tests am eingefrorenen Quellstand und 929 Prüfgruppen in 21 Läufen der tatsächlichen Windows-Anwendung**, darunter 19 Auftrags-UI- und 41 Neustartprüfungen über zwei echte Anwendungsprozesse. Die ursprüngliche Projektpaketdatei wurde zwischen den Prozessstarts entfernt; die gesicherte Basis und ihre Referenzen bleiben wiederherstellbar. KI-Anbieterantworten wurden simuliert. Der [Prüfbericht](https://github.com/andyy909/Formnaro-Downloads/releases/download/v0.111.0-r2/Pruefergebnis.json) beschreibt Umfang und Grenzen. Die weiteren Ausbaupakete 6–10 sind noch offen.
+**0.111.0-r2** ist die aktuelle veröffentlichte Programmversion. Die technische Abnahme umfasst **524 Tests am eingefrorenen Quellstand und 929 Prüfgruppen in 21 Läufen der tatsächlichen Windows-Anwendung**, darunter 19 Auftrags-UI- und 41 Neustartprüfungen über zwei echte Anwendungsprozesse. Die ursprüngliche Projektpaketdatei wurde zwischen den Prozessstarts entfernt; die gesicherte Basis und ihre Referenzen bleiben wiederherstellbar. KI-Anbieterantworten wurden simuliert. Der [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.111.0-r2/Pruefergebnis.json) beschreibt Umfang und Grenzen. Die weiteren Ausbaupakete 6–10 sind noch offen.
 
 Die Anleitungen liegen im Download unter `App/docs` und hier im Verzeichnis [docs](docs).
 
@@ -96,8 +96,8 @@ Dieses Repository enthält außerdem eine eigenständige Kopie des vollständige
 Für die lokale Entwicklung mit Node.js 22.16 oder neuer:
 
 ```powershell
-git clone https://github.com/andyy909/Formnaro-Downloads.git
-cd Formnaro-Downloads
+git clone https://github.com/andyy909/Formnaro-cad.git
+cd Formnaro-cad
 npm ci
 npm run build
 npm start
