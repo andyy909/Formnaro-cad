@@ -1,0 +1,17 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'de.formnaro.mini'
+    compileSdk 35
+    buildFeatures { buildConfig true }
+    defaultConfig {
+        applicationId 'de.formnaro.mini'
+        minSdk 29
+        targetSdk 35
+        versionCode 1
+        versionName '0.5.0-android.1'
+    }
+    buildTypes { release { minifyEnabled false } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    sourceSets { main { assets.srcDirs = ['../../dist-android'] } }
+}
+dependencies { implementation 'androidx.webkit:webkit:1.16.0' }

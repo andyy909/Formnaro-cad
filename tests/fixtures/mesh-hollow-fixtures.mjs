@@ -1,0 +1,5 @@
+import {meshSelectionGeometryDigest} from '../../src/mesh-selection-data.js';
+const mesh={verts:[-6,-5,0,-6,-5,8,-6,5,0,-6,5,8,6,-5,0,6,-5,8,6,5,0,6,5,8],triangles:[1,0,4,2,4,0,1,3,0,3,1,5,3,2,0,3,7,2,5,4,6,5,1,4,6,4,2,7,6,2,7,3,5,7,5,6]};
+export const hollowFixture=()=>({mesh:structuredClone(mesh),options:{wallThickness:1,resolution:.5,drains:[]}});
+export function hollowNode({protectedRegion=false}={}){const n={id:'technical',kind:'mesh',name:'Synthetischer Aushöhlungsquader',meshRole:'solid',mesh:structuredClone(mesh),transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],color:'#447788',opacity:.8,layerId:'default',folderId:null,metadata:{notes:'Synthetischer Quader 12 × 10 × 8 mm'}};if(protectedRegion)n.metadata.meshProtection={format:'FormnaroMeshProtection',version:1,regions:[{id:'contact',name:'Anlagefläche',purpose:'contact',geometryDigest:meshSelectionGeometryDigest(n),triangleIds:[0]}]};return n;}
+export function hollowOptions(n,set={}){return {method:'signed-distance-shell-v1',geometryDigest:meshSelectionGeometryDigest(n),...hollowFixture().options,...set};}

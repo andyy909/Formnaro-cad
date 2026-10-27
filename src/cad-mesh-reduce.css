@@ -1,0 +1,7 @@
+#cad-mesh-reduce{width:365px;max-height:calc(100% - 106px)}
+#cad-mesh-reduce .mesh-reduce-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#cad-mesh-reduce label{display:grid;gap:5px;margin:10px 0;font-size:12px}
+#cad-mesh-reduce .small-note{font-size:11px;line-height:1.45}
+#cad-mesh-reduce #mesh-reduce-result{white-space:pre-wrap;font-size:12px;line-height:1.5}
+#cad-mesh-reduce .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px}
+[data-theme=dark] #cad-mesh-reduce .edge-actions{background:#212f3e}

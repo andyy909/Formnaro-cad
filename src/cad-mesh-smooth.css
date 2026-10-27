@@ -1,0 +1,13 @@
+#cad-mesh-smooth{width:390px;max-height:calc(100% - 106px)}
+#cad-mesh-smooth .mesh-smooth-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#cad-mesh-smooth label{display:grid;gap:5px;margin:10px 0;font-size:12px}
+#cad-mesh-smooth .small-note{font-size:11px;line-height:1.45}
+#cad-mesh-smooth #mesh-smooth-result{white-space:pre-wrap;font-size:12px;line-height:1.5}
+#cad-mesh-smooth .mesh-smooth-pair{display:grid;grid-template-columns:1fr 1.45fr;gap:12px}
+#cad-mesh-smooth .mesh-smooth-check{display:flex;align-items:center;gap:7px}
+#cad-mesh-smooth .mesh-smooth-check input{width:auto}
+#cad-mesh-smooth #mesh-smooth-surface{font-size:12px;line-height:1.45;background:#e7f3fa;padding:8px;border-radius:6px}
+#cad-mesh-smooth .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px}
+[data-theme=dark] #cad-mesh-smooth .edge-actions{background:#212f3e}
+[data-theme=dark] #cad-mesh-smooth #mesh-smooth-surface{background:#283f50}
+@media(max-width:900px){#cad-mesh-smooth{width:min(390px,calc(100% - 28px))}}

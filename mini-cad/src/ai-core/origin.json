@@ -1,0 +1,1275 @@
+{
+  "description": "Lazy native AI construction modules copied from Formnaro 0.58.0. Sandbox navigation adapted for Mini CSP; all file/network/provider capabilities remain outside script sandbox. Extra sandbox HTML is generated from sandboxWorkerMain. No dependency on the parent checkout at runtime.",
+  "files": [
+    {
+      "file": "ai-feedback.js",
+      "upstream": "src/ai-feedback.js",
+      "upstreamSha256": "ac2cc7f15789d9d74dc7b4e66ccb7a4d6b6ed2fe526a3b7e78ba7bd0d6d25a19",
+      "sha256": "ac2cc7f15789d9d74dc7b4e66ccb7a4d6b6ed2fe526a3b7e78ba7bd0d6d25a19",
+      "adapted": false
+    },
+    {
+      "file": "ai.css",
+      "upstream": "src/ai.css",
+      "upstreamSha256": "f549aaa6098aa23d589c05f36dd95389d1595b89d38a4c5251392062d69669d4",
+      "sha256": "f549aaa6098aa23d589c05f36dd95389d1595b89d38a4c5251392062d69669d4",
+      "adapted": false
+    },
+    {
+      "file": "cad-affine.js",
+      "upstream": "src/cad-affine.js",
+      "upstreamSha256": "e0d91dc93d5a66d6cf633089a948ffc6f1e4115772c724b9ad3a01dc5308e3fd",
+      "sha256": "e0d91dc93d5a66d6cf633089a948ffc6f1e4115772c724b9ad3a01dc5308e3fd",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-analysis.js",
+      "upstream": "src/cad-ai-analysis.js",
+      "upstreamSha256": "37e82206a5b1b10dab3ba4c5535e29c68d15964736a22ff2a85771e83e6d2434",
+      "sha256": "37e82206a5b1b10dab3ba4c5535e29c68d15964736a22ff2a85771e83e6d2434",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-attachments.js",
+      "upstream": "src/cad-ai-attachments.js",
+      "upstreamSha256": "8c86aac30976f8f2e6f6f1e2c31d3a9feefc3775f3cb881e74808e67e2dfe829",
+      "sha256": "8c86aac30976f8f2e6f6f1e2c31d3a9feefc3775f3cb881e74808e67e2dfe829",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-chat.js",
+      "upstream": "src/cad-ai-chat.js",
+      "upstreamSha256": "4ba0b22d4d2e633f20cd53fec001cf5d3863f87c15818715daa8cf211db7c710",
+      "sha256": "4ba0b22d4d2e633f20cd53fec001cf5d3863f87c15818715daa8cf211db7c710",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-context.js",
+      "upstream": "src/cad-ai-context.js",
+      "upstreamSha256": "76aa0f6d6d5e2c10fecf53442ab46fa304f6a5e97e37cc28dc317cc7b2f32ea6",
+      "sha256": "76aa0f6d6d5e2c10fecf53442ab46fa304f6a5e97e37cc28dc317cc7b2f32ea6",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-lid-report.js",
+      "upstream": "src/cad-ai-lid-report.js",
+      "upstreamSha256": "bbffc71f09744a330bdae78fc80bb55b643c672226846b21250544202345cf0e",
+      "sha256": "bbffc71f09744a330bdae78fc80bb55b643c672226846b21250544202345cf0e",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-local-tools.js",
+      "upstream": "src/cad-ai-local-tools.js",
+      "upstreamSha256": "a19ac229d052f36a897ef944f8fee14c3622b1b844b221a7e242ab91bf079bc4",
+      "sha256": "a19ac229d052f36a897ef944f8fee14c3622b1b844b221a7e242ab91bf079bc4",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-model-picker.js",
+      "upstream": "src/cad-ai-model-picker.js",
+      "upstreamSha256": "744fe64561dabff24f5a7e6ab74c3cb6dabf7ef7ce4e26ec103440d5438e2f7a",
+      "sha256": "744fe64561dabff24f5a7e6ab74c3cb6dabf7ef7ce4e26ec103440d5438e2f7a",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-program.js",
+      "upstream": "src/cad-ai-program.js",
+      "upstreamSha256": "e24453f34ff843bcbbf40203f8aa0a354f46c46ac8456aa6584e5ce8353689d4",
+      "sha256": "e24453f34ff843bcbbf40203f8aa0a354f46c46ac8456aa6584e5ce8353689d4",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-request.js",
+      "upstream": "src/cad-ai-request.js",
+      "upstreamSha256": "098140ea58f15ec62216f6d825fa8ac113a7cbda98e77157a224a0efe0985ff3",
+      "sha256": "098140ea58f15ec62216f6d825fa8ac113a7cbda98e77157a224a0efe0985ff3",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-result-checks-native.js",
+      "upstream": "src/cad-ai-result-checks-native.js",
+      "upstreamSha256": "5b82e96639910e35e334f513fa34cf37cd598d03980f095257f46ef09c51a510",
+      "sha256": "5b82e96639910e35e334f513fa34cf37cd598d03980f095257f46ef09c51a510",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-result-checks.js",
+      "upstream": "src/cad-ai-result-checks.js",
+      "upstreamSha256": "20d9ca7c73d3500c728d914ed31fc6cda58f8f8e3a2c895923de082cd6b68d8a",
+      "sha256": "20d9ca7c73d3500c728d914ed31fc6cda58f8f8e3a2c895923de082cd6b68d8a",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-sandbox.js",
+      "upstream": "src/cad-ai-sandbox.js",
+      "upstreamSha256": "5e02bb9a508e666a747b487dc2a7e890d9c37bc3166eb4285a6c2827bcebd3bb",
+      "sha256": "f94bca7aa944fc77e1b66d00203fd6d0cd2c42e908185c398ec0a162c861b2b7",
+      "adapted": true
+    },
+    {
+      "file": "cad-ai-ui.js",
+      "upstream": "src/cad-ai-ui.js",
+      "upstreamSha256": "4304bbf12671ec714d4d234d46e6e363667f5ed9a48f881cb13fa9967aa332fa",
+      "sha256": "4304bbf12671ec714d4d234d46e6e363667f5ed9a48f881cb13fa9967aa332fa",
+      "adapted": false
+    },
+    {
+      "file": "cad-ai-usage.js",
+      "upstream": "src/cad-ai-usage.js",
+      "upstreamSha256": "5b9f781ec3d32b5393655ac89828e32de70fe2b144c5928029b53f37867175d0",
+      "sha256": "5b9f781ec3d32b5393655ac89828e32de70fe2b144c5928029b53f37867175d0",
+      "adapted": false
+    },
+    {
+      "file": "cad-analysis-native.js",
+      "upstream": "src/cad-analysis-native.js",
+      "upstreamSha256": "7d43615a5e1baaa26c690017c858a114e2344b751c15165eb34b76fa3513610c",
+      "sha256": "7d43615a5e1baaa26c690017c858a114e2344b751c15165eb34b76fa3513610c",
+      "adapted": false
+    },
+    {
+      "file": "cad-annotations-data.js",
+      "upstream": "src/cad-annotations-data.js",
+      "upstreamSha256": "403cebe4eda2745f36732c0f5df172bf0d7ed8b6e2bc1afe141127b90425b097",
+      "sha256": "403cebe4eda2745f36732c0f5df172bf0d7ed8b6e2bc1afe141127b90425b097",
+      "adapted": false
+    },
+    {
+      "file": "cad-annotations-native.js",
+      "upstream": "src/cad-annotations-native.js",
+      "upstreamSha256": "d5d2997bfa64493caccf82825ae39681a0081fac609664e06ba4b5c327864ec0",
+      "sha256": "d5d2997bfa64493caccf82825ae39681a0081fac609664e06ba4b5c327864ec0",
+      "adapted": false
+    },
+    {
+      "file": "cad-axis-measures.js",
+      "upstream": "src/cad-axis-measures.js",
+      "upstreamSha256": "33a5474545e1a698925a9cd60e7b2fb1e9725978ff421a9a2b0ce1e48ef70821",
+      "sha256": "33a5474545e1a698925a9cd60e7b2fb1e9725978ff421a9a2b0ce1e48ef70821",
+      "adapted": false
+    },
+    {
+      "file": "cad-command-router.js",
+      "upstream": "src/cad-command-router.js",
+      "upstreamSha256": "47607085ac75493ed41920bb0b21ce1ab8a99d21894dc634bc82280d997d84c4",
+      "sha256": "b91119ef7e6cfab3ac95cd1041d9511b746cc54cf6721dc76e70af0060aea7b4",
+      "adapted": true,
+      "adaptation": "Pure hole groups preserve their outer hole role; all-hole source geometry is combined before later material subtraction."
+    },
+    {
+      "file": "cad-display-cache.js",
+      "upstream": "src/cad-display-cache.js",
+      "upstreamSha256": "d27b3335940006a0a83ae282665163a199fbbbfa6c1c93be478f57474d36ec4f",
+      "sha256": "d27b3335940006a0a83ae282665163a199fbbbfa6c1c93be478f57474d36ec4f",
+      "adapted": false
+    },
+    {
+      "file": "cad-display-scale.js",
+      "upstream": "src/cad-display-scale.js",
+      "upstreamSha256": "d1dce4dd2f865723239709f324e008c7956d6bc30dc1ffbd134aac836eed5c8a",
+      "sha256": "d1dce4dd2f865723239709f324e008c7956d6bc30dc1ffbd134aac836eed5c8a",
+      "adapted": false
+    },
+    {
+      "file": "cad-edge-display-native.js",
+      "upstream": "src/cad-edge-display-native.js",
+      "upstreamSha256": "0169d9997bb52cd31d838e7c3ba4984d2838f1fc65ced7afc3b44d513595fa75",
+      "sha256": "0169d9997bb52cd31d838e7c3ba4984d2838f1fc65ced7afc3b44d513595fa75",
+      "adapted": false
+    },
+    {
+      "file": "cad-export-triangles.js",
+      "upstream": "src/cad-export-triangles.js",
+      "upstreamSha256": "b7ccad16bf5a57f35a0a3f5046de3fa5b7a152f04aba14ce1be09601b514edae",
+      "sha256": "b7ccad16bf5a57f35a0a3f5046de3fa5b7a152f04aba14ce1be09601b514edae",
+      "adapted": false
+    },
+    {
+      "file": "cad-extraction-data.js",
+      "upstream": "src/cad-extraction-data.js",
+      "upstreamSha256": "b943e04b1894e2ab45a61bc4e2268c8d6e07989d6eb1dfb2e8dfd9bd034a2c64",
+      "sha256": "b943e04b1894e2ab45a61bc4e2268c8d6e07989d6eb1dfb2e8dfd9bd034a2c64",
+      "adapted": false
+    },
+    {
+      "file": "cad-extraction-native.js",
+      "upstream": "src/cad-extraction-native.js",
+      "upstreamSha256": "d74056f0f8a30b40db70d01d406375b3af8ec9c0d6bbdfe2633838f60487ed50",
+      "sha256": "d74056f0f8a30b40db70d01d406375b3af8ec9c0d6bbdfe2633838f60487ed50",
+      "adapted": false
+    },
+    {
+      "file": "cad-face-placement.js",
+      "upstream": "src/cad-face-placement.js",
+      "upstreamSha256": "72899cb4c7287612f1b64552d6c8aeb411ba85521f43f0d8ced32dd14d4cd560",
+      "sha256": "72899cb4c7287612f1b64552d6c8aeb411ba85521f43f0d8ced32dd14d4cd560",
+      "adapted": false
+    },
+    {
+      "file": "cad-finish-native.js",
+      "upstream": "src/cad-finish-native.js",
+      "upstreamSha256": "5af8166af99de410ffa43f1e1e921fe6579ef494d21f0db3b67f5d10a58e938f",
+      "sha256": "5af8166af99de410ffa43f1e1e921fe6579ef494d21f0db3b67f5d10a58e938f",
+      "adapted": false
+    },
+    {
+      "file": "cad-font-outline.js",
+      "upstream": "src/cad-font-outline.js",
+      "upstreamSha256": "f5562387166917ca5a5f79fc0486901f1cf3a44367811af02044e147ec59bca8",
+      "sha256": "f5562387166917ca5a5f79fc0486901f1cf3a44367811af02044e147ec59bca8",
+      "adapted": false
+    },
+    {
+      "file": "cad-fonts.js",
+      "upstream": "src/cad-fonts.js",
+      "upstreamSha256": "dec49051725ead4d587d59f72c31e00f18af3901be275aeb57f6f6cb8f4a2a39",
+      "sha256": "dec49051725ead4d587d59f72c31e00f18af3901be275aeb57f6f6cb8f4a2a39",
+      "adapted": false
+    },
+    {
+      "file": "cad-form-controls.js",
+      "upstream": "src/cad-form-controls.js",
+      "upstreamSha256": "fcb9bd2abbdbf8644588ea34a7058b3edf70972ebb843cdccdf9e5cc05c528ad",
+      "sha256": "fcb9bd2abbdbf8644588ea34a7058b3edf70972ebb843cdccdf9e5cc05c528ad",
+      "adapted": false
+    },
+    {
+      "file": "cad-form-runtime.js",
+      "upstream": "src/cad-form-runtime.js",
+      "upstreamSha256": "061d51b7f58f2b940b83cd0a7e02d6612d1bfacb060c2dd86db6f0e74577bac1",
+      "sha256": "061d51b7f58f2b940b83cd0a7e02d6612d1bfacb060c2dd86db6f0e74577bac1",
+      "adapted": false
+    },
+    {
+      "file": "cad-geometry-digest.js",
+      "upstream": "src/cad-geometry-digest.js",
+      "upstreamSha256": "5f596061cd12bdfcb1b7d8c96073dcf183a994e5378e1f579e48c516d43bb1c8",
+      "sha256": "5f596061cd12bdfcb1b7d8c96073dcf183a994e5378e1f579e48c516d43bb1c8",
+      "adapted": false
+    },
+    {
+      "file": "cad-interface-state.js",
+      "upstream": "src/cad-interface-state.js",
+      "upstreamSha256": "4b19c284066a1245c7e07125297a82ef3b8425c2038b08586cd97a2a788c563d",
+      "sha256": "4b19c284066a1245c7e07125297a82ef3b8425c2038b08586cd97a2a788c563d",
+      "adapted": false
+    },
+    {
+      "file": "cad-mesh-copy-data.js",
+      "upstream": "src/cad-mesh-copy-data.js",
+      "upstreamSha256": "abd38dcb4af27e16777c86d73533d3a3612c74a647622ec9d1f13f93f39ad561",
+      "sha256": "abd38dcb4af27e16777c86d73533d3a3612c74a647622ec9d1f13f93f39ad561",
+      "adapted": false
+    },
+    {
+      "file": "cad-mesh-copy-native.js",
+      "upstream": "src/cad-mesh-copy-native.js",
+      "upstreamSha256": "d47e961eecc4f77ff21b0b3d47e9d06d6ceb296587f63f05021530d7182d4bbc",
+      "sha256": "d47e961eecc4f77ff21b0b3d47e9d06d6ceb296587f63f05021530d7182d4bbc",
+      "adapted": false
+    },
+    {
+      "file": "cad-mesh-formats.js",
+      "upstream": "src/cad-mesh-formats.js",
+      "upstreamSha256": "cb2894bf8585fb60c38170b7b8bf4f8ab14eafba872a40ed903e8a4eacddc9dd",
+      "sha256": "cb2894bf8585fb60c38170b7b8bf4f8ab14eafba872a40ed903e8a4eacddc9dd",
+      "adapted": false
+    },
+    {
+      "file": "cad-mesh-source-tree.js",
+      "upstream": "src/cad-mesh-source-tree.js",
+      "upstreamSha256": "e95afc3dd997d581f26dcfd1b035f9a4d1c38d4f1b87e18f7ee2a091973c9c4f",
+      "sha256": "e95afc3dd997d581f26dcfd1b035f9a4d1c38d4f1b87e18f7ee2a091973c9c4f",
+      "adapted": false
+    },
+    {
+      "file": "cad-mesh-to-cad-data.js",
+      "upstream": "src/cad-mesh-to-cad-data.js",
+      "upstreamSha256": "298fc08bfe363e8a62f06793b128a40907ea43872f09e65564939dc3036e413f",
+      "sha256": "298fc08bfe363e8a62f06793b128a40907ea43872f09e65564939dc3036e413f",
+      "adapted": false
+    },
+    {
+      "file": "cad-mesh-to-cad-native.js",
+      "upstream": "src/cad-mesh-to-cad-native.js",
+      "upstreamSha256": "1a1fc515ec051d6e0c0b909c8b39644a6da9151501537dd8605432574e8235f0",
+      "sha256": "1a1fc515ec051d6e0c0b909c8b39644a6da9151501537dd8605432574e8235f0",
+      "adapted": false
+    },
+    {
+      "file": "cad-mixed-ai.js",
+      "upstream": "src/cad-mixed-ai.js",
+      "upstreamSha256": "c5cb0af4a72fca5b3bd7308182ee87c836fa107f6349e135f398a38e0d4654ee",
+      "sha256": "c5cb0af4a72fca5b3bd7308182ee87c836fa107f6349e135f398a38e0d4654ee",
+      "adapted": false
+    },
+    {
+      "file": "cad-native-kernel.js",
+      "upstream": "src/cad-native-kernel.js",
+      "upstreamSha256": "84a9e689cf564f57d59929cd8d1e18a886b8a07200634cee9a604201ba5ca412",
+      "sha256": "84a9e689cf564f57d59929cd8d1e18a886b8a07200634cee9a604201ba5ca412",
+      "adapted": false
+    },
+    {
+      "file": "cad-original-contours.js",
+      "upstream": "src/cad-original-contours.js",
+      "upstreamSha256": "9cec5c480314e3f86246c84ed4fe97127e9d3e1a6d8bfd27ffe29ba1e5e99264",
+      "sha256": "9cec5c480314e3f86246c84ed4fe97127e9d3e1a6d8bfd27ffe29ba1e5e99264",
+      "adapted": false
+    },
+    {
+      "file": "cad-partition-data.js",
+      "upstream": "src/cad-partition-data.js",
+      "upstreamSha256": "caea89ea5b2619513ae5f2213d06530c75b009986cb10feaa55a191c74d6fd2e",
+      "sha256": "caea89ea5b2619513ae5f2213d06530c75b009986cb10feaa55a191c74d6fd2e",
+      "adapted": false
+    },
+    {
+      "file": "cad-partition-frame.js",
+      "upstream": "src/cad-partition-frame.js",
+      "upstreamSha256": "7ddc6fdd7258a9f4700438a64580e0be70ea33190a4a182fd28024ea13cf016b",
+      "sha256": "7ddc6fdd7258a9f4700438a64580e0be70ea33190a4a182fd28024ea13cf016b",
+      "adapted": false
+    },
+    {
+      "file": "cad-partition-native.js",
+      "upstream": "src/cad-partition-native.js",
+      "upstreamSha256": "515506c723cc147c050965afe5215b780c1a9a229ba3e92acb5130bf8866e081",
+      "sha256": "515506c723cc147c050965afe5215b780c1a9a229ba3e92acb5130bf8866e081",
+      "adapted": false
+    },
+    {
+      "file": "cad-plugin-manifest.js",
+      "upstream": "src/cad-plugin-manifest.js",
+      "upstreamSha256": "4a7dfc607d73b9708361b78e82e0995aa7337f96dd2d625bf2b04d603382e9c7",
+      "sha256": "4a7dfc607d73b9708361b78e82e0995aa7337f96dd2d625bf2b04d603382e9c7",
+      "adapted": false
+    },
+    {
+      "file": "cad-plugin-recipes.js",
+      "upstream": "src/cad-plugin-recipes.js",
+      "upstreamSha256": "f3d04abc6f7e0e5ed85cd696417412ed6c306f7b4bc2e2ab9bff4f093741ea37",
+      "sha256": "f3d04abc6f7e0e5ed85cd696417412ed6c306f7b4bc2e2ab9bff4f093741ea37",
+      "adapted": false
+    },
+    {
+      "file": "cad-precision-native.js",
+      "upstream": "src/cad-precision-native.js",
+      "upstreamSha256": "3bfc80a20ad0bfbb387feb073ea220b6fa03a7cbcfd36fd507ad9eea4cb702ee",
+      "sha256": "3bfc80a20ad0bfbb387feb073ea220b6fa03a7cbcfd36fd507ad9eea4cb702ee",
+      "adapted": false
+    },
+    {
+      "file": "cad-project.js",
+      "upstream": "src/cad-project.js",
+      "upstreamSha256": "922bb739cef959d3409d456061c6678cd074d7dd0ed88c82d04052d902f4885f",
+      "sha256": "922bb739cef959d3409d456061c6678cd074d7dd0ed88c82d04052d902f4885f",
+      "adapted": false
+    },
+    {
+      "file": "cad-quality.js",
+      "upstream": "src/cad-quality.js",
+      "upstreamSha256": "336a7f46fdc0653c8f825f537911aa12c593f6084868d4d24119b853cf3c222a",
+      "sha256": "336a7f46fdc0653c8f825f537911aa12c593f6084868d4d24119b853cf3c222a",
+      "adapted": false
+    },
+    {
+      "file": "cad-recipes.js",
+      "upstream": "src/cad-recipes.js",
+      "upstreamSha256": "801127f52406b68b032d62c9927f479aca7bd893979759492b4953971cdecdc6",
+      "sha256": "801127f52406b68b032d62c9927f479aca7bd893979759492b4953971cdecdc6",
+      "adapted": false
+    },
+    {
+      "file": "cad-reference-points.js",
+      "upstream": "src/cad-reference-points.js",
+      "upstreamSha256": "c383f0ef16a7fd045ca2bce3fb753404d665438dabed175fefae4230b2faa7c0",
+      "sha256": "c383f0ef16a7fd045ca2bce3fb753404d665438dabed175fefae4230b2faa7c0",
+      "adapted": false
+    },
+    {
+      "file": "cad-screw-surfaces.js",
+      "upstream": "src/cad-screw-surfaces.js",
+      "upstreamSha256": "922e10b9401c80031ffff41a50c281345cb68be6e461281c0d6860cd00369e08",
+      "sha256": "922e10b9401c80031ffff41a50c281345cb68be6e461281c0d6860cd00369e08",
+      "adapted": false
+    },
+    {
+      "file": "cad-self-contours.js",
+      "upstream": "src/cad-self-contours.js",
+      "upstreamSha256": "bc1518158f584eb5c110b61baff3f4bb50adfcabb573dae7d627d0ad2ec6a54e",
+      "sha256": "bc1518158f584eb5c110b61baff3f4bb50adfcabb573dae7d627d0ad2ec6a54e",
+      "adapted": false
+    },
+    {
+      "file": "cad-service.js",
+      "upstream": "src/cad-service.js",
+      "upstreamSha256": "d5d93a9c8356f97b014688be8c848e9328762ae9c75c82389d8675f85a0441ac",
+      "sha256": "88970fcaa5b0dcf798d1db1bb275da89ed6173aecfbbfa4a401b01edde6069a0",
+      "adapted": true,
+      "adaptation": "Pure hole groups preserve their outer hole role; all-hole source geometry is combined before later material subtraction."
+    },
+    {
+      "file": "cad-shapes.js",
+      "upstream": "src/cad-shapes.js",
+      "upstreamSha256": "fa860f1563658ce45bb3cac0e0831abb2ce46f746032db246be421e9fafb0a4e",
+      "sha256": "fa860f1563658ce45bb3cac0e0831abb2ce46f746032db246be421e9fafb0a4e",
+      "adapted": false
+    },
+    {
+      "file": "cad-sketch.js",
+      "upstream": "src/cad-sketch.js",
+      "upstreamSha256": "0f6e6b098c7968247662c3502eaf03756a0ebcf2890e41739569b7af654857a0",
+      "sha256": "0f6e6b098c7968247662c3502eaf03756a0ebcf2890e41739569b7af654857a0",
+      "adapted": false
+    },
+    {
+      "file": "cad-source-clone.js",
+      "upstream": "src/cad-source-clone.js",
+      "upstreamSha256": "ab8071c18c951674b737f3749ce613f178d32e230367b1435afb881e8cdbbb91",
+      "sha256": "ab8071c18c951674b737f3749ce613f178d32e230367b1435afb881e8cdbbb91",
+      "adapted": false
+    },
+    {
+      "file": "cad-step-io.js",
+      "upstream": "src/cad-step-io.js",
+      "upstreamSha256": "05611ea8f016cfe977d5eeccd30c6a71d56c1d8fcc76d713a87d6a4b34fd91d7",
+      "sha256": "05611ea8f016cfe977d5eeccd30c6a71d56c1d8fcc76d713a87d6a4b34fd91d7",
+      "adapted": false
+    },
+    {
+      "file": "cad-stl-converter.js",
+      "upstream": "src/cad-stl-converter.js",
+      "upstreamSha256": "8b618b034468cb8f6ba76abc0caff680394220cde0f52ee50262d27bf0e99c82",
+      "sha256": "8b618b034468cb8f6ba76abc0caff680394220cde0f52ee50262d27bf0e99c82",
+      "adapted": false
+    },
+    {
+      "file": "cad-stl-faceted.js",
+      "upstream": "src/cad-stl-faceted.js",
+      "upstreamSha256": "1c717238d16dd7524269b3387a7ad28856e2e89b890480992e112093726f01e0",
+      "sha256": "1c717238d16dd7524269b3387a7ad28856e2e89b890480992e112093726f01e0",
+      "adapted": false
+    },
+    {
+      "file": "cad-stl-housing.js",
+      "upstream": "src/cad-stl-housing.js",
+      "upstreamSha256": "5ee3025aab890c2f0162cd4d823190c93e326d9acfa4095094d4b12ae32ff2b8",
+      "sha256": "5ee3025aab890c2f0162cd4d823190c93e326d9acfa4095094d4b12ae32ff2b8",
+      "adapted": false
+    },
+    {
+      "file": "cad-stl-input.js",
+      "upstream": "src/cad-stl-input.js",
+      "upstreamSha256": "b10b755bc11f3a3ee65e14146b2a6b64e8ebf6b22e089f6b594f382c98bd2100",
+      "sha256": "b10b755bc11f3a3ee65e14146b2a6b64e8ebf6b22e089f6b594f382c98bd2100",
+      "adapted": false
+    },
+    {
+      "file": "cad-stl-repair.js",
+      "upstream": "src/cad-stl-repair.js",
+      "upstreamSha256": "b92804c429c3c244bc6695059952f867db9ecea81a45535a3204263a689fac56",
+      "sha256": "b92804c429c3c244bc6695059952f867db9ecea81a45535a3204263a689fac56",
+      "adapted": false
+    },
+    {
+      "file": "cad-stl-surfaces.js",
+      "upstream": "src/cad-stl-surfaces.js",
+      "upstreamSha256": "5661c0fb43b16beea705c7fb55dc4472c9370b12ebb24b5e87d42a6a1780dddd",
+      "sha256": "5661c0fb43b16beea705c7fb55dc4472c9370b12ebb24b5e87d42a6a1780dddd",
+      "adapted": false
+    },
+    {
+      "file": "cad-template-data.js",
+      "upstream": "src/cad-template-data.js",
+      "upstreamSha256": "34ee0708e2a8c524e560514d23d9cab788bb1e5c629379fa9ee26bf099e6c10e",
+      "sha256": "34ee0708e2a8c524e560514d23d9cab788bb1e5c629379fa9ee26bf099e6c10e",
+      "adapted": false
+    },
+    {
+      "file": "cad-template-recipes.js",
+      "upstream": "src/cad-template-recipes.js",
+      "upstreamSha256": "042ba0db97faba7009d5e6e6ec1dda96dde99cb9fd717b9ec8f0d85f8b0b5551",
+      "sha256": "042ba0db97faba7009d5e6e6ec1dda96dde99cb9fd717b9ec8f0d85f8b0b5551",
+      "adapted": false
+    },
+    {
+      "file": "cad-tools-native.js",
+      "upstream": "src/cad-tools-native.js",
+      "upstreamSha256": "c01c00f3b6d32ef188d3b85c0c6933ccc82dbf9e445e832c3472645152249995",
+      "sha256": "f28ae56903487c50c855c614e59b911fce301df8ced20138174722295a891a18",
+      "adapted": true,
+      "adaptation": "Pure hole groups preserve their outer hole role; all-hole source geometry is combined before later material subtraction."
+    },
+    {
+      "file": "cad-topology-native.js",
+      "upstream": "src/cad-topology-native.js",
+      "upstreamSha256": "2f15b9f381056cfd8e6381abd29336ed3cab1a0b2087a1fec9f262c6272db57e",
+      "sha256": "2f15b9f381056cfd8e6381abd29336ed3cab1a0b2087a1fec9f262c6272db57e",
+      "adapted": false
+    },
+    {
+      "file": "cad-transactions.js",
+      "upstream": "src/cad-transactions.js",
+      "upstreamSha256": "16a8268ac5ec42eb764f5a305e72e05eba3d58bee04d9f089123ba2e95dedf75",
+      "sha256": "16a8268ac5ec42eb764f5a305e72e05eba3d58bee04d9f089123ba2e95dedf75",
+      "adapted": false
+    },
+    {
+      "file": "cad-worker-client.js",
+      "upstream": "src/cad-worker-client.js",
+      "upstreamSha256": "dd0025aebe3f56ae0cddef31875698c9544b9b9ad3451d88c6614810620ffe60",
+      "sha256": "dd0025aebe3f56ae0cddef31875698c9544b9b9ad3451d88c6614810620ffe60",
+      "adapted": false
+    },
+    {
+      "file": "cad-worker-runtime.js",
+      "upstream": "src/cad-worker-runtime.js",
+      "upstreamSha256": "c1c4ede0fa3e5ab685b1f7f40367452c603805f2cdc4d541baf791acfcb569be",
+      "sha256": "c1c4ede0fa3e5ab685b1f7f40367452c603805f2cdc4d541baf791acfcb569be",
+      "adapted": false
+    },
+    {
+      "file": "cad-workspace.js",
+      "upstream": "src/cad-workspace.js",
+      "upstreamSha256": "bd75a13c74899a72220db38ce6fe33835c903b76071d06383b42d6ac66d255a2",
+      "sha256": "bd75a13c74899a72220db38ce6fe33835c903b76071d06383b42d6ac66d255a2",
+      "adapted": false
+    },
+    {
+      "file": "command-schema.js",
+      "upstream": "src/command-schema.js",
+      "upstreamSha256": "8b8d9e15442328c03dd60329ac9ea94483bd4533545c652edb1586fdbc5b16f3",
+      "sha256": "8b8d9e15442328c03dd60329ac9ea94483bd4533545c652edb1586fdbc5b16f3",
+      "adapted": false
+    },
+    {
+      "file": "common-tool-operations.js",
+      "upstream": "src/common-tool-operations.js",
+      "upstreamSha256": "acf5b0acd96e0bd5a0fd03b783166e749b5a4766d6d1617118a43c80e46f8d85",
+      "sha256": "acf5b0acd96e0bd5a0fd03b783166e749b5a4766d6d1617118a43c80e46f8d85",
+      "adapted": false
+    },
+    {
+      "file": "exchange-formats.js",
+      "upstream": "src/exchange-formats.js",
+      "upstreamSha256": "b23bc8134e7e8ca4719f1ebb7d9db451cf2b90679532f94f2d719db81927b9e3",
+      "sha256": "b23bc8134e7e8ca4719f1ebb7d9db451cf2b90679532f94f2d719db81927b9e3",
+      "adapted": false
+    },
+    {
+      "file": "font.json",
+      "upstream": "src/font.json",
+      "upstreamSha256": "d5c5467690f74061179a292af83bd85c4c551e0f106b2af99714f11184c96981",
+      "sha256": "d5c5467690f74061179a292af83bd85c4c551e0f106b2af99714f11184c96981",
+      "adapted": false
+    },
+    {
+      "file": "fonts/catalog.json",
+      "upstream": "src/fonts/catalog.json",
+      "upstreamSha256": "14a5c06e73caa7d85a03dfb52cb4ec5bdd2296229cc77a41e630383a0b109a34",
+      "sha256": "14a5c06e73caa7d85a03dfb52cb4ec5bdd2296229cc77a41e630383a0b109a34",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-abel.json",
+      "upstream": "src/fonts/free/free-abel.json",
+      "upstreamSha256": "36b89a97a4927094dd6099ebdb260905d1a7e98013f5232e1076cc32c9725273",
+      "sha256": "36b89a97a4927094dd6099ebdb260905d1a7e98013f5232e1076cc32c9725273",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-allura.json",
+      "upstream": "src/fonts/free/free-allura.json",
+      "upstreamSha256": "ab63876ad440ec41622cf29cf7ce93a055b72c630c986047dd8454d949ec763c",
+      "sha256": "ab63876ad440ec41622cf29cf7ce93a055b72c630c986047dd8454d949ec763c",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-amaticsc-bold.json",
+      "upstream": "src/fonts/free/free-amaticsc-bold.json",
+      "upstreamSha256": "7fc8856eac4138607759248fd52456c14dcef68d11fac49895bf76c355fbcc0a",
+      "sha256": "7fc8856eac4138607759248fd52456c14dcef68d11fac49895bf76c355fbcc0a",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-amaticsc.json",
+      "upstream": "src/fonts/free/free-amaticsc.json",
+      "upstreamSha256": "673eeceae9f850699a74084609031eecb9aaf874f6f7f02db69b01ffe26110ae",
+      "sha256": "673eeceae9f850699a74084609031eecb9aaf874f6f7f02db69b01ffe26110ae",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-anton.json",
+      "upstream": "src/fonts/free/free-anton.json",
+      "upstreamSha256": "d274e854b47e84a7791b95fe7d75463af157eec90feb4a57f220022c0e5b5bd6",
+      "sha256": "d274e854b47e84a7791b95fe7d75463af157eec90feb4a57f220022c0e5b5bd6",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-archivo.json",
+      "upstream": "src/fonts/free/free-archivo.json",
+      "upstreamSha256": "df4e53dcd8e9029d1f1c858d3e17e09e544a49db938334f62e98a8074236eed8",
+      "sha256": "df4e53dcd8e9029d1f1c858d3e17e09e544a49db938334f62e98a8074236eed8",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-archivoblack.json",
+      "upstream": "src/fonts/free/free-archivoblack.json",
+      "upstreamSha256": "47deda062b63787fbb551f44a65c796fb34a15142b92eb23757c696a7578c4df",
+      "sha256": "47deda062b63787fbb551f44a65c796fb34a15142b92eb23757c696a7578c4df",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-audiowide.json",
+      "upstream": "src/fonts/free/free-audiowide.json",
+      "upstreamSha256": "9aa3b51d2cc976c4e566ffe3c88e0735685d0400d21371f9a1ad86eb12dc2e5a",
+      "sha256": "9aa3b51d2cc976c4e566ffe3c88e0735685d0400d21371f9a1ad86eb12dc2e5a",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-barlow-bold.json",
+      "upstream": "src/fonts/free/free-barlow-bold.json",
+      "upstreamSha256": "97a9ff90ab4f9ef0804d708c859f125f903e49802661afce7ee52be13cc77ff2",
+      "sha256": "97a9ff90ab4f9ef0804d708c859f125f903e49802661afce7ee52be13cc77ff2",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-barlow.json",
+      "upstream": "src/fonts/free/free-barlow.json",
+      "upstreamSha256": "d6b18bea0f2401a1c3efba9e51b6ea921a46581090d759f9ed6547a94f79ab21",
+      "sha256": "d6b18bea0f2401a1c3efba9e51b6ea921a46581090d759f9ed6547a94f79ab21",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-bebasneue.json",
+      "upstream": "src/fonts/free/free-bebasneue.json",
+      "upstreamSha256": "a2b21e9d07f98bfc1ee9b3c0cf2ae723b8044c97d44e1f7945e3b2e363f7ad06",
+      "sha256": "a2b21e9d07f98bfc1ee9b3c0cf2ae723b8044c97d44e1f7945e3b2e363f7ad06",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-bitter.json",
+      "upstream": "src/fonts/free/free-bitter.json",
+      "upstreamSha256": "c7c121a5a2beaaf396d8e6bb0cc059d069b9cb7ec448210444a286218637ead6",
+      "sha256": "c7c121a5a2beaaf396d8e6bb0cc059d069b9cb7ec448210444a286218637ead6",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-blackopsone.json",
+      "upstream": "src/fonts/free/free-blackopsone.json",
+      "upstreamSha256": "5597b1afb897b19bc5e63f51de5e735303dc3c9890ca75cec2c6fdd5cfc98e59",
+      "sha256": "5597b1afb897b19bc5e63f51de5e735303dc3c9890ca75cec2c6fdd5cfc98e59",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-breeserif.json",
+      "upstream": "src/fonts/free/free-breeserif.json",
+      "upstreamSha256": "a6435da62cffa4c41336e80290b23ccf053120f6f1a93ed2d6cd28aec2f7950e",
+      "sha256": "a6435da62cffa4c41336e80290b23ccf053120f6f1a93ed2d6cd28aec2f7950e",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-bungee.json",
+      "upstream": "src/fonts/free/free-bungee.json",
+      "upstreamSha256": "15693f33f6890aaf103ca9b76bdaf3ba276e1d2cafea295b282f6acc61acb3d3",
+      "sha256": "15693f33f6890aaf103ca9b76bdaf3ba276e1d2cafea295b282f6acc61acb3d3",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-caveat.json",
+      "upstream": "src/fonts/free/free-caveat.json",
+      "upstreamSha256": "4ec64069d6152d0741570e7501b8282e14f6679cd348f6c8989c95ff04de00b3",
+      "sha256": "4ec64069d6152d0741570e7501b8282e14f6679cd348f6c8989c95ff04de00b3",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-cinzel.json",
+      "upstream": "src/fonts/free/free-cinzel.json",
+      "upstreamSha256": "8215ef1b975cad91db3c5f6a99eec12fe0cffa06c03b9006abaa3cc4a077b247",
+      "sha256": "8215ef1b975cad91db3c5f6a99eec12fe0cffa06c03b9006abaa3cc4a077b247",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-comfortaa.json",
+      "upstream": "src/fonts/free/free-comfortaa.json",
+      "upstreamSha256": "275b00228a95ca96386e8e9f61365b3e66f92ca68b2bb7a4073bad431daa96ea",
+      "sha256": "275b00228a95ca96386e8e9f61365b3e66f92ca68b2bb7a4073bad431daa96ea",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-cormorantgaramond.json",
+      "upstream": "src/fonts/free/free-cormorantgaramond.json",
+      "upstreamSha256": "85903d079d43fc1489e9699350592ec0dde06f20f7973839f6e5a2730db25f6a",
+      "sha256": "85903d079d43fc1489e9699350592ec0dde06f20f7973839f6e5a2730db25f6a",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-crimsontext-bold.json",
+      "upstream": "src/fonts/free/free-crimsontext-bold.json",
+      "upstreamSha256": "5bb5aa36a1403ccd60195412598a15d186b4162eb8b2eaaf7397815f01d33a80",
+      "sha256": "5bb5aa36a1403ccd60195412598a15d186b4162eb8b2eaaf7397815f01d33a80",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-crimsontext.json",
+      "upstream": "src/fonts/free/free-crimsontext.json",
+      "upstreamSha256": "58d3766863350e796dacdfacf052afeacf8f7cb39ef7ab159de96e00fd8b7702",
+      "sha256": "58d3766863350e796dacdfacf052afeacf8f7cb39ef7ab159de96e00fd8b7702",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-cutivemono.json",
+      "upstream": "src/fonts/free/free-cutivemono.json",
+      "upstreamSha256": "2c8c0d99ffc000aca0638bb4f46d453f6c650c2e867ae16a460f884e6aa4d8a9",
+      "sha256": "2c8c0d99ffc000aca0638bb4f46d453f6c650c2e867ae16a460f884e6aa4d8a9",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-dancingscript.json",
+      "upstream": "src/fonts/free/free-dancingscript.json",
+      "upstreamSha256": "9a0622da3eb7f81ebaeb5ad6124056cbcc4fa8eedacfe2f22b85053c1d040fa3",
+      "sha256": "9a0622da3eb7f81ebaeb5ad6124056cbcc4fa8eedacfe2f22b85053c1d040fa3",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-ebgaramond.json",
+      "upstream": "src/fonts/free/free-ebgaramond.json",
+      "upstreamSha256": "a11e01f390c270ece3fe71a9a87c0096be755e33a27122057f239d78650cdf1d",
+      "sha256": "a11e01f390c270ece3fe71a9a87c0096be755e33a27122057f239d78650cdf1d",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-greatvibes.json",
+      "upstream": "src/fonts/free/free-greatvibes.json",
+      "upstreamSha256": "480c452e37329481b7c6faca32b74f767c9a25899101469d0097a7c412e7c990",
+      "sha256": "480c452e37329481b7c6faca32b74f767c9a25899101469d0097a7c412e7c990",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-inconsolata.json",
+      "upstream": "src/fonts/free/free-inconsolata.json",
+      "upstreamSha256": "bd6719d66562840e49c81763aa7a94b582c59f2f5add7c5a8b2c5b4822904295",
+      "sha256": "bd6719d66562840e49c81763aa7a94b582c59f2f5add7c5a8b2c5b4822904295",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-indieflower.json",
+      "upstream": "src/fonts/free/free-indieflower.json",
+      "upstreamSha256": "e543489dfd0d97caa1a01d534b4a4589734bd50ef592a77eabff2f73420118e0",
+      "sha256": "e543489dfd0d97caa1a01d534b4a4589734bd50ef592a77eabff2f73420118e0",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-inter.json",
+      "upstream": "src/fonts/free/free-inter.json",
+      "upstreamSha256": "63588cc7c5181e72197e4e8674cee8aede38129dc9a304efa74a75c14fa22ac6",
+      "sha256": "63588cc7c5181e72197e4e8674cee8aede38129dc9a304efa74a75c14fa22ac6",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-josefinsans.json",
+      "upstream": "src/fonts/free/free-josefinsans.json",
+      "upstreamSha256": "ebbabc90fa462387369e8fd3143e92d8739d3b10c1af1ee50bc614ef3d5032bc",
+      "sha256": "ebbabc90fa462387369e8fd3143e92d8739d3b10c1af1ee50bc614ef3d5032bc",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-kalam-bold.json",
+      "upstream": "src/fonts/free/free-kalam-bold.json",
+      "upstreamSha256": "a7e090b1fdb9bef87da79301d37be65b518698ee532b774a53cdd4e76694b89f",
+      "sha256": "a7e090b1fdb9bef87da79301d37be65b518698ee532b774a53cdd4e76694b89f",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-kalam.json",
+      "upstream": "src/fonts/free/free-kalam.json",
+      "upstreamSha256": "9b744e54dfbcbb082be0ff8d6d0d154cb5eb1f4baa6a22cdaf6562fe09128efa",
+      "sha256": "9b744e54dfbcbb082be0ff8d6d0d154cb5eb1f4baa6a22cdaf6562fe09128efa",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-lato-bold.json",
+      "upstream": "src/fonts/free/free-lato-bold.json",
+      "upstreamSha256": "80e4cf72d83a216ecd61a861a3b246c351b5e1df0788648939ad950ae6c34d42",
+      "sha256": "80e4cf72d83a216ecd61a861a3b246c351b5e1df0788648939ad950ae6c34d42",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-lato.json",
+      "upstream": "src/fonts/free/free-lato.json",
+      "upstreamSha256": "33fea638e5b91c16145223495b4cdfdacf82c5ae7bda396ac4cc7127b79f793b",
+      "sha256": "33fea638e5b91c16145223495b4cdfdacf82c5ae7bda396ac4cc7127b79f793b",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-librebaskerville.json",
+      "upstream": "src/fonts/free/free-librebaskerville.json",
+      "upstreamSha256": "ecb764ff1bf60f273709d3ea416c248f51ac4fff6b1047178db05d4e63272a72",
+      "sha256": "ecb764ff1bf60f273709d3ea416c248f51ac4fff6b1047178db05d4e63272a72",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-lobster.json",
+      "upstream": "src/fonts/free/free-lobster.json",
+      "upstreamSha256": "3de36dbde5812d3a4ca334882d6f506a13bd24ec08b1ca380f496c4b062c827e",
+      "sha256": "3de36dbde5812d3a4ca334882d6f506a13bd24ec08b1ca380f496c4b062c827e",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-lora.json",
+      "upstream": "src/fonts/free/free-lora.json",
+      "upstreamSha256": "5894121d7fcdd3aa923c926af3576b492254b81426e06f1647c5f49b6d3719fc",
+      "sha256": "5894121d7fcdd3aa923c926af3576b492254b81426e06f1647c5f49b6d3719fc",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-merriweather.json",
+      "upstream": "src/fonts/free/free-merriweather.json",
+      "upstreamSha256": "29121ad6b30808bb3b5baf0a94dd9a919d0bb4e63890bceaa41d366429ff98eb",
+      "sha256": "29121ad6b30808bb3b5baf0a94dd9a919d0bb4e63890bceaa41d366429ff98eb",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-montserrat.json",
+      "upstream": "src/fonts/free/free-montserrat.json",
+      "upstreamSha256": "b0f981fc838313a5ef4b17e2525a9e2d4ce00add85eecce71664e475c02806cb",
+      "sha256": "b0f981fc838313a5ef4b17e2525a9e2d4ce00add85eecce71664e475c02806cb",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-nunito.json",
+      "upstream": "src/fonts/free/free-nunito.json",
+      "upstreamSha256": "3d2b9ea5cf62e602ec1d574f81327fff2d8cdf0f520e8b907ff5216c4826b576",
+      "sha256": "3d2b9ea5cf62e602ec1d574f81327fff2d8cdf0f520e8b907ff5216c4826b576",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-opensans.json",
+      "upstream": "src/fonts/free/free-opensans.json",
+      "upstreamSha256": "f0e84285131aee2da2ec22cc34d649d72df49ff47e3563a221e913fae9aecf71",
+      "sha256": "f0e84285131aee2da2ec22cc34d649d72df49ff47e3563a221e913fae9aecf71",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-orbitron.json",
+      "upstream": "src/fonts/free/free-orbitron.json",
+      "upstreamSha256": "af4a4bef68b80dfcc8257f312ac7488682184a5692d0471368f5d013e5e871c4",
+      "sha256": "af4a4bef68b80dfcc8257f312ac7488682184a5692d0471368f5d013e5e871c4",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-oswald.json",
+      "upstream": "src/fonts/free/free-oswald.json",
+      "upstreamSha256": "b6d2b7e8800a22b70c7abb26abea88cc496fbf6c1bf423798cfc1fb801d8bba4",
+      "sha256": "b6d2b7e8800a22b70c7abb26abea88cc496fbf6c1bf423798cfc1fb801d8bba4",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-pacifico.json",
+      "upstream": "src/fonts/free/free-pacifico.json",
+      "upstreamSha256": "8b403559399b032cf07cfbffc59d015bd2f851f7c3e824652d63eb8b92aa02a2",
+      "sha256": "8b403559399b032cf07cfbffc59d015bd2f851f7c3e824652d63eb8b92aa02a2",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-playfairdisplay.json",
+      "upstream": "src/fonts/free/free-playfairdisplay.json",
+      "upstreamSha256": "19aa90ab89de4eb7bd98f83f27e5262d9bc0851add218c6757943bc81f9f7529",
+      "sha256": "19aa90ab89de4eb7bd98f83f27e5262d9bc0851add218c6757943bc81f9f7529",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-poppins-bold.json",
+      "upstream": "src/fonts/free/free-poppins-bold.json",
+      "upstreamSha256": "577d66d0e89907cdfd3f2b8d93f97e26adc8e58fb5d5f0b02b02fcf2e7ed8618",
+      "sha256": "577d66d0e89907cdfd3f2b8d93f97e26adc8e58fb5d5f0b02b02fcf2e7ed8618",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-poppins.json",
+      "upstream": "src/fonts/free/free-poppins.json",
+      "upstreamSha256": "a018d9b3063ebafd94ef881eedfc5aedabe7d2f99b124f48fd9e8685e61617a4",
+      "sha256": "a018d9b3063ebafd94ef881eedfc5aedabe7d2f99b124f48fd9e8685e61617a4",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-pressstart2p.json",
+      "upstream": "src/fonts/free/free-pressstart2p.json",
+      "upstreamSha256": "1c0c8f36b3ae671fedffd54eb96a9dc6ee08597d234342a768a2efa074212595",
+      "sha256": "1c0c8f36b3ae671fedffd54eb96a9dc6ee08597d234342a768a2efa074212595",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-quicksand.json",
+      "upstream": "src/fonts/free/free-quicksand.json",
+      "upstreamSha256": "ad6748187d4203a0ae689637603eca5d64a1c49593008d35b87d684738ade70c",
+      "sha256": "ad6748187d4203a0ae689637603eca5d64a1c49593008d35b87d684738ade70c",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-raleway.json",
+      "upstream": "src/fonts/free/free-raleway.json",
+      "upstreamSha256": "6992705f9aadcc310c1ab7e9f7780fc6829a472c9272867f2d8ac94a4639603c",
+      "sha256": "6992705f9aadcc310c1ab7e9f7780fc6829a472c9272867f2d8ac94a4639603c",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-righteous.json",
+      "upstream": "src/fonts/free/free-righteous.json",
+      "upstreamSha256": "f4fe40fbaba37c16b018ae787b2be9df0bf0ba4edc826f6b814041358935c2b9",
+      "sha256": "f4fe40fbaba37c16b018ae787b2be9df0bf0ba4edc826f6b814041358935c2b9",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-roboto.json",
+      "upstream": "src/fonts/free/free-roboto.json",
+      "upstreamSha256": "46ce6118b305806e677e134b81475e16aac12f4a0a1087f523771e370a7377a2",
+      "sha256": "46ce6118b305806e677e134b81475e16aac12f4a0a1087f523771e370a7377a2",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-robotomono.json",
+      "upstream": "src/fonts/free/free-robotomono.json",
+      "upstreamSha256": "e0ee63f422e23a7e7a5aff01f6c0bbe5f26bc5c1c331e8bb8b2d47bee43c9462",
+      "sha256": "e0ee63f422e23a7e7a5aff01f6c0bbe5f26bc5c1c331e8bb8b2d47bee43c9462",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-russoone.json",
+      "upstream": "src/fonts/free/free-russoone.json",
+      "upstreamSha256": "6c6d54b8627edd21022067be5ab973577e65e37512ade11ad5245d10b54710ea",
+      "sha256": "6c6d54b8627edd21022067be5ab973577e65e37512ade11ad5245d10b54710ea",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-sacramento.json",
+      "upstream": "src/fonts/free/free-sacramento.json",
+      "upstreamSha256": "4b573b2c15ffb7521ca24c3b0815da6d75c50ac845e77b4f90c0c79cd95dbc80",
+      "sha256": "4b573b2c15ffb7521ca24c3b0815da6d75c50ac845e77b4f90c0c79cd95dbc80",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-sharetechmono.json",
+      "upstream": "src/fonts/free/free-sharetechmono.json",
+      "upstreamSha256": "fb66af7cea5055694ed025880fdc69f6e248916dd5059f1051131f8ec9b27107",
+      "sha256": "fb66af7cea5055694ed025880fdc69f6e248916dd5059f1051131f8ec9b27107",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-spacemono-bold.json",
+      "upstream": "src/fonts/free/free-spacemono-bold.json",
+      "upstreamSha256": "d7f03d1cceb48e6a46ff2bc860c49e337de6a6247bd3487f67075f53b773294b",
+      "sha256": "d7f03d1cceb48e6a46ff2bc860c49e337de6a6247bd3487f67075f53b773294b",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-spacemono.json",
+      "upstream": "src/fonts/free/free-spacemono.json",
+      "upstreamSha256": "52b3303830ee1f41aaa06863ce906d110923385dfa229cfd955034dbed1f625b",
+      "sha256": "52b3303830ee1f41aaa06863ce906d110923385dfa229cfd955034dbed1f625b",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-stardosstencil-bold.json",
+      "upstream": "src/fonts/free/free-stardosstencil-bold.json",
+      "upstreamSha256": "8a67db1998b94d227e2759a54f109153a92e082cd451bf25bdd090aed0c07dab",
+      "sha256": "8a67db1998b94d227e2759a54f109153a92e082cd451bf25bdd090aed0c07dab",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-stardosstencil.json",
+      "upstream": "src/fonts/free/free-stardosstencil.json",
+      "upstreamSha256": "7bbea6ca14ded1eca24ccc2e7396ec283d2abc173654902f87b9dfdc5eeca504",
+      "sha256": "7bbea6ca14ded1eca24ccc2e7396ec283d2abc173654902f87b9dfdc5eeca504",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-unifrakturmaguntia.json",
+      "upstream": "src/fonts/free/free-unifrakturmaguntia.json",
+      "upstreamSha256": "8e1d5318e0a3998b5eb60e0df496133f04611cf2ee0f8077891e4f49b3f69ffa",
+      "sha256": "8e1d5318e0a3998b5eb60e0df496133f04611cf2ee0f8077891e4f49b3f69ffa",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free/free-vollkorn.json",
+      "upstream": "src/fonts/free/free-vollkorn.json",
+      "upstreamSha256": "d86d6cf9146207d635d649c5906daed39e5e873be45fc5c75f9adb4087370d7c",
+      "sha256": "d86d6cf9146207d635d649c5906daed39e5e873be45fc5c75f9adb4087370d7c",
+      "adapted": false
+    },
+    {
+      "file": "fonts/free-loaders.js",
+      "upstream": "src/fonts/free-loaders.js",
+      "upstreamSha256": "044f178a877ff0cc91f8be53fb047f3c6853f9b4120582334958b096bbb75f82",
+      "sha256": "044f178a877ff0cc91f8be53fb047f3c6853f9b4120582334958b096bbb75f82",
+      "adapted": false
+    },
+    {
+      "file": "fonts/helvetiker_bold.typeface.json",
+      "upstream": "src/fonts/helvetiker_bold.typeface.json",
+      "upstreamSha256": "bd68159ee0b8d10fe24b9daa2e32f19686f9d8269a79dc8d44203a66298bfa2f",
+      "sha256": "bd68159ee0b8d10fe24b9daa2e32f19686f9d8269a79dc8d44203a66298bfa2f",
+      "adapted": false
+    },
+    {
+      "file": "fonts/optimer_regular.typeface.json",
+      "upstream": "src/fonts/optimer_regular.typeface.json",
+      "upstreamSha256": "17e5e14d94d66e0e60eed3bfde403fcfa3e677f3c914e4cbed264c0c0ba95175",
+      "sha256": "17e5e14d94d66e0e60eed3bfde403fcfa3e677f3c914e4cbed264c0c0ba95175",
+      "adapted": false
+    },
+    {
+      "file": "layout-preferences.js",
+      "upstream": "src/layout-preferences.js",
+      "upstreamSha256": "2e71d1d3a047c04ec8ffb77cdfa2f317f60ca0a71d556d5bbe4e10adbbea2b82",
+      "sha256": "2e71d1d3a047c04ec8ffb77cdfa2f317f60ca0a71d556d5bbe4e10adbbea2b82",
+      "adapted": false
+    },
+    {
+      "file": "mesh-appearance.js",
+      "upstream": "src/mesh-appearance.js",
+      "upstreamSha256": "df5ffa3e13a7d79a041544dc3da0304105f92e79eee372deb0af37b36d78700d",
+      "sha256": "df5ffa3e13a7d79a041544dc3da0304105f92e79eee372deb0af37b36d78700d",
+      "adapted": false
+    },
+    {
+      "file": "mesh-connectors.js",
+      "upstream": "src/mesh-connectors.js",
+      "upstreamSha256": "b66cfa5d80efdf7b0556d9cd796e30241194b838e0fa0931595a72d88d8fd5fb",
+      "sha256": "b66cfa5d80efdf7b0556d9cd796e30241194b838e0fa0931595a72d88d8fd5fb",
+      "adapted": false
+    },
+    {
+      "file": "mesh-contact-predicates.js",
+      "upstream": "src/mesh-contact-predicates.js",
+      "upstreamSha256": "bef0318ec51b7e282804459e65fc04313ed89769063b052bb4215f6405fb25a5",
+      "sha256": "bef0318ec51b7e282804459e65fc04313ed89769063b052bb4215f6405fb25a5",
+      "adapted": false
+    },
+    {
+      "file": "mesh-contours.js",
+      "upstream": "src/mesh-contours.js",
+      "upstreamSha256": "d8d04e96dd7ac2fa1bc313f106563190dcc00be03268465744a2c54dfc061cfb",
+      "sha256": "d8d04e96dd7ac2fa1bc313f106563190dcc00be03268465744a2c54dfc061cfb",
+      "adapted": false
+    },
+    {
+      "file": "mesh-counterpart.js",
+      "upstream": "src/mesh-counterpart.js",
+      "upstreamSha256": "eb30b275878bea8fac39a9ad943447768fda86c4964d92fcbe875c8f128c3a27",
+      "sha256": "eb30b275878bea8fac39a9ad943447768fda86c4964d92fcbe875c8f128c3a27",
+      "adapted": false
+    },
+    {
+      "file": "mesh-engine/geometry.js",
+      "upstream": "src/mesh-engine/geometry.js",
+      "upstreamSha256": "3c38913843492c750d05f261f75700009cb74735c98ed2f3d3b2ff1300c1b1e8",
+      "sha256": "3c38913843492c750d05f261f75700009cb74735c98ed2f3d3b2ff1300c1b1e8",
+      "adapted": false
+    },
+    {
+      "file": "mesh-engine/mesh-marks.js",
+      "upstream": "src/mesh-engine/mesh-marks.js",
+      "upstreamSha256": "7b44c30f121b0ea0b9e4881f5dd7d18913bdbf73755155f6f419620232cd3789",
+      "sha256": "7b44c30f121b0ea0b9e4881f5dd7d18913bdbf73755155f6f419620232cd3789",
+      "adapted": false
+    },
+    {
+      "file": "mesh-engine/mesh-partition-schema.js",
+      "upstream": "src/mesh-engine/mesh-partition-schema.js",
+      "upstreamSha256": "d4273be27d52a948230586048266556e37ceeb6fbef48064dfa617d4bf1d2633",
+      "sha256": "d4273be27d52a948230586048266556e37ceeb6fbef48064dfa617d4bf1d2633",
+      "adapted": false
+    },
+    {
+      "file": "mesh-engine/mesh-reference.js",
+      "upstream": "src/mesh-engine/mesh-reference.js",
+      "upstreamSha256": "d14a2a3436d590d3b2ef7d2e8d1dffc842908635195ba34bff0305706449f9ea",
+      "sha256": "d14a2a3436d590d3b2ef7d2e8d1dffc842908635195ba34bff0305706449f9ea",
+      "adapted": false
+    },
+    {
+      "file": "mesh-engine/mesh-sketch.js",
+      "upstream": "src/mesh-engine/mesh-sketch.js",
+      "upstreamSha256": "e869b98607dd54e6b8a8e5b2895bac32b678931425aea06a385b90a9509cc799",
+      "sha256": "e869b98607dd54e6b8a8e5b2895bac32b678931425aea06a385b90a9509cc799",
+      "adapted": false
+    },
+    {
+      "file": "mesh-engine/parameters.js",
+      "upstream": "src/mesh-engine/parameters.js",
+      "upstreamSha256": "f89c3f1b595521ec32cacfb53b2dcda07556af0ddd28bacd80027a5cb3929773",
+      "sha256": "f89c3f1b595521ec32cacfb53b2dcda07556af0ddd28bacd80027a5cb3929773",
+      "adapted": false
+    },
+    {
+      "file": "mesh-engine/parametric-geometry.js",
+      "upstream": "src/mesh-engine/parametric-geometry.js",
+      "upstreamSha256": "7bcb1f1e930a5bf46f3445ad982f55ac114d5af5fb5eae56d8b7faa1f4d3892c",
+      "sha256": "7bcb1f1e930a5bf46f3445ad982f55ac114d5af5fb5eae56d8b7faa1f4d3892c",
+      "adapted": false
+    },
+    {
+      "file": "mesh-erase-fill.js",
+      "upstream": "src/mesh-erase-fill.js",
+      "upstreamSha256": "09430f51b4be006db4ecd7df4de147484520009a1783309013df88beda86c1a3",
+      "sha256": "09430f51b4be006db4ecd7df4de147484520009a1783309013df88beda86c1a3",
+      "adapted": false
+    },
+    {
+      "file": "mesh-features.js",
+      "upstream": "src/mesh-features.js",
+      "upstreamSha256": "47740b49de3bfef8b5d010d4cb3a1e1689477f08ed7c4cdb91f6365678d29f6a",
+      "sha256": "47740b49de3bfef8b5d010d4cb3a1e1689477f08ed7c4cdb91f6365678d29f6a",
+      "adapted": false
+    },
+    {
+      "file": "mesh-hole-fill.js",
+      "upstream": "src/mesh-hole-fill.js",
+      "upstreamSha256": "e72e919b6ffff337b92fe624c7a4b52d6781edd75aa7e1f41751aae01e88f12a",
+      "sha256": "e72e919b6ffff337b92fe624c7a4b52d6781edd75aa7e1f41751aae01e88f12a",
+      "adapted": false
+    },
+    {
+      "file": "mesh-hollow.js",
+      "upstream": "src/mesh-hollow.js",
+      "upstreamSha256": "a47d436520af5093280586996f9113b2d13b4aba758bc81bdec30b86f64497b7",
+      "sha256": "a47d436520af5093280586996f9113b2d13b4aba758bc81bdec30b86f64497b7",
+      "adapted": false
+    },
+    {
+      "file": "mesh-inspector.js",
+      "upstream": "src/mesh-inspector.js",
+      "upstreamSha256": "363b49afeb4f08e5ffbbf20a571d82edc0a8a62d018742abc4321f48bd00ee6b",
+      "sha256": "363b49afeb4f08e5ffbbf20a571d82edc0a8a62d018742abc4321f48bd00ee6b",
+      "adapted": false
+    },
+    {
+      "file": "mesh-lid.js",
+      "upstream": "src/mesh-lid.js",
+      "upstreamSha256": "9a384ce7534adaa5918a53d178e09946ac22bd3c406df3e2412c6cb1bf7474ba",
+      "sha256": "9a384ce7534adaa5918a53d178e09946ac22bd3c406df3e2412c6cb1bf7474ba",
+      "adapted": false
+    },
+    {
+      "file": "mesh-make-solid.js",
+      "upstream": "src/mesh-make-solid.js",
+      "upstreamSha256": "3c7fcebb733579303ee5f2c314e930b08d3e41ec3a11c3e86b086038e551d689",
+      "sha256": "3c7fcebb733579303ee5f2c314e930b08d3e41ec3a11c3e86b086038e551d689",
+      "adapted": false
+    },
+    {
+      "file": "mesh-protection.js",
+      "upstream": "src/mesh-protection.js",
+      "upstreamSha256": "7c5c77c42f97daad478ad38116a4d9f6288abda367711f8a347dc60e43b35e16",
+      "sha256": "7c5c77c42f97daad478ad38116a4d9f6288abda367711f8a347dc60e43b35e16",
+      "adapted": false
+    },
+    {
+      "file": "mesh-reduce.js",
+      "upstream": "src/mesh-reduce.js",
+      "upstreamSha256": "845c2791899462b76d1d933e764073feac3e7c31f043e80c2810156d34c43f6c",
+      "sha256": "845c2791899462b76d1d933e764073feac3e7c31f043e80c2810156d34c43f6c",
+      "adapted": false
+    },
+    {
+      "file": "mesh-remesh.js",
+      "upstream": "src/mesh-remesh.js",
+      "upstreamSha256": "7c0f47ced6d687a94411d39c690e71acaf07308f44e19fc0412bc19c18fed3ce",
+      "sha256": "7c0f47ced6d687a94411d39c690e71acaf07308f44e19fc0412bc19c18fed3ce",
+      "adapted": false
+    },
+    {
+      "file": "mesh-sculpt.js",
+      "upstream": "src/mesh-sculpt.js",
+      "upstreamSha256": "a3b7663540c90f1b24962982d9c4a246ad1ea235e19b591671e5784d29dc0f88",
+      "sha256": "a3b7663540c90f1b24962982d9c4a246ad1ea235e19b591671e5784d29dc0f88",
+      "adapted": false
+    },
+    {
+      "file": "mesh-selection-data.js",
+      "upstream": "src/mesh-selection-data.js",
+      "upstreamSha256": "fa392e0947991d70339c131ece97c57f2d58adc67053dcaff151567f253f0d1b",
+      "sha256": "fa392e0947991d70339c131ece97c57f2d58adc67053dcaff151567f253f0d1b",
+      "adapted": false
+    },
+    {
+      "file": "mesh-selection-screen.js",
+      "upstream": "src/mesh-selection-screen.js",
+      "upstreamSha256": "404a2ed3e4b4606c86ae99541772633d4a8819c9294e5025aec9e0d1750b72d9",
+      "sha256": "404a2ed3e4b4606c86ae99541772633d4a8819c9294e5025aec9e0d1750b72d9",
+      "adapted": false
+    },
+    {
+      "file": "mesh-selection-worker.js",
+      "upstream": "src/mesh-selection-worker.js",
+      "upstreamSha256": "77809ae99c8eeee3244a9147c4a18baa008ece9a9d55e0a0e639be838e140961",
+      "sha256": "77809ae99c8eeee3244a9147c4a18baa008ece9a9d55e0a0e639be838e140961",
+      "adapted": false
+    },
+    {
+      "file": "mesh-simple-repair.js",
+      "upstream": "src/mesh-simple-repair.js",
+      "upstreamSha256": "a8e135bdca5bfe7bbc7a126a8e1fff2a9c6045837003b97c5082eab061dee471",
+      "sha256": "a8e135bdca5bfe7bbc7a126a8e1fff2a9c6045837003b97c5082eab061dee471",
+      "adapted": false
+    },
+    {
+      "file": "mesh-smooth.js",
+      "upstream": "src/mesh-smooth.js",
+      "upstreamSha256": "1a1315d70ea34326cee934ddabc36826e57d6f20a59fe446b913a7ee08270e94",
+      "sha256": "1a1315d70ea34326cee934ddabc36826e57d6f20a59fe446b913a7ee08270e94",
+      "adapted": false
+    },
+    {
+      "file": "mesh-source-data.js",
+      "upstream": "src/mesh-source-data.js",
+      "upstreamSha256": "192e283b71ae02cbbac482749b7060291ffe4a052d88ff1337d8ba9298867763",
+      "sha256": "192e283b71ae02cbbac482749b7060291ffe4a052d88ff1337d8ba9298867763",
+      "adapted": false
+    },
+    {
+      "file": "mesh-workplane.js",
+      "upstream": "src/mesh-workplane.js",
+      "upstreamSha256": "2a5c03b2712b5a642014ca8e2dac5927d2f176cddb56ac61472fe55642692aca",
+      "sha256": "2a5c03b2712b5a642014ca8e2dac5927d2f176cddb56ac61472fe55642692aca",
+      "adapted": false
+    },
+    {
+      "file": "organization.js",
+      "upstream": "src/organization.js",
+      "upstreamSha256": "24698c3ef9b45a838eb3328bfa878443db9cc4b44493ab3284664076fe157cdb",
+      "sha256": "24698c3ef9b45a838eb3328bfa878443db9cc4b44493ab3284664076fe157cdb",
+      "adapted": false
+    },
+    {
+      "file": "parameters.js",
+      "upstream": "src/parameters.js",
+      "upstreamSha256": "c19620290b76bd46548ce8090d7912f1a070d1240653a688728a33d780bff462",
+      "sha256": "c19620290b76bd46548ce8090d7912f1a070d1240653a688728a33d780bff462",
+      "adapted": false
+    },
+    {
+      "file": "project-objects.js",
+      "upstream": "src/project-objects.js",
+      "upstreamSha256": "7c30bd19cdeb4028560aacbde688890723e2805fa3190e110f24a41b175b63e8",
+      "sha256": "7c30bd19cdeb4028560aacbde688890723e2805fa3190e110f24a41b175b63e8",
+      "adapted": false
+    },
+    {
+      "file": "sandbox-frame.html",
+      "upstream": "src/sandbox-frame.html",
+      "upstreamSha256": null,
+      "sha256": "d34ea0b78ce0be82ed6653b935aade81aaf5a500f3e9cd69158e51ffde50bfab",
+      "adapted": false
+    },
+    {
+      "file": "version.js",
+      "upstream": "src/version.js",
+      "upstreamSha256": "91a29dccc209a6d52cb7d218d2e04e904790de1eebd8898564e0bb2bafff1bf6",
+      "sha256": "91a29dccc209a6d52cb7d218d2e04e904790de1eebd8898564e0bb2bafff1bf6",
+      "adapted": false
+    }
+  ]
+}

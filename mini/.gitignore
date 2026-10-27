@@ -1,0 +1,13 @@
+node_modules/
+dist/
+Daten-Mini/
+work/
+*.zip
+dist-android/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/*.jks
+
+Bibliothek/

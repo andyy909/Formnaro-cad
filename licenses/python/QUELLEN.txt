@@ -1,0 +1,3 @@
+Pyodide 314.0.7, unverändert: MPL-2.0. Vollständiges Source-Archiv im Formnaro-Quellpaket unter python-runtime/pyodide-314.0.7-source.tar.gz. Quellen auch https://github.com/pyodide/pyodide/tree/314.0.7
+Python 3.14.2: PSF und enthaltene Lizenzhinweise siehe LICENSE-PYTHON; Quellen https://github.com/python/cpython/tree/v3.14.2
+Fest mitgelieferte Laufzeit, kein Download während der Programmnutzung. Exakte Dateihashes in provenance.json.

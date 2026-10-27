@@ -1,0 +1,19 @@
+{
+  "name": "@formnaro/cad-kernel",
+  "version": "0.11.0-proof.1",
+  "private": true,
+  "type": "module",
+  "description": "Pinned original Replicad/OCCT kernel with native Formnaro affine, ray, BRep and double export interfaces.",
+  "license": "SEE LICENSE IN README.md",
+  "main": "./formnaro_cad.js",
+  "types": "./formnaro_cad.d.ts",
+  "exports": {
+    ".": {
+      "types": "./formnaro_cad.d.ts",
+      "default": "./formnaro_cad.js"
+    },
+    "./wasm": "./formnaro_cad.wasm",
+    "./integrity": "./integrity.json",
+    "./package.json": "./package.json"
+  }
+}

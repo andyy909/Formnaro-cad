@@ -1,0 +1,37 @@
+.settings-tabs{display:flex;gap:6px;margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:9px}.settings-tabs button{flex:1}.settings-tabs button.active{background:#dff0f3;color:#087d91;border-color:#9acbd0}[data-settings-page][hidden]{display:none}[data-settings-page]{min-height:230px}.plugin-row{display:flex;gap:10px;align-items:center;border:1px solid var(--line);padding:10px;border-radius:7px;margin:10px 0}.plugin-row>div{flex:1}.plugin-row p{margin:3px 0;font-size:11px}.plugin-row button{font-size:11px}#settings-handle-output{width:45px;white-space:nowrap;font-size:12px}.dialog-label input[type=range]{flex:1;width:auto;accent-color:var(--accent)}#settings-open{font-size:20px;padding:5px 10px}.plugin-shape{border-color:#87b9ad}.plugin-shape span::before{content:'⊞ ';color:#29817a}
+:root[data-theme=dark]{color-scheme:dark;color:#d6e2eb;background:#172330;--accent:#66c5d5;--line:#3b4d5e}
+[data-theme=dark] body,[data-theme=dark] #viewport{background:#172330}
+[data-theme=dark] header,[data-theme=dark] .toolbar,[data-theme=dark] aside,[data-theme=dark] dialog{background:#212f3e;color:#d6e2eb}
+[data-theme=dark] button,[data-theme=dark] input,[data-theme=dark] select{background:#2b3c4e;color:#e1eaf2;border-color:#485c70}
+[data-theme=dark] button:hover{background:#38546a;border-color:#6c99ac}
+[data-theme=dark] button.primary{background:#168697;color:white}
+[data-theme=dark] .tools button{background:transparent;color:#d6e2eb}
+[data-theme=dark] .tools button:hover,[data-theme=dark] .object-item:hover{background:#304659}
+[data-theme=dark] .shape-tile{background:#2c3e50;border-color:#3b5064}
+[data-theme=dark] .shape-tile:hover{background:#38546a}
+[data-theme=dark] .project input{background:transparent;color:#dfebf4}
+[data-theme=dark] .project span,[data-theme=dark] .panel-heading span,[data-theme=dark] .small-note,[data-theme=dark] .parameter-row,[data-theme=dark] .check-line,[data-theme=dark] .color-line,[data-theme=dark] .xyz-labels,[data-theme=dark] .workspace-settings,[data-theme=dark] #modal-body p,[data-theme=dark] #workspace-label,[data-theme=dark] .view-top,[data-theme=dark] #active-container{color:#a9bdcf}
+[data-theme=dark] .section-title small{color:#9cafc1}
+[data-theme=dark] .container-item{background:#293d50}
+[data-theme=dark] .object-item.selected,[data-theme=dark] .container-item.active-container{background:#205264;color:#d5f4f9}
+[data-theme=dark] .object-item.reference{background:#64512b}
+[data-theme=dark] #history-panel{background:#3b342a;border-color:#8a7349}
+[data-theme=dark] .feature-item{border-left-color:#66563c}
+[data-theme=dark] .feature-item.selected{background:#59462b;color:#ffe1a4}
+[data-theme=dark] .feature-icon{color:#e7bb77}
+[data-theme=dark] .solid-toggle button.active,[data-theme=dark] .mode-switch button.active,[data-theme=dark] .settings-tabs button.active{background:#245663;color:#bbf2fa;border-color:#5f929c}
+[data-theme=dark] .mode-switch,[data-theme=dark] .view-controls button,[data-theme=dark] .view-controls select,[data-theme=dark] .view-bottom{background:#243548ed;color:#bdcede}
+[data-theme=dark] #measure-label{background:#2e3b44;color:#e1e6d5;border-color:#566675}
+[data-theme=dark] .dimension-field,[data-theme=dark] .align-banner,[data-theme=dark] .align-marker{background:#2c4154;color:#e6eef5;border-color:#6e91a2}
+[data-theme=dark] .dimension-field>span:first-child{color:#b2c5d3}
+[data-theme=dark] .dimension-field:focus-within{background:#51452f;border-color:#e4b466}
+[data-theme=dark] .marker-dot,[data-theme=dark] .marker-tick{background:#d0e0e9}
+[data-theme=dark] .ruler-banner,[data-theme=dark] .ruler-field{background:#273f39;color:#cae9d7;border-color:#6b9482}
+[data-theme=dark] #thread-preset{background:#285565}
+[data-theme=dark] #empty-hint h1{color:#d5e4ee}
+[data-theme=dark] #empty-hint p{color:#9db2c4}
+[data-theme=dark] .warning{background:#574329;color:#f3d9af}
+[data-theme=dark] dialog::backdrop{background:#08121aaa}
+[data-theme=dark] #toast{background:#36536b}
+@media(max-width:1150px){.file-actions{gap:4px}.file-actions button{padding:7px}.view-controls button{width:auto;max-width:95px}}
+.portable-start-error{position:fixed;z-index:10000;inset:25% 15% auto;padding:28px;background:#fff;border:2px solid #b33;border-radius:12px;color:#222;box-shadow:0 8px 40px #0006;}

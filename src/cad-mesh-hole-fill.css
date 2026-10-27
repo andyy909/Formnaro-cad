@@ -1,0 +1,12 @@
+#cad-mesh-hole-fill{width:365px;max-height:calc(100% - 106px)}
+#cad-mesh-hole-fill .mesh-hole-heading,#cad-mesh-hole-fill .mesh-hole-page{display:flex;align-items:center;justify-content:space-between;gap:6px}
+#cad-mesh-hole-fill label{display:flex;align-items:center;gap:7px;margin:10px 0;font-size:12px}
+#cad-mesh-hole-fill input[type=radio]{width:16px;height:16px;flex:0 0 auto;margin:0}
+#cad-mesh-hole-fill .small-note{font-size:11px;line-height:1.45}
+#mesh-hole-result{white-space:pre-wrap;font-size:12px}
+#mesh-hole-rings{max-height:230px;overflow:auto}
+#cad-mesh-hole-fill .mesh-hole-ring{display:grid;grid-template-columns:1fr auto;gap:6px;border-bottom:1px solid var(--line,#d9e2ea)}
+#cad-mesh-hole-fill .mesh-hole-ring p{grid-column:1/-1;margin:0 0 8px}
+#cad-mesh-hole-fill .mesh-hole-ring button{align-self:center;padding:5px}
+#cad-mesh-hole-fill .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px}
+[data-theme=dark] #cad-mesh-hole-fill .edge-actions{background:#212f3e}

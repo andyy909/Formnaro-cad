@@ -1,0 +1,192 @@
+Formnaro 0.10 – KI-Werkstatt und lokale KI-Schnittstelle
+======================================================
+
+Formnaro ist der neue Name der bisherigen Anwendung OfflineCAD/Tinkoff. Die bestehende lokale Verbindung,
+scripts/offlinecad_ai.py, offlinecad_-Werkzeuge und %APPDATA%/offlinecad bleiben
+für Kompatibilität erhalten. Die bisherigen OfflineCAD-KI-*.json-Dateinamen
+bleiben ebenfalls verwendbar; ihr Inhalt beschreibt den aktuellen Formnaro-Stand.
+
+SCHNELLSTART IM PROGRAMM
+1. Zahnrad oben → KI / API öffnen.
+2. API-Format wählen, API-Basisadresse und Modellkennung eintragen.
+   OpenAI: Responses, https://api.openai.com/v1 und eine von deinem Konto
+   unterstützte Modellkennung. Kompatible Anbieter/lokale Server: Chat-API
+   und deren /v1-Basisadresse. Der Anbieter muss JSON-Modus unterstützen.
+3. Eigenen API-Schlüssel im Passwortfeld eintragen. Bitte nicht im Chat senden.
+   „API-Einstellungen speichern“, dann optional „Verbindung testen“.
+   Der Test fragt /models ab; Anbieter ohne diesen Endpunkt können trotzdem
+   Modellanfragen unterstützen. Die Modellkennung nicht ausdenken.
+4. ✦ KI öffnen und einen Auftrag mit Maßen in mm schreiben.
+   Beispiel: „Erstelle eine 60 × 40 × 6 mm Platte mit vier 5-mm-Bohrungen,
+   10 mm Abstand vom Rand und 2 mm Radius an den senkrechten Außenkanten.“
+5. „Vorschlag erzeugen“: Die KI erhält automatisch den vollständigen
+   Werkzeugkontext und den aktuellen kompakten Modellzustand einschließlich
+   Gruppenquellen, IDs, Parametern, Sperren und Welttransformationen.
+6. Die Befehle werden lokal geprüft. „Auf Fläche ansehen“ zeigt die berechnete
+   Geometrie. „Übernehmen“ ändert das Projekt; „Verwerfen“ erhält das Original.
+   Strg+Z setzt die ganze Übernahme zurück. Eine Änderung des Projekts zwischen
+   Vorschau und Übernahme verlangt eine neue Prüfung.
+
+Bestehende Teile bearbeiten: Gewünschtes Teil oder seine Bohrung zuerst
+auswählen, dann z.B. „Vergrößere die ausgewählte Bohrung auf 8 mm; behalte die
+anderen Bohrungen bei.“ Gruppenquellen bleiben anschließend mit den normalen
+Griffen und Parametern bearbeitbar. Wenn die KI Rückfragen stellt, die Antwort
+zum Auftrag hinzufügen und erneut senden. Jede Anfrage ist eigenständig.
+
+DATEN UND SCHLÜSSEL
+Der Standardeditor, manuelle JSON-Befehle und die lokale Schnittstelle bleiben
+offline. Cloud-KI benötigt Internet und einen eigenen Anbieterzugang; etwaige
+API-Kosten entstehen beim Anbieter. Auftrag, Objektnamen, Maße und Formparameter
+werden beim Senden an die eingestellte Basisadresse übertragen. Keine laufende
+Übertragung im normalen CAD-Betrieb. Lokale Modelle können vollständig offline
+arbeiten, wenn ihr Server bereits lokal installiert ist.
+
+Ohne „Schlüssel merken“ bleibt der Schlüssel nur während dieser Sitzung im
+Speicher. Mit „merken“ speichert Electron ihn verschlüsselt über Windows DPAPI
+in Daten/ai-settings.json neben Formnaro.exe. Anbieter und Modell werden mit
+dem portablen Ordner übertragen; auf einem anderen PC muss der an das
+Windows-Konto gebundene Schlüssel erneut eingegeben werden. Das ist keine
+Absicherung gegen andere Programme unter
+demselben Windows-Konto. Ein Adresswechsel zu einem anderen Anbieter ohne neue
+Schlüsseleingabe entfernt den bisherigen Schlüssel. „Schlüssel entfernen“ löscht
+ihn auch aus der gespeicherten Konfiguration. API-Einstellungen und Schlüssel
+gelangen nicht in Projekte, KI-Kontext oder Exporte. „Standardwerte“ setzt nur
+die normalen CAD-Einstellungen zurück; API-Einstellungen bleiben separat.
+
+ANDERE KI OHNE EINGEBAUTEN ANBIETER
+✦ KI → JSON-Befehle / externe KI → „Kontext kopieren“ oder „Kontext speichern“.
+Dieser Export enthält den Werkzeugvertrag UND den aktuellen Modellzustand.
+Der KI den Kontext und den Auftrag geben, ihre JSON-Antwort einfügen und
+„Befehle prüfen“. Erst „Änderungen übernehmen“ verändert das Projekt.
+Das „Befehlsbeispiel“ verwendet automatisch die aktuelle Projektrevision.
+Der statische mitgelieferte Kontext enthält den Vertrag, aber keinen aktuellen
+Modellzustand. Für vorhandene Teile immer zusätzlich /scene lesen.
+
+LOKALE DIREKTSTEUERUNG FÜR CODEX UND ANDERE AGENTEN
+In Einstellungen → KI / API „Lokale KI-Schnittstelle aktivieren“.
+Sie lauscht ausschließlich auf 127.0.0.1, mit zufälligem Port und Zugriffstoken.
+Der angezeigte Verbindungsdateipfad ist maßgeblich; den Pfad kann man kopieren.
+Standard: %APPDATA%/offlinecad/ai-bridge.json. Der Token gilt für diese laufende
+Schnittstelle und ändert sich beim Neustart. Keine globale Freigabe, kein CORS.
+Programme mit Zugriff auf diese Datei können Modelle lesen und bearbeiten.
+Die Verbindungsdatei nicht als Modellkontext weitergeben oder veröffentlichen.
+Deaktivieren beendet den Server und entfernt die Verbindungsdatei.
+
+Python-Client: Python 3.10 oder neuer; keine zusätzlichen Python-Pakete.
+Python ist ausschließlich für diesen externen Adapter erforderlich, nicht für
+die portable CAD-Anwendung. offlinecad_ai.py liegt im Ordner scripts.
+In PowerShell (Pfade anpassen):
+
+  $cadConnection = 'C:/PFAD/ZUR/ai-bridge.json'
+  python scripts/offlinecad_ai.py --connection $cadConnection context --out kontext.json
+  python scripts/offlinecad_ai.py --connection $cadConnection scene --out szene.json
+  python scripts/offlinecad_ai.py --connection $cadConnection preview befehle.json --out vorschlag.json
+  python scripts/offlinecad_ai.py --connection $cadConnection apply vorschlag.json
+  python scripts/offlinecad_ai.py --connection $cadConnection export stl --out teil.stl
+  python scripts/offlinecad_ai.py --connection $cadConnection project --out modell.ocad
+  python scripts/offlinecad_ai.py --connection $cadConnection screenshot --out ansicht.png
+
+commands-example.json erst mit der aktuellen revision aus szene.json ergänzen.
+Preview verändert das Original nicht. Apply übernimmt exakt die berechneten IDs
+und Geometrien. Ein alter Vorschlag wird mit STALE_REVISION abgewiesen.
+Der Client liest den Token selbst; er muss nicht in Befehlen stehen.
+
+MCP-ADAPTER
+Für KI-Clients mit MCP-stdio-Unterstützung:
+
+  python scripts/offlinecad_ai.py --connection 'C:/PFAD/ZUR/ai-bridge.json' --mcp
+
+mcp-config-example.json zeigt eine allgemeine Client-Konfiguration. Script-
+und Verbindungsdateipfad anpassen. Codex und andere Clients haben eigene
+Konfigurationsoberflächen/-formate; der Adapter verändert sie nicht automatisch.
+Unterstützte MCP-Protokollversionen: 2025-11-25, 2025-06-18, 2025-03-26, 2024-11-05.
+Werkzeuge: offlinecad_context, offlinecad_scene, offlinecad_project,
+offlinecad_screenshot, offlinecad_preview, offlinecad_apply, offlinecad_export.
+Ressourcen: offlinecad://context und offlinecad://scene.
+Die Initialisierung liefert Arbeitsanweisungen. Danach Kontext und Szene lesen.
+MCP übernimmt keine Anbieteranmeldung und benötigt keinen Cloud-Schlüssel.
+Der Screenshot zeigt die aktuelle Arbeitsfläche; API-Preview liefert den
+berechneten Zustand und Maße, schaltet die sichtbare Fläche aber nicht selbst um.
+Der Adapter schreibt keine Dateien über MCP; Exporte liefern Base64-Dateibytes.
+
+HTTP-API, FORMAT 1
+GET /v1/context       Vertrag, Parameterkatalog und vollständiges JSON Schema
+GET /v1/scene         Kompakter Modellzustand, Auswahl, Revision, Quellenpfade
+GET /v1/project       Vollständiges .ocad-Projekt einschließlich Netzen
+GET /v1/screenshot    Arbeitsfläche als PNG/Base64
+POST /v1/preview      {revision, label?, commands:[...]}
+POST /v1/apply        {previewId, revision}
+POST /v1/export       {format:"stl"|"obj", ids?:[oberste Objekt-IDs]}
+Authorization: Bearer <Token aus Verbindungsdatei>; POST application/json.
+HTTP 409: Projekt inzwischen verändert. Szene neu lesen und neu prüfen.
+Die OpenAPI-Beschreibung steht in OfflineCAD-KI-OpenAPI.json.
+
+UNTERSTÜTZTE BEFEHLE
+create: native Form erstellen, mit Parametern, optional als neue Gruppenquelle.
+update: bestehende Maße, Position, Drehung, Parameter, Qualität oder Loch/Körper
+ändern; auch verschachtelte Quellen und ausgesetzte Schritte.
+transform: relativ verschieben/drehen/skalieren oder Mittelpunkt neu setzen.
+duplicate, delete, group: Kopien, Entfernen, Vereinigung/Schnittmenge mit Historie.
+pattern: Reihe, Raster oder Kreis; align: echte Geometriegrenzen, feste Referenz.
+drop: tatsächlichen Körper an Ebene absetzen; workplane: numerische Ebene setzen.
+layer, folder, assign: neue Container anlegen und eigenständige Teile zuordnen.
+
+WICHTIGE KOORDINATENREGELN
+Alle Maße mm, alle Positionen Mittelpunkte. Quellenpositionen und -größen liegen
+lokal VOR der Skalierung ihrer Gruppe. /scene liefert volle affine Weltmatrizen
+und tatsächliche Weltgrenzen. transform.space world/plane rechnet Verschiebungen
+auch bei gespiegelten oder nichtproportional skalierten Gruppen korrekt zurück.
+Rotation und Skalierung bleiben lokale Quellenoperationen. Neue Gruppenquellen
+werden mit parent und lokalen Koordinaten erstellt. Neue Teile auf geneigter
+Arbeitsebene: create.space plane. Fehlende Position setzt die Unterseite exakt
+auf die Ebene. Gear/thread-params verwenden, um Zähne oder Steigung zu ändern;
+reines Skalieren verändert auch das Profil. Beispiele und Grenzen im Kontext.
+
+UMFANG UND PRÜFUNG
+Native Teile, Bohrungen, Formparameter, Gruppenhistorie und Exporte werden lokal
+berechnet. Persönliche Vorlagen unterstützen einfache Maßformeln; kein allgemeiner
+Constraintbaum. Keine Skizzen, freie Mesh-Kanten-Fillets,
+Loft/Sweep, STEP oder bewegliche Baugruppen. Zusätzliche ausführbare KI-Skripte
+werden nicht geladen. Ungültige Befehle oder Geometrien erhalten das Original.
+Die KI muss Maße, Passungen und gewünschte Funktionen aus dem Auftrag ableiten;
+eine erfolgreiche Geometrieprüfung beweist keine mechanische Eignung.
+
+Anbieter-Adapter mit lokalem Testserver geprüft, lokale HTTP-API sowie Python-
+CLI/MCP mit der echten Desktop-Anwendung. Eine spätere ausdrücklich beauftragte
+Anbieterprüfung bestätigte den Verbindungstest; Generierung wurde wegen fehlenden
+API-Guthabens abgewiesen. Erfolgreiche Cloudgenerierung ist daher noch unbestätigt.
+Kompatibilität setzt die beschriebenen API-Formate voraus.
+
+Technische Primärquellen:
+https://developers.openai.com/api/docs/guides/structured-outputs
+https://www.electronjs.org/docs/latest/api/safe-storage
+https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle
+https://modelcontextprotocol.io/specification/2025-11-25/basic/transports
+https://modelcontextprotocol.io/specification/2025-11-25/server/tools
+
+
+ERGÄNZUNG 0.10
+Projektformat 4; lokale API weiterhin 1. Die Oberfläche besitzt jetzt freie
+Kantenrundungen/Fasen, allgemeine Passungshilfen und STEP-Import/Export.
+Vorhandene Kantenoperationen und CAD-Daten bleiben bei üblichen Quellenänderungen
+erhalten; geometrisch unpassende Änderungen werden abgelehnt. Die Szenenübersicht
+nennt Kantenoperationen und Herkunft der CAD-Daten. API-Datenbefehle erzeugen
+keine neuen Kantenoperationen; API-Export bleibt STL/OBJ. Kanten und STEP über
+die Oberfläche bedienen. Für alle Bearbeitungsdaten .ocad verwenden.
+
+ERGÄNZUNG 0.11 – KI-CHAT UND GEZIELTE BEARBEITUNG
+Der kleine Chat unten rechts verwendet die vorhandene Anbieter-/Modellwahl.
+Klare Maßänderungen dürfen direkt als Vorschlag vorbereitet werden. Die KI nutzt
+vorhandene Maße; neue Maße fragt sie nur ab, wenn wesentliche Angaben fehlen.
+Bei „nur die Höhe ändern“ bleiben Breite, Tiefe und der lokale Boden erhalten.
+Wer ausdrücklich einen Entwurf oder geschätzte Maße verlangt, erhält einen
+Vorschlag mit offengelegten Annahmen. Änderungen brauchen weiterhin Übernehmen.
+
+Bei ausgewählten Gruppenquellen enthält selectionTargets den vollständigen
+Objekt-/Quellenpfad. CAD-Fehler und Übernehmen/Verwerfen werden als Formnaro
+angezeigt und beim nächsten Senden an die KI zurückgemeldet. Fehlgeschlagene
+Aufträge und vorherige Befehlsvorschläge bleiben im begrenzten Arbeitsspeicher-
+Verlauf. Fehler und Abbruch erhalten den Entwurf und seine Bildanhänge.
+Es erfolgt keine zusätzliche automatische Anbieteranfrage.
+Aktuell Projektformat 5 und native CAD-Körper; API-Export unterstützt STEP,
+STL, OBJ, 3MF, glTF und SVG. Frühere Format-/Exportangaben oben sind historisch.

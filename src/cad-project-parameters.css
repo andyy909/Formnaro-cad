@@ -1,0 +1,31 @@
+.cad-project-parameters-panel{position:absolute;top:12px;left:12px;z-index:33;width:min(680px,calc(100% - 24px));max-height:calc(100% - 24px);display:flex;flex-direction:column;box-sizing:border-box;background:var(--panel,#f7f9fb);color:var(--text,#172c3d);border:1px solid var(--border,#a7b8c4);border-radius:10px;box-shadow:0 6px 26px #102c4240;overflow:hidden}
+.cad-project-parameters-panel[hidden]{display:none!important}.cad-project-parameters-panel [hidden]{display:none!important}
+.cad-project-parameters-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid var(--border,#bac8d2)}
+.cad-project-parameters-panel header>div{display:flex;gap:6px;flex:none}.cad-project-parameters-panel header strong{font-size:14px}
+.cad-project-parameters-panel .parameter-body{overflow:auto;min-height:0;padding:10px 12px}
+.cad-project-parameters-panel nav{display:flex;gap:6px;margin:0 0 12px}.cad-project-parameters-panel nav button{flex:1}.cad-project-parameters-panel nav [aria-pressed=true]{background:#087f96;color:white;border-color:#087f96}
+.cad-project-parameters-panel label{display:flex;flex-direction:column;gap:4px;margin:8px 0;font-size:12px;overflow-wrap:anywhere;min-width:0}
+.cad-project-parameters-panel input,.cad-project-parameters-panel select{box-sizing:border-box;width:100%;min-width:0;max-width:100%;min-height:31px}
+.cad-project-parameters-panel button{min-height:31px;white-space:normal;font-size:12px}
+.cad-project-parameters-panel button:focus-visible,.cad-project-parameters-panel input:focus-visible,.cad-project-parameters-panel select:focus-visible{outline:2px solid #1680ad;outline-offset:2px}
+.cad-project-parameters-panel .parameter-note{font-size:12px;line-height:1.5;overflow-wrap:anywhere;margin:5px 0 10px}
+.cad-project-parameters-panel .parameter-table-scroll{max-width:100%;overflow:auto;margin-top:8px}
+.cad-project-parameters-panel table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 14px}
+.cad-project-parameters-panel th{font-weight:600;text-align:left;white-space:nowrap;background:#e9f0f5}
+.cad-project-parameters-panel th,.cad-project-parameters-panel td{padding:6px;border-bottom:1px solid var(--border,#c9d5de);vertical-align:top;overflow-wrap:anywhere}
+.cad-project-parameters-panel td input{min-width:95px}.cad-project-parameters-panel td:last-child{width:1%;white-space:nowrap}.cad-project-parameters-panel td:last-child button{display:block;min-width:82px;margin-bottom:3px}
+.cad-project-parameters-panel td output{display:block;min-width:55px;line-height:31px;font-variant-numeric:tabular-nums}
+.cad-project-parameters-panel .parameter-binding-chooser{display:grid;grid-template-columns:1fr 1.2fr;gap:0 10px}.cad-project-parameters-panel .parameter-binding-chooser>label:nth-child(3),.cad-project-parameters-panel .parameter-binding-chooser>.parameter-row-actions,.cad-project-parameters-panel .parameter-binding-chooser>.parameter-note{grid-column:1/-1}
+.cad-project-parameters-panel .parameter-row-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:7px 0}.cad-project-parameters-panel .parameter-row-actions>select{flex:1;min-width:140px}.cad-project-parameters-panel h4{font-size:13px;margin:16px 0 7px}
+.cad-project-parameters-panel footer{flex:none;display:flex;flex-direction:column;min-height:0;box-sizing:border-box;padding:9px 12px;border-top:1px solid var(--border,#bac8d2);max-height:min(42vh,420px);overflow:hidden}
+.cad-project-parameters-panel footer p{font-size:12px;line-height:1.4;overflow-wrap:anywhere;margin:0 0 6px}.cad-project-parameters-panel .parameter-summary{font-weight:600}
+.cad-project-parameters-panel .parameter-errors{max-height:90px;overflow:auto}.cad-project-parameters-panel .parameter-errors p{font-size:11px}
+.cad-project-parameters-panel .parameter-error{color:#a32129}.cad-project-parameters-panel .parameter-report{font-variant-numeric:tabular-nums;min-height:0;max-height:18vh;overflow:auto;flex:0 1 auto}
+.cad-project-parameters-panel footer>p:not(.parameter-report),.cad-project-parameters-panel .parameter-footer-actions{flex-shrink:0}
+.cad-project-parameters-panel [data-freecad-parameter-inputs]{grid-column:1/-1}
+.cad-project-parameters-panel .parameter-footer-actions{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.cad-project-parameters-panel[data-collapsed=true]{width:min(375px,calc(100% - 24px));top:auto;bottom:12px}.cad-project-parameters-panel[data-collapsed=true] footer{max-height:min(52vh,400px)}
+body.dark .cad-project-parameters-panel,body[data-theme=dark] .cad-project-parameters-panel{background:#1b2a38;color:#eaf3fa;border-color:#526675}
+body.dark .cad-project-parameters-panel th,body[data-theme=dark] .cad-project-parameters-panel th{background:#293e4d}body.dark .cad-project-parameters-panel .parameter-error,body[data-theme=dark] .cad-project-parameters-panel .parameter-error{color:#ffb6b6}
+@media(max-width:1100px){.cad-project-parameters-panel{top:6px;left:6px;width:calc(100% - 12px);max-height:calc(100% - 12px)}.cad-project-parameters-panel header{padding:8px}.cad-project-parameters-panel header strong{font-size:13px}.cad-project-parameters-panel header button{font-size:11px}.cad-project-parameters-panel .parameter-body{padding:8px}.cad-project-parameters-panel th,.cad-project-parameters-panel td{padding:4px}.cad-project-parameters-panel footer{padding:8px}.cad-project-parameters-panel[data-collapsed=true]{bottom:6px}}
+@media(max-width:650px){.cad-project-parameters-panel .parameter-binding-chooser{grid-template-columns:1fr}.cad-project-parameters-panel header>div{gap:3px}.cad-project-parameters-panel .parameter-footer-actions{justify-content:flex-start}.cad-project-parameters-panel .parameter-row-actions>select{min-width:100px}}

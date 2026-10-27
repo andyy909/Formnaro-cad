@@ -1,0 +1,471 @@
+Formnaro Mini CAD 0.2.0 – Drittanbieterhinweise
+Eigener Anwendungscode und übernommene Formnaro-Module: LICENSE.txt.
+
+Produktive Fremdbestandteile:
+- OCCT 8.0.1 / eigener WASM-Build: cad-kernel-build/runtime/licenses und licenses/cad-kernel.
+- Three.js 0.186.1: MIT, Originaltext unten.
+- Tabler Icons 3.49.0: licenses/tabler-icons.txt.
+- OpenType.js 2.0.0 (optionale KI-Textkonturen): licenses/opentype-js-MIT.txt.
+- Offline-Schriften für optionale KI-Konstruktion: Originaltexte und Herkunft in licenses/fonts/.
+- Electron 44.7.0 / Chromium: LICENSE und LICENSES.chromium.html neben der EXE.
+Genau ein CAD-WASM; keine Manifold-Laufzeit und kein STL-Konverter in dieser Ausgabe.
+Entwicklung: Vite, Electron Packager und fflate.
+
+=== Three.js ===
+The MIT License
+
+Copyright © 2010-2026 three.js authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+=== Manifold ===
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+   APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright [yyyy] [name of copyright owner]
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+=== Electron Packager (Buildwerkzeug) ===
+Copyright (c) 2015 Max Ogden and other contributors
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+=== Tabler Icons ===
+MIT License
+
+Copyright (c) 2020-2026 Paweł Kuna
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+FORMNARO MINI CAD 0.1.0 – NATIVER CAD-KERN
+
+Formnaro 0.11: gemeinsamer nativer CAD-Kern, Quellen und Ersatz
+Stand der Formnaro-Erweiterungen: 11.10.2026
+
+Formnaro verwendet Einrichtungen von Open CASCADE Technology (OCCT 8.0.1).
+Der gemeinsame WebAssembly-Kern beruht auf replicad-opencascadejs 1.1.0 und
+OpenCascade.js. Er wurde für Formnaro mit zusätzlichen nativen Bindings und
+der C++-Datei cad-kernel-build/wrappers/formnaro-cad-bridge.cpp neu gebaut.
+Er ist deshalb kein unverändertes npm-Binärartefakt. Die bisherigen Replicad-
+Wrapper bleiben enthalten; die Replicad-JavaScript-Modellierbibliothek wird
+nicht als Anwendungsschicht verwendet. Alle CAD-Objekte liegen im selben Kern.
+
+OpenCascade.js: GNU LGPL Version 2.1. OCCT: GNU LGPL Version 2.1 mit der
+Open CASCADE exception, Version 1.0. Die Ausnahme betrifft OCCT. Originale
+Replicad-Wrapper und die zusätzliche Formnaro-Bridge: MIT. RapidJSON,
+FreeType sowie die Emscripten-Systembibliotheken behalten ihre eigenen
+Lizenzbedingungen. THIRD-PARTY-LICENSES.txt und licenses/cad-kernel/licenses/
+enthalten die vollständigen Originaltexte. Der kombinierte Kern wird nicht
+insgesamt als MIT-Bibliothek ausgewiesen. FreeType wird nach FTL verwendet:
+Portions of this software are copyright © 1996–2023 The FreeType Project
+(www.freetype.org). All rights reserved.
+
+Formnaro ergänzt am 11.10.2026 allgemeine affine CAD-Transformationen,
+native Strahl-/Flächentreffer mit CAD-Normalen, Punktklassifikation,
+triangulierungsfreie BRep-Schreibung und separate Double-Exporttessellierung.
+Die Bridge und die erweiterten Bindings sind im Quellenpaket enthalten.
+OCCT-, RapidJSON- und FreeType-Quellarchive selbst sind unverändert; die
+ursprünglichen OpenCascade.js-Buildwerkzeuge und Patches sind enthalten.
+
+Entsprechende Quellen dieser Auslieferung
+----------------------------------------
+Gemeinsam mit der Portable-Ausgabe werden zwei gesonderte Archive geliefert:
+
+  Formnaro-CAD-Quellen-v0.11.zip
+    upstream/: genau fünf vollständige ursprüngliche Quellenarchive;
+    cad-kernel-build/: Quellenpins, ursprüngliche Lizenztexte, Bridge,
+      Vorbereitung, Docker-/isolierte Linux-Buildroute, Materialisierung,
+      Integritätsprüfung und unabhängige STEP-Leser-Prüfung;
+    generated/formnaro_cad.yml und generated/build-inputs.json:
+      tatsächlich verwendete vollständige Bindingkonfiguration und Hashes;
+    LIES-MICH-QUELLEN.txt: dieser Text.
+
+  Formnaro-Quellcode-v0.11.zip
+    Anwendung, Backend/Preload/Electron, CAD-Adapter und Worker, Buildskripte,
+    Prüfungen, package.json/package-lock.json, Dokumentation, ursprüngliche
+    Fontdaten und verifiziertes CAD-Runtimepaket.
+
+Quellen-Pruefsummen.json neben diesen Archiven nennt Größe und SHA256 der
+Lieferarchive und sämtlicher Archiveinträge. upstream-lock.json nennt genaue
+Bezugsadressen, Revisionen, Größen und vollständige SHA256-Werte. Es wird nicht
+allein auf spätere Verfügbarkeit externer Quelllinks verwiesen. Die fünf
+originalen Archive unter upstream/ sind:
+
+  replicad-e4b05f67dc4e.tar.gz
+    Commit e4b05f67dc4e2393a876ce8c5064a9c93db05bf1; 17426998 Bytes
+    SHA256 92180710da11a6e67ab75eaac8b494b29d32011415c22e29f7fecb1c796da783
+  opencascadejs-ebd263f15337.tar.gz
+    Commit ebd263f15337b440b391492af073662707e86482; 4449501 Bytes
+    SHA256 1e0342c8dbdc04d1835c776d5e95ab25fcad56a5f4cafcbecad92a959b6b00b7
+  OCCT-b8f597c67781.tar.gz
+    Commit b8f597c677811d1f9f4d8a97f5ae2825c0353a42; 45131814 Bytes
+    SHA256 dba62b81078dd43cec23feba89432be301582341001edad1b93342ad8bda35ea
+  rapidjson-24b5e7a8b27f.tar.gz
+    Commit 24b5e7a8b27f42fa16b96fc70aade9106cf7102f; 1116703 Bytes
+    SHA256 2d2601a82d2d3b7e143a3c8d43ef616671391034bc46891a9816b79cf2d3e7a8
+  freetype-de8b92dd7ec6.tar.gz
+    Commit de8b92dd7ec634e9e2b25ef534c54a3537555c11; 2496556 Bytes
+    SHA256 14791d34053acf30394912a8b963277bee60b35fbb3038795d86555ba0415a44
+
+Toolchain und unveränderliches Originalimage
+-------------------------------------------
+Originales Linux/amd64-Buildimage:
+  ghcr.io/taucad/opencascade.js@sha256:215198af0e2ca4c5f308e5540869f2419784dc290062d3eb03d34e4f22e0188c
+Der lesbare Tag canary-ebd263f1-single-threaded ist nur ein zusätzlicher Hinweis;
+das Skript verwendet den Digest. Dockerfile, DEPS.json, Patches und ursprüngliche
+Buildwerkzeuge liegen im OpenCascade.js-Archiv.
+
+Emsdk 5.0.1, Commit 14c18b569f55138fe4963924162244251f454fb0;
+Emscripten-Commit 8c5f43157a3f069ade75876e23061330521eabde;
+Toolchain-Release bf32ae8b61ac8efeb7eca01b54c8307f992724f7.
+System-license-lock.json dokumentiert die Originaltexte einschließlich Autoren,
+mimalloc, musl, libc++/libc++abi, libunwind und compiler-rt mit exakten
+Emscripten-Quellpfaden und Hashes. Der optionale isolierte Linux-Launcher ist
+PRoot 5.5.0, SHA256:
+  db185300a9daabbce86aca7632d8c7fdc4249f6f153171954013b70c5f491ec0
+
+Neubuild aus einem frischen Arbeitsordner
+---------------------------------------
+Beide gelieferten Quellen-ZIPs in einen neuen Arbeitsordner entpacken; die
+gleichnamigen cad-kernel-build-Dateien stammen aus demselben Quellstand.
+Für die mitgelieferten Archive die fünf upstream/*.tar.gz nach
+work/cad-v011-build/archives/ kopieren. Alternativ lädt prepare.mjs exakt diese
+Quellen von den gesperrten Bezugsadressen herunter. Die SHA256-Werte werden
+vor dem Entpacken geprüft. Nutzerprofile oder Modelle sind nicht erforderlich.
+
+Voraussetzungen: Node.js 22+, npm, tar und PowerShell; für Docker eine vorhandene
+erreichbare Linux/amd64-Engine. Im neuen Arbeitsordner:
+
+  npm ci
+  node cad-kernel-build/prepare.mjs
+  powershell -File cad-kernel-build/build.ps1
+
+prepare.mjs übernimmt die vollständige ursprüngliche Replicad-Konfiguration
+packages/replicad-opencascadejs/build-config/custom_build_single.yml, ergänzt
+die Bridge/Bindings und schreibt work/cad-v011-build/config/. build.ps1 bindet
+nur diesen eigenen Konfigurationsordner als /src ein und ruft im gesperrten
+Originalimage link formnaro_cad.yml auf. Der eigentliche Buildcontainer hat kein
+Netzwerk. Das Skript startet keine Dienste und ändert keine Docker-Einstellungen.
+Downloads vor dem Build benötigen Netzwerkzugriff.
+
+Wenn bereits Linux/WSL mit Python 3.11+ vorhanden ist, kann dieselbe ursprüngliche
+Toolchain ohne Docker-Dienst in einem eigenen temporären Rootfs laufen:
+
+  powershell -File cad-kernel-build/build.ps1 -Runner Wsl -Distribution Ubuntu
+
+Ubuntu bezeichnet eine bereits vorhandene Distribution; Python 3.11+ muss unter
+Windows und Linux bereitstehen. Diese Route aktiviert keine Windows-Funktionen
+und installiert keine Distro-Pakete. fetch-image.py prüft Imageindex,
+Plattformmanifest, Konfiguration und sämtliche Layer gegen Digests.
+run-image-linux.py entpackt ausschließlich in einen eigenen temporären
+/var/tmp/formnaro-cad-v011-*/rootfs-Ordner und startet den ebenfalls geprüften
+PRoot-Launcher. Nur eigene Builddateien werden eingebunden. Direkt unter Linux
+sind fetch-image.py/run-image-linux.py ebenfalls verwendbar; Einzelheiten stehen
+in cad-kernel-build/README.md.
+
+Laufzeitprüfung und Materialisierung
+----------------------------------
+Der Neubuild erzeugt formnaro_cad.js, .wasm, .d.ts und ursprüngliche Build-
+Provenienz im eigenen Konfigurationsordner. materialize.mjs prüft Quellenpins,
+Bridge-/YAML-Hash und ursprüngliche Buildvalidierung. Vor dem Kopieren muss die
+tatsächlich neue Binärdatei tests/cad-kernel-proof-extended.test.mjs bestehen;
+fehlende Dateien oder Schnittstellen führen zu einem Fehler, nicht zu Skip.
+Anschließend werden JS/WASM/Typdateien, Provenienz, Quellenpins und vollständige
+Originaltexte nach cad-kernel-build/runtime/ kopiert und integrity.json erzeugt.
+build.ps1 ruft Materialisierung und Integritätsprüfung bereits auf. Separat:
+
+  node cad-kernel-build/materialize.mjs
+  node cad-kernel-build/verify-runtime.mjs
+  npm run test:cad-kernel-extended
+  npm run build
+
+Die ausgelieferte unveränderte WASM-Datei hat 23062347 Bytes und SHA256:
+  964835f6a345ab3a9ab07852fb8d047fb081d38c20849a65b1c037c1d3f2ad8c
+integrity.json prüft 24 Runtimeartefakte, darunter 14 vollständige Lizenz-/
+Autoren-Dateien. Die Vite-Ausgabe enthält genau eine formnaro_cad-*.wasm-Datei.
+Dateinamen können Vite-Hashes tragen; die WASM-Bytes bleiben identisch.
+Zeitstempel der ursprünglichen Buildprovenienz folgen SOURCE_DATE_EPOCH.
+
+Vollständiger Ersatz der Bibliothek
+----------------------------------
+Den JavaScript-Bindings-/WASM-Vertrag zusammen ersetzen: einen angepassten Kern
+aus denselben entsprechenden Quellen bauen, seine nativen Schnittstellen prüfen
+und materialize.mjs sowie verify-runtime.mjs ausführen. src/cad-kernel-loader.js
+lädt diese passende JS/WASM-Kombination. Mit npm run build die Vite-Worker-/
+Assetbezüge neu erzeugen und einen neuen eigenen Electron-Ausgabeordner aus der
+Anwendung und dieser dist-Ausgabe erstellen. scripts/package-cad-release.mjs
+dokumentiert Runtime-Whitelist und getrennte Quellenarchive; das offizielle
+Releaseskript verlangt zuvor die vollständige Produktabnahme. Für eigene
+Bibliotheksänderungen kann mit dem mitgelieferten Anwendungscode und
+@electron/packager ein eigener Ausgabeordner erstellt werden. Bestehende
+Releases und Nutzerdateien werden nicht überschrieben.
+
+Alternativ resources/app.asar mit @electron/asar entpacken, die zusammenpassende
+neu gebündelte dist-Ausgabe und zugehörigen Lizenz-/Provenienzdateien ersetzen
+und ASAR in einem eigenen Ausgabeordner neu packen. Die Bibliothek ist eine
+gesonderte WASM-Datei; Anwendungscode wird nicht mit dem C++-Kern verlinkt.
+Nur die WASM-Datei gegen inkompatible Bindings auszutauschen genügt nicht.
+Es gibt keine Signatur- oder Lizenzprüfung, die eigene Bibliotheksänderungen
+verhindert. Änderungen und Untersuchen/Reverse Engineering zur Fehlersuche
+solcher Bibliotheksänderungen werden durch diese Auslieferung nicht untersagt.
+Die jeweiligen Lizenzrechte bleiben maßgeblich. Formnaro benötigt keinen
+Cloudzugang für Modellieren oder diese lokale Bibliotheksverwendung.
+
+Primärquellen zusätzlich zu den mitgelieferten vollständigen Archiven:
+https://github.com/sgenoud/replicad/tree/e4b05f67dc4e2393a876ce8c5064a9c93db05bf1/packages/replicad-opencascadejs
+https://github.com/taucad/opencascade.js/tree/ebd263f15337b440b391492af073662707e86482
+https://github.com/Open-Cascade-SAS/OCCT/tree/b8f597c677811d1f9f4d8a97f5ae2825c0353a42
+https://github.com/Tencent/rapidjson/tree/24b5e7a8b27f42fa16b96fc70aade9106cf7102f
+https://github.com/freetype/freetype/tree/de8b92dd7ec634e9e2b25ef534c54a3537555c11
+https://github.com/emscripten-core/emscripten/tree/8c5f43157a3f069ade75876e23061330521eabde
+
+meshoptimizer: MIT, Copyright (c) 2016-2026 Arseny Kapoulkine. licenses/meshoptimizer.txt.

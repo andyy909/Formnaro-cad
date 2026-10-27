@@ -1,0 +1,32 @@
+[
+  {
+    "sha256": "3c38913843492c750d05f261f75700009cb74735c98ed2f3d3b2ff1300c1b1e8",
+    "file": "geometry.js",
+    "source": "src/mesh-engine/geometry.js"
+  },
+  {
+    "sha256": "f89c3f1b595521ec32cacfb53b2dcda07556af0ddd28bacd80027a5cb3929773",
+    "file": "parameters.js",
+    "source": "src/mesh-engine/parameters.js"
+  },
+  {
+    "sha256": "7bcb1f1e930a5bf46f3445ad982f55ac114d5af5fb5eae56d8b7faa1f4d3892c",
+    "file": "parametric-geometry.js",
+    "source": "src/mesh-engine/parametric-geometry.js"
+  },
+  {
+    "sha256": "e869b98607dd54e6b8a8e5b2895bac32b678931425aea06a385b90a9509cc799",
+    "file": "mesh-sketch.js",
+    "source": "src/mesh-engine/mesh-sketch.js"
+  },
+  {
+    "sha256": "7b44c30f121b0ea0b9e4881f5dd7d18913bdbf73755155f6f419620232cd3789",
+    "file": "mesh-marks.js",
+    "source": "src/mesh-engine/mesh-marks.js"
+  },
+  {
+    "sha256": "d4273be27d52a948230586048266556e37ceeb6fbef48064dfa617d4bf1d2633",
+    "file": "mesh-partition-schema.js",
+    "source": "src/mesh-engine/mesh-partition-schema.js"
+  }
+]

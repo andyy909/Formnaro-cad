@@ -1,0 +1,16 @@
+{
+  "mesh-import-core.js": {
+    "sha256": "f9925cb4148f9c6f5f57c4f836e709809535ee853875ee3da72c0a666b4921a4",
+    "adaptation": "Exact collinear resolver additionally exported for validation of Float32 STL output."
+  },
+  "mesh-import-limits.js": "f36d02eb431865155095fb3e814621891ea2fb95b3c0fb53fbe1ea319144ed76",
+  "mesh-import-client.js": "5ad8398ce17cf6592a2b73bb558995ef39d2ff404fbe94d2a4ccf65a43e8cfc4",
+  "mesh-import-worker.js": "ff360f44605a73fd4254f419516efe3e806adaeeee8be366af5941cd06cc0b69",
+  "mesh-selection-data.js": {
+    "sha256": "5e474d6b05e7aa6d9ab2209fc22b35cc0f007a93b3ef10cc60d58aec4989b143",
+    "adaptation": "Unused selection worker service removed; geometry/topology functions unchanged."
+  },
+  "mesh-simple-repair.js": "a8e135bdca5bfe7bbc7a126a8e1fff2a9c6045837003b97c5082eab061dee471",
+  "cad-geometry-digest.js": "5f596061cd12bdfcb1b7d8c96073dcf183a994e5378e1f579e48c516d43bb1c8",
+  "cad-export-triangles.js": "b7ccad16bf5a57f35a0a3f5046de3fa5b7a152f04aba14ce1be09601b514edae"
+}

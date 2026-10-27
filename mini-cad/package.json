@@ -1,0 +1,27 @@
+{
+  "name": "formnaro-mini-cad",
+  "productName": "Formnaro Mini CAD",
+  "version": "0.4.1",
+  "private": true,
+  "type": "module",
+  "main": "electron.cjs",
+  "author": "Andreas Klisch",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "description": "Eigenst\u00e4ndiger kompakter nativer CAD-Modellierer mit STEP und optionaler KI",
+  "scripts": {
+    "build": "vite build --config vite.config.js",
+    "start": "electron .",
+    "test": "node --test tests/hole-groups.test.mjs tests/cad.test.mjs tests/placement.test.mjs tests/transform-tools.test.mjs tests/manipulation.test.mjs tests/quick-tools.test.mjs tests/library.test.mjs tests/library-placement.test.mjs tests/library-location.test.mjs tests/ai.test.mjs tests/mesh-import.test.mjs",
+    "test:desktop": "node tests/desktop.cjs",
+    "package": "node scripts/package.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.9.3",
+    "fflate": "0.8.3",
+    "opentype.js": "2.0.0",
+    "three": "0.186.1",
+    "vite": "8.3.4"
+  }
+}

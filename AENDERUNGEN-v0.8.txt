@@ -1,0 +1,56 @@
+TINKOFF 0.8 – KORREKTUREN UND ERWEITERUNGEN (10.10.2026)
+
+Die fünf bestätigten Fehler des Prüfberichts sind korrigiert:
+- Entf im Quellenmodus entfernt nur die gewählte Quelle. Unmögliche Änderungen
+  rollen vollständig zurück. Kopieren/Einfügen und Operationen für ganze Teile
+  erklären im Quellenmodus, dass zuerst „Zur fertigen Gruppe“ zu wählen ist.
+- Projektnamen sind auf 200 Zeichen begrenzt; längere Namen in alten Dateien
+  werden beim Laden gekürzt. Die Geometrie bleibt erhalten.
+- Fehlgeschlagene Änderungen erhalten alle 60 Undo-Schritte.
+- In schmalen/vergrößerten Fenstern Formen/Eigenschaften oben einblenden;
+  nur eine Seitenleiste liegt über dem Modell. Werkzeugleiste ist scrollbar.
+- Neu setzt auch leere Projekte einschließlich Ebene und Arbeitsfläche zurück.
+
+Neue Werkzeuge und Bedienung:
+- Messen: Zwei Punkte auf Teilen/Arbeitsebene anklicken. Fang an Meshpunkten,
+  Netzkanten und Flächen. Abstand ändern bewegt das zweite entsperrte Teil
+  entlang der Verbindung. Für Punkte desselben Teils nur Messung möglich.
+- Quellenfarben erhalten: im Inspector aktivieren. Farben werden nach CSG
+  angezeigt; frühere Quellen besitzen überlappendes Material. Löcher bleiben.
+- Deckkraft: 5–100 %, als Darstellungswert und im GLTF-Export. 3MF-Farben
+  bleiben deckend für Druckmaterialien; keine automatische Filamentzuweisung.
+- Vorlagen: Auswahl einschließlich Netzen/Text/Quellen speichern, favorisieren,
+  exportieren/importieren. Benannte Maße und einfache Formeln steuern lokale
+  Größen/Positionen und native Parameter. Kein allgemeines Constraint-System.
+- Grundformen per Rechtsklick als Favoriten markieren; Favoritenknopf filtert.
+- Passungsvorlagen bei Gewinden/Muttern: eigene erprobte radiale Spiele speichern.
+- Modellnotiz am ausgewählten Teil/Quelle speichern, bis 4000 Zeichen.
+- Schnittansicht: Achse, Höhe und Seite wählen. Schneidet die Darstellung ohne
+  Schnittflächenverschluss; das vollständige Modell bleibt gespeichert/exportiert.
+- Modell prüfen: echte CSG-Kollisionsvolumen und abgetastete lokale Wandstärken.
+  Bis 1500 Flächennormalen je Teil; keine vollständige Wandstärkengarantie.
+- Gruppenbildung per Werkzeugknopf, Export und Modellprüfung laufen in einem
+  Hintergrundprozess mit Zeit-/Fortschrittsanzeige und Abbruch. Direkte Griff-
+  und Quellenänderungen sind weiterhin synchron; nicht jede CAD-Aktion abbrechbar.
+- Bündeln: Auswahl in einem Ordner organisieren ohne geometrische Vereinigung.
+- Importdialog: mm/cm/Zoll, Zielbreite und SVG-Extrusionshöhe wählen.
+- Text: Helvetiker, Helvetiker Bold und Optimer, vollständig lokal gebündelt.
+- Export: 3MF mit getrennten Farbteilen; GLTF 2.0 mit Farben/Deckkraft (Meter);
+  SVG-Draufsicht als Umriss (mm); STL/OBJ weiter verfügbar.
+- Kürzere Parameteransicht, Weitere Parameter aufklappbar, eindeutigere lokale/
+  Weltmaßanzeigen, Dezimalkomma und Tastaturnavigation im Objektbaum.
+
+Start: Tinkoff.exe aus der vollständig entpackten neuen Windows-Ausgabe.
+Vorher die alte CAD-Anwendung schließen; beide verwenden dasselbe lokale
+Profil. .ocad-Projekte und API-/Benutzereinstellungen werden weiter unterstützt.
+Die alte laufende Ausgabe und vorhandene Modelle wurden nicht ersetzt.
+
+Prüfung: 57 Node-Tests, acht bestehende Desktop-Suiten und neue Regression/
+Erweiterungs-/Lastprüfungen erfolgreich; 500 einfache Quader geladen, gruppiert,
+Volumen und Objektlimit geprüft. 3MF-Netze rekonstruiert, GLTF unabhängig geladen.
+Kein neuer Cloud-Aufruf; erfolgreiche Cloudgenerierung bleibt mangels API-Guthaben
+unbestätigt. Keine komplette GPU/Monitor/Screenreader-Matrix oder allgemeine
+mechanische Eignungsprüfung. STEP, allgemeine Kantenverrundungen und bewegliche
+Baugruppen bleiben die im Bericht genannten größeren späteren Vorhaben;
+Cloudzusammenarbeit/Galerie und iPad/AR sind kein Teil dieser Offline-Ausgabe.
+Skizzen und Schaltungen bleiben entsprechend dem Nutzerwunsch ausgeschlossen.

@@ -1,0 +1,14 @@
+{
+  "name": "Formnaro development",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Formnaro browser preview",
+      "onAutoForward": "notify",
+      "visibility": "private"
+    }
+  },
+  "postCreateCommand": "npm ci && node cad-kernel-build/verify-runtime.mjs && npm run build",
+  "remoteUser": "node"
+}

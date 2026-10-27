@@ -1,0 +1,5 @@
+import fs from 'node:fs';
+import {meshSelectionGeometryDigest} from '../../src/mesh-selection-data.js';
+export function smoothingFixture(){return JSON.parse(fs.readFileSync(new URL('../../backend/mesh-smooth-fixture.json',import.meta.url),'utf8'));}
+export function smoothingNode({protectedRegion=true}={}){const f=smoothingFixture(),n={id:'technical',kind:'mesh',name:'Synthetische unruhige Platte',meshRole:'solid',mesh:structuredClone(f.mesh),transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],color:'#447788',opacity:.8,layerId:'default',folderId:null,metadata:{notes:'Synthetisches Glaettungspruefteil'}};if(protectedRegion)n.metadata.meshProtection={format:'FormnaroMeshProtection',version:1,regions:[{id:'contact',name:'Anlageflaeche',purpose:'contact',geometryDigest:meshSelectionGeometryDigest(n),triangleIds:[...f.protectedTriangleIds]}]};return n;}
+export function smoothingOptions(n,set={}){const f=smoothingFixture();return {method:'bounded-laplacian-v1',geometryDigest:meshSelectionGeometryDigest(n),triangleIds:[...f.triangleIds],...f.options,...set};}

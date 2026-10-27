@@ -1,0 +1,13 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {Worker} from 'node:worker_threads';
+import {createCadController} from '../src/cad-controller.js';
+const fixture=()=>createCadController({createWorker:()=>{const w=new Worker(new URL('./fixtures/cad-node-worker.mjs',import.meta.url)),a={postMessage:v=>w.postMessage(v),terminate:()=>w.terminate()};w.on('message',data=>a.onmessage?.({data}));w.on('error',e=>a.onerror?.(e));return a;}});
+const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} vs ${b}`);
+test('Native create applies the public Euler rotation so a centered Y bore crosses both walls',async()=>{
+ const cad=fixture();try{const before=cad.serialize(),p=await cad.preview({kind:'batch',commands:[{op:'create',type:'cylinder',size:[8,8,44],pos:[30,20,18],rot:[90,0,0],as:'bore'}]}),s=await cad.describe(p.project),b=s.objects[0].worldBounds;b.min.forEach((v,i)=>near(v,[26,-2,14][i]));b.max.forEach((v,i)=>near(v,[34,42,22][i]));assert.equal(cad.serialize(),before);cad.discard(p.previewId);}finally{cad.dispose();}
+});
+test('Absolute update and relative transform rotations both change native geometry and preserve its center',async()=>{
+ const cad=fixture();try{await cad.execute({kind:'batch',commands:[{op:'create',type:'box',size:[10,20,30],pos:[0,0,15],as:'box'}]});const id=cad.snapshot().nodes[0].id,before=cad.serialize();for(const command of [{op:'update',target:id,set:{rot:[0,0,90]}},{op:'transform',target:id,rotate:[0,0,90]}]){const p=await cad.preview({kind:'batch',commands:[command]}),b=(await cad.describe(p.project)).objects[0].worldBounds;b.size.forEach((v,i)=>near(v,[20,10,30][i]));b.center.forEach((v,i)=>near(v,[0,0,15][i]));cad.discard(p.previewId);assert.equal(cad.serialize(),before);}}finally{cad.dispose();}
+});
+test('A transverse native cylinder removes two wall bores without adding an unintended floor hole',async()=>{
+ const cad=fixture();try{const commands=[{op:'create',type:'box',size:[60,40,6],pos:[30,20,3],as:'floor'},{op:'create',type:'box',size:[60,6,24],pos:[30,3,18],as:'left'},{op:'create',type:'box',size:[60,6,24],pos:[30,37,18],as:'right'},{op:'create',type:'cylinder',size:[8,8,44],pos:[30,20,18],rot:[90,0,0],solid:false,as:'bore'},{op:'group',targets:['$floor','$left','$right','$bore'],as:'result'}],p=await cad.preview({kind:'batch',commands}),r=await cad.checkPreview(p.previewId,[{kind:'volume',target:'$result',expected:31680-192*Math.PI,tolerance:.0001},{kind:'clearance',target:'$result',from:[30,-1,18],to:[30,41,18],diameter:8},{kind:'solids',target:'$result',expected:1}]);assert.equal(r.checks.length,3);assert.equal(cad.state().undo,0);cad.apply(p);assert.equal(cad.state().undo,1);cad.undo();assert.equal(cad.snapshot().nodes.length,0);}finally{cad.dispose();}
+});

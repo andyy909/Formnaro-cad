@@ -1,0 +1,75 @@
+FORMNARO 0.10 – KANTEN, PASSUNGEN UND STEP (10.10.2026)
+
+KANTEN FREI BEARBEITEN
+Ein entsperrtes fertiges Teil wählen, oben „Kanten …“ öffnen. Die angezeigten
+Kanten direkt am Teil anklicken; ein zweiter Klick entfernt die Auswahl.
+Abrundung oder Fase und Maß in mm wählen. „Vorschau berechnen“ zeigt das
+Ergebnis. „Übernehmen“ erzeugt einen Undo-Schritt; Abbrechen/Escape erhält
+Geometrie und Historie. Die ursprüngliche Form bleibt als editierbare Quelle
+im Objektbaum. Auch boolesche Gruppen und geschlossene Importnetze werden
+unterstützt. „Letzte Kantenoperation entfernen“ berechnet eine Rücknahme als
+Vorschau; erst Übernehmen entfernt sie wirklich.
+
+Quellenänderungen berechnen die Kantenoperationen erneut. Sind ausgewählte
+Kanten durch eine Topologieänderung verschwunden oder nicht mehr eindeutig,
+wird die Änderung abgelehnt. Dann die betreffende Kantenoperation entfernen,
+Quelle ändern und neue Kanten wählen. Ein geometrisch unmöglicher Radius oder
+eine zu große Fase erzeugt kein beschädigtes Teil. Nicht jede Kante eignet
+sich für jede Rundung; kleinere Maße oder Einzelkanten ausprobieren.
+
+PASSUNGSHILFE
+Oben „Passung …“: Zapfen/Deckel verkleinern oder Bohrung/Aufnahme vergrößern.
+Spiel je Seite und lokale X/Y/Z-Achsen wählen. Beispiel Ø20 mm, 0,2 mm je
+Seite: Öffnung Ø20,4 mm oder Einsatz Ø19,6 mm. Die Vorschau nennt Vorher/Nachher.
+Bei Quellen in skalierten Gruppen wird deren vollständige Elterntransformation
+berücksichtigt. Eigene erprobte Druckspiele speichern/laden/entfernen.
+„Lochform als Gegenstück“ erzeugt eine Kopie mit größerem Maß und frischen IDs;
+Original und Quellparameter bleiben erhalten. Zum Ausschneiden das Gegenstück
+mit dem Zielkörper gruppieren. Komplexe Konturen werden skaliert; das Werkzeug
+berechnet keinen flächentreuen Offset und keine automatische Rastgeometrie.
+Die bisherigen radialen Gewinde-Passungsvorlagen bleiben separat verfügbar.
+
+STEP-IMPORT UND -EXPORT
+Import akzeptiert .step/.stp im STEP-Textformat, bis 30 MB. Geschlossene
+CAD-Körper werden in Millimeter übertragen; Dateieinheiten werden ausgewertet.
+Der Größen-/Einfügedialog kann Einheit und Zielbreite ändern. Mehrere Körper
+bleiben innerhalb des Imports geometrisch getrennt; eine Baugruppenstruktur
+oder einzelne Produktnamen wird nicht in einen Formnaro-Baugruppenbaum überführt.
+Reine/offene CAD-Flächen werden mit verständlicher Meldung abgelehnt.
+
+Export → STEP speichert sichtbare Körper als getrennte CAD-Körper in mm.
+Lose Lochformen zuerst mit ihrem Zielkörper gruppieren. Geschlossene innere
+Hohlräume bleiben erhalten. Analytische Flächen aus STEP und aus Kanten-
+bearbeitung werden mit CAD-Daten im Projekt gespeichert; sie bleiben beim
+STEP-Export nach gleichmäßiger Skalierung/Drehung/Spiegelung erhalten.
+Nichtproportionale Skalierung und normale Netzteile werden aus ihrem tatsäch-
+lichen Netz konvertiert: Rundungen der Netzquelle bleiben dann facettiert.
+Boolesche Gruppenberechnung erfolgt weiterhin im bisherigen Netzkern.
+STEP enthält keine Formnaro-Quellenhistorie, Farben oder Bewegungsbeziehungen.
+Für vollständige weitere Bearbeitung immer zusätzlich .ocad speichern.
+
+BETRIEB UND GRENZEN
+Der zusätzliche CAD-Kern wird vollständig lokal mitgeliefert; kein Online-
+Dienst oder zusätzlicher API-Schlüssel. Kantenberechnung und STEP laufen in
+abbrechbaren Hintergrundprozessen. Netzumwandlung höchstens 40000 Dreiecke je
+Teil; bis 8000 auswählbare Kanten, höchstens 128 je Operation und 20 Schritte.
+Radien/Fasen: 0,01–1000 mm. Allgemeines Passungsspiel: 0–5 mm je Seite.
+Bei bereits bearbeiteten Gruppen gelten Kantenmaße vor deren Gruppenskalierung.
+Vor dem Kantenwerkzeug Quellenbearbeitung und Schnittansicht beenden.
+
+Projektformat jetzt 4; ältere Formate 1–3 werden eingelesen. Version 0.9 kann
+neue Format-4-Projekte nicht öffnen. Autosicherung nutzt v4 und liest bestehende
+v3/v2/v1-Sicherungen als Rückfall. Profil %APPDATA%/offlinecad und lokale API 1
+bleiben erhalten. Vor Wechsel zur neuen EXE die bisherige Anwendung schließen.
+Programmordner vollständig entpacken; Formnaro.exe aus Version 0.10 starten.
+
+76/76 Node-Prüfungen, neue CAD-Desktopprüfung und alle 12 bisherigen relevanten
+Desktop-/Workflow-/Ansichtsprüfungen bestanden. Neue Prüfung umfasst echte
+Kantenklicks, Vorschau/Abbruch, Quellen, Undo/Redo, Speichern/Neustart, fehlerhafte
+Radien, Passungen, STEP, Formatmigration und DE/EN/Dark Mode im schmalen Fenster
+bei 125 % Zoom. STEP zusätzlich mit occt-import-js unabhängig eingelesen.
+Details und Grenzen im Prüfbericht dieser Ausgabe.
+
+Weiter offen: allgemeine dauerhafte Maßabhängigkeiten, Loft/Sweep und bewegliche
+Baugruppen. Skizzen und Schaltungen bleiben ausgeschlossen. Die neue Passungshilfe
+ersetzt keine Druckkalibrierung und keine mechanische Auslegung.

@@ -1,0 +1,10 @@
+.cad-rotation-handles{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.cad-rotation-handles[hidden],.cad-rotation-handle[hidden],.cad-rotation-readout[hidden]{display:none}
+.cad-rotation-handle{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;touch-action:none;user-select:none;display:flex;align-items:center;justify-content:center;width:32px;height:30px;min-width:0;padding:3px;border:1px solid transparent;border-radius:5px;background:#ffffffdf;cursor:grab;gap:1px;box-shadow:none}
+.cad-rotation-handle img{width:21px;height:21px;pointer-events:none}
+.cad-rotation-handle span{font-size:9px;color:#557383;align-self:flex-end;pointer-events:none}
+.cad-rotation-handle:hover,.cad-rotation-handle.dragging{background:#d5f0f5;border-color:#2385a2}
+.cad-rotation-handle.dragging{cursor:grabbing}
+.cad-rotation-readout{position:absolute;padding:7px 10px;border:1px solid #b9d7e2;border-radius:4px;background:#fffffff5;font-size:12px;color:#315969;white-space:nowrap;box-shadow:0 2px 9px #23415b16;pointer-events:none;font-variant-numeric:tabular-nums}
+body[data-theme="dark"] .cad-rotation-handle{background:#d7edf4e8}
+body[data-theme="dark"] .cad-rotation-readout{background:#203b49f5;color:#d1f1ff;border-color:#4b8da4}

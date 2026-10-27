@@ -1,0 +1,25 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {createLibrary} from '../library-store.cjs';
+import {createLibraryLocation} from '../library-location.cjs';
+import {createNode,emptyProject,encodeProject,decodeProject} from '../src/model.js';
+const image='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
+function setup(){const programRoot=path.resolve((process.env.FORMNARO_MINI_UNIT_ROOT||'work')+'/library-location-'+crypto.randomUUID()),dataRoot=path.join(programRoot,'Daten-Mini-CAD');fs.mkdirSync(dataRoot,{recursive:true});const options={programRoot,dataRoot,checkProject:decodeProject,checkImage:()=>{}},legacy=createLibrary({root:dataRoot,...options}),manager=()=>createLibraryLocation(options),item={name:'Mein Rohr',folder:'Rohre',favorite:true,text:encodeProject({...emptyProject(),nodes:[createNode('tube')]}),image};return {programRoot,dataRoot,manager,legacy,item};}
+test('portable default folder is beside program and legacy data is copied byte-identically once',async()=>{
+  const {programRoot,dataRoot,manager,legacy,item}=setup(),{id}=await legacy.save(item),location=manager();await location.init();assert.equal(location.location().directory,path.join(programRoot,'Bibliothek-CAD'));assert.equal(location.location().isDefault,true);
+  for(const file of ['model.fmcad','preview.png','meta.json'])assert.deepEqual(fs.readFileSync(path.join(programRoot,'Bibliothek-CAD',id,file)),fs.readFileSync(path.join(dataRoot,'Bibliothek-CAD',id,file)));
+  await location.invoke('update',{id,name:'Geänderter Name',folder:'Neu',favorite:false});fs.writeFileSync(path.join(dataRoot,'Bibliothek-CAD',id,'model.fmcad'),'Nicht erneut lesen');const reloaded=manager();await reloaded.init();const listed=await reloaded.invoke('list');assert.equal(reloaded.location().warning,'');assert.equal(listed.entries.length,1);assert.equal(listed.entries[0].name,'Geänderter Name');assert.equal(legacy.list().entries[0].name,item.name);
+});
+test('explicit folder changes copy entries preserve originals persist across restart and reset portably',async()=>{
+  const {programRoot,dataRoot,manager,legacy,item}=setup(),{id}=await legacy.save(item),location=manager();await location.init();await location.invoke('update',{id,name:'Aktuell',folder:'Werkstatt',favorite:false});const target=path.join(programRoot,'Anderer Ort');await location.change(target);assert.equal(location.location().directory,target);assert.equal((await location.invoke('list')).entries.length,1);assert.equal((await location.invoke('list')).entries[0].name,'Aktuell');assert(fs.existsSync(path.join(programRoot,'Bibliothek-CAD',id,'model.fmcad')));
+  const reloaded=manager();await reloaded.init();assert.equal(reloaded.location().directory,target);assert.equal((await reloaded.invoke('list')).entries.length,1);await reloaded.reset();assert.equal(reloaded.location().directory,path.join(programRoot,'Bibliothek-CAD'));assert.equal(JSON.parse(fs.readFileSync(path.join(dataRoot,'bibliothek-ort.json'),'utf8')).directory,null);assert.equal((await reloaded.invoke('list')).entries.length,1);
+});
+test('legacy ID conflicts preserve both versions and broken entries stay in original folder',async()=>{
+  const {programRoot,dataRoot,manager,legacy,item}=setup(),{id}=await legacy.save(item),target=path.join(programRoot,'Bibliothek-CAD');fs.mkdirSync(target);fs.cpSync(path.join(dataRoot,'Bibliothek-CAD',id),path.join(target,id),{recursive:true});const metaFile=path.join(target,id,'meta.json'),meta=JSON.parse(fs.readFileSync(metaFile,'utf8'));meta.name='Vorhandene andere Variante';fs.writeFileSync(metaFile,JSON.stringify(meta));
+  const broken=await legacy.save({...item,name:'Beschädigt'});fs.writeFileSync(path.join(dataRoot,'Bibliothek-CAD',broken.id,'model.fmcad'),'bad');const location=manager();await location.init();const listed=await location.invoke('list');assert.equal(listed.entries.length,2);assert(listed.entries.some(e=>e.name===meta.name));assert(listed.entries.some(e=>e.name===item.name));assert(location.location().warning);assert.equal(fs.readFileSync(path.join(dataRoot,'Bibliothek-CAD',broken.id,'model.fmcad'),'utf8'),'bad');const again=manager();await again.init();assert.equal((await again.invoke('list')).entries.length,2);
+});
+test('failed folder selection keeps active setting and malformed setting can be reset',async()=>{
+  const {programRoot,dataRoot,manager,item}=setup(),location=manager();await location.init();await location.invoke('save',item);const blocker=path.join(programRoot,'Keine Bibliothek');fs.writeFileSync(blocker,'bleibt');await assert.rejects(location.change(blocker));assert.equal(location.location().isDefault,true);assert.equal((await location.invoke('list')).entries.length,1);assert.equal(fs.readFileSync(blocker,'utf8'),'bleibt');fs.writeFileSync(path.join(dataRoot,'bibliothek-ort.json'),'bad');const invalid=manager();assert(invalid.location().error);await assert.rejects(invalid.init());await invalid.reset();assert.equal((await invalid.invoke('list')).entries.length,1);
+});

@@ -1,0 +1,4 @@
+import {prepareTechnicalMesh,fitTechnicalRegions} from './mesh-technical.js';
+import {meshSelectionGeometryDigest} from './mesh-selection-data.js';
+let prepared;
+self.onmessage=({data})=>{try{let result;if(data.kind==='prepare'){const digest=meshSelectionGeometryDigest(data.node);if(data.options?.triangleIds&&data.options.geometryDigest!==digest)throw Error('Flächenauswahl gehört zu einem anderen Netzstand. Neu auswählen.');prepared=prepareTechnicalMesh(data.node,data.options);prepared.selectionGeometryDigest=digest;result={text:prepared.text,tolerance:prepared.tolerance};}else if(data.kind==='fit'&&prepared){result={...fitTechnicalRegions(prepared,data.analysis),selectionGeometryDigest:prepared.selectionGeometryDigest};prepared=null;}else throw Error('Unbekannter Flächenanalyseauftrag.');self.postMessage({id:data.id,result});}catch(error){self.postMessage({id:data.id,error:error.message});}};

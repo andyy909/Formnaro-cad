@@ -1,0 +1,15 @@
+#cad-mesh-remesh{width:390px;max-height:calc(100% - 106px)}
+#cad-mesh-remesh .mesh-remesh-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#cad-mesh-remesh label{display:grid;gap:5px;margin:10px 0;font-size:12px}
+#cad-mesh-remesh .small-note{font-size:11px;line-height:1.45}
+#cad-mesh-remesh #mesh-remesh-result{white-space:pre-wrap;font-size:12px;line-height:1.5}
+#cad-mesh-remesh .mesh-remesh-pair{display:grid;grid-template-columns:1fr 1.45fr;gap:12px}
+#cad-mesh-remesh .mesh-remesh-check{display:flex;align-items:center;gap:7px}
+#cad-mesh-remesh .mesh-remesh-check input{width:auto}
+#cad-mesh-remesh .mesh-remesh-legend{display:flex;gap:14px;flex-wrap:wrap}
+#cad-mesh-remesh .mesh-remesh-legend span:first-child{color:#1286c7}
+#cad-mesh-remesh .mesh-remesh-legend span:last-child{color:#9c3f00}
+#cad-mesh-remesh .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px}
+[data-theme=dark] #cad-mesh-remesh .edge-actions{background:#212f3e}
+[data-theme=dark] #cad-mesh-remesh .mesh-remesh-legend span:last-child{color:#efb779}
+@media(max-width:900px){#cad-mesh-remesh{width:min(390px,calc(100% - 28px))}}

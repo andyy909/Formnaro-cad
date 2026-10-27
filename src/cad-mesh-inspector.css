@@ -1,0 +1,15 @@
+#cad-mesh-inspector{width:350px;max-height:calc(100% - 106px)}
+#cad-mesh-inspector .mesh-inspector-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#cad-mesh-inspector label{display:flex;align-items:center;gap:7px;margin:9px 0;font-size:12px}
+#cad-mesh-inspector label:has(input[type=number]),#cad-mesh-inspector label:has(select){display:grid}
+#cad-mesh-inspector .mesh-inspector-categories label{display:grid;grid-template-columns:16px 12px 1fr auto;border-bottom:1px solid var(--line,#d9e2ea);padding:7px 0;margin:0}
+#cad-mesh-inspector input[type=checkbox]{width:16px;height:16px;flex:0 0 auto;margin:0}
+#cad-mesh-inspector .mesh-inspector-swatch{width:11px;height:11px;border-radius:3px}
+#cad-mesh-inspector .small-note,#cad-mesh-inspector details{font-size:11px;line-height:1.45}
+#cad-mesh-inspector summary{cursor:pointer;font-weight:600}
+#cad-mesh-inspector .mesh-inspector-warning{color:#aa481b}
+#cad-mesh-inspector .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px}
+#cad-mesh-inspector .mesh-inspector-navigation{display:flex;gap:6px}
+#cad-mesh-inspector [hidden]{display:none!important}
+[data-theme=dark] #cad-mesh-inspector .edge-actions{background:#212f3e}
+[data-theme=dark] #cad-mesh-inspector .mesh-inspector-warning{color:#ffba85}

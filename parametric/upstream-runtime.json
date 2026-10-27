@@ -1,0 +1,49 @@
+{
+  "version": "0.16.2",
+  "commit": "5de48e916df2d659586a36b15c90ed05293a0954",
+  "url": "https://github.com/tangency-labs/solidcraft/releases/download/v0.16.2/solidcraft-windows-x64-portable.zip",
+  "archiveBytes": 64148595,
+  "archiveSha256": "c1cdc511ec70a77536cb22bbcea5c9bcda6e0d29622fc5cb9c935d9a1c3977ef",
+  "files": [
+    {
+      "file": "solidcraft-0.16.2-windows-x64-portable/LICENSE-APACHE",
+      "bytes": 10351,
+      "sha256": "eb3d7b5485466acbd81f2b496f595ab637d2792e268206b27d99e793bdb67549"
+    },
+    {
+      "file": "solidcraft-0.16.2-windows-x64-portable/LICENSE-MIT",
+      "bytes": 1101,
+      "sha256": "44cca886556f909c92e8856945be1c55371698d06d052c6fe7cee7c6fb8e316f"
+    },
+    {
+      "file": "solidcraft-0.16.2-windows-x64-portable/NOTICE",
+      "bytes": 1994,
+      "sha256": "c0358377f5b56965278d56864cc57fb28f454b23c0717244eb5669bf72e95ac9"
+    },
+    {
+      "file": "solidcraft-0.16.2-windows-x64-portable/README.md",
+      "bytes": 24595,
+      "sha256": "ad7e629f2d6afa9516f3036fbd38c4faf5b82500b1f1725d6e6f8f00d7fb4642"
+    },
+    {
+      "file": "solidcraft-0.16.2-windows-x64-portable/solidcraft-cli.exe",
+      "bytes": 77017600,
+      "sha256": "ad153608cde0323577f7d6bc8e9cd1a0390d649495aac3adfa7b79ff83f06190"
+    },
+    {
+      "file": "solidcraft-0.16.2-windows-x64-portable/solidcraft.exe",
+      "bytes": 104762368,
+      "sha256": "46a3c1689d17e50c6dda61d5bf352a15fbd953636704abca01849b39698d8143"
+    },
+    {
+      "file": "solidcraft-0.16.2-windows-x64-portable/solvecraft-cli.exe",
+      "bytes": 327680,
+      "sha256": "1261eda201850c85eee3c33234e94e18a77718b31b11eb577073df34893958c9"
+    },
+    {
+      "file": "solidcraft-0.16.2-windows-x64-portable/THIRD-PARTY-LICENSES.txt",
+      "bytes": 879167,
+      "sha256": "f5345ba855ce8ee494ee6f2cf5f8ccc45f2b83b1893872bd4f4c7374c8232f27"
+    }
+  ]
+}

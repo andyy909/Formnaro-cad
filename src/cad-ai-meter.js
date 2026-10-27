@@ -1,0 +1,64 @@
+const labels={de:{edit:'Modell bearbeiten',rebuild:'STL nachbauen',create:'Neues Modell',help:'Bedienhilfe & Fragen',other:'Sonstiges'},en:{edit:'Edit a model',rebuild:'Rebuild from STL',create:'New model',help:'Guidance & questions',other:'Other'}};
+export function formatAIBytes(bytes,language='de'){
+ if(!Number.isFinite(bytes))return '–';const units=['B','kB','MB','GB'];let unit=0;while(bytes>=1000&&unit<3){bytes/=1000;unit++;}return bytes.toLocaleString(language==='en'?'en-US':'de-DE',{maximumFractionDigits:unit?1:0})+' '+units[unit];
+}
+export function formatAIMeterCost(cost,language='de'){
+ if(!cost||!Number.isFinite(cost.min)||!Number.isFinite(cost.max))return language==='en'?'Price unknown':'Preis unbekannt';
+ const n=v=>v.toLocaleString(language==='en'?'en-US':'de-DE',{minimumFractionDigits:4,maximumFractionDigits:6});return (cost.min===cost.max?n(cost.min):n(cost.min)+'–'+n(cost.max))+' USD';
+}
+const element=(tag,text,className)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;};
+export function createAIUsagePanel({desktop,getContext,language=()=> 'de'}){
+ let metrics=null,metricError='',generation=0,activeRender=null,activeStats=null;
+ const lang=()=>language()==='en'?'en':'de',say=(de,en)=>lang()==='en'?en:de,n=value=>Number.isFinite(value)?value.toLocaleString(lang()==='en'?'en-US':'de-DE'):'–';
+ async function refreshContext(){
+  if(!desktop?.getAIContextMetrics)return;
+  try{const provider=metrics?.provider;metrics=await desktop.getAIContextMetrics({context:getContext()});metricError='';activeRender?.();if(provider&&provider!==metrics.provider)void activeStats?.();}catch{metricError=say('Kontextgrößen konnten nicht gelesen werden.','Context sizes could not be read.');activeRender?.();}
+ }
+ // Warm up once on application startup, without a provider request.
+ let ready=Promise.resolve().then(refreshContext);
+ function mount(parent,before=null){
+  if(!desktop?.getAIUsageStatistics)return;
+  const ticket=++generation,root=element('section',undefined,'ai-meter');root.id='ai-usage-meter';root.setAttribute('aria-label',say('KI-Verbrauch und Kontextgrößen','AI usage and context sizes'));root.dataset.noTranslate='';
+  const head=element('div',undefined,'ai-meter-heading');head.append(element('h3',say('KI-Verbrauch & Kontext','AI usage & context')));
+  const refresh=element('button',say('Aktualisieren','Refresh'));refresh.type='button';refresh.id='ai-meter-refresh';head.append(refresh);root.append(head);
+  const tabs=element('div',undefined,'ai-meter-tabs'),usageTab=element('button',say('Verbrauch','Usage')),contextTab=element('button',say('Kontextgrößen','Context sizes'));
+  for(const button of [usageTab,contextTab])button.type='button';usageTab.id='ai-meter-usage-tab';contextTab.id='ai-meter-context-tab';tabs.append(usageTab,contextTab);root.append(tabs);
+  const usage=element('div'),context=element('div');usage.id='ai-meter-usage';context.id='ai-meter-context';context.hidden=true;root.append(usage,context);
+  function tab(showContext){usage.hidden=showContext;context.hidden=!showContext;usageTab.setAttribute('aria-pressed',String(!showContext));contextTab.setAttribute('aria-pressed',String(showContext));}usageTab.onclick=()=>tab(false);contextTab.onclick=()=>tab(true);tab(false);
+  const filters=element('div',undefined,'ai-meter-filters'),period=document.createElement('select'),scope=document.createElement('select');period.id='ai-meter-period';scope.id='ai-meter-scope';
+  for(const [value,de,en]of [['all','Gesamter erfasster Zeitraum','All recorded usage'],['today','Heute','Today'],['30days','Letzte 30 Tage','Last 30 days']])period.add(new Option(say(de,en),value));
+  scope.add(new Option(say('Aktueller Anbieter','Current provider'),'current'));scope.add(new Option(say('Alle Anbieter','All providers'),'all'));
+  const pl=element('label',say('Zeitraum','Period')),sl=element('label',say('Anbieter','Provider'));pl.append(period);sl.append(scope);filters.append(pl,sl);usage.append(filters);
+  const data=element('div'),status=element('p','', 'small-note');status.setAttribute('role','status');usage.append(data,status);parent.insertBefore(root,before);
+  const card=(label,value,note)=>{const box=element('div',undefined,'ai-meter-card');box.append(element('span',label),element('strong',value));if(note)box.append(element('small',note));return box;};
+  function renderStats(stats){
+   data.replaceChildren();if(!stats?.available){status.textContent=stats?.warning||say('Statistik nicht verfügbar.','Statistics unavailable.');return;}
+   const sums=key=>stats.rows.reduce((s,r)=>s+(r.api[key]||0)+(r.subscription[key]||0),0),cost=kind=>{const rows=stats.rows.map(r=>r[kind]);return {min:rows.reduce((s,r)=>s+r.costMinUSD,0),max:rows.reduce((s,r)=>s+r.costMaxUSD,0)};};
+   const cards=element('div',undefined,'ai-meter-cards');cards.append(card(say('Aufträge · API-Anfragen','Tasks · API requests'),n(sums('tasks'))+' · '+n(sums('requests'))),card(say('Eingabe-Tokens','Input tokens'),(sums('inputMissing')?'≥ ':'')+n(sums('inputTokens')),(sums('cacheMissing')?'≥ ':'')+n(sums('cachedInputTokens'))+say(' davon aus Cache',' from cache')),card(say('Ausgabe-Tokens','Output tokens'),(sums('outputMissing')?'≥ ':'')+n(sums('outputTokens')),say('Denk-Tokens sind enthalten','Includes reasoning tokens')));
+   const apiRequests=stats.rows.reduce((s,r)=>s+r.api.requests,0),apiPriced=stats.rows.reduce((s,r)=>s+r.api.pricedRequests,0),subRequests=stats.rows.reduce((s,r)=>s+r.subscription.requests,0);
+   cards.append(card(say('Geschätzte API-Kosten','Estimated API cost'),apiRequests&&!apiPriced?say('Preis unbekannt','Price unknown'):formatAIMeterCost(cost('api'),lang()),subRequests?say('Abo-Gegenwert separat unten','Subscription equivalent below'):say('Tarifspanne · keine Rechnung','Rate range · not an invoice')));data.append(cards);
+   const subPriced=stats.rows.reduce((s,r)=>s+r.subscription.pricedRequests,0);if(subRequests)data.append(element('p',say('Geschätzter Abo-API-Gegenwert: ','Estimated subscription API equivalent: ')+(subPriced?formatAIMeterCost(cost('subscription'),lang()):say('Preis unbekannt','Price unknown'))+say(' · keine zusätzliche Abo-Abrechnung',' · no extra subscription charge'),'small-note'));
+   const wrap=element('div',undefined,'ai-meter-table-wrap'),table=document.createElement('table'),thead=document.createElement('thead'),tr=document.createElement('tr');
+   for(const title of [say('Auftragsart','Task type'),say('Aufträge','Tasks'),say('Eingabe','Input'),say('Ausgabe','Output'),say('Geschätzte Kosten / Gegenwert','Estimated cost / equivalent')])tr.append(element('th',title));thead.append(tr);table.append(thead);const tbody=document.createElement('tbody'),knownTotal=sums('inputTokens')+sums('outputTokens');
+   for(const row of stats.rows){const tr=document.createElement('tr'),label=element('td',labels[lang()][row.category]),bar=element('span',undefined,'ai-meter-bar'),share=knownTotal?100*(row.api.inputTokens+row.api.outputTokens+row.subscription.inputTokens+row.subscription.outputTokens)/knownTotal:0;bar.style.width=share+'%';bar.dataset.category=row.category;bar.setAttribute('aria-label',Math.round(share)+'%');label.append(bar);tr.append(label);
+    for(const key of ['tasks','inputTokens','outputTokens']){const missing=key==='inputTokens'?'inputMissing':key==='outputTokens'?'outputMissing':null;tr.append(element('td',(missing&&(row.api[missing]+row.subscription[missing])?'≥ ':'')+n(row.api[key]+row.subscription[key])));}
+    const price=element('td');for(const [kind,title]of [['api','API'],['subscription',say('Abo-Gegenwert','Subscription equivalent')]])if(row[kind].requests){const r=row[kind];price.append(element('div',title+': '+(r.pricedRequests?formatAIMeterCost({min:r.costMinUSD,max:r.costMaxUSD},lang()):say('Preis unbekannt','Price unknown'))));}if(!price.childNodes.length)price.textContent='–';tr.append(price);tbody.append(tr);
+   }table.append(tbody);wrap.append(table);data.append(wrap);
+   status.textContent=[stats.warning,say('Automatische Zuordnung nach Auftrag, einschließlich Messungen und Korrekturen. Menü-Klicks ohne KI-Anfrage verbrauchen keine Tokens.','Automatically grouped by task, including measurements and corrections. Menu clicks without an AI request use no tokens.'),sums('inputMissing')||sums('outputMissing')||sums('cacheMissing')?say('≥ kennzeichnet eine bekannte Teilsumme; bei einigen Anfragen fehlen Anbieterzahlen.','≥ marks a known subtotal; some requests have no reported usage.'):'',sums('unpricedRequests')?say('Einige Anfragen haben keinen bekannten Preis; Kosten sind nur die bekannte Teilsumme.','Some requests have no known price; costs are known subtotals only.'):'',say('Erfassung ab Version 0.104.2; frühere Anfragen sind nicht enthalten.','Recording starts with version 0.104.2; earlier usage is not backfilled.')].filter(Boolean).join(' ');
+  }
+  function renderContext(){
+   context.replaceChildren();if(!metrics){context.append(element('p',metricError||say('Kontextgrößen werden gelesen …','Reading context sizes …'),'small-note'));return;}
+   const cards=element('div',undefined,'ai-meter-cards');cards.append(card(say('Anfragebasis','Base context'),formatAIBytes(metrics.total.bytes,lang())),card(say('Geschätzte Eingabe','Estimated input'),'≈ '+n(metrics.total.estimatedTokens)+say(' Tokens',' tokens')),card(say('Eingabekosten je Anfrage','Input cost per request'),formatAIMeterCost(metrics.total.estimatedInputCostUSD,lang()),metrics.provider==='chatgpt'?say('API-Gegenwert beim Abo','Subscription API equivalent'):say('Ohne Cache-Rabatt','Before cache discounts')));context.append(cards);
+   const partNames={tools:say('Werkzeugbeschreibung','Tool contract'),rules:say('Modellierregeln','Modelling rules'),memory:say('Anbieter-Hinweise & Erfahrungen','Provider notes & experience')};
+   context.append(element('p',metrics.components.map(r=>partNames[r.id]+': '+formatAIBytes(r.bytes,lang())).join(' · '),'small-note'));
+   const wrap=element('div',undefined,'ai-meter-table-wrap'),table=document.createElement('table'),thead=document.createElement('thead'),tr=document.createElement('tr');for(const title of [say('Lokale Kontextdatei','Local context file'),say('Dateigröße','File size'),say('Tokens bei vollem Text, geschätzt','Estimated tokens for full text')])tr.append(element('th',title));thead.append(tr);table.append(thead);const tbody=document.createElement('tbody');
+   for(const file of metrics.files){const tr=document.createElement('tr');tr.append(element('td',file.name+(file.missing?say(' · noch leer',' · not created yet'):'')),element('td',formatAIBytes(file.bytes,lang())),element('td',file.available?'≈ '+n(file.estimatedTokens):say('Nicht lesbar','Unreadable')));tbody.append(tr);}table.append(tbody);wrap.append(table);context.append(wrap);
+   context.append(element('p',say('Die Anfragebasis zählt die tatsächlich geladenen Kontextbausteine. Lokale Dokumentationsdateien werden nicht zusätzlich vollständig gesendet. Auftrag, Modellübersicht, Verlauf, Bilder und laufende Mess-/Fehlerberichte kommen je Anfrage hinzu. Tokens sind aus der Textlänge geschätzt (4 Zeichen je Token), keine Anbietermessung.','Base context counts the loaded context components. Local documentation files are not additionally sent in full. Task, model summary, history, images and live analysis/error evidence add to each request. Tokens are estimated from text length (4 characters per token), not provider measurements.'),'small-note'));
+   context.append(element('p',say('Aktualisiert: ','Updated: ')+new Date(metrics.updatedAt).toLocaleString(lang()==='en'?'en-US':'de-DE')+' · '+metrics.model+' · '+say('Beim Programmstart automatisch, ohne KI-Anfrage.','Automatically at startup, without an AI request.'),'small-note'));if(metricError||metrics.warning)context.append(element('p',metricError||metrics.warning,'ai-error'));
+  }
+  async function stats(){try{const result=await desktop.getAIUsageStatistics({period:period.value,allProviders:scope.value==='all'});if(ticket===generation&&root.isConnected)renderStats(result);}catch{if(root.isConnected)status.textContent=say('Verbrauchsstatistik konnte nicht geladen werden.','Usage statistics could not be loaded.');}}
+  period.onchange=stats;scope.onchange=stats;refresh.onclick=async()=>{refresh.disabled=true;try{await Promise.all([stats(),refreshContext()]);if(root.isConnected)renderContext();}finally{refresh.disabled=false;}};
+  activeRender=()=>{if(root.isConnected)renderContext();};activeStats=stats;ready=refreshContext();void stats();void ready.then(()=>{if(root.isConnected)renderContext();});return root;
+ }
+ return {mount,refresh(){ready=refreshContext();return ready;}};
+}

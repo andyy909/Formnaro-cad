@@ -1,0 +1,76 @@
+{
+  "schema": "Formnaro-CAD-kernel-build-v1",
+  "sources": [
+    {
+      "name": "replicad",
+      "repository": "https://github.com/sgenoud/replicad",
+      "commit": "e4b05f67dc4e2393a876ce8c5064a9c93db05bf1",
+      "url": "https://codeload.github.com/sgenoud/replicad/tar.gz/e4b05f67dc4e2393a876ce8c5064a9c93db05bf1",
+      "file": "replicad-e4b05f67dc4e.tar.gz",
+      "bytes": 17426998,
+      "sha256": "92180710da11a6e67ab75eaac8b494b29d32011415c22e29f7fecb1c796da783",
+      "directory": "replicad-e4b05f67dc4e2393a876ce8c5064a9c93db05bf1"
+    },
+    {
+      "name": "opencascadejs",
+      "repository": "https://github.com/taucad/opencascade.js",
+      "commit": "ebd263f15337b440b391492af073662707e86482",
+      "url": "https://codeload.github.com/taucad/opencascade.js/tar.gz/ebd263f15337b440b391492af073662707e86482",
+      "file": "opencascadejs-ebd263f15337.tar.gz",
+      "bytes": 4449501,
+      "sha256": "1e0342c8dbdc04d1835c776d5e95ab25fcad56a5f4cafcbecad92a959b6b00b7",
+      "directory": "opencascade.js-ebd263f15337b440b391492af073662707e86482"
+    },
+    {
+      "name": "OCCT",
+      "repository": "https://github.com/Open-Cascade-SAS/OCCT",
+      "commit": "b8f597c677811d1f9f4d8a97f5ae2825c0353a42",
+      "url": "https://codeload.github.com/Open-Cascade-SAS/OCCT/tar.gz/b8f597c677811d1f9f4d8a97f5ae2825c0353a42",
+      "file": "OCCT-b8f597c67781.tar.gz",
+      "bytes": 45131814,
+      "sha256": "dba62b81078dd43cec23feba89432be301582341001edad1b93342ad8bda35ea",
+      "directory": "OCCT-b8f597c677811d1f9f4d8a97f5ae2825c0353a42"
+    },
+    {
+      "name": "rapidjson",
+      "repository": "https://github.com/Tencent/rapidjson",
+      "commit": "24b5e7a8b27f42fa16b96fc70aade9106cf7102f",
+      "url": "https://codeload.github.com/Tencent/rapidjson/tar.gz/24b5e7a8b27f42fa16b96fc70aade9106cf7102f",
+      "file": "rapidjson-24b5e7a8b27f.tar.gz",
+      "bytes": 1116703,
+      "sha256": "2d2601a82d2d3b7e143a3c8d43ef616671391034bc46891a9816b79cf2d3e7a8",
+      "directory": "rapidjson-24b5e7a8b27f42fa16b96fc70aade9106cf7102f"
+    },
+    {
+      "name": "freetype",
+      "repository": "https://github.com/freetype/freetype",
+      "commit": "de8b92dd7ec634e9e2b25ef534c54a3537555c11",
+      "url": "https://codeload.github.com/freetype/freetype/tar.gz/de8b92dd7ec634e9e2b25ef534c54a3537555c11",
+      "file": "freetype-de8b92dd7ec6.tar.gz",
+      "bytes": 2496556,
+      "sha256": "14791d34053acf30394912a8b963277bee60b35fbb3038795d86555ba0415a44",
+      "directory": "freetype-de8b92dd7ec634e9e2b25ef534c54a3537555c11"
+    }
+  ],
+  "emsdk": {
+    "version": "5.0.1",
+    "repository": "https://github.com/emscripten-core/emsdk",
+    "commit": "14c18b569f55138fe4963924162244251f454fb0",
+    "release": "bf32ae8b61ac8efeb7eca01b54c8307f992724f7",
+    "emscriptenCommit": "8c5f43157a3f069ade75876e23061330521eabde"
+  },
+  "dockerImage": {
+    "reference": "ghcr.io/taucad/opencascade.js:canary-ebd263f1-single-threaded",
+    "digest": "sha256:215198af0e2ca4c5f308e5540869f2419784dc290062d3eb03d34e4f22e0188c"
+  },
+  "linuxLauncher": {
+    "version": "5.5.0",
+    "filename": "proot-5.5.0",
+    "url": "https://github.com/proot-me/proot/releases/download/v5.5.0/proot",
+    "sha256": "db185300a9daabbce86aca7632d8c7fdc4249f6f153171954013b70c5f491ec0",
+    "bytes": 1841504
+  },
+  "upstreamYamlSha256": "01d85d96f2d4d7fcc864ec23ce1aecf6dc4ec86b363c3803cf4d5fac4a789bd0",
+  "bridgeSha256": "74acbde7fefb244f2022d14e288d1ceeb5cf6f167d2356bdc70379aea22c7690",
+  "generatedYamlSha256": "3ef87a600a21cf5dd17da2737a3fc769ae39d5d615d0d61e7716d82c6a3e9ebe"
+}

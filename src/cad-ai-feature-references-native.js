@@ -1,0 +1,65 @@
+import {cadProjectRevision} from './cad-project.js';
+import {cadSelectionContext} from './cad-interface-state.js';
+import {cadGeometryDigest} from './cad-geometry-digest.js';
+import {projectObjectGeometryDigest} from './project-objects.js';
+import {readCadBrep,writeCadBrep,transformCad} from './cad-native-kernel.js';
+import {createCadClickMeasureNative} from './cad-click-measure-native.js';
+import {projectCadFaceAnchorNative} from './cad-topology-native.js';
+import {uniqueCadEdgesNative,cadNativeCurveDto,cadCurveDisplayPointsNative} from './cad-edge-display-native.js';
+import {cadAIReferenceState,captureCadAISourceReference,validateCadAIReference,validateCadAIReferenceTarget,cadAISourceReferenceCatalog,cadAIReferenceFrameDigest} from './cad-ai-feature-references.js';
+
+const fail=(message,code='AI_REFERENCE_INVALID')=>{throw Object.assign(Error('Merkmalsbezug: '+message),{code});};
+const key=t=>JSON.stringify([t.rootId,t.path]),xyz=p=>[p.X(),p.Y(),p.Z()],unit=p=>{const n=Math.hypot(...p);return p.map(v=>v/n);};
+const only=(v,keys)=>{if(!v||Object.getPrototypeOf(v)!==Object.prototype||Object.keys(v).some(k=>!keys.includes(k)))fail('Unbekannte Abfragefelder.');};
+const domainKey=(oc,shape)=>cadGeometryDigest(writeCadBrep(oc,shape));
+const near=(a,b)=>Math.hypot(...a.map((v,k)=>v-b[k]))<=1e-7;
+const sameSurface=(a,b)=>a.kind===b.kind&&(a.kind!=='cylinder'||Math.abs(a.diameter-b.diameter)<=1e-7&&near(a.center,b.center)&&near(a.axis,b.axis));
+const sameCylinder=(a,b)=>{if(a.kind!=='cylinder'||b.kind!=='cylinder'||Math.abs(a.diameter-b.diameter)>1e-6||Math.abs(a.axis.reduce((n,v,k)=>n+v*b.axis[k],0))<1-1e-8)return false;const d=a.center.map((v,k)=>v-b.center[k]),axial=d.reduce((n,v,k)=>n+v*b.axis[k],0);return Math.hypot(...d.map((v,k)=>v-axial*b.axis[k]))<=1e-6;};
+function uniqueFaces(oc,shape){const out=[],buckets=new Map(),e=new oc.TopExp_Explorer(shape,oc.TopAbs_ShapeEnum.TopAbs_FACE);try{while(e.More()){const raw=e.Current();try{const hash=oc.ReplicadShapeHasher.HashCode(raw,2147483647),bucket=buckets.get(hash)??[];if(!bucket.some(face=>face.IsSame(raw))){const face=oc.TopoDS.Face(raw);bucket.push(face);buckets.set(hash,bucket);out.push(face);}}finally{raw.delete();}if(out.length>8000)fail('Mehr als 8000 CAD-Flächen.','AI_REFERENCE_LIMIT');e.Next();}return out;}catch(error){out.forEach(f=>f.delete());throw error;}finally{e.delete();}}
+function surfaceInfo(oc,face){const a=new oc.BRepAdaptor_Surface(face,false),value=e=>e?.value??e;let cylinder,axis,p,n;try{const type=value(a.GetType());if(type===value(oc.GeomAbs_SurfaceType.GeomAbs_Cylinder)){cylinder=a.Cylinder();axis=cylinder.Axis();p=axis.Location();n=axis.Direction();return {kind:'cylinder',diameter:cylinder.Radius()*2,center:xyz(p),axis:unit(xyz(n))};}return {kind:type===value(oc.GeomAbs_SurfaceType.GeomAbs_Plane)?'plane':'other'};}finally{n?.delete();p?.delete();axis?.delete();cylinder?.delete();a.delete();}}
+function edgeRecord(oc,edge){const curve=new oc.BRepAdaptor_Curve(edge);try{const start=curve.FirstParameter(),end=curve.LastParameter();if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start)fail('Unbegrenzte Kante nicht unterstützt.');const samples=[0,.25,.5,.75,1].map(t=>{const p=curve.Value(start+t*(end-start));try{return xyz(p);}finally{p.delete();}}),kind=cadNativeCurveDto(oc,edge).kind;return {kind:'edge',signature:domainKey(oc,edge),point:samples[2],samples,curveKind:['line','circle','ellipse'].includes(kind)?kind:'unsupported'};}finally{curve.delete();}}
+function displayDomain(oc,shape){const edges=uniqueCadEdgesNative(oc,shape);try{const curves=[];let points=0;for(const edge of edges){const curve=cadCurveDisplayPointsNative(oc,edge,{linearDeflection:.03,angularDeflection:Math.PI/36,maxPoints:30000});points+=curve.length;if(points>30000)fail('Bezugshervorhebung überschreitet 30000 Punkte.','AI_REFERENCE_LIMIT');curves.push(curve);}return {curves,scope:'Sampled display curves only; exact native domain signature owns identity.'};}finally{edges.forEach(e=>e.delete());}}
+
+/** Read-only exact finished-face/edge references. No face number survives the
+ * worker response used for an operation; persisted references own domain hashes.
+ * All sources matching a picked native face are returned, including ambiguous
+ * coincident cutters. A bounding box or nearest-source guess is never used. */
+export function createCadAIReferencesNative({oc,service}={}){
+ function root(project,id){const node=project.nodes.find(n=>n.id===id);if(!node||node.kind!=='cad'||!node.solid||!service.productionNodes(project,{ids:[id]}).length)fail('Sichtbares fertiges CAD-Materialteil wählen.');return node;}
+ function origins(project,node,selector,kind){
+  const catalog=cadAISourceReferenceCatalog(project,{rootIds:[node.id],limit:500});if(catalog.truncated)fail('Quellenbaum für eine eindeutige Zuordnung zu groß.','AI_REFERENCE_LIMIT');
+  const possible=catalog.items.filter(item=>{const c=cadSelectionContext(project,item.target);return ['native','step','modeling'].includes(c.node.source)&&(kind!=='bore'||c.node.source==='native'&&c.node.recipe?.type==='cylinder'&&!c.node.solid);});if(possible.length>128)fail('Mehr als 128 mögliche CAD-Merkmalsquellen.','AI_REFERENCE_LIMIT');
+  const matches=[];
+  for(const item of possible){const c=cadSelectionContext(project,item.target),local=readCadBrep(oc,c.node.brep.data);let world,faces=[];try{world=transformCad(oc,local,c.world);let count=0;const shapes=kind==='bore'?(faces=uniqueFaces(oc,world)).filter(face=>sameCylinder(surfaceInfo(oc,face),selector.surface)):[world];for(const shape of shapes){const a=projectCadFaceAnchorNative(oc,shape,selector),b=projectCadFaceAnchorNative(oc,shape,{point:selector.point,normal:selector.normal.map(n=>-n)});count+=a.length+b.length;}if(count===1)matches.push({target:item.target,name:item.name,sourceDigest:projectObjectGeometryDigest(c.node),locked:c.locked,sourceGeometryReadonly:c.sourceGeometryReadonly,fields:item.fields});else if(count>1)matches.push({target:item.target,name:item.name,sourceDigest:projectObjectGeometryDigest(c.node),ambiguous:true,fields:[]});}finally{faces.forEach(f=>f.delete());world?.delete();local.delete();}}
+  return matches;
+ }
+ function source(project,options){only(options,['action','target','kind','id','name']);const reference=captureCadAISourceReference(project,options.target,options);return {reference,state:cadAIReferenceState(project,reference),catalog:cadAISourceReferenceCatalog(project,{rootIds:[reference.target.rootId]})};}
+ function pick(project,options){
+  only(options,['action','kind','ray','ids','id','name']);if(!['face','bore'].includes(options.kind))fail('Fläche oder Bohrung wählen.');
+  if(options.ids!==undefined&&(!Array.isArray(options.ids)||!options.ids.length||options.ids.length>1000||new Set(options.ids).size!==options.ids.length||options.ids.some(id=>typeof id!=='string')))fail('Eindeutige sichtbare CAD-Teile wählen.');
+  const ids=service.productionNodes(project,{ids:options.ids}).filter(n=>n.kind==='cad').map(n=>n.id),hit=ids.length?createCadClickMeasureNative({oc,service}).pick({project,ray:options.ray,ids}):null;if(!hit)fail('Keine eindeutige CAD-Fläche getroffen.','AI_REFERENCE_NOT_HIT');
+  const node=root(project,hit.objectId),shape=service.worldShape(node);let faces=[];
+  try{faces=uniqueFaces(oc,shape);const face=faces[hit.faceIndex-1];if(!face)fail('Native CAD-Fläche fehlt.');const surface=surfaceInfo(oc,face),normal=unit(hit.normal),selector={kind:'face',signature:domainKey(oc,face),point:hit.point,normal,surface};
+   if(options.kind==='bore'){if(surface.kind!=='cylinder')fail('Keine native zylindrische Bohrungswand getroffen.');const delta=hit.point.map((v,k)=>v-surface.center[k]),along=delta.reduce((n,v,k)=>n+v*surface.axis[k],0),radial=delta.map((v,k)=>v-along*surface.axis[k]);if(radial.reduce((n,v,k)=>n+v*normal[k],0)>=-1e-7)fail('Außenmantel ist keine Bohrung. Eine innere Zylinderwand wählen.');}
+   const candidates=origins(project,node,selector,options.kind),unique=candidates.length===1&&!candidates[0].ambiguous?candidates[0]:null;
+   const reference=validateCadAIReference({version:1,id:options.id??'ref-'+crypto.randomUUID(),name:(options.name??(options.kind==='bore'?'Bohrung':'Fläche')+' · '+node.name).slice(0,160),kind:options.kind,target:{rootId:node.id,path:[]},rootDigest:projectObjectGeometryDigest(node),sourceDigest:projectObjectGeometryDigest(node),frameDigest:cadAIReferenceFrameDigest(node.transform),selector,...(options.kind==='bore'&&unique?{origin:{target:unique.target,sourceDigest:unique.sourceDigest}}:{})});
+   // Duplicate exact domains are not a persistent identity. Reject here as
+   // well as on reopening rather than retaining a transient face ordinal.
+   if(faces.filter(f=>domainKey(oc,f)===selector.signature).length!==1)fail('Native Flächendomäne ist mehrdeutig. Eine eindeutige Fläche wählen.','AI_REFERENCE_AMBIGUOUS');
+   return {reference,candidates,display:displayDomain(oc,face),native:{faceIndex:hit.faceIndex},state:cadAIReferenceState(project,reference)};
+  }finally{faces.forEach(f=>f.delete());shape.delete();}
+ }
+ function edges(project,options){only(options,['action','target']);const target=validateCadAIReferenceTarget(options.target);if(target.path.length)fail('Kanten am fertigen Teil wählen.');const node=root(project,target.rootId),shape=service.worldShape(node);let list=[];try{list=uniqueCadEdgesNative(oc,shape);if(list.length>2000)fail('Mehr als 2000 Kanten für die Merkmalswahl.','AI_REFERENCE_LIMIT');return {rootDigest:projectObjectGeometryDigest(node),edges:list.map(edge=>({selector:edgeRecord(oc,edge),display:displayDomain(oc,edge)}))};}finally{list.forEach(e=>e.delete());shape.delete();}}
+ function edge(project,options){only(options,['action','target','signature','id','name']);const target=validateCadAIReferenceTarget(options.target);if(target.path.length)fail('Kanten am fertigen Teil wählen.');const node=root(project,target.rootId),shape=service.worldShape(node);let list=[];try{list=uniqueCadEdgesNative(oc,shape);const matches=list.filter(e=>domainKey(oc,e)===options.signature);if(matches.length!==1)fail('Kante fehlt oder ist mehrdeutig. Neu wählen.','AI_REFERENCE_AMBIGUOUS');const selector=edgeRecord(oc,matches[0]),reference=validateCadAIReference({version:1,id:options.id??'ref-'+crypto.randomUUID(),name:(options.name??'Kante · '+node.name).slice(0,160),kind:'edge',target,rootDigest:projectObjectGeometryDigest(node),sourceDigest:projectObjectGeometryDigest(node),frameDigest:cadAIReferenceFrameDigest(node.transform),selector});return {reference,display:displayDomain(oc,matches[0]),state:cadAIReferenceState(project,reference)};}finally{list.forEach(e=>e.delete());shape.delete();}}
+ function resolve(project,options){
+  only(options,['action','reference']);const reference=validateCadAIReference(options.reference),state=cadAIReferenceState(project,reference);if(state.status!=='current')fail(state.message,state.code);if(!reference.selector)return {reference,state};
+  const node=root(project,reference.target.rootId),shape=service.worldShape(node);let list=[];try{
+   const face=reference.selector.kind==='face';list=face?uniqueFaces(oc,shape):uniqueCadEdgesNative(oc,shape);const matches=list.map((entity,i)=>({entity,index:i+1})).filter(r=>domainKey(oc,r.entity)===reference.selector.signature);if(matches.length!==1)fail('Die vollständige native Domäne fehlt oder ist mehrdeutig. Bezug ausdrücklich neu zuordnen.','AI_REFERENCE_AMBIGUOUS');
+   const selected=matches[0];if(face){if(projectCadFaceAnchorNative(oc,selected.entity,reference.selector).length!==1)fail('Flächenanker und native Domäne widersprechen sich.');const actual=surfaceInfo(oc,selected.entity);if(!sameSurface(actual,reference.selector.surface))fail('Gespeicherte Flächenmessung widerspricht der nativen Domäne.');}else{const actual=edgeRecord(oc,selected.entity);if(actual.curveKind!==reference.selector.curveKind||!near(actual.point,reference.selector.point)||!actual.samples.every((p,k)=>near(p,reference.selector.samples[k])))fail('Gespeicherter Kantenanker widerspricht der nativen Domäne.');}
+   const candidates=face?origins(project,node,reference.selector,reference.kind):[];
+   if(reference.origin&&!candidates.some(c=>!c.ambiguous&&key(c.target)===key(reference.origin.target)&&c.sourceDigest===reference.origin.sourceDigest))fail('Gewählte Merkmalsquelle stimmt nicht mit der nativen Fläche überein.','AI_REFERENCE_STALE');
+   return {reference,state,candidates,display:displayDomain(oc,selected.entity),native:face?{faceIndex:selected.index}:{edgeSignature:reference.selector.signature}};
+  }finally{list.forEach(e=>e.delete());shape.delete();}
+ }
+ return (project,options)=>{let result;if(options?.action==='source')result=source(project,options);else if(options?.action==='pick')result=pick(project,options);else if(options?.action==='edges')result=edges(project,options);else if(options?.action==='edge')result=edge(project,options);else if(options?.action==='resolve')result=resolve(project,options);else fail('Unbekannte Bezugsauswahl.');return {...result,revision:cadProjectRevision(project)};};
+}

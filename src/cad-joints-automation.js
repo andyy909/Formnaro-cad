@@ -1,0 +1,16 @@
+import {validateCadJoints,createCadJoints,cadJointProblems} from './cad-joints-data.js';
+const id={type:'string',minLength:1,maxLength:200},number={type:'number'},vector={type:'array',minItems:3,maxItems:3,items:{type:'number',minimum:-100000,maximum:100000}},limits={type:'object',additionalProperties:false,required:['min','max'],properties:{min:number,max:number}};
+const command=(action,properties,required=Object.keys(properties))=>({type:'object',additionalProperties:false,required:['op','action',...required],properties:{op:{const:'joint'},action:{const:action},...properties}});
+export const CAD_JOINT_COMMAND_SCHEMAS=[
+ command('create',{joint:{oneOf:['fixed','revolute','prismatic'].map(kind=>({type:'object',additionalProperties:false,required:['kind','parentId','childId','origin'],properties:{id,name:{type:'string',minLength:1,maxLength:200},kind:{const:kind},parentId:id,childId:id,origin:vector,axis:vector,...(kind==='fixed'?{}:{limits})}}))}}),
+ command('move',{values:{type:'array',maxItems:256,items:{type:'object',additionalProperties:false,required:['jointId','value'],properties:{jointId:id,value:number}}}}),
+ command('remove',{jointId:id}),command('rebind',{jointId:id,origin:vector,axis:vector}),command('limits',{jointId:id,limits}),command('clear',{})
+];
+export async function previewCadJointCommands(controller,{commands,revision,label='KI-Gelenke'}={}){
+ if(!Array.isArray(commands)||commands.length!==1||commands[0]?.op!=='joint')throw Object.assign(Error('Eine Gelenkaktion in ihrer eigenen Vorschau senden; mehrere Bewegungswerte gesammelt in values.'),{code:'JOINT_COMMAND'});
+ const {op,...request}=commands[0];return controller.previewJoints(request,{revision,label});
+}
+export function cadJointsSummary(project,options={}){
+ if(!options||Object.keys(options).some(k=>!['offset','limit','includeFrames'].includes(k)))throw Error('Gelenkabfrage: offset, limit und includeFrames wählen.');const {offset=0,limit=50,includeFrames=false}=options;if(!Number.isSafeInteger(offset)||offset<0||!Number.isSafeInteger(limit)||limit<1||limit>50||typeof includeFrames!=='boolean')throw Error('Gelenkabfrage: maximal 50 Verbindungen je Seite.');
+ const data=validateCadJoints(project.joints??createCadJoints()),problems=cadJointProblems(project),name=id=>project.nodes.find(n=>n.id===id)?.name??'Fehlendes Teil';return {version:1,total:data.joints.length,offset,limit,truncated:offset+limit<data.joints.length,bases:data.bases.slice(0,50).map(id=>({id,name:name(id)})),baseTotal:data.bases.length,joints:data.joints.slice(offset,offset+limit).map(j=>({id:j.id,name:j.name,kind:j.kind,parentId:j.parentId,parentName:name(j.parentId),childId:j.childId,childName:name(j.childId),value:j.value,...(j.limits?{limits:j.limits,unit:j.kind==='revolute'?'degree':'mm'}:{}),...(includeFrames?{parentFrame:j.parentFrame,childFrame:j.childFrame}:{})})),problems:problems.slice(0,50),problemTotal:problems.length,scope:'Root rigid bodies; tree with fixed basis. Motion preview uses display matrices only. Collision is a separate explicit pose query, never a continuous-path guarantee.'};
+}

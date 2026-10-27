@@ -1,0 +1,10 @@
+#cad-mesh-sculpt{width:360px;max-height:calc(100% - 106px)}
+#cad-mesh-sculpt .sculpt-heading{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#cad-mesh-sculpt label{display:grid;gap:5px;margin:9px 0;font-size:12px}
+#cad-mesh-sculpt .sculpt-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+#cad-mesh-sculpt .sculpt-pair>*{min-width:0}
+#cad-mesh-sculpt .small-note{font-size:11px;line-height:1.45}
+#mesh-sculpt-result{white-space:pre-wrap;font-size:12px;line-height:1.5}
+#cad-mesh-sculpt .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px;display:flex;flex-wrap:wrap}
+[data-theme=dark] #cad-mesh-sculpt .edge-actions{background:#212f3e}
+@media(max-width:900px){#cad-mesh-sculpt{width:min(360px,calc(100% - 28px))}}

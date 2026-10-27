@@ -1,0 +1,24 @@
+import {validateCadAIReferences} from './cad-ai-feature-reference-data.js';
+import {cadAIReferenceState,cadAIReferenceFields} from './cad-ai-feature-references.js';
+
+const fail=(message,code='AI_FEATURE_SCOPE_VIOLATION')=>{throw Object.assign(Error(message),{code,feedback:{retryable:true}});};
+export const CAD_AI_FEATURE_COMMAND_SCHEMA={type:'object',additionalProperties:false,required:['op','referenceId','field','value'],properties:{op:{const:'feature'},referenceId:{type:'string',minLength:1,maxLength:100},field:{type:'string',minLength:1,maxLength:300},value:{type:'number',minimum:-100000,maximum:100000}}};
+export function validateCadAIFeatureCommands(commands){
+ if(!Array.isArray(commands)||!commands.length||commands.length>32)fail('Eine bis 32 gezielte Merkmalsänderungen angeben.');
+ return commands.map(c=>{if(!c||Object.getPrototypeOf(c)!==Object.prototype||Object.keys(c).some(k=>!['op','referenceId','field','value'].includes(k))||c.op!=='feature'||typeof c.referenceId!=='string'||!c.referenceId||c.referenceId.length>100||typeof c.field!=='string'||!c.field||c.field.length>300||!Number.isFinite(c.value)||Math.abs(c.value)>100000)fail('Für diesen Auftrag nur feature-Befehle mit lokal gewählter referenceId, Feld und Wert senden.');return {referenceId:c.referenceId,field:c.field,value:c.value};});
+}
+export function captureCadAIFeatureScope(project,ids,expected){
+ if(!Array.isArray(ids)||ids.length>32||new Set(ids).size!==ids.length||ids.some(id=>typeof id!=='string'))fail('Eindeutige lokal gewählte Merkmalsbezüge erforderlich.');
+ const items=ids.map(id=>{const ref=project.featureReferences?.items.find(r=>r.id===id);if(!ref)fail('Ein angehängter Merkmalsbezug fehlt im aktuellen Projekt. Neu zuordnen.','AI_REFERENCE_MISSING');const state=cadAIReferenceState(project,ref);if(state.status!=='current')fail(state.message,state.code);return ref;});const captured=validateCadAIReferences({version:1,items});if(expected){const snapshots=validateCadAIReferences({version:1,items:expected}).items;for(const ref of captured.items){const old=snapshots.find(r=>r.id===ref.id),binding=r=>JSON.stringify({...r,name:''});if(!old||binding(old)!==binding(ref))fail('Ein angehängter Bezug wurde neu zugeordnet. Den aktuellen Bezug bewusst erneut anhängen.','AI_REFERENCE_STALE');}}return captured;
+}
+export function cadAIFeatureScopeContext(project,references){
+ const data=validateCadAIReferences(references),items=data.items.map(ref=>{const s=cadAIReferenceState(project,ref);let fields=[];
+  if(s.status==='current'&&s.editable){if(ref.kind==='bore'&&ref.origin)fields=[{field:'diameter',value:ref.selector.surface.diameter,unit:'mm'}];else if(ref.kind==='face'&&['plane','cylinder'].includes(ref.selector.surface.kind))fields=[{field:'face.offset',value:0,unit:'mm'}];else if(ref.kind==='edge')fields=[{field:'edge.round',unit:'mm'},{field:'edge.chamfer',unit:'mm'}];else fields=cadAIReferenceFields(project,ref).filter(f=>f.bindable);}
+  return {id:ref.id,name:ref.name,kind:ref.kind,target:ref.target,status:s.status,editable:!!s.editable&&fields.length>0,...(s.status==='current'&&s.editable&&!fields.length?{problem:ref.kind==='face'?'Für diese native Flächenart ist derzeit keine gezielte Versatzoperation verfügbar. Einen unterstützten Bezug wählen.':'Die Merkmalsquelle zuerst eindeutig zuordnen.'}:{}),...(s.message?{problem:s.message}:{}),...(s.reason?{problem:s.reason}:{}),...(ref.selector?.surface?{surface:ref.selector.surface}:{}),fields:fields.slice(0,160),totalFields:fields.length,fieldsTruncated:fields.length>160};
+ });
+ return {restricted:true,revisionBound:true,references:items,rule:'Only these human-attached references are editable in this request. Return commands [{op:"feature",referenceId,field,value}] exclusively. No generic commands, scripts, replacement bodies or edits to another reference. Native geometry/source correspondence and unchanged unrelated parts are checked locally. Ask for explicit reassignment if a reference or editable origin is missing, stale or ambiguous. Source fields are local construction values; diameter rebuilds an analytic bore cutter while preserving its axis/depth. Respect measured target values and do not change other fields. Necessary dependencies are derived locally, listed in the preview and require explicit human Apply including those dependencies. Never supply or broaden dependency targets.'};
+}
+export async function previewCadAIFeatureCommands(controller,{commands,revision,label='Gezielte KI-Merkmalsänderung',references}={}){
+ const edits=validateCadAIFeatureCommands(commands),data=validateCadAIReferences(references??controller.readSnapshot().featureReferences??{version:1,items:[]}),ids=new Set(data.items.map(r=>r.id));if(edits.some(e=>!ids.has(e.referenceId)))fail('Der Vorschlag überschreitet die lokal angehängten Merkmalsbezüge.','AI_FEATURE_REFERENCE_REQUIRED');
+ return controller.preview({kind:'featureEdits',references:data,edits},{revision,label});
+}

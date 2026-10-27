@@ -1,0 +1,18 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
+const {createProjectFiles,installProjects,projectDirectory}=require('../backend/projects.cjs');
+async function fixture(){const root=await fs.mkdtemp(path.join(os.tmpdir(),'formnaro-projects-')),directory=path.join(root,'Projekte'),file=path.join(directory,'Gehäuse ä.ocad'),dialog={showSaveDialog:async()=>({filePath:file}),showOpenDialog:async()=>({filePaths:[file]})},shell={openPath:async()=>''};return {root,directory,file,dialog,shell,store:createProjectFiles({directory,dialog,shell})};}
+const args=text=>({filename:'Gehäuse ä.ocad',bytes:Buffer.from(text)});
+test('Complete save, update without another dialog, save-as, Unicode recents and restart opening',async()=>{
+ const f=await fixture();let dialogs=0;f.dialog.showSaveDialog=async()=>{dialogs++;return {filePath:f.file};};const saved=await f.store.save(args('first'));assert.equal(saved.saved,true);assert.equal(dialogs,1);await f.store.save({...args('second'),id:saved.file.id});assert.equal(dialogs,1);assert.equal(await fs.readFile(f.file,'utf8'),'second');
+ const copy=path.join(f.directory,'Kopie.ocad');f.dialog.showSaveDialog=async()=>({filePath:copy});await f.store.save({...args('copy'),id:saved.file.id,saveAs:true});const data=await f.store.list();assert.equal(data.recent.length,2);assert.equal(data.files.length,2);assert.equal(data.recent[0].name,'Kopie.ocad');
+ const restarted=createProjectFiles({directory:f.directory,dialog:f.dialog,shell:f.shell}),listing=await restarted.list(),opened=await restarted.open({id:listing.recent.find(v=>v.name==='Gehäuse ä.ocad').id});assert.equal(opened.project,'second');await fs.rm(f.root,{recursive:true,force:true});
+});
+test('Cancel, disk failure, unknown targets and external edits preserve existing data',async()=>{
+ const f=await fixture();const saved=await f.store.save(args('before'));f.dialog.showSaveDialog=async()=>({canceled:true});assert.deepEqual(await f.store.save({...args('bad'),saveAs:true}),{saved:false});await fs.writeFile(f.file,'external');await assert.rejects(f.store.save({...args('bad'),id:saved.file.id}),/außerhalb/);await assert.rejects(f.store.open({id:'not-authorized'}));assert.equal(await fs.readFile(f.file,'utf8'),'external');
+ const failed=createProjectFiles({directory:f.directory,dialog:{showSaveDialog:async()=>({filePath:f.file})},write:async()=>{throw Error('disk full');}});await assert.rejects(failed.save(args('bad')),/disk full/);assert.equal(await fs.readFile(f.file,'utf8'),'external');await fs.rm(f.root,{recursive:true,force:true});
+});
+test('Folder lists copied files, deleted recents are disabled, export files are excluded and IPC checks sender',async()=>{
+ const f=await fixture();await f.store.save(args('data'));await fs.writeFile(path.join(f.directory,'copied.ocad'),'copy');await fs.writeFile(path.join(f.directory,'mesh.stl'),'export');await fs.unlink(f.file);const list=await f.store.list();assert.equal(list.recent[0].exists,false);assert.deepEqual(list.files.map(v=>v.name),['copied.ocad']);
+ const handlers={},win={webContents:{}};installProjects(win,{directory:f.directory,ipcMain:{handle:(n,h)=>handlers[n]=h},dialog:f.dialog,shell:f.shell});assert.equal((await handlers['cad-project:list']({sender:{}})).ok,false);assert.equal((await handlers['cad-project:list']({sender:win.webContents})).ok,true);
+ assert.equal(projectDirectory({isPackaged:true,getPath:()=>path.join(f.root,'App/Formnaro.exe')}),path.join(f.root,'App/Projekte'));await fs.rm(f.root,{recursive:true,force:true});
+});

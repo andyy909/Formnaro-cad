@@ -1,0 +1,12 @@
+#cad-mesh-erase-fill{width:400px;max-height:calc(100% - 106px)}
+#cad-mesh-erase-fill .mesh-erase-fill-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#cad-mesh-erase-fill label{display:grid;gap:5px;margin:10px 0;font-size:12px}
+#cad-mesh-erase-fill .small-note{font-size:11px;line-height:1.45}
+#cad-mesh-erase-fill #mesh-erase-fill-result{white-space:pre-wrap;font-size:12px;line-height:1.5}
+#cad-mesh-erase-fill .mesh-erase-fill-check{display:flex;align-items:center;gap:7px}
+#cad-mesh-erase-fill .mesh-erase-fill-check input{width:auto}
+#cad-mesh-erase-fill #mesh-erase-fill-surface{font-size:12px;line-height:1.45;background:#fff0ee;padding:8px;border-radius:6px}
+#cad-mesh-erase-fill .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px}
+[data-theme=dark] #cad-mesh-erase-fill .edge-actions{background:#212f3e}
+[data-theme=dark] #cad-mesh-erase-fill #mesh-erase-fill-surface{background:#4b3035}
+@media(max-width:900px){#cad-mesh-erase-fill{width:min(400px,calc(100% - 28px))}}

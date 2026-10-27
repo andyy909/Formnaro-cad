@@ -1,0 +1,18 @@
+#cad-mesh-features{width:min(440px,calc(100% - 24px));max-height:calc(100% - 84px);overflow:auto;z-index:90}
+#cad-mesh-features header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#cad-mesh-features label{display:grid;gap:5px;margin:9px 0}
+#cad-mesh-features select{width:100%;min-width:0}
+#cad-mesh-features .mesh-features-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+#cad-mesh-features .tool-actions{display:flex;flex-wrap:wrap;gap:8px;position:sticky;bottom:-16px;background:inherit;padding:12px 0;border-top:1px solid #97b7c0}
+#cad-mesh-features [hidden]{display:none}
+#cad-mesh-features #mesh-features-status,#cad-mesh-features #mesh-features-result{overflow-wrap:anywhere}
+
+#cad-mesh-technical{width:min(440px,calc(100% - 24px));max-height:calc(100% - 84px);overflow:auto;z-index:90}
+#cad-mesh-technical header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#cad-mesh-technical label{display:grid;gap:5px;margin:9px 0}
+#cad-mesh-technical label:has(input[type=checkbox]){display:flex;align-items:center}
+#cad-mesh-technical input,#cad-mesh-technical select{width:100%;min-width:0}
+#cad-mesh-technical input[type=checkbox]{width:auto}
+#cad-mesh-technical [hidden]{display:none!important}
+#cad-mesh-technical .tool-actions{display:flex;flex-wrap:wrap;gap:8px;position:sticky;bottom:-16px;background:inherit;padding:12px 0;border-top:1px solid #97b7c0}
+#cad-mesh-technical p{overflow-wrap:anywhere}

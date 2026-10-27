@@ -1,0 +1,111 @@
+{
+  "format": "Formnaro-Mesh-Engine-Origin",
+  "version": 1,
+  "sourceVersion": "0.21.0",
+  "files": [
+    {
+      "file": "coordinates.js",
+      "sha256": "471000fc926fb73e48e3b275e98139590ecf847a04d2e12fde3ec29e8eda1880"
+    },
+    {
+      "file": "exchange-formats.js",
+      "sha256": "b23bc8134e7e8ca4719f1ebb7d9db451cf2b90679532f94f2d719db81927b9e3"
+    },
+    {
+      "file": "exports.js",
+      "sha256": "c6081b37e7cce75c691a0d468b68f09d636177f20e76a7aed306ee1965329e2a"
+    },
+    {
+      "file": "feature-transforms.js",
+      "sha256": "21f4b63736965373ba5df223aa103022f97f39ad96f15fecd32d3e744c481762"
+    },
+    {
+      "file": "geometry.js",
+      "sha256": "3c38913843492c750d05f261f75700009cb74735c98ed2f3d3b2ff1300c1b1e8"
+    },
+    {
+      "file": "history.js",
+      "sha256": "279ad6f2c524f67afa177a8aa3c90174f3c80a08222126a28dcf483130595d13"
+    },
+    {
+      "file": "mesh-edge-finish.js",
+      "sha256": "2e1cc05e697301233a4e763f443021dcc8e0a27780cc5b895db0cd46e6baa97d"
+    },
+    {
+      "file": "mesh-edge-topology.js",
+      "sha256": "86bddb859c5107e039353c0d5c50779b651f0ee8d07695d05712c8edc7dd1824"
+    },
+    {
+      "file": "mesh-hole.js",
+      "sha256": "157cddf3910009e7be0a90f89501a2f50d1a3a8f2a50b14d1514ed1e40fc1035"
+    },
+    {
+      "file": "mesh-marks.js",
+      "sha256": "7b44c30f121b0ea0b9e4881f5dd7d18913bdbf73755155f6f419620232cd3789"
+    },
+    {
+      "file": "mesh-partition-recipe.js",
+      "sha256": "91c3fb0c27450ff25ee0ac744407822c50d2a64925fd748846653442f9c8c9b3"
+    },
+    {
+      "file": "mesh-partition-schema.js",
+      "sha256": "d4273be27d52a948230586048266556e37ceeb6fbef48064dfa617d4bf1d2633"
+    },
+    {
+      "file": "mesh-partition.js",
+      "sha256": "49c090799e0e992dafa0dd9ca408ca6d5b630812179a4758f0cb273259429b84"
+    },
+    {
+      "file": "mesh-project-file.js",
+      "sha256": "d3a0d51a191dbd02f259ba67ae88253f104732db555164c4de03c20b6e0df109"
+    },
+    {
+      "file": "mesh-project-json.js",
+      "sha256": "b524ee6c2e7eb5d674307ab21716a66e6fbbc1ecd49ba52561ad6c5289b57339"
+    },
+    {
+      "file": "mesh-reference.js",
+      "sha256": "d14a2a3436d590d3b2ef7d2e8d1dffc842908635195ba34bff0305706449f9ea"
+    },
+    {
+      "file": "mesh-sketch.js",
+      "sha256": "e869b98607dd54e6b8a8e5b2895bac32b678931425aea06a385b90a9509cc799"
+    },
+    {
+      "file": "mesh-snapshot.js",
+      "sha256": "9e77424fafe812c4bc55873fd4fd00674d5bd83235108c37dd664531f5020404"
+    },
+    {
+      "file": "mesh-stl-repair.js",
+      "sha256": "c5700ab03585f668a34fae96327e4ee2840ce1c9a740567575f51b135eafd09f"
+    },
+    {
+      "file": "model-analysis.js",
+      "sha256": "c468223340be58e8837abba3394c85950896399bade78ba1b8ba951567ae80e4"
+    },
+    {
+      "file": "organization.js",
+      "sha256": "24698c3ef9b45a838eb3328bfa878443db9cc4b44493ab3284664076fe157cdb"
+    },
+    {
+      "file": "parameters.js",
+      "sha256": "f89c3f1b595521ec32cacfb53b2dcda07556af0ddd28bacd80027a5cb3929773"
+    },
+    {
+      "file": "parametric-geometry.js",
+      "sha256": "7bcb1f1e930a5bf46f3445ad982f55ac114d5af5fb5eae56d8b7faa1f4d3892c"
+    },
+    {
+      "file": "project-data.js",
+      "sha256": "1d4405717e6958be10710e94b98779282f69820db334da1dc34e25853bdad219"
+    },
+    {
+      "file": "render-data.js",
+      "sha256": "f4f78e8097d041ea1a5bb924b3ad211a784dc132dc21a67b11667fb52ec55432"
+    },
+    {
+      "file": "section-geometry.js",
+      "sha256": "8b254a081658a139bd7fd2e7d87c97446d67b3001d626bcdd6d4039f3391612e"
+    }
+  ]
+}

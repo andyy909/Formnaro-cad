@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {auditParameterGeometryEvidence,drawingAuditStats,drawingAuditRegressions,auditProjectParametersRelease} from '../scripts/audit-project-parameters-release.mjs';
+function measured(width){return {expectedSize:[width,10,5],expectedVolume:width*50,unrelatedSourcePreserved:true,step:{valid:true,closed:true,solids:1,volume:width*50,bounds:[[-width/2,-5,0],[width/2,5,5]]},stl:{closed:true,oriented:true,components:1,volume:width*50,bounds:[[-width/2,-5,0],[width/2,5,5]]},allTenNativeBodies:Array.from({length:10},(_,index)=>({sourceFormulasPreserved:true,independentBrepValid:true,volume:width*(10+index)*5,transform:[1,0,0,0,0,1,0,0,0,0,1,0,index*35,0,0,1],localBounds:[[-width/2,-(10+index)/2,0],[width/2,(10+index)/2,5]]}))};}
+test('P2 final audit independently requires both analytic active geometries and all retained native source measurements',()=>{
+ for(const width of [26,42])assert.deepEqual(auditParameterGeometryEvidence(measured(width),width),{widthMm:width,nativeBodies:10,firstVolumeMm3:width*50});
+ for(const mutate of [r=>r.expectedSize[0]=25,r=>r.step.volume=1301,r=>r.stl.bounds[1][0]+=0.01,r=>r.step.solids=2,r=>r.stl.oriented=false,r=>r.allTenNativeBodies.pop(),r=>r.allTenNativeBodies[9].volume=1300,r=>r.allTenNativeBodies[0].transform[12]=1,r=>r.allTenNativeBodies[0].sourceFormulasPreserved=false,r=>r.allTenNativeBodies[0].localBounds[0][0]=NaN]){const report=measured(26);mutate(report);assert.throws(()=>auditParameterGeometryEvidence(report,26));}
+});
+test('P2 audit recomputes median/p95 and repeated AND-threshold regressions and refuses absent completed delivery',()=>{
+ assert.deepEqual(drawingAuditStats([3,1,9,5]),{count:4,medianMs:4,p95Ms:9,minMs:1,maxMs:9});assert.throws(()=>drawingAuditStats([1,NaN]));const rows=[{task:'move',statistic:'medianMs',round:1,beforeMs:20,afterMs:31},{task:'move',statistic:'medianMs',round:2,beforeMs:20,afterMs:31},{task:'rotate',statistic:'p95Ms',round:1,beforeMs:2,afterMs:9},{task:'rotate',statistic:'p95Ms',round:2,beforeMs:2,afterMs:9}];assert.deepEqual(drawingAuditRegressions(rows),[{key:'move/medianMs',affectedRounds:[1,2]}]);assert.throws(()=>auditProjectParametersRelease(new URL('../work/nonexistent-p2-delivery-fixture-7a19',import.meta.url).pathname),/ENOENT/);
+});

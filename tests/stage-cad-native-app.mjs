@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),assets=path.join(root,'work/cad-v011/native-app'),work=path.join(root,'work/cad-v011');
+if(!fs.existsSync(path.join(assets,'index.html')))throw Error('Native production-entry proof build is unavailable');
+const sourceManifest=JSON.parse(fs.readFileSync(path.join(root,'cad-kernel-build/runtime/integrity.json'),'utf8'));
+const wasmFiles=fs.readdirSync(path.join(assets,'assets')).filter(name=>name.endsWith('.wasm'));if(wasmFiles.length!==1)throw Error('Native staged application must contain exactly one CAD WASM');
+const wasm=fs.readFileSync(path.join(assets,'assets',wasmFiles[0]));if(createHash('sha256').update(wasm).digest('hex')!==sourceManifest.files['formnaro_cad.wasm'].sha256)throw Error('Native app build uses a different CAD kernel');
+const directory=fs.mkdtempSync(path.join(work,'native-proof-stage-'));if(!directory.startsWith(work+path.sep))throw Error('Isolated stage path escaped the work directory');
+fs.cpSync(assets,path.join(directory,'dist'),{recursive:true,errorOnExist:true,force:false});
+fs.cpSync(path.join(root,'backend'),path.join(directory,'backend'),{recursive:true,errorOnExist:true,force:false});
+for(const name of ['electron.cjs','preload.cjs','package.json'])fs.copyFileSync(path.join(root,name),path.join(directory,name));
+fs.mkdirSync(path.join(directory,'scripts'));fs.copyFileSync(path.join(root,'scripts/offlinecad_ai.py'),path.join(directory,'scripts/offlinecad_ai.py'));
+console.log(JSON.stringify({directory,isolated:true,wasmSha256:sourceManifest.files['formnaro_cad.wasm'].sha256,productVersion:JSON.parse(fs.readFileSync(path.join(directory,'package.json'),'utf8')).version}));

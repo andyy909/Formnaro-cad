@@ -1,0 +1,179 @@
+{
+  "revision": "REPLACE_WITH_CURRENT_SCENE_REVISION",
+  "label": "Platte mit vier Bohrungen",
+  "checks": [
+    {
+      "kind": "size",
+      "target": "$result",
+      "space": "worldAxes",
+      "expected": [
+        60,
+        40,
+        6
+      ]
+    },
+    {
+      "kind": "solids",
+      "target": "$result",
+      "expected": 1
+    },
+    {
+      "kind": "clearance",
+      "target": "$result",
+      "from": [
+        22,
+        12,
+        -1
+      ],
+      "to": [
+        22,
+        12,
+        7
+      ],
+      "diameter": 5
+    },
+    {
+      "kind": "clearance",
+      "target": "$result",
+      "from": [
+        -22,
+        12,
+        -1
+      ],
+      "to": [
+        -22,
+        12,
+        7
+      ],
+      "diameter": 5
+    },
+    {
+      "kind": "clearance",
+      "target": "$result",
+      "from": [
+        22,
+        -12,
+        -1
+      ],
+      "to": [
+        22,
+        -12,
+        7
+      ],
+      "diameter": 5
+    },
+    {
+      "kind": "clearance",
+      "target": "$result",
+      "from": [
+        -22,
+        -12,
+        -1
+      ],
+      "to": [
+        -22,
+        -12,
+        7
+      ],
+      "diameter": 5
+    }
+  ],
+  "commands": [
+    {
+      "op": "create",
+      "type": "roundbox",
+      "as": "plate",
+      "size": [
+        60,
+        40,
+        6
+      ],
+      "pos": [
+        0,
+        0,
+        3
+      ],
+      "params": {
+        "edgeStyle": "round",
+        "edgeSize": 3,
+        "edgeScope": "vertical"
+      }
+    },
+    {
+      "op": "create",
+      "type": "cylinder",
+      "as": "hole0",
+      "size": [
+        5,
+        5,
+        10
+      ],
+      "pos": [
+        22,
+        12,
+        3
+      ],
+      "solid": false
+    },
+    {
+      "op": "create",
+      "type": "cylinder",
+      "as": "hole1",
+      "size": [
+        5,
+        5,
+        10
+      ],
+      "pos": [
+        -22,
+        12,
+        3
+      ],
+      "solid": false
+    },
+    {
+      "op": "create",
+      "type": "cylinder",
+      "as": "hole2",
+      "size": [
+        5,
+        5,
+        10
+      ],
+      "pos": [
+        22,
+        -12,
+        3
+      ],
+      "solid": false
+    },
+    {
+      "op": "create",
+      "type": "cylinder",
+      "as": "hole3",
+      "size": [
+        5,
+        5,
+        10
+      ],
+      "pos": [
+        -22,
+        -12,
+        3
+      ],
+      "solid": false
+    },
+    {
+      "op": "group",
+      "targets": [
+        "$plate",
+        "$hole0",
+        "$hole1",
+        "$hole2",
+        "$hole3"
+      ],
+      "as": "result",
+      "name": "Montageplatte"
+    }
+  ]
+}

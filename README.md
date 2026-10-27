@@ -79,4 +79,32 @@ Bilder zeigen nur sichtbare Konturen. Verdeckte Innengeometrie und die spätere 
 
 **0.111.0-r2** ist die aktuelle veröffentlichte Programmversion. Die technische Abnahme umfasst **524 Tests am eingefrorenen Quellstand und 929 Prüfgruppen in 21 Läufen der tatsächlichen Windows-Anwendung**, darunter 19 Auftrags-UI- und 41 Neustartprüfungen über zwei echte Anwendungsprozesse. Die ursprüngliche Projektpaketdatei wurde zwischen den Prozessstarts entfernt; die gesicherte Basis und ihre Referenzen bleiben wiederherstellbar. KI-Anbieterantworten wurden simuliert. Der [Prüfbericht](https://github.com/andyy909/Formnaro-Downloads/releases/download/v0.111.0-r2/Pruefergebnis.json) beschreibt Umfang und Grenzen. Die weiteren Ausbaupakete 6–10 sind noch offen.
 
-Die Anleitungen liegen im Download unter `App/docs`. Dieses öffentliche Repository dient der Bereitstellung von Beschreibung, Bildern und fertigen Programmpaketen. Das Entwicklungsrepository und seine Git-Historie bleiben privat.
+Die Anleitungen liegen im Download unter `App/docs` und hier im Verzeichnis [docs](docs).
+
+## Vollständiges Projekt und Entwicklung
+
+Dieses Repository enthält außerdem eine eigenständige Kopie des vollständigen Projektstands **0.111.0-r2**: Anwendung, beide Mini-Versionen, CAD-Kern, Tests, Buildskripte, Anleitungen und Lizenzen. Die Kopie ist vom privaten Original unabhängig. Änderungen an diesem Repository verändern das private Original nicht.
+
+| Verzeichnis | Inhalt |
+| --- | --- |
+| `src`, `backend`, `electron.cjs`, `preload.cjs` | Anwendung und Desktop-Anbindung |
+| `cad-kernel-build`, `converter`, `python-runtime`, `speech-runtime` | CAD-Kern sowie Laufzeit- und Buildgrundlagen |
+| `mini`, `mini-cad` | Eigenständige Mini-Versionen |
+| `tests`, `scripts` | Prüfungen, Build- und Paketwerkzeuge |
+| `docs`, `ai`, `licenses` | Anleitungen, Schnittstellen und Lizenztexte |
+
+Für die lokale Entwicklung mit Node.js 22.16 oder neuer:
+
+```powershell
+git clone https://github.com/andyy909/Formnaro-Downloads.git
+cd Formnaro-Downloads
+npm ci
+npm run build
+npm start
+```
+
+Zusätzliche Konverter-, Sprach- und FreeCAD-Funktionen benötigen die in ihren Anleitungen beschriebenen Laufzeiten. Wer das fertige Programm nutzen möchte, verwendet den Windows-Download oben.
+
+Die [bisherige ausführliche Projektbeschreibung](README-Entwicklung.md) enthält die Entwicklungshistorie; einzelne ältere Versionsangaben sind dort historisch. Der [technische Projektkontext](docs/PROJEKTKONTEXT.md) beschreibt den Stand 0.111.0-r2.
+
+Der eigene Anwendungscode steht unter der [PolyForm Noncommercial License 1.0.0](LICENSE.txt). Fremdkomponenten behalten ihre jeweiligen Lizenzen; siehe [Drittanbieterhinweise](THIRD-PARTY-LICENSES.txt). Persönliche Datenordner, Profile, Zugangsdaten und lokale Arbeitsdateien sind nicht Teil der Projektkopie.

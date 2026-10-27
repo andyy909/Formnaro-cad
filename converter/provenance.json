@@ -1,0 +1,177 @@
+{
+  "engine": "0.10.0",
+  "origin": "Verified standalone v0.10 release, immutable source ZIP snapshot",
+  "engineSourceFiles": [
+    {
+      "file": "stlstep/__init__.py",
+      "sha256": "18f1014aff61da3f311b1dce1c952c6bf9c5b39cf9ace61d8b53fe2d584d03df"
+    },
+    {
+      "file": "stlstep/__main__.py",
+      "sha256": "6d8b7d7846a845059d7a3107143f11131f63c5511d669b44085b15ec5e3d2279"
+    },
+    {
+      "file": "stlstep/advanced_regions.py",
+      "sha256": "a6b1e285124a40d6e838001d8ec5a3816b4bb28547193863711946b69994fab8"
+    },
+    {
+      "file": "stlstep/chamfer_profiles.py",
+      "sha256": "d6784dfa3c0c74cf849b2e198d5b8aa74c65d6180109ee1975923270ebdab56a"
+    },
+    {
+      "file": "stlstep/cli.py",
+      "sha256": "be6c9590765f8c0ddf6dc386f3d511dc3426480b36dd12d4868f55a542e75e90"
+    },
+    {
+      "file": "stlstep/conical_profiles.py",
+      "sha256": "a0a538ac6bee80e28bfbb11d7c18ac0743c71d4a8db49d2d08d18d8f9ace01aa"
+    },
+    {
+      "file": "stlstep/connected_regions.py",
+      "sha256": "8809e8ff197a58da4525766cb7fe41f1d494fc98c55f9273e0302757ef408d27"
+    },
+    {
+      "file": "stlstep/deviation.py",
+      "sha256": "ca0d34fbaf729962888404c61086ce7394ab4c0273e8a7954eb6ddf3b7b2aba8"
+    },
+    {
+      "file": "stlstep/deviation_verification.py",
+      "sha256": "3fb0edb66064b9a7b43894c5d1badc4d01e1fa5ecc6f047f6b808f3597e43a56"
+    },
+    {
+      "file": "stlstep/edit_verification.py",
+      "sha256": "bf2f5a7391704f38e011a8d7213f4cba072fa4e9ae2dbb008ff9c43f6bf91256"
+    },
+    {
+      "file": "stlstep/edited_regions.py",
+      "sha256": "7bc349cca0a27c50567a9b9c2e470257d2030e0011147db69a157f1e3ad6622d"
+    },
+    {
+      "file": "stlstep/engine.py",
+      "sha256": "1f31df51a5630bf4c6f4b5e0fa342ca15d1acf058ecdf233ed105df18832d9dd"
+    },
+    {
+      "file": "stlstep/fillets.py",
+      "sha256": "cee780f18c43f05d8a1122b84b5f6a01becf28a2a711209dd1a008437ba649fa"
+    },
+    {
+      "file": "stlstep/freeform_regions.py",
+      "sha256": "54258fa6c9f1dac68cfda0df86e26b742f477a5933b060562de4c58149da9ffd"
+    },
+    {
+      "file": "stlstep/freeform_verification.py",
+      "sha256": "6b8f6aaa64ff45ad4c7c936b510c4060ea91378e02376903b24bf9642e44a044"
+    },
+    {
+      "file": "stlstep/gui.py",
+      "sha256": "9f48c0112f509a1cb0e95a0ad3f949f4d326511648f934238112ffc703ca2443"
+    },
+    {
+      "file": "stlstep/hybrid_verification.py",
+      "sha256": "0255ce407519eb9c49f0a07f87525d3162aff9202ada439fbedaca5c007d7de5"
+    },
+    {
+      "file": "stlstep/layers.py",
+      "sha256": "30b57c341fdace3d4b82d096772b0324a872fd8868758b427e33e6e474353c07"
+    },
+    {
+      "file": "stlstep/local_regions.py",
+      "sha256": "8f070fd349f47f9e4588f1aee19f4980abd235fdc4ab762f41c72e72085ad1b1"
+    },
+    {
+      "file": "stlstep/meridian_regions.py",
+      "sha256": "32d9995b30a92faad33476ce803b66edf07981b12ca97b9e35e094deaad6d9ee"
+    },
+    {
+      "file": "stlstep/primitives.py",
+      "sha256": "1eb19fd83337333022f6bb6721e38d27129554aa9266180ff5b49c112a26ce93"
+    },
+    {
+      "file": "stlstep/recognition.py",
+      "sha256": "cac5424fc22ba748da10a20c7569f58a917d84a4b5ccfc1a08e23d6405248bef"
+    },
+    {
+      "file": "stlstep/region_editor.py",
+      "sha256": "0f77a79cdf56d9ceaf68ce0176a222c55b7ccedc638aee79d117d5ee3559645e"
+    },
+    {
+      "file": "stlstep/region_edits.py",
+      "sha256": "2acf190b7e6b5f393011a67dd2caee3629dfde6aa66e1a6f3d227f7a9c88f5ab"
+    },
+    {
+      "file": "stlstep/region_verification.py",
+      "sha256": "6b671127752a496f2302a0fb3714ce97e96e4bb7e97079f6259f99d97807f4bb"
+    },
+    {
+      "file": "stlstep/regions.py",
+      "sha256": "29354375bd32e510c1e7e0af110b93de1e5da79af90dd2ebf687bb6214221e55"
+    },
+    {
+      "file": "stlstep/repair.py",
+      "sha256": "d25b1c43d7c84e1e52759eb7ea8e844ca1d65172368dcbc85ab53355e2d40539"
+    },
+    {
+      "file": "stlstep/revolved.py",
+      "sha256": "eb4df81e9b78a9d102c7cd38470d5564bb510ed371789e15e2bb9e5e21f8642e"
+    },
+    {
+      "file": "stlstep/seams.py",
+      "sha256": "fb9f401435d5c754cce17b1f71e456b19487c7a1180e771daf76defebe85ec06"
+    },
+    {
+      "file": "stlstep/surfaces.py",
+      "sha256": "e9020c1ff8dfb29ee9ad479ecb412c2d1e8fbba5eb039f34b6244d4e477f28ba"
+    },
+    {
+      "file": "stlstep/verification.py",
+      "sha256": "bce4b8a290115b368a184b8b5adb3671ab0615a8f7a1e9fcfb21101ec2129b46"
+    },
+    {
+      "file": "stlstep/windows_repair.py",
+      "sha256": "c6d0a1afb9255fc9f8f24f40bc96965210470bc8cdbbc50983e0069cd5b44fb5"
+    },
+    {
+      "file": "pyproject.toml",
+      "sha256": "9139d96d8d14db75b6b12433bf7cc3c5d36c93e366ac321a76ed5c4d5a0567e5"
+    },
+    {
+      "file": "uv.lock",
+      "sha256": "cbe66b8c1d5cc07a266b8b8a879c2f95e787df4a3d8b6c03420e52b43ca86c93"
+    }
+  ],
+  "upstreamAcceptance": {
+    "sourceTests": 245,
+    "frozenChecks": 343,
+    "zipSha256": "dd924bdbe2bcb065acdddf0577a4d2f50abfe4c62881197fa160f58c9f399f36"
+  },
+  "bridgeProtocol": 2,
+  "bridgeSourceSha256": "0ac0284c50976980a31685b477bd31d5d46a36734742401ff5ff14242b73c70b",
+  "headlessExeSha256": "98c54301f00cfda714cd771b27019ea2398177ed3803ad86fb01d08eb2a67c2f",
+  "runtimeDirectory": "runtime-v010-security",
+  "runtimeSecurity": {
+    "previousBuild": {
+      "headlessExeSha256": "0a82abeca93a30f5ddbdf3698dd094326bf247aba87b25e958a033fc922fd464",
+      "origin": "Verified standalone v0.10 release, immutable source ZIP snapshot"
+    },
+    "python": "3.13.3",
+    "pyinstaller": "6.22.3",
+    "dependencies": {
+      "pillow": "13.0.0",
+      "setuptools": "84.2.1"
+    },
+    "imagingBinarySha256": "832167d2ecd950dc2382a9866e346d5886262bc8790bbf24613f56ad19d52f82",
+    "configurationChanges": [
+      {
+        "file": "pyproject.toml",
+        "previousSha256": "3c26a64b37a2d4b8a3ba3a415af79882292f8dcdea78369aa324efefc89eb5c8",
+        "sha256": "9139d96d8d14db75b6b12433bf7cc3c5d36c93e366ac321a76ed5c4d5a0567e5"
+      },
+      {
+        "file": "uv.lock",
+        "previousSha256": "e4b93741f6e48bb87cc50905d79cbf39502b3ef682833d53c7a7fc5aff2f4e53",
+        "sha256": "cbe66b8c1d5cc07a266b8b8a879c2f95e787df4a3d8b6c03420e52b43ca86c93"
+      }
+    ],
+    "scope": "Dependency rebuild; engine Python modules and bridge unchanged. Only dependency configuration pins changed. Separate runtime and dependency metadata/licenses retained."
+  }
+}

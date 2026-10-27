@@ -1,0 +1,42 @@
+FORMNARO MINI CAD 0.1.0 – WINDOWS PORTABEL
+
+Formnaro Mini CAD.exe starten. Bedienung wie Mini 0.6.1, jetzt mit nativen
+CAD-Körpern. Die bisherige Mini und die große Formnaro-Version bleiben erhalten.
+
+Importieren: STEP / STP bis 30 MB; geschlossenes STL bis 10.000 Dreiecke
+als facettiertes CAD. Ein STL liefert keine ursprünglichen CAD-Radien.
+Exportieren: gewünschte Teile markieren, dann STEP oder STL wählen.
+Markierte Lochformen schneiden Material aus.
+
+Projekt speichern: .fmcad erhält Formenparameter und Gruppenquellen.
+.fmini und .ocad werden nicht automatisch umgewandelt.
+
+Formen herausziehen; Shift-Klick oder Auswahlrahmen für mehrere Teile.
+Eckgriffe skalieren, Drehpfeile drehen. Im blauen Kreis 15°-Raster.
+Mausrad halten: Ansicht verschieben. Rechtsziehen: Ansicht drehen.
+Mausrad rollen: Zoom. Escape verwirft eine laufende Vorschau.
+
+Bibliothek: Auswahl oder ganzes Projekt mit Vorschaubild speichern,
+wieder öffnen, einfügen oder als eigene Form auf eine Oberfläche ziehen.
+Daten-Mini-CAD und Bibliothek-CAD liegen neben der EXE und gehören
+bei einem Update/PC-Wechsel mitgenommen. Ein selbst gewählter
+Bibliotheksordner muss ebenfalls gesichert werden.
+
+CAD-Anzeigequalität beeinflusst die Ansicht, nicht die STEP-Geometrie.
+CAD-Berechnungen können mehr Zeit benötigen als Netzoperationen.
+Weitere Grenzen und Bedienhinweise stehen in README.md.
+
+Lokal und offline. Kein Cloudschlüssel erforderlich.
+Eigener Anwendungscode: LICENSE.txt.
+Fremdlizenzen und CAD-Quellen: THIRD-PARTY-LICENSES.txt und licenses/.
+Der beigefügte CAD-Quellenstand v0.11 gehört unverändert auch zu dieser Ausgabe.
+
+NEU IN 0.2.0: OPTIONALE KI
+Oben "KI" öffnen, Zahnrad für Anbieter/Modell/Schlüssel.
+Schlüssel später selbst hinterlegen; kein Zugang wird automatisch übernommen.
+Vorschläge zuerst ansehen, dann übernehmen. Eine Übernahme = einmal Rückgängig.
+Chat, Bildvorlagen, native CAD-Werkzeuge, Messungen, Ergebnisprüfungen und
+isolierte lokale Werkzeugskripte. Details und Grenzen in README.md.
+Die normale Mini-Bedienung funktioniert weiterhin offline.
+
+STL jetzt auch als offenes/beschaedigtes Rohnetz, mit sicherer Grundbereinigung und optionaler Arbeitskopie fuer grosse Dateien. Anleitung NETZIMPORT.md.

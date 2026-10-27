@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stl-to-step-local"
+version = "0.10.0"
+description = "Lokaler STL-zu-STEP-Konverter mit Profilerkennung, gekrümmten Flächen und geprüften Rückfallwegen"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "cadquery>=2.6,<3",
+  "trimesh>=4.8,<6",
+  "networkx>=3.5,<4",
+  "scipy>=1.15,<2",
+  "shapely>=2.1,<3",
+  "rtree>=1.4,<2",
+  "fast-simplification>=0.2,<0.3",
+  "matplotlib>=3.10,<4",
+  "winrt-runtime==3.2.1; sys_platform == 'win32'",
+  "winrt-Windows.Foundation==3.2.1; sys_platform == 'win32'",
+  "winrt-Windows.Foundation.Collections==3.2.1; sys_platform == 'win32'",
+  "winrt-Windows.Graphics.Printing3D==3.2.1; sys_platform == 'win32'",
+  "winrt-Windows.Storage==3.2.1; sys_platform == 'win32'",
+  "winrt-Windows.Storage.Streams==3.2.1; sys_platform == 'win32'",
+  "pillow==13.0.0",
+  "setuptools==84.2.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "pyinstaller>=6,<7", "pymeshfix==0.18.1"]
+
+[project.scripts]
+stl-step = "stlstep.cli:main"
+stl-step-gui = "stlstep.gui:main"
+
+[tool.setuptools.packages.find]
+include = ["stlstep*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

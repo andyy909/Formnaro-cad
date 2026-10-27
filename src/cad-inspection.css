@@ -1,0 +1,11 @@
+#cad-inspection{max-height:calc(100% - 28px);overflow:auto;width:min(320px,calc(100% - 24px));box-sizing:border-box}
+#cad-inspection .inspection-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#cad-inspection .inspection-heading button{min-width:32px;flex:none}
+#cad-inspection label{display:flex;flex-direction:column;gap:4px;margin:10px 0}
+#cad-inspection input,#cad-inspection select{box-sizing:border-box;width:100%;min-width:0}
+#cad-inspection input[type=range]{cursor:ew-resize;accent-color:#288c9f;min-height:30px}
+#cad-inspection .inspection-result{white-space:pre-line;font-size:1.1em;font-weight:600;line-height:1.6;margin:10px 0}
+#cad-inspection .two-buttons{display:flex;flex-wrap:wrap;gap:6px}
+#cad-inspection .two-buttons button{flex:1;min-width:105px;white-space:normal}
+#cad-inspection p{overflow-wrap:anywhere}
+@media(max-width:1200px){#cad-inspection{top:auto;bottom:60px;max-height:36%;width:min(320px,calc(100% - 24px))}}

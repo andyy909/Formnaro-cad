@@ -1,0 +1,112 @@
+{
+  "schema": "Formnaro-CAD-runtime-integrity-v1",
+  "kernel": "same-replicad-occt-module",
+  "buildImage": {
+    "reference": "ghcr.io/taucad/opencascade.js:canary-ebd263f1-single-threaded",
+    "digest": "sha256:215198af0e2ca4c5f308e5540869f2419784dc290062d3eb03d34e4f22e0188c"
+  },
+  "proof": {
+    "file": "tests/cad-kernel-proof-extended.test.mjs",
+    "sha256": "f85529ad46848349feaef6d80fdf601a2dd4af51968c5d99373647230df08b88",
+    "tests": 6,
+    "exitCode": 0
+  },
+  "files": {
+    "formnaro_cad.js": {
+      "bytes": 60115,
+      "sha256": "79431b159386e28ee8d3946d2f8a6f749740c8ae9fc2764acd9bab8c7f4f54f1"
+    },
+    "formnaro_cad.wasm": {
+      "bytes": 23062347,
+      "sha256": "964835f6a345ab3a9ab07852fb8d047fb081d38c20849a65b1c037c1d3f2ad8c"
+    },
+    "formnaro_cad.d.ts": {
+      "bytes": 1628360,
+      "sha256": "202efefdaf4fe686fca3030be74ef86b43304300821e0bb0623ede8118546094"
+    },
+    "formnaro_cad.provenance.json": {
+      "bytes": 7611,
+      "sha256": "54b5e24d33bbec9c99328dc5fe0bd8714e893372feb11e195cd1064b841feb71"
+    },
+    "formnaro_cad.build-manifest.json": {
+      "bytes": 483836,
+      "sha256": "015f354c4803beb3e1f7fe70ac1914f8ab5b6aece679c3acbbbefd6d3f2143e6"
+    },
+    "build-inputs.json": {
+      "bytes": 3575,
+      "sha256": "d05b1f74de3c860c14a7632c12d46d42f4fb7e8fb537dc6a769f07f4f58bfcb5"
+    },
+    "licenses/compiler-rt.txt": {
+      "bytes": 16708,
+      "sha256": "1a8f1058753f1ba890de984e48f0242a3a5c29a6a8f2ed9fd813f36985387e8d"
+    },
+    "licenses/Emscripten-AUTHORS.txt": {
+      "bytes": 29004,
+      "sha256": "8585fa1b981f576f52806833481323007ccac5c00f31a873215e31c0f42820f0"
+    },
+    "licenses/Emscripten.txt": {
+      "bytes": 5093,
+      "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86"
+    },
+    "licenses/Formnaro-Bridge-MIT.txt": {
+      "bytes": 1078,
+      "sha256": "2b680f4678cf7db8d88a99b5c89430db25bd27aba0f669020ab934d20c776480"
+    },
+    "licenses/libcxx.txt": {
+      "bytes": 16703,
+      "sha256": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b"
+    },
+    "licenses/libcxxabi.txt": {
+      "bytes": 16706,
+      "sha256": "e2b35be49f7284a45b7baca8fc7b3ab7440e7902392b2528a457816b5bb2a15c"
+    },
+    "licenses/libunwind.txt": {
+      "bytes": 16706,
+      "sha256": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d"
+    },
+    "licenses/mimalloc.txt": {
+      "bytes": 1096,
+      "sha256": "19c99805e7a44a34b297a75d1edea9985e300066dfc024d5c99d4236d4573b5d"
+    },
+    "licenses/musl.txt": {
+      "bytes": 6204,
+      "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af"
+    },
+    "licenses/OCCT-Exception.txt": {
+      "bytes": 947,
+      "sha256": "121ba3ff45b104d133fd1bd5072e1b821c20dbcf217c560f437b9e341b11e61d"
+    },
+    "licenses/replicad-opencascadejs-LGPL-2.1.txt": {
+      "bytes": 26526,
+      "sha256": "20c17d8b8c48a600800dfd14f95d5cb9ff47066a9641ddeab48dc54aec96e331"
+    },
+    "licenses/RapidJSON.txt": {
+      "bytes": 5152,
+      "sha256": "a140e5d46fe734a1c78f1a3c3ef207871dd75648be71fdda8e309b23ab8b1f32"
+    },
+    "licenses/FreeType-FTL.txt": {
+      "bytes": 6743,
+      "sha256": "08c135755dd589039470f1fdbb400daaabaaa50d0b366d19cebff4d22986baa1"
+    },
+    "licenses/Replicad-MIT.txt": {
+      "bytes": 1063,
+      "sha256": "7a3c098c1cf5d8de05efa0b930e7c8398c221da2a59032b617057fb7f122cf70"
+    },
+    "upstream-lock.json": {
+      "bytes": 3379,
+      "sha256": "0087bde93eee91f93187fae285ee98099ba104529bbd9fa4c198d6b32cc8b4f4"
+    },
+    "system-license-lock.json": {
+      "bytes": 2482,
+      "sha256": "f661b3054058bde03fb68b8521712cb804f09a409eb45f16579747e06b56699b"
+    },
+    "README.md": {
+      "bytes": 3084,
+      "sha256": "72923ffc238633a0cc19cae9e73a93525c6179aa3fc3b7d28ba4fb0d2f7231d2"
+    },
+    "package.json": {
+      "bytes": 567,
+      "sha256": "ac564e7ebf0687cc006310948777cf55a82d89954a8501c5961ba0792aeb70ec"
+    }
+  }
+}

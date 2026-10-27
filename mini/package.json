@@ -1,0 +1,30 @@
+{
+  "name": "formnaro-mini",
+  "productName": "Formnaro Mini Mesh",
+  "version": "0.9.1",
+  "private": true,
+  "type": "module",
+  "main": "electron.cjs",
+  "author": "Andreas Klisch",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "description": "Eigenst\u00e4ndiger lokaler Netz-Modellierer f\u00fcr den 3D-Druck",
+  "scripts": {
+    "build": "vite build --config vite.config.js",
+    "start": "electron .",
+    "test": "node --test tests/hole-groups.test.mjs tests/model.test.mjs tests/placement.test.mjs tests/transform-tools.test.mjs tests/manipulation.test.mjs tests/quick-tools.test.mjs tests/library.test.mjs tests/library-placement.test.mjs tests/library-location.test.mjs tests/ai.test.mjs tests/repair.test.mjs tests/mesh-import.test.mjs",
+    "test:desktop": "node tests/desktop.cjs",
+    "package": "node scripts/package.mjs",
+    "build:android": "node scripts/android-build.mjs",
+    "test:touch": "node --test tests/touch-navigation.test.mjs",
+    "test:android": "node scripts/android-smoke.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "fflate": "0.8.3",
+    "three": "0.186.1",
+    "manifold-3d": "3.5.4",
+    "vite": "8.3.4",
+    "electron": "44.9.3",
+    "@electron/packager": "20.3.0"
+  }
+}

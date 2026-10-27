@@ -1,0 +1,35 @@
+import * as THREE from 'three';
+import {frame} from './coordinates.js';
+const format=v=>Number(v.toFixed(3)).toLocaleString(document.documentElement.lang==='en'?'en-US':'de-DE',{useGrouping:false,maximumFractionDigits:3});
+export function validRuler(r){return r===null||r===undefined||!!(r&&Array.isArray(r.origin)&&r.origin.length===3&&r.origin.every(v=>typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=100000)&&['min','center'].includes(r.mode));}
+export function createPrecisionTools({scene,viewport,getCamera,getSelection,bounds,getFrame,isLocked=n=>n.locked,mutate,safe,updateSelection,modal}){
+  let state=null,placing=false;
+  const group=new THREE.Group();scene.add(group);
+  const overlay=document.createElement('div');overlay.className='precision-tools';viewport.append(overlay);
+  const banner=document.createElement('div');banner.className='ruler-banner';overlay.append(banner);
+  const label=document.createElement('span'),mode=document.createElement('select');mode.setAttribute('aria-label','Linealbezug');mode.append(new Option('Unterkante / Endpunkt','min'),new Option('Mittelpunkt','center'));
+  const place=document.createElement('button'),edit=document.createElement('button'),off=document.createElement('button');place.textContent='Ursprung setzen';edit.textContent='XYZ …';edit.title='Linealursprung numerisch bearbeiten';off.textContent='Entfernen';banner.append(label,mode,place,edit,off);
+  const fields=[0,1,2].map(axis=>{const row=document.createElement('label');row.className='ruler-field';const text=document.createElement('span');text.textContent='XYZ'[axis]+' · Abstand';const input=document.createElement('input');input.type='text';input.inputMode='decimal';input.setAttribute('aria-label','Linealabstand '+'XYZ'[axis]);input.id='ruler-'+axis;row.dataset.axis=axis;const unit=document.createElement('span');unit.textContent='mm';row.append(text,input,unit);overlay.append(row);
+    input.onfocus=()=>input.select();input.onclick=()=>input.select();const commit=()=>safe(()=>{const list=getSelection();if(!state||!list.length||list.some(n=>isLocked(n)))return;
+      const b=bounds(list),current=(state.mode==='min'?b.min:b.getCenter(new THREE.Vector3())).getComponent(axis)-state.origin[axis],value=Number(input.value.trim().replace(',','.'));
+      if(!input.value.trim()||!Number.isFinite(value)||Math.abs(value)>100000){input.value=format(current);throw new Error('Linealabstand zwischen −100000 und 100000 mm eingeben.');}
+      if(Math.abs(value-current)<1e-8||input.value===format(current))return;
+      mutate(()=>list.forEach(n=>n.pos=new THREE.Vector3(...n.pos).addScaledVector(frame(getFrame()).axes[axis],value-current).toArray()));
+    });input.onchange=commit;input.onblur=commit;input.onkeydown=e=>{if(e.key==='Enter')input.blur();if(e.key==='Escape'){const b=bounds(getSelection());input.value=format((state.mode==='min'?b.min:b.getCenter(new THREE.Vector3())).getComponent(axis)-state.origin[axis]);input.blur();e.stopPropagation();}};return {row,input,axis,point:new THREE.Vector3()};});
+  function clear(){for(const child of [...group.children]){group.remove(child);child.geometry?.dispose();child.material?.dispose();}}
+  function refresh(){clear();overlay.hidden=!state&&!placing;banner.hidden=!state&&!placing;fields.forEach(f=>f.row.hidden=true);document.querySelector('[data-action="ruler"]').classList.toggle('active',!!state||placing);
+    if(placing){label.textContent='Lineal: Ursprung auf Fläche oder Arbeitsebene anklicken';mode.hidden=true;place.hidden=true;edit.hidden=true;return;}
+    if(!state)return;label.textContent=`Ursprung ${state.origin.map(format).join(' / ')} mm`;mode.hidden=false;place.hidden=false;edit.hidden=false;mode.value=state.mode;
+    const f=frame(getFrame()),origin=new THREE.Vector3(...state.origin),axes=new THREE.AxesHelper(15);axes.position.copy(f.toWorld(origin));axes.quaternion.copy(f.q);axes.material.depthTest=false;group.add(axes);
+    const list=getSelection();if(!list.length)return;const b=bounds(list),target=state.mode==='min'?b.min.clone():b.getCenter(new THREE.Vector3());
+    fields.forEach(({row,input,axis,point})=>{const name=document.getElementById('coordinate-mode').value==='plane'?'UVN':'XYZ';row.querySelector('span').textContent=name[axis]+' · Abstand';input.setAttribute('aria-label','Linealabstand '+name[axis]);point.copy(target);point.setComponent(axis,(target.getComponent(axis)+origin.getComponent(axis))/2);if(axis<2)point.z=b.min.z;point.copy(f.toWorld(point));row.hidden=false;input.disabled=list.some(n=>isLocked(n));if(document.activeElement!==input)input.value=format(target.getComponent(axis)-origin.getComponent(axis));
+      const end=origin.clone();end.setComponent(axis,target.getComponent(axis));const g=new THREE.BufferGeometry().setFromPoints([f.toWorld(origin),f.toWorld(end),f.toWorld(target)]),line=new THREE.Line(g,new THREE.LineBasicMaterial({color:0x469474,depthTest:false}));line.renderOrder=20;group.add(line);
+    });reposition();
+  }
+  function reposition(){if(!state||placing)return;const rect=viewport.getBoundingClientRect(),positions=[];fields.forEach(({row,point})=>{if(row.hidden)return;const p=point.clone().project(getCamera()),x=Math.max(70,Math.min(rect.width-75,(p.x+1)*rect.width/2)),y=Math.max(130,Math.min(rect.height-150,(1-p.y)*rect.height/2));let py=y;while(positions.some(q=>Math.abs(q.x-x)<130&&Math.abs(q.y-py)<55))py+=57;positions.push({x,y:py});row.style.left=x+'px';row.style.top=Math.min(rect.height-85,py)+'px';});}
+  function begin(){placing=true;refresh();updateSelection();}
+  function setOrigin(point){if(!validRuler({origin:point,mode:'min'}))throw new Error('Ungültiger Linealursprung.');mutate(()=>{state={origin:point.map(v=>Math.round(v*1000)/1000),mode:state?.mode||'min'};placing=false;});}
+  edit.onclick=()=>{modal('Linealursprung',`<p>Bezugspunkt im gewählten Koordinatensystem (Millimeter). Die Objekte bleiben dabei an ihrer Position.</p><div class="xyz-labels">${[...(document.getElementById('coordinate-mode').value==='plane'?'UVN':'XYZ')].map(n=>`<span>${n}</span>`).join('')}</div><div class="input-row">${state.origin.map((v,i)=>`<input id="ruler-origin-${i}" aria-label="Linealursprung ${'XYZ'[i]}" inputmode="decimal" value="${format(v)}">`).join('')}</div><div class="modal-actions"><button id="ruler-origin-apply" class="primary">Ursprung übernehmen</button></div>`);document.getElementById('ruler-origin-apply').onclick=()=>safe(()=>{const point=[0,1,2].map(i=>{const s=document.getElementById('ruler-origin-'+i).value.trim();return s?Number(s.replace(',','.')):NaN;});setOrigin(point);document.getElementById('modal').close();});};
+  place.onclick=begin;off.onclick=()=>mutate(()=>{state=null;placing=false;});mode.onchange=()=>mutate(()=>state.mode=mode.value);
+  return {refresh,reposition,begin,isPlacing:()=>placing,setOrigin,snapshot:()=>state?structuredClone(state):null,restore:r=>{state=r?structuredClone(r):null;placing=false;refresh();},escape:()=>{if(!placing)return false;placing=false;refresh();return true;}};
+}

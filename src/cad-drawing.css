@@ -1,0 +1,32 @@
+.cad-drawing-panel{position:absolute;inset:12px;z-index:32;display:flex;flex-direction:column;box-sizing:border-box;overflow:hidden;background:var(--panel,#f5f7f9);color:var(--text,#172c3d);border:1px solid var(--border,#a5b6c1);border-radius:10px;box-shadow:0 6px 26px #102c4240}
+.cad-drawing-panel[hidden]{display:none!important}
+.cad-drawing-panel .drawing-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 14px;border-bottom:1px solid var(--border,#b9c8d2)}
+.cad-drawing-panel .drawing-heading button{min-width:32px;flex:none}
+.cad-drawing-panel .drawing-layout{display:grid;grid-template-columns:260px minmax(0,1fr);flex:1;min-height:0}
+.cad-drawing-panel .drawing-controls{overflow:auto;padding:10px 12px;border-right:1px solid var(--border,#b9c8d2)}
+.cad-drawing-panel label{display:flex;flex-direction:column;gap:4px;margin:7px 0;font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+.cad-drawing-panel input,.cad-drawing-panel select{box-sizing:border-box;width:100%;min-width:0;max-width:100%;min-height:30px}
+.cad-drawing-panel button{min-height:30px;white-space:normal}
+.cad-drawing-panel button:focus-visible,.cad-drawing-panel input:focus-visible,.cad-drawing-panel select:focus-visible,.cad-drawing-panel .drawing-viewport:focus-visible{outline:2px solid #1580b3;outline-offset:2px}
+.cad-drawing-panel .drawing-row{display:flex;gap:6px;align-items:end}.cad-drawing-panel .drawing-row>*{flex:1;min-width:0}
+.cad-drawing-panel .drawing-row>select{flex:1.4}
+.cad-drawing-panel .drawing-titleblock{margin:8px 0}.cad-drawing-panel summary{cursor:pointer;padding:5px 0}
+.cad-drawing-panel .drawing-controls hr{border:0;border-top:1px solid var(--border,#b9c8d2);margin:12px 0}
+.cad-drawing-panel .small-note{font-size:11px;line-height:1.45;overflow-wrap:anywhere;margin:8px 0}
+.cad-drawing-panel .drawing-workspace{display:flex;flex-direction:column;min-width:0;min-height:0}
+.cad-drawing-panel .drawing-toolbar{display:flex;align-items:center;gap:6px;padding:7px 10px;min-height:34px;flex-wrap:wrap;border-bottom:1px solid var(--border,#b9c8d2)}
+.cad-drawing-panel .drawing-toolbar [data-drawing-freshness]{font-size:11px;margin-left:auto;max-width:55%;overflow-wrap:anywhere}
+.cad-drawing-panel .drawing-viewport{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;background:#81939f;padding:18px;box-sizing:border-box}
+.cad-drawing-panel .drawing-paper{position:relative;flex:none;background:white;box-shadow:0 2px 8px #172d4640;margin:auto;touch-action:none;user-select:none;overflow:hidden}
+.cad-drawing-panel .drawing-paper svg{display:block;width:100%;height:100%;color:#17242d;pointer-events:auto}
+.cad-drawing-panel [data-drawing-view]{cursor:move}.cad-drawing-panel [data-drawing-annotation]{cursor:move}
+.cad-drawing-panel [data-drawing-curve]{pointer-events:visibleStroke;cursor:crosshair}
+.cad-drawing-panel .drawing-picked{stroke:#0075b5!important;stroke-width:1!important}
+.cad-drawing-panel .drawing-footer{border-top:1px solid var(--border,#b9c8d2);padding:8px 12px}
+.cad-drawing-panel .drawing-footer p{font-size:12px;line-height:1.4;margin:0 0 7px;overflow-wrap:anywhere;min-height:17px}
+.cad-drawing-panel .drawing-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.cad-drawing-panel .ai-error{color:#ab252b}
+body.dark .cad-drawing-panel,body[data-theme=dark] .cad-drawing-panel{background:#1b2a38;color:#e9f2f8;border-color:#526675}
+body.dark .cad-drawing-panel .ai-error,body[data-theme=dark] .cad-drawing-panel .ai-error{color:#ffb6b6}
+@media(max-width:1100px){.cad-drawing-panel{inset:6px}.cad-drawing-panel .drawing-layout{grid-template-columns:225px minmax(0,1fr)}.cad-drawing-panel .drawing-controls{padding:7px 9px}.cad-drawing-panel .drawing-toolbar [data-drawing-freshness]{max-width:100%;margin-left:0}.cad-drawing-panel .drawing-footer{padding:7px 9px}.cad-drawing-panel .drawing-actions{gap:4px}.cad-drawing-panel .drawing-actions button{font-size:11px;padding:5px 7px}}
+@media(max-width:700px){.cad-drawing-panel .drawing-layout{grid-template-columns:180px minmax(0,1fr)}.cad-drawing-panel .drawing-heading{padding:7px 9px;font-size:13px}.cad-drawing-panel .drawing-controls label{font-size:11px}.cad-drawing-panel .drawing-row{flex-wrap:wrap}.cad-drawing-panel .drawing-actions{justify-content:flex-start}}

@@ -1,0 +1,127 @@
+{
+  "offlinecad-context-menu-v1": {
+    "file": "rechtsklick-menues.json",
+    "limit": 32768
+  },
+  "offlinecad-fusion-settings-v1": {
+    "file": "fusion-einstellungen.json",
+    "limit": 4096
+  },
+  "offlinecad-solid-settings-v1": {
+    "file": "solid-einstellungen.json",
+    "limit": 4096
+  },
+  "offlinecad-creation-domain-v1": {
+    "file": "neue-formen.json",
+    "limit": 1024
+  },
+  "offlinecad-easy-domain-v1": {
+    "file": "easy-arbeitsbereich.json",
+    "limit": 1024
+  },
+  "offlinecad-workbench-mode-v1": {
+    "file": "bedienmodus.json",
+    "limit": 1024
+  },
+  "offlinecad-settings-v1": {
+    "file": "einstellungen.json",
+    "limit": 65536
+  },
+  "offlinecad-fonts-v1": {
+    "file": "schriften.json",
+    "limit": 29360128
+  },
+  "offlinecad-cad-quality-v1": {
+    "file": "cad-qualitaet.json",
+    "limit": 65536
+  },
+  "offlinecad-workflow-settings-v1": {
+    "file": "dateien-und-konverter.json",
+    "limit": 65536
+  },
+  "offlinecad-plugins-v1": {
+    "file": "formenpakete.json",
+    "limit": 104857600
+  },
+  "offlinecad-function-plugins-v1": {
+    "file": "funktionsplugins.json",
+    "limit": 5242880
+  },
+  "offlinecad-library-v1": {
+    "file": "bibliothek.json",
+    "limit": 4194304,
+    "legacyMesh": true
+  },
+  "offlinecad-library-cad-v5": {
+    "file": "bibliothek-cad-v5.json",
+    "limit": 52428800
+  },
+  "offlinecad-library-common-v8": {
+    "file": "bibliothek-gemeinsam-v8.json",
+    "limit": 52428800
+  },
+  "offlinecad-library-cad-v7": {
+    "file": "bibliothek-cad-v7.json",
+    "limit": 52428800
+  },
+  "offlinecad-favorites-v1": {
+    "file": "favoriten.json",
+    "limit": 65536
+  },
+  "offlinecad-fit-presets-v1": {
+    "file": "gewindepassungen.json",
+    "limit": 65536
+  },
+  "offlinecad-general-fits-v1": {
+    "file": "passungen.json",
+    "limit": 65536
+  },
+  "offlinecad-inspection-v1": {
+    "file": "modellpruefung.json",
+    "limit": 65536
+  },
+  "offlinecad-autosave-v4": {
+    "file": "autosicherung-v4.json",
+    "limit": 52428800,
+    "legacyMesh": true
+  },
+  "offlinecad-autosave-v5": {
+    "file": "autosicherung-v5.json",
+    "limit": 52428800
+  },
+  "offlinecad-autosave-v7": {
+    "file": "autosicherung-cad-v7.json",
+    "limit": 52428800
+  },
+  "offlinecad-autosave-v8": {
+    "file": "autosicherung-gemeinsam-v8.json",
+    "limit": 52428800
+  },
+  "offlinecad-autosave-v3": {
+    "file": "autosicherung-v3.json",
+    "limit": 52428800,
+    "legacyMesh": true
+  },
+  "offlinecad-autosave-v2": {
+    "file": "autosicherung-v2.json",
+    "limit": 52428800,
+    "legacyMesh": true
+  },
+  "offlinecad-autosave-v1": {
+    "file": "autosicherung-v1.json",
+    "limit": 52428800,
+    "legacyMesh": true
+  },
+  "offlinecad-layout-v1": {
+    "file": "layout-alt.json",
+    "limit": 524288
+  },
+  "offlinecad-layout-library-v1": {
+    "file": "layoutsammlung-alt.json",
+    "limit": 524288
+  },
+  "offlinecad-recovery-kind": {
+    "file": "autosicherung-auswahl.txt",
+    "limit": 64
+  }
+}

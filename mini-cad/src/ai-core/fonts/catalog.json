@@ -1,0 +1,307 @@
+[
+  {
+    "id": "free-roboto",
+    "name": "Roboto",
+    "category": "sans"
+  },
+  {
+    "id": "free-opensans",
+    "name": "Open Sans",
+    "category": "sans"
+  },
+  {
+    "id": "free-lato",
+    "name": "Lato",
+    "category": "sans"
+  },
+  {
+    "id": "free-lato-bold",
+    "name": "Lato Bold",
+    "category": "sans"
+  },
+  {
+    "id": "free-montserrat",
+    "name": "Montserrat",
+    "category": "sans"
+  },
+  {
+    "id": "free-poppins",
+    "name": "Poppins",
+    "category": "sans"
+  },
+  {
+    "id": "free-poppins-bold",
+    "name": "Poppins Bold",
+    "category": "sans"
+  },
+  {
+    "id": "free-inter",
+    "name": "Inter",
+    "category": "sans"
+  },
+  {
+    "id": "free-nunito",
+    "name": "Nunito",
+    "category": "sans"
+  },
+  {
+    "id": "free-raleway",
+    "name": "Raleway",
+    "category": "sans"
+  },
+  {
+    "id": "free-quicksand",
+    "name": "Quicksand",
+    "category": "sans"
+  },
+  {
+    "id": "free-oswald",
+    "name": "Oswald",
+    "category": "sans"
+  },
+  {
+    "id": "free-barlow",
+    "name": "Barlow",
+    "category": "sans"
+  },
+  {
+    "id": "free-barlow-bold",
+    "name": "Barlow Bold",
+    "category": "sans"
+  },
+  {
+    "id": "free-archivo",
+    "name": "Archivo",
+    "category": "sans"
+  },
+  {
+    "id": "free-abel",
+    "name": "Abel",
+    "category": "sans"
+  },
+  {
+    "id": "free-josefinsans",
+    "name": "Josefin Sans",
+    "category": "sans"
+  },
+  {
+    "id": "free-comfortaa",
+    "name": "Comfortaa",
+    "category": "sans"
+  },
+  {
+    "id": "free-righteous",
+    "name": "Righteous",
+    "category": "sans"
+  },
+  {
+    "id": "free-merriweather",
+    "name": "Merriweather",
+    "category": "serif"
+  },
+  {
+    "id": "free-lora",
+    "name": "Lora",
+    "category": "serif"
+  },
+  {
+    "id": "free-playfairdisplay",
+    "name": "Playfair Display",
+    "category": "serif"
+  },
+  {
+    "id": "free-librebaskerville",
+    "name": "Libre Baskerville",
+    "category": "serif"
+  },
+  {
+    "id": "free-bitter",
+    "name": "Bitter",
+    "category": "serif"
+  },
+  {
+    "id": "free-crimsontext",
+    "name": "Crimson Text",
+    "category": "serif"
+  },
+  {
+    "id": "free-crimsontext-bold",
+    "name": "Crimson Text Bold",
+    "category": "serif"
+  },
+  {
+    "id": "free-cormorantgaramond",
+    "name": "Cormorant Garamond",
+    "category": "serif"
+  },
+  {
+    "id": "free-ebgaramond",
+    "name": "EB Garamond",
+    "category": "serif"
+  },
+  {
+    "id": "free-vollkorn",
+    "name": "Vollkorn",
+    "category": "serif"
+  },
+  {
+    "id": "free-cinzel",
+    "name": "Cinzel",
+    "category": "serif"
+  },
+  {
+    "id": "free-breeserif",
+    "name": "Bree Serif",
+    "category": "serif"
+  },
+  {
+    "id": "free-robotomono",
+    "name": "Roboto Mono",
+    "category": "mono"
+  },
+  {
+    "id": "free-spacemono",
+    "name": "Space Mono",
+    "category": "mono"
+  },
+  {
+    "id": "free-spacemono-bold",
+    "name": "Space Mono Bold",
+    "category": "mono"
+  },
+  {
+    "id": "free-inconsolata",
+    "name": "Inconsolata",
+    "category": "mono"
+  },
+  {
+    "id": "free-sharetechmono",
+    "name": "Share Tech Mono",
+    "category": "mono"
+  },
+  {
+    "id": "free-cutivemono",
+    "name": "Cutive Mono",
+    "category": "mono"
+  },
+  {
+    "id": "free-anton",
+    "name": "Anton",
+    "category": "display"
+  },
+  {
+    "id": "free-bebasneue",
+    "name": "Bebas Neue",
+    "category": "display"
+  },
+  {
+    "id": "free-archivoblack",
+    "name": "Archivo Black",
+    "category": "display"
+  },
+  {
+    "id": "free-bungee",
+    "name": "Bungee",
+    "category": "display"
+  },
+  {
+    "id": "free-blackopsone",
+    "name": "Black Ops One",
+    "category": "display"
+  },
+  {
+    "id": "free-orbitron",
+    "name": "Orbitron",
+    "category": "display"
+  },
+  {
+    "id": "free-audiowide",
+    "name": "Audiowide",
+    "category": "display"
+  },
+  {
+    "id": "free-russoone",
+    "name": "Russo One",
+    "category": "display"
+  },
+  {
+    "id": "free-pressstart2p",
+    "name": "Press Start 2P",
+    "category": "display"
+  },
+  {
+    "id": "free-stardosstencil",
+    "name": "Stardos Stencil",
+    "category": "display"
+  },
+  {
+    "id": "free-stardosstencil-bold",
+    "name": "Stardos Stencil Bold",
+    "category": "display"
+  },
+  {
+    "id": "free-unifrakturmaguntia",
+    "name": "UnifrakturMaguntia",
+    "category": "display"
+  },
+  {
+    "id": "free-pacifico",
+    "name": "Pacifico",
+    "category": "script"
+  },
+  {
+    "id": "free-dancingscript",
+    "name": "Dancing Script",
+    "category": "script"
+  },
+  {
+    "id": "free-greatvibes",
+    "name": "Great Vibes",
+    "category": "script"
+  },
+  {
+    "id": "free-allura",
+    "name": "Allura",
+    "category": "script"
+  },
+  {
+    "id": "free-lobster",
+    "name": "Lobster",
+    "category": "script"
+  },
+  {
+    "id": "free-sacramento",
+    "name": "Sacramento",
+    "category": "script"
+  },
+  {
+    "id": "free-caveat",
+    "name": "Caveat",
+    "category": "script"
+  },
+  {
+    "id": "free-indieflower",
+    "name": "Indie Flower",
+    "category": "script"
+  },
+  {
+    "id": "free-amaticsc",
+    "name": "Amatic SC",
+    "category": "script"
+  },
+  {
+    "id": "free-amaticsc-bold",
+    "name": "Amatic SC Bold",
+    "category": "script"
+  },
+  {
+    "id": "free-kalam",
+    "name": "Kalam",
+    "category": "script"
+  },
+  {
+    "id": "free-kalam-bold",
+    "name": "Kalam Bold",
+    "category": "script"
+  }
+]

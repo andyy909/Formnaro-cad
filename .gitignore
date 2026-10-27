@@ -1,0 +1,45 @@
+# Installierte Abhängigkeiten und erzeugte Ausgaben
+node_modules/
+dist/
+converter/runtime/
+converter/runtime-build/
+converter/runtime-v010/
+converter/runtime-v010-build/
+converter/runtime-v010-pyinstaller/
+converter/runtime-v010-security-build/
+converter/runtime-v010-security/
+converter/.venv/
+converter/*.egg-info/
+release*/
+outputs/
+output/
+
+# Lokale Entwicklungshistorie, Testprofile und Anhänge
+work/
+/tmp/
+Layouts/
+Daten/
+Projekte/
+.codex*/
+
+# Zugangsdaten und lokale KI-Verbindungen
+.env
+.env.*
+!.env.example
+ai-bridge.json
+ai-settings.json
+
+# Cache- und temporäre Dateien
+__pycache__/
+*.py[cod]
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+
+# Reproducibly fetched optional local editor binaries
+/parametric/runtime-win-x64/
+/speech-runtime/*.exe
+/speech-runtime/*.dll
+/speech-runtime/*.bin

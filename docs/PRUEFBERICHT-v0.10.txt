@@ -1,0 +1,94 @@
+FORMNARO 0.10 – PRÜFNACHWEIS (10.10.2026)
+
+UMGESETZTER AUFTRAG
+Frei auswählbare Kantenrundungen/Fasen und allgemeine Passungshilfen zuerst,
+STEP als nächstes größeres Ziel. Alle drei Funktionen sind in dieser Ausgabe
+vorhanden. Neues Projektformat 4 verhindert, dass eine alte Ausgabe gespeicherte
+Kantenoperationen beim Bearbeiten stillschweigend verliert. Alte Formate 1–3
+werden weiterhin geladen, Profil offlinecad und lokale API 1 bleiben erhalten.
+
+GEOMETRIEPRÜFUNGEN
+76/76 Node-Prüfungen bestanden, einschließlich aller bisherigen 68 Prüfungen.
+Acht neue CAD-/Passungsprüfungen:
+- Einzelne Quaderkante abrunden/fasen, messbar Material entfernen, echte Quelle
+  und native Parameter behalten, STEP-Rückimport mit Volumenvergleich.
+- Quellenfarbe/Position ändern, ungültigen Radius ablehnen, Operation entfernen.
+- Gekerbte Gruppe und importiertes geschlossenes Netz fasen.
+- Getrennte STEP-Körper, gedrehte/gespiegelte Teile, ungültige Dateien.
+- Allgemeines Spiel je Seite, Öffnung/Einsatz, Elternskalierung und frische IDs.
+- Analytischer CAD-Zylinder: Rundfläche nach JSON, gleichmäßiger Skalierung,
+  Drehung und Spiegelung erhalten; nichtproportionales Netz korrekt übertragen.
+  STEP-Zolldatei liefert nach Import korrekte Millimetermaße.
+- Geschlossener innerer Hohlraum: ein Körper mit Aussparung bleibt ein Körper;
+  disconnected shells bleiben getrennt. Kantenbearbeitung erhält die Aussparung.
+- Mehrere aufeinanderfolgende Kantenoperationen, Quellenvergrößerung,
+  nichtproportional skalierter/gedrehter/gespiegelter Wrapper und letzte Operation
+  entfernen bei erhaltenen Quellen-IDs und kontrolliertem Volumen.
+
+DESKTOPPRÜFUNGEN
+Neue CAD-Suite mit echtem Electron-Renderer, Maus-/Tastatureingaben und getrenntem
+Profil bestanden. Tatsächliche Kante am Modell angeklickt, Dezimalkomma getippt,
+Vorschau erzeugt und verworfen. Übernahme ist ein Undo-Schritt; Strg+Z/Y und
+Speichern/Neustart behalten Quellen/Geometrie. Eine native Quellenmaßeingabe
+vergrößert den Quader und berechnet die Rundung erneut. Zu großer Radius verändert
+kein Modell. Escape beendet den laufenden CAD-Worker. Passungsvorlagen und neues
+Loch-Gegenstück geprüft; STEP durch echten Importdialog und Dateibrücke übertragen.
+V3-Autosicherungs-Rückfall wird beim echten Reload in V4 übernommen.
+Englisch, Dark Mode und 1100×760-Fenster bei 125 % Zoom geprüft. Panels scrollbar,
+Cancel/Apply erreichbar; 0 Netzwerk-Anfragen und 0 unerwartete Rendererfehler.
+Die Dateibrücke schreibt in einen eigenen Testordner mit simuliertem Dialogziel.
+
+Alle zwölf bisherigen relevanten Electron-Suiten erneut bestanden:
+Desktop-Grundprüfung, Szenenwerkzeuge, Formparameter, Arbeitsebene, Quellenhistorie,
+Quellengriffe, Einstellungen/Plugins, lokale KI, Erweiterungen, v09-Funktionen,
+v09-Workflows und v09-Ansichten. Zusammen mit CAD: 13 Desktop-Suiten.
+Kein neuer vollständiger Lasttest dieser Ausgabe; 0.9-Lastnachweise bleiben
+historisch. Kein neuer Cloud-Anbieteraufruf, Druck-/Slicingauftrag oder Eingriff
+in ein Benutzerprojekt.
+
+STEP MIT ZWEITEM IMPORTER
+occt-import-js 0.0.23 separat als unabhängige STEP-Bindings verwendet.
+Rundkante: 1 Körper, 140 Dreiecke, 20×20×20 mm; Volumen 7982,8066 mm³ gegenüber
+7982,7964 im Formnaro-Netz (Tessellierungsabweichung ca. 0,0102 mm³).
+Innerer Hohlraum: 1 Körper, 24 Dreiecke, 7488 mm³; Aussparung bleibt erhalten.
+Getrennte Körper: 2 Körper, Gesamtvolumen 9000 mm³, Breite 65 mm.
+Desktop-exportierter skalierter Import: 30 mm Breite beim zweiten Importer.
+STEP ist keine .ocad-Quellenhistorie und enthält keine Farbbelegung.
+
+WINDOWS-PAKET
+Formnaro.exe ProductVersion/FileVersion 0.10.0. Paketstart --verify-local im
+separaten Profil bestanden: Formnaro-Titel, Format 4/API 1, Quellen-Worker,
+KI-Vorschau/Apply/Undo, Copy/Paste, native Dateibrücke, Schnittverschluss,
+6000-Proben-Prüfung, zusätzliche CAD-Kanten/Vorschau/Apply/Undo und Spiel je Seite,
+STEP-Rückimport und lokale CAD-WASM. 38 Runtime-Dateien bytegleich mit Quellstand;
+Paketmetadaten gesondert geprüft. Keine Profile, Token, Verbindungsdateien oder
+Schlüssel im Runtime-Paket. Archives werden vollständig CRC-geprüft; genaue
+Größen/SHA256 stehen in Archivmanifest.json.
+
+BEKANNTE GRENZEN
+Netzumwandlung maximal 40000 Dreiecke pro Teil; 8000 auswählbare Kanten, 128 pro
+Operation, 20 Operationen. Nicht jede Geometrie unterstützt jeden Radius.
+Kanten werden über Kurventyp, Topologie und geometrische Anker wiedererkannt;
+mehrdeutige/veränderte Fälle werden abgelehnt. Facettierte Konturen können aus
+vielen Einzelkanten bestehen. Nach Topologieänderungen neu auswählen.
+Passung verändert lokale Dimensionen und berücksichtigt volle Elternskalierung;
+komplexe Konturen werden skaliert, ohne äquidistanten Flächenoffset, ohne
+Rastgenerator und ohne dauerhafte Beziehung zu einem Gegenstück.
+STEP-Flächen nur als geschlossene Körper; keine offenen Flächen/Baugruppenstruktur.
+STEP-CAD bleibt bei gleichmäßiger Skalierung/Drehung/Spiegelung analytisch;
+Netzformen, nichtproportionale Skalierung und normale Boolean-Gruppen bleiben
+facettiert. Farb-/Quellenhistorie über .ocad, Farben gegebenenfalls 3MF/GLTF.
+
+Weiter offene frühere Abnahmen: vollständige reale Windows-Dateidialogrunde,
+breite DPI/GPU/Monitor/Screenreader-Matrix und vollständiger Stromausfallnachweis.
+Allgemeine dauerhafte Maßabhängigkeiten, Loft/Sweep und bewegliche Baugruppen
+sind spätere Ausbauten; Skizzen/Schaltungen ausgeschlossen.
+
+REPRODUKTION UND BEISPIELE
+Die ausführbaren Prüfungen liegen unter tests/; Aufrufe stehen in package.json.
+npm test prüft die Node-Suiten. Desktop-Prüfungen benötigen npm run build.
+Prüfläufe erzeugen ihre Nachweise und eigenen Profile lokal unter work/ bzw.
+in temporären Ordnern. Diese lokalen Daten sind nicht Teil des Git-Repositories.
+Beispiele und Bilder unter docs/ sind eigene synthetische Testmodelle.
+Alte Ausgaben und Benutzerprofile wurden nicht ersetzt oder beendet.
+CAD-Lizenzen und vollständige Bibliotheksquellen stehen separat bereit.

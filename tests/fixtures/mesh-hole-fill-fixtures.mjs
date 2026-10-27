@@ -1,0 +1,1 @@
+export function tube(poly=[[0,0],[10,0],[10,10],[0,10]],height=10){const n=poly.length,verts=[...poly.flatMap(p=>[...p,0]),...poly.flatMap(p=>[...p,height])],triangles=[];for(let i=0;i<n;i++){const j=(i+1)%n;triangles.push(i,j,j+n,i,j+n,i+n);}return {verts,triangles};}

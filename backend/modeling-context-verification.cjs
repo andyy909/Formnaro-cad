@@ -1,0 +1,47 @@
+const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
+exports.verifyModelingContext=async(win,{directory})=>{
+ const checks=[],calls=[],pause=ms=>new Promise(r=>setTimeout(r,ms));
+ const js=code=>win.webContents.executeJavaScript(`(async()=>{const a=window.__cadTest;${code}})()`);
+ async function until(code){const start=Date.now();while(Date.now()-start<45000){if(await js('return '+code))return;await pause(40);}throw Error('Modelling context UI timeout: '+code);}
+ async function proof(label,fn){await fn();checks.push(label);fs.writeFileSync(path.join(directory,'progress.json'),JSON.stringify({checks}));}
+ async function click(selector){await js(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center'});`);await pause(100);const q=await js(`const e=document.querySelector(${JSON.stringify(selector)}),r=e.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);if(e.disabled||!e.contains(hit))throw Error('Covered modelling context control');return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};`);for(const type of ['mouseMove','mouseDown','mouseUp'])win.webContents.sendInputEvent({type,...q,button:'left',clickCount:1});await pause(80);}
+ let forceCorrection=true,forceInvalid=false;
+ const server=http.createServer(async(req,res)=>{
+  const chunks=[];for await(const c of req)chunks.push(c);res.setHeader('Content-Type','application/json');
+  if(req.url.endsWith('/models'))return res.end(JSON.stringify({data:[{id:'local-context-fixture'}]}));
+  const body=JSON.parse(Buffer.concat(chunks)),input=body.messages.at(-1).content,scene=JSON.parse(input.split('Current scene (data):\n')[1].split('\nUser task:\n')[0]);calls.push(body);
+  const wrong=forceCorrection&&calls.length===1,answer={revision:scene.revision,label:'Geprüfte Kontextplatte',commands:[{op:'create',type:'box',as:'plate',size:[wrong?40:60,30,5],pos:[30,15,2.5]}],checks:[{kind:'size',target:'$plate',space:'worldAxes',expected:[60,30,5]},{kind:'solids',target:'$plate',expected:1}]};
+  if(forceInvalid){forceInvalid=false;return res.end(JSON.stringify({choices:[{finish_reason:'length',message:{content:'{'}}],usage:{prompt_tokens:80,completion_tokens:40}}));}
+  res.end(JSON.stringify({choices:[{message:{content:JSON.stringify(answer)}}]}));
+ });await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ try{
+  win.setSize(1500,1000);await js('await a.resetProject();await a.settled();');
+  const settings=await js('return await window.offlinecadDesktop.getAISettings();'),memory=settings.modelingContext;
+  await proof('a portable personal modelling context is created without a model or cloud request',()=>{assert(memory?.notesFile&&fs.existsSync(memory.notesFile));assert.equal(calls.length,0);assert(fs.readFileSync(memory.notesFile,'utf8').includes('math.pi'));});
+  const baseline=await js('return a.serialize();');
+  fs.appendFileSync(memory.notesFile,'\nVERIFIED_CONTEXT_MARKER_A\n');
+  await js(`await window.offlinecadDesktop.saveAISettings({config:{protocol:'chat',baseUrl:'http://127.0.0.1:${server.address().port}',model:'local-context-fixture',maxOutputTokens:131072,rememberKey:false,bridgeEnabled:true},key:'synthetic-context-key'});await a.aiUI.chat.refreshModels();`);
+  async function send(){await until(`!document.getElementById('ai-chat-send').disabled`);await click('#ai-chat-prompt');await js(`document.getElementById('ai-chat-prompt').select();`);win.webContents.insertText('Erstelle eine Platte 60 x 30 x 5 mm mit Prüfung.');await click('#ai-chat-send');await until(`!document.getElementById('ai-chat-send').disabled`);}
+  await send();
+  await proof('external local context includes the same personal notes without exposing its access token',async()=>{const settings=await js('return await window.offlinecadDesktop.getAISettings();'),descriptor=JSON.parse(fs.readFileSync(settings.bridge.connectionFile,'utf8')),response=await fetch(settings.bridge.url+'/v1/context',{headers:{Authorization:'Bearer '+descriptor.token}}),context=await response.json();assert(response.ok);assert(context.modelingExperience?.referenceOnly);assert(context.modelingExperience.text.includes('VERIFIED_CONTEXT_MARKER_A'));assert(!JSON.stringify(context).includes(descriptor.token));});
+  await proof('actual provider requests and automatic correction both carry freshly edited personal notes',()=>{assert.equal(calls.length,2);assert(calls.every(b=>b.messages[0].content.includes('VERIFIED_CONTEXT_MARKER_A')));});
+  await proof('automatic correction journals only the actual structured failure while preserving the model',async()=>{assert.equal(await js('return a.serialize();'),baseline);await until(`(await window.offlinecadDesktop.getAISettings()).modelingContext.entries>=2`);const rows=JSON.parse(fs.readFileSync(memory.journalFile,'utf8')).entries;assert(rows.some(r=>r.outcome==='rejected'&&r.code==='AI_RESULT_MISMATCH'&&r.checkKind==='size'));assert(rows.some(r=>r.outcome==='preview'));assert(!fs.readFileSync(memory.journalFile,'utf8').includes('synthetic-context-key'));});
+  await click('#ai-chat-apply');await js('await a.settled();');
+  await proof('explicit Apply stores a separate applied outcome and keeps one native Undo step',async()=>{await until(`JSON.stringify((await window.offlinecadDesktop.getAISettings()).modelingContext).length>0`);for(let i=0;i<40&&!JSON.parse(fs.readFileSync(memory.journalFile,'utf8')).entries.some(r=>r.outcome==='applied');i++)await pause(25);assert(JSON.parse(fs.readFileSync(memory.journalFile,'utf8')).entries.some(r=>r.outcome==='applied'));assert.equal(await js('return a.undoDepth();'),1);});
+  fs.appendFileSync(memory.notesFile,'\nVERIFIED_CONTEXT_MARKER_B\n');await click('#ai-chat-new');forceCorrection=false;await send();
+  await proof('a new chat receives prior outcomes and note edits without restarting Formnaro',()=>{assert.equal(calls.length,3);const system=calls.at(-1).messages[0].content;assert(system.includes('VERIFIED_CONTEXT_MARKER_B'));assert(system.includes('AI_RESULT_MISMATCH'));assert(system.includes('Nur lokale Vorschau'));});
+  await click('#ai-chat-new');forceInvalid=true;await send();
+  await proof('a truncated real IPC provider reply retains retry metadata and succeeds on automatic correction',()=>{assert.equal(calls.length,5);assert(calls.at(-1).messages.at(-1).content.includes('AI_OUTPUT_INVALID'));assert(calls.at(-1).messages.at(-1).content.includes('truncated'));});
+  await proof('the desktop boundary rejects arbitrary experience text and leaves the journal unchanged',async()=>{const before=fs.readFileSync(memory.journalFile);assert.equal(await js(`try{await window.offlinecadDesktop.recordAIExperience({outcome:'preview',prompt:'private-model-data'});return false;}catch{return true;}`),true);assert.deepEqual(fs.readFileSync(memory.journalFile),before);});
+  await js(`a.aiUI.discard();a.ui.settings.open();document.querySelector('[data-settings-tab="ai"]').click();`);await until(`!!document.getElementById('ai-modeling-context-state')?.textContent`);
+  await proof('the real AI settings display both editable notes and structured journal paths',async()=>{const text=await js(`return document.getElementById('ai-modeling-context-state').textContent;`);assert(text.includes(memory.notesFile)&&text.includes(memory.journalFile));await click('#ai-modeling-context-state');});
+  await click('#ai-output-tokens');await js(`document.getElementById('ai-output-tokens').select();`);win.webContents.insertText('393216');await click('#ai-save-settings');await until(`document.getElementById('ai-settings-message').textContent.includes('gespeichert')`);
+  await proof('the real output budget control persists the supported maximum and sends it to the provider',async()=>{const settings=await js('return await window.offlinecadDesktop.getAISettings();');assert.equal(settings.maxOutputTokens,393216);assert(calls.slice(0,5).every(b=>b.max_tokens===131072));const reply=await js(`return await window.offlinecadDesktop.generateAIReply({prompt:'Budget-Test',context:a.access.context(),scene:a.access.scene(),chat:true});`);assert(reply.ok);assert.equal(calls.at(-1).max_tokens,393216);});
+  await js(`document.getElementById('ai-modeling-context-folder').scrollIntoView({block:'center'});`);await pause(100);await win.webContents.capturePage().then(image=>fs.writeFileSync(path.join(directory,'Modellierkontext-Normal.png'),image.toPNG()));
+  win.setSize(1000,760);await js(`document.getElementById('ai-modeling-context-folder').scrollIntoView({block:'center'});`);await pause(120);
+  await proof('modelling context actions remain readable and reachable at minimum window size',async()=>{assert.equal(await js(`const e=document.getElementById('ai-modeling-context-folder'),r=e.getBoundingClientRect();return r.width>100&&r.top>=0&&r.bottom<=innerHeight&&e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));`),true);});
+  await win.webContents.capturePage().then(image=>fs.writeFileSync(path.join(directory,'Modellierkontext-Klein.png'),image.toPNG()));
+  fs.writeFileSync(path.join(directory,'provider-proof.json'),JSON.stringify({requests:calls.length,markersPresent:true,previousOutcomesPresent:true,cloudRequests:0},null,2));
+  return {ok:true,checks,cloudRequests:0,requests:calls.length};
+ }finally{server.closeAllConnections();await new Promise(r=>server.close(r));}
+};

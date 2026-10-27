@@ -1,0 +1,19 @@
+.cad-context-menu{position:fixed;z-index:1000;width:260px;max-width:calc(100vw - 16px);overflow:auto;box-sizing:border-box;background:#fff;color:#23384a;border:1px solid #aebcc9;border-radius:5px;box-shadow:0 6px 25px #12253840;padding:5px;font-size:12px;overscroll-behavior:contain}
+.context-heading{display:block;white-space:normal;overflow-wrap:anywhere;padding:8px;border-bottom:1px solid #dce3e9;font-size:12px}
+.cad-context-menu>button{display:block;text-align:left;width:100%;min-height:30px;margin:0;border:0;border-radius:2px;background:transparent;font-size:12px;font-weight:400;color:inherit;padding:6px 9px}
+.cad-context-menu button:hover:not(:disabled),.cad-context-menu button:focus-visible{background:#e3edf7;outline:1px solid #8fb3d3;outline-offset:-1px}
+.cad-context-menu button:disabled{opacity:.38;cursor:default}
+.cad-context-menu hr{border:0;border-top:1px solid #dce3e9;margin:4px}
+.context-quick-bar{display:flex;gap:3px;padding:5px 0;border-bottom:1px solid #dce3e9}
+.context-quick-bar button{flex:1;min-width:0;min-height:32px;font-size:19px;border:0;border-radius:2px;background:transparent;color:inherit;padding:3px}
+#context-menu-settings{min-width:0}
+#context-menu-settings>p{font-size:13px;line-height:1.5}
+#context-settings-list{padding:0;list-style:none;max-height:320px;overflow:auto;margin:8px 0;border:1px solid var(--line,#c7d0da);border-radius:4px}
+#context-settings-list li{display:flex;align-items:center;gap:4px;padding:5px 6px;border-bottom:1px solid var(--line,#c7d0da);font-size:12px}
+#context-settings-list li:last-child{border:0}
+#context-settings-list li>span{flex:1;overflow-wrap:anywhere;min-width:0}
+#context-settings-list button{flex:none;min-width:28px;min-height:28px;padding:3px 6px}
+.context-settings-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+[data-theme=dark] .cad-context-menu{background:#263645;color:#e1eaf3;border-color:#587086}
+[data-theme=dark] .cad-context-menu button:hover:not(:disabled),[data-theme=dark] .cad-context-menu button:focus-visible{background:#3a536b}
+[data-theme=dark] .cad-context-menu hr,[data-theme=dark] .context-heading,[data-theme=dark] .context-quick-bar{border-color:#4d6073}

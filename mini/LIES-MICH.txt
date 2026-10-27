@@ -1,0 +1,230 @@
+FORMNARO MINI 0.7.0
+
+Eigenständiger kleiner Netz-Modellierer für Windows x64 und den 3D-Druck.
+Das große Formnaro wird weder aktualisiert noch als Laufzeit benötigt.
+Kompletten Ordner entpacken, dann Formnaro Mini Mesh.exe starten.
+
+WERKZEUGLEISTE
+Oben links: Kopieren, Einfügen, Duplizieren und Löschen; danach Rückgängig
+und Wiederholen. Rechts: Einblenden/Sichtbarkeit, Gruppieren, Gruppierung
+aufheben, Ausrichten, Spiegeln, Auf Fläche setzen, Messen, Auf Boden setzen,
+Importieren und Exportieren. Die Symbole zeigen ihren Namen beim Darüberfahren.
+Kopieren verwendet eine eigene Zwischenablage für diese Mini-Sitzung.
+Einfügen setzt die Kopie jeweils um weitere 10 mm in X und Y versetzt ab.
+Spiegeln wirkt auf die gemeinsame Mitte der Auswahl entlang X, Y oder Z.
+Ausrichten setzt Kanten oder Mitten auf der gewählten Arbeitsachse bündig.
+Ein ausgewähltes Bezugsteil bleibt dabei stehen; ohne Bezugsteil zählt
+der gemeinsame Außenrahmen der Auswahl. Messen oben zeigt
+die tatsächlichen Außenmaße der gesamten Auswahl entlang dieser Achsen.
+
+BAUEN
+Eine Grundform aus der linken Palette auf die Arbeitsfläche oder auf ein
+vorhandenes Teil ziehen. Die durchsichtige Vorschau zeigt die Ablage.
+Loslassen übernimmt das Teil als einen Rückgängig-Schritt; Esc bricht ab.
+Ein einfacher Klick auf die Form fügt sie weiterhin in der Mitte ein.
+Rechts Maße, Position (Mittelpunkt),
+Drehung, Farbe und Formparameter einstellen. Alle Längen sind Millimeter.
+Auf Boden setzt das tatsächliche unterste Stück auf Z=0.
+Linksklick wählt; Shift+Klick ergänzt/entfernt Teile auch unter Mausgriffen.
+Im leeren Bereich mit gedrückter linker Maustaste einen Auswahlrahmen um
+mehrere Teile ziehen. Berührte sichtbare Teile werden markiert; Shift fügt
+sie zur bisherigen Auswahl hinzu. Die Richtung des Rahmens ist beliebig.
+"Alle markieren" oder Strg+A wählt alle sichtbaren Teile.
+Ausgewählte Teile lassen sich gemeinsam bewegen, drehen, duplizieren,
+ausrichten, löschen oder verbinden. Gesperrte Teile verhindern Änderungen.
+Ein Teil direkt mit der linken Maustaste ziehen, um es in X/Y zu verschieben;
+ist es Teil einer Mehrfachauswahl, wird die ganze Auswahl gemeinsam bewegt.
+Die Höhe bleibt dabei erhalten. Esc verwirft eine noch laufende Bewegung.
+Mausrad gedrückt halten und die Maus bewegen verschiebt die gesamte Ansicht
+parallel zum Bildschirm, ohne Drehung oder Größenänderung. Loslassen beendet
+das Verschieben. Rechtsziehen dreht die Ansicht, Shift+Rechtsziehen verschiebt
+sie ebenfalls; Rollen am Mausrad zoomt. Die Teile selbst bleiben unverändert.
+Bewegen und Drehen zeigen Griffe. Die Griffe rasten bei 1 mm bzw. 5 Grad;
+feinere Werte können rechts eingegeben werden. Das Raster ist rechts auch
+auf Aus, 0,1 mm, 1 mm oder 5 mm einstellbar.
+
+DREHEN UND SKALIEREN MIT GRIFFEN
+Nach dem Markieren erscheinen vier weiße Eckpunkte für Breite und Tiefe
+und ein weißer Griff oben für die Höhe. Ziehen skaliert; die gegenüberliegende
+Ecke beziehungsweise die Unterseite bleibt fest. Shift skaliert proportional
+in allen drei Richtungen. Das Raster gilt auch für die neuen Maße.
+Mehrere markierte Teile werden immer gemeinsam proportional skaliert.
+Die kleinen Drehpfeile X/Y/Z drehen um die jeweilige Achse der Auswahl.
+Ein Winkelring mit 24 Rastpunkten und eine Gradzahl erscheinen beim Ziehen.
+Innerhalb des blauen Kreises rastet die Drehung automatisch alle 15 Grad ein,
+also auch exakt bei 45 und 90 Grad. Außerhalb gilt 1 Grad für feines Drehen.
+Shift erzwingt 15-Grad-Schritte auch außerhalb. Die Anzeige nennt das aktive
+Raster. Einzelteile verwenden ihre eigenen Achsen,
+mehrere Teile die gemeinsamen Arbeitsachsen und den gemeinsamen Mittelpunkt.
+Loslassen übernimmt die Änderung als einen Rückgängig-Schritt. Esc oder
+ein Wechsel zu einem anderen Fenster bricht eine laufende Änderung ab. Gesperrte und
+ausgeblendete Teile haben keine Bearbeitungsgriffe. Maße und Formparameter
+können weiterhin rechts eingegeben werden; Bewegen/Drehen behalten ihre Griffe.
+
+AUF OBERFLÄCHEN SETZEN
+Neue Formen aus der Palette direkt auf die gewünschte Körperfläche ziehen.
+Ein vorhandenes Teil auswählen, "Auf Fläche setzen" (P) drücken, den Zeiger
+über die gewünschte Fläche bewegen und zur Bestätigung klicken.
+Die lokale Unterseite richtet sich mit "An Fläche ausrichten" an der
+getroffenen Netzfläche aus; dies funktioniert auch an schrägen und seitlichen
+Flächen. Bei ausgeschalteter Ausrichtung bleibt die Drehung erhalten.
+Die tatsächlichen Netzpunkte bestimmen den Abstand zur Auflagefläche.
+Das Raster liegt in der Zielfläche; es rundet eine schräge Fläche nicht auf
+die Weltachsen. Wenn ein gerasterter Anker die endliche Fläche verfehlen
+würde, wird der genaue Treffer unter dem Zeiger verwendet.
+Ausgeblendete Teile und Lochformen sind keine Auflageziele. Die Vorschau
+ändert weder Projekt, Sicherung noch Rückgängig. Esc bricht sie ab.
+Die Ausrichtung folgt der getroffenen Dreiecksfläche. Dies ist keine
+vollständige Kollisionsprüfung gegen alle umliegenden Teile.
+
+Körper und Lochformen zusammen auswählen und Verbinden: Körper werden
+vereinigt, Lochformen abgezogen. Einzelne Lochformen sind nur Werkzeuge.
+Verbinden speichert seine Ausgangsteile; Auflösen stellt sie wieder her.
+Bei einer nicht gleichmäßig gestreckten und gedrehten Gruppe können
+einzelne Quellen verzerrt sein: diese werden beim Auflösen als exaktes Netz
+erhalten, ihre ursprünglichen Grundformparameter sind dann nicht verfügbar.
+Schnittmenge bildet die gemeinsame Überlappung der ausgewählten Körper.
+Gesicherte Teile lassen sich über das Schloss in der Teileliste entsperren.
+
+EIGENE FORMEN DIREKT ABLEGEN
+Links unter „Formen“ zwischen „Grundformen“ und „Eigene Formen“ umschalten.
+„Eigene Formen“ zeigt die gespeicherten Bibliothekseinträge mit Bildern.
+Eine Bildkachel mit der Maus auf die Arbeitsfläche oder auf eine Körperfläche
+ziehen. Die durchsichtige Vorschau zeigt die Ablage; Loslassen fügt eine Kopie
+hinzu. Auch schräge und seitliche Flächen werden wie bei Grundformen behandelt.
+Raster und „An Fläche ausrichten“ gelten ebenfalls. Esc oder Loslassen außerhalb
+der Arbeitsfläche bricht ab. Das Original in der Bibliothek bleibt erhalten.
+
+Ein Klick auf eine eigene Form bereitet sie zum Ablegen vor: danach auf die
+gewünschte Fläche klicken. Auf Tablets gilt derselbe Ablauf per Antippen.
+Auch während des Ladens beendet Esc die Vorbereitung; ein Wechsel zu
+„Grundformen“ verwirft eine vorbereitete Ablage.
+Mehrteilige Vorlagen werden gemeinsam starr platziert. Teile, Farben, Maße,
+Spiegelung, Lochformen und Gruppenquellen bleiben einzeln erhalten. Nur sichtbare
+Körper bestimmen die Auflage; überstehende Lochformen und ausgeblendete Teile
+heben die Vorlage nicht an. Ohne sichtbaren Körper zählen sichtbare Lochformen.
+Alle Teile der Vorlage zusammen werden mit einem Rückgängig-Schritt eingefügt.
+
+In „Eigene Formen“ nach Name/Ordner suchen, Favoriten filtern und seitenweise
+blättern (maximal zwölf Bilder). Modelle werden erst bei Benutzung geladen.
+„Bibliothek verwalten“ öffnet die bisherige große Bibliotheksübersicht.
+„Aktualisieren“ liest die Liste neu. Nach Speichern und Bearbeiten eines
+Eintrags wird die Palette automatisch aktualisiert. Eigene Teile zunächst
+in der Bibliothek speichern; normale .fmini-Dateien erscheinen nicht automatisch.
+
+BILDBIBLIOTHEK
+Oben „Bibliothek“ öffnen. „Neu speichern“ legt markierte Teile oder auf
+Wunsch das ganze Mini-Projekt ab, mit Name, Ordner und optionalem Favoriten.
+Das Vorschaubild entsteht einmal aus den sichtbaren gespeicherten Teilen.
+Formparameter, Gruppenquellen, Farben, Sperren, Sichtbarkeit und Notizen
+bleiben erhalten. In der Übersicht nach Name oder Ordner suchen; mit
+„Nur Favoriten“ häufig benötigte Bauteile anzeigen. „Bearbeiten“ ändert
+Name, Ordner und Favoritenstatus des Eintrags.
+„Einfügen“ ergänzt das aktuelle Projekt um Kopien mit neuen Kennungen,
+um 10 mm in X/Y versetzt. „Öffnen“ ersetzt das aktuelle Projekt durch den
+gespeicherten Stand. Beide Aktionen sind über Rückgängig umkehrbar.
+Gespeicherte Einträge werden dabei nicht verändert. Maximal zwölf Bilder
+pro Seite; Modelle werden erst beim Öffnen/Einfügen geladen.
+Die eigene Bibliothek liegt standardmäßig im Ordner „Bibliothek“ direkt
+neben Formnaro Mini Mesh.exe. Darin stehen die gespeicherten Mini-Modelle,
+Vorschaubilder und Namen/Ordner/Favoriten. Der aktuelle Pfad wird in der
+Bibliotheksübersicht angezeigt.
+„Speicherort ändern …“ öffnet eine Ordnerauswahl. Bestehende gültige Einträge
+werden in die gewählte Ablage übernommen; die bisherigen Dateien bleiben
+als Sicherung erhalten. Mini merkt sich die ausdrücklich gewählte Ablage.
+„Neben dem Programm speichern“ setzt den Standard wieder ein. Vorhandene
+anders belegte Einträge werden erhalten; nötigenfalls entsteht eine zusätzliche
+Variante statt einer Überschreibung.
+Beim ersten Start übernimmt Mini ältere Einträge aus Daten-Mini/Bibliothek
+in die neue Ablage, ohne die Originale zu löschen. Danach ist die alte Ablage
+eine Sicherung und wird nicht bei jedem Start erneut eingelesen. Nicht lesbare
+Einträge bleiben dort erhalten und werden als Hinweis gemeldet.
+Für einen PC-Wechsel oder ein Update „Bibliothek“ und „Daten-Mini“ mitnehmen.
+Bei einem anderen Speicherort auch dessen Inhalt sichern. Eine ausdrücklich
+gewählte Ablage ist als Pfad in Daten-Mini/bibliothek-ort.json gespeichert;
+beim Standard speichert Mini keinen festen Pfad, damit die Ablage mit dem
+Programmordner mitwandert. Große .ocad- oder native CAD-Bibliotheken sind
+nicht direkt mit Mini kompatibel.
+
+WEITERE WERKZEUGE
+„Zwei Punkte messen“ rechts aktivieren, zwei Punkte auf Teilen oder der
+Grundebene anklicken. Ecken werden in der Nähe des Zeigers gefangen,
+sonst wird die getroffene Oberfläche verwendet. Die Anzeige zeigt Abstand
+und XYZ-Unterschiede. Zum genauen Platzieren einen Abstand eingeben und
+„Zweites Teil verschieben“ drücken. Nur das zweite Teil bewegt sich entlang
+der gemessenen Richtung. Es muss entsperrt sein und sich vom ersten Teil
+unterscheiden. Ein erster Punkt auf der Grundebene ist ebenfalls möglich.
+Neu messen beginnt eine weitere Messung; Esc oder Schließen beendet sie.
+Das reine Messen ändert weder Modell, Auswahl noch Rückgängig.
+
+„Reihe / Raster / Lochkreis“ rechts wiederholt die markierten Teile.
+Anzahl schließt das Original ein; beim Raster ist die Anzahl die Spaltenzahl.
+Abstände werden in mm angegeben. Ein Kreismuster dreht um den eingegebenen
+Mittelpunkt und die gewählte Arbeitsachse; der Abstand des Originals zum
+Mittelpunkt bestimmt den Radius. 360 Grad verteilt ohne doppelte Endkopie,
+Teilkreise schließen beide Enden ein. Optional drehen die Kopien mit.
+Das Original bleibt stehen, mehrere markierte Teile werden gemeinsam
+wiederholt. Die gesamte Anordnung zählt als ein Rückgängig-Schritt.
+Viele Kopien erhöhen weiterhin Speicher- und Zeichenaufwand.
+
+Unter „Deine Teile“ einen Ordnernamen eingeben und die Auswahl zuweisen.
+Ein leerer Name entfernt die Zuordnung. Ordner sind aufklappbar und verbinden
+keine Körper. Das Suchfeld findet Namen, Ordner und Notizen. Notizen lassen
+sich rechts am einzelnen Teil eingeben. Alles bleibt in der .fmini-Datei.
+
+DATEIEN UND SICHERUNG
+Speichern schreibt das eigene Format .fmini mit Maßen, Parametern und Quellen.
+Öffnen liest ausschließlich Mini-Projekte. Große Formnaro-Projekte und
+Einstellungen werden nicht eingelesen. STL importiert geschlossene Netze;
+offene oder fehlerhafte Netze werden mit Erklärung abgelehnt.
+Exportieren schreibt ausschließlich die markierten sichtbaren Teile als STL.
+Nicht markierte Körper und Lochformen werden vollständig ignoriert.
+Markierte Lochformen werden von den markierten Körpern abgezogen.
+Ohne Auswahl oder nur mit Lochformen erscheint ein Hinweis; es wird niemals
+ersatzweise die gesamte Szene exportiert. Auch gesperrte Körper sind
+exportierbar. STL verwendet Millimeter. STL speichert keine Farben/Quellenhistorie.
+Die Segmentzahl eines Teils ist seine tatsächliche Rundungsqualität und gilt
+auch beim STL-Export. Höhere Qualität rechts am Teil einstellen, bevor
+verbunden wird. Der globale Qualitätsschalter gilt für neue Grundformen.
+
+Mini sichert den bestätigten Stand automatisch in Daten-Mini neben der EXE.
+Dieser ganze Ordner enthält ausschließlich Mini-Daten und den Mini-Cache.
+Zum Weitergeben des Programms persönliche Ordner Daten-Mini und Bibliothek
+weglassen; eine eigene Teilesammlung nur absichtlich separat weitergeben.
+Projektdateien zusätzlich selbst sichern. Schreiben im Programmordner muss
+erlaubt sein; bei fehlgeschlagener Sicherung zeigt Mini einen Hinweis.
+Rückgängig/Wiederholen gelten für diese Sitzung; die Historie ist begrenzt.
+
+TASTEN
+Strg+S speichern, Strg+O öffnen, Strg+Z rückgängig, Strg+Y wiederholen,
+Strg+C kopieren, Strg+V einfügen, Strg+D duplizieren, Strg+A alle sichtbaren Teile, Entf löschen,
+W bewegen, E drehen, P auf Fläche setzen, F einpassen, Esc laufende
+Platzierung/Bewegung abbrechen oder sonst Auswahl aufheben.
+
+UMFANG UND GRENZEN
+12 Grundformen mit passenden Parametern, bis 200 Teile / 1.000 Quellen,
+maximal 500.000 gespeicherte Dreiecke im Projekt, 250.000 pro Netzteil,
+Projektdateien bis 32 MiB, STL-Import bis 25 MiB.
+Keine STEP-/BRep-Funktionen, kein CAD-Kern, kein Konverter und
+keine großen Schrift- oder Pluginpakete. Keine Onlineverbindung erforderlich.
+Rundungen sind Dreiecksannäherungen. Keine automatische Druckfreigabe.
+Berechnungen laufen in einem abbrechbaren Hintergrundmodul (45 s Grenze).
+Die Ansicht rendert bei Änderungen, nicht ständig im Leerlauf.
+Die Electron-Desktoplaufzeit ist weiterhin enthalten.
+
+QUELLEN
+Quellen im beiliegenden Formnaro-Mini-Quellen-0.7.0.zip.
+Entwicklung: Node 22.16 oder neuer; im Quellenordner npm ci,
+npm run build, npm start. npm test und npm run test:desktop prüfen Mini.
+Das große Formnaro-Repository ist dafür nicht nötig.
+Eigener Anwendungscode: LICENSE.txt; Fremdkomponenten: licenses/ und
+THIRD-PARTY-LICENSES.txt; Electron zusätzlich LICENSE und LICENSES.chromium.html.
+Neu in 0.7.0: oben „✦ KI“, Anbieter/Modell/Schlüssel über das Zahnrad.
+Die KI liefert geprüfte Vorschläge; erst Übernehmen ändert das Projekt.
+„Netz reparieren“ benötigt keine Parameter. Beschädigte STL werden beim Import
+automatisch repariert, soweit die begrenzte Prüfung ein Ergebnis bestätigt.
+Originalnetz und Reparaturbericht bleiben im Projekt. Näheres in
+KI-UND-NETZREPARATUR.md. Einstellungen und Schlüssel selbst eintragen.
+
+
+STL jetzt auch als offenes/beschaedigtes Rohnetz, mit sicherer Grundbereinigung und optionaler Arbeitskopie fuer grosse Dateien. Anleitung NETZIMPORT.md.

@@ -1,0 +1,41 @@
+{
+  "package": "pyodide",
+  "version": "314.0.7",
+  "npmIntegrity": "sha512-0YvXxEhfEdpLfb/XkM2BFAeMROq0iMUX2bzzH9pOttyMcWkwq+HbE5uyuGD82LN7y2q+SNvi/6V5JEsOlD2R1A==",
+  "source": "https://registry.npmjs.org/pyodide/-/pyodide-314.0.7.tgz",
+  "files": [
+    {
+      "file": "pyodide.mjs",
+      "bytes": 17931,
+      "sha256": "6f1d60f7bf529beb300f0f47983c921d3982363640ba20af0e38efdddbc66109"
+    },
+    {
+      "file": "pyodide.asm.mjs",
+      "bytes": 1250344,
+      "sha256": "f7cdc8ece80678ceb712f8e65ebe6d3a83203a180c399865f49612a051693635"
+    },
+    {
+      "file": "pyodide.asm.wasm",
+      "bytes": 9598218,
+      "sha256": "cc36e3cab04fdfc9a63ff13eb52eae2b911bf46c025cc7b281f394bd3de1d5e6"
+    },
+    {
+      "file": "python_stdlib.zip",
+      "bytes": 2545637,
+      "sha256": "fa1957e5777068fc4f7437f96d860ae2fbe9c19732ba06c84e004ec16dd7dd7a"
+    },
+    {
+      "file": "pyodide-lock.json",
+      "bytes": 119077,
+      "sha256": "5dc2fc119108bc148c7457dc86e7675b5c87e1cafd420b9c34c1eaef7b36c010"
+    }
+  ],
+  "python": "3.14.2",
+  "sourceArchive": {
+    "file": "pyodide-314.0.7-source.tar.gz",
+    "url": "https://github.com/pyodide/pyodide/tree/314.0.7",
+    "bytes": 1464973,
+    "sha256": "0731cd39bd1897c8cf0cac4da5cf9752594e5427cf4bad584200f8c9b617b9ef"
+  },
+  "pythonSource": "https://github.com/python/cpython/tree/v3.14.2"
+}

@@ -1,0 +1,657 @@
+Formnaro 0.103.1 – aktueller Stand 26.10.2026
+
+Vier Bedienmodi (Easy Tinker, Normal, Solid, Fusion 360), lokale Python-/JavaScript-Analyse, zusätzliche FreeCAD-Engine und eine dauerhafte gemeinsame KI-Werkzeugbibliothek. GPT und DeepSeek erhalten dieselben lokalen Modellierwerkzeuge. GPT zeigt einen geschätzten API-Gegenwert; beim Abo ist dies keine zusätzliche Abrechnung.
+
+Neueste Anleitung: docs/KI-ARBEITSUMGEBUNG.md. Gespeicherte Skripte: KI-Werkstatt > Gespeicherte KI-Werkzeuge. Beim Versionswechsel den eigenen Datenordner mitnehmen. Persönliche Modelle, Profile und Zugangsdaten sind nicht Teil des Downloads.
+
+Nachfolgend die bisherigen Funktions- und Versionshinweise.
+
+Formnaro 0.93.1: Der vollständige bisherige Standard-Modellierkontext enthält zusätzlich geprüfte Regeln für Anker, Skizzenachsen, variable Querschnitte und den Umgang mit widersprüchlichen Antworten. Bestehende persönliche Kontextdateien werden weiterhin erhalten.
+
+Formnaro 0.93.0: Python bietet Zylinder zwischen Weltpunkten und Größenänderungen mit festem Mittelpunkt. Korrigiert sind native Euler-Drehungen und Python-Quellenverweise nach dem Gruppieren. Der vollständige bisherige KI-Eingabekontext bleibt erhalten. Anleitung: docs/KI-MODELLIERHILFEN.md.
+
+Formnaro 0.92.1: Automatische Korrekturen erhalten zusätzlich den vollständigen fehlgeschlagenen Python-/JavaScript-Code als Referenz. Funktionierende Geometrie soll erhalten bleiben; bestehender Inputkontext bleibt unverändert.
+
+Formnaro 0.92.0 – KI-Rekonstruktionswerkzeuge
+Vollständige Netzschnittkonturen und Entwurfsvergleich vor Übernahme stehen der KI über die lokale Schnittstelle und Python zur Verfügung. Bestehender Input- und Erfahrungskontext bleibt erhalten. Anleitung: docs/KI-REKONSTRUKTION.md.
+
+DeepSeek erhält standardmäßig131.072 Ausgabetokens statt32.768; unter KI/API bis393.216 einstellbar.
+
+Formnaro 0.91.0 – KI-Modellierkontext
+Einstellungen > KI / API > Modelliergedächtnis zeigt die beiden Kontextdateien.
+Die Markdown-Datei enthält bearbeitbare Hinweise. Neue CAD-KI-Anfragen lesen sie
+und das strukturierte Erfahrungsjournal erneut. Fehlertypen, bestandene Vorschauen
+und Übernahmen werden getrennt erfasst. Keine vollständigen Prompts oder Modelle
+werden in das Erfahrungsjournal übernommen. Anleitung: docs/KI-MODELLIERKONTEXT.md.
+
+Formnaro 0.90.0: Python-Modellierung
+Große KI-Werkstatt > Python-Modellierung > Beispiel einsetzen > Python-Vorschau berechnen.
+Ergebnis prüfen und Änderungen übernehmen. Der ganze Ablauf ist ein Rückgängig-Schritt.
+Die Python-Laufzeit wird lokal mitgeliefert und erst bei einer Python-Berechnung geladen.
+Externe Bibliothek: ai/python. Anleitung: docs/PYTHON-SCHNITTSTELLE.md.
+Portable Freigabe nur mit zugehöriger vollständiger Abnahme.
+
+Formnaro 0.89.0: Automatische Bemaßung
+Technische Zeichnung öffnen > Blatt aktualisieren > Grundbemaßung oder Detaillierte Bemaßung > Automatisch bemaßen.
+Vorschläge verschieben, entfernen oder manuell ergänzen; erst Blatt übernehmen speichert einen Undo-Schritt.
+Neue Abstandsmaße benötigen Projekt/Bibliothek18. Alte Dateien und Programmversionen bleiben erhalten.
+Anleitung: docs/TECHNISCHE-ZEICHNUNGEN.md. Portable Freigabe nur mit zugehöriger Abnahme.
+
+Formnaro 0.84.0: Verknüpfte Konturen
+Optionale Verknüpfung unter Kontur von Fläche, Verwaltung über Verknüpfte Konturen.
+Nur Aktualisieren berechnet betroffene Konturen und Folgegeometrie; Übernehmen bestätigt einen Undo-Schritt.
+Stabile native Flächen-/Kantenrollen; STEP-Geometrieaustausch verlangt ausdrückliches Neuwählen.
+Projekt/Bibliothek14 für Verknüpfungen und stabile Zeichnungsbezüge. Anleitung: docs/VERKNUEPFTE-KONTUREN.md.
+Paket3 des CAD-Ausbaus. Die separate portable Abnahme liegt im jeweiligen Ausgabeverzeichnis; Pakete4–7 bleiben offen.
+
+Formnaro 0.83.0: Projektparameter und Varianten
+Gemeinsame Maßformeln, ausdrückliche Bindungen und aktive Varianten. Anleitung: docs/PROJEKTPARAMETER.md.
+CAD-Werkzeuge > Projektparameter und Varianten; Easy: Zeichnen & Netz.
+Änderungen sammeln, Aktualisieren prüft betroffene Teile, Übernehmen bestätigt mit einem Undo.
+Projekt-/Bibliotheksformat13 für neue Parameter; alte Formate5/7–12 bleiben lesbar.
+Paket2 des CAD-Ausbaus. Pakete3–7 bleiben offen. Die vollständige portable Abnahme liegt bei der separaten Ausgabe.
+
+Formnaro 0.82.0: Technische Zeichnungen
+Anleitung: docs/TECHNISCHE-ZEICHNUNGEN.md. A4/A3, CAD-Ansichten und Schnitte, Maße/Beschriftungen, PDF/SVG und DXF1:1mm.
+Nur Blatt aktualisieren berechnet Projektionen. Neue Blätter benötigen Projektformat12.
+Paket1 des CAD-Ausbaus; seine separate portable Ausgabe ist mit Source-, EXE-, Datei- und Leistungsabnahme erhalten.
+
+Formnaro 0.81.0: CAD-Werkzeuge auf Abruf
+Neue CAD-Werkzeuge: Kontur übernehmen, Fläche versetzen, aushöhlen, Loft und Sweep.
+Bedienung und Grenzen: docs/CAD-MODELLIERWERKZEUGE.md. Neue Rezepte benötigen Projektformat11.
+
+Skizzen: Zoomen, Verschieben der Ansicht, Punktauswahl und Einpassen verwenden
+bereits berechnete Konturen und Fangpunkte weiter. Jede Entwurfsänderung erneuert sie.
+Netzauswahl und Hintergrundabfragen berechnen und übertragen gezielt benötigte Daten.
+Gleiche CAD-Anzeigepuffer werden innerhalb einer Antwort nur einmal übertragen;
+eine vorhandene, geringfügig feinere Darstellung kann weiterverwendet werden.
+Modelle, Quellen, Qualitätsvorgaben, Export und Rückgängig bleiben erhalten.
+Die Bedienung bleibt gleich. Komplexe CAD-Kurven und mehrfarbige CAD-Gruppen
+können weiterhin längere Berechnungen benötigen.
+Anleitung und Grenzen: docs/ARBEITSGESCHWINDIGKEIT.md.
+
+Formnaro 0.79.0: Kernwerkzeuge direkt in Formnaro
+Der zusätzliche SolidCraft-Gesamteditor wird nicht mehr mitgeliefert oder gestartet.
+Direkt enthalten bleiben Skizzen mit Bögen, Kreisen, Langlöchern und Öffnungen,
+lokale benannte Maße und Formeln, Trimmen, Verlängern, Spiegeln und Konturversatz,
+Skizzen-Anbauten/Ausschnitte an CAD und geschlossenen Netzen sowie Beispielskizzen.
+Technische Netzbereiche, Modellvergleich und geschützte Netzvereinfachung bleiben.
+CAD-Werkzeuge bzw. in Easy Tinker Zeichnen & Netz öffnen diese Werkzeuge.
+Alte CAD-Geometrie und eingebettete Quellen bleiben beim Öffnen/Speichern erhalten;
+der frühere Zusatzentwurf lässt sich in dieser Ausgabe nicht weiterbearbeiten.
+Kein vollständiger Skizzenlöser oder allgemeiner Abhängigkeitsbaum zwischen Teilen.
+Anleitung: docs/FORMNARO-KERNWERKZEUGE.md und docs/OFFLINE-MODELLIEREN.md.
+
+Formnaro 0.78.0: Schneller gruppieren
+CAD-Gruppen mit vielen Teilen werden mit weniger großen Zwischenschritten berechnet.
+Originalquellen, Parameter und Rückgängig bleiben erhalten.
+Anleitung: docs/GRUPPIEREN-TEMPO.md.
+
+Formnaro 0.77.0: Blauer Drehkreis wie in der Mini-Version
+Teil auswählen und den Drehgriff X, Y oder Z ziehen.
+Im Kreis: 15 Grad; außerhalb: 1 Grad; mit Shift: immer 15 Grad.
+Winkelanzeige, Escape zum Abbrechen, ein Rückgängig-Schritt beim Loslassen.
+Normal und Easy Tinker; Anleitung: docs/BLAUER-DREHKREIS.md.
+
+Formnaro 0.75.0: Maßlinien beim Verschieben
+Beim Ziehen zeigen X-/Y-Maßlinien auf der Arbeitsebene den Abstand vom Startpunkt.
+Mit Pfeilen, Rasterfang, Vorzeichen und Millimeterwerten in Normal und Easy Tinker.
+Loslassen oder Escape beendet die Anzeige. Anleitung: docs/VERSCHIEBEMASSE.md.
+
+Historischer Stand 0.66.0: Parametrisches Offline-Modellieren mit SolidCraft.
+Der damalige Zusatzeditor entfällt ab 0.79.0; frühere portable Ausgaben bleiben
+erhalten. Projekte im Format 9 bleiben mit CAD-Geometrie und eingebetteter Quelle
+lesbar und speicherbar. Anleitung: docs/OFFLINE-MODELLIEREN.md.
+
+Weiterhin: Kompakte Ansichtswerkzeuge seit 0.62.0
+Seitlich: Startansicht, Oben, Vorn, Rechts, Einpassen.
+Oben unter Ansicht & Pruefen: Messen, Schnittansicht, Wanddickenkarte,
+Modell pruefen, Lineal, Projektion, Koordinaten und Arbeitsebenen.
+Kein Scrollen in der seitlichen Ansichtsleiste; Normal und Easy Tinker.
+
+Weiterhin: STEP-Baugruppen und Wanddickenkarte
+STEP-Import erhaelt Teilebaum, Namen, Platzierungen und Farben.
+Wanddickenkarte: vollstaendiges Teil auswaehlen, Karte oeffnen, Berechnung starten.
+Naeherung mit begrenzten Stichproben; grau bedeutet ungeprueft/unklar. Alles offline.
+Anleitung: docs/STEP-BAUGRUPPEN-UND-WANDDICKEN.md
+Entsprechende aktuelle CAD-Quellen: Formnaro-CAD-Quellen-v0.62.0.zip.
+
+Ergänzung 0.53.0: KI-Messungen und STL-Prüfungen.
+Die KI kann gezielt nachmessen, die lokalen Ergebnisse lesen und dann bauen.
+Geschlossene STL-/Netzteile unterstützen zusätzliche Sollprüfungen für
+Materialkörper, Volumen und freie Bohrkorridore. Vorschau/Rückgängig erhalten
+das Original. Programmgrenzen bleiben erhalten. Details docs/KI-MESSUNGEN.md.
+
+Ergänzung 0.52.0: Formerkennung und passende Gegenstücke.
+Material-Netzteil auswählen, dann Netz-Werkzeuge > Formerkennung und Gegenstück.
+Gemessene Flächen, Innen-/Außenkonturen und Kreisöffnungen untersuchen;
+Einsätze, Hülsen und Abdeckungen mit Spiel als neue Teile vorschlagen.
+Auch direkt durch die KI nutzbar, innerhalb der bisherigen Programmgrenzen.
+Vorschau, Übernehmen und Rückgängig erhalten das Original.
+Gerade Konturpassungen; keine allgemeine Freiformrekonstruktion oder Gewinde.
+Details und Prüfgrenzen: docs/FORMERKENNUNG.md.
+
+Ergänzung 0.51.2: Feste Bearbeitungsleiste wie in Mini.
+Die üblichen Bearbeitungs- und Anordnungswerkzeuge sind in der Normalansicht
+direkt oben als Symbole erreichbar, ohne zuerst „Bearbeiten“ zu öffnen.
+
+Ergänzung 0.51.2: Klare Netzansicht.
+Netzmodelle werden standardmäßig deckend angezeigt, auch in älteren Projekten.
+Unten links markiert „Netzmodell deckend“ den Modelltyp. Häkchen ausschalten,
+um die am Modell eingestellte Deckkraft zu sehen. Lochkörper und Vorschauen
+behalten ihre besondere Darstellung. Die Ansicht ändert weder Modelle noch Export.
+
+Ergänzung 0.51.1: KI-Werkzeuge und eigene lokale Berechnungen.
+Die KI kann vorhandene CAD-/Netzwerkzeuge kombinieren und zusätzliche interne
+Skriptmodule verwenden. Ausführung nur am Modell innerhalb von Formnaro;
+keine fremden Dateien, Systembefehle oder Zugangsdaten. Vorschau und Rückgängig
+bleiben erhalten. Beschreibung: KI-WERKZEUGE.md bzw. docs/KI-WERKZEUGE.md.
+
+Ergänzung 0.49.2: Gemeinsame Funktions- und Stabilitätsprüfung.
+Die separate Ausgabe erhält eine eigene vollständige Quell-/EXE-Abnahme.
+Prüfumfang und Wiederholung: GESAMTPRUEFUNG.md. Frühere Ausgaben bleiben erhalten.
+
+Ergänzung 0.49.1: CAD-Regeln und messbare KI-Ergebnisprüfung.
+Im KI-Vorschlag „Geprüfte Anforderungen anzeigen“ öffnen. Gemessen werden nur
+die dort genannten Sollwerte; Übernehmen bleibt erforderlich. Details in
+CAD-KI-ERGEBNISPRUEFUNG.md. Alle bisherigen Funktionen einschließlich Aushöhlen enthalten.
+
+Formnaro 0.49.0 - Aushöhlen mit Wandstärke und Ablauföffnungen
+
+Im Modus Normal einen geschlossenen Netzkörper wählen und Aushöhlen öffnen.
+Wandstärke, Auflösung und bis zu acht Ablauföffnungen in Weltmaßen einstellen.
+Original, Ergebnis, Überlagerung und Anschnitt prüfen. Übernehmen ergänzt eine
+neue Hülle und erhält das vollständige Original unverändert. Geschützte oder
+ungeeignete Quellen werden abgewiesen. Anleitung AUSHOEHLEN.md.
+Easy Tinker bleibt enthalten. ZIP vollständig separat entpacken und
+App/Formnaro.exe starten. Frühere Ausgaben bleiben erhalten.
+
+Formnaro 0.48.0 - Make Solid mit Originalvergleich
+
+Im Modus Normal ein Netzteil wählen und Make Solid öffnen. Auflösung,
+Schließradius und Versatz einstellen; Original, neue Annäherung und
+Überlagerung vergleichen. Maße, Bohrungen und Details können sich ändern.
+Übernehmen ergänzt ein neues Objekt und erhält das Original unverändert.
+Teile mit Schutzbereichen werden abgewiesen. Anleitung MAKE-SOLID.md.
+Easy Tinker bleibt enthalten. ZIP vollständig separat entpacken und
+App/Formnaro.exe starten. Frühere Ausgaben bleiben erhalten.
+
+Formnaro 0.47.0 - Beschädigte Netzbereiche löschen und ersetzen
+
+Neu: Im Modus Normal Netzflaechen auswaehlen und uebernehmen; dann
+Netzbereiche glaetten oeffnen. Staerke, Durchgaenge, Verschiebungsgrenze und
+Formkantenwinkel einstellen. Schutzflaechen und nicht ausgewaehlte Dreiecke
+bleiben exakt. Original, Ergebnis und echte Punktverschiebungen vergleichen;
+Maße und Volumen koennen sich aendern. Anleitung NETZBEREICHE-GLAETTEN.md.
+Easy Tinker erneut enthalten und mitzupruefen. Separate neue Ausgabe;
+ZIP vollstaendig separat entpacken und App/Formnaro.exe starten.
+
+Formnaro 0.45.0 - Neuvernetzen mit Formvergleich
+
+Neu: Im Modus Normal ein Netzteil waehlen und Netz neu vernetzen oeffnen.
+Dreiecke in ebenen Bereichen umverteilen oder vorhandene Facetten unterteilen.
+Original, Ergebnis und ueberlagerte Dreieckskanten aus gleicher Ansicht vergleichen.
+Bericht zeigt Qualitaet, Formabweichung, Aussenmasse und Schutz. Keine gekruemmte
+Glaettung; Grenzen und Bedienung stehen in NETZE-NEUVERNETZEN.md.
+Easy Tinker und bisherige Werkzeuge enthalten. Separate neue EXE-Ausgabe;
+alte Programme bleiben erhalten. ZIP ganz entpacken und App/Formnaro.exe starten.
+
+Formnaro 0.44.0 – Netze formtreu vereinfachen
+
+Im Modus Normal ein Netzteil wählen, unter Netz-Werkzeuge > Netz vereinfachen
+öffnen. Dreieckszahl ebener Bereiche reduzieren, Bohrungskonturen und Kanten
+erhalten. Schutzflächen bleiben exakt; Ziel, Maßvergleich, Vorschau, Abbrechen
+und Rückgängig sind enthalten. NETZE-VEREINFACHEN.md erklärt Bedienung und
+Grenzen. Die Methode vergröbert keine Kurven. Easy Tinker wird mitgeprüft.
+Separate Ausgabe vollständig entpacken und App/Formnaro.exe starten.
+
+Formnaro 0.43.0 – Passstifte und passende Aufnahmen
+
+Zwei aneinanderliegende Netzteile auswählen, im Modus Normal Netz-Werkzeuge >
+Passstifte und Aufnahmen öffnen. Durchmesser, Stiftlänge, Spiel je Seite und
+Mindestmaterial einstellen. Vorschau zeigt beide Teile getrennt; gemeinsame
+Übernahme bleibt in ursprünglicher Lage. STECKVERBINDER.md erklärt Bedienung
+und Grenzen. Easy Tinker wird mitgeprüft.
+
+Weiter enthalten: Im Modus Normal ein Netzteil auswählen, Netz-Werkzeuge … öffnen und
+Mit Ebene teilen oder Materialkörper herauslösen wählen. Numerische Position,
+Mitte/Schritt/Regler, Vorschauabstand und Schnittflächen helfen beim Prüfen.
+Alle Teile werden in Ursprungslage übernommen; Original und Undo bleiben.
+NETZE-TEILEN-UND-KOERPER.md erklärt Bedienung und Grenzen.
+Easy Tinker und bisherige gemeinsame CAD-/Netz-/Konverterabläufe sind enthalten.
+Neue Ausgabe separat vollständig entpacken und App/Formnaro.exe starten.
+
+Formnaro 0.41.0 – Geprüfte Easy-Werkzeuge
+
+Neu korrigiert: Netzteile ausrichten, Netz-Gewindemutter erstellen und
+Spiegel-Menü mit Escape schließen. Native CAD-Gewinde können längere
+Berechnungszeiten benötigen; die Berechnung lässt sich abbrechen.
+
+Oben zwischen Easy Tinker und Normal umschalten. Easy Tinker zeigt Formen rechts,
+Grundwerkzeuge oben und die Eigenschaften der Auswahl. Normal enthält sämtliche
+Werkzeuge in aufklappbaren Oberkategorien; die Leisten benötigen kein seitliches
+Scrollen mehr.
+
+In Easy oben CAD oder Netz wählen. Neue Formen werden direkt im gewählten
+Format erstellt. Die Teile des anderen Bereichs bleiben gespeichert und
+werden beim Zurückschalten wieder sichtbar. Keine automatische Umwandlung.
+Auswahl, Einfügen und Export bleiben im aktiven Bereich. Speichern sichert
+immer das ganze Projekt mit beiden Bereichen. Normal zeigt alles gemeinsam.
+
+Einstellungen → Layout → Oberfläche anordnen … → Alle Werkzeuge und Bereiche
+anpassen: auch Netz-/Konverter-/Arbeitsebenenwerkzeuge verschieben, Werkzeuge
+ein-/ausblenden, Reihenfolge und Seitenleistenabschnitte ändern und eigene
+Anordnung speichern. Abbrechen stellt den vorherigen Stand wieder her.
+Im Easy-Netzbereich laufen Reparaturversuche automatisch ohne zusätzliche
+Rückfrage. Doppelte/entartete Flächen und Flächenrichtungen werden geprüft;
+kleine offene Stellen können geschlossen werden. Nur ein gültiger geschlossener
+Körper wird übernommen. Rückgängig holt das Original zurück. Ein erfolgloser
+Versuch verändert nichts. Gesperrte Teile und Schutzbereiche bleiben erhalten.
+
+Anleitung: Easy-Tinker-und-Layout.md beziehungsweise docs/EASY-TINKER-UND-LAYOUT.md.
+Neue Ausgabe separat entpacken und App/Formnaro.exe starten.
+
+Enthaltener früherer Stand: Formnaro 0.37.0 – Öffnungen im Netz schließen
+
+Ein Netzteil auswählen → Öffnung schließen … → Rand auswählen und ansehen →
+Vorschau vergleichen → Übernehmen oder Abbrechen. Genau ein einfacher ebener
+Rand pro Vorgang; weitere Öffnungen bleiben erhalten. Auch absichtliche
+Durchbrüche können durch ausdrückliche Auswahl verschlossen werden.
+NETZ-OEFFNUNGEN-SCHLIESSEN.md erklärt Grenzen und Bedienung. Gemeinsames
+Rückgängig und gespeicherte Originalquellen bleiben verfügbar.
+Neue Ausgabe vollständig separat entpacken und App/Formnaro.exe starten.
+
+Formnaro 0.28.0 – Gemeinsamer STL-STEP-Konverter
+
+„STL → STEP“ oben bei Import/Export öffnet den dateibasierten Konverter.
+Gemeinsamer-Konverter.md erklärt Flächenanalyse, Bereichskorrekturen,
+Original-/Ergebnisvergleich und Berichte. „CAD-Übernahme prüfen“ zeigt den
+zusätzlichen nativen Körper in der gemeinsamen Arbeitsfläche. Erst „Übernehmen“
+ändert das Projekt mit einem Rückgängig-Schritt. Verwerfen oder Escape erhält
+das Konverterergebnis. Frühere Programme und Projektteile bleiben erhalten.
+
+Formnaro 0.27.0 – Eigenschaften und Werkzeuge
+
+Eigenschaften-und-Werkzeuge.md beschreibt die übernommenen Netz-Eigenschaften,
+Messen/Lineal, Anordnen, Passung, Flächenplatzierung, Magnet, Analysen,
+Text/SVG/Skizzen, Formpakete, Quellenfarben und gemeinsame Vorlagen.
+„Weitere Netz-Werkzeuge …“ öffnet die zusätzlichen Abläufe.
+Vorschau prüfen, übernehmen oder abbrechen; Rückgängig gilt gemeinsam.
+Die bisherigen Ausgaben bleiben erhalten. Neue Meshmixer-Verfahren folgen später.
+
+Formnaro 0.26.0 – Gemeinsame Arbeitsfläche
+
+Gemeinsame-Arbeitsflaeche.md erklärt die gemeinsame Auswahl, den Objektbaum
+und Arbeitsebenen auf CAD-, Netz- und Vorlagenflächen. Netzflächen erhalten
+eine Vorschau mit Übernehmen/Abbrechen. Neue Netzteile können auf der
+Arbeitsebene oder entlang der Weltachsen entstehen.
+
+Netz-Werkzeuge.md beschreibt die angeschlossenen Netzverfahren in der
+gemeinsamen Arbeitsfläche. Gemeinsame-Projektgrundlage.md erklärt Projekte,
+Dateien und Grenzen. Es gibt eine Vorschau, eine Übernahme und eine gemeinsame
+Rückgängig-Historie. Die bisherigen Ausgaben bleiben erhalten.
+
+Die folgende ausführliche CAD-Anleitung gilt weiterhin für CAD-Körper.
+
+Formnaro 0.12.2 – lokaler CAD-Editor
+
+Aktuelle Ausgabe: STL-Konverter 0.10 mit Flächenfarben und Bearbeitung.
+Die Mausauswahl überspringt verdeckte Körper und prüft Darstellungsgrenzen vor
+einzelnen Dreiecken. Ansichtsänderungen verwenden den bereits bestätigten
+CAD-Stand zur Speicherung; große Körperdaten werden dabei nicht erneut geprüft.
+Auch geänderte Ansichten, Auswahl und Arbeitsplatz-Einstellungen werden beim
+Projektwechsel als ungespeicherte Änderungen berücksichtigt.
+
+Start
+-----
+Formnaro.exe starten. Die Anwendung und ihre Modellierung laufen offline.
+Ein Cloudkonto oder API-Schlüssel ist für die Konstruktion nicht erforderlich.
+Diese Ausgabe liegt separat neben älteren Formnaro-Ausgaben.
+
+Die 23 Formen werden als native Open-CASCADE-Körper aufgebaut. Bildschirm-
+dreiecke dienen der Darstellung; Maße, Löcher, Gruppen, Kantenoperationen,
+Treffpunkte und Exporte entstehen aus CAD-Geometrie.
+
+Bedienung
+---------
+Formen aus der Palette auf die Arbeitsebene oder auf eine CAD-Fläche ziehen.
+Auf Rundflächen wird die örtliche Tangentialebene verwendet. Ein Klick auf
+eine Form fügt sie auf der aktuellen Arbeitsebene hinzu. Die rechte Maustaste
+dreht die Ansicht; Mausrad und vorhandene Ansichtssteuerung bleiben nutzbar.
+
+T, S und R schalten Verschieben, Skalieren und Drehen um. Die Maßfelder und
+weißen Eckgriffe ändern die Abmessungen. Gegenüberliegende Ecke und Unterseite
+bleiben fest. Der dunkle Höhengriff verschiebt entlang der Arbeitsebenennormale.
+Der Eckdialog akzeptiert Dezimalkomma; Enter übernimmt die Eingabe.
+
+Strg+A wählt sichtbare Teile, Strg+D dupliziert, Strg+C/V kopiert und fügt ein,
+Entf löscht, Strg+G gruppiert. Strg+Z macht rückgängig; Strg+Y wiederholt.
+Strg+S speichert, Strg+O öffnet. Sperren und ausgeblendete Teile bleiben erhalten.
+Strg+Umschalt+S öffnet „Speichern unter …“. Oben führt „Projekte“ zur Übersicht
+der letzten 20 gespeicherten/geöffneten Projekte und der Dateien im Projektordner.
+Neue Projekte werden standardmäßig im Ordner „Projekte“ neben Formnaro.exe
+gespeichert; ein anderer Speicherort ist im Dialog möglich. Wiederholtes Speichern
+aktualisiert die geöffnete Datei. „Projektordner öffnen“ zeigt den Ordner im Explorer.
+Projektdateien enthalten zusätzlich Kameraposition, Projektion, Zoom, Auswahl,
+Bearbeitungsmodus, Rasterfang, Qualitätswerte und die Seitenleistenanordnung.
+Beim Öffnen wird der gespeicherte Arbeitsplatz wiederhergestellt. Beim Projekt-
+wechsel können aktuelle Änderungen gespeichert, verworfen oder beibehalten werden.
+Die Arbeitsfläche verwendet ein rechteckiges Raster mit festen 10-/50-mm-Abständen;
+auf der Grundebene wird nur ein Raster gezeichnet.
+Das Bearbeiten-Menü enthält dieselben Befehle.
+
+Funktionen und Plugins
+----------------------
+Über „Funktionen“ in der Werkzeugleiste ist „STL → STEP“ direkt erreichbar.
+Der Konverter ist mitgeliefert. STL auswählen, Einheit und Reparaturoptionen
+prüfen und „Konvertieren und STEP speichern“ anklicken. Die Konvertierung läuft
+in einem getrennten CAD-Worker; aktuelles Projekt, Auswahl und Undo bleiben erhalten.
+Die STEP-Datei wird separat gespeichert. Nicht unterstützte oder offene Hüllen
+werden erklärt abgewiesen. Kleine Lücken werden nur nach ausdrücklicher Auswahl
+geschlossen. Abbrechen beendet den Konverter; Original-STL bleibt erhalten.
+
+Die separate 3D-Vorschau zeigt Ebenen, Zylinder, Kegel, Freiformen und Drehflächen
+mit unterschiedlichen Farben und ihren gemeinsamen Rändern. Bereiche lassen
+sich am Modell oder in der Liste wählen. Dreiecksklick wählt die vordere Fläche,
+ein Rechteck die Dreiecksmitten einschließlich verdeckter Flächen. Strg/Shift
+erweitert die Auswahl. Teilen, Zusammenführen, Typvorgabe und Schutz arbeiten
+an Originaldreiecken; Rückgängig/Wiederholen betrifft nur diese Korrekturen.
+Korrektur-JSON ist an Quelle, Einheit und Toleranz gebunden. Einheit oder Toleranz
+ändern setzt die Korrekturhistorie zurück. Bis 20.000 Dreiecke sind bearbeitbar.
+
+Nach der Konvertierung sind Original, Ergebnis, Überlagerung und Abweichung
+verfügbar. Die Abweichungsfarben zeigen die Abstände dargestellter Ergebnis-
+Dreiecksmitten in Millimetern; maßgeblich bleiben die CAD-/STEP-Prüfungen im
+Bericht. Prüfbericht, reparierte STL/3MF und Ergebnisnetz lassen sich speichern.
+„Als CAD übernehmen“ fügt den geprüften Körper mit einem Projekt-Undo hinzu.
+Freiformrekonstruktion unterstützt geeignete Graphflächen und Drehprofile;
+ungeeignete Bereiche behalten eine geprüfte einfachere Darstellung.
+
+Einstellungen → Plugins trennt Formenpakete und Funktions-Plugins. Formenpakete
+stehen in der Formenbibliothek, Funktions-Plugins ausschließlich unter Funktionen.
+Eigene Funktionspakete (Formnaro-FunctionPlugin, Version 1, .ocfunction/.json)
+dürfen benannte vorhandene Werkzeuge aufrufen. Es werden keine externen Skripte
+ausgeführt. Der separate portable Speicher ist Daten/funktionsplugins.json.
+
+Gruppen behalten ihre Quellen und Lochformen. Im Quellenmodus lassen sich
+ursprüngliche Teile auswählen und ändern; die Gruppe wird neu berechnet.
+Ungleichmäßige Skalierung, Spiegelung und Scherung bleiben als vollständige
+Transformationen erhalten, auch beim Auflösen verschachtelter Gruppen.
+Rundungen und Fasen bleiben nachgelagerte bearbeitbare Operationen.
+
+Präzisionswerkzeuge
+------------------
+Ausrichten, Absetzen und Passungen verwenden CAD-Grenzen im gewählten System.
+Bei Ausrichten kann ein ausgewähltes Teil per Klick als feste Referenz dienen.
+Gesperrte Teile werden nicht bewegt. Messen verwendet echte CAD-Treffpunkte;
+ein Abstand zwischen zwei verschiedenen, beweglichen Körpern ist editierbar.
+
+Arbeitsebene und Magnet verwenden Treffpunkt und orientierte CAD-Flächennormale.
+Magnet unterstützt Ziehen und Loslassen sowie die Vorschau mit Übernehmen oder
+Abbrechen. Während einer Vorschau bleibt der bestätigte Modellstand erhalten.
+Esc bricht eine Berechnung oder eine aktive Modellvorschau ab.
+
+CAD-Kanten lassen sich einzeln und per Rahmen auswählen. Rundungen und Fasen
+werden vor Übernahme geprüft. Geometrisch mehrdeutige oder verlorene Bezüge
+melden einen Fehler; sie werden nicht still auf eine andere Kante übertragen.
+Eine verlorene Arbeitsebenenreferenz behält ihre letzte räumliche Lage.
+
+Kollision, Volumen, Schnittansicht und Farbaufteilung verwenden native CAD-
+Operationen. Die Wandstärkenprüfung misst CAD-Flächen als Stichprobe; sie ist
+kein vollständiger Nachweis aller Wandstärken eines Körpers.
+
+Formen, Text und Vorlagen
+------------------------
+Alle bisherigen Formen, einschließlich Zahnrad, Gewinde, Mutter, Herz, Text und
+SVG, verwenden denselben CAD-Dienst. Polygonseiten und Zahnzahlen bleiben echte
+Formparameter. Text und SVG behalten ihre ursprünglichen Geraden, Bézierkurven
+und Ellipsen, einschließlich Innenlöchern und Füllregeln. Verfügbare Schrift-
+glyphen werden als CAD-Konturen verarbeitet, auch bei überlappenden Konturen.
+
+Herz, Evolventen und Schraubflächen tragen kontrollierte CAD-Spline-Zertifikate:
+maximal 0,0001 mm geometrische Abweichung, bei kleinen Merkmalen höchstens ein
+Hundertstel der Merkmalsgröße. Drehrichtung, Steigung, Flanken und Querschnitte
+von Gewinden und Schrägzahnrädern werden unabhängig von Anzeigesegmenten erzeugt.
+
+Bestehende Formenpaket-Manifeste bleiben nutzbar. Persönliche neue Teilevorlagen
+verwenden CAD-Format 5; ihre Parameter und Formeln bleiben bearbeitbar.
+Favoriten, Einstellungen, Layouts und KI-Einstellungen werden beibehalten.
+
+Speichern und Importieren
+------------------------
+Das bearbeitbare Projektformat ist .ocad, Version 5. Es speichert Formrezepte,
+Quellen, vollständige Transformationen und BRep-Körper ohne Triangulierungen.
+Anzeigepuffer und temporäre Worker-Caches gehören nicht in die Projektdatei.
+Undo, Redo und Autosicherung verwenden ausschließlich bestätigte Modellstände.
+
+Projekte der Formate 1–4 werden nicht konvertiert oder automatisch geladen.
+Die vorhandenen Dateien, alten Autosicherungen und gespeicherten Meshteile
+bleiben auf der Festplatte. Neue CAD-Autosicherungen und Vorlagen haben eigene
+Dateien. Zum Bearbeiten alter Projekte bleibt die ältere Ausgabe verfügbar.
+
+STEP importiert CAD-Körper. STL kann als sichtbare Netzreferenz eingefügt werden.
+Die STL-CAD-Prüfung 2 bietet zusätzlich „Gehäuse als glatten CAD-Körper
+rekonstruieren“. Geschlossene Gehäuse und Deckel werden in ihrer ursprünglichen
+Lage als CAD-Ebenen und begrenzte Bézier-/B-Spline-Flächen aufgebaut. Dünne Teile
+und beliebige Orientierung sind unterstützt. Maximale Oberflächenabweichung zur
+STL: 0,25 mm; Maßabweichungsgrenze für kritische Geometrie: 0,10 mm. Die konkrete
+berechnete Grenze und Volumenabweichung stehen in den Objektnotizen. Einzelne
+Kurvenflächen sind glatt, ihre Übergänge sind nicht überall tangentenstetig.
+Ursprüngliche Radien und parametrische Konstruktionshistorie werden nicht
+behauptet. Der Körper ist CAD-bearbeitbar und STEP-exportierbar. Die ursprüngliche
+STL-Datei bleibt unverändert. Höchstens 40.000 Dreiecke für die Rekonstruktion;
+ungültige, nicht geschlossene oder zu große Netze werden mit Begründung abgelehnt.
+OBJ wird als Netzreferenz importiert. Referenzen sind auswählbar, verschiebbar, drehbar,
+skalierbar, ausblendbar und sperrbar sowie im Projekt speicherbar. CAD-Gruppen,
+Kantenoperationen, Präzisionswerkzeuge und Produktionsausgaben berücksichtigen
+sie nicht. Importdialoge bieten die passenden Einheiteneinstellungen.
+
+Anzeige und Export
+------------------
+Anzeigequalität: standardmäßig 0,02 mm Flächenabweichung und 8° Winkelabweichung.
+Druckexport: standardmäßig 0,01 mm und 5°, unabhängig frei einstellbar.
+Eine Änderung der Anzeigequalität ändert weder CAD-Geometrie noch Maße, Volumen,
+Passung, Arbeitsebene oder die STEP-Geometrie.
+
+STEP exportiert mathematische CAD-Flächen und getrennte Körper direkt.
+STL, OBJ, 3MF und glTF erhalten jeweils ein neu erzeugtes Exportmesh aus dem
+bestätigten CAD-Stand. Das Anzeigemesh wird nicht als Produktionsmesh übernommen.
+Farben und getrennte Teile bleiben erhalten, soweit das Format sie unterstützt.
+OBJ mit Materialdatei wird als ZIP-Bündel gespeichert. SVG-Projektionen entstehen
+aus nativen CAD-Konturen und verdeckten Linien.
+
+Der dauerhafte CAD-Worker verwendet begrenzte Caches. Komplexe Berechnungen
+laufen außerhalb des Oberflächenprozesses. Abbrechen beendet einen blockierten
+Worker und startet aus dem letzten bestätigten Modellstand erneut.
+Ein ungültiger Körper oder ein Speicherfehler erzeugt keine Teiländerung.
+
+Portable Daten und lokale KI
+---------------------------
+Die portable Ausgabe verwendet weiterhin die vorhandenen Programmordner und
+Einstellungen. Die lokale Schnittstelle lässt sich in Formnaro aktivieren.
+Der dort angezeigte Verbindungsdateipfad ist maßgeblich. Der identische
+Python-Client liegt neben der EXE unter scripts/offlinecad_ai.py, Hilfen unter ai/.
+Python 3.10 oder neuer ist dafür erforderlich; ein Cloudschlüssel ist nicht nötig.
+
+Die Werkzeuge heißen weiterhin offlinecad_context, offlinecad_scene,
+offlinecad_project, offlinecad_screenshot, offlinecad_preview, offlinecad_apply
+und offlinecad_export. Preview und Apply prüfen denselben festen Modellstand wie
+die Oberfläche. Veraltete Revisionen werden zurückgewiesen. Verbindungsdateien
+und Zugriffstoken enthalten lokale Geheimnisse und gehören nicht in Projekte
+oder Auslieferungen.
+
+Der KI-Chat unten rechts bereitet auch Änderungen an vorhandenen Teilen und
+ausgewählten Gruppenquellen vor. Vorhandene Maße werden wiederverwendet; bei
+„nur die Höhe ändern“ bleiben Breite, Tiefe und der lokale Boden erhalten.
+Ausdrücklich erlaubte Entwurfsmaße werden als Annahmen genannt. Erst Übernehmen
+ändert das Modell. Fehler und Übernehmen/Verwerfen werden als Formnaro angezeigt
+und bei der nächsten Nachricht an die KI zurückgemeldet. Entwurf und Bilder
+bleiben bei Fehlern oder Abbruch erhalten.
+
+Quellen, Lizenzen und Prüfungen
+------------------------------
+THIRD-PARTY-LICENSES.txt und licenses/ enthalten die vollständigen Hinweise.
+Formnaro-CAD-Quellen-v0.11.zip enthält die exakten entsprechenden Kernelquellen,
+Quellenpins, Bridge, Buildkonfiguration und Ersatzanleitung. Der Anwendungscode
+liegt in Formnaro-Quellcode-v0.11.zip. Prüfsummen stehen daneben.
+Die CAD-Kernbibliothek hat LGPL-2.1-Bestandteile; die OCCT-Ausnahme ist beigefügt.
+Die neue Formnaro-Bridge trägt MIT. Electron/Chromium-Lizenzen liegen neben der EXE.
+
+Die technische Abnahme ist in docs/CAD-ABNAHME-v0.11.md beschrieben. Sie umfasst
+isolierte native Tests, echte Mausbedienung, den unabhängigen STEP-Leser und
+den tatsächlichen Start der gepackten portablen EXE mit eigenem Testprofil.
+
+NEU IN FORMNARO 0.12.0
+64 auswählbare Schriften: bisherige drei plus 61 zusätzliche freie Schriften und
+Schriftschnitte. Im Textwerkzeug nach Schriftname suchen, Vorschau ansehen oder
+eigene TTF-/OTF-Datei importieren. Mitgelieferte Schriften funktionieren offline.
+Eigene Schriften liegen in Daten/schriften.json (50 Dateien, je 5 MB, zusammen
+20 MB). Beim PC-Wechsel Daten und Layouts mitkopieren. Textkörper bleiben beim
+Entfernen einer Schrift erhalten und exportierbar. Zum späteren Ändern des
+Textinhalts die Originalschrift importieren oder eine verfügbare auswählen.
+
+Pfeile an beiden Seitenleisten klappen diese ein und geben Modellierfläche frei.
+Die Trennleiste unter den Grundformen nach oben/unten ziehen, um die Formenliste
+kleiner oder größer zu machen. Die Innenränder der Seitenleisten ändern deren
+Breite; die Trennleiste über dem KI-Chat ändert dessen Höhe. Größen werden im
+Layout gespeichert. Doppelklick auf eine Trennleiste setzt ihre Größe zurück;
+fokussierte Trennleisten lassen sich auch mit Pfeiltasten bedienen (Umschalt:
+größere Schritte). Escape verwirft eine laufende Größenänderung.
+Alle 23 Grundformen besitzen eigene passende Vorschausymbole.
+Einstellungen → Oberfläche → Seiten links/rechts tauschen wechselt die Inhalte.
+Einklappzustand und Seitentausch werden gespeichert und können in benannten
+Layouts verwendet werden. Der kleine KI-Chat sitzt in der rechten Seitenleiste;
+der KI-Knopf in der Kopfzeile öffnet auch die eingeklappte Chatseite.
+
+Diese Ausgabe umfasst alle bisherigen Verbesserungen: native CAD-Leistung,
+STL-Exportkorrektur, Bildchat, Anbieter-/Modellwahl, gezielte KI-Quellenbearbeitung
+und Rückmeldungen zu fehlgeschlagenen Vorschlägen. Modelle, Projektformat 5,
+Benutzereinstellungen und bestehende Anbieterzugänge bleiben erhalten.
+
+STL-REPARATUR UND SPEICHER
+Beim STL-Import zuerst CAD-Rekonstruktion wählen. Die abschaltbare Reparatur
+entfernt Nullflächen/doppelte Dreiecke, richtet Flächen aus und repariert exakt
+kollineare Kanten. Kleine Netzlücken werden nur mit der zusätzlichen Option
+„Kleine Netzlücken schließen“ gefüllt. Diese Option ergänzt Oberflächen und ist
+standardmäßig aus. Ungeeignete Netze bleiben mit Begründung abgewiesen.
+Die Originaldatei bleibt unverändert. Reparaturschritte stehen in den Notizen
+des importierten CAD-Körpers; Genauigkeitsgrenzen beziehen sich auf das reparierte
+Netz. Die portable Reparatur arbeitet offline und benötigt kein Python.
+Große native Zwischenkörper werden früher freigegeben. Beim Wechsel zu einem
+leeren Projekt kann ein groß gewordener CAD-Worker seinen reservierten Speicher
+freigeben; Rückgängig/Wiederholen bleiben verfügbar.
+
+STL-Import: Ungültige Glättungen können durch native CAD-Flächen der Original-STL ersetzt werden. Rundungen bleiben dabei facettiert; ursprüngliche Radien werden nicht wiederhergestellt. Kantenwerkzeuge unterstützen auch dichte CAD-Modelle und erklären ungeeignete Abrundungen/Fasen.
+
+Formnaro 0.12.1: STL-Konverter 0.6 lokal integriert.
+Funktionen > STL > STEP: Toleranz, Einheit, Reparatur, Verfahren und Facettenrückfall. Nach erfolgreicher Konvertierung STEP/Prüfbericht speichern oder Als CAD übernehmen. Auch Importieren > STL als CAD-Körper rekonstruieren verwendet denselben Konverter. Kein Python und kein Cloudschlüssel erforderlich. Gesamten Ordner samt resources/converter behalten. Schwierige Teile können facettiert bleiben; Abweichungen sind Stichproben gegen die Original-STL. Konvertieren/Speichern erhalten das Projekt; CAD-Übernahme ist rückgängig machbar.
+
+FEHLERPROTOKOLLE UND AUSSCHNITTE
+Lochformen sind grau schraffiert; überlappende Körperflächen werden dunkler
+markiert. Gruppieren übernimmt weiterhin den tatsächlichen CAD-Schnitt.
+Fehlerprotokolle schreibt Formnaro automatisch lokal unter Daten/Fehlerprotokolle.
+Einstellungen > Allgemein > Fehlerprotokolle öffnen führt zum Ordner.
+Das Protokoll enthält Zeitpunkt, Aktion, Fehler und technische Diagnose;
+die letzten fünf Dateien bleiben erhalten. Benutzerabbruch wird nicht als
+Fehler gewertet. Vollständige Modelle und KI-Anfragen werden nicht protokolliert.
+
+IMPRESSUM UND EIGENE SOFTWARELIZENZ
+Einstellungen > Allgemein > Impressum und Lizenz zeigt den Rechteinhaber
+Andreas Klisch (privat), die eigene PolyForm Noncommercial 1.0.0 und die
+vollständigen Originaltexte der Fremdkomponenten. Eigener Quellcode darf für
+die im Lizenztext erlaubten Zwecke verwendet, geändert und weitergegeben
+werden. Dies ist eine nichtkommerzielle Source-available-Lizenz, keine
+Open-Source-Lizenz nach OSI. LICENSE.txt enthält Hinweise, Geltungsbereich und
+den vollständigen Originaltext; im Programm kann der Text gespeichert werden.
+Die Rechte der Fremdkomponenten und der bestehenden MIT-Bridge bleiben erhalten.
+
+
+
+CAD 0.13.0 · Übersicht (Paket 1)
+Auswahl isolieren neben Ausblenden; gelben Hinweis zum Beenden verwenden.
+Projekte zeigt lokale Miniaturen aus gespeicherten Dateien. Kamera/Modell/Undo
+bleiben erhalten. Export verwendet dauerhaft sichtbare Teile; Isolation ist
+temporär. Details: docs/CAD-ISOLATION-UND-MINIATUREN.md.
+Dieses neue Paket in einen eigenen Ordner entpacken.
+
+
+CAD 0.14.0 · Auf Fläche legen (Paket 2)
+Sichtbares entsperrtes fertiges CAD-Teil wählen, neben Absetzen das neue Werkzeug
+öffnen, ebene eigene Außenfläche anklicken und native Vorschau übernehmen.
+Arbeitsebene/Grundebene, erneute Wahl und Abbruch im Werkzeugpanel.
+Maße/Spiegelung/Scherung/Quellen erhalten; ein Undo. Anleitung-Paket2.md liegt
+neben der neuen EXE. Nur native ebene tragfähige Flächen, keine Netzreferenzen.
+Keine automatische Installation; diese portable Ausgabe separat entpacken.
+
+
+CAD 0.15.0 · Bezugspunkte und Bohrungen (Paket 3)
+An Bezugspunkt in der Werkzeugleiste; Bohrung erstellen unter Funktionen und
+in den Eigenschaften. Native Markierungen oder freie Flächenpunkte wählen,
+Maße/Versätze einstellen, Vorschau berechnen und übernehmen. Spiel gilt je
+Seite. Original und bearbeitbare Lochquellen bleiben erhalten; ein Undo.
+Anleitung-Paket3.md liegt neben der neuen EXE. Separat entpacken; keine
+automatische Installation. STEP und bestehende native Werkzeuge enthalten.
+
+CAD Paket 4 (0.16.0): bearbeitbare native Skizzen und Maßformeln. Anleitung: docs/CAD-SKIZZEN-UND-MASSFORMELN.md. Neue Skizzen speichern als CAD 7, gewöhnliche Projekte bleiben CAD 5; getrennte CAD7-Sicherungen mit validiertem CAD5-Rückfall bei fehlendem neuen Bestand.
+
+CAD Paket 5 (0.17.0): Körper nativ mit einer Ebene teilen, beide Seiten mit unabhängigen Originalquellen in ursprünglicher Lage. Anleitung: docs/CAD-KOERPER-MIT-EBENE-TEILEN.md. Anzeigeabstand wirkt nur in der Vorschau; Teilungsrezepte verwenden CAD 7.
+
+CAD Paket 6 (0.18.0): getrennte native Volumenkörper herauslösen, mit erhaltenen Hohlräumen und unabhängigen Originalquellen. Lage, Farbe und Kantenbearbeitung bleiben bearbeitbar; Originalgeometrieänderungen benötigen erneutes Herauslösen. Anleitung: docs/CAD-KOERPER-HERAUSLOESEN.md. Extraktionsrezepte verwenden CAD 7.
+
+CAD Paket 7 (0.19.0): gespeicherte KI-Markierungen mit nativ geprüften Flächenbezügen und sichtbaren veralteten Hinweisen. Modellbild direkt als Canvas-PNG an den vorhandenen Chat anhängen, ohne zu senden. Anleitung: docs/CAD-KI-MARKIERUNGEN-UND-MODELLBILD.md. Markierungen verwenden CAD 7.
+
+CAD Paket 8 (0.20.0): Darstellung bei Änderungen mit vollständig auslaufender Kameradämpfung. Im Stillstand keine GPU-Zeichnungen oder Anzeigeaktualisierungen; bestehende native CAD-Caches und gecachte Serialisierung bleiben erhalten. Anleitung und CAD-Messungen: docs/CAD-DARSTELLUNG-UND-LEISTUNG.md. Alle Pakete 1–7 enthalten.
+
+KI-Update: vorberechnete Achsenmaße, strukturierte Fehler und feste DeepSeek-
+Arbeitsregeln bei jedem Aufruf. Anleitung: KI-ACHSENMASSE-UND-FEHLER.md.
+
+
+15.10.2026 – Version 0.23.0: 3MF-, GLB- und glTF-Import mit getrennten Teilen, Objektfarben, Einheiten und Baugruppenpositionen. GLB-Export als einzelne Datei. glTF-Binärbegleitdateien zusammen mit der Modelldatei auswählen. In Netz werden geschlossene Körper, in CAD getrennte Netzreferenzen übernommen. 3MF/GLB/glTF in CAD exportieren auch Netzreferenzen. Details und Grenzen: docs/AUSTAUSCHFORMATE-3MF-GLB-GLTF.md.
+
+16.10.2026 – Version 0.31.0: Gemeinsame Datei-/Konvertervorgaben unter Einstellungen → Dateien. Geprüfte Einstellungsdateien ohne Schlüssel oder Modelle. STL-Import als CAD mit ausdrücklicher Wahl Ohne KI / Mit KI und gemeinsamer Übernahmevorschau. Bestehende CAD- und Netzwerkzeuge teilen KI-Vorschau und Rückgängig. Anleitung: GEMEINSAME-DATEIEN-EINSTELLUNGEN-KI.md (Quellen: docs/).
+
+16.10.2026 – Version 0.32.0: Gesamtabnahme des gemeinsamen Formnaro mit durchgehendem Import-/Bearbeitungs-/Konvertierungs-/Speicher-/Neustart-/Exportablauf. SVG meldet offene oder ungeeignete Netzteile verständlich im Exportdialog; passende geschlossene Teile ausdrücklich auswählen. Anleitung: GESAMTABNAHME-FORMNARO.md (Quellen: docs/).
+
+Formnaro 0.33.0 – Netzflächen und Öffnungsränder auswählen
+Ein sichtbares, entsperrtes Netzteil wählen und Netzflächen auswählen öffnen.
+Dreiecke, Oberflächen nach Nachbarwinkel, zusammenhängende Bestandteile und eindeutige Öffnungsränder markieren. Umschalt fügt hinzu, Strg entfernt.
+Auswahl rückgängig/Wiederholen, Übernehmen oder Abbrechen verwenden. Die bestätigte Auswahl wird im gemeinsamen Projekt gespeichert; Export behält den bisherigen Objektumfang.
+Anleitung: NETZ-FLAECHENAUSWAHL.md. Auswahlpinsel und Lasso folgen als eigenes Paket15.
+
+Formnaro 0.34.0 – Paket 15
+Netzflächen auswählen … bietet Auswahlpinsel, Lasso und benannte Schutzbereiche
+für manuell markierte Bohrungen und Anlageflächen. Ein Strich ist ein lokaler
+Auswahlschritt; Schutzbereiche werden erst mit Übernehmen als Modelländerung
+gespeichert und bleiben rückgängig. Bestehende ganze-Netz-Werkzeuge verweigern
+Geometrieänderungen geschützter Teile. Geladene veraltete Masken sind sichtbar
+ungültig und werden nicht auf neue Dreiecke übertragen. Anleitung:
+NETZ-AUSWAHLPINSEL-SCHUTZ.md. Frühere Ausgaben bleiben erhalten.
+
+Formnaro 0.35.0 – Paket 16
+Netzteil auswählen und Netzinspektor … öffnen: offene Ränder, doppelte und
+entartete Dreiecke, inkonsistente Nachbarrichtung, problematische Kanten und
+Punktverbindungen sowie kleine Nebenbestandteile farbig anzeigen. Kategorien
+einzeln schalten, Fundstellen fokussieren, optional durch das Bauteil zeigen.
+Reine Diagnose, auch für gesperrte/geschützte Netze. Keine Reparatur und kein
+Körpernachweis; Selbstüberschneidungen/Wandstärken nicht geprüft. Markierungen
+sind vorübergehend und werden nach Wiederöffnen erneut berechnet. Anleitung
+NETZINSPEKTOR.md, frühere Ausgabe bleibt erhalten.
+
+Formnaro 0.36.0 – Paket17: Gezielte Netzreparatur
+Netzteil wählen, Netz reparieren … öffnen. Gewünschte Fehlerarten und ggf. einzelne Nebenbestandteile ausdrücklich auswählen, Vorschau/Original vergleichen, Übernehmen oder Abbrechen. Originalquellen und gemeinsames Rückgängig erhalten. Vor Geometrieänderung vorhandene Schutzbereiche separat freigeben. Kein Schließen von Öffnungen und keine automatische Innen-/Außenbestimmung. Anleitung NETZREPARATUR.md. Alte Ausgabe und Solo-Konverter bleiben erhalten.
+
+Paket24: Im Normalmodus Netzflächen ausdrücklich auswählen und übernehmen, dann Netzbereiche ersetzen öffnen. Nur geeigneter einfacher ebener Rand; Vorschau und tatsächlichen Formvergleich prüfen. Schutzflächen und ungewählte Flächen bleiben exakt. Anleitung NETZBEREICHE-ERSETZEN.md. Easy Tinker wird mitgeprüft. ZIP vollständig separat entpacken und App/Formnaro.exe starten.
+
+Ab 0.86.0: Gelenke und geführte Bewegung im CAD-Bereich. Feste/Dreh-/Schiebeverbindungen, Grenzen, Matrixvorschau, gemeinsames Übernehmen1Undo, ausdrückliche diskrete Kollisionsprüfung. Anleitung: docs/GELENKE-BEWEGUNG.md.
+
+Ab 0.87.0: Ansicht & Prüfen > Nur Auswahl vollständig darstellen / Teil nachladen / Alles darstellen. Übrige sichtbare Teile als Rahmen. Arbeitsplatz5 speichert das Ladeset; Geometrie und Exportumfang bleiben vollständig erhalten. Anleitung: docs/BAUGRUPPENANZEIGE.md. Ab 0.88.0: eigenständiges .fnpack mit indexierten, deduplizierten Geometrieblöcken und bedarfsgerechtem Lesen. Anleitung: docs/FNPACK.md.
+
+
+KI-Fehlervorschau ab 0.94: Berechenbare Entwürfe bleiben auch bei Prüffehlern sichtbar. Bewusst mit Fehlern übernehmen oder verwerfen. Rot markiert gemessene Abweichungsstellen bzw. betroffene Teile; keine vollständige Fehlerkarte. Anleitung: docs/KI-FEHLERVORSCHAU.md.
+
+Formnaro 0.99.0 – Solid-Modus
+Oben neben Easy Tinker und Normal den Modus Solid waehlen. Features, Skizze, Pruefen und Baugruppe; Modellbaum und Eigenschaften links. Einstellungen > Solid fuer Navigation, Tasten und Startregister. Anleitung: docs/SOLID-MODUS.md.
+
+
+Rechtsklick auf Teil/Modellbaum: passende Befehle. Einstellungen > Rechtsklick: je Easy Tinker, Normal und Solid Funktionen/Plugins hinzufuegen, entfernen und sortieren. Rechts ziehen bleibt Ansicht drehen.
+

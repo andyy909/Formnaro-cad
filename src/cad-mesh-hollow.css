@@ -1,0 +1,18 @@
+#cad-mesh-hollow{width:410px;max-height:calc(100% - 106px)}
+#cad-mesh-hollow .mesh-hollow-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#cad-mesh-hollow label{display:grid;gap:5px;margin:10px 0;font-size:12px}
+#cad-mesh-hollow .small-note{font-size:11px;line-height:1.45}
+#cad-mesh-hollow #mesh-hollow-result{white-space:pre-wrap;font-size:12px;line-height:1.5}
+#cad-mesh-hollow .mesh-hollow-check{display:flex;align-items:center;gap:7px}
+#cad-mesh-hollow .mesh-hollow-check input{width:auto}
+#cad-mesh-hollow #mesh-hollow-source{background:#e8f3fa;padding:8px;border-radius:6px}
+#cad-mesh-hollow .mesh-hollow-vector{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#cad-mesh-hollow .mesh-hollow-vector input{min-width:0;width:100%}
+#cad-mesh-hollow .mesh-hollow-cut{display:grid;grid-template-columns:90px minmax(0,1fr);gap:8px}
+#cad-mesh-hollow details{border:1px solid #b6cbd6;border-radius:6px;padding:9px;margin:12px 0}
+#cad-mesh-hollow summary{cursor:pointer;font-size:12px;font-weight:600}
+#cad-mesh-hollow .edge-actions-inline{display:flex;flex-wrap:wrap;gap:6px}
+#cad-mesh-hollow .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px;display:flex;flex-wrap:wrap;gap:6px}
+[data-theme=dark] #cad-mesh-hollow .edge-actions{background:#212f3e}
+[data-theme=dark] #cad-mesh-hollow #mesh-hollow-source{background:#283f50}
+@media(max-width:900px){#cad-mesh-hollow{width:min(410px,calc(100% - 28px))}}

@@ -1,0 +1,5 @@
+import fs from 'node:fs';
+import {meshSelectionGeometryDigest} from '../../src/mesh-selection-data.js';
+export function eraseFillFixture(){return JSON.parse(fs.readFileSync(new URL('../../backend/mesh-erase-fill-fixture.json',import.meta.url),'utf8'));}
+export function eraseFillNode({protectedRegion=true}={}){const f=eraseFillFixture(),n={id:'technical',kind:'mesh',name:'Synthetische beschädigte Platte',meshRole:'solid',mesh:structuredClone(f.mesh),transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],color:'#447788',opacity:.8,layerId:'default',folderId:null,metadata:{notes:'Synthetisches Bereichsersetzungspruefteil'}};if(protectedRegion)n.metadata.meshProtection={format:'FormnaroMeshProtection',version:1,regions:[{id:'contact',name:'Anlageflaeche',purpose:'contact',geometryDigest:meshSelectionGeometryDigest(n),triangleIds:[...f.protectedTriangleIds]}]};return n;}
+export function eraseFillOptions(n,set={}){const f=eraseFillFixture();return {method:'planar-replace-v1',geometryDigest:meshSelectionGeometryDigest(n),triangleIds:[...f.triangleIds],...f.options,...set};}

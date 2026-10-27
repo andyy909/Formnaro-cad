@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "runtime": "314.0.7",
+  "packages": [
+    {
+      "name": "numpy",
+      "version": "2.4.6",
+      "file": "numpy-2.4.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "sha256": "a292c1f5d7d8a2208cd5e94fc467604c131cabcd2fc14fed6eefde121e7fabdf",
+      "bytes": 2960568,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/numpy-2.4.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "depends": []
+    },
+    {
+      "name": "scipy",
+      "version": "1.18.0",
+      "file": "scipy-1.18.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "sha256": "17ee329a957863516d1bb6a6aaa0c60576fac027e9cd3d43de27f58b5b599b50",
+      "bytes": 14029750,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/scipy-1.18.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "depends": [
+        "numpy"
+      ]
+    },
+    {
+      "name": "shapely",
+      "version": "2.1.2",
+      "file": "shapely-2.1.2-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "sha256": "0c2dec4d6d251e53007db02416d0163e272a161dbb9248d31a841032098e75a3",
+      "bytes": 851981,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/shapely-2.1.2-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "depends": [
+        "numpy"
+      ]
+    },
+    {
+      "name": "matplotlib",
+      "version": "3.10.8",
+      "file": "matplotlib-3.10.8-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "sha256": "722857932f8f62eac64f8439af15c94d427f9fb945f9590cd242805c983d2d54",
+      "bytes": 6982033,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/matplotlib-3.10.8-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "depends": [
+        "contourpy",
+        "cycler",
+        "fonttools",
+        "kiwisolver",
+        "numpy",
+        "packaging",
+        "pillow",
+        "pyparsing",
+        "python-dateutil",
+        "pytz"
+      ]
+    },
+    {
+      "name": "contourpy",
+      "version": "1.3.3",
+      "file": "contourpy-1.3.3-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "sha256": "0ac15ebf9f820d2d1c3526388aa2818b631cb6c4aae1682efd6b4cc12c1f302c",
+      "bytes": 118874,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/contourpy-1.3.3-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "depends": [
+        "numpy"
+      ]
+    },
+    {
+      "name": "cycler",
+      "version": "0.12.1",
+      "file": "cycler-0.12.1-py3-none-any.whl",
+      "sha256": "8ee450085f15b47f78b034d60059af6a3649e98fa5dde073363437742cc0b4ea",
+      "bytes": 8321,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/cycler-0.12.1-py3-none-any.whl",
+      "depends": [
+        "six"
+      ]
+    },
+    {
+      "name": "six",
+      "version": "1.17.0",
+      "file": "six-1.17.0-py2.py3-none-any.whl",
+      "sha256": "228c50f73aa7addf2c2ccf2979c256802a59ab69cad8152b31b9443cc8140f42",
+      "bytes": 11050,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/six-1.17.0-py2.py3-none-any.whl",
+      "depends": []
+    },
+    {
+      "name": "fonttools",
+      "version": "4.62.1",
+      "file": "fonttools-4.62.1-py3-none-any.whl",
+      "sha256": "0d1516e073fd0a8d8e6d9af46417b6a26209a42518024a18f7085e72d2599605",
+      "bytes": 1152647,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/fonttools-4.62.1-py3-none-any.whl",
+      "depends": []
+    },
+    {
+      "name": "kiwisolver",
+      "version": "1.5.0",
+      "file": "kiwisolver-1.5.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "sha256": "47781998156721147c128a3c74547d5703e0e3cc454d8203e629339368308a93",
+      "bytes": 36616,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/kiwisolver-1.5.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "depends": []
+    },
+    {
+      "name": "packaging",
+      "version": "26.1",
+      "file": "packaging-26.1-py3-none-any.whl",
+      "sha256": "565acbbea54da30348b6d68b6a54373e6f777987db9f1db6966b4b3a5060d303",
+      "bytes": 95852,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/packaging-26.1-py3-none-any.whl",
+      "depends": []
+    },
+    {
+      "name": "pillow",
+      "version": "13.0.0",
+      "file": "pillow-13.0.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+      "sha256": "c045e1d6d8732aad11eeaf8307b8195a5a63eef542bed93c2ef0c72de30df2c2",
+      "bytes": 1057265,
+      "url": "formnaro-build:pillow-13.0.0-pyodide314.0.7",
+      "depends": [],
+      "provenance": "../security-pillow/source-lock.json"
+    },
+    {
+      "name": "pyparsing",
+      "version": "3.3.2",
+      "file": "pyparsing-3.3.2-py3-none-any.whl",
+      "sha256": "f0dd8225b5f8e945980b400bd465b4b90cb0498a2eede0d9dbea98372f6110c5",
+      "bytes": 122781,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyparsing-3.3.2-py3-none-any.whl",
+      "depends": []
+    },
+    {
+      "name": "python-dateutil",
+      "version": "2.9.0.post0",
+      "file": "python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+      "sha256": "9b13365edf9c188f570baf9c540bbb3029ada2a2dacb9694b3659941693ee9e5",
+      "bytes": 229892,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+      "depends": [
+        "six"
+      ]
+    },
+    {
+      "name": "pytz",
+      "version": "2026.1.post1",
+      "file": "pytz-2026.1.post1-py2.py3-none-any.whl",
+      "sha256": "b8249d6450146e0b61e6d710dc02ebb35a904796c4c2f97fe87d4ac5872db36a",
+      "bytes": 510489,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pytz-2026.1.post1-py2.py3-none-any.whl",
+      "depends": []
+    },
+    {
+      "name": "sympy",
+      "version": "1.14.0",
+      "file": "sympy-1.14.0-py3-none-any.whl",
+      "sha256": "61ea8bb98049ba1c702ba3ad2607acb7ab94b9af0b6f97498741f50d3249f428",
+      "bytes": 4185567,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/sympy-1.14.0-py3-none-any.whl",
+      "depends": [
+        "mpmath"
+      ]
+    },
+    {
+      "name": "mpmath",
+      "version": "1.4.1",
+      "file": "mpmath-1.4.1-py3-none-any.whl",
+      "sha256": "e5ebd537e74b9066341a5152e83b63ff2fc37a6388fa7351e766b6e4640f7eee",
+      "bytes": 430985,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/mpmath-1.4.1-py3-none-any.whl",
+      "depends": []
+    },
+    {
+      "name": "networkx",
+      "version": "3.6.1",
+      "file": "networkx-3.6.1-py3-none-any.whl",
+      "sha256": "58b21d3717a1c7a1a32facd972b9422b28a764abc8f2ff59b4fef03d4525cb54",
+      "bytes": 1084840,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/networkx-3.6.1-py3-none-any.whl",
+      "depends": [
+        "decorator",
+        "setuptools",
+        "matplotlib",
+        "numpy"
+      ]
+    },
+    {
+      "name": "decorator",
+      "version": "5.2.1",
+      "file": "decorator-5.2.1-py3-none-any.whl",
+      "sha256": "da941fd8a421e3e0d0d8b4efa5ec775d63ba553c7262de9fd40ddabee659f547",
+      "bytes": 9167,
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/decorator-5.2.1-py3-none-any.whl",
+      "depends": []
+    },
+    {
+      "name": "setuptools",
+      "version": "84.2.1",
+      "file": "setuptools-84.2.1-py3-none-any.whl",
+      "sha256": "ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2",
+      "bytes": 876263,
+      "url": "https://files.pythonhosted.org/packages/ef/55/6dc6d6bb953bdfc52519a0059592c52b6e3b8ad51cf8256dffceb55b0610/setuptools-84.2.1-py3-none-any.whl",
+      "depends": []
+    },
+    {
+      "name": "trimesh",
+      "version": "5.2.0",
+      "file": "trimesh-5.2.0-py3-none-any.whl",
+      "sha256": "04db2c7ec62afdd7763fb04c82bb5f257ddd984993a19ee83697f475fc58fd29",
+      "bytes": 751459,
+      "url": "https://files.pythonhosted.org/packages/51/14/78624d9c89bab76c2a2e1e839c7641fa686828c2c1c8fb64aedf3b371a5d/trimesh-5.2.0-py3-none-any.whl",
+      "depends": [
+        "numpy"
+      ]
+    }
+  ]
+}

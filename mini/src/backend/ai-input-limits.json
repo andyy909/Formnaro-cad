@@ -1,0 +1,10 @@
+{
+  "imageTypes": ["image/png", "image/jpeg", "image/webp"],
+  "maxImageBytes": 5242880,
+  "maxTotalImageBytes": 20971520,
+  "maxImages": 8,
+  "maxAttachments": 4,
+  "maxAttachmentBytes": 12582912,
+  "maxHistory": 12,
+  "maxText": 10000
+}

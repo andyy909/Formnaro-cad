@@ -1,0 +1,39 @@
+#photo-assistant{width:min(1200px,96vw);max-height:94vh;background:var(--panel,#fff);color:var(--text,#172435);border:1px solid #7890a5;border-radius:12px;padding:18px;overflow:auto;box-sizing:border-box}
+#photo-assistant::backdrop{background:#10182799}
+#photo-assistant header,#photo-assistant footer,.photo-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#photo-assistant header{justify-content:space-between}#photo-assistant h2{margin:0}
+.photo-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px}
+.photo-scroll{overflow:auto;height:min(52vh,520px);border:1px solid #7890a5;background:#d7dee7;margin:8px 0}
+.photo-board{position:relative}.photo-board>img{display:block;width:100%;height:auto;max-width:none;user-select:none}.photo-board>#photo-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.photo-values>label{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+#photo-assistant input:not([type=checkbox]),#photo-assistant textarea,#photo-assistant select{box-sizing:border-box;width:100%;background:#fff;color:#142234;border:1px solid #71859a;border-radius:4px;padding:5px}
+#photo-assistant button{background:#f1f5f9;color:#142234;border:1px solid #71859a;border-radius:5px;padding:6px 9px;cursor:pointer}
+#photo-assistant button.primary,#photo-assistant button[aria-pressed=true]{background:#155ebc;color:white;border-color:#155ebc}
+#photo-assistant button:focus-visible,#photo-assistant input:focus-visible,#photo-assistant canvas:focus-visible{outline:3px solid #d88000;outline-offset:2px}
+.photo-limit{font-size:12px;line-height:1.4}#photo-measures{padding-left:18px;font-size:13px}#photo-measures li{margin-bottom:6px}
+.photo-comparison{width:100%;max-width:600px;height:auto;border:1px solid #7890a5}
+#ai-chat-attachments>div{display:flex;flex-direction:column;align-items:flex-start}
+#ai-chat-attachments button.photo-measure-button{position:static;width:auto;height:auto;border-radius:5px;font-size:12px;padding:5px 7px;line-height:1.3;margin-top:4px;color:#142234;background:#f1f5f9}
+#photo-assistant .photo-tools select{width:auto;max-width:240px}
+#photo-assistant .photo-tools input[type=number]{max-width:120px}
+#photo-assistant label,#photo-assistant p,#photo-assistant li,#photo-assistant h3{color:inherit}
+[data-theme=dark] #photo-assistant{background:#1f2d3d;color:#eef4fc}
+#photo-comparison-dialog{width:min(760px,94vw);max-height:90vh;overflow:auto;background:#fff;color:#142234;padding:20px;border:1px solid #7890a5;border-radius:12px}
+#photo-comparison-dialog::backdrop{background:#10182799}
+[data-theme=dark] #photo-comparison-dialog{background:#1f2d3d;color:#eef4fc}
+#photo-comparison-dialog p,#photo-comparison-dialog h2{color:inherit}
+#photo-comparison-dialog>button{background:#f1f5f9;color:#142234;border:1px solid #71859a;padding:6px 12px;border-radius:5px}
+#ai-chat-proposal .ai-chat-proposal-actions{flex-wrap:wrap}
+@media(max-width:800px){.photo-layout{grid-template-columns:1fr}.photo-scroll{height:40vh}}
+
+.photo-calibration{border:1px solid #7890a5;border-radius:6px;padding:10px;margin:10px 0}
+.photo-calibration>label,.photo-calibration #photo-perspective-controls>label{display:inline-flex;flex-direction:column;gap:4px;margin:4px 12px 8px 0;max-width:360px}
+#photo-perspective-controls[hidden],#photo-rectified-panel[hidden]{display:none}
+#photo-rectified-image{display:block;width:auto;max-width:100%;max-height:320px;height:auto}
+#photo-assistant button:disabled{opacity:.5;cursor:default}
+#photo-project-dialog{width:min(820px,94vw);max-height:90vh;overflow:auto;border:1px solid #7890a5;border-radius:10px;padding:18px;background:var(--panel,#fff);color:var(--text,#172435)}
+#photo-project-dialog::backdrop{background:#10182799}
+.photo-project-row{display:flex;gap:12px;padding:12px 0;border-top:1px solid #7890a5;flex-wrap:wrap;align-items:center}
+.photo-project-row img{width:100px;height:76px;object-fit:contain;background:#d7dee7}
+.photo-project-row p{flex:1;min-width:150px;overflow-wrap:anywhere}
+#photo-project-dialog button{padding:6px 10px;border:1px solid #71859a;border-radius:5px;background:#f1f5f9;color:#142234;cursor:pointer}

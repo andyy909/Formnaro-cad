@@ -1,0 +1,16 @@
+.cad-modeling-panel{max-height:calc(100% - 84px);overflow:auto;width:min(340px,calc(100% - 28px));box-sizing:border-box;}
+.cad-modeling-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.cad-modeling-panel header button{flex:0 0 auto;}
+.cad-modeling-panel [data-modeling-target],.cad-modeling-panel [data-modeling-face],.cad-modeling-panel [role=status]{overflow-wrap:anywhere;}
+.cad-modeling-panel .edge-actions{display:flex;flex-wrap:wrap;gap:6px;}
+.cad-modeling-panel .cad-linked-choice{display:flex;align-items:center;gap:8px;}
+.cad-modeling-panel .cad-linked-choice input{width:auto;flex:0 0 auto;}
+.cad-modeling-panel [data-modeling-source]{width:100%;min-width:0;}
+.cad-contour-link-row{border:1px solid var(--border,#687984);border-radius:6px;padding:8px;margin:8px 0;}
+.cad-contour-link-row>label{display:flex;align-items:flex-start;gap:7px;}
+.cad-contour-link-row>label>input{width:auto;flex:0 0 auto;}
+.cad-contour-link-row p,.cad-contour-link-row strong{overflow-wrap:anywhere;}
+.cad-contour-link-row p{font-size:12px;margin:5px 0;}
+.cad-modeling-panel.cad-modeling-picking{max-height:180px;}
+.cad-modeling-picking>.small-note,.cad-modeling-picking>.dialog-label,.cad-modeling-picking>[data-modeling-face],.cad-modeling-picking>[data-modeling-repick],.cad-modeling-picking>[data-contour-manage],.cad-modeling-picking>.edge-actions{display:none;}
+.cad-modeling-picking>[data-modeling-target]{max-height:35px;overflow:hidden;margin:5px 0;}

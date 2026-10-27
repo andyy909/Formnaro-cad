@@ -1,0 +1,31 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {runCadAIRequest} from '../src/cad-ai-request.js';
+import {summarizeAIUsage,formatAIUsage} from '../src/cad-ai-usage.js';
+const require=createRequire(import.meta.url),{generate,validateConfig}=require('../backend/ai-provider.cjs'),{aiUsage}=require('../backend/ai-usage.cjs'),{createAIProfiles}=require('../backend/ai-profiles.cjs');
+test('DeepSeek effort maps to both protocols; other providers retain their original request options',async()=>{
+ const previous=global.fetch,calls=[];global.fetch=async(url,args)=>{const body=JSON.parse(args.body);calls.push(body);return new Response(JSON.stringify(body.messages?{choices:[{finish_reason:'stop',message:{content:'{"message":"OK"}'}}],usage:{prompt_tokens:100,completion_tokens:50,prompt_cache_hit_tokens:80,completion_tokens_details:{reasoning_tokens:30}}}:{output:[{type:'message',content:[{type:'output_text',text:'{"message":"OK"}'}]}],usage:{input_tokens:100,output_tokens:50,input_tokens_details:{cached_tokens:80},output_tokens_details:{reasoning_tokens:30}}}));};
+ try{for(const protocol of ['responses','chat'])for(const reasoningEffort of ['low','high','max']){const r=await generate({baseUrl:'https://api.deepseek.com',model:'deepseek-flash',protocol,reasoningEffort},'fixture',{prompt:'Explain',context:{},scene:{revision:'now'},chat:true});const b=calls.at(-1);assert.equal(protocol==='responses'?b.reasoning.effort:b.reasoning_effort,reasoningEffort);assert.equal(r.usage.reasoningTokens,30);assert.equal(r.usage.outputTokens,50);assert.equal(r.usage.cachedInputTokens,80);assert.ok(r.usage.estimatedCostUSD.min>0);}
+ await generate({baseUrl:'https://example.invalid',model:'custom',protocol:'responses'},'fixture',{prompt:'Explain',context:{},scene:{revision:'now'},chat:true});assert.equal(calls.at(-1).reasoning,undefined);assert.equal(validateConfig({}).reasoningEffort,'high');assert.throws(()=>validateConfig({reasoningEffort:'unsupported'}));
+ }finally{global.fetch=previous;}
+});
+test('Usage counts reasoning within output, preserves unknown values and totals all repair calls',()=>{
+ const c={baseUrl:'https://api.deepseek.com',model:'deepseek-flash',reasoningEffort:'max'},u=aiUsage({usage:{input_tokens:10000,output_tokens:10000,input_tokens_details:{cached_tokens:0},output_tokens_details:{reasoning_tokens:9000}}},c,1234);
+ assert.equal(u.estimatedCostUSD.min,.0075);assert.equal(u.estimatedCostUSD.max,.015);const sum=summarizeAIUsage([u,u]);assert.equal(sum.outputTokens,20000);assert.equal(sum.reasoningTokens,18000);assert.equal(sum.estimatedCostUSD.min,.015);assert.match(formatAIUsage([u],'de'),/Denk-Tokens/);
+ const unknown=aiUsage({},c,1);assert.equal(unknown.inputTokens,null);assert.equal(unknown.estimatedCostUSD,null);assert.match(formatAIUsage([unknown]),/keine vollständigen/);assert.equal(aiUsage({usage:{prompt_tokens:-1,completion_tokens:Infinity}},c,1).outputTokens,null);
+});
+test('Effort selection persists per provider without rewriting or exposing encrypted keys',()=>{
+ const encryptedKey='encrypted-fixture';let saved;const p=createAIProfiles({stored:{config:{baseUrl:'https://api.deepseek.com',model:'deepseek-flash',rememberKey:true},encryptedKey},canEncrypt:()=>true,decrypt:()=> 'fixture-secret',encrypt:()=>{throw Error('Should retain ciphertext');},persist:v=>{saved=v;}});p.selectEffort('max');assert.equal(saved.encryptedKey,encryptedKey);p.selectProvider('https://api.openai.com');assert.equal(p.publicSettings().reasoningEffort,'high');p.selectProvider('https://api.deepseek.com');assert.equal(p.publicSettings().reasoningEffort,'max');assert.ok(!JSON.stringify(p.publicSettings()).includes('fixture-secret'));
+});
+function fixture(){let revision='current',selection=[],commits=0,discards=[];return {access:{scene:()=>({revision,selectionTargets:selection}),context:()=>({units:'mm'}),preview:async r=>{if(r.commands[0].target==='bad')throw Error('CAD target missing');return {previewId:'checked',revision};},discard:id=>discards.push(id),apply:()=>commits++},change:()=>{revision='changed';},select:()=>{selection=[{rootId:'other',path:[]}];},discards,get commits(){return commits;}};}
+test('Failed native proposal repairs once with current context, original task and no Apply',async()=>{
+ const f=fixture(),calls=[],usage=[];const result=await runCadAIRequest({input:{prompt:'Set height 10',images:[],history:[]},access:f.access,generate:async args=>{calls.push(args);return {revision:args.scene.revision,commands:[{op:'update',target:calls.length===1?'bad':'part'}],usage:{inputTokens:10,outputTokens:20}};},onUsage:u=>usage.push(u)});assert.equal(calls.length,2);assert.match(calls[1].correction,/CAD target missing/);assert.equal(calls[1].prompt,calls[0].prompt);assert.equal(result.correctionAttempts,1);assert.equal(result.proposal.previewId,'checked');assert.equal(usage.length,2);assert.equal(f.commits,0);
+});
+test('Correction stops at two retries, never retries network failures, preserves failed usage',async()=>{
+ const f=fixture();let n=0,usages=0;const invalid=async()=>{n++;const e=Error('Invalid JSON');e.aiRetryable=true;e.aiUsage={inputTokens:2,outputTokens:3};throw e;};await assert.rejects(runCadAIRequest({input:{prompt:'Build'},access:f.access,generate:invalid,onUsage:()=>usages++}),/Invalid JSON/);assert.equal(n,3);assert.equal(usages,3);n=0;await assert.rejects(runCadAIRequest({input:{},access:f.access,generate:async()=>{n++;throw Error('HTTP 401');}}),/401/);assert.equal(n,1);
+});
+test('Cancel, changed revision and changed selection prohibit another API request or stale preview',async()=>{
+ for(const change of ['change','select']){const f=fixture();let n=0;await assert.rejects(runCadAIRequest({input:{},access:f.access,generate:async()=>{n++;f[change]();return {revision:'current',commands:[]};}}),/geändert/);assert.equal(n,1);}
+ const f=fixture();let active=true;f.access.preview=async()=>{active=false;return {previewId:'cancelled'};};await assert.rejects(runCadAIRequest({input:{},access:f.access,isCurrent:()=>active,generate:async()=>({revision:'current',commands:[]})}),/abgebrochen/);assert.deepEqual(f.discards,['cancelled']);assert.equal(f.commits,0);
+});

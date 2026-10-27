@@ -1,0 +1,32 @@
+.tablet-controls{display:none}
+.android body{height:100dvh;display:flex;flex-direction:column;font-family:Roboto,'Segoe UI',sans-serif}
+.android header{height:64px;flex:none;padding:8px 12px;gap:12px}
+.android .brand{font-size:17px}.android .brand small{display:none}.android .brand-icon{width:34px;height:38px;font-size:20px}
+.android .document{margin:0}.android .document span{font-size:10px}
+.android nav button{min-height:44px;padding:8px 10px}
+.android .command-bar{flex:none;overflow-x:auto;justify-content:flex-start;min-height:54px;scrollbar-width:thin}
+.android .command-bar .tool-spacer{min-width:8px}.android .command-bar button.tool{min-width:44px;min-height:44px}
+.android .tablet-controls{display:flex;align-items:center;gap:6px;padding:5px 10px;background:#e7eff2;flex:none;overflow-x:auto}
+.android .tablet-controls button{min-height:44px;padding:8px 12px}.android button[aria-pressed=true]{background:#315969;color:white;border-color:#315969}
+.android .tablet-controls small{color:#537180;white-space:nowrap;margin-left:auto}
+.android main{height:auto;flex:1;min-height:0;grid-template-columns:180px minmax(240px,1fr) 228px;position:relative}
+.android aside{padding:14px 10px}.android .shape{height:72px;font-size:12px;touch-action:pan-y}.android .shape svg{width:30px;height:30px}
+.android #viewport{grid-column:2;grid-row:1;min-width:0}.android aside.left{grid-column:1;grid-row:1}.android aside.right{grid-column:3;grid-row:1}
+.android input,.android select,.android textarea{font-size:16px;min-height:44px}.android input[type=checkbox]{min-height:24px;min-width:24px}
+.android .triplet input{font-size:14px}.android .parameter{font-size:12px;grid-template-columns:1fr 88px}.android .parameter input,.android .parameter select{font-size:14px}
+.android .action-grid button,.android .selection-tools button,.android .axis-buttons button{min-height:44px;font-size:12px}
+.android .selection-tools span{display:none}.android .local-note{font-size:10px}
+.android .viewport-top{top:10px;left:8px;right:8px;gap:6px;flex-wrap:wrap}.android .viewport-top button{min-height:44px}
+.android #viewport canvas{touch-action:none}.android .viewport-bottom{bottom:7px;left:8px;font-size:10px}.android .viewport-bottom span:last-child{display:none}
+.android .part-handle.corner-handle,.android .part-handle.height-handle{width:28px;height:28px;background:#fff;border-width:3px}
+.android .rotate-handle{width:44px;height:44px}.android .rotate-handle img{width:25px;height:25px}
+.android footer{flex:none;height:26px;padding:0 10px}.android footer>span:last-child{display:none}
+.android dialog{max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow:auto}.android dialog button{min-height:44px}
+.android .tool-menu{max-width:calc(100vw - 16px);max-height:65dvh;overflow:auto}.android .tool-menu button{min-height:44px}
+.android #placement-hint{top:auto;bottom:38px;white-space:normal;max-width:90%;width:max-content;text-align:center}
+.android #toast{max-width:95%;white-space:normal}
+.android.hide-shapes main{grid-template-columns:0 minmax(240px,1fr) 228px}.android.hide-shapes aside.left{display:none}
+.android.hide-properties main{grid-template-columns:180px minmax(240px,1fr) 0}.android.hide-properties aside.right{display:none}
+.android.hide-shapes.hide-properties main{grid-template-columns:0 minmax(240px,1fr) 0}
+@media(max-width:950px){.android main{grid-template-columns:160px minmax(200px,1fr) 210px}.android .brand-icon{display:none}.android .brand{font-size:15px}.android header{gap:8px}.android nav{gap:4px}.android nav button{font-size:12px}.android .tablet-controls small{display:none}.android .viewport-top .toolbar span:last-child{display:none}}
+@media(max-width:760px){.android header{height:auto;flex-wrap:wrap}.android .document{min-width:120px}.android nav{width:100%;justify-content:space-between}.android nav button{flex:1}.android main,.android.hide-shapes main,.android.hide-properties main{grid-template-columns:minmax(200px,1fr)}.android #viewport{grid-column:1}.android aside.left,.android aside.right{position:absolute;top:0;bottom:0;width:min(280px,80vw);z-index:9;box-shadow:0 4px 20px #243f5540}.android aside.left{left:0}.android aside.right{right:0}.android .tablet-controls{gap:4px}.android .tablet-controls button{font-size:12px;padding:6px 8px}.android footer #footer-note{display:none}}

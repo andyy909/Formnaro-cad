@@ -1,0 +1,21 @@
+#cad-mesh-selection{width:332px;max-height:calc(100% - 106px)}
+#cad-mesh-selection .mesh-selection-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#cad-mesh-selection .mesh-selection-heading button{flex:0 0 30px;min-width:30px;padding:4px}
+#cad-mesh-selection label{display:grid;gap:5px;margin:10px 0}
+#cad-mesh-selection .mesh-selection-count{margin:12px 0;padding:9px 10px;border:1px solid var(--line,#b6cbd3);border-radius:6px;background:#f0f7fa;line-height:1.45;font-weight:600}
+#cad-mesh-selection .small-note{font-size:11px;line-height:1.5}
+#cad-mesh-selection .mesh-selection-warning{color:#9d481b}
+#cad-mesh-selection #mesh-selection-source{font-weight:600;overflow-wrap:anywhere}
+#cad-mesh-selection .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px}
+#cad-mesh-selection .mesh-selection-history{display:flex;flex-wrap:wrap;gap:6px}#cad-mesh-selection .mesh-selection-history button{flex:1 1 110px;font-size:11px}
+#cad-mesh-selection [hidden]{display:none!important}
+[data-theme=dark] #cad-mesh-selection .mesh-selection-count{background:#293c4c;border-color:#587b90}
+[data-theme=dark] #cad-mesh-selection .mesh-selection-warning{color:#ffc392}
+[data-theme=dark] #cad-mesh-selection .edge-actions{background:#212f3e}
+@media(max-width:700px){#cad-mesh-selection{top:52px;right:8px;width:310px;max-width:calc(100% - 16px);max-height:calc(100% - 70px);padding:12px}#cad-mesh-selection .edge-actions{bottom:-12px}}
+
+.mesh-selection-stroke{position:absolute;pointer-events:none;z-index:10;overflow:hidden}
+#cad-mesh-selection details{margin:10px 0;padding:9px;border:1px solid #75bed1;border-radius:6px}
+#cad-mesh-selection summary{cursor:pointer;font-weight:600;font-size:12px}
+#cad-mesh-selection #mesh-selection-protection-status{color:#087d99}
+[data-theme=dark] #cad-mesh-selection #mesh-selection-protection-status{color:#70d8f1}

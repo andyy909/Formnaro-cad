@@ -1,0 +1,1172 @@
+{
+  "version": "0.27.0",
+  "package": 8,
+  "note": "Befehlsabgleich mit Paket-1-Bestand. Route allein ersetzt keine Ablaufprüfung; Nachweise verwenden die genannten Oberflächen- und Vertragssuiten. Persönliche Netzbibliotheksmigration und gemeinsame KI bleiben Paket 12.",
+  "netz": [
+    {
+      "action": "align",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/main.js",
+        "src/scene-tools.js"
+      ]
+    },
+    {
+      "action": "array",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "bundle",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "copy",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "delete",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "demo",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "drop",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "duplicate",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "edge-finish",
+      "route": "src/cad-mesh-tools.js:finish",
+      "proofGroups": [
+        "Netzverfahren"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "export",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "extract-bodies",
+      "route": "src/cad-mesh-tools.js:bodies",
+      "proofGroups": [
+        "Netzverfahren"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "face-floor",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "fit",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "functions",
+      "route": "src/cad-functions-ui.js / cad-function-plugins.js",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "Plugin-Vertrag"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "general-fit",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "group",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "Netzverfahren",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/main.js"
+      ]
+    },
+    {
+      "action": "help",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "hide",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "hole-wizard",
+      "route": "src/cad-mesh-tools.js:drill",
+      "proofGroups": [
+        "Netzverfahren"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "import",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "inspect",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "intersect",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "Netzverfahren",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "isolate",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "library",
+      "route": "src/cad-interface-library.js / cad-persistence.js",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "lock",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "measure",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "mirror",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "new",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "open",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "paste",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/main.js"
+      ]
+    },
+    {
+      "action": "projection",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "projects",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "redo",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/main.js"
+      ]
+    },
+    {
+      "action": "reference-place",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "reset-plane",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "ruler",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/mesh-function-plugins.js",
+        "src/precision-tools.js"
+      ]
+    },
+    {
+      "action": "save",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "section",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/main.js",
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "show-all",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "split-plane",
+      "route": "src/cad-mesh-tools.js:split",
+      "proofGroups": [
+        "Netzverfahren"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "src/mesh-function-plugins.js"
+      ]
+    },
+    {
+      "action": "undo",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/main.js"
+      ]
+    },
+    {
+      "action": "ungroup",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "Netzverfahren",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/main.js"
+      ]
+    },
+    {
+      "action": "workplane-set",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/mesh-function-plugins.js",
+        "src/workplane-tools.js"
+      ]
+    },
+    {
+      "action": "workplane-top",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    }
+  ],
+  "cad": [
+    {
+      "action": "align",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "array",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-function-plugins.js"
+      ]
+    },
+    {
+      "action": "bundle",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "copy",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "delete",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "demo",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "drop",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "duplicate",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "edges",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "Netzverfahren",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-function-plugins.js"
+      ]
+    },
+    {
+      "action": "export",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "extract",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "Netzverfahren",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "fit",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-function-plugins.js"
+      ]
+    },
+    {
+      "action": "functions",
+      "route": "src/cad-functions-ui.js / cad-function-plugins.js",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "Plugin-Vertrag"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "general-fit",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-function-plugins.js"
+      ]
+    },
+    {
+      "action": "group",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "Netzverfahren",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "help",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "hide",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-main.js"
+      ]
+    },
+    {
+      "action": "import",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "inspect",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-function-plugins.js"
+      ]
+    },
+    {
+      "action": "intersect",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "Netzverfahren",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "isolate",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "src/cad-main.js"
+      ]
+    },
+    {
+      "action": "lay-on-face",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-main.js"
+      ]
+    },
+    {
+      "action": "library",
+      "route": "src/cad-interface-library.js / cad-persistence.js",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "lock",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "marks",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "measure",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-function-plugins.js"
+      ]
+    },
+    {
+      "action": "mirror",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "new",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "open",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "paste",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-main.js"
+      ]
+    },
+    {
+      "action": "projection",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "projects",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "redo",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-main.js"
+      ]
+    },
+    {
+      "action": "reference-place",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "reset-plane",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "ruler",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-function-plugins.js"
+      ]
+    },
+    {
+      "action": "save",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "gemischte Projekte",
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "section",
+      "route": "src/cad-mesh-extra-tools.js / vorhandenes natives CAD-Werkzeug",
+      "proofGroups": [
+        "Eigenschaften/Werkzeuge",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-function-plugins.js"
+      ]
+    },
+    {
+      "action": "show-all",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "sketch",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "split",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "Netzverfahren",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "stl-to-step",
+      "route": "bestehender src/cad-functions-ui.js-Konverter",
+      "proofGroups": [
+        "vorhandene Konverter-Anbindung erhalten; weitere Abnahme Paket 9"
+      ],
+      "status": "vorhanden-erhalten",
+      "originalEntryPoints": [
+        "src/cad-function-plugins.js"
+      ]
+    },
+    {
+      "action": "undo",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-main.js"
+      ]
+    },
+    {
+      "action": "ungroup",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "Netzverfahren",
+        "CAD-Oberfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    },
+    {
+      "action": "workplane-set",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html",
+        "src/cad-function-plugins.js"
+      ]
+    },
+    {
+      "action": "workplane-top",
+      "route": "src/cad-main.js:actions",
+      "proofGroups": [
+        "CAD-Oberfläche",
+        "gemischte Projekte",
+        "gemeinsame Arbeitsfläche"
+      ],
+      "status": "uebernommen",
+      "originalEntryPoints": [
+        "index.html"
+      ]
+    }
+  ]
+}

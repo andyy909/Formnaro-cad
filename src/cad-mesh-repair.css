@@ -1,0 +1,13 @@
+#cad-mesh-repair{width:365px;max-height:calc(100% - 106px)}
+#cad-mesh-repair .mesh-repair-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#cad-mesh-repair label{display:flex;align-items:center;gap:7px;margin:10px 0;font-size:12px}
+#cad-mesh-repair label:has(input[type=number]),#cad-mesh-repair label:has(select){display:grid}
+#cad-mesh-repair input[type=checkbox]{width:16px;height:16px;flex:0 0 auto;margin:0}
+#cad-mesh-repair .small-note,#cad-mesh-repair details{font-size:11px;line-height:1.45}
+#cad-mesh-repair #mesh-repair-result{white-space:pre-wrap;font-size:12px}
+#cad-mesh-repair #mesh-repair-parts{max-height:180px;overflow:auto}
+#cad-mesh-repair .mesh-repair-part{display:grid;grid-template-columns:1fr auto;gap:6px;border-bottom:1px solid var(--line,#d9e2ea)}
+#cad-mesh-repair .mesh-repair-part button{align-self:center;padding:5px}
+#cad-mesh-repair .mesh-repair-page{display:flex;align-items:center;gap:5px;margin-top:8px}
+#cad-mesh-repair .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px}
+[data-theme=dark] #cad-mesh-repair .edge-actions{background:#212f3e}

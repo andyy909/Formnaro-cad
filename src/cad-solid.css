@@ -1,0 +1,80 @@
+/* All overrides are scoped to Solid. Saved normal/easy layouts stay intact. */
+body.solid-workbench{--solid-border:#b9c3ce;--solid-panel:#f5f6f8;--solid-active:#2879b9;--solid-text:#26384a}
+body.solid-workbench header{min-height:58px;padding:8px 14px;gap:12px;background:var(--solid-panel)}
+body.solid-workbench header .brand{font-size:19px}
+body.solid-workbench header .brand>span{background:#ba3438}
+body.solid-workbench header .project{flex:1;min-width:130px;max-width:440px}
+body.solid-workbench .toolbar{min-height:38px;padding:3px 12px;background:var(--solid-panel);border-bottom:0}
+body.solid-workbench .toolbar>.tools{flex:1}
+body.solid-workbench .toolbar>#toggle-left,body.solid-workbench .toolbar>#toggle-right{display:none}
+.solid-quick-tools{display:flex;gap:5px;align-items:center}
+.solid-quick-tools button{min-height:30px!important;padding:4px 9px!important;font-size:12px!important}
+.solid-menubar{display:flex;align-items:center;gap:2px;padding:0 12px;min-height:29px;flex:none;border-top:1px solid var(--solid-border);background:var(--solid-panel);color:var(--solid-text);z-index:45}
+.solid-menu>summary{list-style:none;font-size:12px;padding:6px 10px;cursor:pointer}
+.solid-menu>summary::-webkit-details-marker{display:none}
+.solid-menu[open]>summary,.solid-menu>summary:hover{background:#dce7f1;color:#20496f}
+.solid-menu-panel{position:fixed;z-index:120;width:240px;box-sizing:border-box;padding:5px;background:var(--solid-panel);border:1px solid var(--solid-border);box-shadow:0 6px 20px #15273733;overflow:auto}
+.solid-menu:not([open])>.solid-menu-panel{display:none}
+.solid-menu-panel button{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:0;font-size:12px;padding:9px}
+.solid-mode-note{margin-left:auto;white-space:nowrap;letter-spacing:1.2px;font-size:10px;opacity:.65;padding:0 8px}
+.solid-ribbon{flex:none;background:var(--solid-panel);color:var(--solid-text);border-bottom:1px solid var(--solid-border);min-width:0}
+.solid-tabs{display:flex;gap:0;border-bottom:1px solid var(--solid-border);padding-left:12px;overflow-x:auto}
+.solid-tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;font-size:12px;white-space:nowrap;padding:7px 16px}
+.solid-tabs button[aria-selected=true]{background:var(--panel,#fff);border-bottom-color:var(--solid-active);color:var(--solid-active);font-weight:700}
+.solid-command-panel{display:flex;align-items:stretch;gap:0;padding:6px 12px;min-height:83px;overflow-x:auto;overscroll-behavior-x:contain}
+.solid-command-panel[hidden]{display:none!important}
+.solid-command-group{display:flex;align-items:stretch;flex:none;gap:2px;padding:0 8px;border-right:1px solid var(--solid-border)}
+.solid-command-group:first-child{padding-left:0}
+.solid-command-group:last-child{border:0}
+.solid-ribbon .solid-command{display:flex!important;flex-direction:column;justify-content:center;align-items:center;gap:5px;border:1px solid transparent;border-radius:2px;background:transparent;color:inherit;min-width:74px;max-width:112px;min-height:70px;padding:5px 8px;margin:0;width:auto;font-size:11px;line-height:1.2;white-space:normal;text-align:center}
+.solid-ribbon .solid-command[hidden]{display:none!important}
+.solid-command-icon{display:block;color:#a86e23;font-size:27px;font-weight:600;line-height:30px;min-height:30px}
+.solid-command:nth-child(even) .solid-command-icon{color:#3580af}
+.solid-command-caption{display:block!important;max-width:100px}
+.solid-ribbon .solid-command:hover:not(:disabled){background:#e0ebf5;border-color:#9cbbd4}
+.solid-ribbon .solid-command:disabled{opacity:.42}
+body.solid-workbench main,body.solid-workbench[data-library-side=right] main{grid-template-areas:'solidmanager viewport tasks';grid-template-columns:clamp(255px,23vw,310px) minmax(0,1fr) auto}
+body.solid-workbench main>.left-panel,body.solid-workbench main>.right-panel{display:none!important}
+.solid-manager{grid-area:solidmanager;display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--panel,#fff);border-right:1px solid var(--solid-border);color:var(--solid-text);overflow:hidden;z-index:4}
+.solid-manager-tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;flex:none;background:var(--solid-panel);border-bottom:1px solid var(--solid-border)}
+.solid-manager-tabs button{font-size:11px;padding:8px 4px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:inherit}
+.solid-manager-tabs button[aria-selected=true]{border-bottom-color:var(--solid-active);background:var(--panel,#fff);font-weight:700;color:var(--solid-active)}
+.solid-manager-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px 10px 16px}
+.solid-manager-content[hidden]{display:none!important}
+.solid-manager-content h2{font-size:13px;margin:3px 0 13px}
+.solid-manager .sidebar-object-section{height:auto!important;min-height:180px;overflow:visible;display:flex;flex-direction:column;flex:1}
+.solid-manager #object-list{overflow:visible;max-height:none;flex:none;min-height:80px}
+.solid-manager .organization-tools{display:none}
+.solid-manager .sidebar-object-section .sidebar-bottom{flex-wrap:wrap}
+.solid-manager .shape-library-section{height:auto!important;overflow:visible}
+.solid-manager #shape-library{height:auto!important;max-height:none;overflow:visible;grid-template-columns:repeat(2,minmax(0,1fr))}
+.solid-manager .inspector-properties-section{overflow:visible}
+.solid-manager .workspace-settings{padding:0}
+.solid-planes{font-size:12px;border-bottom:1px solid var(--solid-border);padding:0 0 10px;margin-bottom:8px}
+.solid-planes summary{cursor:pointer;padding:5px 0}
+.solid-planes button{display:block;text-align:left;border:0;background:transparent;padding:7px 4px;width:100%;font-size:12px}
+.solid-planes p,.solid-tip{font-size:11px;line-height:1.6;color:var(--muted,#637386)}
+.solid-tip{border-top:1px solid var(--solid-border);padding-top:12px}
+.solid-operation-host{display:none;flex:1;min-height:0;overflow:auto;padding:12px}
+.solid-operation-active>.solid-manager-content,.solid-operation-active>.solid-manager-tabs{display:none!important}
+.solid-operation-active>.solid-operation-host{display:block}
+.solid-operation-host .edge-tool-panel{position:static;max-height:none;max-width:none;width:100%;padding:0;border:0;border-radius:0;box-shadow:none;background:transparent;color:inherit;overflow:visible}
+.solid-operation-host .edge-tool-panel header{padding:0;min-height:40px;background:transparent;display:flex;font-size:13px;flex-wrap:nowrap}
+.solid-task-pane{grid-area:tasks;display:none;width:320px;max-width:35vw;border-left:1px solid var(--solid-border);min-height:0;overflow:auto}
+.solid-task-pane:has(#ai-chat:not(.collapsed)){display:flex}
+body.solid-workbench main .solid-task-pane .cad-ai-chat{margin:0;width:100%;height:100%;max-height:none;border:0}
+body.solid-workbench .view-controls{display:flex;flex-direction:row;left:50%!important;right:auto!important;top:10px!important;transform:translateX(-50%);width:auto;gap:3px;max-width:calc(100% - 16px);padding:3px;background:var(--solid-panel);border:1px solid var(--solid-border);border-radius:3px}
+body.solid-workbench .view-controls button{min-height:29px;width:auto;padding:4px 8px;font-size:11px;white-space:nowrap}
+body.solid-workbench .view-top{top:53px;left:12px!important;right:auto!important;font-size:10px;opacity:.7}
+body.solid-workbench .mode-switch{top:auto!important;bottom:44px;left:auto!important;right:12px!important;border-radius:3px;font-size:11px}
+body.solid-workbench #empty-hint{padding:20px}
+body.solid-workbench #empty-hint h1{font-size:24px}
+.solid-popup{position:absolute;top:70px;left:50%;transform:translateX(-50%);width:min(270px,calc(100% - 20px));max-height:calc(100% - 100px);overflow:auto;background:var(--solid-panel);color:var(--solid-text);border:1px solid var(--solid-border);box-shadow:0 8px 30px #15273733;padding:10px;z-index:60;box-sizing:border-box}
+.solid-popup strong{font-size:13px;display:block;padding:5px}
+.solid-popup button{display:block;text-align:left;width:100%;font-size:12px;padding:7px;margin:3px 0}
+#solid-settings p{font-size:13px;line-height:1.6}
+[data-theme=dark].solid-workbench{--solid-border:#4d6073;--solid-panel:#263645;--solid-active:#87bdea;--solid-text:#e1eaf3}
+[data-theme=dark] .solid-command-icon{color:#e6b267}
+[data-theme=dark] .solid-ribbon .solid-command:hover:not(:disabled),[data-theme=dark] .solid-menu[open]>summary{background:#3a536b;color:#e1eaf3}
+@media(max-width:1000px){.solid-mode-note{display:none}.solid-tabs button{padding:7px 12px}.solid-command-panel{min-height:76px}.solid-ribbon .solid-command{min-width:70px;min-height:65px}body.solid-workbench main,body.solid-workbench[data-library-side=right] main{grid-template-columns:255px minmax(0,1fr) auto}.solid-task-pane{width:280px}.solid-task-pane:has(#ai-chat:not(.collapsed)){position:absolute;right:0;top:0;bottom:0;z-index:40;max-width:calc(100% - 260px);background:var(--solid-panel)}}
+@media(max-height:750px){.solid-command-panel{min-height:68px;padding-top:3px;padding-bottom:3px}.solid-ribbon .solid-command{min-height:60px}.solid-command-icon{font-size:23px;min-height:25px;line-height:25px}}

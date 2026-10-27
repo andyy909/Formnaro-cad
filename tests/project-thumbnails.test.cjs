@@ -1,0 +1,12 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
+const {createProjectFiles}=require('../backend/projects.cjs');
+// Header is sufficient for backend's bounded PNG envelope; real raster decoding
+// and image generation are exercised by the Electron acceptance.
+const bytes=Buffer.alloc(33);Buffer.from([137,80,78,71,13,10,26,10]).copy(bytes);bytes.write('IHDR',12);bytes.writeUInt32BE(240,16);bytes.writeUInt32BE(160,20);const image='data:image/png;base64,'+bytes.toString('base64');
+test('Thumbnail cache is content-bound, read-only for project/recents, guarded against external edits and unlisted paths',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'cad-thumbnail-')),directory=path.join(root,'Projekte'),file=path.join(directory,'A.ocad');await fs.mkdir(directory);await fs.writeFile(file,'first');const store=createProjectFiles({directory}),id=(await store.list()).files[0].id,first=await store.thumbnail({id});assert.equal(first.project,'first');assert.equal((await store.cacheThumbnail({id,token:first.token,image})).cached,true);assert.equal((await store.thumbnail({id})).image,image);assert.equal((await store.list()).recent.length,0);
+ const stat=await fs.stat(file);await fs.writeFile(file,'other');await fs.utimes(file,stat.atime,stat.mtime);assert.equal((await store.thumbnail({id})).project,'other');assert.equal((await store.cacheThumbnail({id,token:first.token,image})).cached,false);assert.equal(await fs.readFile(file,'utf8'),'other');await assert.rejects(store.thumbnail({id:'../A'}));await assert.rejects(store.cacheThumbnail({id,image:'data:image/svg+xml;base64,AA=='}));await fs.rm(root,{recursive:true,force:true});
+});
+test('Missing or damaged preview regenerates; project itself is preserved',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'cad-thumbnail-')),directory=path.join(root,'Projekte'),file=path.join(directory,'A.ocad');await fs.mkdir(directory);await fs.writeFile(file,'original');const store=createProjectFiles({directory}),id=(await store.list()).files[0].id,cache=path.join(root,'Daten','Vorschaubilder');await fs.mkdir(cache,{recursive:true});await fs.writeFile(path.join(cache,id+'.json'),'broken');assert.equal((await store.thumbnail({id})).project,'original');await fs.unlink(file);await assert.rejects(store.thumbnail({id}));await fs.rm(root,{recursive:true,force:true});
+});

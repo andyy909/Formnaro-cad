@@ -1,0 +1,62 @@
+[
+  {
+    "source": "src/cad-export-triangles.js",
+    "sourceSha256": "b7ccad16bf5a57f35a0a3f5046de3fa5b7a152f04aba14ce1be09601b514edae",
+    "sha256": "b7ccad16bf5a57f35a0a3f5046de3fa5b7a152f04aba14ce1be09601b514edae",
+    "adapted": false
+  },
+  {
+    "source": "src/cad-native-kernel.js",
+    "sourceSha256": "84a9e689cf564f57d59929cd8d1e18a886b8a07200634cee9a604201ba5ca412",
+    "sha256": "84a9e689cf564f57d59929cd8d1e18a886b8a07200634cee9a604201ba5ca412",
+    "adapted": false
+  },
+  {
+    "source": "src/cad-project.js",
+    "sourceSha256": "922bb739cef959d3409d456061c6678cd074d7dd0ed88c82d04052d902f4885f",
+    "sha256": "6ab0143523663f27d6d60593e966103c9e297fa42293a61826bea4ad0f7bd0b6",
+    "adapted": true
+  },
+  {
+    "source": "src/cad-recipes.js",
+    "sourceSha256": "801127f52406b68b032d62c9927f479aca7bd893979759492b4953971cdecdc6",
+    "sha256": "801127f52406b68b032d62c9927f479aca7bd893979759492b4953971cdecdc6",
+    "adapted": false
+  },
+  {
+    "source": "src/cad-screw-surfaces.js",
+    "sourceSha256": "922e10b9401c80031ffff41a50c281345cb68be6e461281c0d6860cd00369e08",
+    "sha256": "922e10b9401c80031ffff41a50c281345cb68be6e461281c0d6860cd00369e08",
+    "adapted": false
+  },
+  {
+    "source": "src/cad-sketch.js",
+    "sourceSha256": "0f6e6b098c7968247662c3502eaf03756a0ebcf2890e41739569b7af654857a0",
+    "sha256": "0f6e6b098c7968247662c3502eaf03756a0ebcf2890e41739569b7af654857a0",
+    "adapted": false
+  },
+  {
+    "source": "src/cad-step-io.js",
+    "sourceSha256": "05611ea8f016cfe977d5eeccd30c6a71d56c1d8fcc76d713a87d6a4b34fd91d7",
+    "sha256": "05611ea8f016cfe977d5eeccd30c6a71d56c1d8fcc76d713a87d6a4b34fd91d7",
+    "adapted": false
+  },
+  {
+    "source": "src/cad-stl-faceted.js",
+    "sourceSha256": "1c717238d16dd7524269b3387a7ad28856e2e89b890480992e112093726f01e0",
+    "sha256": "1c717238d16dd7524269b3387a7ad28856e2e89b890480992e112093726f01e0",
+    "adapted": false
+  },
+  {
+    "source": "src/cad-stl-surfaces.js",
+    "sourceSha256": "5661c0fb43b16beea705c7fb55dc4472c9370b12ebb24b5e87d42a6a1780dddd",
+    "sha256": "5661c0fb43b16beea705c7fb55dc4472c9370b12ebb24b5e87d42a6a1780dddd",
+    "adapted": false
+  },
+  {
+    "source": "src/parameters.js",
+    "sourceSha256": "c19620290b76bd46548ce8090d7912f1a070d1240653a688728a33d780bff462",
+    "sha256": "c19620290b76bd46548ce8090d7912f1a070d1240653a688728a33d780bff462",
+    "adapted": false
+  }
+]

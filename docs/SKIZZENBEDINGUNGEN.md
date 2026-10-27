@@ -1,0 +1,19 @@
+# Dauerhafte Skizzenbedingungen
+
+Im Skizzeneditor zunächst **Konturen mit Öffnungen**, dann **Bedingungen einschalten** wählen. Das ist eine ausdrückliche Umstellung dieses Entwurfs auf Skizzenversion 3. Alte Skizzenversionen 1 und 2 bleiben lesbar und werden beim Öffnen nicht verändert.
+
+Beziehungen wählen ihre Elemente oder Punkte aus der Liste. Unterstützt werden Koinzidenz, horizontal und vertikal, parallel und rechtwinklig, gleiche Längen oder Radien, konzentrische Kreise/Bögen, Symmetrie an einer Linie, Tangenten und Fixierungen. Fixierungen können ein ganzes Element oder einen seiner Punkte halten. Tangenten müssen die tatsächliche Linie beziehungsweise den tatsächlichen Kreisbogen berühren; eine Berührung nur auf ihrer Verlängerung reicht nicht.
+
+Länge, Abstand, Winkel und Radius können als bleibende Maßbedingungen gesetzt werden. Die direkten Maßfelder eines Elements erzeugen in Version 3 ebenfalls solche Bedingungen. Formeln dürfen die benannten Skizzenmaße verwenden. Beispielsweise bleibt `breite - 2 * wand` gespeichert; der Löser ersetzt diesen Ausdruck nicht durch das letzte Rechenergebnis. Bereits vorhandene Koordinatenformeln sind verbindlich. Formelgesteuerte Punkte bleiben beim Ziehen geschützt. Ein gebundenes Projektmaß wird über seinen freien Ausgangswert geändert; der Projektparameterkatalog zeigt auch freie Werte der neuen Maßbedingungen.
+
+Während des Ziehens bewegt sich lediglich der 2D-Entwurf. Beim Loslassen, Setzen eines Maßes oder **Jetzt lösen** läuft der kleine 2D-Worker. Er bearbeitet nur die zusammenhängende betroffene Gruppe. Unterbestimmte Entwürfe bleiben bearbeitbar; es wird keine vollständige geometrische Bestimmtheit behauptet. Bei widersprüchlichen Bedingungen, ungültigen Werten, Abbruch oder Zeitüberschreitung bleibt der letzte gültige Entwurf erhalten. Die Rückmeldung benennt die betroffenen Bedingungen. Bedingungen lassen sich einzeln entfernen. Vor dem Entfernen eines daran gebundenen Elements seine Bedingungen ausdrücklich entfernen.
+
+Die Grenzen sind **128 Elemente, 256 Bedingungen, 80 Iterationen und eine Sekunde Rechenzeit**. Ungünstige oder sehr große Gruppen können diese Grenze erreichen; dann Bedingungen aufteilen oder entbehrliche Beziehungen entfernen. QR-Rangprüfung behandelt redundante Beziehungen, die gedämpfte Ausgleichsrechnung begrenzt Rechenschritte. Es handelt sich um einen begrenzten lokalen numerischen Löser und keinen allgemeinen Mechaniksimulator.
+
+Erst **Vorschau berechnen** erstellt oder verändert die CAD- oder Netzgeometrie. **Übernehmen** bestätigt die geprüfte Vorschau mit einem Modell-Undo-Schritt. Zurück/Vor im Skizzeneditor betrifft ausschließlich den Entwurf. Abbrechen verändert das bestätigte Modell nicht. Dieselbe Bedienung steht in Normal und Easy CAD zur Verfügung.
+
+Speichern, Wiederherstellung, Kopieren und Bibliotheksvorlagen erhalten die Bedingungen und Formeln. Neue Version-3-Inhalte benötigen Projekt- und Bibliotheksformat 15; reine Altprojekte behalten ihre bisherige Formatstufe. Spiegelkopien erhalten eigene Element- und Bedingungskennungen sowie gespiegelte Fixpunkte und Winkel. Eine Teilkopie, deren Bedingungen außerhalb der Auswahl liegen, verlangt die vollständige verbundene Gruppe. Bestehende Konturverknüpfungen aus Paket 3 bleiben quellengesteuert; dort sind eigene Konturbedingungen erst nach ausdrücklichem Lösen der Verknüpfung sinnvoll.
+
+Die lokale KI verwendet dieselben nativen `sketch`- und `mesh-create-source`-Vorschauen. Skizzenversion 3 ergänzt Version 2 um `constraints` mit stabilen Element- und Punktbezügen. Den vollständigen aktuellen Datenvertrag liefert die vorhandene lokale Kontextabfrage. Widersprüche verhindern eine Übernahme; dafür wird kein zusätzlicher Cloud-Schlüssel benötigt.
+
+Paket 4 ergänzt die Skizzenbedingungen. Gelenke, vereinfachte Baugruppenanzeige und echtes selektives Laden folgen in Paketen 5–7. Planpunkt 9 ist erst nach Paket 7 vollständig erfüllt.

@@ -1,0 +1,179 @@
+Formnaro 0.11: gemeinsamer nativer CAD-Kern, Quellen und Ersatz
+Stand der Formnaro-Erweiterungen: 11.10.2026
+
+Formnaro verwendet Einrichtungen von Open CASCADE Technology (OCCT 8.0.1).
+Der gemeinsame WebAssembly-Kern beruht auf replicad-opencascadejs 1.1.0 und
+OpenCascade.js. Er wurde für Formnaro mit zusätzlichen nativen Bindings und
+der C++-Datei cad-kernel-build/wrappers/formnaro-cad-bridge.cpp neu gebaut.
+Er ist deshalb kein unverändertes npm-Binärartefakt. Die bisherigen Replicad-
+Wrapper bleiben enthalten; die Replicad-JavaScript-Modellierbibliothek wird
+nicht als Anwendungsschicht verwendet. Alle CAD-Objekte liegen im selben Kern.
+
+OpenCascade.js: GNU LGPL Version 2.1. OCCT: GNU LGPL Version 2.1 mit der
+Open CASCADE exception, Version 1.0. Die Ausnahme betrifft OCCT. Originale
+Replicad-Wrapper und die zusätzliche Formnaro-Bridge: MIT. RapidJSON,
+FreeType sowie die Emscripten-Systembibliotheken behalten ihre eigenen
+Lizenzbedingungen. THIRD-PARTY-LICENSES.txt und licenses/cad-kernel/licenses/
+enthalten die vollständigen Originaltexte. Der kombinierte Kern wird nicht
+insgesamt als MIT-Bibliothek ausgewiesen. FreeType wird nach FTL verwendet:
+Portions of this software are copyright © 1996–2023 The FreeType Project
+(www.freetype.org). All rights reserved.
+
+Formnaro ergänzt am 11.10.2026 allgemeine affine CAD-Transformationen,
+native Strahl-/Flächentreffer mit CAD-Normalen, Punktklassifikation,
+triangulierungsfreie BRep-Schreibung und separate Double-Exporttessellierung.
+Die Bridge und die erweiterten Bindings sind im Quellenpaket enthalten.
+OCCT-, RapidJSON- und FreeType-Quellarchive selbst sind unverändert; die
+ursprünglichen OpenCascade.js-Buildwerkzeuge und Patches sind enthalten.
+
+Entsprechende Quellen dieser Auslieferung
+----------------------------------------
+Gemeinsam mit der Portable-Ausgabe werden zwei gesonderte Archive geliefert:
+
+  Formnaro-CAD-Quellen-v0.11.zip
+    upstream/: genau fünf vollständige ursprüngliche Quellenarchive;
+    cad-kernel-build/: Quellenpins, ursprüngliche Lizenztexte, Bridge,
+      Vorbereitung, Docker-/isolierte Linux-Buildroute, Materialisierung,
+      Integritätsprüfung und unabhängige STEP-Leser-Prüfung;
+    generated/formnaro_cad.yml und generated/build-inputs.json:
+      tatsächlich verwendete vollständige Bindingkonfiguration und Hashes;
+    LIES-MICH-QUELLEN.txt: dieser Text.
+
+  Formnaro-Quellcode-v0.11.zip
+    Anwendung, Backend/Preload/Electron, CAD-Adapter und Worker, Buildskripte,
+    Prüfungen, package.json/package-lock.json, Dokumentation, ursprüngliche
+    Fontdaten und verifiziertes CAD-Runtimepaket.
+
+Quellen-Pruefsummen.json neben diesen Archiven nennt Größe und SHA256 der
+Lieferarchive und sämtlicher Archiveinträge. upstream-lock.json nennt genaue
+Bezugsadressen, Revisionen, Größen und vollständige SHA256-Werte. Es wird nicht
+allein auf spätere Verfügbarkeit externer Quelllinks verwiesen. Die fünf
+originalen Archive unter upstream/ sind:
+
+  replicad-e4b05f67dc4e.tar.gz
+    Commit e4b05f67dc4e2393a876ce8c5064a9c93db05bf1; 17426998 Bytes
+    SHA256 92180710da11a6e67ab75eaac8b494b29d32011415c22e29f7fecb1c796da783
+  opencascadejs-ebd263f15337.tar.gz
+    Commit ebd263f15337b440b391492af073662707e86482; 4449501 Bytes
+    SHA256 1e0342c8dbdc04d1835c776d5e95ab25fcad56a5f4cafcbecad92a959b6b00b7
+  OCCT-b8f597c67781.tar.gz
+    Commit b8f597c677811d1f9f4d8a97f5ae2825c0353a42; 45131814 Bytes
+    SHA256 dba62b81078dd43cec23feba89432be301582341001edad1b93342ad8bda35ea
+  rapidjson-24b5e7a8b27f.tar.gz
+    Commit 24b5e7a8b27f42fa16b96fc70aade9106cf7102f; 1116703 Bytes
+    SHA256 2d2601a82d2d3b7e143a3c8d43ef616671391034bc46891a9816b79cf2d3e7a8
+  freetype-de8b92dd7ec6.tar.gz
+    Commit de8b92dd7ec634e9e2b25ef534c54a3537555c11; 2496556 Bytes
+    SHA256 14791d34053acf30394912a8b963277bee60b35fbb3038795d86555ba0415a44
+
+Toolchain und unveränderliches Originalimage
+-------------------------------------------
+Originales Linux/amd64-Buildimage:
+  ghcr.io/taucad/opencascade.js@sha256:215198af0e2ca4c5f308e5540869f2419784dc290062d3eb03d34e4f22e0188c
+Der lesbare Tag canary-ebd263f1-single-threaded ist nur ein zusätzlicher Hinweis;
+das Skript verwendet den Digest. Dockerfile, DEPS.json, Patches und ursprüngliche
+Buildwerkzeuge liegen im OpenCascade.js-Archiv.
+
+Emsdk 5.0.1, Commit 14c18b569f55138fe4963924162244251f454fb0;
+Emscripten-Commit 8c5f43157a3f069ade75876e23061330521eabde;
+Toolchain-Release bf32ae8b61ac8efeb7eca01b54c8307f992724f7.
+System-license-lock.json dokumentiert die Originaltexte einschließlich Autoren,
+mimalloc, musl, libc++/libc++abi, libunwind und compiler-rt mit exakten
+Emscripten-Quellpfaden und Hashes. Der optionale isolierte Linux-Launcher ist
+PRoot 5.5.0, SHA256:
+  db185300a9daabbce86aca7632d8c7fdc4249f6f153171954013b70c5f491ec0
+
+Neubuild aus einem frischen Arbeitsordner
+---------------------------------------
+Beide gelieferten Quellen-ZIPs in einen neuen Arbeitsordner entpacken; die
+gleichnamigen cad-kernel-build-Dateien stammen aus demselben Quellstand.
+Für die mitgelieferten Archive die fünf upstream/*.tar.gz nach
+work/cad-v011-build/archives/ kopieren. Alternativ lädt prepare.mjs exakt diese
+Quellen von den gesperrten Bezugsadressen herunter. Die SHA256-Werte werden
+vor dem Entpacken geprüft. Nutzerprofile oder Modelle sind nicht erforderlich.
+
+Voraussetzungen: Node.js 22+, npm, tar und PowerShell; für Docker eine vorhandene
+erreichbare Linux/amd64-Engine. Im neuen Arbeitsordner:
+
+  npm ci
+  node cad-kernel-build/prepare.mjs
+  powershell -File cad-kernel-build/build.ps1
+
+prepare.mjs übernimmt die vollständige ursprüngliche Replicad-Konfiguration
+packages/replicad-opencascadejs/build-config/custom_build_single.yml, ergänzt
+die Bridge/Bindings und schreibt work/cad-v011-build/config/. build.ps1 bindet
+nur diesen eigenen Konfigurationsordner als /src ein und ruft im gesperrten
+Originalimage link formnaro_cad.yml auf. Der eigentliche Buildcontainer hat kein
+Netzwerk. Das Skript startet keine Dienste und ändert keine Docker-Einstellungen.
+Downloads vor dem Build benötigen Netzwerkzugriff.
+
+Wenn bereits Linux/WSL mit Python 3.11+ vorhanden ist, kann dieselbe ursprüngliche
+Toolchain ohne Docker-Dienst in einem eigenen temporären Rootfs laufen:
+
+  powershell -File cad-kernel-build/build.ps1 -Runner Wsl -Distribution Ubuntu
+
+Ubuntu bezeichnet eine bereits vorhandene Distribution; Python 3.11+ muss unter
+Windows und Linux bereitstehen. Diese Route aktiviert keine Windows-Funktionen
+und installiert keine Distro-Pakete. fetch-image.py prüft Imageindex,
+Plattformmanifest, Konfiguration und sämtliche Layer gegen Digests.
+run-image-linux.py entpackt ausschließlich in einen eigenen temporären
+/var/tmp/formnaro-cad-v011-*/rootfs-Ordner und startet den ebenfalls geprüften
+PRoot-Launcher. Nur eigene Builddateien werden eingebunden. Direkt unter Linux
+sind fetch-image.py/run-image-linux.py ebenfalls verwendbar; Einzelheiten stehen
+in cad-kernel-build/README.md.
+
+Laufzeitprüfung und Materialisierung
+----------------------------------
+Der Neubuild erzeugt formnaro_cad.js, .wasm, .d.ts und ursprüngliche Build-
+Provenienz im eigenen Konfigurationsordner. materialize.mjs prüft Quellenpins,
+Bridge-/YAML-Hash und ursprüngliche Buildvalidierung. Vor dem Kopieren muss die
+tatsächlich neue Binärdatei tests/cad-kernel-proof-extended.test.mjs bestehen;
+fehlende Dateien oder Schnittstellen führen zu einem Fehler, nicht zu Skip.
+Anschließend werden JS/WASM/Typdateien, Provenienz, Quellenpins und vollständige
+Originaltexte nach cad-kernel-build/runtime/ kopiert und integrity.json erzeugt.
+build.ps1 ruft Materialisierung und Integritätsprüfung bereits auf. Separat:
+
+  node cad-kernel-build/materialize.mjs
+  node cad-kernel-build/verify-runtime.mjs
+  npm run test:cad-kernel-extended
+  npm run build
+
+Die ausgelieferte unveränderte WASM-Datei hat 23062347 Bytes und SHA256:
+  964835f6a345ab3a9ab07852fb8d047fb081d38c20849a65b1c037c1d3f2ad8c
+integrity.json prüft 24 Runtimeartefakte, darunter 14 vollständige Lizenz-/
+Autoren-Dateien. Die Vite-Ausgabe enthält genau eine formnaro_cad-*.wasm-Datei.
+Dateinamen können Vite-Hashes tragen; die WASM-Bytes bleiben identisch.
+Zeitstempel der ursprünglichen Buildprovenienz folgen SOURCE_DATE_EPOCH.
+
+Vollständiger Ersatz der Bibliothek
+----------------------------------
+Den JavaScript-Bindings-/WASM-Vertrag zusammen ersetzen: einen angepassten Kern
+aus denselben entsprechenden Quellen bauen, seine nativen Schnittstellen prüfen
+und materialize.mjs sowie verify-runtime.mjs ausführen. src/cad-kernel-loader.js
+lädt diese passende JS/WASM-Kombination. Mit npm run build die Vite-Worker-/
+Assetbezüge neu erzeugen und einen neuen eigenen Electron-Ausgabeordner aus der
+Anwendung und dieser dist-Ausgabe erstellen. scripts/package-cad-release.mjs
+dokumentiert Runtime-Whitelist und getrennte Quellenarchive; das offizielle
+Releaseskript verlangt zuvor die vollständige Produktabnahme. Für eigene
+Bibliotheksänderungen kann mit dem mitgelieferten Anwendungscode und
+@electron/packager ein eigener Ausgabeordner erstellt werden. Bestehende
+Releases und Nutzerdateien werden nicht überschrieben.
+
+Alternativ resources/app.asar mit @electron/asar entpacken, die zusammenpassende
+neu gebündelte dist-Ausgabe und zugehörigen Lizenz-/Provenienzdateien ersetzen
+und ASAR in einem eigenen Ausgabeordner neu packen. Die Bibliothek ist eine
+gesonderte WASM-Datei; Anwendungscode wird nicht mit dem C++-Kern verlinkt.
+Nur die WASM-Datei gegen inkompatible Bindings auszutauschen genügt nicht.
+Es gibt keine Signatur- oder Lizenzprüfung, die eigene Bibliotheksänderungen
+verhindert. Änderungen und Untersuchen/Reverse Engineering zur Fehlersuche
+solcher Bibliotheksänderungen werden durch diese Auslieferung nicht untersagt.
+Die jeweiligen Lizenzrechte bleiben maßgeblich. Formnaro benötigt keinen
+Cloudzugang für Modellieren oder diese lokale Bibliotheksverwendung.
+
+Primärquellen zusätzlich zu den mitgelieferten vollständigen Archiven:
+https://github.com/sgenoud/replicad/tree/e4b05f67dc4e2393a876ce8c5064a9c93db05bf1/packages/replicad-opencascadejs
+https://github.com/taucad/opencascade.js/tree/ebd263f15337b440b391492af073662707e86482
+https://github.com/Open-Cascade-SAS/OCCT/tree/b8f597c677811d1f9f4d8a97f5ae2825c0353a42
+https://github.com/Tencent/rapidjson/tree/24b5e7a8b27f42fa16b96fc70aade9106cf7102f
+https://github.com/freetype/freetype/tree/de8b92dd7ec634e9e2b25ef534c54a3537555c11
+https://github.com/emscripten-core/emscripten/tree/8c5f43157a3f069ade75876e23061330521eabde

@@ -1,0 +1,50 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+async function verifyConverterWorkspace(win,app,{directory,converter,fixtures,files}){
+ const js=code=>win.webContents.executeJavaScript(code),checks=[];
+ const prepareProject=async()=>{
+  await js(`(async()=>{const a=window.__cadTest;await a.loadDemo();await a.settled();const wait=async fn=>{const t=Date.now();while(!fn()){if(Date.now()-t>30000)throw Error('Mixed fixture import '+document.getElementById('import-status')?.textContent);await new Promise(r=>setTimeout(r,20));}await a.settled();};
+  const tetra=[[[0,0,0],[0,10,0],[10,0,0]],[[0,0,0],[10,0,0],[0,0,10]],[[10,0,0],[0,10,0],[0,0,10]],[[0,10,0],[0,0,0],[0,0,10]]];
+  const load=async(name,triangles,kind)=>{const stl='solid fixture\\n'+triangles.map(ps=>'facet normal 0 0 0\\nouter loop\\n'+ps.map(p=>'vertex '+p.join(' ')).join('\\n')+'\\nendloop\\nendfacet\\n').join('')+'endsolid fixture',d=new DataTransfer();d.items.add(new File([stl],name));const e=document.getElementById('import-file');e.files=d.files;e.dispatchEvent(new Event('change'));await wait(()=>document.getElementById('modal').open&&document.getElementById('import-kind'));const kindInput=document.getElementById('import-kind');kindInput.value=kind;kindInput.dispatchEvent(new Event('change',{bubbles:true}));document.getElementById('import-confirm').click();await wait(()=>!document.getElementById('modal').open);return a.getModel().nodes.at(-1).id;};
+  const closed=await load('Geschlossenes Netz.stl',tetra,'mesh'),open=await load('Absichtliche Öffnung.stl',tetra.slice(0,1),'mesh'),reference=await load('Gesperrte Vorlage.stl',tetra.slice(1,2),'reference');
+  await a.mutate(p=>{p.name='Gemischtes Konverterprojekt';const n=p.nodes.find(n=>n.id===closed);n.transform[0]=1.3;n.transform[4]=.2;n.transform[8]=-.1;n.transform[12]=60;n.transform[13]=-20;n.metadata.notes='Erhaltene technische Netzquelle';const o=p.nodes.find(n=>n.id===open);o.transform[12]=30;o.transform[13]=45;p.folders.push({id:'protected-converter-folder',name:'Geschützte Vorlagen',layerId:'default',parentId:null,hidden:false,locked:true});const r=p.nodes.find(n=>n.id===reference);r.folderId='protected-converter-folder';r.locked=true;r.opacity=.35;r.transform[12]=-40;});await a.settled();window.__converterOriginals=a.getModel().nodes;})();`);
+  checks.push('Normal mixed fixture: native CAD, affine closed mesh, intentional open mesh and locked reference');
+  await require('./verification-controls.cjs').revealVerificationControl(win,'.file-actions [data-action="stl-to-step"]');
+  const route=await js(`(()=>{const a=window.__cadTest,e=a.functionsUI.file,click=e.click;let opened=false;e.click=()=>opened=true;const b=document.querySelector('.file-actions [data-action="stl-to-step"]'),r=b.getBoundingClientRect();if(r.left<0||r.right>innerWidth||document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)!==b)throw Error('Direct converter button is not visible');b.click();e.click=click;return opened;})()`);assert(route);checks.push('STL to STEP entry in the current workbench menu opens the shared file chooser');
+ };
+ const exercisePreview=async({check,until,js})=>{
+  const before=await js('window.__cadTest.serialize()'),depth=await js('window.__cadTest.undoDepth()');
+  await js('document.getElementById("converter-discard").click()');
+  check(await js('!window.__cadTest.functionsUI.state().projectPreview&&window.__cadTest.functionsUI.state().hasResult&&!window.__cadTest.view.groups.preview.children.length&&document.getElementById("modal").matches(":modal")'),'Discard returns to converter result without leaving preview geometry');
+  check(await js('window.__cadTest.serialize()')===before&&await js('window.__cadTest.undoDepth()')===depth,'Discard preserves all mixed project bytes and history');
+  await js('document.getElementById("converter-import").click()');await until('window.__cadTest.functionsUI.state()?.projectPreview&&!window.__cadTest.functionsUI.state()?.busy');
+  await js('(async()=>{await window.__cadTest.mutate(p=>{p.name="Zwischenzeitlicher Projektstand";});await window.__cadTest.settled();})()');
+  check(await js('!window.__cadTest.functionsUI.state().projectPreview&&window.__cadTest.functionsUI.state().hasResult&&!window.__cadTest.view.groups.preview.children.length'),'An intermediate common project revision invalidates only the transfer proposal');
+  await js('window.__cadTest.actions.undo()');await js('window.__cadTest.settled()');check(await js('window.__cadTest.serialize()')===before,'Undo of independent edit preserves the original mixed project');
+  await js('document.getElementById("converter-import").click()');await until('window.__cadTest.functionsUI.state()?.projectPreview&&!window.__cadTest.functionsUI.state()?.busy');
+  win.webContents.sendInputEvent({type:'keyDown',keyCode:'ESC'});win.webContents.sendInputEvent({type:'keyUp',keyCode:'ESC'});
+  await until('!window.__cadTest.functionsUI.state()?.projectPreview');check(await js('window.__cadTest.serialize()')===before&&await js('window.__cadTest.functionsUI.state().hasResult&&document.getElementById("modal").open'),'Trusted Escape discards only the candidate and retains the converter result');
+  await js('document.getElementById("converter-import").click()');await until('window.__cadTest.functionsUI.state()?.projectPreview&&!window.__cadTest.functionsUI.state()?.busy');
+  await js('window.__cadTest.view.renderReady()');fs.writeFileSync(path.join(directory,'shared-transfer-preview.png'),(await win.webContents.capturePage()).toPNG());
+ };
+ const verified=await require('./stl-integration-verification.cjs').verify(win,app,{reportPath:path.join(directory,'converter-core.json'),converter,fixtures,prepareProject,normalFileInput:true,syntheticOnly:true,exercisePreview});
+ checks.push(...verified.checks);
+ // Reload deliberately loses ephemeral test globals: use the confirmed project
+ // written before reload as the authoritative original fixture for this check.
+ const beforeReload=JSON.parse(fs.readFileSync(path.join(directory,'before-reload.ocad'),'utf8')),after=await js('window.__cadTest.getModel()');
+ function strip(n){const v=structuredClone(n);delete v.stats;return v;}
+ assert.deepEqual(after.nodes.filter(n=>n.kind!=='cad').map(strip),beforeReload.nodes.filter(n=>n.kind!=='cad').map(strip));checks.push('Conversion, correction, preview, commit, cancel and reload preserve exact raw mesh/reference metadata');
+ await js('(async()=>{await window.__cadTest.save();await window.__cadTest.settled();})()');const physical=JSON.parse(fs.readFileSync(files.save,'utf8'));assert.equal(physical.version,8);assert(physical.nodes.some(n=>n.kind==='mesh')&&physical.nodes.some(n=>n.kind==='referenceMesh')&&physical.nodes.filter(n=>n.kind==='cad').length>=3);checks.push('Normal save writes a physical mixed Format-8 project with converted native CAD');
+ await js('(async()=>{const a=window.__cadTest;window.__converterFinal=a.serialize();await a.resetProject();await a.openProject();await a.settled();if(a.serialize()!==window.__converterFinal)throw Error("Mixed project roundtrip changed");})()');checks.push('Normal reopen restores exact converted BReps, source triangles, locks and affine matrices');
+ for(const format of ['3mf','stl']){await js(`(async()=>{const a=window.__cadTest,s=a.serialize(),u=a.undoDepth();await a.exportModel('${format}');if(s!==a.serialize()||u!==a.undoDepth())throw Error('Export changed project');})()`);assert(fs.statSync(path.join(directory,'exports',physical.name+'.'+format)).size>100);checks.push('Physical common '+format+' export preserves the confirmed converted project');}
+ const waitFor=async code=>{const start=Date.now();while(!await js(code)){if(Date.now()-start>240000)throw Error('Modal replacement: '+code);await new Promise(r=>setTimeout(r,60));}};
+ const bytes=fs.readFileSync(path.join(fixtures,'platte-mit-zwei-senkungen.stl')).toString('base64');
+ await js(`(()=>{const d=new DataTransfer();d.items.add(new File([Uint8Array.from(atob(${JSON.stringify(bytes)}),c=>c.charCodeAt(0))],'Neue Übernahme.stl'));const e=window.__cadTest.functionsUI.file;e.files=d.files;e.dispatchEvent(new Event('change'));})()`);
+ await waitFor('window.__cadTest.functionsUI.state()?.regions>0&&!window.__cadTest.functionsUI.state()?.busy');await js('document.getElementById("converter-run").click()');await waitFor('window.__cadTest.functionsUI.state()?.hasResult&&!window.__cadTest.functionsUI.state()?.busy');
+ await js('window.__modalReplacementBefore=window.__cadTest.serialize();window.__modalReplacementUndo=window.__cadTest.undoDepth();document.getElementById("converter-import").click()');await waitFor('window.__cadTest.functionsUI.state()?.projectPreview&&!window.__cadTest.functionsUI.state()?.busy');
+ await js(`document.querySelector('[data-action="help"]').click()`);await waitFor('window.__cadTest.functionsUI.state()?.disposed');
+ assert(await js('document.getElementById("modal").matches(":modal")&&!document.getElementById("modal").classList.contains("stl-project-preview")'));checks.push('Another app dialog replaces modeless transfer confirmation as a normal modal');
+ assert(await js('window.__cadTest.serialize()===window.__modalReplacementBefore&&window.__cadTest.undoDepth()===window.__modalReplacementUndo&&!window.__cadTest.view.groups.preview.children.length'));checks.push('Replacing the workbench discards its native proposal and preserves the confirmed project');await js('document.getElementById("modal-close").click()');
+ return {...verified,checks:[...checks],isolatedProfile:true,package9:true,screenshot:path.join(directory,'shared-transfer-preview.png')};
+}
+function verificationDialogs(directory){const d=require('./mixed-project-verification.cjs').verificationDialogs(directory),base=d.exportDialog;return {...d,exportDialog:{...base,showSaveDialog:async(...args)=>globalThis.__cancelStlVerificationSave?{canceled:true}:base.showSaveDialog(...args)}};}
+module.exports={verifyConverterWorkspace,verificationDialogs};

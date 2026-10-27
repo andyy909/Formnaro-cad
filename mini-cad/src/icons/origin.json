@@ -1,0 +1,121 @@
+[
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/copy.svg",
+    "sha256": "d2e70b9166c09e66e28351ae32ab87b0ec1e4c3cd5d6d31354e65cf8a6d0677c",
+    "originalSha256": "01da13d33d6163f37ee81f397e567832068d836af0307118156370716357be07",
+    "change": "stroke color only",
+    "file": "copy.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/clipboard.svg",
+    "sha256": "e7bfb808d323021f33804926b42815f2599b9698d75dfece2938b43cd41270ba",
+    "originalSha256": "1d5e10b6e69c84cebb883b7263bf2b4cc3ae19cfd07ff5d136a5a6f269c6d2f8",
+    "change": "stroke color only",
+    "file": "clipboard.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/copy-plus.svg",
+    "sha256": "b29a351b088fddd48b5415ab9842afc63bfe679d6cb0b373e562a8e93e9b4a7a",
+    "originalSha256": "73f8ed86ea80546fd943015aeea9a48bcbc1294c80832a2c681c9bf0229a524f",
+    "change": "stroke color only",
+    "file": "copy-plus.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/trash.svg",
+    "sha256": "3c8569a4c3d337aae01cc69f88256871162203d004e65c5348b9a2474ee13ba1",
+    "originalSha256": "94176fd47075e845088ac13745104d722daae7fa8be94ae9665c143f8e2705a7",
+    "change": "stroke color only",
+    "file": "trash.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/arrow-back-up.svg",
+    "sha256": "c8ef05552cbbeca9723f9a0e75cdcadaa671aafe5c442b18d47400bc74a7deea",
+    "originalSha256": "f50453256d271a311cd614d98d8168a5a9f3dd4ee54e3e14e5592c72d59d13a0",
+    "change": "stroke color only",
+    "file": "arrow-back-up.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/arrow-forward-up.svg",
+    "sha256": "a5b433b6d2fc1567dcbf6a97150565133c9ebba3b0089fab6381913b8a63408f",
+    "originalSha256": "a17ac6aeba9ca74873cbdcd262c084ab09edafee1a78eb38f17b38fd0afe0c2b",
+    "change": "stroke color only",
+    "file": "arrow-forward-up.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/bulb.svg",
+    "sha256": "ab2bb6f7cbc43cabb2ba8d1f53f85159a62bba149de7cd6f1b7a1e14769377c6",
+    "originalSha256": "ecbb1219b1f096468aaeaf5095e71dadc75e37f23c5f91fb535c9cd2aa74095a",
+    "change": "stroke color only",
+    "file": "bulb.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/chevron-down.svg",
+    "sha256": "c67972239a4bcefeb9a03509319ffb187a3be4d936d8341a4037a4f6028c0af6",
+    "originalSha256": "a3a801faaeeb084e8a96897a5e2f355870b861e9606a1b50a89011b2718cc322",
+    "change": "stroke color only",
+    "file": "chevron-down.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/layers-union.svg",
+    "sha256": "d75fa8cce24d20a993da4675ba27204c2f2f83869b9ce503e601da746583f333",
+    "originalSha256": "1ca9b1f3ae6f27d10ba79e98d0ba4c31bea25a99d30864452105f7ae3f4d62f1",
+    "change": "stroke color only",
+    "file": "layers-union.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/layers-linked.svg",
+    "sha256": "a0b17b6d9bcc2e8a061e0608d05e09df80018e1ccbb6d0cf56e2c28c90f2a066",
+    "originalSha256": "231b930487b5a538d2fb26a14798250078ff6ca2ef4336e6b90693eeb82e5afc",
+    "change": "stroke color only",
+    "file": "layers-linked.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/align-left-2.svg",
+    "sha256": "bfd72104e762659fb340b944c08783e804fd1d2d8460ba66bc5a7249381c1928",
+    "originalSha256": "2e7792c1413b6e50f0bc76c58724dba54f711ec3a9fca4633f7b67cb059c812c",
+    "change": "stroke color only",
+    "file": "align-left.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/flip-horizontal.svg",
+    "sha256": "4e7af4ec9ae141aba514bf363ebe6b1f1ee699346dc1abdaede5a3517b29bfba",
+    "originalSha256": "61ec0f6ef73c6186436f9b0edc6e928c1beeccb83616699274382ba2aab1a92e",
+    "change": "stroke color only",
+    "file": "flip-horizontal.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/magnet.svg",
+    "sha256": "1b21b916d28e0ba4b25d1f79fa26280af4c4ec3da166e8757f0aeb4a3494a1b3",
+    "originalSha256": "36f9fa6a15f646f553f5ca6a8bb993e7f1a311a00aad26bfcaa87a1f74d37b75",
+    "change": "stroke color only",
+    "file": "magnet.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/ruler-measure.svg",
+    "sha256": "8614204e8c245e5bf222409238d0b61d4815b758b0b4d492e2b734f554c53608",
+    "originalSha256": "5908592a6a691268a0a64887884a4be793658a46eacb3d03c7911f7f37338666",
+    "change": "stroke color only",
+    "file": "ruler-measure.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/box-align-bottom.svg",
+    "sha256": "fb9c5d2848a676e6d600c7a82a16579487f6fa174048ef7cbf93f62444b3fb6a",
+    "originalSha256": "072aac705a5ea294ee868ee0ff62df359ee81ac2fd68a45c9168a6bf413a1c8e",
+    "change": "stroke color only",
+    "file": "box-align-bottom.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/arrows-move.svg",
+    "sha256": "db72d191e76ee4530071bbef6b234996c86ff466a92d147c2ba08d0c380ef9f9",
+    "originalSha256": "45b5a5c95a430f7512b9b20d48a3fed70571f4cb31069da74000c94550c7ec4c",
+    "change": "stroke color only",
+    "file": "arrows-move.svg"
+  },
+  {
+    "source": "@tabler/icons@3.49.0/icons/outline/rotate.svg",
+    "sha256": "4a90e3ae879e769f03ab38fd666872a471b53a42b38c2179b9e68333e3057aec",
+    "originalSha256": "27bd2a929eee1460da0948b24156194d65b0a33fb3ba356d6ee18572d4eb76b1",
+    "change": "stroke color only",
+    "file": "rotate.svg"
+  }
+]

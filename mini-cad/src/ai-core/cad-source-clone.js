@@ -1,0 +1,3 @@
+function ids(node,map){const old=node.id;node.id=globalThis.crypto.randomUUID();map.set(old,node.id);for(const annotation of node.annotations??[])annotation.id=globalThis.crypto.randomUUID();for(const child of node.children??[])ids(child,map);}
+function origins(node,map){for(const step of node.finish?.steps??[])for(const edge of step.edges){edge.origin.rootId=map.get(edge.origin.rootId)??edge.origin.rootId;edge.origin.path=edge.origin.path.map(id=>map.get(id)??id);}for(const child of node.children??[])origins(child,map);}
+export function cloneCadSources(node,{mapping=new Map()}={}){const copy=structuredClone(node);ids(copy,mapping);origins(copy,mapping);return copy;}

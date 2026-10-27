@@ -1,0 +1,92 @@
+{
+  "format": "FormnaroSyntheticHollowFixture",
+  "version": 1,
+  "synthetic": true,
+  "description": "Closed outward cube 12x10x8mm; bottom drain connects exterior with new inner cavity.",
+  "mesh": {
+    "verts": [
+      -6,
+      -5,
+      0,
+      6,
+      -5,
+      0,
+      6,
+      5,
+      0,
+      -6,
+      5,
+      0,
+      -6,
+      -5,
+      8,
+      6,
+      -5,
+      8,
+      6,
+      5,
+      8,
+      -6,
+      5,
+      8
+    ],
+    "triangles": [
+      0,
+      2,
+      1,
+      0,
+      3,
+      2,
+      4,
+      5,
+      6,
+      4,
+      6,
+      7,
+      0,
+      1,
+      5,
+      0,
+      5,
+      4,
+      1,
+      2,
+      6,
+      1,
+      6,
+      5,
+      2,
+      3,
+      7,
+      2,
+      7,
+      6,
+      3,
+      0,
+      4,
+      3,
+      4,
+      7
+    ]
+  },
+  "options": {
+    "wallThickness": 1.5,
+    "resolution": 0.4,
+    "drains": [
+      {
+        "center": [
+          0,
+          0,
+          0.75
+        ],
+        "direction": [
+          0,
+          0,
+          -1
+        ],
+        "diameter": 2,
+        "length": 6
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+.cad-legal-summary{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.cad-legal-summary strong{font-size:24px}
+.cad-legal-summary span{color:var(--muted,#63798e)}
+.cad-legal-section{padding:16px 0;border-top:1px solid var(--border,#dbe5ec)}
+.cad-legal-section h3{font-size:15px;margin:0 0 10px}
+.cad-legal-section p{line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.cad-legal-section summary{cursor:pointer;font-weight:600;line-height:1.5}
+.cad-legal-text{max-height:320px;overflow:auto;padding:16px;border:1px solid var(--border,#dbe5ec);border-radius:8px;background:var(--panel-bg,#f4f7fa);font:12px/1.65 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:4}
+[data-theme=dark] .cad-legal-text{background:#172630;border-color:#3a4e60;color:#d9e5ee}
+[data-theme=dark] .cad-legal-section{border-color:#3a4e60}
+[data-theme=dark] .cad-legal-summary span{color:#a5b7c6}
+@media(max-width:700px){.cad-legal-text{max-height:240px}}

@@ -1,0 +1,60 @@
+FORMNARO 0.9 – ANLEITUNGSERGÄNZUNG (10.10.2026)
+
+1. KOPIEREN UND EINFÜGEN
+Oben stehen Duplizieren, Kopieren und Einfügen nebeneinander.
+Kopieren (Strg+C) legt ausgewählte fertige Teile samt Quellen und Parametern
+in die anwendungsinterne Zwischenablage. Das Modell bleibt dabei unverändert.
+Einfügen (Strg+V) erstellt neue Teile mit neuen IDs, um 10 mm in X/Y versetzt.
+Jedes Einfügen ist ein Undo-Schritt. Die Zwischenablage gilt für diese Sitzung.
+Duplizieren (Strg+D) bleibt die direkte Wiederholung mit wiederholbarem Abstand.
+Im Quellenmodus zuerst „Zur fertigen Gruppe“ wählen; dann ganze Teile kopieren.
+
+2. BERECHNUNG UND ABBRUCH
+Gruppieren und Schnittmenge laufen auch über Strg+G im Hintergrund.
+Quellen-Griffzüge, Maße/Position/Winkel, Formparameter und Qualität sowie
+Aussetzen, Quellenlöschen und Körper/Loch verwenden eine gemeinsame
+Bearbeitungstransaktion. Native Einzelteile und Passungsvorlagen sind einbezogen.
+Die orange Quellenvorschau folgt direkt. Das fertige Teil folgt nach erfolgreicher
+Worker-Berechnung. Nur der neueste wartende Zustand wird berechnet/übernommen.
+Der Abschluss erzeugt einen Undo-Schritt. Escape, Abbrechen oder ein vom System
+abgebrochener Zeigerzug stellt den Zustand vom Anfang der Bearbeitung wieder her.
+Autosicherung übernimmt nur bestätigte Zustände. Gruppierung, Export und
+Modellprüfung lassen sich ebenfalls abbrechen; danach neu starten.
+Import, Vorlagenaufbau, Auflösen mit Geometrieberechnung und KI-Vorschauen
+bleiben außerhalb dieses neuen Abbruchumfangs.
+
+3. SCHNITTANSICHT
+„Schnittansicht“ öffnen, X/Y/Z, Schnitthöhe und die gewünschte Seite wählen.
+Orange Flächen schließen den temporär geschnittenen Körper; Bohrungen bleiben
+als Aussparungen offen. Nach Änderungen wird der Schnitt erneut berechnet.
+„Schnitt aus“ entfernt die Darstellungsnetze. Projekt und Exporte enthalten das
+vollständige Modell, unabhängig von der Schnittansicht.
+
+4. MODELLPRÜFUNG
+Die Mindestwand wird lokal gespeichert, Vorgabe 1 mm. Als Prüfqualität stehen
+1500 oder 6000 Stichproben je Teil zur Wahl. Bei wenigen Dreiecken werden weniger
+Proben genommen; die tatsächlich verwendete Zahl erscheint im Ergebnis.
+Kollision anklicken: betroffene Teile auswählen. „Dünne Stellen zeigen“ blendet
+bis zu 20 Messstrecken für das gewählte Teil ein. IDs und Prüf-Revisionskennung
+stehen im Ergebnis. Änderungen machen alte Ergebnisse ausdrücklich veraltet.
+„Kleinste abgetastete Wand“ ist keine vollständige Mindestwandgarantie.
+
+5. SPEICHERN
+Desktop-Speichern/Export öffnet den Windows-Dateidialog. Der Erfolg wird erst
+nach vollständigem Schreiben gemeldet. Abbrechen oder Schreibfehler bedeutet
+keinen erfolgreichen Speicherstatus. Im reinen Browser wird ein Download nur
+angefordert; sein Abschluss ist nicht bestätigt. Regelmäßig .ocad-Dateien sichern.
+Projektdateien sind kompakt auf 50 MB UTF-8, Bibliotheken auf 4 MB begrenzt, wie
+beim Öffnen. Größere Dateien werden vor dem Schreiben abgelehnt. Gruppen müssen
+die bisherigen Grenzen von 1 Million Netzpunkten und 2 Millionen Dreiecken
+einhalten; zu große Ergebnisse werden abgelehnt, der Ausgangszustand bleibt.
+
+6. START UND KOMPATIBILITÄT
+Formnaro.exe liegt separat in release-formnaro-v0.9/Formnaro-win32-x64.
+Vor dem normalen Wechsel die bisherige Anwendung selbst schließen; beide
+Versionen verwenden dasselbe bestehende Profil %APPDATA%/offlinecad.
+Projektformat 3, lokale KI-API 1 und vorhandene Profil-/Projektdateien bleiben.
+Das bebilderte Handbuch unter dem früheren Namen Tinkoff-Handbuch-DE.pdf beschreibt die Grundlagen bis
+0.8; diese Ergänzung beschreibt 0.9. Der Prüfbericht benennt Ergebnisse und Grenzen.
+STEP, allgemeine Kantenverrundung und bewegliche Baugruppen folgen später.
+Skizzen, Schaltungen, Cloudtests und Druckjobs sind nicht Bestandteil dieser Runde.

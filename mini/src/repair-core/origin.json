@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "file": "cad-export-triangles.js",
+      "source": "src/cad-export-triangles.js",
+      "sha256": "b7ccad16bf5a57f35a0a3f5046de3fa5b7a152f04aba14ce1be09601b514edae",
+      "sourceSha256": "b7ccad16bf5a57f35a0a3f5046de3fa5b7a152f04aba14ce1be09601b514edae",
+      "adaptation": "unchanged"
+    },
+    {
+      "file": "cad-geometry-digest.js",
+      "source": "src/cad-geometry-digest.js",
+      "sha256": "5f596061cd12bdfcb1b7d8c96073dcf183a994e5378e1f579e48c516d43bb1c8",
+      "sourceSha256": "5f596061cd12bdfcb1b7d8c96073dcf183a994e5378e1f579e48c516d43bb1c8",
+      "adaptation": "unchanged"
+    },
+    {
+      "file": "mesh-inspector.js",
+      "source": "src/mesh-inspector.js",
+      "sha256": "363b49afeb4f08e5ffbbf20a571d82edc0a8a62d018742abc4321f48bd00ee6b",
+      "sourceSha256": "363b49afeb4f08e5ffbbf20a571d82edc0a8a62d018742abc4321f48bd00ee6b",
+      "adaptation": "unchanged"
+    },
+    {
+      "file": "mesh-selection-data.js",
+      "source": "src/mesh-selection-data.js",
+      "sha256": "a99d93c33df9ab8ae5ac9af3eeddaa865df717d232ab9a7a645bd63ecdc0bf44",
+      "sourceSha256": "fa392e0947991d70339c131ece97c57f2d58adc67053dcaff151567f253f0d1b",
+      "adaptation": "Unused browser worker service omitted; topology and digest functions retained."
+    },
+    {
+      "file": "mesh-simple-repair.js",
+      "source": "src/mesh-simple-repair.js",
+      "sha256": "a8e135bdca5bfe7bbc7a126a8e1fff2a9c6045837003b97c5082eab061dee471",
+      "sourceSha256": "a8e135bdca5bfe7bbc7a126a8e1fff2a9c6045837003b97c5082eab061dee471",
+      "adaptation": "unchanged"
+    },
+    {
+      "file": "mesh-stl-repair.js",
+      "source": "src/mesh-engine/mesh-stl-repair.js",
+      "sha256": "c5700ab03585f668a34fae96327e4ee2840ce1c9a740567575f51b135eafd09f",
+      "sourceSha256": "c5700ab03585f668a34fae96327e4ee2840ce1c9a740567575f51b135eafd09f",
+      "adaptation": "unchanged"
+    }
+  ]
+}

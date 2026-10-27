@@ -1,0 +1,134 @@
+/* Fusion presentation is scoped; the other modes retain their saved layouts. */
+body.fusion-workbench{--fusion-border:#b9c3ce;--fusion-panel:#f5f6f8;--fusion-active:#2879b9;--fusion-text:#26384a}
+body.fusion-workbench header{min-height:58px;padding:8px 14px;gap:12px;background:var(--fusion-panel)}
+body.fusion-workbench header .brand{font-size:19px}
+body.fusion-workbench header .brand>span{background:#ba3438}
+body.fusion-workbench header .project{flex:1;min-width:130px;max-width:440px}
+body.fusion-workbench .toolbar{min-height:38px;padding:3px 12px;background:var(--fusion-panel);border-bottom:0}
+body.fusion-workbench .toolbar>.tools{flex:1}
+body.fusion-workbench .toolbar>#toggle-left,body.fusion-workbench .toolbar>#toggle-right{display:none}
+.fusion-quick-tools{display:flex;gap:5px;align-items:center}
+.fusion-quick-tools button{min-height:30px!important;padding:4px 9px!important;font-size:12px!important}
+.fusion-menubar{display:flex;align-items:center;gap:2px;padding:0 12px;min-height:29px;flex:none;border-top:1px fusion var(--fusion-border);background:var(--fusion-panel);color:var(--fusion-text);z-index:45}
+.fusion-menu>summary{list-style:none;font-size:12px;padding:6px 10px;cursor:pointer}
+.fusion-menu>summary::-webkit-details-marker{display:none}
+.fusion-menu[open]>summary,.fusion-menu>summary:hover{background:#dce7f1;color:#20496f}
+.fusion-menu-panel{position:fixed;z-index:120;width:240px;box-sizing:border-box;padding:5px;background:var(--fusion-panel);border:1px fusion var(--fusion-border);box-shadow:0 6px 20px #15273733;overflow:auto}
+.fusion-menu:not([open])>.fusion-menu-panel{display:none}
+.fusion-menu-panel button{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:0;font-size:12px;padding:9px}
+.fusion-mode-note{margin-left:auto;white-space:nowrap;letter-spacing:1.2px;font-size:10px;opacity:.65;padding:0 8px}
+.fusion-ribbon{flex:none;background:var(--fusion-panel);color:var(--fusion-text);border-bottom:1px fusion var(--fusion-border);min-width:0}
+.fusion-tabs{display:flex;gap:0;border-bottom:1px fusion var(--fusion-border);padding-left:12px;overflow-x:auto}
+.fusion-tabs button{border:0;border-bottom:3px fusion transparent;border-radius:0;background:transparent;font-size:12px;white-space:nowrap;padding:7px 16px}
+.fusion-tabs button[aria-selected=true]{background:var(--panel,#fff);border-bottom-color:var(--fusion-active);color:var(--fusion-active);font-weight:700}
+.fusion-command-panel{display:flex;align-items:stretch;gap:0;padding:6px 12px;min-height:83px;overflow-x:auto;overscroll-behavior-x:contain}
+.fusion-command-panel[hidden]{display:none!important}
+.fusion-command-group{display:flex;align-items:stretch;flex:none;gap:2px;padding:0 8px;border-right:1px fusion var(--fusion-border)}
+.fusion-command-group:first-child{padding-left:0}
+.fusion-command-group:last-child{border:0}
+.fusion-ribbon .fusion-command{display:flex!important;flex-direction:column;justify-content:center;align-items:center;gap:5px;border:1px fusion transparent;border-radius:2px;background:transparent;color:inherit;min-width:74px;max-width:112px;min-height:70px;padding:5px 8px;margin:0;width:auto;font-size:11px;line-height:1.2;white-space:normal;text-align:center}
+.fusion-ribbon .fusion-command[hidden]{display:none!important}
+.fusion-command-icon{display:block;color:#a86e23;font-size:27px;font-weight:600;line-height:30px;min-height:30px}
+.fusion-command:nth-child(even) .fusion-command-icon{color:#3580af}
+.fusion-command-caption{display:block!important;max-width:100px}
+.fusion-ribbon .fusion-command:hover:not(:disabled){background:#e0ebf5;border-color:#9cbbd4}
+.fusion-ribbon .fusion-command:disabled{opacity:.42}
+body.fusion-workbench main,body.fusion-workbench[data-library-side=right] main{grid-template-areas:'fusionmanager viewport tasks';grid-template-columns:clamp(255px,23vw,310px) minmax(0,1fr) auto}
+body.fusion-workbench main>.left-panel,body.fusion-workbench main>.right-panel{display:none!important}
+.fusion-manager{grid-area:fusionmanager;display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--panel,#fff);border-right:1px fusion var(--fusion-border);color:var(--fusion-text);overflow:hidden;z-index:4}
+.fusion-manager-tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;flex:none;background:var(--fusion-panel);border-bottom:1px fusion var(--fusion-border)}
+.fusion-manager-tabs button{font-size:11px;padding:8px 4px;border:0;border-bottom:2px fusion transparent;border-radius:0;background:transparent;color:inherit}
+.fusion-manager-tabs button[aria-selected=true]{border-bottom-color:var(--fusion-active);background:var(--panel,#fff);font-weight:700;color:var(--fusion-active)}
+.fusion-manager-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px 10px 16px}
+.fusion-manager-content[hidden]{display:none!important}
+.fusion-manager-content h2{font-size:13px;margin:3px 0 13px}
+.fusion-manager .sidebar-object-section{height:auto!important;min-height:180px;overflow:visible;display:flex;flex-direction:column;flex:1}
+.fusion-manager #object-list{overflow:visible;max-height:none;flex:none;min-height:80px}
+.fusion-manager .organization-tools{display:none}
+.fusion-manager .sidebar-object-section .sidebar-bottom{flex-wrap:wrap}
+.fusion-manager .shape-library-section{height:auto!important;overflow:visible}
+.fusion-manager #shape-library{height:auto!important;max-height:none;overflow:visible;grid-template-columns:repeat(2,minmax(0,1fr))}
+.fusion-manager .inspector-properties-section{overflow:visible}
+.fusion-manager .workspace-settings{padding:0}
+.fusion-planes{font-size:12px;border-bottom:1px fusion var(--fusion-border);padding:0 0 10px;margin-bottom:8px}
+.fusion-planes summary{cursor:pointer;padding:5px 0}
+.fusion-planes button{display:block;text-align:left;border:0;background:transparent;padding:7px 4px;width:100%;font-size:12px}
+.fusion-planes p,.fusion-tip{font-size:11px;line-height:1.6;color:var(--muted,#637386)}
+.fusion-tip{border-top:1px fusion var(--fusion-border);padding-top:12px}
+.fusion-operation-host{display:none;flex:1;min-height:0;overflow:auto;padding:12px}
+.fusion-operation-active>.fusion-manager-content,.fusion-operation-active>.fusion-manager-tabs{display:none!important}
+.fusion-operation-active>.fusion-operation-host{display:block}
+.fusion-operation-host .edge-tool-panel{position:static;max-height:none;max-width:none;width:100%;padding:0;border:0;border-radius:0;box-shadow:none;background:transparent;color:inherit;overflow:visible}
+.fusion-operation-host .edge-tool-panel header{padding:0;min-height:40px;background:transparent;display:flex;font-size:13px;flex-wrap:nowrap}
+.fusion-task-pane{grid-area:tasks;display:none;width:320px;max-width:35vw;border-left:1px fusion var(--fusion-border);min-height:0;overflow:auto}
+.fusion-task-pane:has(#ai-chat:not(.collapsed)){display:flex}
+body.fusion-workbench main .fusion-task-pane .cad-ai-chat{margin:0;width:100%;height:100%;max-height:none;border:0}
+body.fusion-workbench .view-controls{display:flex;flex-direction:row;left:50%!important;right:auto!important;top:10px!important;transform:translateX(-50%);width:auto;gap:3px;max-width:calc(100% - 16px);padding:3px;background:var(--fusion-panel);border:1px fusion var(--fusion-border);border-radius:3px}
+body.fusion-workbench .view-controls button{min-height:29px;width:auto;padding:4px 8px;font-size:11px;white-space:nowrap}
+body.fusion-workbench .view-top{top:53px;left:12px!important;right:auto!important;font-size:10px;opacity:.7}
+body.fusion-workbench .mode-switch{top:auto!important;bottom:44px;left:auto!important;right:12px!important;border-radius:3px;font-size:11px}
+body.fusion-workbench #empty-hint{padding:20px}
+body.fusion-workbench #empty-hint h1{font-size:24px}
+.fusion-popup{position:absolute;top:70px;left:50%;transform:translateX(-50%);width:min(270px,calc(100% - 20px));max-height:calc(100% - 100px);overflow:auto;background:var(--fusion-panel);color:var(--fusion-text);border:1px fusion var(--fusion-border);box-shadow:0 8px 30px #15273733;padding:10px;z-index:60;box-sizing:border-box}
+.fusion-popup strong{font-size:13px;display:block;padding:5px}
+.fusion-popup button{display:block;text-align:left;width:100%;font-size:12px;padding:7px;margin:3px 0}
+#fusion-settings p{font-size:13px;line-height:1.6}
+[data-theme=dark].fusion-workbench{--fusion-border:#4d6073;--fusion-panel:#263645;--fusion-active:#87bdea;--fusion-text:#e1eaf3}
+[data-theme=dark] .fusion-command-icon{color:#e6b267}
+[data-theme=dark] .fusion-ribbon .fusion-command:hover:not(:disabled),[data-theme=dark] .fusion-menu[open]>summary{background:#3a536b;color:#e1eaf3}
+@media(max-width:1000px){.fusion-mode-note{display:none}.fusion-tabs button{padding:7px 12px}.fusion-command-panel{min-height:76px}.fusion-ribbon .fusion-command{min-width:70px;min-height:65px}body.fusion-workbench main,body.fusion-workbench[data-library-side=right] main{grid-template-columns:255px minmax(0,1fr) auto}.fusion-task-pane{width:280px}.fusion-task-pane:has(#ai-chat:not(.collapsed)){position:absolute;right:0;top:0;bottom:0;z-index:40;max-width:calc(100% - 260px);background:var(--fusion-panel)}}
+@media(max-height:750px){.fusion-command-panel{min-height:68px;padding-top:3px;padding-bottom:3px}.fusion-ribbon .fusion-command{min-height:60px}.fusion-command-icon{font-size:23px;min-height:25px;line-height:25px}}
+
+/* Fusion arrangement: grouped Design toolbar, Browser, right tool palette,
+   bottom navigation and a strip backed by the actual retained source tree. */
+body.fusion-workbench{--fusion-active:#087dbb;--fusion-panel:#f3f3f3;--fusion-border:#c4c6c9;--fusion-text:#30363b}
+body.fusion-workbench header .brand>span{background:#df7429}
+.fusion-workspace{display:flex;align-items:center;padding:0 18px;border-right:1px solid var(--fusion-border);font-size:12px;font-weight:700;letter-spacing:.6px;flex:none}
+.fusion-tabs button{font-size:12px;text-transform:uppercase;padding:9px 16px}
+.fusion-group-tools{display:flex;flex:1;gap:2px}
+.fusion-command-group{flex-direction:column;align-items:stretch;padding:0 10px}
+.fusion-group-title{display:block;text-align:center;font-size:10px;padding-top:5px;color:var(--muted,#66737c)}
+.fusion-group-menu>summary{list-style:none;cursor:pointer;text-align:center;font-size:10px;padding:5px 4px 0;color:var(--fusion-text)}
+.fusion-group-menu>summary::-webkit-details-marker{display:none}
+.fusion-group-menu-panel{position:fixed;display:flex;flex-direction:column;z-index:125;width:245px;box-sizing:border-box;padding:6px;border:1px solid var(--fusion-border);background:var(--fusion-panel);box-shadow:0 6px 20px #15273733;overflow:auto}
+.fusion-group-menu:not([open])>.fusion-group-menu-panel{display:none}
+.fusion-ribbon .fusion-group-menu-panel .fusion-command{flex-direction:row;justify-content:flex-start;width:100%;max-width:none;min-height:36px;gap:10px;padding:5px;font-size:12px;text-align:left}
+.fusion-group-menu-panel .fusion-command-icon{font-size:19px;min-width:26px;min-height:24px;line-height:24px}
+.fusion-group-menu-panel .fusion-command-caption{max-width:none}
+.fusion-ribbon .fusion-command{min-width:66px;max-width:96px;min-height:59px;font-size:10px}
+.fusion-command-icon{font-size:24px;color:#cd7732}
+.fusion-manager-tabs{grid-template-columns:1fr 1fr 1fr}
+.fusion-manager-tabs button{font-size:10px;padding:8px 3px;overflow-wrap:anywhere}
+.fusion-manager{background:var(--fusion-panel)}
+.fusion-manager .sidebar-object-section{min-height:110px}
+.fusion-planes{margin-bottom:4px}
+.fusion-task-pane{background:var(--panel,#fff);flex-direction:column;width:300px;max-width:33vw;overflow:auto}
+.fusion-task-pane:has(.fusion-properties:not([hidden])),.fusion-task-pane.fusion-operation-active{display:flex}
+.fusion-properties{padding:12px;overflow:auto}
+.fusion-properties>button{width:100%;font-size:11px;margin-bottom:10px}
+.fusion-task-pane .fusion-operation-host{flex:none}
+.fusion-task-pane.fusion-operation-active .fusion-operation-host{display:block}
+.fusion-task-pane.fusion-operation-active .fusion-properties{display:none}
+.fusion-task-pane:has(#ai-chat:not(.collapsed))>.fusion-properties{display:none}
+.fusion-source-strip{position:absolute;bottom:40px;left:0;right:0;height:62px;box-sizing:border-box;background:var(--fusion-panel);border-top:1px solid var(--fusion-border);display:flex;align-items:center;gap:12px;padding:7px 12px;z-index:3;color:var(--fusion-text)}
+.fusion-source-strip>strong{font-size:10px;font-weight:600;max-width:95px;flex:none;overflow-wrap:anywhere;line-height:1.4}
+.fusion-source-items{display:flex;align-items:center;gap:4px;overflow:auto;min-width:0;padding:2px}
+.fusion-source-items button{flex:none;max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;padding:8px;border-radius:2px;border-bottom:3px solid #d78231}
+.fusion-source-items button[aria-pressed=true]{background:#dcebf5;border-color:var(--fusion-active);color:#16476a}
+.fusion-source-empty{font-size:11px;color:var(--muted,#66737c)}
+body.fusion-workbench #canvas-host{bottom:102px}
+body.fusion-workbench .view-controls{left:auto!important;right:12px!important;top:12px!important;transform:none;display:grid;grid-template-columns:1fr 1fr;max-width:190px}
+body.fusion-workbench .view-controls button:first-child{grid-column:1/-1}
+body.fusion-workbench .mode-switch{bottom:112px}
+body.fusion-workbench .view-top{top:14px}
+body.fusion-workbench #measure-label{bottom:155px}
+.fusion-popup{top:30px;max-height:calc(100% - 150px);width:320px}
+.fusion-popup input{width:100%;box-sizing:border-box;margin:0 0 8px;font-size:13px}
+.fusion-navigation{position:absolute;bottom:112px;left:50%;transform:translateX(-50%);display:flex;gap:3px;padding:4px;background:var(--fusion-panel);border:1px solid var(--fusion-border);border-radius:3px;z-index:3;max-width:calc(100% - 24px)}
+.fusion-navigation button{font-size:10px;padding:6px 8px;white-space:nowrap}
+@media(max-width:1100px){.fusion-navigation{bottom:154px}}
+.fusion-task-pane>.cad-ai-chat.collapsed{display:none}
+[data-theme=dark].fusion-workbench{--fusion-border:#4d5963;--fusion-panel:#29343e;--fusion-active:#83c5ee;--fusion-text:#e5edf3}
+[data-theme=dark] .fusion-source-items button[aria-pressed=true]{background:#36566f;color:#e8f4ff}
+@media(max-width:1200px){.fusion-task-pane:has(.fusion-properties:not([hidden])),.fusion-task-pane.fusion-operation-active,.fusion-task-pane:has(#ai-chat:not(.collapsed)){position:absolute;right:0;top:0;bottom:0;z-index:40;width:300px;max-width:calc(100% - 260px);box-shadow:-4px 0 15px #15273722}.fusion-workspace{padding:0 10px;font-size:10px}}
+@media(max-width:850px){body.fusion-workbench header{gap:6px;padding:7px}body.fusion-workbench header .brand{font-size:15px}body.fusion-workbench header .project{min-width:80px}.fusion-tabs button{padding:8px}.fusion-source-strip>strong{max-width:70px}}

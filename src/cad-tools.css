@@ -1,0 +1,13 @@
+.edge-tool-panel{position:absolute;right:14px;top:64px;z-index:31;width:288px;max-width:calc(100% - 28px);max-height:calc(100% - 128px);overflow:auto;box-sizing:border-box;padding:16px;background:#fff;color:#23384a;border:1px solid #97b7c0;border-radius:10px;box-shadow:0 8px 28px #203b4d33;font-size:13px}
+.edge-tool-panel[hidden]{display:none}.edge-tool-panel .section-title{margin-top:0}.edge-tool-panel p{line-height:1.45;margin:10px 0}.edge-tool-panel input,.edge-tool-panel select{width:100%;box-sizing:border-box}.edge-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.edge-actions button{flex:1 1 100px}.fit-result{padding:12px;border:1px solid var(--line);border-radius:6px;font-weight:600;line-height:1.6}
+[data-theme=dark] .edge-tool-panel{background:#212f3e;color:#d6e2eb;border-color:#587b90}
+.edge-marquee{position:absolute;z-index:30;pointer-events:none;border:2px solid #ff9d21;background:#ff9d2126}.edge-marquee[hidden]{display:none}
+#magnet-mode.active{background:#fff0cc;color:#6c4700;border-color:#dc991b}[data-theme=dark] #magnet-mode.active{background:#785211;color:#fff0cd;border-color:#e8aa39}.mode-switch{flex-wrap:wrap;justify-content:flex-end}
+
+.cad-reference-markers{position:absolute;inset:0;pointer-events:none;z-index:28}.cad-reference-marker{position:absolute;transform:translate(-50%,-50%);width:20px;height:20px;min-height:0!important;padding:0!important;border:1px solid #146d88;border-radius:50%;background:#f0fbff;color:#126781;pointer-events:auto;font-size:16px;line-height:18px}.cad-reference-marker:hover,.cad-reference-marker:focus-visible{background:#ffd66b;border-color:#b77513;outline:2px solid #fff}.cad-reference-marker[data-kind=circle-center]{width:24px;height:24px;font-size:22px}.cad-reference-marker[data-kind=face-centroid]{border-radius:3px}[data-action=drill]{width:100%;margin-top:6px}
+
+.edge-tool-panel [hidden]{display:none!important}
+
+.cad-split-normal{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.cad-split-legend{display:flex;gap:12px;align-items:center}.cad-split-panel .dialog-label{margin:10px 0}.cad-split-panel .small-note{font-size:11px}
+
+.cad-marks-panel label{display:grid;gap:4px}.cad-marks-panel input[type=color]{height:36px;padding:3px;width:100%}.cad-marks-panel textarea{width:100%;box-sizing:border-box}.cad-marks-panel [data-mark-list]{max-height:160px;overflow:auto}.cad-marks-panel li{margin:6px 0}.cad-marks-panel li button{margin:4px 4px 0 0}

@@ -1,0 +1,21 @@
+{
+  "pillow": {
+    "name": "pillow",
+    "version": "13.0.0",
+    "file": "pillow-13.0.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl",
+    "sha256": "c045e1d6d8732aad11eeaf8307b8195a5a63eef542bed93c2ef0c72de30df2c2",
+    "bytes": 1057265,
+    "url": "formnaro-build:pillow-13.0.0-pyodide314.0.7",
+    "depends": [],
+    "provenance": "../security-pillow/source-lock.json"
+  },
+  "setuptools": {
+    "name": "setuptools",
+    "version": "84.2.1",
+    "file": "setuptools-84.2.1-py3-none-any.whl",
+    "sha256": "ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2",
+    "bytes": 876263,
+    "url": "https://files.pythonhosted.org/packages/ef/55/6dc6d6bb953bdfc52519a0059592c52b6e3b8ad51cf8256dffceb55b0610/setuptools-84.2.1-py3-none-any.whl",
+    "depends": []
+  }
+}

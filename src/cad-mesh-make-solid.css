@@ -1,0 +1,12 @@
+#cad-mesh-make-solid{width:410px;max-height:calc(100% - 106px)}
+#cad-mesh-make-solid .mesh-make-solid-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#cad-mesh-make-solid label{display:grid;gap:5px;margin:10px 0;font-size:12px}
+#cad-mesh-make-solid .small-note{font-size:11px;line-height:1.45}
+#cad-mesh-make-solid #mesh-make-solid-result{white-space:pre-wrap;font-size:12px;line-height:1.5}
+#cad-mesh-make-solid .mesh-make-solid-check{display:flex;align-items:center;gap:7px}
+#cad-mesh-make-solid .mesh-make-solid-check input{width:auto}
+#cad-mesh-make-solid #mesh-make-solid-source{background:#e8f3fa;padding:8px;border-radius:6px}
+#cad-mesh-make-solid .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px;display:flex;flex-wrap:wrap}
+[data-theme=dark] #cad-mesh-make-solid .edge-actions{background:#212f3e}
+[data-theme=dark] #cad-mesh-make-solid #mesh-make-solid-source{background:#283f50}
+@media(max-width:900px){#cad-mesh-make-solid{width:min(410px,calc(100% - 28px))}}

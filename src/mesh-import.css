@@ -1,0 +1,11 @@
+#import-mesh-options > label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+#import-mesh-report {
+  white-space: pre-wrap;
+  max-height: 160px;
+  overflow: auto;
+}
