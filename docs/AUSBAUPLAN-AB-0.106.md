@@ -327,6 +327,6 @@ Private Bereitstellung abgeschlossen: [Formnaro 0.113.0-r3](https://github.com/a
 
 Windows-ZIP: 1.883.314.641 Bytes, SHA-256 641aeff7bdb49ad5644422dc47d3edba2fac7b1a0bd0b69e686fe819b7130f09. Alle 37.380 ZIP-Einträge wurden nach dem Packen vollständig zurückgelesen und geprüft.
 
-[Private Ausgabe](https://github.com/andyy909/Formnaro/releases/tag/v0.114.0-r7) veröffentlicht und serverseitig geprüft. Die öffentliche Übernahme ist auf ausdrücklichen Folgeauftrag beauftragt und läuft. Bedienung, Messungen und Grenzen: [Integrierte CAD-Laufzeit](INTEGRIERTE-CAD-LAUFZEIT.md).
+[Private Ausgabe](https://github.com/andyy909/Formnaro/releases/tag/v0.114.0-r7) veröffentlicht und serverseitig geprüft. [Öffentliche Ausgabe](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7) auf ausdrücklichen Folgeauftrag ebenfalls veröffentlicht und serverseitig geprüft; das Windows-ZIP ist mit der privaten Ausgabe bytegleich. Bedienung, Messungen und Grenzen: [Integrierte CAD-Laufzeit](INTEGRIERTE-CAD-LAUFZEIT.md).
 
 Pakete 8–10 bleiben offen; 11–13 sind weiterhin optional. Die große allgemeine Gesamtprüfung folgt am Ende der beauftragten Folge.

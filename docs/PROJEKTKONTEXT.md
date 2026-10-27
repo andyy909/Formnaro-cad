@@ -15,7 +15,7 @@ alte FCStd-/Helperquellen, Abbruch sowie aktuelle Paketbilder sind geprüft.
 Native Basis und abschließende Integritätsänderungen sind getrennt per SHA
 gebunden; kein allgemeiner Gesamttest für diesen Einzelpunkt.
 [Details](INTEGRIERTE-CAD-LAUFZEIT.md). Private Ausgabe: https://github.com/andyy909/Formnaro/releases/tag/v0.114.0-r7.
-Auf ausdrücklichen Folgeauftrag wird derselbe geprüfte Windows-Download auch
+Auf ausdrücklichen Folgeauftrag ist derselbe geprüfte Windows-Download auch
 im öffentlichen Repository Formnaro-cad als 0.114.0-r7 bereitgestellt:
 https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7.
 Der Produktcode bleibt zum abgenommenen Stand unverändert; die nachträgliche
