@@ -1,124 +1,169 @@
-# Formnaro
+<p align="center">
+  <img src="bilder/formnaro-banner.svg" alt="Formnaro – deine lokale 3D-Werkstatt für Windows" width="100%">
+</p>
 
-**Deine lokale 3D-Werkstatt für Windows.**
+<p align="center">
+  <strong>Von der ersten Form zum eigenen Bauteil.</strong><br>
+  CAD, 3D-Modelle und technische Zeichnungen für Modellbau und 3D-Druck.
+</p>
 
-Mit Formnaro konstruierst du technische Teile, bearbeitest 3D-Modelle und bereitest eigene Ideen für Modellbau und 3D-Druck vor. CAD-Körper, Netze, Skizzen und technische Zeichnungen stehen in einer Anwendung zur Verfügung. Die normale Modellierung funktioniert offline; Projekte bleiben auf deinem Rechner.
+<h3 align="center">
+  <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows.zip">↓ Formnaro für Windows herunterladen</a>
+</h3>
 
-## Herunterladen
+<p align="center">
+  <strong>0.114.0-r7 · Windows 64 Bit · portabel · ca. 1,88 GB</strong><br>
+  FreeCAD und Python sind bereits dabei.
+</p>
 
-### [Formnaro 0.114.0-r7 für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows.zip)
+<p align="center">
+  <a href="#in-drei-schritten-starten">Erste Schritte</a> ·
+  <a href="https://github.com/andyy909/Formnaro-cad/releases/latest">Versionshinweise</a> ·
+  <a href="#anleitungen">Anleitungen</a> ·
+  <a href="https://github.com/andyy909/Formnaro-cad/issues">Feedback &amp; Ideen</a>
+</p>
 
-**Windows · 64 Bit · portable**
+---
 
-[Versionshinweise, Prüfbericht und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7) · [Alle Versionen](https://github.com/andyy909/Formnaro-cad/releases)
+## Deine Idee. Deine Maße. Dein Modell.
 
-1. ZIP-Datei herunterladen und vollständig in einen eigenen Ordner entpacken.
-2. `Formnaro/Formnaro.exe` starten. Alle Unterordner, Laufzeiten und Lizenzen zusammenlassen.
-3. Eigene Einstellungen und Werkzeuge bei Bedarf über den bisherigen Datenordner mitnehmen.
+Ein Halter für die Werkbank, ein Gehäuse für die Elektronik oder ein Ersatzteil für den Modellbau: Mit Formnaro baust du eigene Teile auf, passt vorhandene Modelle an und erstellst Zeichnungen dazu.
 
-Persönliche Modelle, Profile und Zugangsdaten sind nicht enthalten. FreeCAD 1.1.4 und Python 3.11 sind integriert; eine separate Installation oder Pfadeinrichtung entfällt.
+Beginne mit einfachen Formen oder konstruiere mit Skizzen, Parametern und CAD-Werkzeugen. Die normale Modellierung funktioniert **offline**; deine Projekte speicherst du lokal. Änderungen prüfst du in der Vorschau und übernimmst sie anschließend mit der Möglichkeit, sie rückgängig zu machen.
 
-## Neu in 0.114.0-r7
+![Formnaro im Solid-Modus: kompakte Werkzeugleisten, Modellbaum und CAD-Arbeitsfläche](bilder/solid-r5.png)
 
-- **Ein vollständiger Download:** FreeCAD 1.1.4, Python 3.11 und die benötigten Module werden mit Formnaro ausgeliefert.
-- **Automatische Laufzeitwahl:** Python, native FCStd-Merkmale, Kurven- und Flächenwerkzeuge verwenden die integrierte Version.
-- **Geprüft auf frischem Windows:** 167 Prüfgruppen in sechs Läufen ohne externe FreeCAD-/Python-Installation bestanden; zusätzlich 92 lokale EXE-Prüfgruppen.
-- **Portabel und isoliert:** verschobene Umlautpfade, AppContainer, unsichtbare GUI-Module, alte Quellen, Exporte, Abbruch und Undo geprüft.
+*Einblick in die kompakte Solid-Oberfläche, aufgenommen mit Version 0.113.1-r5.*
 
-Der Download umfasst ungefähr **1,88 GB**, der entpackte Programmordner ungefähr **4,36 GB**. [Abnahme und Einzelheiten](docs/INTEGRIERTE-CAD-LAUFZEIT.md).
+## Was du damit machen kannst
 
-Die folgende Aufnahme stammt aus der frischen Windows-Prüf-VM und zeigt einen synthetischen nativen Python-Prüfkörper in 0.114.0-r7.
+| Dein Vorhaben | Die passenden Werkzeuge |
+| --- | --- |
+| **Ein eigenes Bauteil konstruieren** | Grundformen, bearbeitbare Skizzen, Bohrungen, Ausschnitte, Rundungen und weitere CAD-Werkzeuge. |
+| **Maße und Varianten anpassen** | Benannte Maße, Formeln und gemeinsame Projektparameter für zusammengehörige Teile. |
+| **Vorhandene 3D-Modelle bearbeiten** | STL- und andere Netzmodelle importieren, prüfen und gezielt bearbeiten; CAD-Modelle über STEP austauschen. |
+| **Komplexere Formen aufbauen** | Bézier- und B-Spline-Kurven, Lofts, Sweeps sowie Flächen, Prägungen und Vertiefungen. |
+| **Eine Konstruktion dokumentieren** | Technische Ansichten, Schnitte und Bemaßungen mit Ausgabe als PDF, SVG oder DXF. |
+| **Vorlagen und Fotos verwenden** | Projektfotos, Referenzmaße und bestätigte technische Ansichten als Grundlage für bearbeitbare CAD-Entwürfe. |
 
-![Native CAD-Modellierung mit integrierter FreeCAD-/Python-Laufzeit](bilder/integrierte-cad-laufzeit.png)
+## Vier Bedienmodi – ein gemeinsames Projekt
 
-## Bisherige Oberflächenverbesserungen in 0.113.1-r5
+Wähle die Oberfläche, die zu deiner Arbeitsweise passt.
 
-- **Mehr Modellfläche:** kompakte Kopf- und Werkzeugleisten in Solid und Fusion.
-- **Dateiaktionen oben:** Neu, Öffnen, Speichern, Projekte, Import, Export und Einstellungen zwischen Modellname und Modusauswahl.
-- **Zusatzfunktionen im Menü:** KI-Werkstatt, Projektfotos und Merkmalsfunktionen unter Extras beziehungsweise Dienstprogramme.
-- **Eine gemeinsame Zeile:** Schnellaktionen und Werkzeugregister nebeneinander.
-- **Modusname Fusion:** vertraute Befehle und bisherige Bedienung erhalten.
-- **Fehlerkorrekturen enthalten:** robuster Start, geschützte Speicherdateien, verbesserte Theme-Umschaltung und lokale Skriptausführung.
-- **CAD-Erweiterungen seit 0.111:** Bézier-/B-Spline-Kurven, Mehrprofil-Lofts, zusammengesetzte Sweeps sowie Flächen und Prägung/Vertiefung.
+| Modus | So arbeitest du |
+| --- | --- |
+| **Easy Tinker** | Mit Formenpalette, direkten Maßfeldern und Griffen zum Verschieben und Drehen. |
+| **Normal** | Mit der regulären Werkzeugoberfläche für CAD- und Netzbearbeitung. |
+| **Solid** | Mit klassischen Menüs, Werkzeugregistern, Modellbaum und Eigenschaften links. |
+| **Fusion** | Mit kompakter Werkzeugleiste und nach Aufgaben gegliederten Befehlsgruppen. |
 
-Die vorherige Layoutänderung bestand **39 gezielte Prüfgruppen an der tatsächlichen Windows-EXE** und vier visuelle Paketprüfungen. Vorherige Wartungs- und Oberflächenprüfungen sind im Prüfbericht getrennt aufgeführt. Kein erneut ausgeführter allgemeiner Gesamttest für diese Layoutänderung.
+<details>
+<summary><strong>Weitere Einblicke: Easy Tinker, Fusion und Skizzen</strong></summary>
 
-### Aktuelle Oberfläche: Solid und Fusion
+### Einfach mit Formen beginnen
 
-Diese Aufnahmen stammen aus der geprüften Windows-Ausgabe 0.113.1-r5.
-
-![Kompakte Solid-Oberfläche mit Dateiaktionen neben dem Modellnamen](bilder/solid-r5.png)
-
-![Fusion mit gemeinsamer Schnellaktions- und Registerzeile](bilder/fusion-r5.png)
-
-## Was du mit Formnaro machen kannst
-
-- **Einfach einsteigen:** Grundformen platzieren, Maße ändern, Teile verschieben, ausrichten, spiegeln und gruppieren.
-- **Technisch konstruieren:** Skizzen, Maßformeln, Projektparameter und Varianten sowie CAD-Werkzeuge für Anbauten, Ausschnitte, Bohrungen und weitere Formänderungen verwenden.
-- **3D-Druck-Modelle bearbeiten:** STL- und andere Netzmodelle importieren, prüfen, gezielt reparieren und mit Netzwerkzeugen bearbeiten; CAD über STEP austauschen.
-- **Zeichnungen erstellen:** Technische Ansichten und Bemaßungen anlegen und als PDF, SVG oder DXF ausgeben.
-- **Mit Referenzbildern arbeiten:** Projektfotos speichern, ebene Bilder entzerren und bestätigte Vorder-, Seiten- und Draufsichten zu einer bearbeitbaren CAD-Variante verbinden.
-- **Optional KI nutzen:** Modellieraufträge, Foto-Unterstützung und Programmhilfe über einen eingerichteten Anbieter verwenden. Python und FreeCAD sind im Windows-Download als lokale Laufzeiten enthalten.
-
-Änderungen lassen sich vor der Übernahme in einer Vorschau prüfen und anschließend rückgängig machen. Für KI-Anfragen an einen Cloud-Anbieter wird eine Internetverbindung benötigt; abhängig vom eingerichteten Zugang können Anbietergebühren anfallen.
-
-## Feste Vorgaben für KI-Aufträge
-
-Ziel, Annahmen, geschützte Quellen und native Sollprüfungen bleiben beim gespeicherten Auftrag erhalten. Die folgende Aufnahme stammt aus der geprüften Ausgabe 0.111.0-r2 und zeigt ein synthetisches Testbeispiel.
-
-![Auftragsvorgaben mit festem Ziel und nativer Maßprüfung](bilder/ki-auftragsvorgaben.png)
-
-## Ein Blick ins Programm
-
-Die folgenden Bildschirmbilder stammen aus der geprüften Windows-Ausgabe 0.108.0 und zeigen mitgelieferte Testbeispiele.
-
-### Easy Tinker – Formen und Maße direkt im Blick
-
-Die vereinfachte Oberfläche bietet eine Formenpalette, direkte Größenfelder und Griffe zum Verschieben und Drehen.
+Grundformen auswählen, Maße eingeben und Teile anordnen.
 
 ![Easy Tinker mit Formenpalette und direkt bearbeitbaren Maßen](bilder/easy-tinker.png)
 
-### Solid – Werkzeuge und Modellbaum
+*Aufnahme aus Version 0.108.0.*
 
-Vier Bedienmodi stehen zur Wahl: **Easy Tinker, Normal, Solid und Fusion**. Hier ist der Solid-Modus mit dunkler Darstellung zu sehen.
+### Mit Fusion konstruieren
 
-![Solid-Modus mit Werkzeugregistern, Modellbaum und ausgewähltem CAD-Körper](bilder/solid-modus.png)
+Kompakte Kopfzeile, Dateiaktionen am Modellnamen und zusammengefasste Werkzeuge schaffen Platz für das Modell.
 
-### Skizzen – Konturen, Öffnungen und Formeln
+![Fusion mit kompakter Kopfzeile und Werkzeugregistern](bilder/fusion-r5.png)
 
-Bearbeitbare Skizzen verbinden technische Konturen mit benannten Maßen und Maßbeziehungen.
+*Aufnahme aus Version 0.113.1-r5.*
 
-![Skizzeneditor mit Bohrungen, Langloch und benannten Maßen](bilder/skizzen.png)
+### Aus Konturen werden Bauteile
 
-### Neu in 0.108.0 – technische Fotoansichten verbinden
+Skizzen verbinden technische Konturen, Öffnungen und benannte Maße.
 
-Bestätigte Vorder-, Seiten- und Draufsichten teilen sich Nullpunkte und Zielmaße. Aus den Profilen entsteht eine native CAD-Vorschau; jede Ansicht und die Funktionsmaße werden vor der Übernahme geprüft.
+![Skizzeneditor mit Bohrungen, Langloch und Maßformeln](bilder/skizzen.png)
+
+*Aufnahme aus Version 0.108.0.*
+
+</details>
+
+## KI, wenn du Unterstützung möchtest
+
+Lass dir bei Modellieraufträgen, der Arbeit mit Referenzfotos oder bei Fragen zur Bedienung helfen. Gespeicherte KI-Aufträge behalten ihr Ziel, geschützte Quellen und festgelegte Maßprüfungen. Entwürfe lassen sich vor der Übernahme ansehen und prüfen.
+
+Die KI-Funktionen sind **optional**. Für Anfragen an einen Cloud-Anbieter brauchst du einen eingerichteten Zugang und eine Internetverbindung; mögliche Kosten hängen vom Anbieter ab. Die mitgelieferten Python- und FreeCAD-Werkzeuge rechnen lokal.
+
+<details>
+<summary><strong>Einblicke in KI-Aufträge und technische Fotoansichten</strong></summary>
+
+### Vorgaben bleiben am Auftrag
+
+Ziel, Annahmen, geschützte Teile und Maßprüfungen werden mit dem Auftrag gespeichert.
+
+![KI-Auftragsvorgaben mit festem Ziel und nativer Maßprüfung](bilder/ki-auftragsvorgaben.png)
+
+*Synthetisches Prüfbeispiel aus Version 0.111.0-r2.*
+
+### Technische Ansichten als Vorlage
+
+Bestätigte Vorder-, Seiten- und Draufsichten teilen sich Bezugspunkte und Zielmaße. Daraus entsteht eine native CAD-Vorschau mit bearbeitbaren Profilen.
 
 ![Native CAD-Vorschau aus drei bestätigten technischen Ansichten](bilder/technische-fotoansichten.png)
 
-Bilder zeigen nur sichtbare Konturen. Verdeckte Innengeometrie und die spätere Passung eines gedruckten Teils müssen gesondert geklärt und geprüft werden.
+*Synthetisches Prüfbeispiel aus Version 0.108.0. Verdeckte Innengeometrie und die spätere Passung lassen sich aus sichtbaren Konturen allein nicht bestimmen.*
 
-## Geprüfte Ausgabe
+</details>
 
-**0.114.0-r7** ist die aktuelle veröffentlichte Programmversion. Paket 6a wurde gezielt mit 92 lokalen EXE-Prüfgruppen und 167 Prüfgruppen in sechs Läufen auf frischem Windows abgenommen. Alle 35.586 CAD-Laufzeitdateien wurden dort vollständig geprüft. Die nativen Quelltests und die abschließenden Integritätsprüfungen sind getrennt per SHA gebunden; überlappende Phasen werden nicht addiert. Aktuelle Paketbilder wurden visuell geprüft. KI-Anbieterantworten wurden simuliert.
+## In drei Schritten starten
 
-Der [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Pruefergebnis.json) beschreibt Umfang und Grenzen. Pakete 0–6, 6a und 7 sind abgeschlossen, 8–10 bleiben offen. Die gemeinsame allgemeine Gesamtprüfung folgt am Ende der beauftragten Folge.
+1. **[Windows-ZIP herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows.zip).**
+2. **Vollständig entpacken** – in einen eigenen Ordner, mit allen Unterordnern und Lizenzen.
+3. **`Formnaro/Formnaro.exe` starten** und ein neues Projekt anlegen.
 
-Die Anleitungen liegen im Download unter `Formnaro/docs` und hier im Verzeichnis [docs](docs).
+**Alles für den CAD-Start ist dabei:** FreeCAD 1.1.4 und Python 3.11 sind integriert. Eine separate Installation oder Pfadeinrichtung entfällt. Der Download umfasst etwa **1,88 GB**, der entpackte Programmordner etwa **4,36 GB**.
 
-## Vollständiges Projekt und Entwicklung
+Vorhandene Einstellungen und eigene Werkzeuge kannst du bei Bedarf über deinen bisherigen Datenordner mitnehmen.
 
-Dieses Repository enthält außerdem eine eigenständige Kopie des vollständigen Projektstands **0.114.0-r7**: Anwendung, beide Mini-Versionen, CAD-Kern, Tests, Buildskripte, Anleitungen und Lizenzen. Die Kopie ist vom privaten Original unabhängig. Änderungen an diesem Repository verändern das private Original nicht.
+### Neu im aktuellen Download
 
-| Verzeichnis | Inhalt |
+Mit **0.114.0-r7** kommen die CAD-Laufzeiten direkt mit dem Programm. Python-Funktionen, native FCStd-Merkmale sowie Kurven- und Flächenwerkzeuge verwenden automatisch die integrierte Laufzeit.
+
+[Versionshinweise und Downloads](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7) · [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Pruefbericht.txt) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/SHA256SUMS.txt)
+
+<details>
+<summary><strong>Prüfumfang und technische Einzelheiten</strong></summary>
+
+Die integrierte CAD-Laufzeit wurde mit **92 lokalen EXE-Prüfgruppen** und **167 Prüfgruppen in sechs Läufen auf frischem Windows** ohne externe FreeCAD-/Python-Installation abgenommen. Dort wurden alle **35.586 CAD-Laufzeitdateien** vollständig geprüft. Die Prüfumfänge sind getrennt dokumentiert und werden nicht als neue allgemeine Gesamtprüfung ausgegeben.
+
+Geprüft wurden unter anderem native Exporte, vorhandene Quellen, vier Bedienmodi, Umlautpfade, Abbruch und Rückgängig. Aktuelle Paketbilder wurden visuell geprüft; KI-Anbieterantworten in diesen Prüfungen waren simuliert.
+
+![Nativer CAD-Prüfkörper mit integrierter FreeCAD- und Python-Laufzeit](bilder/integrierte-cad-laufzeit.png)
+
+*Synthetisches Prüfbeispiel aus 0.114.0-r7 auf frischem Windows.*
+
+Einzelheiten und Grenzen: [integrierte CAD-Laufzeit](docs/INTEGRIERTE-CAD-LAUFZEIT.md) und [maschinenlesbarer Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Pruefergebnis.json).
+
+</details>
+
+## Anleitungen
+
+| Du möchtest … | Hier geht es weiter |
 | --- | --- |
-| `src`, `backend`, `electron.cjs`, `preload.cjs` | Anwendung und Desktop-Anbindung |
-| `cad-kernel-build`, `converter`, `python-runtime`, `speech-runtime` | CAD-Kern sowie Laufzeit- und Buildgrundlagen |
-| `mini`, `mini-cad` | Eigenständige Mini-Versionen |
-| `tests`, `scripts` | Prüfungen, Build- und Paketwerkzeuge |
-| `docs`, `ai`, `licenses` | Anleitungen, Schnittstellen und Lizenztexte |
+| **Das Programm kennenlernen** | [Bedienungsanleitung](LIES-MICH.txt) · [Solid](docs/SOLID-MODUS.md) · [Fusion](docs/FUSION-MODUS.md) |
+| **Mit Maßen und CAD-Werkzeugen arbeiten** | [Projektparameter und Varianten](docs/PROJEKTPARAMETER.md) · [Kurven, Loft und Sweep](docs/CAD-KURVEN.md) · [Flächen und Prägungen](docs/CAD-FLAECHEN.md) |
+| **Zeichnungen und Projekte ausgeben** | [Technische Zeichnungen](docs/TECHNISCHE-ZEICHNUNGEN.md) · [FNPACK-Projekte](docs/FNPACK.md) |
+| **KI-Unterstützung einrichten und nutzen** | [KI-Aufträge](docs/KI-AUFTRAEGE.md) · [Foto-Assistent](docs/FOTO-ASSISTENT.md) · [Programm-Assistent](docs/PROGRAMM-ASSISTENT.md) |
+| **Das Projekt selbst bauen** | [Bauanleitung](docs/BUILD.md) · [Technischer Projektkontext](docs/PROJEKTKONTEXT.md) |
 
-Für die lokale Entwicklung mit Node.js 22.16 oder neuer:
+## Quellcode und Mitmachen
+
+Du hast eine Idee, vermisst eine Funktion oder hast einen Fehler gefunden? Beschreibe dein Anliegen in den **[GitHub Issues](https://github.com/andyy909/Formnaro-cad/issues)**. Bei Fehlern helfen die verwendete Version und die Schritte, mit denen sie sich nachvollziehen lassen.
+
+Dieses Repository enthält den veröffentlichten Projektstand **0.114.0-r7** mit Anwendung, beiden Mini-Versionen, Tests, Buildskripten, Anleitungen und Lizenzen.
+
+<details>
+<summary><strong>Entwicklungsumgebung und Projektstruktur</strong></summary>
+
+Für die lokale Entwicklung mit **Node.js 22.16 oder neuer**:
 
 ```powershell
 git clone https://github.com/andyy909/Formnaro-cad.git
@@ -128,8 +173,25 @@ npm run build
 npm start
 ```
 
-Für FreeCAD-Funktionen im Entwicklungscheckout bereitet `npm run setup:cad-runtime` die fest gepinnte portable Laufzeit vor. Weitere Bauvoraussetzungen stehen in [BUILD.md](docs/BUILD.md). Wer das fertige Programm nutzen möchte, verwendet den vollständigen Windows-Download oben.
+Für FreeCAD-Funktionen im Entwicklungscheckout bereitet `npm run setup:cad-runtime` die fest gepinnte portable Laufzeit vor. Weitere Voraussetzungen stehen in der [Bauanleitung](docs/BUILD.md).
 
-Die [bisherige ausführliche Projektbeschreibung](README-Entwicklung.md) enthält die Entwicklungshistorie; einzelne ältere Versionsangaben sind dort historisch. Der [technische Projektkontext](docs/PROJEKTKONTEXT.md) beschreibt den aktuellen abgenommenen Stand.
+| Verzeichnis | Inhalt |
+| --- | --- |
+| `src`, `backend` | Benutzeroberfläche und Desktop-Funktionen |
+| `cad-kernel-build`, `converter` | CAD-Kern und Konverter |
+| `python-runtime`, `speech-runtime` | Weitere Laufzeit- und Buildgrundlagen |
+| `mini`, `mini-cad` | Eigenständige Mini-Versionen |
+| `tests`, `scripts` | Prüfungen und Paketwerkzeuge |
+| `docs`, `ai`, `licenses` | Anleitungen, Schnittstellen und Lizenztexte |
 
-Der eigene Anwendungscode steht unter der [PolyForm Noncommercial License 1.0.0](LICENSE.txt). Fremdkomponenten behalten ihre jeweiligen Lizenzen; siehe [Drittanbieterhinweise](THIRD-PARTY-LICENSES.txt). Persönliche Datenordner, Profile, Zugangsdaten und lokale Arbeitsdateien sind nicht Teil der Projektkopie.
+</details>
+
+Der eigene Anwendungscode steht unter der **[PolyForm Noncommercial License 1.0.0](LICENSE.txt)**. Für Fremdkomponenten gelten die jeweiligen [Drittanbieterlizenzen](THIRD-PARTY-LICENSES.txt).
+
+---
+
+<p align="center">
+  <strong>Eine Idee im Kopf? Mach ein Modell daraus.</strong><br>
+  <a href="https://github.com/andyy909/Formnaro-cad/releases/latest">Formnaro herunterladen</a> ·
+  <a href="https://github.com/andyy909/Formnaro-cad/issues">Feedback geben</a>
+</p>
