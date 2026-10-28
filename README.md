@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="bilder/formnaro-banner.svg" alt="Formnaro – deine lokale 3D-Werkstatt für Windows" width="100%">
+  <img src="bilder/formnaro-logo.png" alt="Formnaro – Logo in Navy und Limette" width="240">
 </p>
 
 <p align="center">
@@ -31,9 +31,35 @@ Ein Halter für die Werkbank, ein Gehäuse für die Elektronik oder ein Ersatzte
 
 Beginne mit einfachen Formen oder konstruiere mit Skizzen, Parametern und CAD-Werkzeugen. Die normale Modellierung funktioniert **offline**; deine Projekte speicherst du lokal. Änderungen prüfst du in der Vorschau und übernimmst sie anschließend mit der Möglichkeit, sie rückgängig zu machen.
 
-![Formnaro im Solid-Modus: kompakte Werkzeugleisten, Modellbaum und CAD-Arbeitsfläche](bilder/solid-r5.png)
+## Komplexere Bauteile – direkt in Formnaro
 
-*Einblick in die kompakte Solid-Oberfläche, aufgenommen mit Version 0.113.1-r5.*
+Diese drei Demonstrationsmodelle wurden in **Formnaro 0.114.0-r7** konstruiert. Die Bilder stammen direkt aus der 3D-Ansicht des Programms. Die bearbeitbaren Projekte kannst du selbst öffnen.
+
+### Elektronikgehäuse mit abgehobenem Deckel
+
+Ein Gehäuse mit **2,4 mm Wandstärke**, Anschlussausschnitt, vier Schraubdomen und einem Deckel mit Lüftungsschlitzen. Die Platine und die Elektronik-Dummys sind eigenständige Teile. So lassen sich Körper und Ausschnitte kombinieren und eine Baugruppe übersichtlich darstellen.
+
+![Elektronikgehäuse mit Deckel, Lüftungsschlitzen, Schraubdomen und separater Platine](bilder/beispiel-elektronikgehaeuse.png)
+
+[Bearbeitbares Gehäuseprojekt](beispiele/elektronikgehaeuse.ocad)
+
+### Lagerhalter mit Langlöchern und Welle
+
+Grundplatte, aufrechter Lagerbock und runde Lageraufnahme werden zu einem CAD-Körper verbunden. **Vier Langlöcher und eine durchgehende Lagerbohrung** entstehen als Ausschnitte. Lagerringe, Distanzring und Welle bleiben separate Teile.
+
+![Lagerhalter mit vier Langlöchern, Lageraufnahme, getrennten Ringen und Welle](bilder/beispiel-lagerhalter.png)
+
+[Bearbeitbares Lagerhalterprojekt](beispiele/lagerhalter.ocad)
+
+### Parametrische Zahnräder und Drehgelenke
+
+Die Getriebestudie kombiniert ein Ritzel mit **24 Zähnen** und ein Zahnrad mit **42 Zähnen**, beide mit Modul **1,5**, Naben und Wellenbohrungen. Grundplatte, Wellen und Distanzhülsen ergänzen den Aufbau.
+
+![Getriebestudie mit zwei parametrischen Zahnrädern auf einer Grundplatte](bilder/beispiel-getriebestudie.png)
+
+Das Projekt enthält **zwei unabhängig bedienbare Drehgelenke**. Unter „Gelenke und geführte Bewegung“ kannst du beide Winkel verändern, die Vorschau zurücksetzen oder eine Stellung übernehmen. Eine automatische Zahnradkopplung ist derzeit nicht enthalten.
+
+[Bearbeitbares Getriebeprojekt mit Drehgelenken](beispiele/getriebestudie.ocad) · [Gelenke und Bewegung erklärt](docs/GELENKE-BEWEGUNG.md)
 
 ## Was du damit machen kannst
 
