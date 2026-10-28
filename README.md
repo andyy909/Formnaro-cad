@@ -8,11 +8,11 @@
 </p>
 
 <h3 align="center">
-  <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows.zip">↓ Formnaro für Windows herunterladen</a>
+  <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows-Klarer-Start.zip">↓ Formnaro für Windows herunterladen</a>
 </h3>
 
 <p align="center">
-  <strong>0.114.0-r7 · Windows 64 Bit · portabel · ca. 1,88 GB</strong><br>
+  <strong>0.114.0-r7 · Windows 64 Bit · portabel · ca. 1,89 GB</strong><br>
   FreeCAD und Python sind bereits dabei.
 </p>
 
@@ -141,11 +141,13 @@ Bestätigte Vorder-, Seiten- und Draufsichten teilen sich Bezugspunkte und Zielm
 
 ## In drei Schritten starten
 
-1. **[Windows-ZIP herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows.zip).**
+1. **[Windows-ZIP herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows-Klarer-Start.zip).**
 2. **Vollständig entpacken** – in einen eigenen Ordner, mit allen Unterordnern und Lizenzen.
-3. **`Formnaro/Formnaro.exe` starten** und ein neues Projekt anlegen.
+3. **„Formnaro starten“ doppelklicken** und ein neues Projekt anlegen.
 
-**Alles für den CAD-Start ist dabei:** FreeCAD 1.1.4 und Python 3.11 sind integriert. Eine separate Installation oder Pfadeinrichtung entfällt. Der Download umfasst etwa **1,88 GB**, der entpackte Programmordner etwa **4,36 GB**.
+Oben liegen drei praktische Verknüpfungen: **Formnaro starten**, **Projekte** und **Bibliothek und Einstellungen**. Die Programmdateien sind im Ordner **Programmdateien** zusammengefasst. Über „Projekte“ erreichst du auch die drei mitgelieferten CAD-Beispiele im Unterordner **Beispiele**. [Ordneraufteilung und Hilfe zum Start](docs/KLARER-START.md).
+
+**Alles für den CAD-Start ist dabei:** FreeCAD 1.1.4 und Python 3.11 sind integriert. Eine separate Installation oder Pfadeinrichtung entfällt. Der Download umfasst etwa **1,89 GB**, der entpackte Programmordner etwa **4,37 GB**.
 
 Vorhandene Einstellungen und eigene Werkzeuge kannst du bei Bedarf über deinen bisherigen Datenordner mitnehmen.
 
@@ -153,7 +155,7 @@ Vorhandene Einstellungen und eigene Werkzeuge kannst du bei Bedarf über deinen 
 
 Mit **0.114.0-r7** kommen die CAD-Laufzeiten direkt mit dem Programm. Python-Funktionen, native FCStd-Merkmale sowie Kurven- und Flächenwerkzeuge verwenden automatisch die integrierte Laufzeit.
 
-[Versionshinweise und Downloads](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7) · [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Pruefbericht.txt) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/SHA256SUMS.txt)
+[Versionshinweise und Downloads](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7) · [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Pruefbericht.txt) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows-Klarer-Start-SHA256.txt)
 
 <details>
 <summary><strong>Prüfumfang und technische Einzelheiten</strong></summary>
@@ -221,3 +223,4 @@ Der eigene Anwendungscode steht unter der **[PolyForm Noncommercial License 1.0.
   <a href="https://github.com/andyy909/Formnaro-cad/releases/latest">Formnaro herunterladen</a> ·
   <a href="https://github.com/andyy909/Formnaro-cad/issues">Feedback geben</a>
 </p>
+
