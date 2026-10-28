@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title desc">
+  <title id="title">Formnaro – deine lokale 3D-Werkstatt</title>
+  <desc id="desc">Formnaro für Windows. CAD, Modellbau und 3D-Druck. Rechts eine stilisierte technische Zeichnung eines Bauteils.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#0e2133"/>
+      <stop offset="1" stop-color="#122e3a"/>
+    </linearGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#69dfcb" stop-opacity=".32"/>
+      <stop offset="1" stop-color="#5ecbe8" stop-opacity=".14"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#a4e4e8" stroke-opacity=".055"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="360" rx="20" fill="url(#bg)"/>
+  <rect x="704" width="576" height="360" rx="20" fill="url(#grid)"/>
+  <path d="M64 59h42" stroke="#75e4cc" stroke-width="5" stroke-linecap="round"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="64" y="145" fill="#f2fafb" font-size="76" font-weight="700" letter-spacing="-3">Formnaro</text>
+    <text x="67" y="197" fill="#c5dce4" font-size="28">Deine lokale 3D-Werkstatt.</text>
+    <text x="67" y="236" fill="#91b2c1" font-size="21">CAD · Modellbau · 3D-Druck</text>
+    <g font-size="13" font-weight="600" letter-spacing="1.6">
+      <rect x="66" y="278" width="128" height="30" rx="15" fill="#213f50"/>
+      <text x="130" y="298" fill="#d1e7ed" text-anchor="middle">WINDOWS 64 BIT</text>
+      <rect x="204" y="278" width="108" height="30" rx="15" fill="#213f50"/>
+      <text x="258" y="298" fill="#d1e7ed" text-anchor="middle">PORTABEL</text>
+      <rect x="322" y="278" width="212" height="30" rx="15" fill="#213f50"/>
+      <text x="428" y="298" fill="#d1e7ed" text-anchor="middle">OFFLINE MODELLIEREN</text>
+    </g>
+  </g>
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <path d="M780 150 970 64 1160 150 970 241Z" fill="url(#top)" stroke="#91eee0" stroke-width="2.5"/>
+    <path d="M780 150 970 241 970 300 780 209Z" fill="#1d5861" fill-opacity=".6" stroke="#6dcfc9" stroke-width="2"/>
+    <path d="M970 241 1160 150 1160 209 970 300Z" fill="#163f52" stroke="#6dcfc9" stroke-width="2"/>
+    <ellipse cx="970" cy="153" rx="65" ry="31" fill="#0e2435" stroke="#a5f2e4" stroke-width="2"/>
+    <path d="M909 164c22-25 100-25 122 0" fill="none" stroke="#548e9a" stroke-width="1.5"/>
+    <path d="M970 40v23m0 237v23M752 139l-19-9m439 94 20 10M907 153h126m-63-40v80" fill="none" stroke="#7ab4c3" stroke-opacity=".55" stroke-dasharray="5 6"/>
+    <path d="M778 239v34m192 48v29m-183-84 174 83" fill="none" stroke="#73d2cb" stroke-opacity=".65"/>
+    <path d="m787 266 10-1-6 9m170 75-10 1 6-9" fill="none" stroke="#73d2cb"/>
+    <circle cx="780" cy="150" r="4" fill="#d8fff2" stroke="none"/>
+    <circle cx="970" cy="64" r="4" fill="#d8fff2" stroke="none"/>
+    <circle cx="1160" cy="150" r="4" fill="#d8fff2" stroke="none"/>
+    <circle cx="970" cy="241" r="4" fill="#d8fff2" stroke="none"/>
+  </g>
+</svg>
