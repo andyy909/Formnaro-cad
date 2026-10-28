@@ -29,7 +29,7 @@ async function verifyRuntime(root=runtimeRoot(),{signal,background=!!process.ver
  let manifest;try{manifest=readManifest(root);}catch{throw fail('Manifest');}
  if(manifest.schema!==1||manifest.version!=='1.1.4'||!Array.isArray(manifest.files)||!manifest.files.length)throw fail('Manifest');
  const totalFiles=manifest.files.length;manifest={...manifest,totalFiles,scope:startupOnly?'startup-core':'complete',files:startupOnly?manifest.files.filter(row=>typeof row.file==='string'&&startupFiles.has(row.file.toLowerCase())):manifest.files};
- if(!manifest.files.length)throw fail('Kernkomponenten');
+ if(!manifest.files.length||startupOnly&&(manifest.files.length!==startupFiles.size||new Set(manifest.files.map(row=>row.file.toLowerCase())).size!==startupFiles.size))throw fail('Kernkomponenten');
  if(!background)return require('./freecad-integrity-worker.cjs').verifyFiles(root,manifest,{signal});
  // Use the already delivered executable in its Node mode: file I/O is then
  // independent of Electron's live message loop, including worker-thread I/O.
@@ -52,13 +52,22 @@ async function verifyRuntime(root=runtimeRoot(),{signal,background=!!process.ver
 }
 let verification;
 async function prepareRuntime(exe,{signal}={}){
+ signal?.throwIfAborted();
  const s=resolveRuntime();
  if(s.bundled){if(!s.available)throw fail();if(path.resolve(exe)!==path.resolve(s.executable))throw fail('Laufzeitauswahl');
   // Check startup components before the first job. Full distribution integrity
   // is checked during packaging/acceptance, without rereading all optional
   // modules, examples, symbols and licenses on ordinary model requests.
-  // Failed/cancelled checks can be retried after restoring a complete bundle.
-  verification??=verifyRuntime(s.root,{signal,startupOnly:true}).catch(e=>{verification=undefined;throw e;});await verification;signal?.throwIfAborted();
+  // Verification belongs to the runtime. A caller can stop waiting without
+  // cancelling other jobs that need the same check. Failed checks may retry.
+  verification??=verifyRuntime(s.root,{startupOnly:true}).catch(e=>{verification=undefined;throw e;});
+  if(signal)await new Promise((resolve,reject)=>{
+   const abort=()=>{signal.removeEventListener('abort',abort);reject(signal.reason);};
+   signal.addEventListener('abort',abort,{once:true});
+   verification.then(value=>{signal.removeEventListener('abort',abort);resolve(value);},error=>{signal.removeEventListener('abort',abort);reject(error);});
+   if(signal.aborted)abort();
+  });else await verification;
+  signal?.throwIfAborted();
  }
  return s;
 }

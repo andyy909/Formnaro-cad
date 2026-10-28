@@ -50,7 +50,7 @@ exports.verifyPhotoPerspective=async(win,{directory})=>{
   check(await js('window.__cadTest.controller.serialize()')===saved,'Cancelled dialog and chat attachment do not modify project geometry or references');
   win.setSize(1400,960);
   for(const mode of ['easy','solid','fusion','normal']){
-   await js('window.__cadTest.workbenchUI.setMode('+JSON.stringify(mode)+');void 0');await click('#photo-project-open');
+   await js('window.__cadTest.workbenchUI.setMode('+JSON.stringify(mode)+');void 0');if(mode==='solid'||mode==='fusion'){await click('[data-'+mode+'-menu="extras"] > summary');await js("(()=>{const buttons=[...document.querySelectorAll('[data-"+mode+"-menu=extras] button')].filter(b=>b.textContent.trim()==='Projektfotos');if(buttons.length!==1)throw Error('Project photo menu entry is not unique');buttons[0].id='perspective-project-photos-route';})()");await click('#perspective-project-photos-route');}else await click('#photo-project-open');
    check(await js("document.querySelectorAll('.photo-project-row').length")===1,'Stored project photo is reachable in '+mode+' mode');await click('#photo-project-dialog>button:last-child');
    check(await js('window.__cadTest.controller.serialize()')===saved,'Switching '+mode+' mode preserves photo bytes and source geometry');
   }

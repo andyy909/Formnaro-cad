@@ -26,6 +26,10 @@ async function runPythonJob({job,exe,script,inputs,inspectOnly,signal,timeout,do
  const host=await fs.mkdtemp(path.join(path.dirname(job),'formnaro-cad-host-'));
  try{
  const runtime=await require('./freecad-runtime.cjs').prepareRuntime(exe,{signal});
+ // The container grants runtime access using this path. Resolve directory
+ // junctions first so the grant reaches the physical DLL directory as well.
+ exe=await fs.realpath(exe);
+ if(runtime.bundled&&path.dirname(path.dirname(exe)).toLowerCase()!==(await fs.realpath(runtime.root)).toLowerCase())throw failure('Die CAD-Programmdatei liegt außerhalb der geprüften Laufzeit.','FREECAD_RUNTIME_INVALID');
  if(runtime.bundled)await fs.copyFile(path.join(runtime.root,'formnaro-container.exe'),path.join(host,'container.exe'));
  else{
  const source=await fs.readFile(path.join(__dirname,'freecad-container.cs'));await fs.writeFile(path.join(host,'container.cs'),source);

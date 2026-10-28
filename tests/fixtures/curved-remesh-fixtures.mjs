@@ -1,0 +1,6 @@
+import {meshNode,reductionKernel} from './mesh-reduce-fixtures.mjs';
+import {meshSelectionGeometryDigest} from '../../src/mesh-selection-data.js';
+export async function curvedSphere(segments=20){const k=await reductionKernel(),s=k.Manifold.sphere(8,segments);try{const m=s.getMesh();return meshNode({verts:Array.from(m.vertProperties),triangles:Array.from(m.triVerts)},'curved');}finally{s.delete();}}
+export function curvedSheet(n=8){const verts=[],triangles=[];for(let y=0;y<=n;y++)for(let x=0;x<=n;x++){const u=x&&x<n?x+.19*Math.sin(x*3+y):x;verts.push(u,y,.035*(u*u+y*y));}for(let y=0;y<n;y++)for(let x=0;x<n;x++){const a=y*(n+1)+x,b=a+1,c=a+n+1,d=c+1;triangles.push(a,b,d,a,d,c);}return meshNode({verts,triangles},'sheet');}
+export const curvedOptions=(n,patch={})=>({method:'curved-isotropic-v1',mode:'remesh',geometryDigest:meshSelectionGeometryDigest(n),scope:'all',triangleIds:[],targetEdgeLength:1.3,iterations:1,maxDeviation:.25,featureAngle:45,...patch});
+export function protectCurved(n,ids){n.metadata.meshProtection={format:'FormnaroMeshProtection',version:1,regions:[{id:'contact',name:'Anlagefläche',purpose:'contact',geometryDigest:meshSelectionGeometryDigest(n),triangleIds:ids}]};return n;}

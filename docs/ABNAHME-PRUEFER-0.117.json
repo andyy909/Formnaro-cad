@@ -1,0 +1,64 @@
+{
+  "version": "0.117.0-r7",
+  "scope": "Reproducible verification-only corrections used externally against the immutable R7 application. For future builds apply these exact corrections to the verification sources before freezing the next candidate.",
+  "frozenCodeCommit": "80fa344c9bd415bcb701479ff97a14c546bedc9a",
+  "applicationArchiveUnchanged": true,
+  "patches": [
+    {
+      "file": "backend/photo-perspective-verification.cjs",
+      "export": "verifyPhotoPerspective",
+      "beforeSha256": "90cca3d19d3a96cef8a332dde6ac8da8e7b6a1e572a84a9a3a4609abd9131e02",
+      "afterSha256": "5e5312d9295cc74a8630b8d07f8e346c5f16a1e7ba99521268a2c37827cc8325",
+      "replacements": [
+        {
+          "before": "await js('window.__cadTest.workbenchUI.setMode('+JSON.stringify(mode)+');void 0');await click('#photo-project-open');",
+          "after": "await js('window.__cadTest.workbenchUI.setMode('+JSON.stringify(mode)+');void 0');if(mode==='solid'||mode==='fusion'){await click('[data-'+mode+'-menu=\"extras\"] > summary');await js(\"(()=>{const buttons=[...document.querySelectorAll('[data-\"+mode+\"-menu=extras] button')].filter(b=>b.textContent.trim()==='Projektfotos');if(buttons.length!==1)throw Error('Project photo menu entry is not unique');buttons[0].id='perspective-project-photos-route';})()\");await click('#perspective-project-photos-route');}else await click('#photo-project-open');",
+          "occurrences": 1
+        }
+      ],
+      "allFunctionalAssertionsRetained": true
+    },
+    {
+      "file": "backend/photo-multiview-verification.cjs",
+      "export": "verifyPhotoMultiView",
+      "beforeSha256": "e76aaf3e243ec7e8aab50e64c42c8639572810b559e4e6d2c101a1bbcd17e45f",
+      "afterSha256": "c4ec71a84fc963d3da9f97e4bdb06ae61ae75e5f09c6cf581efed640f3418b1c",
+      "replacements": [
+        {
+          "before": "async function click(selector){",
+          "after": "async function click(selector){if(selector===\"#photo-project-open\"){const mode=await js('window.__cadTest.workbenchUI.mode()');if(['solid','fusion'].includes(mode)){const menu='[data-'+mode+'-menu=extras]';await click(menu+' > summary');const index=await js(\"Array.from(document.querySelectorAll(\"+JSON.stringify(menu+' button')+\")).findIndex(e=>e.textContent.trim()===\"+JSON.stringify(\"Projektfotos\")+\")\");assert(index>=0,'Visible Projektfotos menu entry exists in '+mode);return click(menu+' button:nth-child('+(index+1)+')');}}",
+          "occurrences": 1
+        }
+      ],
+      "allFunctionalAssertionsRetained": true
+    },
+    {
+      "file": "backend/ai-feature-references-verification.cjs",
+      "export": "verifyFeatureReferences",
+      "beforeSha256": "047aa836185b332176e1aeeec88b4ec59b4041c424fcf10d18ba979de22415de",
+      "afterSha256": "14f01fe7d630f3aeaaca1d8bd71914cdf53a8950569f8c3bdcdc94bc76239bcf",
+      "replacements": [
+        {
+          "before": "async function click(selector){",
+          "after": "async function click(selector){if(selector===\"#ai-feature-open\"){const mode=await js('window.__cadTest.workbenchUI.mode()');if(['solid','fusion'].includes(mode)){const menu='[data-'+mode+'-menu=extras]';await click(menu+' > summary');const index=await js(\"Array.from(document.querySelectorAll(\"+JSON.stringify(menu+' button')+\")).findIndex(e=>e.textContent.trim()===\"+JSON.stringify(\"KI-Merkmalsbezüge\")+\")\");assert(index>=0,'Visible KI-Merkmalsbezüge menu entry exists in '+mode);return click(menu+' button:nth-child('+(index+1)+')');}}",
+          "occurrences": 1
+        }
+      ],
+      "allFunctionalAssertionsRetained": true
+    },
+    {
+      "file": "backend/freecad-runtime-verification.cjs",
+      "export": "verifyFreeCADRuntime",
+      "beforeSha256": "4ec3698e81a64076100911c01ab5db5d03a2c4f6ae1f9ab4e56a0cdbe603cda0",
+      "afterSha256": "efc2dc27d9fe8808a70617aece37af8c62e5c7eba6c4318606c712b02adf2cc3",
+      "replacements": [
+        {
+          "before": "check(r.measurements.gui&&r.measurements.draft&&r.measurements.freecad.toLowerCase().startsWith(status.root.toLowerCase()),mode+' uses bundled native/GUI modules without loading external FreeCAD');",
+          "after": "const runtimeRootPhysical=fs.realpathSync(status.root),freecadHomePhysical=fs.realpathSync(r.measurements.freecad),homeRelative=path.relative(runtimeRootPhysical,freecadHomePhysical);\n  const homeInsideRuntime=homeRelative===''||(!path.isAbsolute(homeRelative)&&homeRelative!=='..'&&!homeRelative.startsWith('..'+path.sep));\n  fs.writeFileSync(path.join(directory,mode+'-runtime-paths.json'),JSON.stringify({mode,status,measurements:r.measurements,resourcesPath:process.resourcesPath,realpaths:{runtimeRoot:runtimeRootPhysical,freecadHome:freecadHomePhysical,executable:fs.realpathSync(status.executable),resources:fs.realpathSync(process.resourcesPath)},homeRelative,homeInsideRuntime,oldLexicalPrefix:r.measurements.freecad.toLowerCase().startsWith(status.root.toLowerCase())},null,2));\n  check(r.measurements.gui&&r.measurements.draft&&homeInsideRuntime,mode+' uses bundled native/GUI modules without loading external FreeCAD');",
+          "occurrences": 1
+        }
+      ],
+      "allFunctionalAssertionsRetained": true
+    }
+  ]
+}

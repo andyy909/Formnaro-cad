@@ -1,3 +1,4 @@
+import {partFaceColors,hasCurrentPartSurfaceGroups} from './cad-part-properties.js';
 import {cadBounds,cadVolume,cadBoolean,readCadBrep,transformCad,validateCadSolid,writeCadBrep} from './cad-native-kernel.js';
 import {cadIdentity,multiplyCadMatrices} from './cad-affine.js';
 
@@ -39,7 +40,7 @@ export function cadColorPartsNative(oc,node,{display=false,regionCache}={}){
   const output=[];let remainder;
   try{
     const rootStyle={name:node.name,color:node.color,opacity:node.opacity??1};
-    if(!node.multicolor||!node.children){output.push({shape:placed(oc,node),...rootStyle,...(node.source==='step'&&node.metadata?.stepFaceColors?{faceColors:node.metadata.stepFaceColors}:{})});return output;}
+    if(hasCurrentPartSurfaceGroups(node)||!node.multicolor||!node.children){output.push({shape:placed(oc,node),...rootStyle,...(partFaceColors(node).length?{faceColors:partFaceColors(node)}:{})});return output;}
     const sources=[];
     function visit(source,parent,inherited){
       if(source.kind!=='cad')throw Error('Referenzmesh ist keine CAD-Farbquelle.');

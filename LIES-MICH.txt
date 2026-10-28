@@ -569,12 +569,11 @@ Fehler gewertet. Vollständige Modelle und KI-Anfragen werden nicht protokollier
 
 IMPRESSUM UND EIGENE SOFTWARELIZENZ
 Einstellungen > Allgemein > Impressum und Lizenz zeigt den Rechteinhaber
-Andreas Klisch (privat), die eigene PolyForm Noncommercial 1.0.0 und die
-vollständigen Originaltexte der Fremdkomponenten. Eigener Quellcode darf für
-die im Lizenztext erlaubten Zwecke verwendet, geändert und weitergegeben
-werden. Dies ist eine nichtkommerzielle Source-available-Lizenz, keine
-Open-Source-Lizenz nach OSI. LICENSE.txt enthält Hinweise, Geltungsbereich und
-den vollständigen Originaltext; im Programm kann der Text gespeichert werden.
+Andreas Klisch (privat), die eigene MIT License und die vollständigen
+Originaltexte der Fremdkomponenten. Der eigene Anwendungscode ist Open Source;
+Nutzung, Änderungen und Weitergabe sind auch kommerziell erlaubt. Der
+Copyright- und Lizenzhinweis muss erhalten bleiben. LICENSE.txt enthält den
+vollständigen Lizenztext; im Programm kann der Text gespeichert werden.
 Die Rechte der Fremdkomponenten und der bestehenden MIT-Bridge bleiben erhalten.
 
 

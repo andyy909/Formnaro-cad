@@ -1,6 +1,8 @@
 #cad-mesh-sculpt{width:360px;max-height:calc(100% - 106px)}
 #cad-mesh-sculpt .sculpt-heading{display:flex;justify-content:space-between;align-items:center;gap:8px}
 #cad-mesh-sculpt label{display:grid;gap:5px;margin:9px 0;font-size:12px}
+#cad-mesh-sculpt label.sculpt-refine{display:flex;align-items:center;gap:8px}
+#cad-mesh-sculpt .sculpt-refine input{width:auto;margin:0;flex:none}
 #cad-mesh-sculpt .sculpt-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 #cad-mesh-sculpt .sculpt-pair>*{min-width:0}
 #cad-mesh-sculpt .small-note{font-size:11px;line-height:1.45}

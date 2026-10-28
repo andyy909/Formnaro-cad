@@ -205,7 +205,7 @@ export function immutableMeshSnapshot(mesh){
   Object.freeze(arrays.verts);Object.freeze(arrays.triangles);Object.freeze(mesh);
   immutableMeshSnapshots.add(mesh);meshValidationCache.set(mesh,checked);return true;
 }
-function validMesh(mesh){
+export function validMesh(mesh){
   const cached=meshValidationCache.get(mesh);if(cached)return cached.valid;
   const {verts,triangles}=mesh;
   if(Object.isFrozen(mesh)&&Array.isArray(verts)&&Array.isArray(triangles)&&Object.isFrozen(verts)&&Object.isFrozen(triangles)){
@@ -214,7 +214,7 @@ function validMesh(mesh){
   }
   return Array.isArray(verts)&&Array.isArray(triangles)&&verts.length<=3000000&&triangles.length<=6000000&&verts.length%3===0&&triangles.length%3===0&&verts.every(Number.isFinite)&&triangles.every(v=>Number.isInteger(v)&&v>=0&&v<verts.length/3);
 }
-export function validNode(n,depth=0) {
+export function validNode(n,depth=0,{meshValidator=validMesh}={}) {
   if(!n||depth>12||typeof n.id!=='string'||typeof n.name!=='string'||!n.name||n.name.length>200||typeof n.type!=='string')return false;
   if(!['size','pos','rot'].every(k=>Array.isArray(n[k])&&n[k].length===3&&n[k].every(v=>typeof v==='number'&&Number.isFinite(v))))return false;
   if(n.size.some(v=>v<.01||v>10000)||n.pos.some(v=>Math.abs(v)>100000)||n.rot.some(v=>Math.abs(v)>100000))return false;
@@ -230,11 +230,11 @@ export function validNode(n,depth=0) {
   if(n.cad!==undefined&&(!n.mesh||!validCad(n.cad)))return false;
   if(n.edgeFinish!==undefined&&(!n.children?.length||!n.operation||!validFinish(n.edgeFinish)))return false;
   if(n.operation!==undefined&&(!['union','intersection','partition'].includes(n.operation)||!n.children?.length||!n.mesh))return false;
-  if(!validPartition(n,validMesh))return false;
+  if(!validPartition(n,meshValidator))return false;
   if(!validParameters(n))return false;
   if(n.parameterSize&&(!Array.isArray(n.parameterSize)||n.parameterSize.length!==3||n.parameterSize.some(v=>typeof v!=='number'||!Number.isFinite(v)||v<.01||v>10000)))return false;
-  if(n.mesh&&!validMesh(n.mesh))return false;
+  if(n.mesh&&!meshValidator(n.mesh))return false;
   if(!n.mesh&&!SHAPES.some(s=>s[0]===n.type))return false;
-  if(n.children&&(!Array.isArray(n.children)||n.children.length>500||!n.children.every(c=>validNode(c,depth+1))||!Array.isArray(n.baseSize)||n.baseSize.length!==3||!n.baseSize.every(v=>Number.isFinite(v)&&v>0)))return false;
+  if(n.children&&(!Array.isArray(n.children)||n.children.length>500||!n.children.every(c=>validNode(c,depth+1,{meshValidator}))||!Array.isArray(n.baseSize)||n.baseSize.length!==3||!n.baseSize.every(v=>Number.isFinite(v)&&v>0)))return false;
   return true;
 }

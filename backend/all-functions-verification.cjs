@@ -27,7 +27,7 @@ async function verifyAllFunctions(win,app,{directory,files,phase='interactions'}
    const width=await js(`document.getElementById('viewport').getBoundingClientRect().width`);
    await click('#collapse-library');await click('#collapse-inspector');
    check(await js(`document.getElementById('viewport').getBoundingClientRect().width`)>width+400,'Both sidebar arrows enlarge the canvas without modifying the model');
-   await click('#ai-open');await until(`document.body.dataset.inspectorCollapsed==='false'&&!document.getElementById('ai-chat-body').hidden`);await click('#collapse-library');
+   if(await js("document.body.dataset.inspectorCollapsed==='true'"))await click('#collapse-inspector');if(await js("document.getElementById('ai-chat').classList.contains('collapsed')"))await click('#ai-chat-toggle');await until(`document.body.dataset.inspectorCollapsed==='false'&&!document.getElementById('ai-chat-body').hidden`);await click('#collapse-library');
    await click('#settings-open');await click('#settings-legal');await until(`document.getElementById('modal-title').textContent==='Impressum und Lizenz'`);
    check((await js(`document.getElementById('legal-version').textContent`)).includes(app.getVersion()),'Actual settings open the correct versioned license dialog');
    check(await js(`document.getElementById('legal-own-text').textContent`)===fs.readFileSync(path.join(app.getAppPath(),'LICENSE.txt'),'utf8'),'Application license text is complete and exact');

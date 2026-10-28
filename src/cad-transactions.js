@@ -35,7 +35,7 @@ export function createCadTransactions({initial,build,abort=()=>{},now=()=>Date.n
     const protectionDraft={nodes:draft.nodes.filter(n=>n.kind==='mesh').map(n=>({id:n.id,kind:n.kind,metadata:{meshProtection:n.metadata?.meshProtection?structuredClone(n.metadata.meshProtection):undefined}}))};
     // Capture only the explicit reduction/remeshing/smoothing/patch replacement target before handing a mutable plan
     // to a builder. The guard independently checks every protected coordinate.
-    const reduceTarget=['mesh-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill'].includes(operation?.type)&&typeof operation.id==='string'?operation.id:operation?.kind==='batch'&&operation.commands?.some(c=>['tool','script'].includes(c?.op))?protectionBaseline.nodes.map(n=>n.id):null;
+    const reduceTarget=operation?.type==='mesh-surgery'?(operation.id??structuredClone(operation.ids??[])):['mesh-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill'].includes(operation?.type)&&typeof operation.id==='string'?operation.id:operation?.kind==='batch'&&operation.commands?.some(c=>['tool','script'].includes(c?.op))?protectionBaseline.nodes.map(n=>n.id):null;
     // Make Solid and Hollow add one independent copy. Preserve the whole prior
     // project, including layers/folders that indirectly control existing roots.
     // JSON evidence is private even if the builder mutates its context copies.

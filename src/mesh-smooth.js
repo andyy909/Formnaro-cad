@@ -70,6 +70,19 @@ function signedVolume(ids,positions,origin){let v=0;for(const f of ids){const [a
 function triangleNormal(ids,positions){const p=ids.map(v=>positions[v]);return cross(sub(p[1],p[0]),sub(p[2],p[0]));}
 function minimumQuadratic(a,b,c){let value=Math.min(a,a+b+c);if(c>0){const t=-b/(2*c);if(t>0&&t<1)value=Math.min(value,a+b*t+c*t*t);}return value;}
 
+// Static audit for topology-changing tools. Actual shared simplices, rather
+// than merely adjacent face IDs, determine which contact is legitimate.
+export function auditMeshIntersections(ids,positions,{signal,pairLimit=PAIR_LIMIT,collect=false}={}){
+ const box=bounds(positions),extent=norm(sub(box.max,box.min)),epsilon=Math.max(1,extent,...box.min.map(Math.abs),...box.max.map(Math.abs))*Number.EPSILON*512;
+ const index=indexTriangles(ids,positions,signal);let checks=0;const pairs=[];
+ for(const a of index.items){
+  tick(a.id,signal);const longest=Math.max(...a.p.map((p,k)=>norm(sub(p,a.p[(k+1)%3])))),altitude=norm(cross(sub(a.p[1],a.p[0]),sub(a.p[2],a.p[0])))/longest;
+  if(!Number.isFinite(altitude)||altitude<=epsilon*32)fail('Sehr dünne Flächen sind numerisch nicht eindeutig prüfbar.','MESH_REMESH_NUMERIC');
+  index.query(expand(a.box,epsilon),b=>{if(b.id<=a.id)return;if(++checks>pairLimit)fail('Die Schnittprüfung überschreitet das Arbeitsbudget. Ein kleineres Netz verwenden.','MESH_REMESH_LIMIT');tick(checks,signal);const shared=a.vertices.filter(v=>b.vertices.includes(v)).map(v=>positions[v]),r=pairGeometry(a.p,b.p,shared,epsilon);if(r.forbidden||!shared.length&&r.distance<=epsilon){if(!collect)fail('Das Netz enthält überlappende oder sich schneidende Flächen. Zuerst gezielt reparieren.','MESH_REMESH_INTERSECTION');if(pairs.length>=1000)fail('Mehr als 1.000 Schnittpaare. Für eine vollständige Diagnose einen kleineren Bestandteil verwenden.','MESH_REMESH_LIMIT');pairs.push([a.id,b.id]);}});
+ }
+ return {checks,pairLimit,method:'shared-simplex-triangle-intersections',...(collect?{pairs,triangleIds:[...new Set(pairs.flat())].sort((a,b)=>a-b),complete:true}:{})};
+}
+
 /** Same-connectivity local smoothing with immutable selection/mask borders.
  * Each nonincident triangle pair has a conservative swept-clearance guard:
  * total step displacement stays strictly below their current exact separation.

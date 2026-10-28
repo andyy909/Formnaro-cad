@@ -82,7 +82,7 @@ exports.verifyEasyAutoRepair=async function(win,{directory,files}){
   await run(`(()=>{const data=new DataTransfer();data.items.add(new File([${JSON.stringify(rows.join('\n'))}],${JSON.stringify(importedName)},{type:'model/stl'}));const input=document.getElementById('import-file');input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
   await until(`document.getElementById('modal').open&&!!document.getElementById('import-kind')`,'the ordinary STL import dialog');
   check(await run(`document.getElementById('import-kind').value==='mesh'&&document.querySelectorAll('#import-kind option').length===1`),'Real Easy Mesh STL import stays in the mesh domain');
-  await run(`document.getElementById('import-repair').checked=false;window.__autoRepairProof.importModalOpens=window.__autoRepairProof.modalOpens;`);
+  await run(`document.getElementById('import-auto-mesh-repair').checked=false;if(document.getElementById('import-auto-mesh-repair').checked)throw Error('Mesh import cleanup must be explicitly disabled');window.__autoRepairProof.importModalOpens=window.__autoRepairProof.modalOpens;`);
   await click('#import-confirm');await until(`!document.getElementById('modal').open`);await until(`window.__cadTest.easyRepair.state().repaired===3&&${idle}`,'automatic repair after the ordinary STL import');await settled();
   const imported=(await model()).nodes.find(n=>n.name===importedName);
   check(!!imported&&imported.meshSource?.sources?.[0]?.mesh.triangles.length===39&&await run(`window.__autoRepairProof.modalOpens===window.__autoRepairProof.importModalOpens&&!document.getElementById('modal').open`),'Damaged STL repairs automatically with import repair switched off and no extra prompt, retaining the imported triangles');

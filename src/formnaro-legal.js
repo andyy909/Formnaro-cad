@@ -5,7 +5,7 @@ export const FORMNARO_LEGAL=Object.freeze({
   copyrightYear:2026,
   copyrightHolder:'Andreas Klisch (privat)',
   contact:'',
-  licenseName:'PolyForm Noncommercial 1.0.0',
-  licenseSummary:'Offener Quellcode für die nach dieser Lizenz erlaubten nichtkommerziellen Zwecke. Es gelten besondere Erlaubnisse für die im Lizenztext genannten Einrichtungen. Die Beschränkung gilt für den eigenen Anwendungscode; Fremdkomponenten behalten ihre ursprünglichen Lizenzrechte.',
+  licenseName:'MIT License',
+  licenseSummary:'Der eigene Formnaro-Anwendungscode ist Open Source unter der MIT-Lizenz. Nutzung, Änderungen und Weitergabe sind auch kommerziell erlaubt. Der Copyright- und Lizenzhinweis muss erhalten bleiben. Fremdkomponenten behalten ihre eigenen Lizenzbedingungen.',
   licenseText
 });

@@ -1,3 +1,5 @@
+import {placement,bounds,triangleQuality,quality,sampledDeviation} from './mesh-remesh-geometry.js';
+import {remeshCurvedMesh} from './mesh-curved-remesh.js';
 import {buildMeshSelectionTopology} from './mesh-selection-data.js';
 import {inspectMeshTopology} from './mesh-inspector.js';
 
@@ -17,60 +19,25 @@ const bad=['duplicate','degenerate','orientation','nonmanifoldEdge','nonmanifold
 function inspect(topology,signal){const r=inspectMeshTopology(topology,{smallTriangleLimit:0,signal});if(bad.some(k=>r.categories[k].count))fail('Das Netz enthält mehrdeutige, doppelte, entartete oder falsch verbundene Flächen. Vor dem Neuvernetzen gezielt reparieren.');return r;}
 
 export function validateMeshRemeshOptions(o){
- const allowed=['method','mode','geometryDigest','scope','triangleIds','targetEdgeLength','iterations','maxDeviation'];
- if(!o||Object.getPrototypeOf(o)!==Object.prototype||Object.keys(o).some(k=>!allowed.includes(k))||o.method!=='planar-isotropic-v1'||!['subdivide','remesh'].includes(o.mode)||!(/^[a-f0-9]{64}$/).test(o.geometryDigest??'')||!['all','selection'].includes(o.scope)||!Array.isArray(o.triangleIds)||o.triangleIds.length>MESH_REMESH_LIMIT||new Set(o.triangleIds).size!==o.triangleIds.length||o.triangleIds.some(i=>!Number.isSafeInteger(i)||i<0||i>=MESH_REMESH_LIMIT)||o.scope==='all'&&o.triangleIds.length||o.scope==='selection'&&!o.triangleIds.length||typeof o.targetEdgeLength!=='number'||!Number.isFinite(o.targetEdgeLength)||o.targetEdgeLength<=0||o.targetEdgeLength>1e6||!Number.isSafeInteger(o.iterations)||o.iterations<1||o.iterations>8||typeof o.maxDeviation!=='number'||!Number.isFinite(o.maxDeviation)||o.maxDeviation<0||o.maxDeviation>1)fail('Ungültige Optionen oder veraltete Flächenauswahl für das Neuvernetzen. Kantenlänge > 0 bis 1.000.000 mm, 1 bis 8 Durchläufe und Abweichung 0 bis 1 mm wählen.');
+ const allowed=['method','mode','geometryDigest','scope','triangleIds','targetEdgeLength','iterations','maxDeviation','featureAngle'];
+ if(!o||Object.getPrototypeOf(o)!==Object.prototype||Object.keys(o).some(k=>!allowed.includes(k))||!['planar-isotropic-v1','curved-isotropic-v1'].includes(o.method)||!['subdivide','remesh'].includes(o.mode)||!(/^[a-f0-9]{64}$/).test(o.geometryDigest??'')||!['all','selection'].includes(o.scope)||!Array.isArray(o.triangleIds)||o.triangleIds.length>MESH_REMESH_LIMIT||new Set(o.triangleIds).size!==o.triangleIds.length||o.triangleIds.some(i=>!Number.isSafeInteger(i)||i<0||i>=MESH_REMESH_LIMIT)||o.scope==='all'&&o.triangleIds.length||o.scope==='selection'&&!o.triangleIds.length||typeof o.targetEdgeLength!=='number'||!Number.isFinite(o.targetEdgeLength)||o.targetEdgeLength<=0||o.targetEdgeLength>1e6||!Number.isSafeInteger(o.iterations)||o.iterations<1||o.iterations>8||typeof o.maxDeviation!=='number'||!Number.isFinite(o.maxDeviation)||o.maxDeviation<0||o.maxDeviation>1)fail('Ungültige Optionen oder veraltete Flächenauswahl für das Neuvernetzen. Kantenlänge > 0 bis 1.000.000 mm, 1 bis 8 Durchläufe und Abweichung 0 bis 1 mm wählen.');
+ if(o.method==='curved-isotropic-v1'&&(o.mode!=='remesh'||typeof o.featureAngle!=='number'||!Number.isFinite(o.featureAngle)||o.featureAngle<1||o.featureAngle>90)||o.method==='planar-isotropic-v1'&&o.featureAngle!==undefined)fail('Für gekrümmte Netze einen Formkantenwinkel von 1 bis 90 Grad wählen.');
  return {...o,triangleIds:[...o.triangleIds].sort((a,b)=>a-b)};
 }
-function placement(m){
- if(!Array.isArray(m)||m.length!==16||m.some(v=>typeof v!=='number'||!Number.isFinite(v))||m[3]!==0||m[7]!==0||m[11]!==0||m[15]!==1)fail('Eine gültige affine Objektlage wird benötigt.');
- const a=m[0],b=m[4],c=m[8],d=m[1],e=m[5],f=m[9],g=m[2],h=m[6],i=m[10],det=a*(e*i-f*h)-b*(d*i-f*g)+c*(d*h-e*g);
- if(!det||!Number.isFinite(det))fail('Die Objektlage ist nicht sicher invertierbar.');
- const inverse=[(e*i-f*h)/det,(c*h-b*i)/det,(b*f-c*e)/det,(f*g-d*i)/det,(a*i-c*g)/det,(c*d-a*f)/det,(d*h-e*g)/det,(b*g-a*h)/det,(a*e-b*d)/det];
- if(inverse.some(v=>!Number.isFinite(v)))fail('Die Objektlage ist nicht sicher invertierbar.');
- return {world:p=>[0,1,2].map(k=>m[k]*p[0]+m[k+4]*p[1]+m[k+8]*p[2]+m[k+12]),local:p=>{const q=p.map((v,k)=>v-m[k+12]);return [0,1,2].map(k=>dot(inverse.slice(k*3,k*3+3),q));}};
-}
-function bounds(points){const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(const p of points)if(p)for(let k=0;k<3;k++){min[k]=Math.min(min[k],p[k]);max[k]=Math.max(max[k],p[k]);}return {min,max};}
-function triangleQuality(ids,positions){const [a,b,c]=ids.map(v=>positions[v]),u=sub(b,a),v=sub(c,a),area2=norm(cross(u,v)),sides=[norm(u),norm(v),norm(sub(c,b))],sum=sides.reduce((n,x)=>n+x*x,0),longest=Math.max(...sides);return {quality:sum?2*Math.sqrt(3)*area2/sum:0,aspect:area2?longest*longest/area2:Infinity};}
-function quality(faces,positions){
- let minQuality=1,total=0,maxAspectRatio=0,triangleCount=0;const lengths=new Map();
- for(const f of faces)if(f.alive){const q=triangleQuality(f.ids,positions);minQuality=Math.min(minQuality,q.quality);total+=q.quality;maxAspectRatio=Math.max(maxAspectRatio,q.aspect);triangleCount++;for(let k=0;k<3;k++){const a=f.ids[k],b=f.ids[(k+1)%3],key=ekey(a,b);if(!lengths.has(key))lengths.set(key,norm(sub(positions[a],positions[b])));}}
- let sum=0,sum2=0,minEdgeLength=Infinity,maxEdgeLength=0;for(const l of lengths.values()){sum+=l;sum2+=l*l;minEdgeLength=Math.min(minEdgeLength,l);maxEdgeLength=Math.max(maxEdgeLength,l);}const meanEdgeLength=sum/lengths.size;
- return {triangleCount,minQuality,meanQuality:total/triangleCount,maxAspectRatio,meanEdgeLength,minEdgeLength,maxEdgeLength,edgeLengthCV:Math.sqrt(Math.max(0,sum2/lengths.size-meanEdgeLength**2))/meanEdgeLength};
-}
-
-// Closest distance by oriented half planes and segment projections. Avoid
-// subtracting nearly equal barycentric determinants on very thin triangles.
-function distance2(p,a,b,c){
- const ab=sub(b,a),ac=sub(c,a),ap=sub(p,a),scale=Math.max(...ab.map(Math.abs),...ac.map(Math.abs));if(!scale)return dot(ap,ap);
- const n=cross(ab.map(v=>v/scale),ac.map(v=>v/scale)),length=norm(n);if(!length)return Math.min(dot(ap,ap),dot(sub(p,b),sub(p,b)),dot(sub(p,c),sub(p,c)));const unit=n.map(v=>v/length),pairs=[[a,b],[b,c],[c,a]];
- if(pairs.every(([x,y])=>dot(cross(sub(y,x),sub(p,x)),unit)>=0)){const d=dot(ap,unit);return d*d;}
- let best=Infinity;for(const [x,y]of pairs){const d=sub(y,x),q=sub(p,x),t=Math.min(1,Math.max(0,dot(q,d)/dot(d,d))),r=q.map((v,k)=>v-t*d[k]);best=Math.min(best,dot(r,r));}return best;
-}
-function surfaceIndex(faces,points,signal){
- const triangles=[];for(let i=0;i<faces.length;i++){tick(i,signal);const f=faces[i];if(f.alive){const p=f.ids.map(v=>points[v]);triangles.push({p,bounds:bounds(p),center:mean(p)});}}
- let visits=0;
- function tree(items){tick(visits++,signal);const box={min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]};for(const t of items)for(let k=0;k<3;k++){box.min[k]=Math.min(box.min[k],t.bounds.min[k]);box.max[k]=Math.max(box.max[k],t.bounds.max[k]);}if(items.length<=12)return {box,items};const ranges=box.max.map((v,k)=>v-box.min[k]),axis=ranges.indexOf(Math.max(...ranges));items.sort((a,b)=>a.center[axis]-b.center[axis]);const middle=Math.floor(items.length/2);return {box,left:tree(items.slice(0,middle)),right:tree(items.slice(middle))};}
- const root=tree([...triangles]);const boxDistance=(p,b)=>p.reduce((s,v,k)=>s+Math.max(0,b.min[k]-v,v-b.max[k])**2,0);
- function nearest(p){let best=Infinity;const pending=[root];while(pending.length){tick(visits++,signal);if(visits>2000000)fail('Die unabhängige Oberflächenprüfung überschreitet ihr begrenztes Arbeitsbudget. Ein kleineres Netz oder weniger Durchläufe wählen.','MESH_REMESH_LIMIT');const n=pending.pop();if(boxDistance(p,n.box)>best)continue;if(n.items){for(const t of n.items)best=Math.min(best,distance2(p,...t.p));}else{const l=boxDistance(p,n.left.box),r=boxDistance(p,n.right.box);if(l<r)pending.push(n.right,n.left);else pending.push(n.left,n.right);}}return Math.sqrt(Math.max(0,best));}
- function samples(){const result=[],count=Math.min(triangles.length,Math.floor(4096/7));for(let i=0;i<count;i++){tick(i,signal);const p=triangles[Math.floor(i*triangles.length/count)].p;result.push(...p,mean(p),mean([p[0],p[1]]),mean([p[1],p[2]]),mean([p[2],p[0]]));}return result;}
- return {nearest,samples};
-}
-function sampledDeviation(beforeFaces,beforePoints,afterFaces,afterPoints,signal){const before=surfaceIndex(beforeFaces,beforePoints,signal),after=surfaceIndex(afterFaces,afterPoints,signal),a=before.samples(),b=after.samples();let forwardMax=0,reverseMax=0,squares=0;for(let i=0;i<a.length;i++){tick(i,signal);const d=after.nearest(a[i]);forwardMax=Math.max(forwardMax,d);squares+=d*d;}for(let i=0;i<b.length;i++){tick(i,signal);const d=before.nearest(b[i]);reverseMax=Math.max(reverseMax,d);squares+=d*d;}return {method:'deterministic-vertices-edges-centroids',sampleCountBefore:a.length,sampleCountAfter:b.length,forwardMax,reverseMax,maximum:Math.max(forwardMax,reverseMax),rms:Math.sqrt(squares/(a.length+b.length)),approximate:true};}
-
 /** Conforming edge subdivision preserves the original faceted surface. The
  * remesh mode additionally improves diagonals and interior vertex positions in
  * fixed planar patches; curves, patch contours and scope/mask borders stay fixed.
  * No normal smoothing, curve approximation, coarsening or automatic repair.
  */
 export function remeshPlanarMesh(node,options,{signal}={}){
- const o=validateMeshRemeshOptions(options),mesh=node?.mesh;abort(signal);
+ const o=validateMeshRemeshOptions(options);if(o.method==='curved-isotropic-v1')return remeshCurvedMesh(node,o,{signal});const mesh=node?.mesh;abort(signal);
  if(mesh?.triangles?.length/3>MESH_REMESH_LIMIT)fail('Neuvernetzen unterstützt bis zu 150.000 Ausgangsdreiecke je Netz. Ein kleineres Netz auswählen.','MESH_REMESH_LIMIT');
  const topology=buildMeshSelectionTopology(mesh,{signal}),before=inspect(topology,signal),transform=placement(node.transform);if(o.geometryDigest!==topology.geometryDigest)fail('Die Netzgeometrie wurde geändert. Neuvernetzen und Flächenauswahl erneut öffnen.','MESH_REMESH_STALE');
  const regions=node.metadata?.meshProtection?.regions??[],protectedIds=new Set();for(const r of regions){if(r.geometryDigest!==topology.geometryDigest||!Array.isArray(r.triangleIds)||r.triangleIds.some(v=>!Number.isSafeInteger(v)||v<0||v>=topology.triangles))fail('Ein Schutzbereich gehört nicht mehr zur aktuellen Geometrie. Schutzflächen erneut festlegen.');r.triangleIds.forEach(v=>protectedIds.add(v));}
  if(o.triangleIds.some(v=>v>=topology.triangles))fail('Die Flächenauswahl ist veraltet.');
  const chosen=new Set(o.triangleIds),positions=[],local=[],faces=[],at=[],pinned=[],edges=new Map(),faceKeys=new Map();let scopeBeforeTriangles=0;
  for(let i=0;i<topology.vertices;i++){tick(i,signal);if(topology.representatives[i]===i){local[i]=mesh.verts.slice(i*3,i*3+3);positions[i]=transform.world(local[i]);if(positions[i].some(v=>!Number.isFinite(v)))fail('Die Objektlage überschreitet den auswertbaren Zahlenbereich.');at[i]=new Set();pinned[i]=false;}}
- for(let i=0;i<topology.triangles;i++){const eligible=o.scope==='all'||chosen.has(i);if(eligible)scopeBeforeTriangles++;faces.push({ids:mesh.triangles.slice(i*3,i*3+3).map(v=>topology.representatives[v]),patch:-1,alive:true,editable:eligible&&!protectedIds.has(i),original:i});}
+ for(let i=0;i<topology.triangles;i++){const eligible=o.scope==='all'||chosen.has(i);if(eligible)scopeBeforeTriangles++;faces.push({ids:mesh.triangles.slice(i*3,i*3+3).map(v=>topology.representatives[v]),patch:-1,alive:true,editable:eligible&&!protectedIds.has(i),ancestor:i,original:i});}
  const beforeFaces=structuredClone(faces),beforePoints=structuredClone(positions),beforeBounds=bounds(positions),extent=norm(sub(beforeBounds.max,beforeBounds.min)),numericalAllowance=Math.max(1,...beforeBounds.min.map(Math.abs),...beforeBounds.max.map(Math.abs),extent)*Number.EPSILON*512;
  const normals=faces.map(f=>{const p=f.ids.map(v=>positions[v]),n=cross(sub(p[1],p[0]),sub(p[2],p[0])),l=norm(n);if(!l||!Number.isFinite(l))fail('Eine Fläche ist in dieser Objektlage nicht eindeutig auswertbar.');return n.map(v=>v/l);}),patches=[];
  const planarTolerance=Math.min(1e-8,o.maxDeviation/4);
@@ -119,6 +86,7 @@ export function remeshPlanarMesh(node,options,{signal}={}){
  if(!splitEdges&&!flippedEdges&&!relaxedVertices)fail('Keine sicher verbesserbare Vernetzung gefunden. Schutzflächen, Auswahlränder und im Neuverteilungsmodus Kurvenfacetten sowie Formkanten bleiben erhalten. Eine andere Kantenlänge oder Unterteilen wählen.','MESH_REMESH_NO_CHANGE');
  const used=new Set();for(const f of faces)if(f.alive)f.ids.forEach(v=>used.add(v));const vertices=[...used].sort((a,b)=>a-b),vertexMap=new Map(vertices.map((v,i)=>[v,i])),verts=vertices.flatMap(v=>local[v]),triangles=[],faceMap=new Map(),retainedOriginalFaceIds=[];
  for(let i=0;i<faces.length;i++){tick(i,signal);const f=faces[i];if(f.alive){if(f.original>=0)faceMap.set(f.original,triangles.length/3);retainedOriginalFaceIds.push(f.original);triangles.push(...f.ids.map(v=>vertexMap.get(v)));}}
+ const originalFaceIds=faces.filter(f=>f.alive).map(f=>f.ancestor);
  const result={verts,triangles},afterTopology=buildMeshSelectionTopology(result,{signal}),after=inspect(afterTopology,signal);
  if(after.componentCount!==before.componentCount)fail('Die Neuvernetzung würde die Anzahl der Bestandteile verändern.');
  const finalBoundary=[...edges.values()].filter(e=>e.faces.size===1);if(finalBoundary.length!==boundaryLineage.size||finalBoundary.some(e=>!boundaryLineage.has(ekey(e.a,e.b))))fail('Ein ursprünglicher Öffnungsrand würde verändert.');
@@ -138,5 +106,5 @@ export function remeshPlanarMesh(node,options,{signal}={}){
  const sampledSurfaceDeviation=sampledDeviation(beforeFaces,beforePoints,faces,positions,signal);if(sampledSurfaceDeviation.maximum>maximumSurfaceDeviationBound+numericalAllowance)fail('Die unabhängigen Oberflächenstichproben widersprechen der analytischen Formgrenze.');
  const protection=regions.length?{format:'FormnaroMeshProtection',version:1,regions:regions.map(r=>({...structuredClone(r),geometryDigest:afterTopology.geometryDigest,triangleIds:r.triangleIds.map(id=>{const mapped=faceMap.get(id);if(mapped===undefined)fail('Eine Schutzfläche würde entfernt.');return mapped;}).sort((a,b)=>a-b)}))}:null;
  const qualityAfter=quality(faces,positions),longEdges=[...edges.values()].filter(e=>norm(sub(positions[e.a],positions[e.b]))>o.targetEdgeLength*4/3).length;
- abort(signal);return {mesh:result,protection,retainedOriginalFaceIds,report:{method:o.method,mode:o.mode,beforeTriangles:topology.triangles,afterTriangles:alive,scopeBeforeTriangles,scopeAfterTriangles:scopeBeforeTriangles+alive-topology.triangles,qualityBefore,qualityAfter,targetEdgeLength:o.targetEdgeLength,coordinatesMoved,insertedVertices:splitEdges,splitEdges,flippedEdges,relaxedVertices,protectedTriangles:protectedIds.size,protectedRegions:regions.map(r=>({id:r.id,name:r.name,purpose:r.purpose,triangles:r.triangleIds.length})),protectedGeometryExact:true,unselectedGeometryExact:true,maximumSurfaceDeviationBound,numericalAllowance,sampledSurfaceDeviation,boundsDifference,boundsBefore:beforeBounds,boundsAfter:afterBounds,componentCount:after.componentCount,boundaryEdges:afterTopology.diagnostics.boundaryCount,curveAndFeatureEdges:fixedEdges.length,patches:patches.length,passes,attempts,budgetHit,limitedBySafety:!!longEdges,longEdgesRemaining:longEdges,curvedSurfaceApproximation:false,coarsening:false}};
+ abort(signal);return {mesh:result,protection,retainedOriginalFaceIds,originalFaceIds,report:{method:o.method,mode:o.mode,beforeTriangles:topology.triangles,afterTriangles:alive,scopeBeforeTriangles,scopeAfterTriangles:scopeBeforeTriangles+alive-topology.triangles,qualityBefore,qualityAfter,targetEdgeLength:o.targetEdgeLength,coordinatesMoved,insertedVertices:splitEdges,splitEdges,flippedEdges,relaxedVertices,protectedTriangles:protectedIds.size,protectedRegions:regions.map(r=>({id:r.id,name:r.name,purpose:r.purpose,triangles:r.triangleIds.length})),protectedGeometryExact:true,unselectedGeometryExact:true,maximumSurfaceDeviationBound,numericalAllowance,sampledSurfaceDeviation,boundsDifference,boundsBefore:beforeBounds,boundsAfter:afterBounds,componentCount:after.componentCount,boundaryEdges:afterTopology.diagnostics.boundaryCount,curveAndFeatureEdges:fixedEdges.length,patches:patches.length,passes,attempts,budgetHit,limitedBySafety:!!longEdges,longEdgesRemaining:longEdges,curvedSurfaceApproximation:false,coarsening:false}};
 }

@@ -22,7 +22,10 @@ exports.verifyFreeCADRuntime=async(win,{directory})=>{
   // controller command lifecycle (same path in all four workbench modes).
   const r=await freecad.run({inspectOnly:true,script:{version:1,gui:true,code:"import sys,FreeCADGui,ImportGui,Draft\nmeasurements={'gui':bool(App.GuiUp),'python':sys.version,'prefix':sys.prefix,'freecad':App.getHomePath(),'draft':hasattr(Draft,'make_wire')}"}});
   timings.push({operation:mode+'-offscreen-gui',ms:performance.now()-t});
-  check(r.measurements.gui&&r.measurements.draft&&r.measurements.freecad.toLowerCase().startsWith(status.root.toLowerCase()),mode+' uses bundled native/GUI modules without loading external FreeCAD');
+  const runtimeRootPhysical=fs.realpathSync(status.root),freecadHomePhysical=fs.realpathSync(r.measurements.freecad),homeRelative=path.relative(runtimeRootPhysical,freecadHomePhysical);
+  const homeInsideRuntime=homeRelative===''||(!path.isAbsolute(homeRelative)&&homeRelative!=='..'&&!homeRelative.startsWith('..'+path.sep));
+  fs.writeFileSync(path.join(directory,mode+'-runtime-paths.json'),JSON.stringify({mode,status,measurements:r.measurements,resourcesPath:process.resourcesPath,realpaths:{runtimeRoot:runtimeRootPhysical,freecadHome:freecadHomePhysical,executable:fs.realpathSync(status.executable),resources:fs.realpathSync(process.resourcesPath)},homeRelative,homeInsideRuntime,oldLexicalPrefix:r.measurements.freecad.toLowerCase().startsWith(status.root.toLowerCase())},null,2));
+  check(r.measurements.gui&&r.measurements.draft&&homeInsideRuntime,mode+' uses bundled native/GUI modules without loading external FreeCAD');
   check(await js('window.__cadTest.serialize()')===before&&await js('window.__cadTest.undoDepth()')===undo,mode+' runtime analysis preserves the confirmed project and Undo');
   await js("(async()=>{const a=window.__cadTest;window.__runtimePreview=await a.access.preview({revision:a.access.scene().revision,label:'Integrierte CAD-Laufzeit',commands:[{op:'tool',engine:'freecad',as:'result',operation:{kind:'build',script:{version:1,code:'result=Part.makeBox(2,3,4)'}}}],checks:[{kind:'volume',target:'$result',expected:24,tolerance:.0001}]});})()");
   check(await js('window.__cadTest.serialize()')===before&&await js('window.__cadTest.undoDepth()')===undo,mode+' native model preview preserves confirmed geometry');

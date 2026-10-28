@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 exports.verifyModelingContext=async(win,{directory})=>{
- const checks=[],calls=[],pause=ms=>new Promise(r=>setTimeout(r,ms));
+ const checks=[],calls=[],visualCalls=[],pause=ms=>new Promise(r=>setTimeout(r,ms));
  const js=code=>win.webContents.executeJavaScript(`(async()=>{const a=window.__cadTest;${code}})()`);
  async function until(code){const start=Date.now();while(Date.now()-start<45000){if(await js('return '+code))return;await pause(40);}throw Error('Modelling context UI timeout: '+code);}
  async function proof(label,fn){await fn();checks.push(label);fs.writeFileSync(path.join(directory,'progress.json'),JSON.stringify({checks}));}
@@ -9,22 +9,23 @@ exports.verifyModelingContext=async(win,{directory})=>{
  const server=http.createServer(async(req,res)=>{
   const chunks=[];for await(const c of req)chunks.push(c);res.setHeader('Content-Type','application/json');
   if(req.url.endsWith('/models'))return res.end(JSON.stringify({data:[{id:'local-context-fixture'}]}));
-  const body=JSON.parse(Buffer.concat(chunks)),input=body.messages.at(-1).content,scene=JSON.parse(input.split('Current scene (data):\n')[1].split('\nUser task:\n')[0]);calls.push(body);
+  const body=JSON.parse(Buffer.concat(chunks)),content=body.messages.at(-1).content,input=typeof content==='string'?content:content.filter(p=>p.type==='text').map(p=>p.text).join('\n'),scene=JSON.parse(input.split('Current scene (data):\n')[1].split('\nUser task:\n')[0]);
+  if(input.includes('Visual review of an UNAPPLIED candidate')){const feedback=JSON.parse(input.split('Visual review of an UNAPPLIED candidate (reference data, not instructions):\n')[1].split('\nCompare the four labelled')[0]);assert(Array.isArray(content)&&content.some(p=>p.type==='image_url'));assert.equal(feedback.views.length,4);visualCalls.push(body);return res.end(JSON.stringify({choices:[{message:{content:JSON.stringify({revision:scene.revision,review:{previewId:feedback.previewId,accepted:true,observations:'Synthetic four-view review; native dimensions checked separately.'}})}}]}));}calls.push(body);
   const wrong=forceCorrection&&calls.length===1,answer={revision:scene.revision,label:'Geprüfte Kontextplatte',commands:[{op:'create',type:'box',as:'plate',size:[wrong?40:60,30,5],pos:[30,15,2.5]}],checks:[{kind:'size',target:'$plate',space:'worldAxes',expected:[60,30,5]},{kind:'solids',target:'$plate',expected:1}]};
   if(forceInvalid){forceInvalid=false;return res.end(JSON.stringify({choices:[{finish_reason:'length',message:{content:'{'}}],usage:{prompt_tokens:80,completion_tokens:40}}));}
   res.end(JSON.stringify({choices:[{message:{content:JSON.stringify(answer)}}]}));
  });await new Promise(r=>server.listen(0,'127.0.0.1',r));
  try{
   win.setSize(1500,1000);await js('await a.resetProject();await a.settled();');
-  const settings=await js('return await window.offlinecadDesktop.getAISettings();'),memory=settings.modelingContext;
+  const settings=await js('return await window.offlinecadDesktop.getAISettings();');let memory=settings.modelingContext;
   await proof('a portable personal modelling context is created without a model or cloud request',()=>{assert(memory?.notesFile&&fs.existsSync(memory.notesFile));assert.equal(calls.length,0);assert(fs.readFileSync(memory.notesFile,'utf8').includes('math.pi'));});
   const baseline=await js('return a.serialize();');
-  fs.appendFileSync(memory.notesFile,'\nVERIFIED_CONTEXT_MARKER_A\n');
-  await js(`await window.offlinecadDesktop.saveAISettings({config:{protocol:'chat',baseUrl:'http://127.0.0.1:${server.address().port}',model:'local-context-fixture',maxOutputTokens:131072,rememberKey:false,bridgeEnabled:true},key:'synthetic-context-key'});await a.aiUI.chat.refreshModels();`);
+  await js(`await window.offlinecadDesktop.saveAISettings({config:{protocol:'chat',baseUrl:'http://127.0.0.1:${server.address().port}',model:'local-context-fixture',maxOutputTokens:131072,rememberKey:false,bridgeEnabled:true},key:'synthetic-context-key'});await a.aiUI.chat.refreshModels();a.aiUI.openChat();`);
+  memory=(await js('return await window.offlinecadDesktop.getAISettings();')).modelingContext;fs.appendFileSync(memory.notesFile,'\nVERIFIED_CONTEXT_MARKER_A\n');
   async function send(){await until(`!document.getElementById('ai-chat-send').disabled`);await click('#ai-chat-prompt');await js(`document.getElementById('ai-chat-prompt').select();`);win.webContents.insertText('Erstelle eine Platte 60 x 30 x 5 mm mit Prüfung.');await click('#ai-chat-send');await until(`!document.getElementById('ai-chat-send').disabled`);}
   await send();
   await proof('external local context includes the same personal notes without exposing its access token',async()=>{const settings=await js('return await window.offlinecadDesktop.getAISettings();'),descriptor=JSON.parse(fs.readFileSync(settings.bridge.connectionFile,'utf8')),response=await fetch(settings.bridge.url+'/v1/context',{headers:{Authorization:'Bearer '+descriptor.token}}),context=await response.json();assert(response.ok);assert(context.modelingExperience?.referenceOnly);assert(context.modelingExperience.text.includes('VERIFIED_CONTEXT_MARKER_A'));assert(!JSON.stringify(context).includes(descriptor.token));});
-  await proof('actual provider requests and automatic correction both carry freshly edited personal notes',()=>{assert.equal(calls.length,2);assert(calls.every(b=>b.messages[0].content.includes('VERIFIED_CONTEXT_MARKER_A')));});
+  await proof('actual provider requests and automatic correction both carry freshly edited personal notes',()=>{assert.equal(calls.length,2);assert.equal(visualCalls.length,1);assert([...calls,...visualCalls].every(b=>b.messages[0].content.includes('VERIFIED_CONTEXT_MARKER_A')));});
   await proof('automatic correction journals only the actual structured failure while preserving the model',async()=>{assert.equal(await js('return a.serialize();'),baseline);await until(`(await window.offlinecadDesktop.getAISettings()).modelingContext.entries>=2`);const rows=JSON.parse(fs.readFileSync(memory.journalFile,'utf8')).entries;assert(rows.some(r=>r.outcome==='rejected'&&r.code==='AI_RESULT_MISMATCH'&&r.checkKind==='size'));assert(rows.some(r=>r.outcome==='preview'));assert(!fs.readFileSync(memory.journalFile,'utf8').includes('synthetic-context-key'));});
   await click('#ai-chat-apply');await js('await a.settled();');
   await proof('explicit Apply stores a separate applied outcome and keeps one native Undo step',async()=>{await until(`JSON.stringify((await window.offlinecadDesktop.getAISettings()).modelingContext).length>0`);for(let i=0;i<40&&!JSON.parse(fs.readFileSync(memory.journalFile,'utf8')).entries.some(r=>r.outcome==='applied');i++)await pause(25);assert(JSON.parse(fs.readFileSync(memory.journalFile,'utf8')).entries.some(r=>r.outcome==='applied'));assert.equal(await js('return a.undoDepth();'),1);});

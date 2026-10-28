@@ -8,11 +8,11 @@
 </p>
 
 <h3 align="center">
-  <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows-Klarer-Start.zip">↓ Formnaro für Windows herunterladen</a>
+  <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.117.0-r8/Formnaro-v0.117.0-r8-Windows.zip">↓ Formnaro für Windows herunterladen</a>
 </h3>
 
 <p align="center">
-  <strong>0.114.0-r7 · Windows 64 Bit · portabel · ca. 1,89 GB</strong><br>
+  <strong>0.117.0-r8 · Windows 64 Bit · portabel · ca. 1,89 GB · eigener Code: MIT</strong><br>
   FreeCAD und Python sind bereits dabei.
 </p>
 
@@ -70,6 +70,7 @@ Das Projekt enthält **zwei unabhängig bedienbare Drehgelenke**. Unter „Gelen
 | **Vorhandene 3D-Modelle bearbeiten** | STL- und andere Netzmodelle importieren, prüfen und gezielt bearbeiten; CAD-Modelle über STEP austauschen. |
 | **Komplexere Formen aufbauen** | Bézier- und B-Spline-Kurven, Lofts, Sweeps sowie Flächen, Prägungen und Vertiefungen. |
 | **Eine Konstruktion dokumentieren** | Technische Ansichten, Schnitte und Bemaßungen mit Ausgabe als PDF, SVG oder DXF. |
+| **Teile und Baugruppen verwalten** | Flächenfarben, Materialgruppen, ausdrücklich eingegebene Dichte, Masse und Schwerpunkt, CSV-Stückliste und gespeicherte Explosionsansicht. |
 | **Vorlagen und Fotos verwenden** | Projektfotos, Referenzmaße und bestätigte technische Ansichten als Grundlage für bearbeitbare CAD-Entwürfe. |
 
 ## Vier Bedienmodi – ein gemeinsames Projekt
@@ -141,7 +142,7 @@ Bestätigte Vorder-, Seiten- und Draufsichten teilen sich Bezugspunkte und Zielm
 
 ## In drei Schritten starten
 
-1. **[Windows-ZIP herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows-Klarer-Start.zip).**
+1. **[Windows-ZIP herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.117.0-r8/Formnaro-v0.117.0-r8-Windows.zip).**
 2. **Vollständig entpacken** – in einen eigenen Ordner, mit allen Unterordnern und Lizenzen.
 3. **„Formnaro starten“ doppelklicken** und ein neues Projekt anlegen.
 
@@ -153,14 +154,27 @@ Vorhandene Einstellungen und eigene Werkzeuge kannst du bei Bedarf über deinen 
 
 ### Neu im aktuellen Download
 
-Mit **0.114.0-r7** kommen die CAD-Laufzeiten direkt mit dem Programm. Python-Funktionen, native FCStd-Merkmale sowie Kurven- und Flächenwerkzeuge verwenden automatisch die integrierte Laufzeit.
+**0.117.0-r8** enthält die abgeschlossene Ausbaufolge bis Paket 10 und gibt den gesamten eigenen Formnaro-Anwendungscode unter der **MIT-Lizenz** frei, einschließlich kommerzieller Nutzung.
 
-[Versionshinweise und Downloads](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7) · [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Pruefbericht.txt) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows-Klarer-Start-SHA256.txt)
+- **Teile & Material:** Materialgruppen und eine ausdrücklich eingegebene Dichte für geeignete CAD- und Netzteile; Volumen, Masse und Schwerpunkt prüfen.
+- **Flächenfarben:** eigene Flächengruppen und unterstützte Farbexporte bei erhaltenen Originalquellen.
+- **Stückliste:** Teile als CSV ausgeben.
+- **Explosionsansicht:** Abstände zur Übersicht speichern, während Montagepositionen und Exporte unverändert bleiben.
+
+Unbekannte Dichte bleibt unbekannt. Massensummen addieren die Teile; sie vereinigen überlappende Körper nicht. Die Explosionsansicht ist eine Anzeige ohne Kollisionssimulation. [Bedienung und Grenzen](docs/TEILE-MATERIAL-BAUGRUPPEN.md).
+
+Auch die gekrümmte Netzbearbeitung und die erweiterten Netzflächenwerkzeuge sind enthalten: [gekrümmte Netze](docs/GEKRUEMMTE-NETZE.md) · [Netzreparatur und Flächen](docs/NETZREPARATUR-FLAECHEN.md).
+
+[Versionshinweise und Downloads](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.117.0-r8) · [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.117.0-r8/Pruefbericht.txt) · [Prüfergebnis](https://github.com/andyy909/Formnaro-cad/releases/download/v0.117.0-r8/Pruefergebnis.json) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.117.0-r8/SHA256SUMS.txt)
 
 <details>
 <summary><strong>Prüfumfang und technische Einzelheiten</strong></summary>
 
-Die integrierte CAD-Laufzeit wurde mit **92 lokalen EXE-Prüfgruppen** und **167 Prüfgruppen in sechs Läufen auf frischem Windows** ohne externe FreeCAD-/Python-Installation abgenommen. Dort wurden alle **35.586 CAD-Laufzeitdateien** vollständig geprüft. Die Prüfumfänge sind getrennt dokumentiert und werden nicht als neue allgemeine Gesamtprüfung ausgegeben.
+Die vollständige Funktionsabnahme der Ausbaufolge stammt aus **0.117.0-r7**: **2.153 Tests in 352 Testdateien**, **3.312 Windows-Prüfgruppen in 91 erfolgreichen Prozessläufen** und **16 visuell geprüfte Paketbilder**. Dazu gehören ein vollständiger 30-minütiger Dauertest, Wiederherstellung, zwei echte Auftragsneustarts und unabhängige Leser für physische Exportdateien. Die Herkunft der Unit-Belege und die korrigierten Spezialprüfer sind im [Abnahmebericht](docs/GESAMTABNAHME-AUSBAU-0.117.md) ausdrücklich dokumentiert.
+
+**R8 ist die anschließende Lizenzaktualisierung auf MIT.** Der Prüfbericht trennt die gezielten R8-Prüfungen der Lizenzänderung von der R7-Gesamtfunktionsabnahme. Die genannten vollständigen R7-Zahlen sind keine neu ausgeführte vollständige R8-Prüfung.
+
+Die integrierte FreeCAD-/Python-Laufzeit wurde zuvor auch auf frischem Windows ohne externe Installation abgenommen. Bei der Abnahme wurden alle **35.586 CAD-Laufzeitdateien** vollständig auf Integrität geprüft.
 
 Geprüft wurden unter anderem native Exporte, vorhandene Quellen, vier Bedienmodi, Umlautpfade, Abbruch und Rückgängig. Aktuelle Paketbilder wurden visuell geprüft; KI-Anbieterantworten in diesen Prüfungen waren simuliert.
 
@@ -168,7 +182,7 @@ Geprüft wurden unter anderem native Exporte, vorhandene Quellen, vier Bedienmod
 
 *Synthetisches Prüfbeispiel aus 0.114.0-r7 auf frischem Windows.*
 
-Einzelheiten und Grenzen: [integrierte CAD-Laufzeit](docs/INTEGRIERTE-CAD-LAUFZEIT.md) und [maschinenlesbarer Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Pruefergebnis.json).
+Einzelheiten und Grenzen: [Gesamtabnahme der Ausbaufolge](docs/GESAMTABNAHME-AUSBAU-0.117.md), [integrierte CAD-Laufzeit](docs/INTEGRIERTE-CAD-LAUFZEIT.md) und [maschinenlesbarer Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.117.0-r8/Pruefergebnis.json).
 
 </details>
 
@@ -179,6 +193,7 @@ Einzelheiten und Grenzen: [integrierte CAD-Laufzeit](docs/INTEGRIERTE-CAD-LAUFZE
 | **Das Programm kennenlernen** | [Bedienungsanleitung](LIES-MICH.txt) · [Solid](docs/SOLID-MODUS.md) · [Fusion](docs/FUSION-MODUS.md) |
 | **Mit Maßen und CAD-Werkzeugen arbeiten** | [Projektparameter und Varianten](docs/PROJEKTPARAMETER.md) · [Kurven, Loft und Sweep](docs/CAD-KURVEN.md) · [Flächen und Prägungen](docs/CAD-FLAECHEN.md) |
 | **Zeichnungen und Projekte ausgeben** | [Technische Zeichnungen](docs/TECHNISCHE-ZEICHNUNGEN.md) · [FNPACK-Projekte](docs/FNPACK.md) |
+| **Material, Masse und Baugruppen prüfen** | [Teile, Flächenfarben, Stückliste und Explosion](docs/TEILE-MATERIAL-BAUGRUPPEN.md) |
 | **KI-Unterstützung einrichten und nutzen** | [KI-Aufträge](docs/KI-AUFTRAEGE.md) · [Foto-Assistent](docs/FOTO-ASSISTENT.md) · [Programm-Assistent](docs/PROGRAMM-ASSISTENT.md) |
 | **Das Projekt selbst bauen** | [Bauanleitung](docs/BUILD.md) · [Technischer Projektkontext](docs/PROJEKTKONTEXT.md) |
 
@@ -186,7 +201,11 @@ Einzelheiten und Grenzen: [integrierte CAD-Laufzeit](docs/INTEGRIERTE-CAD-LAUFZE
 
 Du hast eine Idee, vermisst eine Funktion oder hast einen Fehler gefunden? Beschreibe dein Anliegen in den **[GitHub Issues](https://github.com/andyy909/Formnaro-cad/issues)**. Bei Fehlern helfen die verwendete Version und die Schritte, mit denen sie sich nachvollziehen lassen.
 
-Dieses Repository enthält den veröffentlichten Projektstand **0.114.0-r7** mit Anwendung, beiden Mini-Versionen, Tests, Buildskripten, Anleitungen und Lizenzen.
+Dieses Repository enthält den vollständigen veröffentlichten Projektstand **0.117.0-r8** mit Anwendung, beiden Mini-Versionen, Python-SDK, Tests, Buildskripten, Anleitungen und Lizenzen. Der gesamte eigene Anwendungscode ist unter [MIT](LICENSE.txt) nutzbar, veränderbar und weiterverteilbar, auch kommerziell. Copyright- und Lizenzhinweis müssen erhalten bleiben.
+
+[Formnaro-Quellcode dieses Releases herunterladen](https://github.com/andyy909/Formnaro-cad/archive/refs/tags/v0.117.0-r8.zip) · [Vollständige entsprechende CAD-Quellen mit Originalarchiven](https://github.com/andyy909/Formnaro-cad/releases/download/v0.117.0-r8/Formnaro-CAD-Quellen-v0.117.0.zip)
+
+Das zusätzliche CAD-Quellenasset enthält die fünf exakt gepinnten Originalarchive sowie die aktuelle Formnaro-Bridge und Buildeingaben. Es ergänzt den vollständigen Quellcheckout für den Neubuild des CAD-Kerns. [Quellen, Lizenzen und Austausch der Bibliothek](licenses/CAD-Quellen-und-Build.txt).
 
 <details>
 <summary><strong>Entwicklungsumgebung und Projektstruktur</strong></summary>
@@ -214,7 +233,7 @@ Für FreeCAD-Funktionen im Entwicklungscheckout bereitet `npm run setup:cad-runt
 
 </details>
 
-Der eigene Anwendungscode steht unter der **[PolyForm Noncommercial License 1.0.0](LICENSE.txt)**. Für Fremdkomponenten gelten die jeweiligen [Drittanbieterlizenzen](THIRD-PARTY-LICENSES.txt).
+Der eigene Anwendungscode steht unter der **[MIT-Lizenz](LICENSE.txt)**. Die ursprünglichen [Drittanbieterlizenzen](THIRD-PARTY-LICENSES.txt) bleiben unverändert. Insbesondere stehen OpenCascade.js und OCCT weiterhin unter ihren LGPL-Bedingungen einschließlich der OCCT-Ausnahme; der kombinierte CAD-Kern wird nicht insgesamt als MIT bezeichnet.
 
 ---
 

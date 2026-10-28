@@ -68,7 +68,7 @@ output.parent.mkdir(exist_ok=True)
 with zipfile.ZipFile(output, 'x', compression=zipfile.ZIP_DEFLATED, compresslevel=1, allowZip64=True) as z:
     for name,file in entries:
         z.write(file,name,compress_type=zipfile.ZIP_STORED if file.suffix=='.zip' else zipfile.ZIP_DEFLATED)
-    z.writestr('START-HIER.txt', f'Formnaro {version} – STL-Konverter 0.10\n\nGesamtes ZIP in einen eigenen Ordner entpacken.\nFormnaro-win32-x64/Formnaro.exe starten.\nUnter Funktionen > STL → STEP: Flächenfarben, Regionseditor, Freiformen, Prüfbericht und reparierte STL/3MF.\nAls CAD übernehmen fügt den geprüften Körper mit einem Undo ein.\nAnwendungs-/Enginequellen und passende CAD-Kernel-Quellen sind beigefügt.\nEigener Code: PolyForm Noncommercial 1.0.0; Drittanbieter behalten ihre eigenen Lizenzen.\nPersönliche Modelle, Profile und Zugangsdaten sind nicht enthalten.\n')
+    z.writestr('START-HIER.txt', f'Formnaro {version} – STL-Konverter 0.10\n\nGesamtes ZIP in einen eigenen Ordner entpacken.\nFormnaro-win32-x64/Formnaro.exe starten.\nUnter Funktionen > STL → STEP: Flächenfarben, Regionseditor, Freiformen, Prüfbericht und reparierte STL/3MF.\nAls CAD übernehmen fügt den geprüften Körper mit einem Undo ein.\nAnwendungs-/Enginequellen und passende CAD-Kernel-Quellen sind beigefügt.\nEigener Code: MIT License (auch kommerziell); Drittanbieter behalten ihre eigenen Lizenzen.\nPersönliche Modelle, Profile und Zugangsdaten sind nicht enthalten.\n')
     z.writestr('Paket-Pruefung.json',json.dumps(manifest,ensure_ascii=False,indent=2))
 print('Portable ZIP erstellt; prüfe CRC und alle enthaltenen Dateihashes.', flush=True)
 with zipfile.ZipFile(output) as z:

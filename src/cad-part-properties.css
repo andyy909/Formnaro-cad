@@ -1,0 +1,13 @@
+#part-properties-panel{width:min(560px,calc(100% - 32px));max-height:calc(100% - 80px);overflow:auto}
+#part-properties-panel label{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+#part-properties-panel .inspection-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#part-properties-panel input:not([type=color]),#part-properties-panel select{width:100%;box-sizing:border-box}
+#part-properties-panel .edge-actions{position:sticky;bottom:0;background:var(--panel,#fff);padding:8px 0;display:flex;gap:8px}
+.part-table-scroll{overflow:auto;max-height:350px;margin-top:12px}
+.part-table-scroll table{border-collapse:collapse;min-width:650px;font-size:12px}
+.part-table-scroll th,.part-table-scroll td{padding:8px;text-align:left;border-bottom:1px solid var(--border,#d5dee5);vertical-align:top}
+.part-explosion-notice{position:absolute;left:16px;bottom:40px;padding:9px 12px;border-radius:8px;background:var(--panel,#fff);color:var(--text,#163b50);box-shadow:0 2px 12px #102b4420;z-index:15;font-size:12px}
+.part-explosion-notice[hidden]{display:none}
+.part-explosion-notice button{margin-left:10px}
+[data-theme=dark] #part-properties-panel .edge-actions,[data-theme=dark] .part-explosion-notice{background:#223447;color:#e4edf5}
+[data-theme=dark] .part-table-scroll th,[data-theme=dark] .part-table-scroll td{border-color:#405466}

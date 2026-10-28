@@ -24,7 +24,7 @@ export function validateMeshEraseFillOptions(o){
 }
 function summary(t,result){return {componentCount:result.componentCount,boundaryEdges:t.diagnostics.boundaryCount,categories:Object.fromEntries(Object.entries(result.categories).map(([k,c])=>[k,c.count]))};}
 function boundaryKeys(t,exclude=new Set()){const out=[];for(const e of t.edges.values())if(e.incidents.length===1&&!exclude.has(edgeKey(...e.vertices)))out.push(edgeKey(...e.vertices));return out.sort();}
-function supportDisk(topology,selected,signal){
+export function supportDisk(topology,selected,signal){
  const vertices=new Set(),faces=[],seen=new Set(),ignored=[];
  for(const id of selected){tick(id,signal);const ids=topology.mesh.triangles.slice(id*3,id*3+3).map(v=>topology.representatives[v]),key=faceKey(ids);if(topology.bad[id]===1||seen.has(key)){ignored.push(ids);continue;}seen.add(key);faces.push(ids);ids.forEach(v=>vertices.add(v));}
  if(!faces.length||ignored.some(f=>f.some(v=>!vertices.has(v))))fail('Der beschädigte Bereich besitzt keine eindeutig zusammenhängende Flächenscheibe. Alle beschädigten Innenflächen einschließlich ihrer gültigen Randnachbarn auswählen.');

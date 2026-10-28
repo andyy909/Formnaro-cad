@@ -226,7 +226,7 @@ Die Kontur hat keine Fläche.|The contour has no area.
 Skizze außerhalb der zulässigen Abmessungen.|Sketch dimensions are outside the permitted range.
 Rechteck, echter Kreis oder geschlossene Kontur mit benannten Maßen und nativer Extrusion.|Rectangle, native circle or closed contour with named dimensions and native extrusion.
 Vollständiger Lizenztext|Full license text
-Offener Quellcode für die nach dieser Lizenz erlaubten nichtkommerziellen Zwecke. Es gelten besondere Erlaubnisse für die im Lizenztext genannten Einrichtungen. Die Beschränkung gilt für den eigenen Anwendungscode; Fremdkomponenten behalten ihre ursprünglichen Lizenzrechte.|Source code is available for the noncommercial purposes permitted by this license. Special permissions apply to the organizations named in the license. The restriction applies to the application code; third-party components retain their original license rights.
+Der eigene Formnaro-Anwendungscode ist Open Source unter der MIT-Lizenz. Nutzung, Änderungen und Weitergabe sind auch kommerziell erlaubt. Der Copyright- und Lizenzhinweis muss erhalten bleiben. Fremdkomponenten behalten ihre eigenen Lizenzbedingungen.|Formnaro's own application code is open source under the MIT License. Commercial use, modification and distribution are permitted. The copyright and permission notice must be retained. Third-party components retain their own license terms.
 Gesammelte Lizenzhinweise|Collected license notices
 Konverter|Converter
 CAD-Kern|CAD kernel

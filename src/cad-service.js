@@ -1,3 +1,4 @@
+import {partFaceColors,splitPartSurfaceMesh,hasCurrentPartSurfaceGroups} from './cad-part-properties.js';
 import {hasGeometryRefs,isGeometryRef,sameDeferredGeometry} from './cad-geometry-ref.js';
 import {cadStepMeshParts} from './cad-step-appearance.js';
 import {meshColorsEnabled} from './mesh-appearance.js';
@@ -239,8 +240,8 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     const known=knownMeshes===undefined?null:new Set(knownMeshes),included=ids===undefined?null:new Set(ids);
     for(const node of draft.nodes){
       if(included&&!included.has(node.id))continue;
-      if(node.kind!=='cad'){referenceBounds(node);result.push({id:node.id,kind:node.kind,transform:node.transform,mesh:structuredClone(node.mesh)});continue;}
-      if(colored&&node.solid&&node.multicolor&&node.children){
+      if(node.kind!=='cad'){referenceBounds(node);result.push({id:node.id,kind:node.kind,transform:node.transform,mesh:structuredClone(node.mesh),...(partFaceColors(node).length?{faceColors:partFaceColors(node)}:{})});continue;}
+      if(colored&&node.solid&&node.multicolor&&node.children&&!hasCurrentPartSurfaceGroups(node)){
         const linear=[...node.transform];linear[12]=linear[13]=linear[14]=0;
         const colorSource=value=>[value.brep.data,value.transform,value.name,value.color,value.opacity,value.solid,!!value.suppressed,!!value.multicolor,value.children?.map(colorSource)];
         const placementKey=JSON.stringify(['colored-placement',colorSource({...node,transform:cadIdentity()}),quality]),previous=displayCache.get(placementKey);
@@ -274,7 +275,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
         mesh=displayCache.find((value,candidateKey)=>{if(!candidateKey.startsWith(prefix))return false;const candidate=JSON.parse(candidateKey.slice(prefix.length,-1));return candidate.angleDegrees===localQuality.angleDegrees&&candidate.deflection<=localQuality.deflection&&candidate.deflection>=localQuality.deflection/1.1;});
       }
       if(!mesh){const shape=readCadBrep(oc,node.brep.data);try{mesh=cadDisplayMesh(oc,shape,localQuality);const bytes=utf8.encode(key).length+[mesh.vertices,mesh.normals,mesh.triangles,mesh.faceGroups].reduce((sum,values)=>sum+values.length*8,0);displayCache.set(key,mesh,Math.max(1,bytes));}finally{shape.delete();}}
-      result.push({id:node.id,kind:'cad',transform:node.transform,...(node.source==='step'&&node.metadata?.stepFaceColors?{faceColors:node.metadata.stepFaceColors}:{}),...displayEnvelope(mesh,known)});
+      result.push({id:node.id,kind:'cad',transform:node.transform,...(partFaceColors(node).length?{faceColors:partFaceColors(node)}:{}),...displayEnvelope(mesh,known)});
     }
     return result;
   }
@@ -304,11 +305,11 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     for(const n of draft.nodes){
       if(!(n.kind==='mesh'&&n.meshRole!=='hole'||includeReferences&&n.kind==='referenceMesh')||n.hidden||layers.get(n.layerId)?.hidden||ids&&!ids.includes(n.id))continue;
       let folder=n.folderId,hidden=false;while(folder){const f=folders.get(folder);if(f.hidden)hidden=true;folder=f.parentId;}if(hidden)continue;
-      const colored=n.kind==='mesh'&&meshColorsEnabled(n)&&meshColorParts?.filter(part=>part.rootId===n.id);if(colored?.length){for(const part of colored)parts.push({name:part.name,color:part.color,opacity:part.opacity,mesh:{vertices:part.mesh.verts,triangles:part.mesh.triangles}});continue;}
+      const colored=!hasCurrentPartSurfaceGroups(n)&&n.kind==='mesh'&&meshColorsEnabled(n)&&meshColorParts?.filter(part=>part.rootId===n.id);if(colored?.length){for(const part of colored)parts.push({name:part.name,color:part.color,opacity:part.opacity,mesh:{vertices:part.mesh.verts,triangles:part.mesh.triangles}});continue;}
       const vertices=[];for(let i=0;i<n.mesh.verts.length;i+=3)vertices.push(...cadPoint(n.transform,n.mesh.verts.slice(i,i+3)));
       const triangles=[...n.mesh.triangles],m=n.transform,det=m[0]*(m[5]*m[10]-m[9]*m[6])-m[4]*(m[1]*m[10]-m[9]*m[2])+m[8]*(m[1]*m[6]-m[5]*m[2]);
       if(det<0)for(let i=0;i<triangles.length;i+=3)[triangles[i+1],triangles[i+2]]=[triangles[i+2],triangles[i+1]];
-      parts.push({name:n.name,color:n.color??'#8294aa',opacity:n.opacity??1,mesh:{vertices,triangles}});
+      parts.push(...splitPartSurfaceMesh(n,{vertices,triangles}));
     }
     return parts;
   }

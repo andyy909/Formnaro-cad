@@ -80,3 +80,44 @@ weiter, auch bei direktem Aufruf. Sie verwenden damit die Version aus
 Eingaben mehr. `work/` bleibt lediglich ein lokal erzeugter Arbeits-/Belegordner.
 Die oben beschriebene Laufzeitvorbereitung bleibt erforderlich; ein bytegleiches
 Nachbauen des veröffentlichten ZIPs wird dadurch nicht zugesichert.
+
+
+## Gezielte Paket-8-Ausgabe 0.115.0
+
+`npm run test:curved-remesh` prüft die neuen Netzwerkzeuge und ihre direkten
+Controller-/Quellen-/Schutzgrenzen. `npm run package:curved-remesh -- r1` friert
+eigene Quellen ein, prüft zusätzlich die betroffenen Speicher-/Katalogwege,
+baut eine separate Windows-Ausgabe und führt die drei gezielten Netz-/Pinsel-
+Desktopläufe aus. Die CAD-/Sprach-/Konverterlaufzeiten stammen aus der lokal
+vorhandenen abgenommenen 0.114.0-r7-Ausgabe; die CAD-Kopie wird vollständig
+SHA-geprüft. Die erste Paketierung erfordert genau diese Basisausgabe.
+Danach müssen Paketbilder und physische Exporte unabhängig geprüft und die
+Freigabe dokumentiert werden. Dies ersetzt nicht die allgemeine Abschlussabnahme.
+
+
+## Gezielte Paket-9-Ausgabe 0.116.0
+
+`npm run package:mesh-surgery -- r2` friert Quellen ein, führt die 112 gezielten
+Tests und vier echten Windows-Läufe aus. Vorausgesetzt ist die unveränderte
+abgenommene 0.115.0-r1-Ausgabe unter output/Gekruemmte-Netze-v0.115.0-r1;
+deren integrierte CAD-/Sprach-/Konverterlaufzeiten werden weiterverwendet.
+CAD-Laufzeit wird vollständig SHA-geprüft. Sichtprüfung, unabhängige
+Exportprüfung und dokumentierte Freigabe schließen die Abnahme ab.
+Die allgemeine gemeinsame Prüfung erfolgt nach Paket 10.
+
+
+## Gemeinsame Ausbauprüfung 0.117.0
+
+`node scripts/package-final-expansion.mjs rN` friert alle verfolgten Quellen und vorbereiteten lokalen Laufzeiteingaben ein, prüft sämtliche aktuellen Node-Testdateien frisch und baut eine Windows-EXE. Danach folgen der allgemeine Windows-Katalog und gezielte Erweiterungspfade. Grundlage ist die unveränderte akzeptierte 0.116.0-r2-Laufzeit. Visuelle Prüfung, unabhängige physische Exportleser, Archiv-Rücklesung und dokumentierte Freigabe ergänzen den automatischen Lauf. Persönliche Profile und Modelle gehören nicht zur Paketbasis.
+
+Für die finale Generation wurde der vollständige R5-Unit-Lauf bei SHA-belegter Gleichheit aller Funktionsdateien, Testdateien, Build-Ausgaben und Laufzeiteingaben referenziert. Die einzigen Änderungen sind drei ausdrücklich eingebettete Windows-Verifier-Korrekturen: Vorschau-Bereitschaft, aktuelle Netz-Importoption und nummerierte STL-Datei einschließlich bytegenauer Belegkopie. Alle Original-Receipts, TAP-Zahlen und Log-Prüfsummen wurden kontrolliert; keine fehlgeschlagenen oder fremden Unit-Ergebnisse übernommen. Alle Windows-Suiten laufen an der neuen finalen Paketidentität frisch. Ihre gewöhnliche lokale CAD-Laufzeitkopie wird vollständig geprüft; der Regressionstest kopiert daraus erneut in einen frischen physischen Ordner und verlinkt diesen für einen echten AppContainer-Auftrag. Beide Konverteraliase verwenden dieselbe akzeptierte Laufzeit. Das Python-SDK und der Verbindungsadapter liegen zusätzlich physisch neben der EXE, weil externes CPython nicht aus Electron-ASAR importieren kann.
+
+
+Die gemeinsame R7-Abnahme enthält zusätzlich fünf Spezialläufe mit vier extern korrigierten Prüfmodulen. Veraltete Zugriffe auf verborgene Headerknöpfe werden durch echte Mausklicks auf Solid-/Fusion-Extras-Menüeinträge ersetzt; die Laufzeitprüfung vergleicht kanonische physische Pfade über Windows-Verzeichnislinks hinweg. Die Prüfer werden vor dem isolierten Teststart einzeln und SHA-gebunden geladen; alle fachlichen Assertions und die Programmdateien bleiben unverändert. Exakte reversible Patches, Originalfehler und erfolgreiche neue Berichte sind lokal in externalsuiteprovenance-v2.json gebunden.
+
+Die vier exakten Prüferkorrekturen sind ohne persönliche Pfade in `ABNAHME-PRUEFER-0.117.json` versioniert. Für neue Paketbauten diese reinen Prüferkorrekturen vor dem nächsten Einfrieren in die Prüfquellen übernehmen. Die geprüfte R7-Anwendung bleibt unverändert.
+
+
+## MIT-Nachtrag 0.117.0-r8
+
+R8 ist ein belegter Lizenz-/Metadaten-Nachtrag zur vollständig geprüften R7-Modellbasis. Der eigene Code trägt SPDX MIT; originale Fremdtexte und native Laufzeitbytes bleiben erhalten. Ausschließlich die eigene FreeCAD-Quellnotiz und ihre Manifestzeile wurden neutralisiert und neu gepinnt. Die vier dokumentierten Verifierkorrekturen sind in den Prüfquellen enthalten. Neubuild, sieben echte DE/EN-Lizenz-UI-Prüfungen an der R8-ASAR sowie 95 gepackte EXE-Gruppen sichern den Nachtrag. Referenzumfang und Nachweisgrenzen: MIT-FREIGABE-0.117.md.

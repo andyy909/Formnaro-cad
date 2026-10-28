@@ -1,0 +1,10 @@
+#cad-mesh-surgery{width:390px;max-height:calc(100% - 106px)}
+#cad-mesh-surgery .surgery-heading{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#cad-mesh-surgery label{display:grid;gap:5px;margin:9px 0;font-size:12px}
+#cad-mesh-surgery input,#cad-mesh-surgery select{min-width:0;width:100%}
+#cad-mesh-surgery [hidden]{display:none!important}
+#cad-mesh-surgery .small-note{font-size:11px;line-height:1.45}
+#mesh-surgery-result{white-space:pre-wrap;font-size:12px;line-height:1.5}
+#cad-mesh-surgery .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px;display:flex;flex-wrap:wrap}
+[data-theme=dark] #cad-mesh-surgery .edge-actions{background:#212f3e}
+@media(max-width:900px){#cad-mesh-surgery{width:min(390px,calc(100% - 28px))}}

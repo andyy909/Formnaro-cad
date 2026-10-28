@@ -417,7 +417,7 @@ Die getrennte Netz-Ausgabe importiert keine fremden Profile oder Schlüssel auto
 
 Keine Skizzenwerkstatt, beweglichen Baugruppen oder allgemeinen Zwangsbedingungen zwischen Teilen. Eigene Vorlagen mit Formeln sind begrenzte Erzeugungshilfen. Importierte Fertigteile enthalten keine verlorene ursprüngliche Historie. Laufzeiten hängen von Geometrie, Dreieckszahl, Dateigröße und Rechner ab.
 
-Impressum und Lizenz sind unter Allgemein erreichbar. Eigener Anwendungscode: **PolyForm Noncommercial 1.0.0**. Für Bibliotheken und Schriften gelten die beigefügten Originaltexte. Das Handbuch erläutert die Bedienung; für Nutzungsrechte den vollständigen Lizenztext lesen.
+Impressum und Lizenz sind unter Allgemein erreichbar. Eigener Anwendungscode: **MIT License**, auch für kommerzielle Nutzung, Änderungen und Weitergabe. Copyright- und Lizenzhinweis erhalten. Für Bibliotheken und Schriften gelten die beigefügten Originaltexte. Das Handbuch erläutert die Bedienung; für Nutzungsrechte den vollständigen Lizenztext lesen.
 
 > Stand dieser Anleitung: 13. Oktober 2026. Historische Tinkoff-/OfflineCAD-Handbücher bleiben erhalten, beschreiben aber einen früheren Funktionsstand.''')
     core=common(kind)

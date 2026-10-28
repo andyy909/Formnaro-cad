@@ -1,6 +1,9 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 async function verifyMeshRemesh(win,{directory,files}){
+ if(process.env.FORMNARO_VERIFY_PART_PROPERTIES_ONLY==='1')return require('./part-properties-verification.cjs').verifyPartProperties(win,{directory,files});
+ if(process.env.FORMNARO_VERIFY_SURGERY_ONLY==='1')return require('./mesh-surgery-verification.cjs').verifyMeshSurgery(win,{directory,files});
+ if(process.env.FORMNARO_VERIFY_CURVED_REMESH_ONLY==='1')return require('./mesh-curved-remesh-verification.cjs').verifyCurvedRemesh(win,{directory,files});
  fs.mkdirSync(directory,{recursive:true});const checks=[],js=code=>win.webContents.executeJavaScript(code),proof=async(name,code)=>{const result=await js(`(async()=>{try{const a=window.__cadTest,p=window.__remeshProof;const check=(ok,message)=>{if(!ok)throw Error(message);};{${code}}return {ok:true};}catch(e){return {error:e.message,stack:e.stack};}})()`);if(!result.ok)throw Error(name+': '+result.error);checks.push(name);};
  const attached=win.webContents.debugger.isAttached();if(!attached)win.webContents.debugger.attach('1.3');
  async function capture(name){await js('(async()=>{await window.__cadTest.view.renderReady();await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame);})()');const file=path.join(directory,name+'.png');fs.writeFileSync(file,(await win.webContents.capturePage()).toPNG());return file;}

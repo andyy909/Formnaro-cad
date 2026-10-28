@@ -41,7 +41,7 @@ export function createCadToolsUI({controller,view,marksView,getSelection,getScen
     for(const attribute of ['data-edge-kind','data-edge-amount'])panel.querySelector(`[${attribute}]`).oninput=()=>{discardPreview();if(active)drawEdges();};
     panel.querySelector('[data-edge-all]').onclick=()=>run(()=>{const s=valid('edges');if(s.edges.length>128)throw Error('Maximal 128 Kanten je Operation.');discardPreview();s.selected=new Set(s.edges.map(edge=>edge.edgeToken));drawEdges();});panel.querySelector('[data-edge-none]').onclick=()=>{if(active){active.selected.clear();discardPreview();drawEdges();}};
     panel.querySelector('[data-edge-preview]').onclick=()=>run(()=>previewEdges());panel.querySelector('[data-edge-remove]').onclick=()=>run(()=>previewEdges(true));panel.querySelector('[data-edge-apply]').onclick=()=>run(applyEdges);
-    view.setInteraction(()=>{});const result=await query('edges',{nodeId:item.id,...quality()});if(token!==generation)return;valid('edges').edges=result.edges;drawEdges();
+    view.setInteraction(()=>{},{allowCanvasListeners:true});const result=await query('edges',{nodeId:item.id,...quality()});if(token!==generation)return;valid('edges').edges=result.edges;drawEdges();
   }
   async function previewEdges(remove=false){const s=valid('edges'),node=bodyNode(s.nodeId),amount=remove?1:number(panel.querySelector('[data-edge-amount]').value),kind=panel.querySelector('[data-edge-kind]').value;discardPreview();let operation;
     if(remove){if(!node.finish)throw Error('Keine CAD-Kantenoperation zum Entfernen.');operation={kind:'editFinish',target:s.nodeId,steps:node.finish.steps.slice(0,-1)};}

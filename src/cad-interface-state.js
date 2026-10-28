@@ -4,6 +4,7 @@ import {Matrix4,Euler,Vector3,Quaternion} from 'three';
 import {cadIdentity,cadPoint,multiplyCadMatrices,inverseCadMatrix,resizeCadAtCorner} from './cad-affine.js';
 import {cadSourceAtPath} from './cad-form-controls.js';
 import {flags} from './organization.js';
+import {isGeometryRef,validateGeometryRef} from './cad-geometry-ref.js';
 const DEG=Math.PI/180;
 // Only immutable confirmed vertices own this cache. Drafts and imported mutable
 // arrays are scanned again so an in-place geometry edit cannot reuse old bounds.
@@ -11,6 +12,9 @@ const meshBounds=new WeakMap();
 function target(value){if(!value||typeof value.rootId!=='string'||!Array.isArray(value.path)||value.path.some(id=>typeof id!=='string')||value.path.length>12)throw Error('Ungültiges CAD-Auswahlziel.');return value;}
 export function cadInterfaceLocalBounds(node){
   if(node.kind==='cad'&&node.stats?.bounds)return node.stats.bounds;
+  // Catalogue bounds support read-only dimensions while payloads remain deferred.
+  // They do not certify native geometry or authorize construction from a ref.
+  if(['referenceMesh','mesh'].includes(node.kind)&&isGeometryRef(node.mesh))return validateGeometryRef(node.mesh,'mesh').bounds;
   if(!['referenceMesh','mesh'].includes(node.kind)||!Array.isArray(node.mesh?.verts)||!node.mesh.verts.length)throw Error('CAD-Grenzen oder originales Netz fehlen.');
   const verts=node.mesh.verts,cached=meshBounds.get(verts);if(cached)return {min:[...cached.min],max:[...cached.max]};
   const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=0;i<verts.length;i++){const value=verts[i];if(!Number.isFinite(value))throw Error('Ungültige Netzreferenz.');min[i%3]=Math.min(min[i%3],value);max[i%3]=Math.max(max[i%3],value);}if(Object.isFrozen(verts))meshBounds.set(verts,{min,max});return {min:[...min],max:[...max]};

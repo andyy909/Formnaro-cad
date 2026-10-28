@@ -1,5 +1,17 @@
 # Technischer Projektkontext
 
+Modellfunktionen gemeinsam abgenommen an 0.117.0-r7. Der anschließende Stand 0.117.0-r8 stellt den eigenen Anwendungscode auf MIT um und wird auf ausdrücklichen Nutzerauftrag privat und öffentlich bereitgestellt. Pakete 0–10 einschließlich 6a abgeschlossen. Die folgenden älteren Entwicklungsstände sind historische Einträge. Details: GESAMTABNAHME-AUSBAU-0.117.md.
+
+Lokale Nachprüfung vom 27.10.2026 auf Basis 0.114.0-r7: bestätigte Fehler aus
+einem externen Bericht in Laufzeit-Abbruch, Ergebnisdateiprüfung, Fusion,
+FreeCAD-/Flächen-Dialogwächtern, Skizzenbearbeitung, früher KI-Migration,
+Bibliotheksversionen und unverändertem Layout-Reset korrigiert. Einzelabgleich,
+offene bzw. bereits abgesicherte Aussagen und gezielte Prüfumfänge stehen in
+[NACHPRUEFUNG-0.114.0.md](NACHPRUEFUNG-0.114.0.md). Diese Änderungen liegen
+zunächst im lokalen Entwicklungsstand; die nachstehende freigegebene EXE und
+ihre Online-Releases wurden nicht ersetzt und enthalten die neuen Korrekturen
+noch nicht. Keine Sentry-Telemetrie in der Anwendung ergänzt.
+
 Paket 6a wurde am 27.10.2026 mit **0.114.0-r7** gezielt abgenommen.
 FreeCAD 1.1.4 und Python 3.11 sind vollständig portabel integriert; Nutzer
 benötigen keine separate Installation und keinen Laufzeitdownload. Die gepackte
@@ -4543,3 +4555,126 @@ Die npm-Zuordnung war bereits aktuell. Laufzeitvorbereitung siehe BUILD.md;
 kein byteidentischer ZIP-Neubau zugesichert. Fünf gezielte Einstiegstests mit
 0.113.1/0.114.0 und ohne historischen work-Ordner bestanden; keine vollständige
 CAD-/EXE-Abnahme für diese Skriptkorrektur wiederholt.
+
+
+### Öffentlicher GitHub-Auftritt (28.10.2026)
+
+Die Startseite von `andyy909/Formnaro-cad` ist als Produktbeschreibung gestaltet:
+eigenständiger SVG-Banner, direkter Windows-Download, Funktions- und Modusübersicht,
+aufklappbare Bildschirmbilder, Anleitungen sowie getrennte technische Prüfnachweise.
+Die Bilder behalten ihre jeweiligen Versionsangaben. Der nicht vorhandene Verweis
+auf README-Entwicklung.md ist entfernt. Kurzbeschreibung, neun Repository-Themen
+und der Release-Einstieg als Homepage sind ebenfalls gepflegt.
+
+Diese Veröffentlichung umfasst nur README.md und bilder/formnaro-banner.svg sowie
+Repository-Metadaten. Aktuelle öffentliche Programmausgabe bleibt 0.114.0-r7;
+Entwicklungsänderungen werden dadurch nicht automatisch synchronisiert. Bei einer
+späteren README-Pflege Links gegen den öffentlichen Dateibaum und die tatsächlichen
+Release-Assets prüfen. Die lokale Entwicklungs-README bleibt davon getrennt.
+
+### Logo, native Beispielmodelle und übersichtliches Startarchiv (28.10.2026)
+
+Die öffentliche Beschreibung verwendet das bereitgestellte Logo unverändert und
+zeigt drei mit der freigegebenen 0.114.0-r7-Oberfläche konstruierte CAD-Beispiele:
+Elektronikgehäuse, Lagerhalter und Getriebestudie. Die Bilder sind unmittelbare
+Aufnahmen der 3D-Ansicht; die .ocad-Dateien enthalten native Geometrie und Quellen.
+Die Getriebestudie besitzt zwei unabhängige Drehgelenke. Eine automatische
+Zahnradkopplung ist nicht implementiert; auf Nutzerwunsch wird kein GIF gezeigt.
+
+Das zusätzliche Archiv Formnaro-v0.114.0-r7-Windows-Klarer-Start.zip fasst sämtliche
+Programmbestandteile unter Programmdateien zusammen. Drei Windows-Verknüpfungen
+führen zum Programm, zum tatsächlichen Projektordner und zu Bibliothek/Einstellungen
+im tatsächlichen Datenordner. Die drei Beispielprojekte liegen im Projektordner.
+Programmdateien, ASAR und Laufzeiten sind unverändert zur ursprünglichen Freigabe;
+die neue Aufteilung hat eigene Archiv- und Startprüfungen. Keine neue Anwendungsversion
+und keine zusätzliche allgemeine Programmabnahme. Die lokale Entwicklungs-README
+und die vorbestehenden Nachprüfungskorrekturen werden dadurch nicht synchronisiert.
+
+
+### Paket 8: gekrümmte Netze (28.10.2026, abgenommen)
+
+Die vorhandene mesh-remesh-Operation erhält curved-isotropic-v1 mit lokalen
+Split-/Collapse-/Flip-/Projektionsschritten, exakten Schutz-/Auswahl-/Formkanten-
+und Öffnungsgrenzen. Neue bidirektionale vollständige Dreiecksüberdeckung begrenzt
+die Formabweichung; Stichproben werden getrennt ausgewiesen. Schnitt-/Topologie-
+und unabhängige Körper-/Volumenprüfung bleiben verbindlich. mesh-sculpt erhält
+optionale konforme Verfeinerung nur im verbundenen vorderseitigen Pinselbereich,
+innerhalb derselben Quelle/Vorschau/Undo-Transaktion. Grenzen und Bedienung in
+GEKRUEMMTE-NETZE.md. Vorhandene lokale Nachprüfungskorrekturen bleiben erhalten.
+Gezielte Paketabnahme 0.115.0-r1 abgeschlossen: 127 Tests und 91 tatsächliche
+Windows-Prüfgruppen in drei Läufen, zehn visuell geprüfte Paketbilder, physische
+Projekt-/FNPACK-/STL- und Autosicherungsprüfung. Archivierte Legacy-Netzquellen
+akzeptieren streng geprüfte Geometriekataloge; der Engine-Standard bleibt
+inline-only. Kataloggrenzen dienen nur der Anzeige. Keine vorgezogene allgemeine
+Gesamtprüfung; Pakete 9–10 bleiben offen.
+
+
+Die zusätzliche Startausgabe ist im öffentlichen Release 0.114.0-r7 bereitgestellt:
+[Download mit übersichtlichem Startordner](https://github.com/andyy909/Formnaro-cad/releases/download/v0.114.0-r7/Formnaro-v0.114.0-r7-Windows-Klarer-Start.zip).
+Die öffentliche README verweist auf dieses Archiv und auf docs/KLARER-START.md.
+Die ursprüngliche ZIP bleibt als separates Asset erhalten. Größe und SHA-256 der
+neuen ZIP stimmen mit GitHub überein; der anonyme Download ist erreichbar.
+
+
+### Paket 9 abgenommen (28.10.2026)
+
+Neue lokale mesh-surgery-Operation mit benachbarten quadratischen Füllflächen,
+expliziten Randverbindungen auch zwischen zwei getrennten Netzteilen, lokalen
+Ersatzflächen, Extrusion/Normalversatz sowie abgetasteten Schrift-/Flächenreliefs.
+Schnittdiagnose verwendet die bestehende geometrische Paarprüfung; automatische
+Reparatur bleibt auf exakte Duplikate/Nullflächen und konsistente Orientierung
+begrenzt. Schutz und außerhalb der Auswahl liegende Dreiecke werden unabhängig
+verglichen. Originalquellen und FNPACK-/Undo-Transaktionen erhalten.
+Die neue Oberfläche wird über den vorhandenen Öffnungsdialog angeboten und teilt
+dessen globale Bearbeitungssperre. Quellenmeilenstein 0.116.0 gezielt geprüft:
+100 Kern-/Controller-/Abhängigkeits- und Oberflächenprüfungen; isolierter Windows-Entwicklungslauf mit allen acht
+Werkzeugarten, vier Modi, physischen OCAD/FNPACK/STL-Dateien, Autosave und Undo.
+Extrusion und Schrift-STL unabhängig dreiecksgenau zurückgelesen.
+Spiegelungs-Windung, eigene Abdeckung verschachtelter Reliefkonturen und
+verspätete Vergleichsansichten sind durch Regressionen abgesichert.
+Reliefhöhe ist eine Obergrenze; tatsächlicher maximaler Versatz und geometrische
+Begrenzung werden berichtet. Gemeinsame Programmschnittstelle stellt denselben
+Katalog und denselben Auftrag bereit. Grenzen: docs/NETZREPARATUR-FLAECHEN.md.
+Neue Windows-Ausgabe 0.116.0-r2 gezielt abgenommen: 112 Tests und 126
+Prüfgruppen in vier tatsächlichen EXE-Läufen. Paketbilder, physische
+OCAD/FNPACK/STL/Autosave und unabhängige STL-Rücklesung geprüft. Interne
+CAD-Laufzeit vollständig SHA-geprüft. Frühere Ausgaben bleiben unverändert.
+Paket 10 ist als Fortsetzung beauftragt; die allgemeine Gesamtprüfung folgt danach.
+
+
+### Paket 10 in Arbeit (28.10.2026)
+
+Teileigenschaften mit ausdrücklicher homogener Dichte, geometriegebundene
+CAD-/Netz-Flächengruppen, native Volumen-/Schwerpunktintegration, Stückliste
+und reine Anzeige-Explosion werden im Entwicklungsstand 0.117.0 ergänzt.
+Projekt/Bibliothek 25 und Arbeitsplatz 6 nur bei Verwendung; frühere Formate
+bleiben erhalten. BRep-/Netzidentität, Montage und Quellen bleiben unverändert.
+Gezielte Quelltests und Windows-Entwicklungslauf vorhanden; noch keine
+Paketfreigabe oder allgemeine Abschlussabnahme. Details: TEILE-MATERIAL-BAUGRUPPEN.md.
+
+Lokaler Entwicklungsstand 0.117.0: Vor dem AppContainer-Start wird der geprüfte FreeCAD-Programmpfad kanonisch aufgelöst. Dadurch erhalten auch frische portable Laufzeiten hinter Windows-Verzeichnislinks die notwendigen Leserechte am physischen DLL-Verzeichnis. Die Runtime-Integritätsprüfung und Containerisolation bleiben aktiv. Eine Regression kopiert die Laufzeit frisch, verlinkt sie und prüft einen echten nativen Messauftrag; alter Code schlägt fehl, korrigierter Code besteht. Noch keine neue Gesamtabnahme oder Auslieferung zugesagt.
+
+
+### Vorbereitung der gemeinsamen Ausbauabnahme 0.117.0
+
+Die Glättungsvorschau unterstützt Drahtgitter aus indizierten und nicht indizierten Darstellungsgeometrien. Der native Kantenpicker darf weitere Canvas-Capture-Listener erreichen; andere Picker bleiben exklusiv, Abbruch setzt die Freigabe zurück. Echte Mausprüfungen sichern Kantenauswahl, Abwahl und erneute Auswahl ab.
+
+Externe Python-Prozesse können nicht aus Electron-ASAR importieren. Der Gesamtpackager kopiert deshalb SDK und Verbindungsadapter zusätzlich physisch neben die EXE. Für frische native Junction-Prüfungen wird eine gewöhnliche vollständige Laufzeitkopie vorbereitet; beide alten Konverterpfade verweisen auf dieselbe akzeptierte Laufzeit. Die vollständige neue Paketabnahme steht noch aus; frühere fehlgeschlagene Generationen bleiben als Belege erhalten.
+
+
+### Paket 10 und allgemeine Ausbauabnahme abgeschlossen
+
+Windows-Ausgabe 0.117.0-r7: 2153 Tests in 352 vollständig ausgeführten Testdateien und 3312 tatsächliche Windows-Prüfgruppen bestanden. OCAD/FNPACK, physische Farb-/Netzexporte, native erste Momente, explizite Dichte, Anzeige-Explosion, vier Modi, Wiederöffnen/Autosicherung/Undo geprüft. Vollständige CAD-Laufzeitintegrität und unveränderte ältere Ausgaben bestätigt. Details und Grenzen: GESAMTABNAHME-AUSBAU-0.117.md. Vorherige Entwicklungsabsätze sind historisch.
+
+
+Die gemeinsame R7-Abnahme enthält zusätzlich fünf Spezialläufe mit vier extern korrigierten Prüfmodulen. Veraltete Zugriffe auf verborgene Headerknöpfe werden durch echte Mausklicks auf Solid-/Fusion-Extras-Menüeinträge ersetzt; die Laufzeitprüfung vergleicht kanonische physische Pfade über Windows-Verzeichnislinks hinweg. Die Prüfer werden vor dem isolierten Teststart einzeln und SHA-gebunden geladen; alle fachlichen Assertions und die Programmdateien bleiben unverändert. Exakte reversible Patches, Originalfehler und erfolgreiche neue Berichte sind lokal in externalsuiteprovenance-v2.json gebunden.
+
+Die vier exakten Prüferkorrekturen sind ohne persönliche Pfade in `ABNAHME-PRUEFER-0.117.json` versioniert. Für neue Paketbauten diese reinen Prüferkorrekturen vor dem nächsten Einfrieren in die Prüfquellen übernehmen. Die geprüfte R7-Anwendung bleibt unverändert.
+
+
+### MIT und öffentliche Bereitstellung 0.117.0-r8 (28.10.2026)
+
+Der Nutzer hat vollständige Open-Source-Lizenzierung des eigenen Codes und Veröffentlichung in beiden Repositories ausdrücklich beauftragt. Eigener Hauptprogramm-/Mini-Code und Metadaten stehen unter MIT; kommerzielle Nutzung ist erlaubt. Originale Fremdlizenzen bleiben erhalten. Aktive Lizenzanzeige, DE/EN-Übersetzung und Downloadtext werden neu gebaut. Die vier bei R7 extern geprüften reinen Verifierkorrekturen sind jetzt in die Prüfquellen übernommen. Eine strikte Dateiparität bindet unveränderte Modell-/Kernel-/Quellenlogik an die vollständige R7-Abnahme. R8 erhält gesonderte Lizenz-/Paketprüfungen; R7-Prüfgruppen werden als Referenz gekennzeichnet. Vorherige private-only-/PolyForm-Absätze sind historische Stände. Lizenzumfang: LIZENZ-MIT.md.
+
+
+R8-MIT-Nachprüfung abgeschlossen: 95 Prüfgruppen in fünf tatsächlichen EXE-Prozessen und sieben Prüfgruppen der echten R8-ASAR-Lizenzoberfläche bestanden; zwei neue Lizenzbilder visuell geprüft. Modell-/Kernel-/Controller-/KI-Code und alle 352 Unitquellen sind gegenüber R7 unverändert. Quellenmanifest, vier übernommene reine Verifierkorrekturen und die einzelne eigene Laufzeit-Notiz sind gebunden. R7-Basis 2153/3312/91/16 bleibt ausdrücklich referenziert. Ziel sind beide Repositories mit identischen Archiven; aktueller Nachtrag: MIT-FREIGABE-0.117.md.

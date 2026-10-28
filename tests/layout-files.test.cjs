@@ -27,7 +27,7 @@ test('duplicate names, invalid commands, stale revisions and failed writes never
   const {defaultLayout}=await schema,dir=await temporary(),store=createLayoutStore(dir);let r=await store.read();r=await store.change({revision:r.revision,command:{action:'save',name:'ÄÖ 日本語',layout:defaultLayout()}});const file=path.join(dir,'layouts.json'),before=await fs.readFile(file,'utf8');
   for(const command of [{action:'save',name:'äö 日本語',layout:defaultLayout()},{action:'save',name:'',layout:defaultLayout()},{action:'current',layout:{version:1}},{action:'save',name:'abc',layout:defaultLayout(),path:'../../outside'},{action:'delete',id:'not-an-id'}])await assert.rejects(store.change({revision:r.revision,command}));
   await assert.rejects(store.change({revision:'missing',command:{action:'reset'}}),/inzwischen/);
-  const denied=createLayoutStore(dir,{write:async()=>{throw Object.assign(Error('Denied'),{code:'EACCES'});}});await assert.rejects(denied.change({revision:r.revision,command:{action:'reset'}}),/beschreibbaren/);
+  const denied=createLayoutStore(dir,{write:async()=>{throw Object.assign(Error('Denied'),{code:'EACCES'});}}),changed=defaultLayout();changed.librarySide='right';await assert.rejects(denied.change({revision:r.revision,command:{action:'current',layout:changed}}),/beschreibbaren/);
   assert.equal(await fs.readFile(file,'utf8'),before);assert.deepEqual(await fs.readdir(dir),['layouts.json']);
 });
 test('damaged or oversized portable files remain unchanged on read and change',async()=>{

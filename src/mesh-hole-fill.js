@@ -7,7 +7,7 @@ function intersects(a,b,c,d){const x=cross(a,b,c),y=cross(a,b,d),u=cross(c,d,a),
 function inside(p,poly){if(poly.some((a,i)=>on(p,a,poly[(i+1)%poly.length])))return 0;let yes=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++)if((poly[i][1]>p[1])!==(poly[j][1]>p[1])&&p[0]<(poly[j][0]-poly[i][0])*(p[1]-poly[i][1])/(poly[j][1]-poly[i][1])+poly[i][0])yes=!yes;return yes?1:-1;}
 function segmentInCap(a,b,poly){if(inside(a,poly)>0||inside(b,poly)>0||inside(a.map((v,k)=>(v+b[k])/2),poly)>0)return true;return poly.some((c,i)=>{const d=poly[(i+1)%poly.length];return cross(a,b,c)*cross(a,b,d)<-eps*eps&&cross(c,d,a)*cross(c,d,b)<-eps*eps;});}
 export function validateHoleFillOptions(o){if(!o||Object.getPrototypeOf(o)!==Object.prototype||Object.keys(o).some(k=>!['method','geometryDigest','ringId'].includes(k))||o.method!=='planar-cap-v1'||typeof o.geometryDigest!=='string'||!(/^[a-f0-9]{64}$/).test(o.geometryDigest??'')||typeof o.ringId!=='string'||!(/^e:\d+:\d+$/).test(o.ringId))fail('Ungültige Optionen zum Schließen einer Öffnung.');return {...o};}
-function rings(topology,signal){const boundary=[...topology.edges.values()].filter(e=>e.incidents.length===1),at=new Map(),seen=new Set(),out=[];
+export function boundaryRings(topology,signal){const boundary=[...topology.edges.values()].filter(e=>e.incidents.length===1),at=new Map(),seen=new Set(),out=[];
  for(const e of boundary)for(const v of e.vertices){if(!at.has(v))at.set(v,[]);at.get(v).push(e);}
  for(const seed of boundary){abort(signal);if(seen.has(seed.id))continue;const edges=[],vertices=[],queue=[seed];seen.add(seed.id);for(let h=0;h<queue.length;h++){if(!(h%1024))abort(signal);const e=queue[h];edges.push(e);for(const v of e.vertices)for(const n of at.get(v))if(!seen.has(n.id)){seen.add(n.id);queue.push(n);}}
   const id=edges.map(e=>e.id).sort()[0],entry={id,edgeCount:edges.length,vertices:[],reason:''};out.push(entry);
@@ -19,6 +19,7 @@ function rings(topology,signal){const boundary=[...topology.edges.values()].filt
  }
  return out;
 }
+const rings=boundaryRings;
 function polygon(topology,ring){if(ring.reason)fail(ring.reason);const raw=ring.vertices.map(i=>topology.mesh.verts.slice(i*3,i*3+3)),origin=raw[0],extent=Math.max(...[0,1,2].map(k=>Math.max(...raw.map(p=>p[k]))-Math.min(...raw.map(p=>p[k]))));if(!Number.isFinite(extent)||extent<=0)fail('Randgröße ist numerisch nicht zuverlässig.');
  const points=raw.map(p=>p.map((v,k)=>(v-origin[k])/extent));let best=[0,0,0],norm=0;
  for(let i=1;i<points.length;i++)for(let j=i+1;j<points.length;j++){const a=points[i],b=points[j],n=[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],s=Math.hypot(...n);if(s>norm){norm=s;best=n;}}

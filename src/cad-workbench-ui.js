@@ -13,7 +13,7 @@ const categories=[
   ['extras','Extras',['marks','functions','help']]
 ];
 const cameraKeys=['view-iso','view-top','view-front','view-right','fit'];
-const viewToolKeys=['assembly-only','assembly-load','assembly-all','coordinates','projection','measure','section','thickness','model-compare','inspect','ruler','workplane-set','workplane-top','reset-plane'];
+const viewToolKeys=['part-properties-open','assembly-only','assembly-load','assembly-all','coordinates','projection','measure','section','thickness','model-compare','inspect','ruler','workplane-set','workplane-top','reset-plane'];
 const easyActions=['undo','redo','copy','paste','duplicate','delete','group','ungroup','align','mirror','center','drop'];
 const directGroups=[['copy','paste','duplicate','delete'],['undo','redo'],['bundle','group','ungroup'],['align','mirror','center','drop']];
 const iconNames={copy:'copy',paste:'clipboard',duplicate:'copy-plus',delete:'trash',undo:'arrow-back-up',redo:'arrow-forward-up',group:'layers-union',ungroup:'layers-linked',align:'align-left',mirror:'flip-horizontal',center:'focus-centered',drop:'box-align-bottom'};

@@ -6,6 +6,11 @@ const runtime=require('./freecad-runtime.cjs');
 function executable(){return runtime.resolveRuntime().executable;}
 function status(){const s=runtime.resolveRuntime();return {...s,engine:'FreeCAD',pythonAPI:s.available&&process.platform==='win32',pythonIsolation:process.platform==='win32'?'windows-appcontainer':null};}
 function failure(message,code='FREECAD_FAILED'){return Object.assign(Error(message),{code});}
+async function readResult(job,name,code){
+ const file=path.join(job,name),stat=await fs.lstat(file);
+ if(!stat.isFile()||stat.isSymbolicLink()||stat.size>LIMIT||path.dirname(await fs.realpath(file))!==await fs.realpath(job))throw failure('Ungültige FreeCAD-Ergebnisdatei.',code);
+ const bytes=await fs.readFile(file);if(bytes.length>LIMIT)throw failure('FreeCAD-Ergebnis überschreitet 32 MiB.',code);return bytes;
+}
 async function run({plan,script,inputs=[],inspectOnly=false,document}, {signal,exe=executable(),timeout=300000}={}){
  if(document!==undefined){if(plan!==undefined||script!==undefined||!Array.isArray(inputs)||inputs.length||inspectOnly!==false)throw failure('Dokumentmerkmale getrennt von Skript-/Planaufträgen bearbeiten.','FREECAD_DOCUMENT_INPUT');return require('./freecad-document.cjs').runDocument(document,{signal,exe,timeout});}
  if(typeof inspectOnly!=='boolean')throw failure('Ungültiger Prüfmodus.','FREECAD_PLAN_INVALID');
@@ -26,7 +31,7 @@ async function run({plan,script,inputs=[],inspectOnly=false,document}, {signal,e
   for(const f of files)await fs.writeFile(path.join(job,f.file),f.data);
   if(script){
    await runPythonJob({job,exe,script,inputs:files.map(({data,...f})=>f),inspectOnly,signal,timeout});
-   const read=async name=>{const f=path.join(job,name),stat=await fs.lstat(f);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>LIMIT||path.dirname(await fs.realpath(f))!==await fs.realpath(job))throw failure('Ungültige FreeCAD-Python-Ergebnisdatei.','FREECAD_PYTHON_FAILED');return fs.readFile(f);};
+   const read=name=>readResult(job,name,'FREECAD_PYTHON_FAILED');
    const result=JSON.parse(await read('result.json'));
    if(!result.ok)throw Object.assign(failure('FreeCAD-Python: '+result.error,result.code||'FREECAD_PYTHON_FAILED'),{feedback:{retryable:true,traceback:result.traceback}});
    if(inspectOnly)return {...result,script};
@@ -48,10 +53,10 @@ async function run({plan,script,inputs=[],inspectOnly=false,document}, {signal,e
    child.once('error',e=>{clean();reject(e);});child.once('close',code=>{clean();if(signal?.aborted)reject(failure('FreeCAD-Berechnung abgebrochen.','ABORTED'));else if(timedOut)reject(failure('FreeCAD-Zeitlimit nach fünf Minuten erreicht.','FREECAD_TIMEOUT'));else if(code!==0)reject(failure('FreeCAD-Prozess fehlgeschlagen: '+log));else resolve();});
   });
   }
-  const result=JSON.parse(await fs.readFile(path.join(job,'result.json'),'utf8'));
+  const result=JSON.parse(await readResult(job,'result.json','FREECAD_FAILED'));
   if(!result.ok){const error=failure('FreeCAD Schritt '+result.step+' ('+result.operation+'): '+result.error);if(result.diagnostics)error.feedback={geometryCheck:result.diagnostics};throw error;}
   if(inspectOnly)return {...result,plan};
-  const read=async name=>{const f=path.join(job,name);if((await fs.stat(f)).size>LIMIT)throw failure('FreeCAD-Ergebnis überschreitet 32 MiB.');return (await fs.readFile(f)).toString('base64');};
+  const read=async name=>(await readResult(job,name,'FREECAD_FAILED')).toString('base64');
   return {...result,stepBase64:await read('result.step'),documentBase64:await read('result.FCStd'),plan};
  }finally{
   // job is created by mkdtemp under exactly the intended temporary root.

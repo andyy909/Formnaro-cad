@@ -30,6 +30,7 @@ function killTree(pid){if(process.platform==='win32'){try{execFileSync('taskkill
 async function execute(suite,command,argv,report){
  const dir=path.join(directory,suite.id.replaceAll(':','-'));fs.mkdirSync(dir,{recursive:true});
  if(suite.flag==='speech')createSpeechFixture(path.join(dir,'fixture.wav'));
+ if(suite.id==='step-thickness')execFileSync(process.execPath,['scripts/create-step-fixture.mjs',path.join(dir,'fixture.step')],{cwd:root,windowsHide:true,timeout:60000,stdio:['ignore','ignore','pipe']});
  const log=path.join(dir,'process.log'),stream=fs.createWriteStream(log),begin=Date.now(),env={...process.env};delete env.ELECTRON_RUN_AS_NODE;
  env.TEMP=path.dirname(directory);env.TMP=path.dirname(directory);env.PYTHONDONTWRITEBYTECODE='1';
  const receipt={id:suite.id,ok:false,command:path.basename(command),args:argv,startedAt:new Date(begin).toISOString(),...identity};

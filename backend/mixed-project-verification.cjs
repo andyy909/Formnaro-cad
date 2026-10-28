@@ -44,7 +44,7 @@ async function verifyMixedProject(win,{directory,files}={}){
   const result=await js(`window.__cadTest.exportModel(${JSON.stringify(format)})`);const file=path.join(directory,'exports','Gemeinsames Prüfprojekt.'+result.extension);assert.ok(fs.statSync(file).size>30,format+' physical file');checks.push('mixed-normal-export-ipc-'+format);
  }
  await proof('mixed-autosave-keeps-prior-cad-namespace',`
-  const p=window.__mixed;check(a.storage.getItem('offlinecad-autosave-v8'),'mixed autosave missing');const old=a.storage.getItem('offlinecad-autosave-v7');check(old&&JSON.parse(old).version!==8,'old CAD autosave overwritten');
+  const p=window.__mixed,old=a.storage.getItem('offlinecad-autosave-v7');await p.wait(()=>!!a.storage.getItem('offlinecad-autosave-v8'));const saved=JSON.parse(a.storage.getItem('offlinecad-autosave-v8'));check(saved.version===8&&JSON.stringify(saved.nodes)===JSON.stringify(JSON.parse(a.serialize()).nodes),'mixed autosave geometry missing');check(old&&a.storage.getItem('offlinecad-autosave-v7')===old&&JSON.parse(old).version!==8,'old CAD autosave overwritten');
   p.final=a.serialize();
  `);
  const image=path.join(directory,'mixed-scene.png');await js('window.__cadTest.view.fit();window.__cadTest.view.invalidate();');await new Promise(r=>setTimeout(r,100));fs.writeFileSync(image,(await win.webContents.capturePage()).toPNG());

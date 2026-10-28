@@ -1,3 +1,4 @@
+import {hasCurrentPartSurfaceGroups} from './cad-part-properties.js';
 import {taskConversionKey,validateAITaskRuntime} from './cad-ai-task-runtime.js';
 import {taskCandidateModelKey,validateTaskCandidate} from './cad-ai-task-candidate.js';
 import {aiFeedback} from './ai-feedback.js';
@@ -58,7 +59,7 @@ function mergeDrawingUpdateReports(before,after){
 
 /** The renderer and local automation share one confirmed CAD store and worker.
  * Commands, display buffers and gestures remain outside persisted model state. */
-export function createCadController({createWorker,createComparisonWorker,createMeshWorker=()=>new Worker(new URL('./mesh-engine-worker.js',import.meta.url),{type:'module'}),runScript=runCadAIScript,runPython=runCadPython,convertModel=runModelConversion,initial=createCadProject(),resolveGeometry=async project=>{if(hasGeometryRefs(project))throw Object.assign(Error('Geometriepaket zum Nachladen fehlt.'),{code:'GEOMETRY_NOT_LOADED'});return project;},getDisplayIds=()=>null,getFonts=()=>[],getProgramResources=()=>({}),onChange=()=>{},onBusy=()=>{},onProgress=()=>{},onError=()=>{},prepareCommit=async()=>{},reuseTranslations=false,displayQuality={deflection:.02,angleDegrees:8}}={}){
+export function createCadController({createWorker,createComparisonWorker,createMeshWorker=()=>new Worker(new URL('./mesh-engine-worker.js',import.meta.url),{type:'module'}),runScript=runCadAIScript,runPython=runCadPython,convertModel=runModelConversion,initial=createCadProject(),resolveGeometry=async project=>{if(hasGeometryRefs(project))throw Object.assign(Error('Geometriepaket zum Nachladen fehlt.'),{code:'GEOMETRY_NOT_LOADED'});return project;},getDisplayIds=()=>null,getFonts=()=>[],getProgramResources=()=>({}),onChange=()=>{},onBusy=()=>{},onProgress=()=>{},onError=()=>{},prepareCommit=async()=>{},reuseTranslations=false,canWrite=()=>true,displayQuality={deflection:.02,angleDegrees:8}}={}){
   let store,closed=false,displaySequence=0,previewSequence=0,metadata=null,confirmedView=null,pendingDrawingProof=null,projectScope=globalThis.crypto.randomUUID();const previews=new Map(),candidateViews=new Map(),viewQueries=new Map(),replacementPreviews=new Set(),drawingProofs=new Map();
   const aiWorkspace=createAIWorkspace(),blockedConversions=new Map(),runningAnalyses=new Set();let workspaceRevision;
   const originalConvertModel=convertModel;convertModel=async args=>{const key=taskConversionKey(cadProjectRevision(args.project),args.target);if(args.action==='convert'&&blockedConversions.has(key))throw blockedConversions.get(key);try{return await originalConvertModel(args);}catch(error){if(error.feedback?.toolFailure?.scope==='converter-only')blockedConversions.set(key,error);throw error;}};
@@ -102,7 +103,7 @@ export function createCadController({createWorker,createComparisonWorker,createM
   // boundary without a second history stack; ordinary commits inherit it.
   const projectScopes=new WeakMap(),geometryOwners=new WeakMap(),geometryOwner=project=>{let owner=geometryOwners.get(project);if(!owner){owner=Symbol();geometryOwners.set(project,owner);}return owner;};
   const revisionHolds=new Set();
-  const assertWritable=()=>{if(revisionHolds.size)throw Object.assign(Error('Die laufende Zeichnungsausgabe zuerst abschließen oder abbrechen.'),{code:'BUSY'});};
+  const assertWritable=()=>{if(!canWrite())throw Object.assign(Error('Explosionsansicht zuerst beenden; die Montage bleibt unverändert.'),{code:'BUSY'});if(revisionHolds.size)throw Object.assign(Error('Die laufende Zeichnungsausgabe zuerst abschließen oder abbrechen.'),{code:'BUSY'});};
   function rememberView(project,view,quality){
     const freeze=value=>{if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};
     const privateView={revision:view.revision,scene:freeze(structuredClone(view.scene)),meshes:view.meshes.map(({mesh,...record})=>Object.freeze({...freeze(structuredClone(record)),mesh}))};
@@ -376,7 +377,8 @@ export function createCadController({createWorker,createComparisonWorker,createM
   }
   function discardJointCollision(id){previews.delete(id);store.discard(id);}
   async function query(kind,options={}, {signal}={}){
-    alive();const project=store.readSnapshot(),revision=store.revision();
+    alive();const revision=store.revision(),project=kind==='partProperties'?await resolveGeometry(store.readSnapshot(),[options.id]):store.readSnapshot();
+    if(store.revision()!==revision)throw Object.assign(Error('Projekt während des Nachladens geändert.'),{code:'STALE_REVISION'});
     const result=await worker.run({job:'query',project,query:{kind,options}},{revision,progress,signal});
     if(store.revision()!==revision){const error=Error('Das CAD-Modell wurde während der Abfrage geändert.');error.code='STALE_REVISION';throw error;}return result;
   }
@@ -434,7 +436,7 @@ export function createCadController({createWorker,createComparisonWorker,createM
     // The worker validates its own fixed input revision for this display job.
     const included=validateCadLoadSet(Object.hasOwn(options,'ids')?options.ids:getDisplayIds(project)),idsSet=included===null?null:new Set(included);
     let meshes=included?.length===0?[]:await worker.run({job:'display',project,quality,colored:true,...(included===null?{}:{ids:included})},{revision});
-    const ids=project.nodes.filter(n=>(!idsSet||idsSet.has(n.id))&&n.kind==='mesh'&&meshColorsEnabled(n)&&n.meshRole!=='hole'&&!flags(n,project).hidden).map(n=>n.id);if(ids.length){const parts=await meshWorker.run({job:'toolsQuery',kind:'colors',ids,project},{revision});meshes=[...meshes.filter(m=>!ids.includes(m.rootId??m.id)),...parts];}
+    const ids=project.nodes.filter(n=>(!idsSet||idsSet.has(n.id))&&n.kind==='mesh'&&!hasCurrentPartSurfaceGroups(n)&&meshColorsEnabled(n)&&n.meshRole!=='hole'&&!flags(n,project).hidden).map(n=>n.id);if(ids.length){const parts=await meshWorker.run({job:'toolsQuery',kind:'colors',ids,project},{revision});meshes=[...meshes.filter(m=>!ids.includes(m.rootId??m.id)),...parts];}
     if(included===null)rememberQuery(project,{meshes,quality:JSON.stringify(quality)});return {sequence,revision,current:sequence===displaySequence,meshes};
   }
   async function surfaceForComparison(project,id,quality=displayQuality,{signal}={}){
@@ -450,7 +452,7 @@ export function createCadController({createWorker,createComparisonWorker,createM
   async function verify(value){alive();const project=typeof value==='string'?parseCadProject(value):cadProjectSnapshot(value);if(hasGeometryRefs(project))return project;const result=await worker.run({job:'rebuild',project},{revision:cadProjectRevision(project)});return result.project;}
   async function exportModel(options){
     alive();assertExportReady(options);const project=store.readSnapshot(),revision=store.revision();onBusy(true);
-    try{let meshColorParts;if(['obj','3mf','gltf','glb'].includes(options.format)){const ids=project.nodes.filter(n=>n.kind==='mesh'&&meshColorsEnabled(n)&&n.meshRole!=='hole'&&!flags(n,project).hidden&&(!options.ids||options.ids.includes(n.id))).map(n=>n.id);if(ids.length)meshColorParts=await meshWorker.run({job:'toolsQuery',kind:'colors',ids,project},{revision,progress});}if(store.revision()!==revision)throw Object.assign(Error('Projekt während des Exports geändert.'),{code:'STALE_REVISION'});const result=await worker.run({job:'exportModel',project,options:{...options,meshColorParts}},{revision,progress});if(store.revision()!==revision)throw Object.assign(Error('Projekt während des Exports geändert. Erneut exportieren.'),{code:'STALE_REVISION'});return result;}
+    try{let meshColorParts;if(['obj','3mf','gltf','glb'].includes(options.format)){const ids=project.nodes.filter(n=>n.kind==='mesh'&&!hasCurrentPartSurfaceGroups(n)&&meshColorsEnabled(n)&&n.meshRole!=='hole'&&!flags(n,project).hidden&&(!options.ids||options.ids.includes(n.id))).map(n=>n.id);if(ids.length)meshColorParts=await meshWorker.run({job:'toolsQuery',kind:'colors',ids,project},{revision,progress});}if(store.revision()!==revision)throw Object.assign(Error('Projekt während des Exports geändert.'),{code:'STALE_REVISION'});const result=await worker.run({job:'exportModel',project,options:{...options,meshColorParts}},{revision,progress});if(store.revision()!==revision)throw Object.assign(Error('Projekt während des Exports geändert. Erneut exportieren.'),{code:'STALE_REVISION'});return result;}
     finally{onBusy(store.state().busy);}
   }
   function assertExportReady(options={}){alive();const current=store.readSnapshot(),problems=cadProjectParameterExportProblems(current,options);if(problems.length)throw Object.assign(Error('Betroffene Projektparameter oder Varianten zuerst aktualisieren oder den verlorenen Bezug ausdrücklich lösen. '+problems[0].message),{code:'PARAMETERS_UPDATE_REQUIRED',problems});const contours=cadContourLinkProblems(current,current.contourLinks,options);if(contours.length)throw Object.assign(Error('Betroffene Konturverknüpfungen zuerst aktualisieren, neu zuordnen oder ausdrücklich lösen. '+contours[0].message),{code:'CONTOUR_UPDATE_REQUIRED',problems:contours});return true;}
@@ -472,7 +474,8 @@ export function createCadController({createWorker,createComparisonWorker,createM
   }
   async function meshQuery(name,options={}){
     if(!['inspectSolid','analyzeEdges','toolsQuery'].includes(name))throw Error('Unbekannte Netzabfrage.');
-    alive();const revision=store.revision(),project=store.readSnapshot();
+    alive();const revision=store.revision(),project=name==='toolsQuery'&&options.kind==='partProperties'?await resolveGeometry(store.readSnapshot(),[options.id]):store.readSnapshot();
+    if(store.revision()!==revision)throw Object.assign(Error('Projekt während des Nachladens geändert.'),{code:'STALE_REVISION'});
     const node=options.node??project.nodes.find(n=>n.id===(options.nodeId??options.id));
     const request=name==='toolsQuery'?{...options,job:name,node,project}:{job:name,node};
     const result=await meshWorker.run(request,{revision,progress});

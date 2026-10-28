@@ -1,3 +1,4 @@
+import {nativePartProperties} from './cad-part-properties-native.js';
 import {rerunBoundFreeCADNative} from './cad-freecad-rerun-bound-native.js';
 import {replaceFreeCADDocumentNative} from './cad-freecad-replacement-native.js';
 import {measureCadBore} from './cad-bore-check-native.js';
@@ -66,6 +67,7 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
         case 'exportStep':result=service.exportStep(project);break;
         case 'exportModel':result=service.exportModel(project,request.options);break;
         case 'query':{
+          if(request.query?.kind==='partProperties'){const options=request.query.options;if(!options||Object.keys(options).some(k=>k!=='id'))throw Error('Ein Teil für die Masseprüfung wählen.');const node=service.productionNodes(project,{ids:[options.id]})[0];if(!node)throw Error('Ein sichtbares CAD-Materialteil wählen.');result=nativePartProperties(kernel,node);break;}
           if(request.query?.kind==='featureReference'){result=createCadAIReferencesNative({oc:kernel,service})(project,request.query.options);break;}
           if(request.query?.kind==='drawingProjection'){result=createCadDrawingNative({oc:kernel,service})(project,request.query.options);break;}
           if(request.query?.kind==='linkedFaceCandidate'){result=createCadLinkedContoursNative({oc:kernel,service}).candidate(project,request.query.options);break;}

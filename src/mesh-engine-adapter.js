@@ -1,3 +1,5 @@
+import {meshPartProperties} from './mesh-part-properties.js';
+import {performMeshSurgery,bridgeMeshNodes,meshSurgeryCatalog,validateMeshSurgeryOptions} from './mesh-surgery.js';
 import {prepareConstrainedSketch} from './sketch-constraints-solver.js';
 import {prepareSketchAttachment,checkSketchAttachment,attachmentMeshOperations} from './sketch-attachment.js';
 import {resolveSketch} from './mesh-engine/mesh-sketch.js';
@@ -133,7 +135,7 @@ export function createMeshEngineAdapter({kernel}={}){
     if(value&&Object.getPrototypeOf(value)===Object.prototype)return Object.fromEntries(Object.entries(value).filter(([,v])=>v!==undefined).map(([k,v])=>[k,recipeData(v)]));
     throw Error('Der Netz-Rechenkern lieferte keine speicherbaren Quelldaten.');
   }
-  function retained(node,sources,operation){return {format:'Formnaro-MeshSource',version:['repair','connectors','reduce','remesh','smooth','sculpt','erase-fill','make-solid','hollow','lid','counterpart'].includes(operation.type)?3:2,node:recipeData(node),sources:structuredClone(sources),operation:recipeData(operation)};}
+  function retained(node,sources,operation){return {format:'Formnaro-MeshSource',version:['repair','connectors','reduce','remesh','smooth','sculpt','surgery','erase-fill','make-solid','hollow','lid','counterpart'].includes(operation.type)?3:2,node:recipeData(node),sources:structuredClone(sources),operation:recipeData(operation)};}
   function simpleRepair(source,options){
     const topology=buildMeshSelectionTopology(source.mesh),fixed=repairSimpleTopology(topology,options),counts=t=>Object.fromEntries(Object.entries(inspectMeshTopology(t,{smallTriangleLimit:options.smallTriangleLimit}).categories).map(([k,c])=>[k,c.count]));
     const node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',mesh:fixed.mesh};
@@ -147,6 +149,7 @@ export function createMeshEngineAdapter({kernel}={}){
   }
   async function reduceSource(source,options){const reduced=await (options.method==='curved-v1'?reduceCurvedMesh:reducePlanarMesh)(source,options),node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',opacity:source.opacity??1,mesh:reduced.mesh};return {node,report:reduced.report,protection:reduced.protection};}
   function remeshSource(source,options){const reduced=remeshPlanarMesh(source,options),node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',opacity:source.opacity??1,mesh:reduced.mesh};return {node,report:reduced.report,protection:reduced.protection};}
+  function surgerySource(sources,options){const fixed=sources.length===2?bridgeMeshNodes(sources[0],sources[1],options):performMeshSurgery(sources[0],options),source=sources[0],node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',opacity:source.opacity??1,mesh:fixed.mesh};return {node,report:fixed.report,protection:fixed.protection};}
   function sculptSource(source,options){const fixed=sculptMesh(source,options),node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',opacity:source.opacity??1,mesh:fixed.mesh};return {node,report:fixed.report,protection:fixed.protection};}
   function smoothSource(source,options){const reduced=smoothSelectedMesh(source,options),node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',opacity:source.opacity??1,mesh:reduced.mesh};return {node,report:reduced.report,protection:reduced.protection};}
   function eraseFillSource(source,options){const fixed=eraseFillSelectedMesh(source,options),node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',opacity:source.opacity??1,mesh:fixed.mesh};return {node,report:fixed.report,protection:fixed.protection};}
@@ -155,6 +158,7 @@ export function createMeshEngineAdapter({kernel}={}){
   function lidSource(source,options){const fixed=createMeshLid(source,options,{kernel}),node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#e4a14b',solid:true,mesh:fixed.mesh};return {node,report:fixed.report};}
   function counterpartSource(source,options){const fixed=createMeshCounterpart(source,options,{kernel}),node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:'#e4a14b',solid:true,mesh:fixed.mesh};return {node,report:fixed.report};}
   async function derive(sources,recipe){
+    if(recipe.type==='surgery')return surgerySource(sources,recipe.options);
     if(recipe.type==='counterpart')return counterpartSource(sources[0],recipe.options);
     if(recipe.type==='lid')return lidSource(sources[0],recipe.options);
     if(recipe.type==='reduce')return reduceSource(sources[0],recipe.options);
@@ -212,6 +216,7 @@ export function createMeshEngineAdapter({kernel}={}){
   }
   const lidCatalogCache=new Map();
   function toolsQuery({project,kind,id,ids,attemptedDigests,options={}}){
+    if(kind==='partProperties'){const p=cadProjectSnapshot(project),n=p.nodes.find(n=>n.id===id);if(!n||n.kind!=='mesh'||n.meshRole==='hole'||flags(n,p).hidden)throw Error('Ein sichtbares Materialnetz auswählen.');return meshPartProperties(n,{inspectSolid});}
     if(kind==='jointCollision'){
       if(Object.keys(options).length||!Array.isArray(ids)||ids.length!==2||ids[0]===ids[1])throw Error('Genau zwei verschiedene Körper für die Kollisionsprüfung wählen.');
       const p=cadProjectSnapshot(project),nodes=ids.map(id=>p.nodes.find(n=>n.id===id));if(nodes.some(n=>!n||n.kind!=='mesh'||n.meshRole==='hole'||flags(n,p).hidden||n.mesh.triangles.length/3>200000))throw Error('Zwei sichtbare Materialnetze mit höchstens je 200.000 Dreiecken wählen.');
@@ -252,6 +257,7 @@ export function createMeshEngineAdapter({kernel}={}){
     }
     if(kind==='autoRepair')return autoRepairCandidate(project,id,attemptedDigests);
     if(kind==='reduceCatalog'){const p=cadProjectSnapshot(project),n=p.nodes.find(n=>n.id===id);if(!n||n.kind!=='mesh'||flags(n,p).hidden||flags(n,p).locked)throw Error('Ein sichtbares, entsperrtes Netzteil auswählen.');if(n.mesh.triangles.length/3>150000)throw Error('Vereinfachen unterstützt bis zu 150.000 Dreiecke je Netz.');return {geometryDigest:meshSelectionGeometryDigest(n),triangles:n.mesh.triangles.length/3,regions:(n.metadata?.meshProtection?.regions??[]).map(r=>({name:r.name,purpose:r.purpose,triangles:r.triangleIds.length}))};}
+    if(kind==='surgeryCatalog'){const p=cadProjectSnapshot(project),n=p.nodes.find(n=>n.id===id);if(!n||n.kind!=='mesh'||flags(n,p).hidden||flags(n,p).locked)throw Error('Ein sichtbares, entsperrtes Netzteil auswählen.');return meshSurgeryCatalog(n);}
     if(kind==='remeshCatalog'){const p=cadProjectSnapshot(project),n=p.nodes.find(n=>n.id===id);if(!n||n.kind!=='mesh'||flags(n,p).hidden||flags(n,p).locked)throw Error('Ein sichtbares, entsperrtes Netzteil auswählen.');if(n.mesh.triangles.length/3>150000)throw Error('Neuvernetzen unterstützt bis zu 150.000 Dreiecke je Netz.');return {geometryDigest:meshSelectionGeometryDigest(n),triangles:n.mesh.triangles.length/3,regions:(n.metadata?.meshProtection?.regions??[]).map(r=>({name:r.name,purpose:r.purpose,triangles:r.triangleIds.length}))};}
     if(['makeSolidCatalog','hollowCatalog'].includes(kind)){const hollow=kind==='hollowCatalog',p=cadProjectSnapshot(project),n=p.nodes.find(n=>n.id===id);if(!n||n.kind!=='mesh'||flags(n,p).hidden||flags(n,p).locked||n.meshRole==='hole')throw Error('Ein sichtbares, entsperrtes Material-Netzteil auswählen.');const limit=hollow?MESH_HOLLOW_LIMIT:MESH_MAKE_SOLID_LIMIT;if(n.mesh.triangles.length/3>limit)throw Error((hollow?'Aushöhlen':'Make Solid')+' unterstützt bis zu '+limit.toLocaleString('de-DE')+' Dreiecke je Quelle.');if(meshProtectionRegions(n).length)throw Object.assign(Error('Dieses Werkzeug ist für Teile mit Schutzbereichen gesperrt. Das geschützte Original bleibt unverändert.'),{code:'MESH_PROTECTION'});if(hollow)inspectSolid(n);const m=n.transform,min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(const v of new Set(n.mesh.triangles)){const q=n.mesh.verts.slice(v*3,v*3+3);for(let k=0;k<3;k++){const w=m[k]*q[0]+m[k+4]*q[1]+m[k+8]*q[2]+m[k+12];min[k]=Math.min(min[k],w);max[k]=Math.max(max[k],w);}}const extent=Math.max(...max.map((v,k)=>v-min[k])),shortest=Math.min(...max.map((v,k)=>v-min[k]));return {geometryDigest:meshSelectionGeometryDigest(n),triangles:n.mesh.triangles.length/3,worldBounds:{min,max},extent,suggestedResolution:Math.max(1e-6,Math.min(1e6,extent/(hollow?48:32))),...(hollow?{suggestedWallThickness:Math.max(1e-6,Math.min(1e6,shortest/10))}:{})};}
     if(kind==='eraseFillCatalog'){const p=cadProjectSnapshot(project),n=p.nodes.find(n=>n.id===id);if(!n||n.kind!=='mesh'||flags(n,p).hidden||flags(n,p).locked)throw Error('Ein sichtbares, entsperrtes Netzteil auswählen.');if(n.mesh.triangles.length/3>MESH_ERASE_FILL_LIMIT)throw Error('Bereiche ersetzen unterstützt bis zu '+MESH_ERASE_FILL_LIMIT.toLocaleString('de-DE')+' Dreiecke je Netz.');return {geometryDigest:meshSelectionGeometryDigest(n),triangles:n.mesh.triangles.length/3,regions:(n.metadata?.meshProtection?.regions??[]).map(r=>({name:r.name,purpose:r.purpose,triangles:r.triangleIds.length}))};}
@@ -278,7 +284,7 @@ export function createMeshEngineAdapter({kernel}={}){
       // Earlier partial repairs may still be nonmanifold. A unary repair chain
       // inherits leaf color from its latest valid footprint, while genuine
       // source groups continue to project their own separate colored regions.
-      if(['repair','reduce','remesh','smooth','sculpt','erase-fill','make-solid','hollow','lid'].includes(recipe?.operation?.type)){
+      if(['repair','reduce','remesh','smooth','sculpt','surgery','erase-fill','make-solid','hollow','lid'].includes(recipe?.operation?.type)){
         const original=recipe.sources[0],fallback=repairFallback??{mesh:source.mesh,transform,name:source.name,color:source.color??'#77a8b5',opacity:source.opacity??1};
         if(original.meshSource?.sources||original.meshSource?.node.children?.length){const frame=multiply(transform,new THREE.Matrix4().fromArray(original.transform).invert().toArray());visit(original,frame,fallback);}
         else take(fallback.mesh,fallback.transform,fallback.name,fallback.color,fallback.opacity);
@@ -308,7 +314,7 @@ export function createMeshEngineAdapter({kernel}={}){
   async function checkedRecipe(node){
     const legacy=localSource(node),source=node.meshSource;if(!(Array.isArray(source?.sources)))return legacy;
     const rebuilt=await derive(source.sources,source.operation),expectedNode=rebuilt.node??rebuilt.nodes[source.operation.part??0];if(!expectedNode)throw Error('Die erhaltene Netzableitung lässt sich nicht mehr zuordnen.');
-    const expected=['repair','reduce','remesh','smooth','sculpt','erase-fill','make-solid','hollow','lid'].includes(source.operation.type)?localManifold(expectedNode):worldManifold(expectedNode),stored=['repair','reduce','remesh','smooth','sculpt','erase-fill','make-solid','hollow','lid'].includes(source.operation.type)?localManifold(source.node):worldManifold(source.node);let added,missing;
+    const expected=['repair','reduce','remesh','smooth','sculpt','surgery','erase-fill','make-solid','hollow','lid'].includes(source.operation.type)?localManifold(expectedNode):worldManifold(expectedNode),stored=['repair','reduce','remesh','smooth','sculpt','surgery','erase-fill','make-solid','hollow','lid'].includes(source.operation.type)?localManifold(source.node):worldManifold(source.node);let added,missing;
     try{positive(expected);positive(stored);added=stored.subtract(expected);missing=expected.subtract(stored);const allowed=Math.max(expected.volume()*3e-5,1e-8);if(added.status()!=='NoError'||missing.status()!=='NoError'||Math.abs(added.volume())>allowed||Math.abs(missing.volume())>allowed)throw Error('Die erhaltenen Originalquellen passen nicht zum Netzrezept. Projekt unverändert lassen und Werkzeug erneut aufrufen.');}
     finally{expected.delete();stored.delete();added?.delete();missing?.delete();}return legacy;
   }
@@ -326,7 +332,7 @@ export function createMeshEngineAdapter({kernel}={}){
   async function editSource(original,path,set,organization){
     if(original.locked||organization&&flags(original,organization).locked)throw Error('Die erhaltene Originalquelle oder ihr Layer/Ordner ist gesperrt.');
     const source=original.meshSource,checkedSource=await checkedRecipe(original);
-    if(['reduce','remesh','smooth','sculpt','erase-fill','make-solid','hollow','lid'].includes(source?.operation?.type)&&path.length)throw Error('Die Netzbearbeitung behält Original und Schutzflächen unverändert im Verlauf. Für Geometrieänderungen am Original Rückgängig verwenden und das Werkzeug erneut aufrufen.');
+    if(['reduce','remesh','smooth','sculpt','surgery','erase-fill','make-solid','hollow','lid'].includes(source?.operation?.type)&&path.length)throw Error('Die Netzbearbeitung behält Original und Schutzflächen unverändert im Verlauf. Für Geometrieänderungen am Original Rückgängig verwenden und das Werkzeug erneut aufrufen.');
     if(source?.operation?.type==='connectors'&&path.length)throw Error('Originale einer Steckverbindung bleiben als Verlauf erhalten. Für Änderungen beide Teile gemeinsam neu verbinden oder Rückgängig verwenden.');
     if(Array.isArray(source?.sources)&&path.length){
       const index=source.sources.findIndex(n=>n.id===path[0]);if(index<0)throw Error('Die erhaltene Originalquelle wurde nicht gefunden.');
@@ -381,7 +387,7 @@ export function createMeshEngineAdapter({kernel}={}){
       const template={layerId:draft.activeLayerId,folderId:draft.activeFolderId,opacity:1,hidden:false,locked:false,metadata:{notes:''}},out=commonFromLegacy(legacy,template,op.frame===undefined?matrixArray(legacy):multiply(op.frame,matrixArray(legacy)));out.meshSource={format:'Formnaro-MeshSource',version:1,node:legacy};
       if(draft.nodes.some(n=>n.id===out.id))throw Error('Diese Objektkennung wird bereits verwendet.');if(flags(out,draft).locked||flags(out,draft).hidden)throw Error('Einen sichtbaren, entsperrten Layer/Ordner zum Erstellen auswählen.');inspectSolid(out);draft.nodes.push(out);return {project:cadProjectSnapshot(draft),selectedIds:[out.id],report:{created:true}};
     }
-    const ids=['mesh-group','mesh-connectors'].includes(op.type)?op.ids:[op.id];if(!Array.isArray(ids)||!ids.length||ids.length>500||new Set(ids).size!==ids.length)throw Error('Netzteile eindeutig auswählen.');
+    const ids=['mesh-group','mesh-connectors'].includes(op.type)||op.type==='mesh-surgery'&&op.ids!==undefined?op.ids:[op.id];if(!Array.isArray(ids)||!ids.length||ids.length>500||new Set(ids).size!==ids.length)throw Error('Netzteile eindeutig auswählen.');
     const sources=ids.map(id=>{const node=draft.nodes.find(n=>n.id===id);if(!node||node.kind!=='mesh')throw Error('Nur bearbeitbare Netzteile auswählen.');if(flags(node,draft).locked)throw Error('Das Netzteil oder sein Ordner/Layer ist gesperrt.');if(flags(node,draft).hidden)throw Error('Nur sichtbare Netzteile bearbeiten.');return node;});
     const first=sources[0];let outputs,report={};
     if(op.type==='mesh-counterpart'){
@@ -420,7 +426,15 @@ export function createMeshEngineAdapter({kernel}={}){
       report={...fixed.report,resultId:out.id,sourceId:first.id,originalRetained:true,solidProven:true,sourceSolidProven:!!before,volumeBefore:before?.volume??null,volumeAfter:after.volume,volumeDifference:before?after.volume-before.volume:null,volumePercentChange:before?(after.volume-before.volume)/before.volume*100:null};
       draft.nodes.push(out);return {project:cadProjectSnapshot(draft),selectedIds:[out.id],report};
     }
-    if(op.type==='mesh-erase-fill'){
+    if(op.type==='mesh-surgery'){
+      if(Object.keys(op).some(k=>!['type','id','ids','options'].includes(k))||op.id!==undefined&&op.ids!==undefined)throw Error('Netzauftrag benötigt eine eindeutige Zielauswahl.');
+      const options=validateMeshSurgeryOptions(op.options);if(sources.length!==1&&!(sources.length===2&&options.action==='bridge'&&options.otherGeometryDigest))throw Error('Nur eine ausdrückliche Randverbindung darf zwei Netzteile verschmelzen.');
+      const fixed=surgerySource(sources,options);outputs=[{...structuredClone(first),mesh:fixed.node.mesh,meshSource:keepMeshAppearance(first,retained(fixed.node,sources,{type:'surgery',options}))}];
+      outputs[0].metadata={...first.metadata,sourceReference:first.metadata?.sourceReference??{objectId:first.id,geometryDigest:projectObjectGeometryDigest(first),operation:'mesh-edit'}};if(fixed.protection)outputs[0].metadata.meshProtection=fixed.protection;
+      let before=null;try{if(meshTopologyClass(first.mesh).type==='closedMesh')before=inspectSolid(first);}catch{if(!['repair','replace'].includes(options.action))throw Error('Der ursprüngliche geschlossene Körper ist nicht gültig.');}
+      const closed=meshTopologyClass(outputs[0].mesh).type==='closedMesh',after=closed?inspectSolid(outputs[0]):null;report={...fixed.report,solidProven:closed,sourceSolidProven:!!before,volumeBefore:before?.volume??null,volumeAfter:after?.volume??null};
+    }
+    else if(op.type==='mesh-erase-fill'){
       if(Object.keys(op).some(k=>!['type','id','options'].includes(k)))throw Error('Unbekannte Felder zum Ersetzen eines Netzbereichs.');
       const options=validateMeshEraseFillOptions(op.options),fixed=eraseFillSource(first,options),recipe={type:'erase-fill',options};
       outputs=[{...structuredClone(first),mesh:fixed.node.mesh,meshSource:keepMeshAppearance(first,retained(fixed.node,[first],recipe))}];
@@ -448,7 +462,7 @@ export function createMeshEngineAdapter({kernel}={}){
       report=fixed.report;
       // A closed material input must remain an independently proven material
       // body. Open sheets retain exact boundaries and are not called solids.
-      if(meshTopologyClass(first.mesh).type==='closedMesh'){const before=inspectSolid(first),after=inspectSolid(outputs[0]),allowance=options.method==='curved-v1'?before.volume*.01:Math.max(1e-7,before.volume*2e-6);if(Math.abs(after.volume-before.volume)>allowance)throw Error('Die Vereinfachung überschreitet die Volumenprüfung.');report={...report,solidProven:true,volumeBefore:before.volume,volumeAfter:after.volume,volumeTolerance:allowance,volumeDifference:after.volume-before.volume,volumePercentChange:(after.volume-before.volume)/before.volume*100};}else report={...report,solidProven:false};
+      if(meshTopologyClass(first.mesh).type==='closedMesh'){const before=inspectSolid(first),after=inspectSolid(outputs[0]),allowance=['curved-v1','curved-isotropic-v1'].includes(options.method)?before.volume*.01:Math.max(1e-7,before.volume*2e-6);if(Math.abs(after.volume-before.volume)>allowance)throw Error('Die Vereinfachung überschreitet die Volumenprüfung.');report={...report,solidProven:true,volumeBefore:before.volume,volumeAfter:after.volume,volumeTolerance:allowance,volumeDifference:after.volume-before.volume,volumePercentChange:(after.volume-before.volume)/before.volume*100};}else report={...report,solidProven:false};
     }
     else if(op.type==='mesh-connectors'){
       if(Object.keys(op).some(k=>!['type','ids','reference','options'].includes(k))||sources.length!==2)throw Error('Genau zwei Netzteile für eine gemeinsame Steckverbindung auswählen.');
@@ -487,7 +501,7 @@ export function createMeshEngineAdapter({kernel}={}){
     }
     const selected=new Set(ids),insertion=draft.nodes.findIndex(n=>selected.has(n.id));draft.nodes=draft.nodes.filter(n=>!selected.has(n.id));
     // Restoring originals must never overwrite unrelated roots with reused IDs.
-    const existing=new Set(draft.nodes.map(n=>n.id));for(const n of outputs){if(existing.has(n.id)){if(op.type!=='mesh-dissolve')throw Error('Die Kennung einer erhaltenen Netzquelle wird bereits verwendet.');n.id=crypto.randomUUID();}existing.add(n.id);if(!['mesh-role','mesh-simple-repair','mesh-close-hole','mesh-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill'].includes(op.type))inspectSolid(n);}
+    const existing=new Set(draft.nodes.map(n=>n.id));for(const n of outputs){if(existing.has(n.id)){if(op.type!=='mesh-dissolve')throw Error('Die Kennung einer erhaltenen Netzquelle wird bereits verwendet.');n.id=crypto.randomUUID();}existing.add(n.id);if(!['mesh-role','mesh-simple-repair','mesh-close-hole','mesh-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill','mesh-surgery'].includes(op.type))inspectSolid(n);}
     if(['mesh-split','mesh-extract-bodies'].includes(op.type))report={...report,review:{parts:meshPartitionReview(outputs,op.type==='mesh-split'?report.plane:null),scope:'stored-faces-near-plane',keepsAllMaterial:true}};
     draft.nodes.splice(insertion,0,...outputs);return {project:cadProjectSnapshot(draft),selectedIds:outputs.map(n=>n.id),report};
   }

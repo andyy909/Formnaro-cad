@@ -6,7 +6,7 @@
   "type": "module",
   "main": "electron.cjs",
   "author": "Andreas Klisch",
-  "license": "SEE LICENSE IN LICENSE.txt",
+  "license": "MIT",
   "description": "Eigenst\u00e4ndiger lokaler Netz-Modellierer f\u00fcr den 3D-Druck",
   "scripts": {
     "build": "vite build --config vite.config.js",

@@ -1,3 +1,4 @@
+import {validateMeshSurgeryOptions} from './mesh-surgery.js';
 import {validateMeshLidOptions} from './mesh-lid.js';
 import {validateCounterpartOptions} from './mesh-counterpart.js';
 import {validateMeshHollowOptions} from './mesh-hollow.js';
@@ -9,13 +10,17 @@ import {validateMeshRemeshOptions} from './mesh-remesh.js';
 import {validateMeshReduceOptions} from './mesh-reduce.js';
 import {validateConnectorOptions,validateConnectorReference} from './mesh-connectors.js';
 import {validateHoleFillOptions} from './mesh-hole-fill.js';
-import {validNode} from './mesh-engine/geometry.js';
+import {validNode,validMesh} from './mesh-engine/geometry.js';
+import {isGeometryRef,validateGeometryRef} from './cad-geometry-ref.js';
 import {validateSimpleRepairOptions} from './mesh-simple-repair.js';
 
 /** The legacy reader's recipes and nested sources are archived independently of
  * the current world transform. No kernel handles or cached render buffers. */
 export function validateMeshSource(value,{validateSourceNode}={}){
-  if(!value||Object.getPrototypeOf(value)!==Object.prototype||Object.keys(value).some(k=>!['format','version','node',...(value.version>=2?['sources','operation']:[]),...(value.version===3?['appearance']:[])].includes(k))||value.format!=='Formnaro-MeshSource'||![1,2,3].includes(value.version)||!validNode(value.node))throw Error('Ungültige erhaltene Netzquelle.');
+  // A saved catalogue may defer the archived legacy mesh as well as the root.
+  // Native construction still uses validNode's ordinary inline-only validator.
+  const meshValidator=mesh=>{if(!isGeometryRef(mesh))return validMesh(mesh);validateGeometryRef(mesh,'mesh');return true;};
+  if(!value||Object.getPrototypeOf(value)!==Object.prototype||Object.keys(value).some(k=>!['format','version','node',...(value.version>=2?['sources','operation']:[]),...(value.version===3?['appearance']:[])].includes(k))||value.format!=='Formnaro-MeshSource'||![1,2,3].includes(value.version)||!validNode(value.node,0,{meshValidator}))throw Error('Ungültige erhaltene Netzquelle.');
   const active=new Set();let count=0;
   function plain(v,depth=0){
     if(++count>10000000||depth>40)throw Error('Erhaltene Netzquelle ist zu groß oder zu tief.');
@@ -29,7 +34,7 @@ export function validateMeshSource(value,{validateSourceNode}={}){
   if(value.version===2||value.version===3&&(clean.sources!==undefined||clean.operation!==undefined)){
     if(typeof validateSourceNode!=='function'||!Array.isArray(clean.sources)||!clean.sources.length||clean.sources.length>500)throw Error('Die Netzoperation benötigt erhaltene Originalteile.');
     const op=clean.operation;
-    if(!op||Array.isArray(op)||Object.keys(op).some(k=>!['type','mode','plane','reference','options','edgeIds','part','suppressedIds'].includes(k))||!['group','drill','split','bodies','finish','repair','connectors','reduce','remesh','smooth','sculpt','erase-fill','make-solid','hollow','lid','counterpart'].includes(op.type))throw Error('Ungültiges erhaltenes Netzverfahren.');
+    if(!op||Array.isArray(op)||Object.keys(op).some(k=>!['type','mode','plane','reference','options','edgeIds','part','suppressedIds'].includes(k))||!['group','drill','split','bodies','finish','repair','connectors','reduce','remesh','smooth','sculpt','surgery','erase-fill','make-solid','hollow','lid','counterpart'].includes(op.type))throw Error('Ungültiges erhaltenes Netzverfahren.');
     if(op.type==='repair'&&value.version!==3)throw Error('Die erhaltene Reparatur benötigt Netzquellformat 3.');
     if(op.suppressedIds!==undefined&&(!Array.isArray(op.suppressedIds)||op.suppressedIds.length>500||new Set(op.suppressedIds).size!==op.suppressedIds.length||op.suppressedIds.some(id=>typeof id!=='string'||!id||id.length>200||!clean.sources.some(source=>source.id===id))))throw Error('Ungültige unterdrückte Netzquellen.');
     if(op.part!==undefined&&(!Number.isInteger(op.part)||op.part<0||op.part>499))throw Error('Ungültiger erhaltener Netzbestandteil.');
@@ -41,6 +46,7 @@ export function validateMeshSource(value,{validateSourceNode}={}){
     if(op.type==='repair'&&op.options?.method!==undefined){if(op.options.method==='planar-cap-v1')validateHoleFillOptions(op.options);else validateSimpleRepairOptions(op.options);}
     if(op.type==='reduce'){if(value.version!==3||clean.sources.length!==1||Object.keys(op).some(k=>!['type','options'].includes(k)))throw Error('Ungültige erhaltene Vereinfachung.');validateMeshReduceOptions(op.options);}
     if(op.type==='remesh'){if(value.version!==3||clean.sources.length!==1||Object.keys(op).some(k=>!['type','options'].includes(k)))throw Error('Ungültige erhaltene Neuvernetzung.');validateMeshRemeshOptions(op.options);}
+    if(op.type==='surgery'){if(value.version!==3||Object.keys(op).some(k=>!['type','options'].includes(k)))throw Error('Ungültige erhaltene Netzbearbeitung.');const o=validateMeshSurgeryOptions(op.options);if(clean.sources.length!==(o.action==='bridge'&&o.otherGeometryDigest?2:1))throw Error('Die erhaltenen Randquellen passen nicht zum Auftrag.');}
     if(op.type==='sculpt'){if(value.version!==3||clean.sources.length!==1||Object.keys(op).some(k=>!['type','options'].includes(k)))throw Error('Ungültiger erhaltener Pinselstrich.');validateMeshSculptOptions(op.options);}
     if(op.type==='smooth'){if(value.version!==3||clean.sources.length!==1||Object.keys(op).some(k=>!['type','options'].includes(k)))throw Error('Ungültige erhaltene Glättung.');validateMeshSmoothOptions(op.options);}
     if(op.type==='erase-fill'){if(value.version!==3||clean.sources.length!==1||Object.keys(op).some(k=>!['type','options'].includes(k)))throw Error('Ungültiges erhaltenes Bereichsersetzen.');validateMeshEraseFillOptions(op.options);}

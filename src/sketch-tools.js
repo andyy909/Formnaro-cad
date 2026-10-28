@@ -10,7 +10,7 @@ const value=(s,input)=>{const r=geometry(s);return sketchExpression(input,n=>{if
 function element(s,id){const e=geometry(s).elements.find(e=>e.id===id);if(!e)throw Error('Konturelement fehlt.');return e;}
 function replacePoint(s,original,point,{shared=true,id,field}={}){
  const r=geometry(s),out=structuredClone(s);
- for(const e of out.elements){const numeric=r.elements.find(n=>n.id===e.id);for(const key of fields(e))if(shared?distance(numeric[key],original)<1e-7:e.id===id&&key===field)e[key]=[...point];}
+ for(const e of out.elements){const numeric=r.elements.find(n=>n.id===e.id);for(const key of fields(e))if(shared?['start','end'].includes(key)&&distance(numeric[key],original)<1e-7:e.id===id&&key===field)e[key]=[...point];}
  return out;
 }
 // Read only the expressions emitted by this editor. The dimensions themselves
@@ -27,6 +27,7 @@ export function sketchElementDimensions(s,id){
  return result;
 }
 export function dimensionSketchElement(s,id,dimension,input){
+ if(isCadCurve(element(s,id)))throw Error('Unpassende Maßart. Kurven über ihre Kontrollpunkte bearbeiten.');
  const e=element(s,id),stored=s.elements.find(e=>e.id===id),n=value(s,input);if(!Number.isFinite(n)||dimension!=='angle'&&(n<.005||n>10000))throw Error('Maß außerhalb des gültigen Bereichs.');let out=structuredClone(s);
  if(s.version>=3){const type=dimension==='diameter'?'radius':dimension;if(!['length','angle','radius'].includes(type)||e.type==='line'&&!['length','angle'].includes(type)||e.type!=='line'&&type!=='radius')throw Error('Unpassende Maßart.');const old=out.constraints.find(c=>c.type===type&&c.refs.length===1&&c.refs[0].element===id);const c={id:old?.id??profileId('dimension'),type,refs:[{element:id}],value:dimension==='diameter'?'('+input+')/2':String(input)};if(old)out.constraints[out.constraints.indexOf(old)]=c;else out.constraints.push(c);return out;}
  if(e.type==='line'){
@@ -34,11 +35,11 @@ export function dimensionSketchElement(s,id,dimension,input){
  }else if(e.type==='circle'){
   if(!['diameter','radius'].includes(dimension))throw Error('Kreis: Radius oder Durchmesser wählen.');out.elements.find(e=>e.id===id).diameter=dimension==='radius'?'2*('+input+')':String(input);
  }else{
-  if(dimension!=='radius')throw Error('Bogen: Radius wählen.');for(const key of ['start','through','end']){const unit=e[key].map((v,k)=>(v-e.center[k])/e.radius),p=e.center.map((v,k)=>'('+number(v)+')+('+input+')*('+number(unit[k])+')');out=replacePoint(out,e[key],p);}
+  if(dimension!=='radius')throw Error('Bogen: Radius wählen.');for(const key of ['start','through','end']){const unit=e[key].map((v,k)=>(v-e.center[k])/e.radius),p=e.center.map((v,k)=>'('+number(v)+')+('+input+')*('+number(unit[k])+')');out=replacePoint(out,e[key],p,{shared:key!=='through',id,field:key});}
  }
  geometry(out);return out;
 }
-export function editSketchCoordinate(s,id,field,axis,input){const e=element(s,id);if(!fields(e).includes(field)||![0,1].includes(axis))throw Error('Ungültige Punktkoordinate.');value(s,input);const stored=s.elements.find(e=>e.id===id),p=[...stored[field]];p[axis]=String(input);return replacePoint(s,e[field],p);}
+export function editSketchCoordinate(s,id,field,axis,input){const e=element(s,id);if(!fields(e).includes(field)||![0,1].includes(axis))throw Error('Ungültige Punktkoordinate.');value(s,input);const stored=s.elements.find(e=>e.id===id),p=[...stored[field]];p[axis]=String(input);return replacePoint(s,e[field],p,{shared:['start','end'].includes(field),id,field});}
 export function mirrorSketch(s,{loopId=null,axis='x',offset=0}={}){
  if(!['x','y'].includes(axis)||!Number.isFinite(offset))throw Error('Spiegelachse und Abstand wählen.');const out=structuredClone(s),loop=loopId?s.loops.find(l=>l.id===loopId):null;if(loopId&&!loop)throw Error('Kontur fehlt.');
  const ids=new Set(loop?.elements??s.elements.map(e=>e.id)),map=new Map(),coordinate=axis==='x'?1:0,reflect=x=>s.version>=3&&sketchLiteral(x)?number(2*offset-Number(x)):'2*('+number(offset)+')-('+x+')',copies=s.elements.filter(e=>ids.has(e.id)).map(e=>{const c=structuredClone(e);map.set(e.id,c.id=profileId(e.type));for(const key of fields(c))c[key][coordinate]=reflect(c[key][coordinate]);return c;});
@@ -61,6 +62,7 @@ function parameter(e,p){if(e.type==='line'){const u=e.end.map((v,k)=>v-e.start[k
 function curveAt(e,t){return e.type==='line'?e.start.map((v,k)=>v+t*(e.end[k]-v)):e.center.map((v,k)=>v+e.radius*(k===0?Math.cos:Math.sin)(e.startAngle+t*e.sweep));}
 export function trimExtendSketch(s,{id,cutterId,mode='trim',end='end'}={}){
  if(id===cutterId||!['trim','extend'].includes(mode)||!['start','end'].includes(end))throw Error('Element, Schnittgrenze und Ende wählen.');const a=element(s,id),b=element(s,cutterId),out=structuredClone(s),stored=out.elements.find(e=>e.id===id),eps=1e-7;
+ if(![a,b].every(e=>['line','arc','circle'].includes(e.type)))throw Error('Trimmen und Verlängern unterstützen zunächst nur Linien, Kreise und Kreisbögen.');
  const candidates=intersections(a,b).filter(p=>{const t=parameter(b,p);return b.type==='circle'||t>=-eps&&t<=1+eps;}).map(p=>({p,t:parameter(a,p)}));
  if(a.type==='circle'){
   if(mode!=='trim'||candidates.length!==2)throw Error('Vollkreis benötigt zwei Schnittpunkte zum Trimmen.');const ts=candidates.map(c=>c.t).sort((a,b)=>a-b),start=end==='end'?ts[0]:ts[1],finish=end==='end'?ts[1]:ts[0]+1;delete stored.center;delete stored.diameter;Object.assign(stored,{type:'arc',start:pair(curveAt(a,start)),through:pair(curveAt(a,(start+finish)/2)),end:pair(curveAt(a,finish))});

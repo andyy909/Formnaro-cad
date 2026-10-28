@@ -1,6 +1,6 @@
 # Formnaro-Ausbau ab 0.106 – verbindliche Paketfolge
 
-Stand: 27.10.2026. Auftrag: „Neuer Formnaro-Ausbauplan: bessere Fotomodelle,
+Stand: 28.10.2026. Auftrag: „Neuer Formnaro-Ausbauplan: bessere Fotomodelle,
 gezielte KI-Änderungen und erweiterte Modellierung“, vom Nutzer als
 „Eingefügter Text(2).txt“ übergeben und zur Umsetzung freigegeben.
 Die Paketnummern dieses Plans sind unabhängig von historischen Paketnummern.
@@ -13,12 +13,14 @@ außerhalb dieses Plans. Keine persönliche Modell-/Profil-/Zugangsdaten überne
 
 ## Reihenfolge, Abhängigkeiten und Status
 
-**Aktueller Gesamtstand (27.10.2026): Pakete 0–6, 6a und 7 sind abgeschlossen.**
+**Aktueller Gesamtstand (28.10.2026): Pakete 0–10 einschließlich 6a sind abgeschlossen.**
 Paket 6a ist als 0.114.0-r7 gezielt an der gepackten Windows-Ausgabe abgenommen,
 einschließlich einer frischen Windows-11-VM ohne externe FreeCAD-/Python-Installation.
-Paket 7 war auf Nutzerauftrag vorgezogen worden. Pakete 8–10 sind offen;
+Paket 7 war auf Nutzerauftrag vorgezogen worden. Paket 10 ist abgeschlossen;
 11–13 bleiben später optional. Die Paketnummern bleiben erhalten.
-Paket 8 (lokale Bearbeitung gekrümmter Netze) ist der nächste offene Planpunkt.
+Paket 8 ist als 0.115.0-r1 gezielt an der gepackten Windows-Ausgabe abgenommen.
+Paket 9 ist als 0.116.0-r2 gezielt an der gepackten Windows-Ausgabe abgenommen.
+Paket 10 und die große gemeinsame Gesamtprüfung sind mit 0.117.0-r7 abgeschlossen.
 
 | Paket | Ergebnis und verbindliche Abnahme | Voraussetzungen | Status |
 | --- | --- | --- | --- |
@@ -31,9 +33,9 @@ Paket 8 (lokale Bearbeitung gekrümmter Netze) ist der nächste offene Planpunkt
 | 6 | Editierbare B-Splines/Bézier; Mehrprofil-Loftoberfläche/zusammengesetzter Sweep; Orientierung/Verdrehung/Selbstschnitt prüfen; Schräge/Merkmalentfernung/Rotation/Helix über verfügbare FreeCAD-Version | 5 | Abgeschlossen: 0.112.0-r2, 627 Tests am eingefrorenen Quellstand und 962 Prüfgruppen in 22 Läufen der gepackten Windows-Anwendung bestanden; neue Kurven, Loft/Sweep und FreeCAD-Werkzeuge einschließlich Vorschau/Undo, FNPACK24/STEP und vier Bedienmodi abgenommen. Zunächst private Bereitstellung |
 | 6a | Benötigte FreeCAD-Komponenten als festen Bestandteil von Formnaro ausliefern: ein Download, ein Programmstart, keine separate FreeCAD-Installation; vorhandene Python-, FCStd- und Modellierfunktionen mit der integrierten Laufzeit prüfen | 6 | Abgeschlossen: 0.114.0-r7; FreeCAD 1.1.4/Python 3.11 integriert, 92 lokale EXE-Prüfgruppen und 167 Prüfgruppen in sechs Läufen auf frischem Windows ohne externe Installation; vollständige Laufzeitintegrität, alte Quellen, Exporte, Umlautpfad und Fehlerfälle geprüft. Private und auf Folgeauftrag öffentliche Bereitstellung |
 | 7 | Randkurvenflächen, Übergänge und Vernähen; Prägung/Vertiefung auf Ebenen/Zylindern; Anschlussqualität getrennt von Körpergültigkeit; andere gekrümmte Flächen erst nach Abnahme | 6; integrierte Auslieferung seit 6a | Abgeschlossen: 0.113.0-r3, 640 Tests und 979 Prüfgruppen in 23 Windows-Läufen; G0-Anschlussdiagnose, geschlossenes Vernähen und begrenzte Ebenen-/Zylinderprägung abgenommen. Private Bereitstellung |
-| 8 | Lokales Split/Collapse/Flip/Glätten gekrümmter Netze; Formkanten/Schutz/Öffnungsränder erhalten; Pinsel mit lokaler Verfeinerung; Formabweichung, Dreiecksqualität und Körperprüfung vergleichen | 7 | Offen |
-| 9 | Gekrümmte Lochfüllung, zwei explizite Randringe verbinden; Selbstschnitte lokalisieren/gezielt ersetzen; Flächenextrusion/-versatz/Schrift/Relief; automatische Reparatur nur für belegte Fallgruppen | 8 | Offen |
-| 10 | Flächenfarben/Materialgruppen und unterstützte Exporte; explizite Dichte für Masse/Schwerpunkt; Stückliste; gespeicherte Explosion mit Abstandsregler ohne Montageänderung; Cache an Geometrie/Einstellungen/Engine binden | 9 | Offen |
+| 8 | Lokales Split/Collapse/Flip/Glätten gekrümmter Netze; Formkanten/Schutz/Öffnungsränder erhalten; Pinsel mit lokaler Verfeinerung; Formabweichung, Dreiecksqualität und Körperprüfung vergleichen | 7 | Abgeschlossen: 0.115.0-r1; 127 gezielte Tests und 91 Prüfgruppen in drei tatsächlichen Windows-Läufen, zehn Paketbilder und unabhängige physische STL-/Projektprüfung |
+| 9 | Gekrümmte Lochfüllung, zwei explizite Randringe verbinden; Selbstschnitte lokalisieren/gezielt ersetzen; Flächenextrusion/-versatz/Schrift/Relief; automatische Reparatur nur für belegte Fallgruppen | 8 | Abgeschlossen: 0.116.0-r2; 112 gezielte Tests und 126 Prüfgruppen in vier tatsächlichen Windows-Läufen; Paketbilder sowie physische OCAD/FNPACK/STL/Autosave- und Quellen-/Undo-Prüfung |
+| 10 | Flächenfarben/Materialgruppen und unterstützte Exporte; explizite Dichte für Masse/Schwerpunkt; Stückliste; gespeicherte Explosion mit Abstandsregler ohne Montageänderung; Cache an Geometrie/Einstellungen/Engine binden | 9 | Abgeschlossen: 0.117.0-r7; 33 gezielte Windows-Prüfgruppen, unterstützte physische Farbexporte und gespeicherte Explosion geprüft; gemeinsame Gesamtprüfung bestanden |
 | 11 | FreeCAD SheetMetal, zunächst konstante Dicke: Grundblech/Biegung/Abwicklung, Radius/K-Faktor, DXF mit Biegelinien und erhaltenes Ausgangsmodell | 10 + separat verfügbares Modul | Später optional |
 | 12 | Lokale FEM/CalculiX samt Vernetzung: linear-elastische Statik, explizites Material/Lager/Last; Verformung/Spannung/Randbedingungen und Netzvergleich; keine geratenen Druckwerkstoffe | 10 + separat verfügbare Solver | Später optional |
 | 13 | Separater Hi3D-Versuch auf eingerichteter Linux-GPU: grobes Netz + Foto, protokollierte Normalisierung/Rücktransformation, getrennte Vergleichsvariante, kleinste Stufe messen; Lizenzen vor Auslieferung prüfen | 10 + GPU/Modelle/Lizenzen | Später optional |
@@ -330,3 +332,102 @@ Windows-ZIP: 1.883.314.641 Bytes, SHA-256 641aeff7bdb49ad5644422dc47d3edba2fac7b
 [Private Ausgabe](https://github.com/andyy909/Formnaro/releases/tag/v0.114.0-r7) veröffentlicht und serverseitig geprüft. [Öffentliche Ausgabe](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7) auf ausdrücklichen Folgeauftrag ebenfalls veröffentlicht und serverseitig geprüft; das Windows-ZIP ist mit der privaten Ausgabe bytegleich. Bedienung, Messungen und Grenzen: [Integrierte CAD-Laufzeit](INTEGRIERTE-CAD-LAUFZEIT.md).
 
 Pakete 8–10 bleiben offen; 11–13 sind weiterhin optional. Die große allgemeine Gesamtprüfung folgt am Ende der beauftragten Folge.
+
+
+## Paket 8: gezielte Abnahme 0.115.0-r1 (28.10.2026)
+
+Gekrümmte Neuvernetzung mit lokalen Split-/Collapse-/Flip-/Projektionsschritten
+und optionale lokale Pinselverfeinerung sind abgenommen. Schutzflächen und
+Auswahlgrenzen bleiben exakt, Formkanten und Öffnungsränder erhalten.
+Die bidirektionale vollständige Dreiecksüberdeckung begrenzt die Formabweichung;
+Stichproben, Qualität und unabhängige Körper-/Volumenprüfung sind getrennt belegt.
+127 gezielte Tests und 91 Prüfgruppen (23 neu, 28 bisherige Neuvernetzung,
+40 bisherige Pinsel) in drei Läufen der tatsächlichen neuen Windows-EXE bestanden.
+Speichern/Wiederöffnen, Autosicherung, originales Quellenrezept, Undo/Redo,
+physisches FNPACK und STL sind geprüft; zehn Paketbilder visuell gesehen.
+Der vollständige SHA-Abgleich der mitgelieferten CAD-Laufzeit ist bestanden.
+Der unabhängige STL-Leser bestätigt zwei gültig orientierte, geschlossene
+zusammenhängende Exportkörper und exakte geschriebene Koordinaten.
+Keine echten Cloud-Modellaufrufe und keine Änderungen an Nutzerprojekten.
+Bedienung und Grenzen: [GEKRUEMMTE-NETZE.md](GEKRUEMMTE-NETZE.md).
+Pakete 9–10 und die große gemeinsame Abschlussprüfung bleiben offen.
+
+
+## Paket 9: gezielte Abnahme 0.116.0-r2 (28.10.2026)
+
+112 gezielte Tests und 126 Prüfgruppen in vier Läufen der neuen Windows-EXE
+bestanden: 46 neue Netzflächen-, 25 Lochfüllungs-, 28 Ersatzflächen- und
+27 Reparaturprüfgruppen. Alle acht neuen Aktionen, vier Bedienmodi, Quellen,
+Vorschau, Revision, Abbruch und Undo sind abgedeckt. Physische OCAD/FNPACK,
+Autosicherung und STL zurückgelesen. Der unabhängige Python-Leser bestätigt
+alle Dreieckskoordinaten und je einen geschlossenen orientierten Körper für
+Extrusion und Schriftrelief. Vollständige interne CAD-Laufzeitintegrität bestanden.
+Paketbilder visuell geprüft. Automatische Bereinigung beim Import wird in den
+bestehenden Schadensprüfungen ausdrücklich deaktiviert, damit ihre absichtlich
+beschädigten Ausgangsdaten erhalten bleiben; geometrische Assertions unverändert.
+Keine Cloud-Modellaufrufe und keine Änderungen an Nutzerprojekten.
+G0-Füllung nimmt fehlende Geometrie an; weiches Netzrelief garantiert keine
+exakte Prägehöhe. Grenzen: [NETZREPARATUR-FLAECHEN.md](NETZREPARATUR-FLAECHEN.md).
+Paket 10 und die gemeinsame allgemeine Abschlussprüfung bleiben offen.
+
+
+## Gemeinsame Ausbauabnahme 0.117.0-r7
+
+Die beauftragten Pakete 0–10 einschließlich der integrierten CAD-Laufzeit 6a
+sind an der neuen Windows-Ausgabe gemeinsam geprüft. Optionale Pakete 11–13
+gehören nicht zu diesem Abschluss.
+
+2153 Tests in 352 vollständig ausgeführten Testdateien bestanden;
+keine Fehler, übersprungenen oder abgebrochenen Tests. 3312 Prüfgruppen
+in 91 tatsächlichen Windows-Prozessläufen bestanden.
+Die allgemeinen Bedienpfade werden durch spezielle Nachweise für Foto-
+Perspektive/Mehransichten, Merkmalsreferenzen, FCStd, gespeicherte KI-Aufträge,
+native Kurven und Flächen sowie gekrümmte Netze ergänzt. Der vollständige Unit-Lauf stammt aus R5; sämtliche Funktionsdateien, Testdateien, Build-Ausgaben und Laufzeiteingaben sind für R7 bytegleich. Ausschließlich drei Windows-Prüfer wurden berichtigt: asynchrone Vorschau mit erzwungener Verzögerung abwarten, tatsächliche Netz-Importoption abschalten und die automatisch nummerierte Exportdatei bytegenau prüfen. Die kopierte Mesh-Belegdatei ist ebenfalls bytegleich geprüft. Alle Windows-Prüfungen wurden am finalen R7-Paket neu ausgeführt. Anbieterantworten
+werden lokal simuliert; es erfolgte keine Cloud-Modellinferenz.
+
+Vier externe Spezialprüfer verwenden die tatsächlichen Solid-/Fusion-Menüwege für Projektfotos und Merkmalsbezüge sowie kanonische Laufzeitpfade; alle Geometrie-, Quellen-, Datei- und Undo-Assertions bleiben unverändert.
+Diese Korrekturen betreffen fünf isolierte R7-Prüfläufe.
+Die eingepackten älteren Prüfselektoren zielten dort auf verborgene Headerknöpfe.
+Exakte reversible Prüferkorrekturen, ursprüngliche Fehlberichte und die neuen
+Ergebnisse sind separat SHA-gebunden. Der Laufzeitprüfer vergleicht die
+kanonischen physischen Pfade beider Seiten eines Windows-Verzeichnislinks.
+Sämtliche Geometrie-, Quellen-, Datei-
+und Undo-Assertions bleiben erhalten; EXE, ASAR und Funktionscode sind unverändert.
+
+Paket 10: Flächenfarben und Gruppen für CAD/Netze, unterstützte Farbexporte,
+ausdrückliche homogene Dichte, native Masse/Schwerpunkt, CSV-Stückliste und
+gespeicherte Anzeige-Explosion. OCAD/FNPACK, Autosicherung, Wiederöffnen,
+Vorschau/Undo und originale Montage geprüft. Ein unabhängiger FreeCAD-Leser
+bestätigt die physische STEP-Ausgabe als zwei gültige geschlossene Körper mit
+2600 mm³ und dem erwarteten Volumenschwerpunkt. Separate Standardformatleser
+prüfen glTF/GLB/OBJ/3MF/CSV, Maße und ausgewählte native und Netz-Farben.
+Physische STL aus den Netzpaketen werden unabhängig dreiecksgenau gelesen.
+
+16 tatsächliche Paketbilder visuell geprüft; vier Bedienmodi,
+kleine/dunkle Ansicht, native und Netz-Vorschau sowie gespeicherte Explosion
+einbezogen. Die gesamte integrierte CAD-Laufzeit ist SHA-geprüft. Ältere
+Ausgaben bleiben unverändert. Frische FreeCAD-Laufzeiten hinter einem
+Windows-Verzeichnislink sind durch einen echten AppContainer-Regressionstest
+abgesichert: Laufzeitprüfung vor Auflösung des physischen Programmpfads.
+
+Grenzen und Bedienung: [Teile und Baugruppen](TEILE-MATERIAL-BAUGRUPPEN.md),
+[Netzflächen](NETZREPARATUR-FLAECHEN.md), [gekrümmte Netze](GEKRUEMMTE-NETZE.md),
+[CAD-Flächen](CAD-FLAECHEN.md). Unbekannte Dichte bleibt unbekannt;
+Massensummen vereinigen überlappende Bauteile nicht. Explosionsrichtungen
+dienen der Anzeige und sind keine Kollisionssimulation.
+
+Quellen und Programm werden zuerst privat bereitgestellt. Die öffentliche
+Ausgabe bleibt 0.114.0-r7; sie wird nur auf gesonderten Auftrag aktualisiert.
+Eingebettete ASAR-Dokumentation enthält den eingefrorenen Buildstand;
+die beiliegenden Abschlussdokumente ergänzen die danach erhobenen Nachweise.
+
+Der nach Nutzerpause unterbrochene R7-Lauf und ein Wiederanlauf mit einem
+Hänger beim Beenden der Wartungsprüfung bleiben als eigene Vorlaufbelege
+erhalten. Ein separater Wartungskontrolllauf und der anschließend vollständig
+neu ausgeführte allgemeine R7-Katalog bestanden am unveränderten Programm.
+Die obigen Zählungen beziehen sich auf die vollständig abgenommenen Läufe.
+
+
+## Nachtrag 28.10.2026: MIT und Ausgabe in beiden Repositories
+
+Nach der vollständigen technischen R7-Abnahme hat der Nutzer die MIT-Lizenz für den gesamten eigenen Anwendungscode und die Veröffentlichung auch im öffentlichen Formnaro-cad-Repository beauftragt. Die Lieferung 0.117.0-r8 enthält diesen Lizenz-/Metadaten-Nachtrag und die übernommenen reinen Prüferkorrekturen. Die Modellfunktionen bleiben SHA-belegt gleich zur vollständigen R7-Abnahme. Die ergänzenden R8-Lizenz- und Paketprüfungen werden getrennt berichtet. Frühere Aussagen zur ausschließlich privaten Bereitstellung von 0.117 sind durch diesen ausdrücklichen Auftrag ersetzt.

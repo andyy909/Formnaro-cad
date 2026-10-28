@@ -29,7 +29,7 @@ function createLayoutStore(directory,{write=writeAtomic}={}){
       }
       const previous=await read();if(args.revision!==previous.revision)throw Error('Die Layoutdatei wurde inzwischen geändert. Bitte erneut laden.');
       const {changeLayouts}=await schema,data=changeLayouts(previous.data,args.command,()=>crypto.randomUUID()),bytes=Buffer.from(JSON.stringify(data,null,2)+'\n');if(bytes.length>MAX_BYTES)throw Error('Layoutdatei ist zu groß.');
-      if(args.command.action==='current'&&previous.exists&&JSON.stringify(data)===JSON.stringify(previous.data))return previous;
+      if(previous.exists&&JSON.stringify(data)===JSON.stringify(previous.data))return previous;
       try{await fs.mkdir(path.dirname(filename),{recursive:true});if(previous.exists)await write(filename+'.vorher',await fs.readFile(filename));await write(filename,bytes);}catch(error){throw Error('Layouts konnten nicht im Programmordner gespeichert werden. Bitte einen beschreibbaren Ordner verwenden.'+(typeof error.code==='string'?' ('+error.code+')':''),{cause:error});}
       return {data,revision:crypto.createHash('sha256').update(bytes).digest('hex'),exists:true,directory:path.dirname(filename)};
     }finally{busy=false;}
