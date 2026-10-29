@@ -25,12 +25,14 @@ export function validateSourceReference(value){
 function ordered(value){if(Array.isArray(value))return value.map(ordered);if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().map(k=>[k,ordered(value[k])]));return value===0?0:value;}
 function objectGeometry(node){
   if(!PROJECT_OBJECT_KINDS.includes(node?.kind))throw Error('Unbekannte Objektart.');
+  const ids=new Map();function index(n,path){ids.set(n.id,path);n.children?.forEach((child,i)=>index(child,path+'/'+i));}index(node,'source');
   // Include native saved geometry even when it also has a parametric recipe.
   // This is an exact source identity, not an approximate shape equivalence.
   function geometry(n){
     const out={kind:n.kind,transform:n.transform};
     if(n.kind==='cad'){
       for(const key of ['brep','recipe','source','solid','suppressed','operation','finish','partition','extraction','modeling'])if(n[key]!==undefined)out[key]=n[key];
+      if(n.drill){out.drill=structuredClone(n.drill);out.drill.sourceId=ids.get(n.drill.sourceId)??n.drill.sourceId;out.drill.boxId=ids.get(n.drill.boxId)??n.drill.boxId;}
       if(n.children)out.children=n.children.map(geometry);
     }else{out.mesh=n.mesh;if(n.meshRole!==undefined)out.meshRole=n.meshRole;}
     return out;

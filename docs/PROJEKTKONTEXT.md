@@ -1,5 +1,23 @@
 # Technischer Projektkontext
 
+Aktueller Ausbaustand 29.10.2026: [ALLTAGSAUSBAU-UMSETZUNGSSTAND.md](ALLTAGSAUSBAU-UMSETZUNGSSTAND.md) beschreibt die neue erste Etappe mit Bohrmerkmalen, Körper-/Bohrungsmustern und direkter Skizzenbedienung. Neue Inhalte verwenden je nach Rezept Format 27–29; alte Inhalte bleiben lesbar. Die aktuelle gezielte Standprüfung umfasst 115 bestandene Tests. Allgemeine Endprüfung, gemeinsame Beispielabnahme und gepackte Windows-Ausgabe sind offen; keine vollständige Freigabe aus den Quellprüfungen ableiten.
+
+Ausbauauftrag 29.10.2026: Die erste Etappe des neuen Plans umfasst mitwachsende Bohrungen, verknüpfte Muster und direkte Skizzenbedienung. Werkstatt, Zeichnungen, Montage, STEP-Direktbearbeitung und Blech folgen nach Priorität. Umsetzung und Abnahme sind noch offen; bestehende Quelländerungen und frühere Prüfbelege bleiben erhalten. Einzelheiten: [AUSBAUPLAN-ALLTAG-WERKSTATT-MASCHINENBAU.md](AUSBAUPLAN-ALLTAG-WERKSTATT-MASCHINENBAU.md).
+
+Zwischenstand: Muster können mit vollständiger Auswahl, Parameterabhängigkeiten und frischen Kennungen über die Bibliothek übernommen werden; veraltete oder unvollständige Muster werden abgewiesen. Zwei historische Auditprüfungen erwarten jetzt die unveränderten 17 ursprünglichen Skizzen-Prüflabels als Pflichtteilmenge und zusätzlich die aktuelle Gesamtzahl. Die neue Etappe ist damit nicht insgesamt abgenommen.
+
+Wartung 0.118.3: bestätigte Punkte eines externen Audits in Originalquellen korrigiert.
+FNPACK prüft Referenzen auch hinter primitiven Arrayelementen; Sprachintegrität
+verwendet Streaming; Tokenmaskierung, Login-Lock-Rennen, Fehlerflut und ungültige
+KI-/STL-Eingaben sind abgesichert. Dateibasierte IPC verlangt den Hauptframe;
+Navigation bleibt beim exakten lokalen Anwendungsdokument. Electron im
+Hauptprogramm auf 44.10.0, Minis unverändert. Neue Ausgabe aus frischer datenfreier
+Stage mit relativen Abnahmeangaben; vorhandene Nutzerdaten niemals bereinigen.
+Prüfumfang und Freigabestatus stehen in der jeweiligen Abnahme. Befunde und Grenzen:
+[NACHPRUEFUNG-0.118.3.md](NACHPRUEFUNG-0.118.3.md).
+
+Entwicklung 0.118.0: eigenes Werkzeug für große Netze (bis 2 Mio. Dreiecke), persistierte Zahnradkopplungen auf festen parallelen Achsen sowie lokale KI-Modellstrenge 0–100. Neue Inhalte verwenden Projekt/Bibliothek26, Gelenkdaten2. Messbefunde werden durch gelockerte Strenge nicht nachträglich als bestanden bezeichnet; externe API-Prüfaufträge und Dateiintegrität bleiben streng. Details und Grenzen: [GROSSE-NETZE-UND-ZAHNRAEDER.md](GROSSE-NETZE-UND-ZAHNRAEDER.md). 0.118.0-r1 ist lokal abgenommen: 140 gezielte Tests, 59 echte Windows-Prüfgruppen in drei Läufen, vier neue Paketbilder visuell geprüft und vollständige CAD-Laufzeitintegrität bestätigt. Quellen sind an die Paketprüfung gebunden. Keine neue allgemeine Gesamtprüfung und keine neue Online-Veröffentlichung. Maßgeblicher lokaler Beleg: work/mechanism-tools/package-r1/acceptance.json.
+
 Modellfunktionen gemeinsam abgenommen an 0.117.0-r7. Der anschließende Stand 0.117.0-r8 stellt den eigenen Anwendungscode auf MIT um und wird auf ausdrücklichen Nutzerauftrag privat und öffentlich bereitgestellt. Pakete 0–10 einschließlich 6a abgeschlossen. Die folgenden älteren Entwicklungsstände sind historische Einträge. Details: GESAMTABNAHME-AUSBAU-0.117.md.
 
 Lokale Nachprüfung vom 27.10.2026 auf Basis 0.114.0-r7: bestätigte Fehler aus
@@ -3444,6 +3462,29 @@ Zusatz 0.96.0: Auch eine ausgefallene letzte Bildprüfung oder Korrektur behält
 ## 0.97 Lokale Spracheingabe
 KI-Chat besitzt expliziten Recorder mit lokalem whisper.cpp/large-v3-turbo Q5_0, ohne Cloud-Speech/API-Key. Aufnahme maximal180s; Stoppen transkribiert in den bestehenden Entwurf, niemals automatisch senden. Abbruch/Chat-Schließen beendet Mikrofon; fester CLI-Aufruf, Runtimehashes, temporäre WAV/Text-Bereinigung und Mainframe-Audiozugriff. Portable Ressourcen separat unter resources/speech; Setupmanifest und MIT-Lizenzen im Repository. Details docs/SPRACHEINGABE.md. Abnahme mit synthetischem deutschem Audio durch echten MediaRecorder/IPC/Whisper geplant; physisches Mikrofon separat zu erproben.
 
+## 0.119 Programm-Assistent, Sprache und Euro-Kosten
+
+Das interne Sprachmenü bietet zusätzlich Deepgram Nova-3 für abgeschlossene
+Aufnahmen; ein eigener, per Windows verschlüsselt gespeicherter Deepgram-Schlüssel
+ist erforderlich. Die Aufnahme wird ausdrücklich an Deepgram gesendet; es gibt
+keine Live-Streaming- oder gemessene Latenzzusage. Lokal bleibt wählbar. In der
+Bedienhilfe bewegt sich der virtuelle Zeiger standardmäßig langsam. Für eine
+begrenzte, lokale Bildaufzeichnung der tatsächlichen Formnaro-Oberfläche gibt es
+Abspielen, Pause und eine Zeitleiste. Zurückspulen wiederholt keine Aktionen;
+die Bilder bleiben nur im Arbeitsspeicher und können bei langen Vorführungen
+begrenzt werden. Es wird kein Bildschirm anderer Anwendungen aufgenommen.
+
+`ai/FORMNARO-ASSISTENT.md` ergänzt bei jeder CAD-Anfrage die festen Arbeitsregeln;
+der getrennte persönliche Anbieter-Kontext mit den bisherigen Erfahrungen wird
+weiter geladen. Der Zielkatalog enthält nun auch die Großnetzvereinfachung und
+erklärt die Grenze zwischen Netzkonvertierung und parametrischem Nachbau. Die
+Kontextgrößen nennen die Assistentendatei. Kostenanzeigen zeigen USD und eine
+geschätzte EUR-Spanne anhand eines datierten EZB-Referenzkurses. Der Kurs wird
+nicht ungefragt im Hintergrund geladen; **Euro-Kurs aktualisieren** holt die
+offizielle Tagesdatei, speichert den zuletzt erfolgreichen Kurs lokal und lässt
+den vorherigen bei Fehlern erhalten. Historische Ausgaben und aktive Profile
+werden durch die Quelländerung nicht überschrieben.
+
 
 ## 0.98 ChatGPT-Abo-Anmeldung
 Offizielle OAuth-Anbindung fuer lokal betriebene Apps (SIWC dynamic_agent_client), getrennt von API-Schluesseln. PKCE/State/Nonce, signierte ID-Token, Windows-verschluesselte Sitzungen, rotierende Refresh-Token und Kontoauswahl. Offizieller Responses-SSE-Transport, nur abgeschlossene Antworten, kontobezogene Modellliste; bestehende lokale CAD-Pruefung unveraendert. API-Kompatibilitaetsfelder fuer aeltere Releases erhalten. Whisper bleibt lokal; Abo-Route unterstuetzt keine Transkription. Siehe docs/CHATGPT-ANMELDUNG.md, insbesondere echte Konto-Freischaltung separat von synthetischen Tests.
@@ -4678,3 +4719,107 @@ Der Nutzer hat vollständige Open-Source-Lizenzierung des eigenen Codes und Ver�
 
 
 R8-MIT-Nachprüfung abgeschlossen: 95 Prüfgruppen in fünf tatsächlichen EXE-Prozessen und sieben Prüfgruppen der echten R8-ASAR-Lizenzoberfläche bestanden; zwei neue Lizenzbilder visuell geprüft. Modell-/Kernel-/Controller-/KI-Code und alle 352 Unitquellen sind gegenüber R7 unverändert. Quellenmanifest, vier übernommene reine Verifierkorrekturen und die einzelne eigene Laufzeit-Notiz sind gebunden. R7-Basis 2153/3312/91/16 bleibt ausdrücklich referenziert. Ziel sind beide Repositories mit identischen Archiven; aktueller Nachtrag: MIT-FREIGABE-0.117.md.
+
+
+### STL-Objektfarben 0.118.1
+
+Die sechs Netz-Ansichtsstile überschrieben beim Zeichnen die im Inspektor gewählte Objektfarbe. Der Renderer übergibt nun die tatsächlich aufgelöste Farbe (Anzeige-Record oder Projektobjekt) auch bei wiederverwendeten Geometriepuffern an den Ansichtsstil. Gespeicherte eigene Farben haben Vorrang; der neutrale Importstandard #8294aa verwendet weiterhin die sechs Ansichtsfarben. Quellenfarben, Loch-/Vorschaufarben, Geometrie und Projektformat bleiben unverändert. Die Regression prüft echte STL-Importe, Inspektoränderung, Undo/Redo, Wiederöffnen und alle sechs Stile.
+
+
+### Große Netzprojekte 0.118.2
+
+Die Revisionsberechnung darf nicht das 50-MB-Limit der normalen JSON-Projektdatei verwenden: Originalquellen und mehrere Netze können bereits eine Vereinfachungsvorschau darüber bringen. Interne, vollständig validierte Projekte haben jetzt eine getrennte Arbeitsgrenze von 256 MiB; normale OCAD-Dateien behalten ihre 50-MiB-Grenze. Der bestehende Revisionsalgorithmus bleibt für bisherige Projekte identisch. Größere Projekte wählen beim normalen Speichern und bei der Autosicherung automatisch das vorhandene FNPACK-Format. Paket-Autosicherung nimmt einen bestätigten Snapshot statt eines großen JSON-Zwischenformats an. Der native Paketindex akzeptiert auch das bereits eingeführte Rezeptformat 26. Originalquellen und unbeteiligte Teile bleiben erhalten.
+
+### Programmhilfe und Kontextbudget 0.119.1
+
+Die interne Bedienhilfe übermittelt für reine Menüfragen nur den registrierten
+Zielkatalog, aktuellen Bedienmodus und Zielzustand, den laufenden Szenenzustand
+sowie die allgemeinen Assistentenregeln und den getrennten Anbieter-Kontext.
+Die vollständigen nativen CAD-Befehlsschemata werden dabei ausgelassen. Ein
+Bedienauftrag darf höchstens drei Generierungen einschließlich fehlerhafter
+Antworten auslösen. Modellierende Antworten auf den kompakten Vertrag werden
+nicht ausgeführt: Formnaro lädt den vollständigen Vertrag und fordert den
+Vorschlag erneut an. Echte Modellaufträge behalten ihr bisheriges Schrittbudget.
+
+Der Zielkatalog enthält Voraussetzungen und lokale Hilfesuche auch für Raster,
+Einstellungen und Navigationsbereiche. Projektparameter benötigen zum Öffnen
+keine Auswahl; geometrische Bindungen benötigen erhaltene Quellfelder. Gelenke
+können starre CAD- und Netzmaterialteile verbinden. Assistentenregeln verlangen
+gebündelte Führungen und ein bis zwei erklärende Sätze, ohne erneute Rückfrage,
+wenn das gewünschte Zeigen bereits eindeutig beauftragt wurde.
+
+Gezielte Nachweise prüfen die Klassifikation, Ausgabeverträge, Requestbudgets,
+kompakte Übertragung und sichere Rückkehr zum vollständigen Modellvertrag.
+Reale synthetische DeepSeek-Fälle ergänzen diese Tests; sie sind keine Garantie
+für beliebige Modellaufträge oder fehlerfreie Erklärungen. Die KI-Preisanzeige
+bleibt eine Schätzung mit datiertem Tarif und Wechselkurs, keine Rechnung.
+
+### Bedienziele vor Modellvorschauen 0.119.2
+
+Eine Modellvorführung kann pro Berechnungsschritt ein registriertes, vorhandenes
+Bedienziel zeigen. Grundformen sind ausdrücklich nur Zeigeziele: ihr Anklicken
+würde das bestätigte Modell ändern und ist für die Vorführung nicht freigegeben.
+Das Ziel wird vor der rechnerischen Vorschau hervorgehoben; die Vorschau bleibt
+bis zur ausdrücklichen Übernahme unbestätigt. Nicht verfügbare Ziele fallen mit
+sichtbarem Hinweis auf die Arbeitsfläche zurück. Das ist keine Demonstration
+von echten geometrischen Klicks, Eingaben oder Drag-and-drop.
+
+Die commands einer Vorführungsstufe enthalten nur die neu hinzukommenden
+Befehle; frühere Aliase bleiben gültig. Formnaro führt die Stufen selbst zu
+jeder kumulierten Vorschau zusammen. Wiederholte Befehle und Aliasdefinitionen
+würden dagegen unbeabsichtigte Duplikate erzeugen.
+
+
+### Getrennter Übungsmodus 0.120.0
+
+Der Übungsmodus startet ein eigenes Fenster in einem separaten Prozess mit
+isoliertem, leerem Projekt und eigenem temporären Profil ohne Anbieterschlüssel
+und Netzwerk. Die KI kann einen begrenzten Plan vorschlagen. Validiert werden
+bis zu 50 Schritte mit Quader oder Zylinder, Maßen und Positionen, Körper- oder
+Lochrolle, Auswahl vorhandener Aliasobjekte und Gruppierung. Nur registrierte
+Bedienziele werden über native Eingaben betätigt; nach jedem Schritt kontrolliert
+Formnaro den tatsächlichen Zustand. Nach dem ersten Teil und der Gruppierung
+wird der vorhandene Einpassen-Knopf sichtbar betätigt, damit das Teil näher
+zu sehen ist. Der ausführende Prozess übermittelt nur
+einen begrenzten Prüfbericht und übernimmt keine Daten ins Elternprojekt.
+
+Die sichtbare Übung bietet Pause, Weiter und Stop; beim Fokusverlust pausiert
+sie und läuft erst nach ausdrücklichem Weiter. Main-seitige Generationstoken
+verhindern, dass verspätetes Weiter eine neuere Pause überstimmt. Eingaben
+außerhalb der freigegebenen Bedienelemente werden während der Pause blockiert;
+ein unerwarteter Eingriff während der Übung stoppt sie. Gleichzeitige eigene
+Eingaben genau am gerade automatisierten Ziel sind nicht eindeutig von den
+Programmeingaben unterscheidbar. Der Modus unterstützt derzeit kein freies
+Ziehen und keine beliebigen Werkzeuge. Modellgenerierung durch den gewählten
+Anbieter kann Kosten verursachen; die isolierte Ausführung selbst hat keinen
+Cloudzugriff. Das ist eine gezielte Erweiterung der früheren Bedienhilfe, keine
+allgemeine Computer-Use-Steuerung und keine Garantie korrekter KI-Pläne.
+
+## 29.10.2026 – Explizite Überführung alter Bohrgruppen
+
+Einfache alte Bohrgruppen können im Bohrdialog nach ausdrücklicher Bestätigung von Nennmaßen, Spiel und Endbedingung in mitwachsende Merkmale überführt werden. Dieselben Validatoren und nativen Berechnungen wie bei Neuanlage werden verwendet. Beidseitige native Differenzprüfung lehnt auch versetzte Löcher gleichen Volumens ab; Vorschau/Übernahme bleiben revisionsgebunden und erhalten Root-/Basis-ID sowie Undo. Keine automatische Dateimigration. Komplexe Projektbezüge, alte topologische Marker, Markierungen, unterdrückte Gruppen und Flächenfarben werden bis zur geprüften Zuordnung abgewiesen.
+
+Breiter eingefrorener Quell-Unitlauf: 2343 Tests in 392 Suiten bestanden, keine Fehler/Skip/Abbrüche, sourceChanged=false. Neuer Vite-Build, isolierter Electron-Dialogtest und physischer OCAD/FNPACK-Rundlauf bestanden. Platte 4→12 mm, Flansch 4→6 mit Auslassung/gelöster Position und konvertierte Kopfaufnahme als native Beispiele geprüft; physische STEP-Dateien separat mit FreeCAD gelesen, gültig/geschlossen/je ein Solid. Auswahl im Dialogtest über synthetische Strahlen/DOM, keine physische Maus- oder EXE-Abnahme behaupten. Dies ist ein Entwicklungsnachweis für den Alltag-/Werkstattplan, keine neue Gesamtfreigabe. Allgemeines Flächen-Rebind, vollständige gemeinsame GUI-Beispiele und gepackte Windows-/Soak-/Recovery-Abnahme bleiben offen. Details docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md.
+
+
+## 29.10.2026 – Gemeinsame Neuzuordnung erhaltener Bohrungsflächen
+
+Der Bohrungseditor bietet einen ausdrücklichen Neuzuordnungsweg für bis zu 13 vorhandene Bohrmerkmale auf unterstützten Quader-, Zylinderstirn- und STEP-Prismenquellen. Alle betroffenen und nachfolgenden Bohrungen werden in einer Vorschau mit einem Undo neu berechnet. Maße, Muster und Originalquellen bleiben erhalten. Bis Fläche verlangt neue Eintritts- und Zielwahl. Andere Projektparameter-/Merkmalsabhängigkeiten werden bis zur gemeinsamen Unterstützung abgewiesen; allgemeines Rebind bleibt offen. Die lokale KI führt denselben nativen Befehl aus.
+
+Zur Auswahl erscheint die ungeschnittene Originalquelle. Nur tatsächlich getroffene Originalquellmeshes gelten als Auswahl; ein Anzeigequalitätswechsel kann daher keine verdeckte Ursprungsfläche über einen Treffer am fertigen Lochkörper wählen. Der separate dauerhafte Electron-Regressionslauf deckt Qualitätswechsel, Mausklick auf einen vertieften Kopfaufnahmeboden und erfolgreiche Neuwahl ab.
+
+Frischer breiter Quelllauf: 2353 Tests in 394 Suiten bestanden, sourceChanged=false. Zusätzlich 11/11 gezielte native/KI/UI-Tests, 72 bestehende Windows-Prüfgruppen, zehn Dialogschritte mit nativen Electron-Mauseingaben, drei asynchrone Abbruchfälle und Vite-Build bestanden. Physische OCAD/FNPACK-Rundläufe und unabhängiges FreeCAD-Part-Rücklesen des App-STEP-Exports bestanden; Volumen, Schwerpunkt und Lage der Kopfaufnahme bestätigt. Beide finalen Reviewachsen ohne offenen Befund. Ein vorheriger 249-Dateien-Lauf wurde für den zusätzlichen UI-Schutz gestoppt und nicht wiederverwendet. Belege work/drill-rebind-2026-10-29/evidence.json, Details im Alltag-Umsetzungsstand. Die abschließenden zwei Dokumentergänzungen bilden ein reines Dokumentationsdelta. Keine neue EXE, Startverknüpfung oder Releasefreigabe.
+
+
+## 29.10.2026 – Bohrungsflächen mit Projektparametern und analytischem Arbeitsrohling
+
+Die begrenzte gemeinsame Neuzuordnung erhaltener Bohrungsflächen unterstützt nun bereits aktuelle Projektparameterbindungen und Varianten. Quellenpfade und Stempel bleiben erhalten; vor und nach dem nativen Aufbau werden Bindungen geprüft. Veraltete Parameter und veränderte abhängige FreeCAD-Eingaben werden abgewiesen. Die Vorschauprüfung erfolgt vor Registrierung/Verdrängung anderer Vorschläge und bleibt abbrechbar. Ausstehende Parameteränderungen zusammen mit externen Merkmalsabhängigkeiten sind weiterhin ein offener Erweiterungsschritt.
+
+Ein unabhängiger STEP-BOP-Test fand eine ältere Regression beim Bohren in über GTransform nicht gleichmäßig skalierte Quader/Zylinder. Die Bohrungsberechnung erzeugt für scharfkantige native Quader und ursprünglich kreisrunde unverrundete native Zylinder einen temporären exakten Ebenen-/Kreis-/Ellipsenrohling unter derselben vollständigen affinen Abbildung. Gespeicherte Quellenrezepte, BReps und Matrizen bleiben erhalten; auch die zylindrische Fußabdruckprüfung verwendet den analytischen Originalrohling. Andere Quellarten und Verrundungen werden nicht still ersetzt. Dauerhafte Regressionen prüfen STEP-Materialgleichheit und drei separate FreeCAD-Leserfälle samt strenger BOP-Prüfung.
+
+Frisch 2365 Tests in 395 Suiten, 74 gezielte Tests plus final zwölf neue Tests, 83 Windows-Prüfgruppen, 13 Dialogschritte, separate UI-Regression und Vite-Build bestanden. Physische OCAD/FNPACK-Rundläufe und unabhängiges STEP-Rücklesen für 8/12 mm bestanden: jeweils ein gültiger geschlossener Solid, BOP fehlerfrei, beidseitige Referenzdifferenz 0, Volumenabweichung unter 2e-11 mm³. Weitere Kreis-/Ellipsen-/Spiegel-/Scherungs- und Folgebohrungsfälle unabhängig bestätigt; drei finale Bilder angesehen und beide Reviewachsen ohne offenen Befund. Erster Vollauf nach 112 bestandenen Dateien für die echte Exportkorrektur gestoppt, keinerlei Ergebnisreuse. Belege work/drill-rebind-parameters-2026-10-29/evidence.json. Keine EXE-/Releasefreigabe; gemeinsame GUI-Beispiele und allgemeine EXE-/Soak-/Recovery-Abnahme bleiben offen.
+
+
+## 29.10.2026 – Quellstand 0.120.0 in beiden GitHub-Repositories
+
+Auf Nutzerauftrag werden die aktuellen Entwicklungsquellen in andyy909/Formnaro (privat) und andyy909/Formnaro-cad (öffentlich) veröffentlicht. README und PRUEFSTAND-0.120.0.md/json unterscheiden den geprüften Quellstand mit 2365 Tests/395 Suiten, 83 Windows-Prüfgruppen und 13 Dialogschritten von der noch offenen gepackten Windows-/Soak-/Recovery-Abnahme. Vorhandene öffentliche Beispiele, Bilder und die Übungs-GIF bleiben erhalten. Die funktionalen Quellen bleiben gegenüber dem Nachweis unverändert; allein Publikationsdokumentation und Git-Ausschlüsse werden ergänzt. Lokale Diagnosehelfer, Entwicklungsverlauf, Profile, Zugangsdaten und persönliche Modelle bleiben außerhalb der Veröffentlichung.

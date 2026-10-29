@@ -26,10 +26,17 @@ function createChatGPTAuth({directory,encrypt,decrypt,canEncrypt,openExternal,fe
  function persist(){if(!canEncrypt())throw Error('Sichere Windows-Anmeldespeicherung ist nicht verfügbar.');fs.mkdirSync(directory,{recursive:true});writeAtomicSync(file,encrypt(JSON.stringify(state)));}
  function lock(){
   if(localBusy)throw Error('ChatGPT-Anmeldung wird bereits bearbeitet.');fs.mkdirSync(directory,{recursive:true});
-  try{const fd=fs.openSync(lockFile,'wx',0o600);fs.writeFileSync(fd,String(process.pid));fs.closeSync(fd);}catch(e){
-   if(e.code!=='EEXIST')throw e;let live=true;try{const pid=Number(fs.readFileSync(lockFile,'utf8'));if(Number.isInteger(pid)&&pid>0)process.kill(pid,0);}catch(e){if(e.code==='ESRCH')live=false;}
-   if(live)throw Error('Eine andere Formnaro-Instanz bearbeitet die ChatGPT-Anmeldung.');fs.unlinkSync(lockFile);return lock();
+  let acquired=false;
+  for(let attempt=0;attempt<5;attempt++){
+   try{const fd=fs.openSync(lockFile,'wx',0o600);try{fs.writeFileSync(fd,String(process.pid));}finally{fs.closeSync(fd);}acquired=true;break;}catch(e){
+    if(e.code!=='EEXIST')throw e;
+    let live=true;
+    try{const pid=Number(fs.readFileSync(lockFile,'utf8'));if(Number.isInteger(pid)&&pid>0)process.kill(pid,0);}catch(error){if(error.code==='ENOENT')continue;if(error.code==='ESRCH')live=false;}
+    if(live)throw Error('Eine andere Formnaro-Instanz bearbeitet die ChatGPT-Anmeldung.');
+    try{fs.unlinkSync(lockFile);}catch(error){if(error.code!=='ENOENT')throw error;}
+   }
   }
+  if(!acquired)throw Error('ChatGPT-Anmeldesperre wurde wiederholt geändert. Bitte erneut versuchen.');
   localBusy=true;try{read();}catch(e){unlock();throw e;}
  }
  function unlock(){if(localBusy){localBusy=false;try{fs.unlinkSync(lockFile);}catch{}}}

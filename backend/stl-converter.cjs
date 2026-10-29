@@ -5,7 +5,7 @@ function boundedJSON(value,label){
  if(!value||typeof value!=='object'||Array.isArray(value)||Buffer.byteLength(JSON.stringify(value))>JSON_LIMIT)throw Error('Ungültige '+label+'.');
 }
 function validate(args){
- if(!args||typeof args!=='object'||Object.keys(args).some(k=>!['id','bytes','options','name','action','edits','commands'].includes(k))||typeof args.id!=='string'||!/^[-a-zA-Z0-9]{1,80}$/.test(args.id)||!(args.bytes instanceof Uint8Array)||!args.bytes.length||args.bytes.length>LIMIT||typeof args.name!=='string'||args.name.length>1000||!args.name.toLowerCase().endsWith('.stl'))throw Error('Eine STL-Datei bis 50 MB auswählen.');
+ if(!args||typeof args!=='object'||Object.keys(args).some(k=>!['id','bytes','options','name','action','edits','commands'].includes(k))||typeof args.id!=='string'||!/^[-a-zA-Z0-9]{1,80}$/.test(args.id)||!(args.bytes instanceof Uint8Array)||!args.bytes.length||args.bytes.length>LIMIT||typeof args.name!=='string'||args.name.length>1000||!args.name.toLowerCase().endsWith('.stl')||!args.name.slice(0,-4).trim()||/[\\/\x00-\x1f]/.test(args.name))throw Error('Eine STL-Datei bis 50 MB auswählen.');
  const o=args.options??{},allowed=['unit','tolerance','mode','rounds','repair','fallback','samples','target_faces','region_edits'];
  if(!o||typeof o!=='object'||Array.isArray(o)||Object.keys(o).some(k=>!allowed.includes(k)))throw Error('Ungültige Konverteroption.');
  const options={unit:1,tolerance:.15,mode:'auto',rounds:'keep',repair:true,fallback:true,samples:6000,target_faces:500,...o};
@@ -74,7 +74,7 @@ function createStlConverter({command,prefix=[],tempRoot=os.tmpdir(),timeoutMs=60
 }
 function installStlConverter(win,{directory,ipcMain=require('electron').ipcMain,command,prefix}={}){
  const runner=createStlConverter({command:command??path.join(directory,'Formnaro-Konverter.exe'),prefix,onProgress:value=>{if(!win.webContents.isDestroyed())win.webContents.send('cad-stl:progress',value);}});
- const sender=event=>{if(event.sender!==win.webContents||win.webContents.isDestroyed())throw Error('Invalid window.');};
+ const sender=event=>{if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame||win.webContents.isDestroyed())throw Error('Invalid window.');};
  for(const action of ['convert','analyse'])ipcMain.handle('cad-stl:'+action,async(event,args)=>{try{sender(event);return {ok:true,value:await runner[action](args)};}catch(error){return {ok:false,error:error.message,code:error.code};}});
  ipcMain.handle('cad-stl:cancel',async(event,args)=>{try{sender(event);if(!args||typeof args.id!=='string')throw Error('Ungültiger Abbruchauftrag.');return {ok:true,value:await runner.cancel(args.id)};}catch(error){return {ok:false,error:error.message};}});
  const stop=()=>{void runner.cancel();};win.once('closed',stop);win.webContents.on('render-process-gone',stop);win.webContents.on('did-start-navigation',(_event,_url,inPlace,mainFrame)=>{if(mainFrame&&!inPlace)stop();});

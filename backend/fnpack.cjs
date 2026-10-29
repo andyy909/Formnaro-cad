@@ -10,12 +10,12 @@ function refs(value,result=new Map(),depth=0){
   need(['brep','mesh'].includes(value.kind)&&/^[a-f0-9]{64}$/.test(value.sha256)&&Number.isSafeInteger(value.bytes)&&value.bytes>0&&value.bytes<=(value.kind==='brep'?12:128)*1024*1024,'Ungültiger Geometrieverweis.');
   const old=result.get(value.sha256);need(!old||old.kind===value.kind&&old.bytes===value.bytes,'Widersprüchlicher Geometrieverweis.');result.set(value.sha256,value);
  }else if(value?.format==='OpenCascade-BRep'||Array.isArray(value?.verts)&&Array.isArray(value?.triangles))need(false,'Geometriepuffer gehören in Paketblöcke, nicht in den Index.');
- else if(Array.isArray(value)&&(!value.length||typeof value[0]!=='object'))return result;
+ else if(Array.isArray(value)){for(const child of value)if(child&&typeof child==='object')refs(child,result,depth+1);}
  else if(value&&typeof value==='object')for(const child of Object.values(value))refs(child,result,depth+1);
  return result;
 }
 function validateIndex(index,fileSize){
- need(index&&Object.keys(index).sort().join(',')==='blocks,format,project,version'&&index.format==='FormnaroPackage'&&index.version===1&&index.project?.format==='OfflineCAD'&&[17,18,19,20,21,22,23,24,25].includes(index.project.version)&&Array.isArray(index.project.nodes)&&index.project.nodes.length<=500&&Array.isArray(index.blocks)&&index.blocks.length<=20000,'Ungültiger Paketindex.');
+ need(index&&Object.keys(index).sort().join(',')==='blocks,format,project,version'&&index.format==='FormnaroPackage'&&index.version===1&&index.project?.format==='OfflineCAD'&&[17,18,19,20,21,22,23,24,25,26,27,28,29].includes(index.project.version)&&Array.isArray(index.project.nodes)&&index.project.nodes.length<=500&&Array.isArray(index.blocks)&&index.blocks.length<=20000,'Ungültiger Paketindex.');
  const referenced=refs(index.project),seen=new Set();let end=0;
  for(const b of index.blocks){need(b&&Object.keys(b).sort().join(',')==='bytes,kind,offset,sha256'&&/^[a-f0-9]{64}$/.test(b.sha256)&&!seen.has(b.sha256)&&Number.isSafeInteger(b.offset)&&b.offset===end&&Number.isSafeInteger(b.bytes)&&b.bytes>0,'Ungültiger oder überlappender Geometrieblock.');const ref=referenced.get(b.sha256);need(ref&&ref.kind===b.kind&&ref.bytes===b.bytes,'Geometrieblock stimmt nicht mit Katalog überein.');seen.add(b.sha256);end+=b.bytes;need(Number.isSafeInteger(end)&&end<=MAX_PACK,'Paket ist zu groß.');}
  need(referenced.size===seen.size,'Geometrieblock fehlt im Index.');if(fileSize!==undefined)need(end===fileSize,'Paketgröße stimmt nicht mit Index überein.');return index;

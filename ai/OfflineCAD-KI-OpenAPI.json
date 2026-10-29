@@ -23720,6 +23720,202 @@
                           "additionalProperties": false,
                           "required": [
                             "op",
+                            "action",
+                            "pattern"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "linkedPattern"
+                            },
+                            "action": {
+                              "const": "put"
+                            },
+                            "pattern": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "version",
+                                "id",
+                                "sourceId",
+                                "kind",
+                                "count",
+                                "excluded"
+                              ],
+                              "properties": {
+                                "version": {
+                                  "const": 1
+                                },
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                },
+                                "sourceId": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                },
+                                "kind": {
+                                  "enum": [
+                                    "line",
+                                    "grid",
+                                    "circle",
+                                    "mirror"
+                                  ]
+                                },
+                                "count": {
+                                  "type": "integer",
+                                  "minimum": 2,
+                                  "maximum": 200
+                                },
+                                "step": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "number"
+                                  },
+                                  "minItems": 3,
+                                  "maxItems": 3
+                                },
+                                "columns": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 200
+                                },
+                                "rowStep": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "number"
+                                  },
+                                  "minItems": 3,
+                                  "maxItems": 3
+                                },
+                                "center": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "number"
+                                  },
+                                  "minItems": 3,
+                                  "maxItems": 3
+                                },
+                                "radius": {
+                                  "type": "number"
+                                },
+                                "startAngle": {
+                                  "type": "number"
+                                },
+                                "angle": {
+                                  "type": "number"
+                                },
+                                "rotateCopies": {
+                                  "type": "boolean"
+                                },
+                                "mirrorAxis": {
+                                  "enum": [
+                                    "x",
+                                    "y",
+                                    "z"
+                                  ]
+                                },
+                                "mirrorOffset": {
+                                  "type": "number"
+                                },
+                                "excluded": {
+                                  "type": "array",
+                                  "maxItems": 199,
+                                  "uniqueItems": true,
+                                  "items": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 199
+                                  }
+                                },
+                                "bindings": {
+                                  "type": "array",
+                                  "maxItems": 12,
+                                  "items": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                      "field",
+                                      "parameterId"
+                                    ],
+                                    "properties": {
+                                      "field": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 200
+                                      },
+                                      "parameterId": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 200
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "action",
+                            "id",
+                            "index"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "linkedPattern"
+                            },
+                            "action": {
+                              "const": "detachInstance"
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            },
+                            "index": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 199
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "action",
+                            "id",
+                            "confirm"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "linkedPattern"
+                            },
+                            "action": {
+                              "const": "detach"
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            },
+                            "confirm": {
+                              "const": true
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
                             "referenceId",
                             "field",
                             "value"
@@ -24538,6 +24734,93 @@
                             },
                             "action": {
                               "const": "clear"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "action",
+                            "gear"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "joint"
+                            },
+                            "action": {
+                              "const": "gear-create"
+                            },
+                            "gear": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "jointA",
+                                "jointB",
+                                "teethA",
+                                "teethB"
+                              ],
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                },
+                                "jointA": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                },
+                                "jointB": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                },
+                                "teethA": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 10000
+                                },
+                                "teethB": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 10000
+                                },
+                                "kind": {
+                                  "enum": [
+                                    "external",
+                                    "internal"
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "action",
+                            "gearId"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "joint"
+                            },
+                            "action": {
+                              "const": "gear-remove"
+                            },
+                            "gearId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
                             }
                           }
                         },
@@ -31480,6 +31763,73 @@
                             "through": {
                               "type": "boolean"
                             },
+                            "associative": {
+                              "type": "boolean"
+                            },
+                            "termination": {
+                              "const": "plane"
+                            },
+                            "stopReference": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "token": {
+                                  "type": "string",
+                                  "pattern": "^(vertex|edge|circle|face):[0-9]{1,5}$"
+                                },
+                                "ray": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "origin",
+                                    "direction"
+                                  ],
+                                  "properties": {
+                                    "origin": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "direction": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "near": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    "far": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0
+                                    }
+                                  }
+                                },
+                                "faceIndex": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 8000
+                                }
+                              },
+                              "anyOf": [
+                                {
+                                  "required": [
+                                    "token"
+                                  ]
+                                },
+                                {
+                                  "required": [
+                                    "ray"
+                                  ]
+                                }
+                              ]
+                            },
                             "diameter": {
                               "type": "number",
                               "minimum": 0.1,
@@ -31521,6 +31871,498 @@
                             "as": {
                               "type": "string",
                               "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "target"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "editDrill"
+                            },
+                            "target": {
+                              "oneOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "rootId",
+                                    "path"
+                                  ],
+                                  "properties": {
+                                    "rootId": {
+                                      "type": "string"
+                                    },
+                                    "path": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      },
+                                      "maxItems": 12
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "patch": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "kind": {
+                                  "enum": [
+                                    "plain",
+                                    "countersink",
+                                    "counterbore"
+                                  ]
+                                },
+                                "termination": {
+                                  "enum": [
+                                    "through",
+                                    "depth",
+                                    "plane"
+                                  ]
+                                },
+                                "diameter": {
+                                  "type": "number",
+                                  "minimum": 0.1,
+                                  "maximum": 1000
+                                },
+                                "depth": {
+                                  "type": "number",
+                                  "minimum": 0.1,
+                                  "maximum": 10000
+                                },
+                                "headDiameter": {
+                                  "type": "number",
+                                  "minimum": 0.1,
+                                  "maximum": 1000
+                                },
+                                "headDepth": {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 10000
+                                },
+                                "angle": {
+                                  "type": "number",
+                                  "minimum": 30,
+                                  "maximum": 150
+                                },
+                                "gap": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 5
+                                },
+                                "pattern": {
+                                  "anyOf": [
+                                    {
+                                      "type": "null"
+                                    },
+                                    {
+                                      "oneOf": [
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "version",
+                                            "kind",
+                                            "count",
+                                            "step",
+                                            "skip"
+                                          ],
+                                          "properties": {
+                                            "version": {
+                                              "const": 1
+                                            },
+                                            "kind": {
+                                              "const": "line"
+                                            },
+                                            "count": {
+                                              "type": "integer",
+                                              "minimum": 2,
+                                              "maximum": 64
+                                            },
+                                            "step": {
+                                              "type": "array",
+                                              "minItems": 2,
+                                              "maxItems": 2,
+                                              "items": {
+                                                "type": "number",
+                                                "minimum": -10000,
+                                                "maximum": 10000
+                                              }
+                                            },
+                                            "skip": {
+                                              "type": "array",
+                                              "maxItems": 63,
+                                              "uniqueItems": true,
+                                              "items": {
+                                                "type": "integer",
+                                                "minimum": 1,
+                                                "maximum": 63
+                                              }
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "version",
+                                            "kind",
+                                            "columns",
+                                            "rows",
+                                            "step",
+                                            "rowStep",
+                                            "skip"
+                                          ],
+                                          "properties": {
+                                            "version": {
+                                              "const": 1
+                                            },
+                                            "kind": {
+                                              "const": "grid"
+                                            },
+                                            "columns": {
+                                              "type": "integer",
+                                              "minimum": 1,
+                                              "maximum": 64
+                                            },
+                                            "rows": {
+                                              "type": "integer",
+                                              "minimum": 1,
+                                              "maximum": 64
+                                            },
+                                            "step": {
+                                              "type": "array",
+                                              "minItems": 2,
+                                              "maxItems": 2,
+                                              "items": {
+                                                "type": "number",
+                                                "minimum": -10000,
+                                                "maximum": 10000
+                                              }
+                                            },
+                                            "rowStep": {
+                                              "type": "array",
+                                              "minItems": 2,
+                                              "maxItems": 2,
+                                              "items": {
+                                                "type": "number",
+                                                "minimum": -10000,
+                                                "maximum": 10000
+                                              }
+                                            },
+                                            "skip": {
+                                              "type": "array",
+                                              "maxItems": 63,
+                                              "uniqueItems": true,
+                                              "items": {
+                                                "type": "integer",
+                                                "minimum": 1,
+                                                "maximum": 63
+                                              }
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "version",
+                                            "kind",
+                                            "count",
+                                            "center",
+                                            "skip"
+                                          ],
+                                          "properties": {
+                                            "version": {
+                                              "const": 1
+                                            },
+                                            "kind": {
+                                              "const": "circle"
+                                            },
+                                            "count": {
+                                              "type": "integer",
+                                              "minimum": 2,
+                                              "maximum": 64
+                                            },
+                                            "center": {
+                                              "type": "array",
+                                              "minItems": 2,
+                                              "maxItems": 2,
+                                              "items": {
+                                                "type": "number",
+                                                "minimum": -10000,
+                                                "maximum": 10000
+                                              }
+                                            },
+                                            "radius": {
+                                              "type": "number",
+                                              "minimum": 0.01,
+                                              "maximum": 10000
+                                            },
+                                            "angle": {
+                                              "type": "number",
+                                              "minimum": -360,
+                                              "maximum": 360
+                                            },
+                                            "startAngle": {
+                                              "type": "number",
+                                              "minimum": -36000,
+                                              "maximum": 36000
+                                            },
+                                            "skip": {
+                                              "type": "array",
+                                              "maxItems": 63,
+                                              "uniqueItems": true,
+                                              "items": {
+                                                "type": "integer",
+                                                "minimum": 1,
+                                                "maximum": 63
+                                              }
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "version",
+                                            "kind",
+                                            "axis",
+                                            "offset",
+                                            "skip"
+                                          ],
+                                          "properties": {
+                                            "version": {
+                                              "const": 1
+                                            },
+                                            "kind": {
+                                              "const": "mirror"
+                                            },
+                                            "axis": {
+                                              "enum": [
+                                                "u",
+                                                "v"
+                                              ]
+                                            },
+                                            "offset": {
+                                              "type": "number",
+                                              "minimum": -10000,
+                                              "maximum": 10000
+                                            },
+                                            "skip": {
+                                              "type": "array",
+                                              "maxItems": 63,
+                                              "uniqueItems": true,
+                                              "items": {
+                                                "type": "integer",
+                                                "minimum": 1,
+                                                "maximum": 63
+                                              }
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              }
+                            },
+                            "positionReference": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "token": {
+                                  "type": "string",
+                                  "pattern": "^(vertex|edge|circle|face):[0-9]{1,5}$"
+                                },
+                                "ray": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "origin",
+                                    "direction"
+                                  ],
+                                  "properties": {
+                                    "origin": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "direction": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "near": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    "far": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0
+                                    }
+                                  }
+                                },
+                                "faceIndex": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 8000
+                                }
+                              },
+                              "anyOf": [
+                                {
+                                  "required": [
+                                    "token"
+                                  ]
+                                },
+                                {
+                                  "required": [
+                                    "ray"
+                                  ]
+                                }
+                              ]
+                            },
+                            "stopReference": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "token": {
+                                  "type": "string",
+                                  "pattern": "^(vertex|edge|circle|face):[0-9]{1,5}$"
+                                },
+                                "ray": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "origin",
+                                    "direction"
+                                  ],
+                                  "properties": {
+                                    "origin": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "direction": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "near": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    "far": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0
+                                    }
+                                  }
+                                },
+                                "faceIndex": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 8000
+                                }
+                              },
+                              "anyOf": [
+                                {
+                                  "required": [
+                                    "token"
+                                  ]
+                                },
+                                {
+                                  "required": [
+                                    "ray"
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "anyOf": [
+                            {
+                              "required": [
+                                "patch"
+                              ]
+                            },
+                            {
+                              "required": [
+                                "positionReference"
+                              ]
+                            },
+                            {
+                              "required": [
+                                "stopReference"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "target",
+                            "index"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "detachDrillPattern"
+                            },
+                            "target": {
+                              "oneOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "rootId",
+                                    "path"
+                                  ],
+                                  "properties": {
+                                    "rootId": {
+                                      "type": "string"
+                                    },
+                                    "path": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      },
+                                      "maxItems": 12
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "index": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 63
                             }
                           }
                         }

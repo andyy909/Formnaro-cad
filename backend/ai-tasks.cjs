@@ -26,7 +26,8 @@ function requirements(value){
  for(const target of value.protectedTargets)need(plain(target)&&Object.keys(target).sort().join(',')==='path,rootId'&&typeof target.rootId==='string'&&target.rootId.length>0&&target.rootId.length<=200&&Array.isArray(target.path)&&target.path.length<=12&&target.path.every(x=>typeof x==='string'&&x.length>0&&x.length<=200),'Ungültiger geschützter Teil.');return copy(value);
 }
 function inputData(value){
- need(plain(value)&&Object.keys(value).every(k=>['prompt','images','history','chat','photoReferences','featureReferences','usageTaskId'].includes(k)),'Nur Auftragsinhalt speichern; Zugangsdaten und Anbieterkonfiguration bleiben getrennt.');
+ need(plain(value)&&Object.keys(value).every(k=>['prompt','images','history','chat','photoReferences','featureReferences','usageTaskId','modelStrictness'].includes(k)),'Nur Auftragsinhalt speichern; Zugangsdaten und Anbieterkonfiguration bleiben getrennt.');
+ need(value.modelStrictness===undefined||Number.isInteger(value.modelStrictness)&&value.modelStrictness>=0&&value.modelStrictness<=100,'KI-Modellstrenge: 0 bis 100.');
  need(typeof value.prompt==='string'&&value.prompt.length<=10000,'Ungültiger gespeicherter Auftrag.');return copy(value);
 }
 function progress(value,maxSteps,purpose){

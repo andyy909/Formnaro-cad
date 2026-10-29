@@ -25,7 +25,7 @@ function arrays(mesh,{signal,limits=MESH_SELECTION_LIMITS}={}){
 export function meshSelectionGeometryDigest(nodeOrMesh,{signal}={}){
   const mesh=nodeOrMesh?.mesh??nodeOrMesh;if(!mesh||typeof mesh!=='object')fail('Netzdaten fehlen.');
   let result=frozen(mesh)&&digestCache.get(mesh);if(result){aborted(signal);return result;}
-  arrays(mesh,{signal});result=cadGeometryDigest(JSON.stringify({verts:mesh.verts,triangles:mesh.triangles}));aborted(signal);
+  arrays(mesh,{signal,limits:{...MESH_SELECTION_LIMITS,triangles:2000000}});result=cadGeometryDigest(JSON.stringify({verts:mesh.verts,triangles:mesh.triangles}));aborted(signal);
   if(frozen(mesh))digestCache.set(mesh,result);return result;
 }
 function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}

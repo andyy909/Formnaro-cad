@@ -27,7 +27,7 @@ export function validateCadProjectParameterTarget(value){fields(value,['rootId',
 export function cadProjectParameterLiteral(value){if(typeof value==='number')return finite(value);if(typeof value==='string'&&LITERAL.test(value.trim().replaceAll('−','-')))return finite(Number(value.trim().replaceAll('−','-')));return null;}
 function expression(value){if(typeof value==='number')return finite(value);if(typeof value!=='string'||!value.trim()||value.length>200)fail('Maßformel benötigt 1–200 Zeichen.');const clean=value.replaceAll('−','-'),tokens=clean.match(TOKEN)??[];if(tokens.join('')!==clean.replace(/\s/g,''))fail('Nur Zahlen, Parameternamen, + − * /, Klammern, sind und cosd verwenden.');return value;}
 function refs(value){if(typeof value==='number')return [];const tokens=value.replaceAll('−','-').match(TOKEN)??[];return [...new Set(tokens.filter((t,i)=>/^[A-Za-z_]/.test(t)&&tokens[i+1]!=='('))];}
-function field(value){text(value,300);if(isFreeCADParameterField(value))return value;if(/^sketch\.constraints\..+\.value$/.test(value)||/^(?:size|pos)\.[012]$/.test(value)||/^params\.[A-Za-z][A-Za-z0-9_]{0,39}$/.test(value)&&!BAD.has(value.slice(7))||/^modeling\.(?:offset|thickness|path\.(?:length|radius|angle))$/.test(value)||/^sketch\.variables\.[A-Za-z_][A-Za-z0-9_]{0,39}$/.test(value)||/^sketch\.dimensions\.(?:width|depth|diameter|height)$/.test(value)||/^sketch\.elements\..+\.(?:diameter|(?:start|through|end|center|control(?:[1-9]|1[0-4]))\.[01])$/.test(value))return value;fail('Unbekanntes Bindungsfeld.');}
+function field(value){text(value,300);if(isFreeCADParameterField(value))return value;if(/^drill\.pattern\.(?:count|columns|rows|offset|radius|angle|startAngle|(?:step|rowStep|center)\.[01])$/.test(value)||/^sketch\.constraints\..+\.value$/.test(value)||/^(?:size|pos)\.[012]$/.test(value)||/^params\.[A-Za-z][A-Za-z0-9_]{0,39}$/.test(value)&&!BAD.has(value.slice(7))||/^modeling\.(?:offset|thickness|path\.(?:length|radius|angle))$/.test(value)||/^sketch\.variables\.[A-Za-z_][A-Za-z0-9_]{0,39}$/.test(value)||/^sketch\.dimensions\.(?:width|depth|diameter|height)$/.test(value)||/^sketch\.elements\..+\.(?:diameter|(?:start|through|end|center|control(?:[1-9]|1[0-4]))\.[01])$/.test(value))return value;fail('Unbekanntes Bindungsfeld.');}
 function state(value,baseline=false){fields(value,['target','hidden','suppressed']);const out={target:validateCadProjectParameterTarget(value.target)};for(const key of ['hidden','suppressed'])if(value[key]!==undefined)out[key]=bool(value[key]);if(baseline&&(['hidden','suppressed'].some(k=>out[k]===undefined))||!baseline&&out.hidden===undefined&&out.suppressed===undefined)fail('Variantenstatus benötigt Sichtbarkeit oder Unterdrückung.');return out;}
 
 function evaluateDefinition(data,variantId=data.activeVariantId,effects=true){
@@ -65,6 +65,7 @@ export function cadProjectParameterFieldValue(node,key){
  let raw;
  if(isFreeCADParameterField(key))return freeCADParameterValue(node,key);
  if(key.startsWith('params.')){const k=key.slice(7);if(Object.hasOwn(node.recipe?.params??{},k))raw=node.recipe.params[k];}
+ else if(key.startsWith('drill.pattern.')){const parts=key.slice(14).split('.');raw=parts.length===1?node.drill?.pattern?.[parts[0]]:node.drill?.pattern?.[parts[0]]?.[Number(parts[1])];}
  else if(key.startsWith('modeling.')){const parts=key.slice(9).split('.');raw=parts.length===1?node.modeling?.[parts[0]]:node.modeling?.path?.[parts[1]];}
  else if(key.startsWith('sketch.variables.'))raw=node.recipe?.sketch?.variables?.find(v=>v.name===key.slice(17))?.value;
  else if(key.startsWith('sketch.dimensions.'))raw=node.recipe?.sketch?.dimensions?.[key.slice(18)];
@@ -97,11 +98,11 @@ export function renameCadProjectParameter(value,parameterId,newName){const data=
 /** Keep only selected source families and every scalar dependency needed by
  * those bindings in any retained variant. Unrelated variables never leak into
  * a selected-parts library entry. */
-export function selectCadProjectParameters(value,rootIds){
- const data=validateCadProjectParameters(value),wanted=new Set(rootIds),bindings=data.bindings.filter(b=>wanted.has(b.target.rootId)),needed=new Set(bindings.map(b=>b.parameterId)),names=new Map(data.parameters.map(p=>[p.name,p.id]));let changed=true;
+export function selectCadProjectParameters(value,rootIds,{parameterIds=[]}={}){
+ const data=validateCadProjectParameters(value),wanted=new Set(rootIds),bindings=data.bindings.filter(b=>wanted.has(b.target.rootId)),needed=new Set([...bindings.map(b=>b.parameterId),...parameterIds]),names=new Map(data.parameters.map(p=>[p.name,p.id]));if([...needed].some(id=>!data.parameters.some(p=>p.id===id)))fail('Ausgewählter Projektparameter fehlt.');let changed=true;
  while(changed){changed=false;for(const parameter of data.parameters)if(needed.has(parameter.id)){const definitions=[parameter.value,...data.variants.flatMap(v=>v.values.filter(p=>p.parameterId===parameter.id).map(p=>p.value))];for(const definition of definitions)for(const reference of refs(definition)){const id=names.get(reference);if(!needed.has(id)){needed.add(id);changed=true;}}}}
  const variants=data.variants.map(v=>({...v,values:v.values.filter(p=>needed.has(p.parameterId)),states:v.states.filter(s=>wanted.has(s.target.rootId))})),stateful=variants.some(v=>v.states.length);
- if(!bindings.length&&!stateful)return createCadProjectParameters();
+ if(!bindings.length&&!stateful&&!needed.size)return createCadProjectParameters();
  const out={...data,parameters:data.parameters.filter(p=>needed.has(p.id)),bindings,variants,...(data.baseStates?{baseStates:data.baseStates.filter(s=>wanted.has(s.target.rootId))}:{})};
  if(data.freecad)out.freecad=data.freecad.filter(run=>bindings.some(b=>targetKey(b.target)===targetKey(run.target)&&isFreeCADParameterField(b.field))).map(run=>({...run,inputs:run.inputs.map(input=>({...input,...(!wanted.has(input.target.rootId)?{unresolved:true}:{})}))}));
  if(data.applied)out.applied={...data.applied,effectSignature:evaluateDefinition(out).effectSignature,inputs:data.applied.inputs.filter(i=>bindings.some(b=>b.id===i.bindingId))};return validateCadProjectParameters(out);

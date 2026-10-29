@@ -18,12 +18,12 @@ export function validateGeometryIdentity(value){
 }
 export function hasGeometryRefs(value){
  if(isGeometryRef(value))return true;
- if(Array.isArray(value)&&(!value.length||typeof value[0]!=='object'))return false;
+ if(Array.isArray(value))return value.some(child=>child&&typeof child==='object'&&hasGeometryRefs(child));
  return !!value&&typeof value==='object'&&Object.values(value).some(hasGeometryRefs);
 }
 export function geometryRefs(value,result=new Map()){
  if(isGeometryRef(value)){const checked=validateGeometryRef(value,value.kind),old=result.get(checked.sha256);if(old&&(old.bytes!==checked.bytes||old.kind!==checked.kind))throw Error('Widersprüchlicher Geometrieblock.');result.set(checked.sha256,checked);}
- else if(Array.isArray(value)&&(!value.length||typeof value[0]!=='object'))return result;
+ else if(Array.isArray(value)){for(const child of value)if(child&&typeof child==='object')geometryRefs(child,result);}
  else if(value&&typeof value==='object')for(const child of Object.values(value))geometryRefs(child,result);
  return result;
 }

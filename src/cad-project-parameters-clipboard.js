@@ -2,7 +2,7 @@ import {cadProjectParameterTarget,selectCadProjectParameters,validateCadProjectP
 
 // Capture a selected source family independently of its former parent group.
 // The clipboard stores expressions and stable references, never computed values.
-export function captureCadProjectParameterClipboard(project,targets){
+export function captureCadProjectParameterClipboard(project,targets,{parameterIds=[]}={}){
   if(!project.projectParameters)return undefined;
   const data=validateCadProjectParameters(project.projectParameters),routes=targets.map(from=>({from,node:cadProjectParameterTarget(project,from).node}));
   const route=target=>routes.find(({from})=>target.rootId===from.rootId&&target.path.length>=from.path.length&&from.path.every((id,i)=>target.path[i]===id));
@@ -12,5 +12,5 @@ export function captureCadProjectParameterClipboard(project,targets){
   data.variants=data.variants.map(v=>({...v,states:v.states.filter(s=>route(s.target)).map(s=>({...s,target:target(s.target)}))}));
   if(data.baseStates)data.baseStates=data.baseStates.filter(s=>route(s.target)).map(s=>({...s,target:target(s.target)}));
   delete data.applied;
-  return selectCadProjectParameters(data,routes.map(({node})=>node.id));
+  return selectCadProjectParameters(data,routes.map(({node})=>node.id),{parameterIds});
 }

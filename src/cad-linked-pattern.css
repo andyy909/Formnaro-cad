@@ -1,0 +1,58 @@
+.linked-pattern-form {
+  min-width: 0;
+}
+.linked-pattern-form .input-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.linked-pattern-form .input-row .dialog-label {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  gap: 4px;
+}
+.linked-pattern-form .input-row input {
+  width: 100%;
+  min-width: 0;
+}
+.linked-pattern-form .modal-actions {
+  position: sticky;
+  bottom: -1px;
+  z-index: 4;
+  padding: 10px 0;
+  background: var(--panel, #fff);
+}
+[data-theme=dark] .linked-pattern-form .modal-actions {
+  background: #212f3e;
+}
+.linked-pattern-bindings,
+.linked-pattern-detach {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #d7dce0);
+  border-radius: 6px;
+}
+.linked-pattern-bindings summary,
+.linked-pattern-detach summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.linked-pattern-binding-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px 12px;
+}
+.linked-pattern-binding-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.linked-pattern-binding-grid label[hidden] {
+  display: none;
+}
+.linked-pattern-detach .check-line {
+  margin: 12px 0;
+  align-items: flex-start;
+}

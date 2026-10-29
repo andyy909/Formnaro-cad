@@ -11,10 +11,14 @@ export const MESH_DISPLAY_STYLES=Object.freeze({
 export function applyMeshDisplayStyle(mesh,style='blue',enabled=true){
   const preset=MESH_DISPLAY_STYLES[style]??MESH_DISPLAY_STYLES.blue;
   const active=enabled&&!mesh.userData.cutout&&!mesh.material.vertexColors;
-  const key=`${style}:${active}`;
+  const color=mesh.userData.objectColor??mesh.userData.record?.color;
+  // Keep the six view presets for the neutral import default; saved custom
+  // object colors take priority and remain correct after Save/Open and Undo.
+  const objectColor=typeof color==='string'&&color.toLowerCase()!=='#8294aa';
+  const key=`${style}:${active}:${objectColor?color:''}`;
   if(mesh.userData.meshStyleKey===key)return;
   mesh.userData.meshStyleKey=key;
-  if(active)mesh.material.color.set(preset.color);
+  if(active)mesh.material.color.set(objectColor?color:preset.color);
   mesh.material.roughness=active?preset.roughness:.62;
   mesh.material.metalness=active?preset.metalness:.03;
   for(const child of mesh.children)if(child.userData.meshContour){

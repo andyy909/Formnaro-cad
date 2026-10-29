@@ -39,6 +39,12 @@ test('Invalid grant requires new sign-in; unconfirmed remote revocation is discl
 test('Concurrent application cannot rotate same credentials during login',async t=>{
  const f=fixture(t);await f.auth.start();const other=createChatGPTAuth(f.options);await assert.rejects(other.start(),/andere Formnaro/);f.auth.cancel();await other.start();other.cancel();
 });
+
+test('A synthetic login lock disappearing after EEXIST is retried instead of reported as a live session',async t=>{
+ const f=fixture(t),lock=path.join(f.directory,'session.lock'),read=fs.readFileSync;fs.writeFileSync(lock,String(process.pid));let injected=false;
+ t.mock.method(fs,'readFileSync',function(file,...args){if(file===lock&&!injected){injected=true;fs.unlinkSync(lock);throw Object.assign(Error('synthetic disappearing lock'),{code:'ENOENT'});}return read.call(this,file,...args);});
+ await f.auth.start();assert.equal(injected,true);assert.equal(f.auth.publicStatus().pending,true);f.auth.cancel();assert.equal(fs.existsSync(lock),false);
+});
 test('Browser launch failure never exposes the authorization URL or retained ID token',async t=>{
  const f=fixture(t);await f.auth.start();await f.callback();const bad=createChatGPTAuth({...f.options,openExternal:async url=>{throw Error(url);}});await assert.rejects(bad.start({accountId:f.auth.publicStatus().activeId}),e=>/Standardbrowser/.test(e.message)&&!e.message.includes('id_token_hint')&&!e.message.includes('auth.openai.com'));assert.equal(bad.publicStatus().pending,false);assert.equal(bad.publicStatus().connected,true);
 });

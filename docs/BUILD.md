@@ -121,3 +121,57 @@ Die vier exakten Prüferkorrekturen sind ohne persönliche Pfade in `ABNAHME-PRU
 ## MIT-Nachtrag 0.117.0-r8
 
 R8 ist ein belegter Lizenz-/Metadaten-Nachtrag zur vollständig geprüften R7-Modellbasis. Der eigene Code trägt SPDX MIT; originale Fremdtexte und native Laufzeitbytes bleiben erhalten. Ausschließlich die eigene FreeCAD-Quellnotiz und ihre Manifestzeile wurden neutralisiert und neu gepinnt. Die vier dokumentierten Verifierkorrekturen sind in den Prüfquellen enthalten. Neubuild, sieben echte DE/EN-Lizenz-UI-Prüfungen an der R8-ASAR sowie 95 gepackte EXE-Gruppen sichern den Nachtrag. Referenzumfang und Nachweisgrenzen: MIT-FREIGABE-0.117.md.
+
+
+## Gezielte Ausgabe 0.118.0
+
+Die getrennte lokale Ausgabe für große Netze, Zahnradkopplungen und
+KI-Modellstrenge wird mit folgendem gezielten Paketlauf gebaut:
+
+```
+node scripts/package-mechanism-tools.mjs r1 "<Ordner einer abgenommenen vollständigen Formnaro-Ausgabe>"
+```
+
+Der Lauf baut frisch, prüft 23 betroffene Testdateien, friert die Quellen ein,
+bündelt eine eigene Windows-EXE und übernimmt die vollständig geprüften
+CAD-/Konverter-/Sprachlaufzeiten aus der angegebenen Ausgabe. Drei isolierte
+EXE-Läufe prüfen die neuen Werkzeuge und die bisherigen Gelenk-/
+Vereinfachungsfunktionen. Neue Ausgabeverzeichnisse werden nicht überschrieben.
+Nach erfolgreichem Lauf sind die Paketbilder tatsächlich anzusehen; erst dann
+wird die lokale Freigabe bestätigt. Das ist keine vollständige allgemeine
+Gesamtabnahme und veröffentlicht nichts online.
+
+
+Für den gezielten STL-Farbfix 0.118.1 unterstützt derselbe Paketbauer eine getrennte Ausgabe STL-Farben-v0.118.1-rN. Er prüft neun betroffene Testdateien, die echte Netz-Anzeige samt Inspektorfarbe und einen Smoke-Test der Zahnrad-/KI-Einstellungen. Quellen, Laufzeitintegrität und vorherige Ausgabe werden wie oben gebunden; die Paketbilder müssen vor der Freigabe angesehen werden.
+
+
+Für 0.118.2 erzeugt derselbe Paketbauer Grosse-Projekte-v0.118.2-rN und prüft 20 betroffene Testdateien. Die isolierte Großprojektprüfung benötigt FORMNARO_VERIFY_LARGE_MESH_FILE als Pfad zur unveränderten lokalen GLB-Testdatei; sie wird weder in die Ausgabe noch in den gemeinsamen Projektkontext übernommen. Zwei große Netzinstanzen überschreiten absichtlich 50 MiB. Detailtreue 10/90, Vorschau, Übernehmen/Undo, physische FNPACK-Ausgabe/Wiederöffnen und Paket-Autosicherung werden tatsächlich geprüft. Netzfarben und Zahnrad-/KI-Regler erhalten gesonderte Prüfläufe.
+# Wartung 0.118.3
+
+Gezielter Paketbau mit `node scripts/package-mechanism-tools.mjs r1 <akzeptierter-Programmordner>`.
+Der Builder erkennt Version 0.118.3, erstellt eine frische Stage und übernimmt nur
+die geprüften Unterlaufzeiten, keine Daten-/Projektordner. Tests und isolierte
+Windows-Läufe decken Auditkorrekturen, FNPACK, Sprache, Navigation, große Projekte
+und bestehende Farben/Gelenkbedienung ab. Visuelle Freigabe folgt getrennt nach
+Prüfung tatsächlicher Paketbilder; der Builder erklärt das Paket nicht automatisch
+für freigegeben. Ausgabeberichte enthalten keine absoluten persönlichen Pfade.
+Für den vorhandenen Großnetz-Regressionsfall wird `FORMNARO_VERIFY_LARGE_MESH_FILE`
+nur lokal gesetzt; keine Fixture oder persönlichen Pfade in Auslieferungen kopieren.
+
+# Gezielte Menü-Hilfe 0.119.1
+
+Die Folgeausgabe baut die vorhandene 0.119.0-Basis mit engeren Kontext- und
+Bedienhilfebudgets neu. Die Abnahme ist eine Delta-Prüfung der geänderten
+KI-/Bedienhilfewege mit isolierten EXE-Läufen, eigenem Quellenmanifest und
+Sichtprüfung tatsächlicher Paketbilder. Frühere Modell-, Sprach- und
+Laufzeitnachweise bleiben als historische Basis erhalten. Live-DeepSeek-Tests
+verwenden ausschließlich künstliche Projekte und getrennte Testprofile;
+Zugangsdaten und Testprofile gehören nicht in Stage oder Auslieferung.
+
+# Bedienziele und Vorschau 0.119.2
+
+Die lokale Ausgabe prüft gezielt die Vorführungsänderung gegenüber 0.119.1.
+Grundformziele sind nur Zeigeziele, anschließend wird eine geprüfte Vorschau
+berechnet. Isolierte UI-Prüfungen erfassen Zielanzeige vor der Berechnung,
+Modell-/Undo-Erhalt, Abbruch und Wiedergabe; die komplette frühere Abnahme wird
+nicht als neuer vollständiger Regressionstest ausgegeben.

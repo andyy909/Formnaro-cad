@@ -1,5 +1,7 @@
 const fs=require('node:fs'),path=require('node:path');
 exports.verifyJoints=async(win,{directory,files}={})=>{
+ if(process.env.FORMNARO_VERIFY_LARGE_PROJECT==='1')return require('./large-project-verification.cjs').verifyLargeProject(win,{directory,files});
+ if(process.env.FORMNARO_VERIFY_MECHANISM_TOOLS==='1')return require('./mechanism-tools-verification.cjs').verifyMechanismTools(win,{directory,files});
  const checks=[],pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
  const run=async code=>{const r=await win.webContents.executeJavaScript(`(async()=>{const a=window.__cadTest,p=window.__jointProof,check=(v,m)=>{if(!v)throw Error(m)};try{return {ok:true,value:await(async()=>{${code}})()};}catch(e){return {ok:false,error:e.message,stack:e.stack};}})()`);if(!r.ok)throw Error(r.error+'\n'+r.stack);return r.value;};
  async function proof(label,code){fs.writeFileSync(path.join(directory,'progress.json'),JSON.stringify({checks,pending:label}));await run(code);checks.push(label);}

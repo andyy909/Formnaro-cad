@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 const json=p=>JSON.parse(fs.readFileSync(new URL('../'+p,import.meta.url)));
 test('Root and both Mini lockfiles use fixed Electron and Undici versions',()=>{
  for(const root of ['','mini/','mini-cad/']){
-  const pkg=json(root+'package.json'),lock=json(root+'package-lock.json');assert.equal(pkg.devDependencies.electron,'44.9.3');assert.equal(lock.packages['node_modules/electron'].version,'44.9.3');
+  const expected=root?'44.9.3':'44.10.0',pkg=json(root+'package.json'),lock=json(root+'package-lock.json');assert.equal(pkg.devDependencies.electron,expected);assert.equal(lock.packages['node_modules/electron'].version,expected);
   for(const [name,p]of Object.entries(lock.packages))if(name.endsWith('/undici'))assert.equal(p.version,'7.30.1');
  }
 });

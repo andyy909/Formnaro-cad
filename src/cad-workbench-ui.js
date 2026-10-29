@@ -8,7 +8,7 @@ const categories=[
   ['edit','Bearbeiten',['duplicate','copy','paste','delete','bundle']],
   ['arrange','Anordnen',['group','ungroup','align','mirror','center','drop','lay-on-face','reference-place','workplane-set','workplane-top','reset-plane']],
   ['cad','CAD-Werkzeuge',['edges','general-fit','sketch','sketch-on-part','sketch-templates','cad-contour','linked-contours','cad-face-offset','cad-shell','cad-loft','cad-sweep','cad-draft','cad-defeature','cad-revolution','cad-helix','cad-surface-fill','cad-surface-transition','cad-surface-sew','cad-surface-relief','cad-edit-modeling','joints','drawing','project-parameters','split','extract','drill']],
-  ['mesh','Netz-Werkzeuge',['mesh-tools','mesh-select','mesh-inspector','mesh-repair','mesh-close-hole','mesh-connectors','mesh-reduce','mesh-curved-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill','mesh-make-solid','mesh-hollow','mesh-features','mesh-more']],
+  ['mesh','Netz-Werkzeuge',['mesh-tools','mesh-select','mesh-inspector','mesh-repair','mesh-close-hole','mesh-connectors','mesh-reduce','mesh-curved-reduce','mesh-large-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill','mesh-make-solid','mesh-hollow','mesh-features','mesh-more']],
   ['convert','Umwandeln',['cad-to-mesh','mesh-to-cad','stl-to-step']],
   ['extras','Extras',['marks','functions','help']]
 ];
@@ -143,7 +143,7 @@ export function createCadWorkbenchUI({storage,layoutUI,safe,t=v=>v,canSwitch=()=
       for(const key of order.filter(key=>easyActions.includes(key))){const node=controls.get(key);if(node)tools.append(node);}
       for(const key of cameraKeys){const node=controls.get(key);if(node)document.querySelector('.view-controls').append(node);}
       for(const key of ['mode-translate','mode-scale','mode-rotate']){const node=controls.get(key);if(node)document.querySelector('.mode-switch').append(node);}
-      menu(tools,'drawing-tools','Zeichnen & Netz',['sketch','sketch-templates','sketch-on-part','cad-contour','linked-contours','cad-face-offset','cad-shell','cad-loft','cad-sweep','cad-draft','cad-defeature','cad-revolution','cad-helix','cad-surface-fill','cad-surface-transition','cad-surface-sew','cad-surface-relief','cad-edit-modeling','joints','drawing','project-parameters','mesh-select','mesh-features','mesh-reduce','mesh-curved-reduce','mesh-repair'].map(key=>controls.get(key)).filter(Boolean));
+      menu(tools,'drawing-tools','Zeichnen & Netz',['sketch','sketch-templates','sketch-on-part','cad-contour','linked-contours','cad-face-offset','cad-shell','cad-loft','cad-sweep','cad-draft','cad-defeature','cad-revolution','cad-helix','cad-surface-fill','cad-surface-transition','cad-surface-sew','cad-surface-relief','cad-edit-modeling','joints','drawing','project-parameters','mesh-select','mesh-features','mesh-reduce','mesh-curved-reduce','mesh-large-reduce','mesh-repair'].map(key=>controls.get(key)).filter(Boolean));
       // Read-only inspection and view tools share the same top menu in both modes.
       cameraAndViewTools();
       // Keep the project/file-format entry reachable at compact widths.

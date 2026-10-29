@@ -27,7 +27,13 @@ test('A failed downstream native program leaves the input edit, parameters and U
 });
 
 test('Cancelling during the downstream native job preserves the entire confirmed project and a later edit waits for native cleanup',async t=>{
- const {cad,calls,b,request}=await fixture(t),before=cad.serialize(),depth=cad.state().undo,count=calls.length,abort=new AbortController(),promise=cad.previewFreeCADDocument(request(18),{signal:abort.signal});const deadline=Date.now()+15000;while(calls.length<count+2&&Date.now()<deadline)await new Promise(r=>setTimeout(r,20));assert.equal(calls.length,count+2);const timer=setTimeout(()=>abort.abort(),1000);try{await assert.rejects(promise,e=>e.name==='AbortError'||e.code==='ABORTED');}finally{clearTimeout(timer);}assert.equal(cad.serialize(),before);assert.equal(cad.state().undo,depth);const p=await cad.previewFreeCADDocument(request(14));assert(Math.abs(p.project.nodes.find(n=>n.id===b).stats.volume-240)<1e-7);cad.discard(p.previewId);assert.equal(cad.serialize(),before);
+ const {cad,calls,b,request}=await fixture(t),before=cad.serialize(),depth=cad.state().undo,count=calls.length,abort=new AbortController(),promise=cad.previewFreeCADDocument(request(18),{signal:abort.signal});
+ // FreeCAD startup and the first native edit can take longer under a full
+ // concurrent suite. Observe rejection immediately and always cancel/settle
+ // the pending work, including if the bounded wait or an assertion fails.
+ let outcome,timer;const observed=promise.then(()=>{outcome={ok:true};},error=>{outcome={error};});
+ try{const deadline=Date.now()+120000;while(calls.length<count+2&&!outcome&&Date.now()<deadline)await new Promise(r=>setTimeout(r,20));if(outcome)throw outcome.error??Error('Vorschau endete vor dem nachgelagerten FreeCAD-Auftrag.');assert.equal(calls.length,count+2,'Nachgelagerter FreeCAD-Auftrag wurde innerhalb von 120 Sekunden nicht gestartet.');timer=setTimeout(()=>abort.abort(),1000);await assert.rejects(promise,e=>e.name==='AbortError'||e.code==='ABORTED');}finally{clearTimeout(timer);abort.abort();await observed;}
+ assert.equal(cad.serialize(),before);assert.equal(cad.state().undo,depth);const p=await cad.previewFreeCADDocument(request(14));assert(Math.abs(p.project.nodes.find(n=>n.id===b).stats.volume-240)<1e-7);cad.discard(p.previewId);assert.equal(cad.serialize(),before);
 });
 
 

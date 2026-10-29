@@ -42,6 +42,8 @@ import {validateCadDrawings} from './cad-drawing-data.js';
 import {planCadProjectParameters,stampCadProjectParameters,applyCadProjectParameterStates,cadProjectParameterTarget} from './cad-project-parameters-data.js';
 import {cadProjectParameterExportProblems} from './cad-project-parameters-export.js';
 import {createCadContourLinks,validateCadContourLinks,validateCadContourTarget,cadContourLinkId,cadContourLinkProblems,planCadContourLinks} from './cad-linked-contours-data.js';
+import {assertCadLinkedPatternExportReady} from './cad-linked-pattern-data.js';
+import {planCadParameterPatterns} from './cad-linked-pattern-update-data.js';
 import {cadDependencyAffected,cadDependencyNodeId} from './cad-dependency-graph.js';
 import {validateCadContourRequest} from './cad-linked-contours-automation.js';
 
@@ -196,7 +198,7 @@ export function createCadController({createWorker,createComparisonWorker,createM
     if(context.operation?.kind==='projectParameters'){
       if(Object.keys(context.operation).some(k=>!['kind','data','variantId'].includes(k))||parameterModelKey(confirmed)!==parameterModelKey(project))throw Error('Eine Parameteraktualisierung darf keine unbestätigten Änderungen an anderen Teilen übernehmen.');
       const plan=planCadProjectParameters(project,context.operation.data,{variantId:context.operation.variantId});parameterPlanLocks(project,plan);
-      if(plan.metadataOnly){
+      if(plan.metadataOnly&&(!project.linkedPatterns?.patterns.length||!planCadParameterPatterns(project,context.operation.data,{variantId:context.operation.variantId}).patterns.length)){
         let draft=applyCadProjectParameterStates(project,plan.changedStates);const required=draft.nodes.filter(n=>hasGeometryRefs(n)&&!sameDeferredGeometry(confirmed.nodes.find(old=>old.id===n.id),n)).map(n=>n.id);if(required.length)draft=await resolveGeometry(draft,required,{signal:context.signal});draft.projectParameters=stampCadProjectParameters(draft,plan.data);const candidate=cadProjectReadView(draft),nextRevision=cadProjectRevision(candidate),stateChangedIds=[...new Set(plan.changedStates.map(s=>s.target.rootId))],report={affectedIds:stateChangedIds,stateChangedIds,rebuiltIds:[],constructedIds:[],counts:{},metadataOnly:true,staleBindingIds:[]};let view;
         if(!plan.changedStates.length){geometryOwners.set(candidate,geometryOwner(confirmed));if(confirmedView?.project===confirmed){const old=confirmedView.view;rememberView(candidate,{...old,revision:nextRevision,scene:{...old.scene,revision:nextRevision,projectVersion:candidate.version}},qualityKey);}}
         else{
@@ -455,7 +457,7 @@ export function createCadController({createWorker,createComparisonWorker,createM
     try{let meshColorParts;if(['obj','3mf','gltf','glb'].includes(options.format)){const ids=project.nodes.filter(n=>n.kind==='mesh'&&!hasCurrentPartSurfaceGroups(n)&&meshColorsEnabled(n)&&n.meshRole!=='hole'&&!flags(n,project).hidden&&(!options.ids||options.ids.includes(n.id))).map(n=>n.id);if(ids.length)meshColorParts=await meshWorker.run({job:'toolsQuery',kind:'colors',ids,project},{revision,progress});}if(store.revision()!==revision)throw Object.assign(Error('Projekt während des Exports geändert.'),{code:'STALE_REVISION'});const result=await worker.run({job:'exportModel',project,options:{...options,meshColorParts}},{revision,progress});if(store.revision()!==revision)throw Object.assign(Error('Projekt während des Exports geändert. Erneut exportieren.'),{code:'STALE_REVISION'});return result;}
     finally{onBusy(store.state().busy);}
   }
-  function assertExportReady(options={}){alive();const current=store.readSnapshot(),problems=cadProjectParameterExportProblems(current,options);if(problems.length)throw Object.assign(Error('Betroffene Projektparameter oder Varianten zuerst aktualisieren oder den verlorenen Bezug ausdrücklich lösen. '+problems[0].message),{code:'PARAMETERS_UPDATE_REQUIRED',problems});const contours=cadContourLinkProblems(current,current.contourLinks,options);if(contours.length)throw Object.assign(Error('Betroffene Konturverknüpfungen zuerst aktualisieren, neu zuordnen oder ausdrücklich lösen. '+contours[0].message),{code:'CONTOUR_UPDATE_REQUIRED',problems:contours});return true;}
+  function assertExportReady(options={}){alive();const current=store.readSnapshot();assertCadLinkedPatternExportReady(current,options);const problems=cadProjectParameterExportProblems(current,options);if(problems.length)throw Object.assign(Error('Betroffene Projektparameter oder Varianten zuerst aktualisieren oder den verlorenen Bezug ausdrücklich lösen. '+problems[0].message),{code:'PARAMETERS_UPDATE_REQUIRED',problems});const contours=cadContourLinkProblems(current,current.contourLinks,options);if(contours.length)throw Object.assign(Error('Betroffene Konturverknüpfungen zuerst aktualisieren, neu zuordnen oder ausdrücklich lösen. '+contours[0].message),{code:'CONTOUR_UPDATE_REQUIRED',problems:contours});return true;}
   async function open(value,{label='CAD-Projekt öffnen',revision=store.revision()}={}){
     const prepared=await readProject(value);
     const result=await preview(undefined,{project:prepared.project,revision,label,replaceProject:true});return {...apply({previewId:result.previewId,revision:result.revision}),migration:prepared.migration,warnings:prepared.warnings};

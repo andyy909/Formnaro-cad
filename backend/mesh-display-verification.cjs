@@ -87,6 +87,23 @@ exports.verifyMeshDisplay=async function(win,{directory}={}){
   win.setSize(1100,780);await run('window.__cadTest.view.renderReady()');await new Promise(r=>setTimeout(r,150));await shot('easy-kompakt');
   await proof('compact badge stays accessible',`const e=document.querySelector('.cad-mesh-display input'),r=e.getBoundingClientRect();check(r.width>0&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===e,'Compact badge blocked');`);
   await proof('Easy CAD domain hides mesh badge',`a.workbenchUI.setDomain('cad');await a.settled();await a.view.renderReady();check(document.querySelector('.cad-mesh-display').hidden,'Other domain badge');`);
-  return {ok:true,checks,cloudRequests:0};
+  await proof('STL inspector color changes the rendered material and only one reversible appearance step',`
+   a.workbenchUI.setMode('normal');a.select([{rootId:window.__meshDisplayId,path:[]}]);await a.settled();
+   window.__meshColorProof={original:a.serialize(),depth:a.undoDepth(),mesh:JSON.stringify(a.getModel().nodes.find(n=>n.id===window.__meshDisplayId).mesh)};
+   window.__setMeshColor=async color=>{const input=document.getElementById('object-color');check(input&&!input.disabled,'Color picker unavailable');input.value=color;input.dispatchEvent(new Event('change',{bubbles:true}));const t=Date.now();while(a.getModel().nodes.find(n=>n.id===window.__meshDisplayId).color!==color||a.controller.state().busy){if(Date.now()-t>30000)throw Error('Color change timeout');await new Promise(r=>setTimeout(r,20));}await a.settled();await a.view.renderReady();};
+   await window.__setMeshColor('#1025d5');const n=a.getModel().nodes.find(n=>n.id===window.__meshDisplayId),m=a.view.groups.bodies.children.find(m=>m.userData.rootId===n.id);check(m.material.color.getHexString()==='1025d5','Selected blue hidden by view preset '+JSON.stringify({node:n.color,record:m.userData.record.color,material:m.material.color.getHexString(),style:m.userData.meshStyleKey,vertices:m.material.vertexColors}));check(JSON.stringify(n.mesh)===window.__meshColorProof.mesh&&a.undoDepth()===window.__meshColorProof.depth+1,'Color changed geometry/history');
+  `);
+  await shot('stl-eigene-farbe-blau');
+  await proof('Undo Redo and Save Open preserve the chosen STL color',`
+   const p=window.__meshColorProof,applied=a.serialize();await a.actions.undo();await a.settled();check(a.serialize()===p.original,'Color Undo differs');await a.actions.redo();await a.settled();check(a.serialize()===applied,'Color Redo differs');await a.controller.open(JSON.parse(applied));await a.settled();await a.view.renderReady();check(a.view.groups.bodies.children.find(m=>m.userData.rootId===window.__meshDisplayId).material.color.getHexString()==='1025d5','Reopen hides own color');
+  `);
+  await proof('all six display styles keep the existing selected STL color visible',`
+   const before=a.serialize();a.ui.settings.open();const input=document.getElementById('settings-meshDisplayStyle');for(const style of ['blue','white','sand','graphite','fusion','solidworks']){input.value=style;await input.onchange();await a.view.renderReady();check(a.view.groups.bodies.children.find(m=>m.userData.rootId===window.__meshDisplayId).material.color.getHexString()==='1025d5','Preset hides chosen color: '+style);check(a.serialize()===before,'View style changed saved model');}document.getElementById('settings-done').click();
+  `);
+  await proof('dark theme and a second chosen color refresh reused render buffers',`
+   a.ui.settings.open();const theme=document.getElementById('settings-theme');theme.value='dark';await theme.onchange();document.getElementById('settings-done').click();a.select([{rootId:window.__meshDisplayId,path:[]}]);await a.settled();await window.__setMeshColor('#ef3344');await a.view.renderReady();check(a.view.groups.bodies.children.find(m=>m.userData.rootId===window.__meshDisplayId).material.color.getHexString()==='ef3344','Dark/red color stale');
+  `);
+  await shot('stl-eigene-farbe-dunkel');
+  return {ok:true,checks,cloudRequests:0,screenshots:['stl-eigene-farbe-blau','stl-eigene-farbe-dunkel'].map(name=>path.join(directory,name+'.png'))};
  }catch(error){await shot('failed').catch(()=>{});fs.writeFileSync(path.join(directory,'failure.json'),JSON.stringify({error:error.message,checks},null,2));throw error;}
 };

@@ -6,6 +6,7 @@ import {cadIdentity,cadPoint,multiplyCadMatrices,resizeCadAtCorner} from './cad-
 import {cadSelectionContext,cadFormLocalDimensions,cadInterfaceLocalBounds} from './cad-interface-state.js';
 import {cadSketchRecipe} from './cad-sketch.js';
 import {validateCadModelingOperation} from './cad-modeling-data.js';
+import {validateCadDrillPattern} from './cad-drill-pattern.js';
 import {cadProjectParameterCatalog,cadParameterLiteral} from './cad-project-parameters-catalog.js';
 import {planCadProjectParameters,stampCadProjectParameters} from './cad-project-parameters-data.js';
 
@@ -37,6 +38,7 @@ export async function buildCadBoundSubset(input,bindings,{service,editRecipe,sig
   else if(/^pos\.[012]$/.test(binding.field)){edit.pos.set(Number(binding.field.at(-1)),binding.value);touch(context);}
   else if(isFreeCADParameterField(binding.field)){edit.freecad??={};edit.freecad[freeCADParameterKey(binding.field)]=binding.value;touch(context);}
   else if(binding.field.startsWith('params.')){edit.params[binding.field.slice(7)]=binding.value;touch(context,{build:true});}
+  else if(binding.field.startsWith('drill.pattern.')){edit.drillPattern??=structuredClone(node.drill.pattern);const parts=binding.field.slice(14).split('.');if(parts.length===1)edit.drillPattern[parts[0]]=binding.value;else edit.drillPattern[parts[0]][Number(parts[1])]=binding.value;touch(context,{build:true});}
   else if(binding.field.startsWith('sketch.')){edit.sketch??=structuredClone(node.recipe.sketch);const slot=sketchSlot(edit.sketch,binding.field);if(!slot.object||!cadParameterLiteral(slot.object[slot.key]))throw Error('Abgeleitete Skizzenformel erhalten. Das freie Ausgangsmaß binden.');slot.object[slot.key]=String(binding.value);touch(context,{build:true});}
   else if(binding.field.startsWith('modeling.')){edit.modeling??=structuredClone(node.modeling);if(binding.field.startsWith('modeling.path.'))edit.modeling.path[binding.field.slice(14)]=binding.value;else edit.modeling[binding.field.slice(9)]=binding.value;touch(context,{build:true});}
   else throw Error('Unbekanntes gebundenes Maß.');
@@ -46,6 +48,7 @@ export async function buildCadBoundSubset(input,bindings,{service,editRecipe,sig
   if(Object.keys(edit.params).length){const recipe=await editRecipe({...node,locked:false},{params:edit.params});aborted(signal);if(!same(recipe,node.recipe)){node.recipe=recipe;edit.preserveMinimum=true;}else geometry.delete(node.id);}
   if(edit.sketch){if(edit.sketch.version>=3){const result=solveSketchConstraints(edit.sketch,{signal});if(!result.ok)throw Object.assign(Error(result.message),{code:result.code,conflicts:result.conflicts});edit.sketch=result.sketch;}const recipe=cadSketchRecipe(edit.sketch);if(!same(recipe,node.recipe))node.recipe=recipe;else geometry.delete(node.id);}
   if(edit.modeling){const {sourceSignature,...operation}=edit.modeling;node.modeling={version:1,...validateCadModelingOperation(operation),...(sourceSignature?{sourceSignature}:{})};if(same(node.modeling,edit.original.modeling))geometry.delete(node.id);}
+  if(edit.drillPattern){node.drill.pattern=validateCadDrillPattern(edit.drillPattern);if(same(node.drill.pattern,edit.original.drill.pattern))geometry.delete(node.id);}
  }
  // Only unknown final resizes need this persisted strict budget. Ordinary
  // source edits retain their existing construction tolerance and geometry.

@@ -1,3 +1,6 @@
+import {projectObjectGeometryDigest} from './project-objects.js';
+import {hasTransientCadReference} from './cad-ai-reference-guard.js';
+import {rejectStaleCadReferences} from './cad-ai-reference-guard.js';
 import {Matrix4,Quaternion,Vector3} from 'three';
 import {cadProjectSnapshot} from './cad-project.js';
 import {aiFeedback} from './ai-feedback.js';
@@ -78,6 +81,7 @@ function meshOperation(command,aliases,project){
  * No intermediate Apply/Undo, renderer geometry, repair or conversion is used. */
 export async function runMixedCadAIBatch({project,baseline,commands,runNative,runMesh,query,runScript,runPython,convertModel,runFreeCAD,signal,progress,initialAliases={}}={}){
  if(!Array.isArray(commands)||!commands.length||commands.length>200)invalid('1–200 gemeinsame Befehle erforderlich.');
+ commands.forEach((command,index)=>rejectStaleCadReferences(command,index>0));
  let current=cadProjectSnapshot(project),aliases=structuredClone(initialAliases),changes=[],warnings=[],reports=[];
  // Revalidate a supplied draft against its real confirmed baseline before it
  // becomes the baseline of any subsequent native command segment.
@@ -116,7 +120,7 @@ export async function runMixedCadAIBatch({project,baseline,commands,runNative,ru
    result=runCommonModelTool(current,operation);const checked=await runNative({project:result.project,baseline:current,operation:undefined,signal});result.project=checked.project;
   }else result=c.engine==='mesh'?await runMesh({project:current,operation,signal}):await runNative({project:current,baseline:current,operation,signal});abort(signal);
   locks(before,result.project);
-  assertMeshProtectionChange(before,result.project,{reduceTarget:['mesh-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill'].includes(operation.type)?operation.id:null});
+  assertMeshProtectionChange(before,result.project,{reduceTarget:['mesh-reduce','mesh-large-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill'].includes(operation.type)?operation.id:null});
   if(['mesh-lid','mesh-counterpart','mesh-make-solid','mesh-hollow'].includes(operation.type)){
    const globals=p=>JSON.stringify(Object.fromEntries(Object.entries(p).filter(([k])=>k!=='nodes')));
    if(result.project.nodes.length!==before.nodes.length+1||JSON.stringify(result.project.nodes.filter(n=>n.id!==operation.resultId))!==JSON.stringify(before.nodes)||globals(result.project)!==globals(before))invalid('Eine Ergebniskopie muss das ganze Originalprojekt unverändert erhalten.');
@@ -129,8 +133,24 @@ export async function runMixedCadAIBatch({project,baseline,commands,runNative,ru
   reports.push({tool:operation.type==='mesh-lid'?'lid':operation.type==='mesh-counterpart'?'counterpart':operation.type??operation.kind,...result.report,...(conversionReport?{conversion:conversionReport}:{})});
   return {selectedIds:ids,aliases:structuredClone(aliases),report:conversionReport??result.report??null};
  }
- async function scriptCommand(command){
+ async function scriptCommand(command,previousCommand){
   const c=validateProgramCommand(command),runner=c.op==='python'?runPython:runScript;if(typeof runner!=='function')invalid('Lokale Skriptumgebung ist nicht verfügbar.');let count=0;
+  const signature=id=>{const node=current.nodes.find(n=>n.id===id);return node?.kind==='cad'?projectObjectGeometryDigest(node)+':'+JSON.stringify(node.transform):null;},initialRoots=new Map(current.nodes.map(node=>[node.id,signature(node.id)])),issued=new Map();
+  function rawReferenceAllowed(id){return !previousCommand&&typeof id==='string'&&initialRoots.has(id)&&initialRoots.get(id)!==null&&initialRoots.get(id)===signature(id);}
+  function checkedScriptCommand(input){
+   const command=resolveProgramAliases(input,aliases);if(!hasTransientCadReference(command))return command;
+   const inner=command.op==='tool'&&command.engine==='cad'&&command.operation?.kind==='tool'?command.operation.options:command, id=inner?.target?.rootId??inner?.target??inner?.id;
+   const allowed=command.op==='drill'||command.op==='editDrill'||command.op==='tool'&&command.engine==='cad'&&['previewDrill','previewEditDrill'].includes(command.operation?.name);
+   if(!allowed){if(previousCommand||count>1&&(!rawReferenceAllowed(id)||command.op!=='modeling'))rejectStaleCadReferences(command,true);return command;}
+   const keys=['reference','positionReference','stopReference'];let verifiedToken=false;
+   for(const key of keys){const ref=inner?.[key];if(!ref||typeof ref!=='object')continue;
+    let proof;if(typeof ref.token==='string'&&ref.token.startsWith('ai-ref:')){proof=issued.get(ref.token);if(!proof||proof.id!==id||proof.signature!==signature(id))rejectStaleCadReferences(command,true);ref.token=proof.token;verifiedToken=true;}
+    else if(('token' in ref||'faceIndex' in ref)&&!rawReferenceAllowed(id))rejectStaleCadReferences(command,true);
+    if('faceIndex' in ref&&!rawReferenceAllowed(id)&&(!proof||proof.faceIndex!==ref.faceIndex))rejectStaleCadReferences(command,true);
+   }
+   if(!verifiedToken&&!rawReferenceAllowed(id))rejectStaleCadReferences(command,true);
+   return command;
+  }
   const value=await runner({code:c.code,name:c.name,modules:c.modules,signal,timeoutMs:300000,call:async(method,args)=>{
    abort(signal);
    if(method==='model'){const snapshot=cadProjectSnapshot(current);return {...snapshot,objects:snapshot.nodes};}
@@ -139,12 +159,27 @@ export async function runMixedCadAIBatch({project,baseline,commands,runNative,ru
     // fontLibrary mutates worker configuration; provider/desktop IPC is never
     // reachable here. Geometry queries alone are exposed to the sandbox.
     if(!AI_PROGRAM_TOOLS.queries[args.engine].includes(args.kind)&&!(args.engine==='mesh'&&AI_PROGRAM_TOOLS.meshCatalogs.includes(args.kind)))invalid('Unbekannte Modellabfrage.');
-    return query({project:current,engine:args.engine,kind:args.kind,options:resolveProgramAliases(args.options??{},aliases),signal});
+    const options=resolveProgramAliases(args.options??{},aliases);let faceToken;
+    if(args.engine==='cad'&&args.kind==='faceSketch'&&'faceToken' in options){
+     if('faceIndex' in options)invalid('Für die Flächenkopie entweder faceToken oder faceIndex angeben.');faceToken=options.faceToken;const proof=issued.get(faceToken),id=options.nodeId;if(!proof||proof.kind!=='face'||proof.id!==id||proof.signature!==signature(id))rejectStaleCadReferences({reference:{faceIndex:0}},true);options.faceIndex=proof.faceIndex;delete options.faceToken;
+    }
+    if(args.engine==='cad'&&!faceToken&&('faceIndex' in options||'faceIndices' in options)&&!rawReferenceAllowed(options.nodeId??options.id??options.target))rejectStaleCadReferences({reference:{faceIndex:options.faceIndex??0}},true);
+    const result=await query({project:current,engine:args.engine,kind:args.kind,options,signal});
+    if(args.engine==='cad'&&args.kind==='rayPick'&&result&&typeof result.objectId==='string'&&Number.isSafeInteger(result.faceIndex)){
+     const id=result.objectId,digest=signature(id);if(digest){const token='ai-face:'+crypto.randomUUID();issued.set(token,{kind:'face',id,signature:digest,faceIndex:result.faceIndex});return {...result,faceToken:token};}
+    }
+    if(faceToken&&result)return {...result,faceToken};
+    if(args.engine==='cad'&&args.kind==='referencePoints'&&Array.isArray(result?.points)){
+     const id=options.nodeId,digest=signature(id);if(!digest)invalid('Ein eindeutiges natives Teil für die Bezugsabfrage wählen.');
+     const wrapped=structuredClone(result);for(const point of wrapped.points)if(typeof point.id==='string'){const token='ai-ref:'+crypto.randomUUID();issued.set(token,{id,signature:digest,token:point.id,faceIndex:point.faceIndex});point.id=token;}return wrapped;
+    }
+    return result;
    }
    if(method!=='run'||!args||['script','python'].includes(args.op))invalid('Ein Modellierwerkzeug wählen. Verschachtelte Skripte sind nicht nötig.');
    if(++count>2000)invalid('Zu viele Modelloperationen in einer Vorschau.');
+   args=checkedScriptCommand(args);
    if(args.op==='tool')return programTool(args);
-   const result=await runMixedCadAIBatch({project:current,baseline:current,commands:[resolveProgramAliases(args,aliases)],initialAliases:aliases,runNative,runMesh,query,runScript,runFreeCAD,convertModel,signal});
+   const result=await runMixedCadAIBatch({project:current,baseline:current,commands:[args],initialAliases:aliases,runNative,runMesh,query,runScript,runFreeCAD,convertModel,signal});
    const before=current;locks(before,result.project);assertMeshProtectionChange(before,result.project);current=result.project;
    // Native grouping remaps existing aliases to retained source addresses.
    // Keep that complete map between individual calls from the local worker.
@@ -157,7 +192,7 @@ export async function runMixedCadAIBatch({project,baseline,commands,runNative,ru
   abort(signal);const start=index,command=commands[index];
   try{
    if(['tool','script','python'].includes(command?.op)){
-    if(command.op==='tool')await programTool(command);else await scriptCommand(command);index++;
+    if(command.op==='tool')await programTool(command);else await scriptCommand(command,start>0);index++;
    }else if(command?.op!=='mesh'){
     const segment=[];while(index<commands.length&&!['mesh','tool','script','python'].includes(commands[index]?.op))segment.push(commands[index++]);
     const before=current,result=await runNative({project:current,baseline:current,operation:{kind:'batch',commands:segment,initialAliases:aliases},signal}),synchronized=synchronizeMeshWorkplane(result.project,before);

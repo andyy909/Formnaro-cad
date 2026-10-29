@@ -28,6 +28,20 @@ test('Native cylinder face provenance rebinds height/diameter edits, preserving 
   }finally{service.dispose();}
 });
 
+test('Native box face follows a 4 to 12 mm source change, including nested source path and undo',async()=>{
+ const service=createCadService({oc});try{
+  const body=service.nativeNode({type:'box',size:[40,20,4]},{id:'body'}),hole=service.nativeNode({type:'cylinder',size:[2,2,20]},{id:'hole',solid:false});
+  const group={id:'group-box',kind:'cad',name:'Platte',source:'group',solid:true,transform:cadIdentity(),operation:'union',children:[body,hole],brep:structuredClone(body.brep),stats:structuredClone(body.stats)};
+  const initial=await service.rebuild(createCadProject({nodes:[group]}));initial.workplane=bind(initial.nodes[0],[5,3,2],[0,0,1],'box-face-top');initial.workplane.reference.topology.origin.path=['body'];
+  const transactions=createCadTransactions({initial,build:(p,c)=>service.rebuild(p,{baseline:c.baseline})}),tools=createCadToolsNative({oc,service,transactions});
+  transactions.apply(await tools.previewEditSource({groupId:'group-box',path:['body'],patch:{recipe:{type:'box',size:[40,20,12]}},revision:transactions.revision()}));
+  assert.ok(transactions.snapshot().workplane.reference);closeVector(transactions.snapshot().workplane.origin,[5,3,6]);
+  transactions.undo();closeVector(transactions.snapshot().workplane.origin,[5,3,2]);transactions.redo();closeVector(transactions.snapshot().workplane.origin,[5,3,6]);
+  transactions.apply(await tools.previewEditSource({groupId:'group-box',path:['body'],patch:{recipe:{type:'cylinder',size:[40,20,12]}},revision:transactions.revision()}));
+  assert.equal(transactions.snapshot().workplane.reference,null);
+ }finally{service.dispose();}
+});
+
 test('Missing/ambiguous CAD faces detach references and preserve the previous spatial plane pose',async()=>{
   const service=createCadService({oc});try{
     const node=service.nativeNode({type:'cylinder',size:[20,20,20]},{id:'cad'}),initial=createCadProject({nodes:[node],workplane:bind(node,[2,3,10],[0,0,1])}),draft=structuredClone(initial);draft.nodes[0].recipe.size=[20,20,28];const fresh=await service.rebuild(draft),lost=rebindCadWorkplaneNative(oc,fresh,{baseline:initial});assert.equal(lost.workplane.reference,null);assert.deepEqual(lost.workplane.origin,initial.workplane.origin);assert.deepEqual(lost.workplane.orientation,initial.workplane.orientation);

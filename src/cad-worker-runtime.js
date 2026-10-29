@@ -1,3 +1,4 @@
+import {verifyStepDrillExports} from './cad-step-drill-verify.js';
 import {nativePartProperties} from './cad-part-properties-native.js';
 import {rerunBoundFreeCADNative} from './cad-freecad-rerun-bound-native.js';
 import {replaceFreeCADDocumentNative} from './cad-freecad-replacement-native.js';
@@ -18,6 +19,8 @@ import {nativeRecipeForInput,nativeRecipeEdit} from './cad-form-runtime.js';
 import {createCadPrecisionNative} from './cad-precision-native.js';
 import {createCadDrawingNative} from './cad-drawing-native.js';
 import {updateCadProjectParameters} from './cad-project-parameters-native.js';
+import {updateCadParameterPatterns} from './cad-linked-pattern-update-native.js';
+import {planCadParameterPatterns} from './cad-linked-pattern-update-data.js';
 import {createCadLinkedContoursNative,updateCadAssociative} from './cad-linked-contours-native.js';
 import {createCadClickMeasureNative} from './cad-click-measure-native.js';
 import {createCadAIReferencesNative} from './cad-ai-feature-references-native.js';
@@ -46,6 +49,8 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
       if(baselineRevision!==message.revision){const error=Error('CAD-Worker erhielt ein anderes Ausgangsmodell.');error.code='STALE_REVISION';throw error;}
       if(readOnly&&(baseline===project?baselineRevision:cadProjectRevision(project))!==message.revision){const error=Error('CAD-Abfragen und Export benötigen den bestätigten Modellstand.');error.code='UNCONFIRMED_PROJECT';throw error;}
       const progress=value=>reply(message,{type:'progress',value});let result;
+      if(['exportModel','exportMeshes','exportStep'].includes(request.job))await verifyStepDrillExports(service,project,{ids:request.options?.ids});
+      if(request.job==='query'&&['svgProjection','drawingProjection'].includes(request.query?.kind))await verifyStepDrillExports(service,project,{ids:request.query.options?.ids});
       switch(request.job){
         case 'command':
           if(request.operation?.kind==='freecadBoundRerun')result=await rerunBoundFreeCADNative(project,request.operation,{oc:kernel,service,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
@@ -54,7 +59,8 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
           else if(request.operation?.kind==='associativeUpdate')result=await updateCadAssociative(project,request.operation,{oc:kernel,service,editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
           else if(request.operation?.kind==='projectParameters'){
             if(Object.keys(request.operation).some(key=>!['kind','data','variantId'].includes(key)))throw Error('Unbekannte Felder der Projektmaß-Aktualisierung.');
-            if(project.contourLinks?.links.length||request.operation.data?.version===2)result=await updateCadAssociative(project,{...request.operation,kind:'associativeUpdate'},{oc:kernel,service,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
+            if(project.linkedPatterns?.patterns.length&&planCadParameterPatterns(project,request.operation.data,{variantId:request.operation.variantId}).patterns.length)result=await updateCadParameterPatterns(project,request.operation,{oc:kernel,service,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
+            else if(project.contourLinks?.links.length||request.operation.data?.version===2)result=await updateCadAssociative(project,{...request.operation,kind:'associativeUpdate'},{oc:kernel,service,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
             else result={...await updateCadProjectParameters(project,request.operation.data,{service,editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts}),variantId:request.operation.variantId}),changes:[{op:'projectParameters',label:'Projektmaße aktualisieren'}],aliases:{},warnings:[]};
           }else result=await router.run(project,request.operation,{baseline,progress});
           if(request.display)result.display=service.display(result.project,request.quality);break;
@@ -67,6 +73,7 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
         case 'exportStep':result=service.exportStep(project);break;
         case 'exportModel':result=service.exportModel(project,request.options);break;
         case 'query':{
+          if(request.query?.kind==='stepDrillIntegrity'){result=await verifyStepDrillExports(service,project,request.query.options);break;}
           if(request.query?.kind==='partProperties'){const options=request.query.options;if(!options||Object.keys(options).some(k=>k!=='id'))throw Error('Ein Teil für die Masseprüfung wählen.');const node=service.productionNodes(project,{ids:[options.id]})[0];if(!node)throw Error('Ein sichtbares CAD-Materialteil wählen.');result=nativePartProperties(kernel,node);break;}
           if(request.query?.kind==='featureReference'){result=createCadAIReferencesNative({oc:kernel,service})(project,request.query.options);break;}
           if(request.query?.kind==='drawingProjection'){result=createCadDrawingNative({oc:kernel,service})(project,request.query.options);break;}

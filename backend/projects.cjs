@@ -85,6 +85,6 @@ function createProjectFiles({directory,cacheDirectory=path.join(path.dirname(dir
 }
 function installProjects(win,{directory,ipcMain,dialog,shell,onPackRead}={}){
   if(!ipcMain||!dialog||!shell){const electron=require('electron');ipcMain||=electron.ipcMain;dialog||=electron.dialog;shell||=electron.shell;}
-  const store=createProjectFiles({directory,win,dialog,shell,onPackRead});win.on?.('closed',()=>{void store.close();});for(const name of ['list','open','save','folder','thumbnail','cacheThumbnail','readBlock','openPackRecovery','savePackRecovery'])ipcMain.handle('cad-project:'+name,async(event,args)=>{if(event.sender!==win.webContents)return {ok:false,error:'Invalid window.'};try{return {ok:true,value:await store[name](args)};}catch(e){return {ok:false,error:e.message};}});return store;
+  const store=createProjectFiles({directory,win,dialog,shell,onPackRead});win.on?.('closed',()=>{void store.close();});for(const name of ['list','open','save','folder','thumbnail','cacheThumbnail','readBlock','openPackRecovery','savePackRecovery'])ipcMain.handle('cad-project:'+name,async(event,args)=>{if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return {ok:false,error:'Invalid window.'};try{return {ok:true,value:await store[name](args)};}catch(e){return {ok:false,error:e.message};}});return store;
 }
 module.exports={projectDirectory,createProjectFiles,installProjects};

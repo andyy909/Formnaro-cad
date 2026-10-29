@@ -15,6 +15,13 @@ test('Trusted rules accompany all three attempts in both protocols, with and wit
   for(const body of bodies.slice(1)){const payload=JSON.stringify(body);assert.match(payload,/retryable/);assert.match(payload,/rejectedBatch/);}
  }}finally{global.fetch=original;}
 });
+test('Every CAD request receives Formnaro-specific guidance and the STL conversion limitation',async()=>{
+ const original=global.fetch,bodies=[];
+ try{global.fetch=async(_url,options)=>{bodies.push(JSON.parse(options.body));return new Response(JSON.stringify({output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({message:'ok'})}]}]}));};
+  for(let i=0;i<2;i++)await generate({protocol:'responses',baseUrl:'https://api.deepseek.com',model:'deepseek-flash'},'synthetic-key',{prompt:'Erkläre Netz in CAD',scene:{revision:'current'},context:{},chat:true});
+  for(const body of bodies){assert.match(body.instructions,/Formnaro-Assistent: Programm- und Bedienregeln/);assert.match(body.instructions,/garantiert keine parametrisch bearbeitbaren Skizzen/);}
+ }finally{global.fetch=original;}
+});
 test('Explicit non-retryable feedback ends correction immediately',async()=>{
  let calls=0;await assert.rejects(run({input:{},access:{scene:()=>({revision:'current'}),context:()=>({}),preview:()=>{throw Object.assign(Error('blocked'),{feedback:{retryable:false}});}},generate:async()=>{calls++;return {commands:[{op:'update'}]};}}),/blocked/);assert.equal(calls,1);
  assert.equal(aiFeedback({code:'CAD_REEXTRACT_REQUIRED',message:'protected'}).retryable,false);

@@ -1,4 +1,6 @@
+import {rejectStaleCadReferences} from './cad-ai-reference-guard.js';
 import {hasGeometryRefs,isGeometryRef} from './cad-geometry-ref.js';
+import {validateCadLinkedPattern,materializeCadLinkedPattern,stampCadLinkedPattern,cadLinkedPatternProblems,assertCadLinkedPatternCopyReady} from './cad-linked-pattern-data.js';
 import {remapCadJoints,validateCadJoints} from './cad-joints-data.js';
 import {prepareConstrainedSketch} from './sketch-constraints-solver.js';
 import {prepareSketchAttachment,checkSketchAttachment,attachmentNativeCommands} from './sketch-attachment.js';
@@ -123,7 +125,7 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
     let project=cadProjectSnapshot(input),rebuildBaseline=cadProjectSnapshot(baseline??input);const aliases=structuredClone(seeds);let dirtyGeometry=false;const jointOriginal=input.joints?structuredClone(input.joints):undefined,jointCopies=new Map();
     async function verified(){if(dirtyGeometry){try{project=await service.rebuild(project,{baseline:rebuildBaseline});}catch(error){error.code??='CAD_ERROR';error.cadBatchFailure=true;error.feedback=aiFeedback(error);throw error;}rebuildBaseline=cadProjectSnapshot(project);dirtyGeometry=false;}return project;}
     for(let index=0;index<operation.commands.length;index++){
-      const command=operation.commands[index];try{if(!command||typeof command.op!=='string')fail('INVALID_COMMAND','Befehlsname fehlt.');
+      const command=operation.commands[index];try{rejectStaleCadReferences(command,index>0);if(!command||typeof command.op!=='string')fail('INVALID_COMMAND','Befehlsname fehlt.');
       switch(command.op){
         case 'modeling':{
           fields(command,['op','target','operation','as']);await verified();const context=address(project,command.target,aliases);editable(context);
@@ -230,7 +232,7 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
           dirtyGeometry=true;break;
         }
         case 'duplicate':{
-          fields(command,['op','target','as','translate','space']);const context=address(project,command.target,aliases);editable(context);const contourBefore=project.contourLinks?cadProjectSnapshot(project):undefined,mapping=new Map(),copy=cloneCadSources(context.node,{mapping});if(jointOriginal&&!context.parent){const list=jointCopies.get(context.node.id)??[];list.push(copy.id);jointCopies.set(context.node.id,list);}context.siblings.splice(context.siblings.indexOf(context.node)+1,0,copy);const next={...context,node:copy,world:multiplyCadMatrices(context.parentWorld,copy.transform)};if(command.translate)shift(next,translate(vector(command.translate)),frameFor(project,next,command.space??'local'));const to=context.parent?{rootId:context.root.id,path:[...context.target.path.slice(0,-1),copy.id]}:{rootId:copy.id,path:[]};if(project.projectParameters)project.projectParameters=copyCadProjectParameterReferences(project,{from:context.target,to,mapping});if(contourBefore)project.contourLinks=copyCadContourLinks(project,{from:context.target,to,mapping,previousProject:contourBefore});alias(command,context.parent?to:copy.id,aliases);dirtyGeometry=true;break;
+          fields(command,['op','target','as','translate','space']);const context=address(project,command.target,aliases);editable(context);assertCadLinkedPatternCopyReady(project,[context.root.id]);const contourBefore=project.contourLinks?cadProjectSnapshot(project):undefined,mapping=new Map(),copy=cloneCadSources(context.node,{mapping});if(jointOriginal&&!context.parent){const list=jointCopies.get(context.node.id)??[];list.push(copy.id);jointCopies.set(context.node.id,list);}context.siblings.splice(context.siblings.indexOf(context.node)+1,0,copy);const next={...context,node:copy,world:multiplyCadMatrices(context.parentWorld,copy.transform)};if(command.translate)shift(next,translate(vector(command.translate)),frameFor(project,next,command.space??'local'));const to=context.parent?{rootId:context.root.id,path:[...context.target.path.slice(0,-1),copy.id]}:{rootId:copy.id,path:[]};if(project.projectParameters)project.projectParameters=copyCadProjectParameterReferences(project,{from:context.target,to,mapping});if(contourBefore)project.contourLinks=copyCadContourLinks(project,{from:context.target,to,mapping,previousProject:contourBefore});alias(command,context.parent?to:copy.id,aliases);dirtyGeometry=true;break;
         }
         case 'delete':{
           fields(command,['op','target']);const context=address(project,command.target,aliases);editable(context);context.siblings.splice(context.siblings.indexOf(context.node),1);unlinkPlane(project,context);dirtyGeometry=true;break;
@@ -264,10 +266,17 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
           const store=createCadTransactions({initial:project,build:(p,c)=>service.rebuild(p,{baseline:c.baseline})}),tools=createCadToolsNative({oc,service,transactions:store}),proposal=await tools.previewReferencePlacement({id:context.node.id,sourceReference:command.sourceReference,targetId:target?.node.id,targetReference:command.targetReference,offset:command.offset,revision:store.revision()});project=proposal.project;dirtyGeometry=true;break;
         }
         case 'drill':{
-          fields(command,['op','target','reference','kind','through','diameter','depth','headDiameter','headDepth','angle','gap','offset','as']);await verified();const context=address(project,command.target,aliases);editable(context);if(context.target.path.length)fail('INVALID_COMMAND','Bohrungsassistent benötigt ein fertiges Teil.');const resultId=globalThis.crypto.randomUUID(),store=createCadTransactions({initial:project,build:(p,c)=>service.rebuild(p,{baseline:c.baseline})}),tools=createCadToolsNative({oc,service,transactions:store}),proposal=await tools.previewDrill({...command,id:context.node.id,resultId,revision:store.revision()});project=proposal.project;alias(command,resultId,aliases);dirtyGeometry=true;break;
+          fields(command,['op','target','reference','kind','through','termination','stopReference','associative','diameter','depth','headDiameter','headDepth','angle','gap','offset','as']);if(command.associative!==undefined&&typeof command.associative!=='boolean')fail('INVALID_COMMAND','Mitwachsende Bohrung benötigt einen booleschen Wert.');await verified();const context=address(project,command.target,aliases);editable(context);if(context.target.path.length)fail('INVALID_COMMAND','Bohrungsassistent benötigt ein fertiges Teil.');const resultId=globalThis.crypto.randomUUID(),store=createCadTransactions({initial:project,build:(p,c)=>service.rebuild(p,{baseline:c.baseline})}),tools=createCadToolsNative({oc,service,transactions:store}),proposal=await tools.previewDrill({...command,id:context.node.id,resultId,revision:store.revision()});project=proposal.project;alias(command,resultId,aliases);dirtyGeometry=true;break;
+        }
+        case 'editDrill':
+        case 'detachDrillPattern':{
+          fields(command,command.op==='editDrill'?['op','target','patch','positionReference','stopReference']:['op','target','index']);await verified();const context=address(project,command.target,aliases);editable(context);
+          const store=createCadTransactions({initial:project,build:(p,c)=>service.rebuild(p,{baseline:c.baseline})}),tools=createCadToolsNative({oc,service,transactions:store});
+          const options={id:context.root.id,path:context.target.path,revision:store.revision()},proposal=command.op==='editDrill'?await tools.previewEditDrill({...options,patch:command.patch,positionReference:command.positionReference,stopReference:command.stopReference}):await tools.previewDetachDrillPattern({...options,index:command.index});
+          project=proposal.project;dirtyGeometry=true;break;
         }
         case 'pattern':{
-          fields(command,['op','target','kind','count','step','columns','rowStep','radius','angle','startAngle','center','rotateCopies','space','as']);const context=address(project,command.target,aliases);editable(context);
+          fields(command,['op','target','kind','count','step','columns','rowStep','radius','angle','startAngle','center','rotateCopies','space','as']);const context=address(project,command.target,aliases);editable(context);assertCadLinkedPatternCopyReady(project,[context.root.id]);
           if(!Number.isSafeInteger(command.count)||command.count<2||command.count>200||!['line','grid','circle'].includes(command.kind))fail('INVALID_COMMAND','Ungültiges CAD-Muster.');const contourBefore=project.contourLinks?cadProjectSnapshot(project):undefined,chosen=frameFor(project,context,command.space??'local'),copies=[],original=structuredClone(context.node),localBounds=cadInterfaceLocalBounds(original),baseCenter=cadPoint(multiplyCadMatrices(inverseCadMatrix(chosen),context.world),localBounds.min.map((v,k)=>(v+localBounds.max[k])/2));
           for(let n=command.kind==='circle'?0:1;n<command.count;n++){
             const mapping=new Map(),copy=n===0?context.node:cloneCadSources(original,{mapping});let delta;
@@ -299,6 +308,35 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
   async function run(input,operation,{baseline=input,progress}={}){
     const project=cadProjectSnapshot(input);if(!operation||typeof operation.kind!=='string')fail('INVALID_COMMAND','CAD-Auftrag fehlt.');
     switch(operation.kind){
+      case 'linkedPatternDetachInstance':{
+        fields(operation,['kind','id','index']);if(cadProjectRevision(project)!==cadProjectRevision(baseline))fail('UNCONFIRMED_PROJECT','Das Lösen benötigt den bestätigten Modellstand.');
+        const current=project.linkedPatterns?.patterns.find(p=>p.id===operation.id),instance=current?.instances.find(i=>i.index===operation.index);if(!instance||current.excluded.includes(operation.index))fail('INVALID_COMMAND','Eine vorhandene Musterkopie auswählen.');
+        if(cadLinkedPatternProblems(project,current).length)fail('PATTERN_UPDATE_REQUIRED','Das Muster zuerst aktualisieren, bevor eine Kopie gelöst wird.');
+        const node=project.nodes.find(n=>n.id===instance.id);if(!node||containerFlags(project,node).locked)fail('LOCKED_CAD_OBJECT','Die Musterkopie fehlt oder ist gesperrt.');
+        const next={...current,excluded:[...current.excluded,operation.index].sort((a,b)=>a-b),instances:current.instances.filter(i=>i.index!==operation.index)};delete next.snapshot;
+        const stamped=stampCadLinkedPattern(project,next);project.linkedPatterns={version:1,patterns:project.linkedPatterns.patterns.map(p=>p.id===current.id?stamped:p)};
+        return {project:cadProjectSnapshot(project),changes:[{op:'linkedPatternDetachInstance',target:instance.id}],warnings:[]};
+      }
+      case 'linkedPatternDetach':{
+        fields(operation,['kind','id','confirmConflict']);if(cadProjectRevision(project)!==cadProjectRevision(baseline))fail('UNCONFIRMED_PROJECT','Das Lösen benötigt den bestätigten Modellstand.');
+        const existing=project.linkedPatterns?.patterns.find(p=>p.id===operation.id);if(!existing)fail('INVALID_COMMAND','Musterverknüpfung fehlt.');
+        if(operation.confirmConflict!==undefined&&typeof operation.confirmConflict!=='boolean')fail('INVALID_COMMAND','Ungültige Bestätigung.');
+        if(cadLinkedPatternProblems(project,existing).length&&operation.confirmConflict!==true)fail('PATTERN_UPDATE_REQUIRED','Das veraltete Muster nur nach ausdrücklicher Bestätigung lösen: vorhandene Teile bleiben unverändert, fehlende Teile werden nicht wiederhergestellt.');
+        for(const nodeId of [existing.sourceId,...existing.instances.map(i=>i.id)]){const node=project.nodes.find(n=>n.id===nodeId);if(node&&containerFlags(project,node).locked)fail('LOCKED_CAD_OBJECT','Muster oder Musterkopie ist gesperrt.');}
+        const remaining=project.linkedPatterns.patterns.filter(p=>p.id!==operation.id);if(remaining.length)project.linkedPatterns={version:1,patterns:remaining};else delete project.linkedPatterns;
+        return {project:cadProjectSnapshot(project),changes:[{op:'linkedPatternDetach',target:existing.sourceId}],warnings:[]};
+      }
+      case 'linkedPattern':{
+        fields(operation,['kind','pattern']);if(cadProjectRevision(project)!==cadProjectRevision(baseline))fail('UNCONFIRMED_PROJECT','Muster benötigt den bestätigten Modellstand.');
+        const requested=validateCadLinkedPattern(operation.pattern),previous=project.linkedPatterns?.patterns.find(p=>p.id===requested.id),context=address(project,requested.sourceId,{});editable(context);
+        if(context.parent||containerFlags(project,context.node).hidden)fail('INVALID_COMMAND','Eine sichtbare vollständige CAD-Quelle auswählen.');
+        if(!previous&&requested.snapshot)fail('INVALID_COMMAND','Neues Muster darf keinen vorherigen Zustand behaupten.');
+        for(const item of previous?.instances??[]){const node=project.nodes.find(n=>n.id===item.id);if(node&&(containerFlags(project,node).locked||containerFlags(project,node).hidden))fail('LOCKED_CAD_OBJECT','Gesperrte oder verborgene Musterkopie kann nicht aktualisiert werden.');}
+        const result=materializeCadLinkedPattern(project,requested,{previous}),list=project.linkedPatterns?.patterns??[];
+        result.project.linkedPatterns={version:1,patterns:[...list.filter(p=>p.id!==requested.id),result.pattern]};
+        const rebuilt=await service.rebuild(result.project,{baseline,progress}),pattern=stampCadLinkedPattern(rebuilt,result.pattern);rebuilt.linkedPatterns={version:1,patterns:[...list.filter(p=>p.id!==requested.id),pattern]};
+        return {project:cadProjectSnapshot(rebuilt),changes:[{op:'linkedPattern',target:requested.sourceId}],warnings:[]};
+      }
       case 'cadToMesh':{fields(operation,['kind','target','quality','id']);if(cadProjectRevision(project)!==cadProjectRevision(baseline))fail('UNCONFIRMED_PROJECT','Eine Netzkopie benötigt den bestätigten CAD-Stand, keine veränderte Vorschau.');const {node,report}=cadMeshCopyNative(oc,project,operation);project.nodes.push(node);return {project:await service.rebuild(project,{baseline,progress}),report,changes:[{op:'cadToMesh',target:operation.target}],warnings:[]};}
       case 'create':fields(operation,['kind','recipe','options']);project.nodes.push(service.nativeNode(operation.recipe,operation.options));break;
       case 'meshToCad':{fields(operation,['kind','target','sourceDigest','bytes','id','notes']);if(cadProjectRevision(project)!==cadProjectRevision(baseline))fail('UNCONFIRMED_PROJECT','Die CAD-Kopie benötigt das bestätigte Quellnetz.');project.nodes.push(meshToCadNative(service,project,operation));break;}
@@ -336,7 +374,16 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
       }
       case 'finish':{
         fields(operation,['kind','target','step']);const context=address(project,operation.target,{});editable(context);if(context.node.kind!=='cad'||context.parent)fail('INVALID_COMMAND','Kantenoperation benötigt einen fertigen CAD-Wurzelkörper.');const node=context.node,step=structuredClone(operation.step);
-        if(node.source==='group'||node.source==='finish'||node.source==='partition'||node.source==='extraction'||node.source==='modeling'){node.finish??={steps:[]};node.finish.steps.push(step);}
+        if(node.drill){
+          const references=value=>typeof value==='string'?value===node.id:Array.isArray(value)?value.some(references):!!value&&typeof value==='object'&&Object.values(value).some(references);
+          for(const key of ['projectParameters','contourLinks','joints','drawings','linkedPatterns','featureReferences'])if(references(project[key]))fail('CAD_DRILL_DEPENDENCIES_UNSUPPORTED','Eine Kantenbearbeitung auf verknüpfter Bohrung mit bestehenden Bezügen wird noch nicht unterstützt.');
+          function lockedSource(source){return !!source.locked||(source.children??[]).some(lockedSource);}if(lockedSource(node))fail('LOCKED_CAD_OBJECT','Die Bohrungsquelle oder eine ihrer Quellen ist gesperrt.');
+          const child=structuredClone(node);child.id=globalThis.crypto.randomUUID();child.transform=cadIdentity();delete child.annotations;delete child.geometryIdentity;
+          for(const edge of step.edges??[]){edge.origin.rootId=node.id;edge.origin.path=[child.id,...(edge.origin.path??[])];}
+          const reference=project.workplane.reference;if(reference?.objectId===node.id)reference.topology.origin.path=[child.id,...reference.topology.origin.path];
+          delete node.drill;delete node.operation;delete node.geometryIdentity;node.source='finish';node.children=[child];node.finish={steps:[step]};
+        }
+        else if(node.source==='group'||node.source==='finish'||node.source==='partition'||node.source==='extraction'||node.source==='modeling'){node.finish??={steps:[]};node.finish.steps.push(step);}
         else{const child=structuredClone(node);child.id=globalThis.crypto.randomUUID();child.transform=cadIdentity();for(const edge of step.edges??[]){edge.origin.rootId=node.id;edge.origin.path=[child.id,...(edge.origin.path??[])];}const reference=project.workplane.reference;if(reference?.objectId===node.id)reference.topology.origin.path=[child.id,...reference.topology.origin.path];delete node.recipe;node.source='finish';node.children=[child];node.finish={steps:[step]};}
         break;
       }
@@ -347,7 +394,7 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
         else if(['group','partition','extraction','modeling'].includes(context.node.source))delete context.node.finish;
         else if(context.node.source==='finish'){
           const wrapper=context.node,child=structuredClone(wrapper.children[0]),childId=child.id,childFrame=[...child.transform],inverseChild=inverseCadMatrix(childFrame);child.id=wrapper.id;child.transform=multiplyCadMatrices(wrapper.transform,childFrame);
-          for(const key of ['name','solid','color','opacity','multicolor','hidden','locked','layerId','folderId','metadata'])if(wrapper[key]!==undefined)child[key]=structuredClone(wrapper[key]);
+          for(const key of ['name','solid','color','opacity','multicolor','hidden','locked','layerId','folderId','metadata','annotations'])if(wrapper[key]!==undefined)child[key]=structuredClone(wrapper[key]);
           // Surviving nested operations keep their own result-root identity.
           // Only the child that takes over the wrapper ID is renamed.
           function rebase(node){for(const step of node.finish?.steps??[])for(const edge of step.edges)if(edge.origin.rootId===childId)edge.origin.rootId=wrapper.id;for(const source of node.children??[])rebase(source);}rebase(child);
@@ -357,7 +404,8 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
       }
       case 'tool':{
         fields(operation,['kind','name','options']);const store=createCadTransactions({initial:project,build:(p,context)=>service.rebuild(p,{baseline:context.baseline})}),tools=createCadToolsNative({oc,service,transactions:store});
-        if(!['previewAlign','previewAnchor','previewWorkplane','previewPlace','previewLayOnFace','previewSplit','previewExtract','previewReferencePlacement','previewDrill','previewGroup','previewEditSource','previewSuppressSource','previewDissolve'].includes(operation.name))fail('INVALID_COMMAND','Unbekanntes natives CAD-Werkzeug.');
+        if(!['previewAlign','previewAnchor','previewWorkplane','previewPlace','previewLayOnFace','previewSplit','previewExtract','previewReferencePlacement','previewDrill','previewConvertDrill','previewRebindDrills','previewEditDrill','previewDetachDrillPattern','previewGroup','previewEditSource','previewSuppressSource','previewDissolve'].includes(operation.name))fail('INVALID_COMMAND','Unbekanntes natives CAD-Werkzeug.');
+        const drillOptions={previewRebindDrills:['id','bindings'],previewConvertDrill:['id','confirmed','reference','kind','through','termination','stopReference','diameter','depth','headDiameter','headDepth','angle','gap','offset'],previewDrill:['id','reference','kind','through','termination','stopReference','diameter','depth','headDiameter','headDepth','angle','gap','offset','associative','resultId'],previewEditDrill:['id','path','patch','positionReference','stopReference'],previewDetachDrillPattern:['id','path','index']}[operation.name];if(drillOptions)fields(operation.options,drillOptions);
         const result=await tools[operation.name]({...operation.options,revision:store.revision()});return {project:result.project};
       }
       case 'sketchAttachment':{
@@ -380,7 +428,7 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
       const dimensions={...cadAxisMeasures(localBounds,node.transform,world),...(node.kind==='cad'?{solids}:{})};
       const objectType=projectObjectType(node),sharedCommands=state.locked?[]:['update','transform','duplicate','delete','align','drop','pattern','assign'],meshTools=node.kind!=='mesh'||state.locked||state.hidden?[]:['role','repair',...(node.meshRole!=='hole'?['counterpart']:[]),...(objectType==='closedMesh'?['group','sourceEdit',...(node.meshRole!=='hole'?['split','drill','bodies','finish','dissolve']:[])]:[])];
       const meshSources=node.kind==='mesh'?meshSourceTree(node).slice(0,500).map(({node:source,path,poseEditable,suppressed,suppressible,locked,hidden})=>({path,name:source.name,type:source.type,size:source.size,pos:source.pos,rot:source.rot,mirror:source.mirror,params:source.params,segments:source.segments,color:source.color,opacity:source.opacity,solid:source.solid,poseEditable,suppressed,suppressible,locked,hidden})):undefined;
-      objects.push({...dimensions,...(hasGeometryRefs(node)?{geometryLoaded:false,geometryEvidence:'package-catalogue-only'}:{}),id:node.id,name:node.name,kind:node.kind,type:node.recipe?.type??node.source??objectType,objectType,capabilities:projectObjectCapabilities(node),automation:{sharedCommands,meshTools,programTools:state.locked||state.hidden?[]:node.kind==='mesh'?['mesh','app','converter']:node.kind==='cad'?['cad','app']:[],meshBodyProofRequired:node.kind==='mesh',nativeTools:node.kind==='cad'&&!state.locked&&!state.hidden},...(node.kind==='mesh'?{meshRole:node.meshRole??'solid',geometryDigest:projectObjectGeometryDigest(node),meshSources}:{}),target:{rootId,path},parentId:path.length?path.at(-2)??rootId:null,solid:node.solid,source:node.source,recipe:node.recipe,transform:node.transform,worldMatrix:world,localBounds,worldBounds,volume,hidden:state.hidden,locked:state.locked,suppressed:!!node.suppressed,color:node.color,opacity:node.opacity,operation:node.operation,children:(node.children??[]).map(c=>c.id),finish:node.finish,modeling:node.modeling,annotations:node.annotations?.map(a=>cadAnnotationWorld(a,world)),extraction:node.extraction,sourceGeometryReadonly:inherited.sourceGeometryReadonly,partition:node.partition,partitionWorld:node.partition?cadPartitionWorldPlane(node.partition,world):undefined,layerId:node.layerId,folderId:node.folderId,metadata:node.metadata});
+      objects.push({...dimensions,...(hasGeometryRefs(node)?{geometryLoaded:false,geometryEvidence:'package-catalogue-only'}:{}),id:node.id,name:node.name,kind:node.kind,type:node.recipe?.type??node.source??objectType,objectType,capabilities:projectObjectCapabilities(node),automation:{sharedCommands,meshTools,programTools:state.locked||state.hidden?[]:node.kind==='mesh'?['mesh','app','converter']:node.kind==='cad'?['cad','app']:[],meshBodyProofRequired:node.kind==='mesh',nativeTools:node.kind==='cad'&&!state.locked&&!state.hidden},...(node.kind==='mesh'?{meshRole:node.meshRole??'solid',geometryDigest:projectObjectGeometryDigest(node),meshSources}:{}),target:{rootId,path},parentId:path.length?path.at(-2)??rootId:null,solid:node.solid,source:node.source,recipe:node.recipe,transform:node.transform,worldMatrix:world,localBounds,worldBounds,volume,hidden:state.hidden,locked:state.locked,suppressed:!!node.suppressed,color:node.color,opacity:node.opacity,operation:node.operation,children:(node.children??[]).map(c=>c.id),drill:node.drill,finish:node.finish,modeling:node.modeling,annotations:node.annotations?.map(a=>cadAnnotationWorld(a,world)),extraction:node.extraction,sourceGeometryReadonly:inherited.sourceGeometryReadonly,partition:node.partition,partitionWorld:node.partition?cadPartitionWorldPlane(node.partition,world):undefined,layerId:node.layerId,folderId:node.folderId,metadata:node.metadata});
       objects.at(-1).metadata=parametricSceneMetadata(node.metadata);
       for(const child of node.children??[])visit(child,world,rootId,[...path,child.id],state);
     }

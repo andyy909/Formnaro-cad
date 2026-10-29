@@ -25,6 +25,16 @@
 
 ---
 
+<!-- formnaro-development-status:start -->
+## Aktueller Entwicklungsstand 0.120.0
+
+Die Quellen enthalten mitwachsende Bohrungen, verknüpfte Muster und direkte Skizzenmaße sowie die weiteren seit 0.117.0 entwickelten Änderungen. Aktuelle Projektparameter und Varianten bleiben bei der Flächenneuzuordnung erhalten. STEP-Fehler beim Bohren in nicht gleichmäßig skalierte Quader und Zylinder sind korrigiert.
+
+**Geprüft:** 2.365 Tests in 395 Suiten, 83 Windows-Prüfgruppen und 13 Dialogschritte bestanden. OCAD/FNPACK-Rundläufe und unabhängige STEP-Topologie-/Referenzprüfungen bestanden. [Prüfstand und Grenzen](docs/PRUEFSTAND-0.120.0.md) · [Ausbauplan und offene Punkte](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md).
+
+Dies ist ein Quell-Entwicklungsstand. Die vollständige gemeinsame GUI-Abnahme und die gepackte Windows-/Soak-/Recovery-Abnahme stehen noch aus. Der unten verlinkte Windows-Download 0.117.0-r8 ist eine gesondert abgenommene ältere Ausgabe.
+<!-- formnaro-development-status:end -->
+
 ## Über Formnaro
 
 Formnaro ist ein portables Programm zum Erstellen und Bearbeiten von 3D-Modellen und technischen Zeichnungen.

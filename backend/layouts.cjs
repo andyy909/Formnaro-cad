@@ -52,7 +52,7 @@ function installLayouts(win,{directory,ipcMain,shell}={}){
     ['cad-layout:get',()=>store.inspect()],['cad-layout:change',args=>store.change(args)],
     ['cad-layout:folder',async()=>{await fs.mkdir(store.directory,{recursive:true});const error=await shell.openPath(store.directory);if(error)throw Error(error);return true;}]
   ])ipcMain.handle(channel,async(event,args)=>{
-    if(event.sender!==win.webContents)return {ok:false,error:'Invalid window.'};
+    if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return {ok:false,error:'Invalid window.'};
     try{return {ok:true,value:await handler(args)};}catch(e){return {ok:false,error:e.message};}
   });
   return store;

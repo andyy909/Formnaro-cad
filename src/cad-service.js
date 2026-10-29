@@ -1,3 +1,4 @@
+import {buildAssociativeStepDrill} from './cad-step-drill.js';
 import {partFaceColors,splitPartSurfaceMesh,hasCurrentPartSurfaceGroups} from './cad-part-properties.js';
 import {hasGeometryRefs,isGeometryRef,sameDeferredGeometry} from './cad-geometry-ref.js';
 import {cadStepMeshParts} from './cad-step-appearance.js';
@@ -20,6 +21,7 @@ import {partitionCadNative} from './cad-partition-native.js';
 import {extractCadNative} from './cad-extraction-native.js';
 import {cadGeometryDigest,cadSourceGeometryDigest} from './cad-geometry-digest.js';
 import {cadModelingNative,cadProfileModelingNative} from './cad-modeling-native.js';
+import {buildAssociativeBoxDrill} from './cad-associative-drill.js';
 
 // This independent service is not enabled in the v4 application. Unsupported
 // construction or transformation fails instead of entering a mesh code path.
@@ -60,6 +62,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     try{
       if(node.source==='native')shape=buildCadRecipe(oc,node.recipe,{affineTransform:(s,m)=>transformCad(oc,s,m),constructionBudget:nodeTolerance(node,world)});
       else if(node.source==='step')shape=readCadBrep(oc,node.brep.data);
+      else if(node.drill)shape=node.drill.version===3?buildAssociativeStepDrill(oc,node.children[0],node.drill):buildAssociativeBoxDrill(oc,node.children[0],node.drill);
       else{
         if(node.source==='modeling'){
           if(node.modeling.sourceSignature&&cadSourceGeometryDigest(node.children[0])!==node.modeling.sourceSignature)throw Object.assign(Error('Die Originalgeometrie wurde geändert. Die Bearbeitungsfläche erneut wählen.'),{code:'CAD_MODELING_REFERENCE_CHANGED'});
@@ -109,7 +112,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
   function sourceKey(node,budget){
     if(node.source==='native')return JSON.stringify(['native',node.recipe,budget]);
     if(node.source==='step')return JSON.stringify(['step',node.brep.data]);
-    return JSON.stringify([node.source,node.operation,node.partition,node.extraction,node.modeling,node.finish,node.children.map(child=>[node.finish?child.id:null,child.brep.data,child.transform,child.solid,!!child.suppressed,...(node.source==='modeling'?[child.recipe]:[])])]);
+    return JSON.stringify([node.source,node.operation,node.partition,node.extraction,node.modeling,node.finish,node.drill,node.children.map(child=>[node.finish?child.id:null,child.brep.data,child.transform,child.solid,!!child.suppressed,...(node.source==='modeling'?[child.recipe]:[])])]);
   }
   function cached(node,world,signal){
     const key=sourceKey(node,nodeTolerance(node,world));let entry=cache.get(key),owned=false;

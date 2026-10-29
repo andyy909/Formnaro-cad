@@ -1,6 +1,19 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{EventEmitter}=require('node:events');
-const {createErrorLog,installErrorLog}=require('../backend/error-log.cjs');
+const {createErrorLog,installErrorLog,redact}=require('../backend/error-log.cjs');
 function fixture(fn){const root=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-error-log-'));try{return fn(root);}finally{fs.rmSync(root,{recursive:true,force:true});}}
+
+test('Credential redaction removes trailing non-word token characters completely',()=>{
+ for(const suffix of ['-','_','=','==','--'])assert.equal(redact('Bearer synthetic-audit-token'+suffix),'[entfernt]');
+ assert.equal(redact('sk-synthetic-audit-token-'),'[entfernt]');
+});
+test('A flood of different log messages has bounded disk writes and cannot suppress fatal diagnosis',()=>fixture(root=>{
+ let time=1720000000000;const log=createErrorLog({directory:root,now:()=>new Date(time)}),results=[];
+ for(let i=0;i<100;i++)results.push(log.append({source:'renderer-console',message:'synthetic error '+i}));
+ assert.ok(results.filter(r=>r.written).length<=20);assert.ok(results.some(r=>r.rateLimited));
+ assert.equal(log.append({source:'main-process',message:'spoofed fatal'}).rateLimited,true);
+ assert.equal(log.append({source:'main-process',message:'fatal diagnosis'},{critical:true}).written,true);
+ time+=1001;assert.equal(log.append({message:'new interval'}).written,true);
+}));
 test('Structured error logs preserve diagnosis, redact credentials and discard full models/requests',()=>fixture(root=>{
  const log=createErrorLog({directory:root,version:'0.12.1',now:()=>new Date('2026-10-13T10:00:00Z')}),secret='sk-project-secretabcdefghijk',token='a'.repeat(64);
  const result=log.append({source:'cad-worker',message:`Fehler ${secret} Bearer some-other-secret api_key=genericsecret token=${token} https://host/path?access=secret`,stack:'at validateCadSolid',phase:'boolean-difference',nodeCount:3,operation:'previewGroup',project:{brep:'PRIVATE MODEL'},request:{prompt:'PRIVATE PROMPT'},password:'private'});

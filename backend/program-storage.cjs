@@ -41,7 +41,7 @@ function createProgramStore(directory,{legacyAIFile,write=writeAtomicSync,cadOnl
         fs.mkdirSync(stage,{recursive:true});
         for(const key of keys)write(path.join(stage,entries[key].file),legacy[key]);
         if(legacyAIFile&&fs.existsSync(legacyAIFile)){
-          if(fs.statSync(legacyAIFile).size>65536)throw Error('KI-Einstellungen sind zu groß.');
+          if(fs.statSync(legacyAIFile).size>65536)throw Object.assign(Error('KI-Einstellungen sind zu groß.'),{code:'INVALID_LEGACY_AI'});
           write(path.join(stage,'ai-settings.json'),fs.readFileSync(legacyAIFile));
         }
         write(path.join(stage,MARKER),JSON.stringify(FORMAT,null,2)+'\n');
@@ -58,7 +58,7 @@ function createProgramStore(directory,{legacyAIFile,write=writeAtomicSync,cadOnl
           }
           migrated=keys.length>0;
         }
-      }catch{throw Error(WRITE_ERROR);}
+      }catch(error){if(error.code==='INVALID_LEGACY_AI')throw error;throw Error(WRITE_ERROR,{cause:error});}
       finally{fs.rmSync(stage,{recursive:true,force:true});}
     }
     marker();const values={},revisions={};
@@ -89,13 +89,13 @@ function installProgramStorage(win,{directory,legacyAIFile,ipcMain,shell,cadOnly
   const electron=(!ipcMain||!shell)?require('electron'):null;ipcMain||=electron.ipcMain;shell||=electron.shell;
   const store=createProgramStore(directory,{legacyAIFile,cadOnly});
   for(const [name,fn]of [['initialize',args=>store.initialize(args)],['change',args=>store.change(args)]])ipcMain.on('cad-data:'+name,(event,args)=>{
-    if(event.sender!==win.webContents){event.returnValue={ok:false,error:'Invalid window.'};return;}
+    if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame){event.returnValue={ok:false,error:'Invalid window.'};return;}
     // The renderer already owns the accepted value. Returning a multi-MB
     // autosave again would synchronously encode/copy it back over Electron IPC.
     try{const saved=fn(args);event.returnValue={ok:true,value:name==='change'?{revision:saved.revision}:saved};}catch(e){event.returnValue={ok:false,error:e.message};}
   });
   ipcMain.handle('cad-data:folder',async event=>{
-    if(event.sender!==win.webContents)return {ok:false,error:'Invalid window.'};
+    if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return {ok:false,error:'Invalid window.'};
     try{const error=await shell.openPath(store.directory);if(error)throw Error(error);return {ok:true,value:true};}catch(e){return {ok:false,error:e.message};}
   });
   return store;

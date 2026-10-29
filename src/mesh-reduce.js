@@ -1,11 +1,13 @@
 import {buildMeshSelectionTopology,meshSelectionGeometryDigest} from './mesh-selection-data.js';
 import {inspectMeshTopology} from './mesh-inspector.js';
+import {validateLargeMeshReduceOptions} from './mesh-large-reduce.js';
 
 export const MESH_REDUCE_LIMIT=150000;
 const fail=(message,code='MESH_REDUCE')=>{throw Object.assign(Error(message),{code});};
 const abort=signal=>{if(signal?.aborted)throw Object.assign(Error('Vereinfachung abgebrochen.'),{name:'AbortError'});};
 const tick=(i,signal)=>{if(!(i%1024))abort(signal);};
 export function validateMeshReduceOptions(o){
+ if(o?.method==='large-v1')return validateLargeMeshReduceOptions(o);
  if(!o||Object.getPrototypeOf(o)!==Object.prototype||Object.keys(o).some(k=>!['method','geometryDigest','scope','triangleIds','targetMode','target','maxDeviation'].includes(k))||!['planar-v1','curved-v1'].includes(o.method)||!(/^[a-f0-9]{64}$/).test(o.geometryDigest??'')||!['all','selection'].includes(o.scope)||!['percent','count'].includes(o.targetMode)||!Number.isFinite(o.target)||!Number.isFinite(o.maxDeviation)||o.maxDeviation<0||o.maxDeviation>1||!Array.isArray(o.triangleIds)||o.triangleIds.length>MESH_REDUCE_LIMIT||new Set(o.triangleIds).size!==o.triangleIds.length||o.triangleIds.some(i=>!Number.isSafeInteger(i)||i<0||i>=MESH_REDUCE_LIMIT)||o.scope==='all'&&o.triangleIds.length||o.scope==='selection'&&!o.triangleIds.length)fail('Ungültige Optionen oder veraltete Flächenauswahl für die Vereinfachung.');
  if(o.targetMode==='percent'&&(o.target<1||o.target>=100)||o.targetMode==='count'&&(!Number.isSafeInteger(o.target)||o.target<1||o.target>MESH_REDUCE_LIMIT))fail('Ziel: 1 bis unter 100 % verbleibende Dreiecke oder eine positive ganze Dreieckszahl.');
  return {...o,triangleIds:[...o.triangleIds].sort((a,b)=>a-b)};

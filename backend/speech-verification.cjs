@@ -29,8 +29,19 @@ exports.verifySpeech=async function(win,{directory,tempDirectory}){
   await run(`window.__speechOriginalGet=navigator.mediaDevices.getUserMedia;navigator.mediaDevices.getUserMedia=async()=>{throw new DOMException('Denied','NotAllowedError');};void 0;`);await click('#ai-chat-mic');await until("!window.__cadTest.aiUI.chat.state().speechBusy");
   check(await run("document.getElementById('ai-chat-speech-status').textContent.includes('Mikrofonzugriff nicht erlaubt')&&!document.getElementById('ai-chat-send').disabled"),'Permission refusal explains recovery and unlocks chat');
   await run('navigator.mediaDevices.getUserMedia=window.__speechOriginalGet;void 0');
+  const realFetch=global.fetch;let onlineCalls=0;
+  try{
+   global.fetch=async(url,options)=>{if(!String(url).startsWith('https://api.deepgram.com/v1/listen?'))return realFetch(url,options);onlineCalls++;check(options.method==='POST'&&options.body.length>44&&options.headers['Content-Type']==='audio/wav','Online recognition sends actual recorded audio through the fixed provider endpoint');return new Response(JSON.stringify({results:{channels:[{alternatives:[{transcript:'Online erkannt: Bohrung 8 mm.'}]}]}}));};
+   await run("document.getElementById('ai-chat-speech-setup').open=true;document.getElementById('ai-chat-speech-key').value='synthetic-speech-test-key';document.getElementById('ai-chat-speech-key-save').click();void 0");await until("document.getElementById('ai-chat-speech-mode').value==='online'");
+   const saved=fs.readFileSync(path.join(directory,'portable-data','Sprache-Online.json'),'utf8');check(!saved.includes('synthetic-speech-test-key')&&saved.includes('encryptedKey'),'Online provider key is saved encrypted in the isolated profile');
+   await run("document.getElementById('ai-chat-speech-key').scrollIntoView({block:'nearest'});void 0");await pause(100);check(await run("(()=>{const e=document.getElementById('ai-chat-speech-key'),r=e.getBoundingClientRect();return r.width>0&&r.top>=0&&r.bottom<=innerHeight&&e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));})()"),'Online key entry is reachable through the chat scroll area');await shot('online-setup');
+   await click('#ai-chat-mic');await until("document.getElementById('ai-chat-mic').getAttribute('aria-pressed')==='true'");await pause(1800);await click('#ai-chat-mic');await until("!window.__cadTest.aiUI.chat.state().speechBusy");
+   check(onlineCalls===1&&await run("document.getElementById('ai-chat-prompt').value.includes('Online erkannt: Bohrung 8 mm.')"),'Actual recorder and IPC insert the online transcript without submitting the chat');
+   check(await run('window.__cadTest.serialize()===window.__speechBefore&&window.__cadTest.aiUI.chat.state().historyCount===0'),'Online dictation leaves the project and chat history unchanged');
+   await click('#ai-chat-speech-key-clear');await until("document.getElementById('ai-chat-speech-mode').value==='local'");check(!fs.existsSync(path.join(directory,'portable-data','Sprache-Online.json')),'Removing the speech key removes its isolated settings file');
+  }finally{global.fetch=realFetch;}
   win.setSize(1000,680);await pause(300);
-  for(const id of ['ai-chat-mic','ai-chat-speech-language','ai-chat-send']){
+  for(const id of ['ai-chat-mic','ai-chat-speech-language','ai-chat-speech-mode','ai-chat-send']){
    await run(`document.getElementById(${JSON.stringify(id)}).scrollIntoView({block:'nearest'})`);await pause(100);
    check(await run(`(()=>{const e=document.getElementById(${JSON.stringify(id)}),r=e.getBoundingClientRect();return r.width>0&&r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));})()`),'Minimum window: '+id+' is reachable through the chat scroll area');
   }

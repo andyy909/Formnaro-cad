@@ -7,6 +7,7 @@ import {cadProjectSnapshot} from './cad-project.js';
 import {cadIdentity,cadPoint,multiplyCadMatrices,inverseCadMatrix} from './cad-affine.js';
 import {cadBounds,cadRayHits,cadNativeCapabilities,readCadBrep,transformCad} from './cad-native-kernel.js';
 import {cadWorkplaneFromHit} from './cad-tools-native.js';
+import {identifyCadBoxFaceAnchor,remapCadBoxFaceAnchor} from './cad-box-face-anchor.js';
 
 function unit(v){if(!Array.isArray(v)||v.length!==3||!v.every(Number.isFinite))throw Error('CAD-Flächenanker benötigt eine endliche Normale.');const largest=Math.max(...v.map(Math.abs));if(!largest)throw Error('CAD-Flächenanker benötigt eine endliche Normale.');const scaled=v.map(x=>x/largest),length=Math.hypot(...scaled);return scaled.map(x=>x/length);}
 function normal(matrix,n){const inverse=inverseCadMatrix(matrix);return unit([0,1,2].map(row=>inverse[row*4]*n[0]+inverse[row*4+1]*n[1]+inverse[row*4+2]*n[2]));}
@@ -31,6 +32,23 @@ export function projectCadFaceAnchorNative(oc,shape,anchor,{tolerance=1e-6}={}){
 }
 
 function sourceNode(root,path){let node=root,matrix=cadIdentity();for(const id of path){node=node.children?.find(child=>child.id===id);if(!node||node.suppressed)return null;matrix=multiplyCadMatrices(matrix,node.transform);}return {node,matrix};}
+function boxAnchor(oc,topology,root,oldRoot){
+  if(!topology.origin.featureId?.startsWith('box-face-'))return null;
+  const source=sourceNode(root,topology.origin.path),oldSource=oldRoot&&sourceNode(oldRoot,topology.origin.path);
+  if(!source||source.node.source!=='native'||source.node.recipe?.type!=='box'||!source.node.solid)return null;
+  // For a newly created root (split/extraction), no old root with its new ID
+  // exists. Keep the exact saved point only if it still lies on the same box
+  // feature; the caller additionally requires one native result-face match.
+  // Without an old source no changed point may be extrapolated or guessed.
+  if(!oldRoot){const shape=readCadBrep(oc,source.node.brep.data);try{const inverse=inverseCadMatrix(source.matrix),anchor={point:cadPoint(inverse,topology.anchor.point),normal:normal(inverse,topology.anchor.normal)};return identifyCadBoxFaceAnchor(anchor,cadBounds(oc,shape))===topology.origin.featureId?structuredClone(topology.anchor):null;}finally{shape.delete();}}
+  if(!oldSource||source.node.id!==oldSource.node.id||oldSource.node.source!=='native'||oldSource.node.recipe?.type!=='box'||source.node.solid!==oldSource.node.solid)return null;
+  const previous=readCadBrep(oc,oldSource.node.brep.data),current=readCadBrep(oc,source.node.brep.data);
+  try{
+    const inverse=inverseCadMatrix(oldSource.matrix),anchor={point:cadPoint(inverse,topology.anchor.point),normal:normal(inverse,topology.anchor.normal)};
+    const result=remapCadBoxFaceAnchor({feature:topology.origin.featureId,anchor,previousBounds:cadBounds(oc,previous),currentBounds:cadBounds(oc,current)});
+    return result?{point:cadPoint(source.matrix,result.point),normal:normal(source.matrix,result.normal)}:null;
+  }finally{previous.delete();current.delete();}
+}
 function cylinderAnchor(oc,topology,root,oldRoot){
   const feature=topology.origin.featureId;if(!['cylinder-face-top','cylinder-face-bottom','cylinder-face-side'].includes(feature))return null;
   const source=sourceNode(root,topology.origin.path);if(!source||source.node.source!=='native'||source.node.recipe?.type!=='cylinder')return null;
@@ -55,7 +73,7 @@ export function rebindCadWorkplaneNative(oc,input,{baseline,resolveSourceFeature
   const root=p.nodes.find(node=>node.id===reference.objectId&&node.kind==='cad');if(!root){p.workplane.reference=null;return p;}
   if(hasGeometryRefs(root))return p;
   const original=structuredClone(p.workplane),topology=reference.topology,oldRoot=baseline&&cadProjectSnapshot(baseline).nodes.find(node=>node.id===reference.objectId);let expected;
-  if(topology.origin.featureId){if(resolveSourceFeature)expected=resolveSourceFeature({reference:structuredClone(reference),root,oldRoot});if(!expected)expected=cylinderAnchor(oc,topology,root,oldRoot);if(!expected){p.workplane.reference=null;return p;}}
+  if(topology.origin.featureId){if(resolveSourceFeature)expected=resolveSourceFeature({reference:structuredClone(reference),root,oldRoot});if(!expected)expected=cylinderAnchor(oc,topology,root,oldRoot);if(!expected)expected=boxAnchor(oc,topology,root,oldRoot);if(!expected){p.workplane.reference=null;return p;}}
   else expected=structuredClone(topology.anchor);
   if(!expected.normal){p.workplane.reference=null;return p;}
   const local=readCadBrep(oc,root.brep.data);let world;

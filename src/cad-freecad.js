@@ -1,6 +1,7 @@
 import {dispatchFreeCAD} from './cad-freecad-dispatch.js';
 const fail=message=>{throw Object.assign(Error(message),{code:'FREECAD_INPUT'});};
 import {cadBytesDigest} from './cad-geometry-digest.js';
+import {assertCadLinkedPatternExportReady} from './cad-linked-pattern-data.js';
 export async function runFreeCADPlan({project,operation,exportGeometry,signal,desktop=globalThis.offlinecadDesktop}){
  if(!desktop?.runFreeCADReply)fail('FreeCAD benötigt die Desktop-Ausgabe von Formnaro.');
  if(!operation||Object.keys(operation).some(k=>!['kind','plan','script','inputs'].includes(k))||!['build','inspect'].includes(operation.kind)||!!operation.plan===!!operation.script||!Array.isArray(operation.inputs??[])||(operation.inputs??[]).length>8)fail('FreeCAD: build oder inspect mit genau einem plan oder script und höchstens acht Eingaben wählen.');
@@ -9,6 +10,7 @@ export async function runFreeCADPlan({project,operation,exportGeometry,signal,de
   if(!input||Object.keys(input).some(k=>!['name','target'].includes(k)))fail('FreeCAD-Eingabe benötigt name und target.');
   const id=typeof input.target==='string'?input.target:input.target?.path?.length===0?input.target.rootId:null,node=project.nodes.find(n=>n.id===id);
   if(!node)fail('Ein vorhandenes Quellteil wählen.');
+  assertCadLinkedPatternExportReady(project,{ids:[id]});
   // Inspection/export reads hidden and locked sources without changing them.
   // A private export copy also represents legacy reference meshes as material.
   const exportProject=structuredClone(project),copy=exportProject.nodes.find(n=>n.id===id);copy.hidden=false;

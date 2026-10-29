@@ -1,12 +1,63 @@
-Formnaro 0.114.0-r7 – Integrierte CAD-Laufzeit, 27.10.2026
+Formnaro 0.120.0 – Übungsmodus, 29.10.2026
 
-Das vollständige ZIP entpacken und Formnaro/Formnaro.exe starten.
+Der Übungsmodus führt begrenzte Modellieraufgaben in einem getrennten
+Übungsfenster mit eigenem temporärem Profil und leerem Projekt vor. Dort werden
+sichtbare Bedienelemente betätigt und Werte eingegeben; die Schritte werden
+geprüft. Das Teil wird über den sichtbaren Einpassen-Knopf herangezoomt.
+Das eigene Projekt wird nicht automatisch verändert oder übernommen.
+Die erste Ausbaustufe unterstützt Quader, Zylinder, Maße und Positionen,
+Lochrolle, Auswahl und Gruppierung. Weitere Werkzeuge und freies Ziehen werden
+nicht automatisch unterstützt. Ein KI-Auftrag kann Kosten verursachen; der
+Übungsablauf selbst arbeitet ohne Cloudzugriff. Pause, Weiter und Stop sind im
+Übungsfenster verfügbar; bei Fokusverlust wartet die Übung auf Weiter.
+
+Formnaro 0.119.2 – Bedienziele und Vorschau, 29.10.2026
+
+Die Modellvorführung zeigt vor einem Berechnungsschritt auf das zugehörige
+registrierte Bedienziel, etwa eine Grundform oder ein Werkzeug. Danach erscheint
+die berechnete Vorschau. Die Form wird dabei nicht wirklich per Maus gezogen
+oder per Klick erstellt; übernehmen ändert das Projekt erst nach Bestätigung.
+Wenn das Ziel im aktuellen Modus nicht sichtbar ist, weist die Vorführung auf
+den Rückfall zur Arbeitsfläche hin. Pausieren, Abbrechen und Wiedergabe bleiben.
+
+Weitere Hinweise zur gezielten Menü-Hilfe aus 0.119.1:
+
+Neu: Reine Bedienfragen erhalten einen kleineren Ziel- und Hilfekontext statt
+des vollständigen CAD-Befehlsschemas und nutzen höchstens drei KI-Anfragen.
+Zusammengehörige Menüpunkte sollen gemeinsam gezeigt und kurz erklärt werden.
+Modellaufträge behalten die vollständige CAD-API. Antworten, die aus dem kleinen
+Bedienkontext dennoch Modellbefehle liefern, werden zuerst mit vollständigem
+Kontext neu angefordert. Die bisherigen Modelle werden dadurch nicht verändert.
+Projektparameter und Gelenke haben getrennt beschriebene Voraussetzungen;
+Gelenke können auch starre Netzmaterialteile verbinden.
+
+Weitere Hinweise zu Sprache und Wiedergabe aus 0.119.0:
+
+Neu: langsam geführte Bedienhilfe mit lokal abspielbarer Bildaufzeichnung und
+Zeitleiste, erweiterte Assistentenregeln und Euro-Schätzungen für KI-Kosten.
+Optional kann Deepgram Nova-3 für Spracheingabe eingerichtet werden; dafür ist
+ein eigener Deepgram-API-Schlüssel erforderlich. Dabei wird die Aufnahme an
+Deepgram übertragen und es können Kosten entstehen. Die lokale Erkennung bleibt
+verfügbar. Ein Geschwindigkeitsvorteil der Online-Erkennung wurde ohne Konto
+nicht gemessen. Details: docs/SPRACHEINGABE.md und docs/PROJEKTKONTEXT.md.
+
+Nachfolgend die Hinweise der vorherigen Ausgabe.
+
+Formnaro 0.118.3 – Paketprüfung und lokale Sicherheit, 29.10.2026
+
+Den vollständigen Programmordner entpacken und Formnaro.exe starten.
 FreeCAD 1.1.4 und Python 3.11 sind enthalten; keine separate Installation
 oder Pfadeinrichtung erforderlich. Alle Unterordner und Lizenzen mitnehmen.
-Persönliche Modelle, Einstellungen und Zugangsdaten sind nicht enthalten.
+Eine frisch erstellte Ausgabe enthält keine persönlichen Modelle, Einstellungen
+oder Zugangsdaten. Nach der Benutzung enthält ihr Ordner Daten/ eigene Arbeitsdaten.
+Diese Daten sichern und beim Versionswechsel bewusst übernehmen; nicht löschen,
+um eine benutzte Ausgabe zur Weitergabe zu bereinigen.
 
-Paket 6a ist auf frischem Windows ohne externe FreeCAD-/Python-Installation
-abgenommen. Details: docs/INTEGRIERTE-CAD-LAUFZEIT.md.
+Neu: vollständige Geometrieverweissuche in Paketen, speichersparende Prüfung des
+Sprachpakets, vollständige Tokenmaskierung, begrenztes Fehlerlogging und einheitliche
+IPC-/Navigationsgrenzen. Electron 44.10.0. Details: docs/NACHPRUEFUNG-0.118.3.md.
+Die Ausgabe hat eine gezielte Nachprüfung; Umfang und Ergebnis stehen in Abnahme.json.
+Integrierte CAD-Laufzeit: docs/INTEGRIERTE-CAD-LAUFZEIT.md.
 
 Nachfolgend historische Funktions- und Versionshinweise.
 

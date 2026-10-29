@@ -34,12 +34,12 @@ function installFiles(win,{ipcMain,dialog,sequenceFile}=require('electron')){
     if(sequenceFile)try{await fs.mkdir(path.dirname(sequenceFile),{recursive:true});await writeAtomic(sequenceFile,Buffer.from(JSON.stringify([...series.values()])));}catch{/* The model was saved; retain numbering in memory if preferences are unwritable. */}
   }
   ipcMain.handle('cad-file:cancel',async(event,args)=>{
-    if(event.sender!==win.webContents)return {ok:false,error:'Invalid window.'};
+    if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return {ok:false,error:'Invalid window.'};
     if(!args||typeof args.operationId!=='string'||!/^[a-zA-Z0-9-]{1,100}$/.test(args.operationId))return {ok:false,error:'Ungültige Ausgabekennung.'};
     const canceled=!!activeSave&&activeSave.id===args.operationId;if(canceled)activeSave.canceled=true;return {ok:true,value:{canceled}};
   });
   ipcMain.handle('cad-file:save',async(event,args)=>{
-    if(event.sender!==win.webContents)throw Error('Invalid window.');
+    if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return {ok:false,error:'Invalid window.'};
     if(saving)return {ok:false,error:'Eine Dateiauswahl ist bereits geöffnet.'};
     try{
       if(!args||typeof args.filename!=='string'||args.filename.length>220||/[<>:"/\\|?*\x00-\x1f]/.test(args.filename)||args.numbered!==undefined&&typeof args.numbered!=='boolean'||args.operationId!==undefined&&(typeof args.operationId!=='string'||!/^[a-zA-Z0-9-]{1,100}$/.test(args.operationId))||!(args.bytes instanceof Uint8Array)||args.bytes.length>400*1024*1024)throw Error('Ungültige Dateidaten.');

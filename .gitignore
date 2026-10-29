@@ -44,3 +44,7 @@ Thumbs.db
 /speech-runtime/*.dll
 /speech-runtime/*.bin
 /freecad-runtime/runtime/
+
+# Lokale Live-Diagnosehelfer ohne Auslieferungsfunktion
+/.formnaro-live-ui-temp.cjs
+/scripts/.formnaro-live-eval-temp.cjs

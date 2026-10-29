@@ -1,4 +1,5 @@
 const fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),{createHash}=require('node:crypto'),{spawn}=require('node:child_process');
+const {createReadStream}=require('node:fs');
 const MAX_SECONDS=180,MAX_BYTES=44+16000*2*MAX_SECONDS;
 const MODELS={'small-q5_1':{file:'ggml-small-q5_1.bin',label:'Whisper small'},'large-v3-turbo-q5_0':{file:'ggml-large-v3-turbo-q5_0.bin',label:'Whisper large-v3-turbo'}};
 function validateAudio(value){
@@ -10,7 +11,7 @@ function validateAudio(value){
  if(Math.sqrt(energy/((b.length-44)/2))<0.001)throw Error('Keine hörbare Sprache aufgenommen. Mikrofon und Eingangslautstärke prüfen.');
  return {bytes:Buffer.from(b),seconds};
 }
-function createSpeechService({directory,tempDirectory=os.tmpdir(),spawnProcess=spawn,timeoutMs=10*60*1000}={}){
+function createSpeechService({directory,tempDirectory=os.tmpdir(),spawnProcess=spawn,timeoutMs=10*60*1000,online}={}){
  let active=null,verified=null;
  async function checkRuntime(){
   if(!verified)verified=(async()=>{
@@ -18,8 +19,9 @@ function createSpeechService({directory,tempDirectory=os.tmpdir(),spawnProcess=s
    if(manifest.engine!=='whisper.cpp'||!Object.hasOwn(MODELS,manifest.model)||!Array.isArray(manifest.files)||!manifest.files.length)throw Error('Ungültiges Sprachpaket.');
    for(const item of manifest.files){
     if(!/^[a-zA-Z0-9_.-]+$/.test(item.name)||! /^[a-f0-9]{64}$/.test(item.sha256))throw Error('Ungültiges Sprachpaket.');
-    const bytes=await fs.readFile(path.join(directory,item.name));
-    if(createHash('sha256').update(bytes).digest('hex')!==item.sha256)throw Error('Das lokale Sprachpaket ist beschädigt.');
+    const digest=createHash('sha256');
+    for await(const bytes of createReadStream(path.join(directory,item.name),{highWaterMark:1024*1024}))digest.update(bytes);
+    if(digest.digest('hex')!==item.sha256)throw Error('Das lokale Sprachpaket ist beschädigt.');
    }
    const model=MODELS[manifest.model];
    if(!manifest.files.some(f=>f.name==='whisper-cli.exe')||!manifest.files.some(f=>f.name===model.file))throw Error('Das lokale Sprachpaket ist unvollständig.');
@@ -30,11 +32,16 @@ function createSpeechService({directory,tempDirectory=os.tmpdir(),spawnProcess=s
  async function status(){try{return await checkRuntime();}catch{return {available:false,local:true,maxSeconds:MAX_SECONDS,error:'Lokales Whisper-Sprachpaket fehlt oder ist beschädigt. Bitte die vollständige portable Ausgabe mit resources/speech verwenden.'};}}
  function cancel(requestId){if(active&&active.id===requestId){active.controller.abort();active.child?.kill();return true;}return false;}
  async function transcribe(args){
-  if(!args||typeof args.requestId!=='string'||! /^[a-zA-Z0-9-]{1,80}$/.test(args.requestId)||!['de','en','auto'].includes(args.language??'de'))throw Error('Ungültige Sprachanfrage.');
+  if(!args||typeof args.requestId!=='string'||! /^[a-zA-Z0-9-]{1,80}$/.test(args.requestId)||!['de','en','auto'].includes(args.language??'de')||!['local','online'].includes(args.mode??'local'))throw Error('Ungültige Sprachanfrage.');
   if(active)throw Error('Eine Spracherkennung läuft bereits.');
   const audio=validateAudio(args.bytes),job={id:args.requestId,controller:new AbortController(),child:null};job.done=new Promise(resolve=>job.finished=resolve);active=job;let temp;
   const abort=()=>{if(job.controller.signal.aborted)throw Error('Spracherkennung abgebrochen.');};
   try{
+   if(args.mode==='online'){
+    if(!online)throw Error('Online-Spracherkennung ist nicht verfügbar.');
+    const timeout=setTimeout(()=>job.controller.abort(),Math.min(timeoutMs,60000));
+    try{const result=await online.transcribe({bytes:audio.bytes,language:args.language??'de',signal:job.controller.signal});abort();return {...result,seconds:audio.seconds};}finally{clearTimeout(timeout);}
+   }
    const runtime=await checkRuntime();abort();await fs.mkdir(tempDirectory,{recursive:true});
    temp=await fs.mkdtemp(path.join(tempDirectory,'formnaro-speech-'));const input=path.join(temp,'input.wav'),output=path.join(temp,'transcript');
    await fs.writeFile(input,audio.bytes);abort();
@@ -55,9 +62,12 @@ function createSpeechService({directory,tempDirectory=os.tmpdir(),spawnProcess=s
  }
  return {status,transcribe,cancel,hasActive:()=>!!active,async dispose(){const job=active;if(job){cancel(job.id);await job.done;}}};
 }
-function installSpeech(win,{directory,tempDirectory,service=createSpeechService({directory,tempDirectory}),ipcMain=require('electron').ipcMain}={}){
+function installSpeech(win,{directory,tempDirectory,settingsDirectory,online,service,ipcMain=require('electron').ipcMain}={}){
+ online??=settingsDirectory?require('./speech-online.cjs').createOnlineSpeech({directory:settingsDirectory,safeStorage:require('electron').safeStorage}):undefined;
+ service??=createSpeechService({directory,tempDirectory,online});
  const handle=(name,fn)=>ipcMain.handle(name,async(event,args)=>{if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('Invalid speech window.');try{return {ok:true,value:await fn(args)};}catch(e){return {ok:false,error:e.message};}});
  handle('cad-speech:status',()=>service.status());handle('cad-speech:transcribe',args=>service.transcribe(args));handle('cad-speech:cancel',args=>service.cancel(args?.requestId));
+ handle('cad-speech:online-status',()=>online?.status()??{configured:false,canRemember:false});handle('cad-speech:online-save',args=>{if(!online)throw Error('Online-Sprache ist nicht verfügbar.');return online.save(args);});
  win.on('closed',()=>service.dispose());win.webContents.on('render-process-gone',()=>service.dispose());win.webContents.on('did-start-navigation',(_e,_url,_inPlace,isMain)=>{if(isMain)service.dispose();});
  return service;
 }

@@ -33,5 +33,5 @@ function createToolLibrary(directory){
  }
  return {request,directory};
 }
-function installToolLibrary(win,{directory,ipcMain}){const store=createToolLibrary(directory);ipcMain.handle('cad-ai-tools:request',(event,args)=>{if(event.sender!==win.webContents)return {ok:false,error:'Invalid window.'};try{return {ok:true,value:store.request(args)};}catch(e){return {ok:false,error:e.message,code:e.code};}});return store;}
+function installToolLibrary(win,{directory,ipcMain}){const store=createToolLibrary(directory);ipcMain.handle('cad-ai-tools:request',(event,args)=>{if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return {ok:false,error:'Invalid window.'};try{return {ok:true,value:store.request(args)};}catch(e){return {ok:false,error:e.message,code:e.code};}});return store;}
 module.exports={createToolLibrary,validateTool,installToolLibrary};

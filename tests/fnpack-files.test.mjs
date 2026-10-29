@@ -1,8 +1,21 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';import {createHash} from 'node:crypto';
-import {openFnpack,writeFnpack,HEADER} from '../backend/fnpack.cjs';
+import {openFnpack,writeFnpack,geometryReferences,HEADER} from '../backend/fnpack.cjs';
 const sha=data=>createHash('sha256').update(data).digest('hex'),payload=Buffer.from('DBRep_DrawableShape\nexact original source\n'),hash=sha(payload),ref={format:'Formnaro-GeometryRef',kind:'brep',sha256:hash,bytes:payload.length};
 const project=()=>({format:'OfflineCAD',version:17,nodes:[{id:'one',brep:ref,transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]},{id:'two',brep:ref,transform:[1,0,0,0,0,1,0,0,0,0,1,0,50,0,0,1]}]});
 async function fixture(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'formnaro-fnpack-'));t.after(async()=>{assert.equal(path.dirname(dir),os.tmpdir());assert.ok(path.basename(dir).startsWith('formnaro-fnpack-'));await fs.rm(dir,{recursive:true,force:true});});return dir;}
+
+test('mixed arrays cannot hide missing, invalid or conflicting geometry blocks from the backend',async t=>{
+ const dir=await fixture(t),file=path.join(dir,'mixed.fnpack');
+ for(const first of [1,'text',false,null]){
+  const p={format:'OfflineCAD',version:26,nodes:[],list:[first,{nested:[0,ref]}]};
+  assert.equal(geometryReferences(p).size,1);
+  await assert.rejects(writeFnpack(file,{project:p}),/fehlt/);
+  await writeFnpack(file,{project:p,blocks:[{sha256:hash,bytes:payload}]});
+  const opened=await openFnpack(file);try{assert.equal(opened.index.blocks.length,1);assert.deepEqual(await opened.read(hash),payload);}finally{await opened.close();}
+  assert.throws(()=>geometryReferences({list:[first,{...ref,bytes:0}]}),/Geometrieverweis/);
+  assert.throws(()=>geometryReferences({first:ref,list:[first,{...ref,bytes:ref.bytes+1}]}),/Widersprüchlich/);
+ }
+});
 test('fnpack reads only index on Open; deduplicated instances retain independent placement and exact source bytes',async t=>{const dir=await fixture(t),file=path.join(dir,'independent.fnpack'),events=[];await writeFnpack(file,{project:project(),blocks:[{sha256:hash,bytes:payload}]});const pack=await openFnpack(file,{onRead:e=>events.push(e)});try{assert.deepEqual(events.map(e=>e.kind),['header','index']);assert.equal(pack.index.blocks.length,1);assert.deepEqual(pack.index.project,project());assert.ok((await fs.stat(file)).size>HEADER+payload.length);assert.deepEqual(await pack.read(hash),payload);assert.deepEqual(events.map(e=>e.kind),['header','index','geometry']);}finally{await pack.close();}});
 test('fnpack Save As streams unopened blocks and survives loss of its original package and STEP input',async t=>{const dir=await fixture(t),file=path.join(dir,'first.fnpack'),saved=path.join(dir,'saved.fnpack'),step=path.join(dir,'original.step'),events=[];await fs.writeFile(step,'unused source');await writeFnpack(file,{project:project(),blocks:[{sha256:hash,bytes:payload}]});const source=await openFnpack(file,{onRead:e=>events.push(e)});try{const changed=project();changed.nodes[1].transform[12]=73;await writeFnpack(saved,{project:changed,source});assert.deepEqual(events.map(e=>e.kind),['header','index','copy']);}finally{await source.close();}await fs.unlink(file);await fs.unlink(step);const read=await openFnpack(saved);try{assert.equal(read.index.project.nodes[1].transform[12],73);assert.deepEqual(await read.read(hash),payload);}finally{await read.close();}});
 test('fnpack rejects corrupted unloaded data on demand and on save without replacing the last valid target',async t=>{const dir=await fixture(t),file=path.join(dir,'broken.fnpack'),target=path.join(dir,'safe.fnpack'),prior=Buffer.from('last valid project');await writeFnpack(file,{project:project(),blocks:[{sha256:hash,bytes:payload}]});const source=await openFnpack(file);try{const bytes=await fs.readFile(file);bytes[bytes.length-1]^=1;await fs.writeFile(file,bytes);await assert.rejects(source.read(hash),/Prüfsumme/);await fs.writeFile(target,prior);await assert.rejects(writeFnpack(target,{project:project(),source}),/beschädigt/);assert.deepEqual(await fs.readFile(target),prior);assert.equal((await fs.readdir(dir)).some(n=>n.endsWith('.tmp')),false);}finally{await source.close();}});

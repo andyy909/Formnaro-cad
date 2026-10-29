@@ -5,6 +5,7 @@ const fixture=path.resolve(__dirname,'fixtures/stl-bridge-process.cjs');
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 async function context(){const root=await fs.mkdtemp(path.join(os.tmpdir(),'formnaro-bridge-test-'));return {root,runner:createStlConverter({command:process.execPath,prefix:[fixture],tempRoot:root}),dispose:()=>fs.rm(root,{recursive:true,force:true})};}
 test('Reject invalid renderer inputs before native process creation',()=>{
+ for(const name of ['.stl','   .stl','../part.stl','folder/part.stl','folder\\part.stl','bad\u0000.stl'])assert.throws(()=>validate({...args(),name}));
  for(const value of [null,{}, {...args(),id:'../x'}, {...args(),bytes:new Uint8Array()}, {...args(),name:'x.step'},args({unit:2}),args({tolerance:NaN}),args({mode:'arbitrary'}),args({samples:500.5}),args({repair:1}),args({fallback:'yes'}),args({command:'bad.exe'}),args({target_faces:0})])assert.throws(()=>validate(value));
  assert.equal(validate(args({unit:25.4,tolerance:.001})).unit,25.4);
 });

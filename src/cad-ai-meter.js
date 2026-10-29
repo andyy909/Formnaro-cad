@@ -1,14 +1,15 @@
+import {formatAICostUSD,setAIExchangeRate,getAIExchangeRate} from './ai-currency.js';
 const labels={de:{edit:'Modell bearbeiten',rebuild:'STL nachbauen',create:'Neues Modell',help:'Bedienhilfe & Fragen',other:'Sonstiges'},en:{edit:'Edit a model',rebuild:'Rebuild from STL',create:'New model',help:'Guidance & questions',other:'Other'}};
 export function formatAIBytes(bytes,language='de'){
  if(!Number.isFinite(bytes))return '–';const units=['B','kB','MB','GB'];let unit=0;while(bytes>=1000&&unit<3){bytes/=1000;unit++;}return bytes.toLocaleString(language==='en'?'en-US':'de-DE',{maximumFractionDigits:unit?1:0})+' '+units[unit];
 }
 export function formatAIMeterCost(cost,language='de'){
- if(!cost||!Number.isFinite(cost.min)||!Number.isFinite(cost.max))return language==='en'?'Price unknown':'Preis unbekannt';
- const n=v=>v.toLocaleString(language==='en'?'en-US':'de-DE',{minimumFractionDigits:4,maximumFractionDigits:6});return (cost.min===cost.max?n(cost.min):n(cost.min)+'–'+n(cost.max))+' USD';
+ return formatAICostUSD(cost,language);
 }
 const element=(tag,text,className)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;};
-export function createAIUsagePanel({desktop,getContext,language=()=> 'de'}){
- let metrics=null,metricError='',generation=0,activeRender=null,activeStats=null;
+export function createAIUsagePanel({desktop,getContext,language=()=> 'de',onExchangeChange=()=>{}}){
+ let metrics=null,metricError='',generation=0,activeRender=null,activeStats=null,activeExchange=null;
+ if(desktop?.getAIExchangeRate)void desktop.getAIExchangeRate().then(rate=>{setAIExchangeRate(rate);activeExchange?.();activeRender?.();void activeStats?.();onExchangeChange();}).catch(()=>{});
  const lang=()=>language()==='en'?'en':'de',say=(de,en)=>lang()==='en'?en:de,n=value=>Number.isFinite(value)?value.toLocaleString(lang()==='en'?'en-US':'de-DE'):'–';
  async function refreshContext(){
   if(!desktop?.getAIContextMetrics)return;
@@ -21,6 +22,9 @@ export function createAIUsagePanel({desktop,getContext,language=()=> 'de'}){
   const ticket=++generation,root=element('section',undefined,'ai-meter');root.id='ai-usage-meter';root.setAttribute('aria-label',say('KI-Verbrauch und Kontextgrößen','AI usage and context sizes'));root.dataset.noTranslate='';
   const head=element('div',undefined,'ai-meter-heading');head.append(element('h3',say('KI-Verbrauch & Kontext','AI usage & context')));
   const refresh=element('button',say('Aktualisieren','Refresh'));refresh.type='button';refresh.id='ai-meter-refresh';head.append(refresh);root.append(head);
+  const exchange=element('p','', 'small-note'),exchangeButton=element('button',say('Euro-Kurs aktualisieren','Update euro rate'));exchangeButton.type='button';exchangeButton.id='ai-meter-exchange-refresh';root.append(exchange,exchangeButton);
+  const showExchange=()=>{const r=getAIExchangeRate();exchange.textContent=say('Euro-Schätzung: 1 EUR = ','Euro estimate: 1 EUR = ')+r.usdPerEur.toLocaleString(lang()==='en'?'en-US':'de-DE',{maximumFractionDigits:6})+' USD · '+say('EZB-Referenzkurs vom ','ECB reference rate dated ')+r.date+say(' · keine Rechnung',' · not an invoice');};showExchange();
+  activeExchange=()=>{if(root.isConnected)showExchange();};exchangeButton.hidden=!desktop?.refreshAIExchangeRate;exchangeButton.onclick=async()=>{exchangeButton.disabled=true;try{setAIExchangeRate(await desktop.refreshAIExchangeRate());showExchange();await stats();renderContext();onExchangeChange();}catch{exchange.textContent=say('EZB-Kurs konnte nicht aktualisiert werden; der bisherige datierte Kurs bleibt in Verwendung.','Could not update the ECB rate; the previous dated rate remains in use.');}finally{exchangeButton.disabled=false;}};
   const tabs=element('div',undefined,'ai-meter-tabs'),usageTab=element('button',say('Verbrauch','Usage')),contextTab=element('button',say('Kontextgrößen','Context sizes'));
   for(const button of [usageTab,contextTab])button.type='button';usageTab.id='ai-meter-usage-tab';contextTab.id='ai-meter-context-tab';tabs.append(usageTab,contextTab);root.append(tabs);
   const usage=element('div'),context=element('div');usage.id='ai-meter-usage';context.id='ai-meter-context';context.hidden=true;root.append(usage,context);
@@ -53,7 +57,7 @@ export function createAIUsagePanel({desktop,getContext,language=()=> 'de'}){
    context.append(element('p',metrics.components.map(r=>partNames[r.id]+': '+formatAIBytes(r.bytes,lang())).join(' · '),'small-note'));
    const wrap=element('div',undefined,'ai-meter-table-wrap'),table=document.createElement('table'),thead=document.createElement('thead'),tr=document.createElement('tr');for(const title of [say('Lokale Kontextdatei','Local context file'),say('Dateigröße','File size'),say('Tokens bei vollem Text, geschätzt','Estimated tokens for full text')])tr.append(element('th',title));thead.append(tr);table.append(thead);const tbody=document.createElement('tbody');
    for(const file of metrics.files){const tr=document.createElement('tr');tr.append(element('td',file.name+(file.missing?say(' · noch leer',' · not created yet'):'')),element('td',formatAIBytes(file.bytes,lang())),element('td',file.available?'≈ '+n(file.estimatedTokens):say('Nicht lesbar','Unreadable')));tbody.append(tr);}table.append(tbody);wrap.append(table);context.append(wrap);
-   context.append(element('p',say('Die Anfragebasis zählt die tatsächlich geladenen Kontextbausteine. Lokale Dokumentationsdateien werden nicht zusätzlich vollständig gesendet. Auftrag, Modellübersicht, Verlauf, Bilder und laufende Mess-/Fehlerberichte kommen je Anfrage hinzu. Tokens sind aus der Textlänge geschätzt (4 Zeichen je Token), keine Anbietermessung.','Base context counts the loaded context components. Local documentation files are not additionally sent in full. Task, model summary, history, images and live analysis/error evidence add to each request. Tokens are estimated from text length (4 characters per token), not provider measurements.'),'small-note'));
+   context.append(element('p',say('Die Anfragebasis zählt die tatsächlich geladenen Kontextbausteine. Die Formnaro-Assistentendatei ist in den Regeln enthalten; die großen Werkzeug-Dokumentationsdateien werden nicht zusätzlich vollständig gesendet. Auftrag, Modellübersicht, Verlauf, Bilder und laufende Mess-/Fehlerberichte kommen je Anfrage hinzu. Tokens sind aus der Textlänge geschätzt (4 Zeichen je Token), keine Anbietermessung.','Base context counts the loaded context components, including the Formnaro assistant guidance in the rules. The large tool documentation files are not additionally sent in full. Task, model summary, history, images and live analysis/error evidence add to each request. Tokens are estimated from text length (4 characters per token), not provider measurements.'),'small-note'));
    context.append(element('p',say('Aktualisiert: ','Updated: ')+new Date(metrics.updatedAt).toLocaleString(lang()==='en'?'en-US':'de-DE')+' · '+metrics.model+' · '+say('Beim Programmstart automatisch, ohne KI-Anfrage.','Automatically at startup, without an AI request.'),'small-note'));if(metricError||metrics.warning)context.append(element('p',metricError||metrics.warning,'ai-error'));
   }
   async function stats(){try{const result=await desktop.getAIUsageStatistics({period:period.value,allProviders:scope.value==='all'});if(ticket===generation&&root.isConnected)renderStats(result);}catch{if(root.isConnected)status.textContent=say('Verbrauchsstatistik konnte nicht geladen werden.','Usage statistics could not be loaded.');}}

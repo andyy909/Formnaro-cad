@@ -24,9 +24,10 @@ export function createCadTransactions({initial,build,abort=()=>{},now=()=>Date.n
   function prune(){const cutoff=now()-previewLifetime;for(const [id,p] of previews)if(p.created<cutoff)previews.delete(id);}
   function cancel(){if(!active)return false;const pending=active;active=null;generation++;pending.controller.abort();abort();return true;}
   function state(){prune();return {revision,busy:!!active,undo:undo.length,redo:redo.length,previews:previews.size};}
-  async function preview({revision:expected,project,label='',operation,replaceProject=false}={}){
+  async function preview({revision:expected,project,label='',operation,replaceProject=false,validateResult}={}){
     checkRevision(expected);if(active)throw failure('BUSY','Eine CAD-Berechnung läuft bereits.');
     if(typeof label!=='string'||label.length>200)throw failure('INVALID_LABEL','Ungültige Vorschau-Beschriftung.');
+    if(validateResult!==undefined&&typeof validateResult!=='function')throw TypeError('Ungültiger CAD-Ergebnisprüfer.');
     const draft=validateCadProject(cadProjectSnapshot(project)),baseline=snapshot(),token=++generation,controller=new AbortController();
     assertMeshProtectionChange(baseline,draft,{replaceProject});
     // The injected builder may mutate its draft/context copies in place. Keep
@@ -35,7 +36,7 @@ export function createCadTransactions({initial,build,abort=()=>{},now=()=>Date.n
     const protectionDraft={nodes:draft.nodes.filter(n=>n.kind==='mesh').map(n=>({id:n.id,kind:n.kind,metadata:{meshProtection:n.metadata?.meshProtection?structuredClone(n.metadata.meshProtection):undefined}}))};
     // Capture only the explicit reduction/remeshing/smoothing/patch replacement target before handing a mutable plan
     // to a builder. The guard independently checks every protected coordinate.
-    const reduceTarget=operation?.type==='mesh-surgery'?(operation.id??structuredClone(operation.ids??[])):['mesh-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill'].includes(operation?.type)&&typeof operation.id==='string'?operation.id:operation?.kind==='batch'&&operation.commands?.some(c=>['tool','script'].includes(c?.op))?protectionBaseline.nodes.map(n=>n.id):null;
+    const reduceTarget=operation?.type==='mesh-surgery'?(operation.id??structuredClone(operation.ids??[])):['mesh-reduce','mesh-large-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill'].includes(operation?.type)&&typeof operation.id==='string'?operation.id:operation?.kind==='batch'&&operation.commands?.some(c=>['tool','script'].includes(c?.op))?protectionBaseline.nodes.map(n=>n.id):null;
     // Make Solid and Hollow add one independent copy. Preserve the whole prior
     // project, including layers/folders that indirectly control existing roots.
     // JSON evidence is private even if the builder mutates its context copies.
@@ -56,6 +57,9 @@ export function createCadTransactions({initial,build,abort=()=>{},now=()=>Date.n
       const result=cadProjectReadView(built);
       assertMeshProtectionChange(protectionBaseline,result,{replaceProject,protectionDraft,reduceTarget});
       if(solidCopy&&(projectGlobals(result)!==solidCopy.globals||result.nodes.length!==JSON.parse(solidCopy.nodes).length+1||result.nodes.filter(n=>n.id===solidCopy.resultId&&n.kind==='mesh').length!==1||JSON.stringify(result.nodes.filter(n=>n.id!==solidCopy.resultId))!==solidCopy.nodes))throw failure(solidCopy.code,'Die Berechnung würde das Originalprojekt, seine Organisation oder vorhandene Teile verändern. Nur eine neue Ergebniskopie darf ergänzt werden.');
+      // Domain correspondence must pass before registration can evict an older
+      // candidate. Keep cancellation/revision protection during this validation.
+      if(validateResult){await Promise.race([validateResult(result),interruption]);if(controller.signal.aborted||active?.token!==token)throw failure('ABORTED','CAD-Vorschau abgebrochen.');checkRevision(expected);}
       // Make copies before publishing anything: a worker or caller must not be
       // able to change a later Apply by retaining a mutable result reference.
       const id='cad-preview-'+instanceId+'-'+(++sequence),record={project:result,revision:expected,created:now(),label};

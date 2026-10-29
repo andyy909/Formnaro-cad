@@ -104,7 +104,7 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
     stepFaceAppearance(mesh,temporary&&record.previewColor?{...record,faceColors:null}:record,node);
     setCadCutoutMaterial(material,projectObjectIsHole(node));
     if(reference&&!temporary){const contour=meshDisplayEdges(geometry);contour.visible=!projectObjectIsHole(node);contour.userData.meshContour=true;contour.userData.rootId=record.rootId??node.id;mesh.add(contour);material.polygonOffset=true;material.polygonOffsetFactor=1;material.polygonOffsetUnits=1;}
-    mesh.matrixAutoUpdate=false;mesh.matrix.fromArray(record.transform);mesh.userData={id:node.id,rootId:record.rootId??node.id,reference,record,cutout:projectObjectIsHole(node),originalMatrix:mesh.matrix.clone()};return mesh;
+    mesh.matrixAutoUpdate=false;mesh.matrix.fromArray(record.transform);mesh.userData={id:node.id,rootId:record.rootId??node.id,reference,record,objectColor:record.color??node.color,cutout:projectObjectIsHole(node),originalMatrix:mesh.matrix.clone()};return mesh;
   }
   function stepFaceAppearance(mesh,record,node){
     const faces=projectObjectIsHole(node)?null:record.faceColors,base=record.color??node.color??'#ef6948',key=faces?.length?JSON.stringify([faces,base]):null;
@@ -150,7 +150,7 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
     clearAlignmentPreview();const keep=new Set(prepared.entries.map(e=>e.mesh));for(const mesh of [...bodies.children])if(!keep.has(mesh))dispose(mesh);records.clear();displayBytes=prepared.nextBytes;lastReuse=0;lastCreated=0;
     for(const {mesh,record,node,reused}of prepared.entries){if(reused)lastReuse++;else lastCreated++;
       const cutout=projectObjectIsHole(node),opacity=displayOpacity(record,node),material=mesh.material;material.color.set(cutout?'#89929e':record.color??node.color??'#ef6948');if(mesh.userData.cutout!==cutout)setCadCutoutMaterial(material,cutout);mesh.userData.cutout=cutout;for(const child of mesh.children)if(child.userData.meshContour)child.visible=!cutout;updateMaterialOpacity(material,opacity);stepFaceAppearance(mesh,record,node);mesh.userData.meshStyleKey=null;if(material.vertexColors)material.color.set('#ffffff');
-      mesh.matrix.fromArray(record.transform);mesh.matrixWorldNeedsUpdate=true;mesh.userData.record=record;mesh.userData.originalMatrix=mesh.matrix.clone();bodies.add(mesh);const list=records.get(node.id)??[];list.push(mesh);records.set(node.id,list);
+      mesh.matrix.fromArray(record.transform);mesh.matrixWorldNeedsUpdate=true;mesh.userData.record=record;mesh.userData.objectColor=record.color??node.color;mesh.userData.originalMatrix=mesh.matrix.clone();bodies.add(mesh);const list=records.get(node.id)??[];list.push(mesh);records.set(node.id,list);
     }
     sectionPreview.rebind();refreshVisibility();updateBed(project);setSelection(getSelection(),getScene());
   }

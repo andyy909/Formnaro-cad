@@ -1,3 +1,4 @@
+import {aiModellingPolicy,aiStrictnessDecision} from './ai-model-strictness.js';
 import {captureAIRequestBinding,validateAIRequestResume} from './cad-ai-task-resume.js';
 import {validateAITaskRequirements,captureAITaskProtection,verifyAITaskProtection} from './cad-ai-task-requirements.js';
 import {visualReviewInput} from './cad-ai-visual-review.js';
@@ -10,6 +11,7 @@ import {createAITaskProgress,aiCandidateQuality,compareAIQuality,aiCandidateGeom
 // One user request may repair failed output/previews; it never commits a model.
 export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,onUsage=()=>{},onCorrection=()=>{},onAnalysis=()=>{},onVisualReview=()=>{},visualReview=true,maxCorrections,maxSteps=7,requirements,purpose=requirements?.purpose??'technical',onProgress,resume,restoreOnly=false}){
  if(!Number.isSafeInteger(maxSteps)||maxSteps<7||maxSteps>80)throw Error('KI-Arbeitsschritte: 7 bis 80 wählen.');
+ const modelPolicy=aiModellingPolicy(input.modelStrictness??100);
  const extended=maxSteps>7,correctionLimit=maxCorrections??(extended?maxSteps-1:2),analysisLimit=extended?maxSteps-1:2,reviewLimit=extended?maxSteps-1:2;
  const fixedRequirements=requirements?validateAITaskRequirements(requirements):null;if(fixedRequirements&&fixedRequirements.purpose!==purpose)throw Object.assign(Error('Die Qualitätsart darf die gespeicherten Auftragsvorgaben nicht ersetzen.'),{code:'AI_TASK_REQUIREMENTS_INVALID'});
  const protectedSources=captureAITaskProtection(fixedRequirements?.protectedTargets.length?access.project?.():null,fixedRequirements?.protectedTargets??[]);
@@ -21,7 +23,7 @@ export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,
  else if(!access.programOnly)await access.beginTask?.();
  const baseInput=input,photoTask=await createPhotoTask(input,restored?.saved.photoState);current();let photoReports=[],photoImageOmissions=[];
  if(photoTask){const packed=addPhotoImages(baseInput,[...photoTask.initialImages,...photoTask.takeImages()]);input={...input,images:packed.images};photoImageOmissions=packed.omitted;}
- let correction=restored?.saved.correction??'',lastResult=restored?.saved.lastResult??undefined,lastFailure,requiredChecks=restored?(restored.saved.requiredChecksLocked?restored.checks:undefined):(fixedRequirements?.checks.length?structuredClone(fixedRequirements.checks):undefined),analysisRounds=restored?.saved.counters.analysisRounds??0,correctionAttempts=restored?.saved.counters.correctionAttempts??0,retained;const analysisResults=restored?.analysisResults??[];let visualInput=null,visualReviews=restored?.saved.counters.visualReviews??0;
+ let correction=restored?.saved.correction??'',lastResult=restored?.saved.lastResult??undefined,lastFailure,requiredChecks=restored?(restored.saved.requiredChecksLocked?restored.checks:undefined):(fixedRequirements?.checks.length?structuredClone(fixedRequirements.checks):undefined),analysisRounds=restored?.saved.counters.analysisRounds??0,correctionAttempts=restored?.saved.counters.correctionAttempts??0,retained;const analysisResults=restored?.analysisResults??[];let visualInput=null,visualReviews=restored?.saved.counters.visualReviews??0,programHelpBudget=!!access.programOnly&&!access.practiceRequested,programHelpRequests=0;
  async function finish(error){
   const value=retained;if(value.proposal.visualReview?.status==='pending')value.proposal.visualReview={status:'incomplete',reason:error?.message??'Keine abgeschlossene Bildprüfung.'};
   if(error)value.proposal={...value.proposal,correctionError:{code:error.code??'AI_CORRECTION_FAILED',message:error.message}};
@@ -30,7 +32,7 @@ export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,
  }
  try{
  if(restored?.saved.candidate){
-  const saved=restored.saved.candidate,proposal=await access.restoreCandidate(saved,{checks:requiredChecks??[],revision:original.revision});
+  const saved=restored.saved.candidate,proposal=await access.restoreCandidate(saved,{checks:requiredChecks??[],revision:original.revision});if(proposal?.verification)proposal.verification.modellingPolicy=aiStrictnessDecision(proposal.verification,modelPolicy.strictness);
   try{current();const project=access.getPreview?.(proposal?.previewId);if(!proposal||proposal.previewId===saved.proposal.previewId||proposal.revision!==original.revision||!project||proposal.verification?.version!==1||!Array.isArray(proposal.verification.checks)||proposal.verification.checks.length!==(requiredChecks?.length??0))throw Object.assign(Error('Die gespeicherte Vorschau wurde nicht neu geprüft.'),{code:'AI_TASK_RESUME_INVALID'});verifyAITaskProtection(project,protectedSources);retained={result:saved.result,proposal};}
   catch(error){if(proposal?.previewId&&proposal.previewId!==saved.proposal.previewId)access.discard?.(proposal.previewId);throw error;}
   if(typeof access.inspectFreeCADPreview==='function'){
@@ -50,8 +52,20 @@ export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,
   let scene=current(),result,preparedProposal;
   try{
    if(typeof access.sceneForAI==='function'){scene=await access.sceneForAI();current();}
-   result=await generate({...input,...(visualInput??{}),context:{...compactAIRequestContext(access.context()),...(photoTask?{...photoTask.context(),photoComparison:photoReports,photoImageOmissions}:{}),agentWorkflow:{step:attempt+1,maxSteps,remainingSteps:maxSteps-attempt-1,analysisRounds,correctionAttempts,progress:progress.snapshot(),...(fixedRequirements?{taskRequirements:structuredClone(fixedRequirements)}:{}),qualityCriteria:purpose==='generative'?'Preserve explicit dimensions and native validity; judge free-form shape qualitatively. Do not invent dimensional proof from visual acceptance.':'Preserve fixed functional dimensions, native checks, calibrated reference evidence and protected sources; visual resemblance is a separate qualitative check.',rule:'Measure, construct, inspect and correct adaptively within this request budget. Preserve requirements, original geometry and the best usable preview. FreeCAD is an additional local geometry engine. Never claim installation or geometric validity without a completed tool result.'},taskEvidence:taskEvidence.snapshot()},scene,correction,...(analysisResults.length?{analysisResults}: {})});
+   if(programHelpBudget&&programHelpRequests>=3)throw Object.assign(Error('Bedienhilfe nach 3 KI-Anfragen beendet. Bitte das gewünschte Werkzeug oder Ziel genauer benennen.'),{code:'AI_PROGRAM_HELP_BUDGET',feedback:{retryable:false}});
+   const programHelp=programHelpBudget?{maxRequests:3,usedRequests:++programHelpRequests,remainingRequests:3-programHelpRequests,rule:'Use the current target catalogue directly and batch the requested guide steps. At most one local help lookup should normally be needed. Give one or two useful explanatory sentences; ask a user question only if the intended target is essential and unresolved.'}:undefined;
+   const requestContext=access.context({programHelpOnly:programHelpBudget});
+   result=await generate({...input,...(visualInput??{}),context:{...compactAIRequestContext(requestContext),...(access.practiceRequested?{practiceOnly:true}:{}),modellingPolicy:modelPolicy,...(photoTask?{...photoTask.context(),photoComparison:photoReports,photoImageOmissions}:{}),agentWorkflow:{step:attempt+1,maxSteps,...(programHelp?{programHelp}:{}),remainingSteps:maxSteps-attempt-1,analysisRounds,correctionAttempts,progress:progress.snapshot(),...(fixedRequirements?{taskRequirements:structuredClone(fixedRequirements)}:{}),qualityCriteria:purpose==='generative'?'Preserve explicit dimensions and native validity; judge free-form shape qualitatively. Do not invent dimensional proof from visual acceptance.':'Preserve fixed functional dimensions, native checks, calibrated reference evidence and protected sources; visual resemblance is a separate qualitative check.',rule:'Measure, construct, inspect and correct adaptively within this request budget. Preserve requirements, original geometry and the best usable preview. FreeCAD is an additional local geometry engine. Never claim installation or geometric validity without a completed tool result.'},taskEvidence:taskEvidence.snapshot()},scene:access.practiceRequested?{revision:scene.revision,objects:[],selectionTargets:[],practiceIsolated:true}:scene,correction,...(analysisResults.length?{analysisResults}: {})});
    if(result.usage)onUsage(result.usage,attempt);current();lastResult=result;
+   if(access.practiceRequested&&(result.commands!==undefined||result.analysis!==undefined||result.review!==undefined||result.checks!==undefined||result.assistant!==undefined&&result.assistant?.kind!=='practice'))throw Object.assign(Error('Für diesen Übungsauftrag sind nur ein Übungsplan oder eine Antwort erlaubt. Das aktuelle Projekt wurde nicht verändert.'),{code:'PRACTICE_SCOPE_VIOLATION',feedback:{retryable:false}});
+   if(requestContext.programHelpOnly===true&&(result.commands||result.analysis||['demonstrate','practice'].includes(result.assistant?.kind))){
+    programHelpBudget=false;
+    correction='Der vorherige Aufruf enthielt nur den Bedienkatalog. Seine Modellbefehle wurden nicht ausgeführt. Der vollständige Modelliervertrag steht jetzt bereit. Erzeuge den vollständigen Modellvorschlag erneut gegen die bestätigte Szene.';
+    continue;
+   }
+   // A construction or geometric measurement switches to the normal model
+   // workflow; the smaller navigation budget must not truncate its checks.
+   if(result.commands||result.analysis||['demonstrate','practice'].includes(result.assistant?.kind))programHelpBudget=false;
    if(result.assistant!==undefined){
     if(access.restrictedFeatures&&result.assistant?.kind!=='help')throw Object.assign(Error('Dieser Auftrag erlaubt nur die angehängten Merkmalsbezüge. Bedienhilfen, Notizen und freie Vorführungen gehören in einen getrennten Auftrag.'),{code:'AI_FEATURE_SCOPE_VIOLATION',feedback:{retryable:true}});
     if(!access.programAssistant||result.revision!==original.revision||['commands','analysis','review','checks'].some(k=>result[k]!==undefined))throw Error('Ungültige Programm-Assistentenantwort.');
@@ -62,6 +76,7 @@ export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,
     }else{
      if(result.assistant.kind==='help'&&analysisRounds>=analysisLimit)throw Object.assign(Error('Hilfesuchlimit erreicht.'),{feedback:{retryable:false}});
      const report=await access.programAssistant.execute(result.assistant,{isCurrent,expectedProviderId:access.expectedProviderId});current();
+     if(result.assistant.kind==='practice'&&report?.ok!==true)throw Object.assign(Error(report?.reason||report?.message||'Die Übung wurde nicht abgeschlossen.'),{code:'PRACTICE_FAILED',feedback:{retryable:false}});
      if(result.assistant.kind==='help'){onAnalysis(++analysisRounds);analysisResults.push({programHelp:report});const stalled=progress.analysis([{engine:'app',kind:'help',options:{query:result.assistant.query}}],report);await observed(stalled?'stopped':'analysis');if(stalled)throw stalled;correction='';continue;}
      if(retained)return {...await finish(Error(result.message??'Die Bedienhilfe lieferte keinen verbesserten Entwurf.')),assistantReport:report,...(result.message?{message:result.message}:{})};
      return {...result,message:result.message??(result.assistant.kind==='note'?'Kontextnotiz ergänzt.':'Bedienhilfe abgeschlossen.'),assistantReport:report};
@@ -99,6 +114,7 @@ export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,
     try{proposal.independentCheck=await access.inspectFreeCADPreview(proposal.previewId);current();}
     catch(error){current();if(/STALE|ABORT|CANCEL/.test(error.code??''))throw error;proposal.independentCheck={status:'unavailable',reason:error.message};}
    }
+   if(proposal.verification)proposal.verification.modellingPolicy=aiStrictnessDecision(proposal.verification,modelPolicy.strictness);
    // A later failed correction must not evict an already better usable draft.
    if(photoTask){proposal.photoComparison=(await photoTask.compare(proposal.previewId,access.inspectPhotoPreview)).map(r=>({...r,previewId:proposal.previewId,revision:original.revision}));current();photoReports=proposal.photoComparison.map(({overlay,...report})=>report);}
    const candidateGeometry=typeof access.getPreview==='function'?aiCandidateGeometry(access.getPreview(proposal.previewId)):undefined;
@@ -106,17 +122,17 @@ export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,
     if(retained)access.discard?.(retained.proposal.previewId);retained={result,proposal};
    }else access.discard?.(proposal.previewId);
    progress.candidate(retained.proposal);
-   if(proposal.verification?.passed===false){
+   if(proposal.verification?.passed===false&&!aiStrictnessDecision(proposal.verification,modelPolicy.strictness).accepted){
     const failures=proposal.verification.checks.filter(c=>c.passed===false),failed=failures[0];
     throw Object.assign(Error(failed.error.message),{code:failed.error.code,feedback:{...failed.feedback,message:failed.error.message,failures:failures.map(c=>aiFeedback({code:c.error.code,message:c.error.message,feedback:{...c.feedback,message:c.error.message}}))}});
    }
    if(proposal.independentCheck?.passed===false)throw Object.assign(Error('FreeCAD meldet ungültige Geometrie im STEP-Export.'),{code:'FREECAD_INVALID_RESULT',feedback:{geometryCheck:proposal.independentCheck}});
-   if(proposal.photoComparison?.some(r=>r.matches===false)){
+   if(modelPolicy.strictness>0&&proposal.photoComparison?.some(r=>r.matches===false)){
     const packed=addPhotoImages(baseInput,[...photoTask.initialImages,...proposal.photoComparison.flatMap(r=>r.overlay?[r.overlay]:[])]);input={...input,images:packed.images};photoImageOmissions=packed.omitted;
     throw Object.assign(Error('Fotovergleich: Kontur, Außenmaß oder sichtbare Öffnung weicht ab. Konstruktive Maße und Referenz erhalten.'),{code:'PHOTO_MISMATCH'});
    }
    const stalled=progress.proposed(candidateGeometry);if(stalled)throw stalled;
-   if(visualReview&&typeof access.inspectPreview==='function'&&visualReviews<reviewLimit){
+   if(modelPolicy.strictness>0&&visualReview&&typeof access.inspectPreview==='function'&&visualReviews<reviewLimit){
     visualReviews++;retained.proposal.visualReview={status:'pending'};correction='';await observed('candidate');
     try{
      onVisualReview(visualReviews);const capture=await access.inspectPreview(retained.proposal.previewId);current();

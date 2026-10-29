@@ -89,7 +89,7 @@ async function printDrawingPdf(value,{BrowserWindow,session,owner,timeoutMs=3000
 function installDrawingPdf(win,{ipcMain,BrowserWindow,session}=require('electron')){
   let busy=false;
   ipcMain.handle('cad-drawing:pdf',async(event,args)=>{
-    if(event.sender!==win.webContents)return {ok:false,error:'Ungültiges Fenster.'};
+    if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return {ok:false,error:'Ungültiges Fenster.'};
     if(busy)return {ok:false,error:'Eine PDF-Ausgabe läuft bereits.'};
     busy=true;
     try{return {ok:true,value:await printDrawingPdf(args,{BrowserWindow,session,owner:win})};}

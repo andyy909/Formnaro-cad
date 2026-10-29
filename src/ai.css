@@ -28,6 +28,10 @@
 .chatgpt-settings{border:1px solid var(--border,#d7e0e8);border-radius:10px;padding:16px;margin:12px 0}.chatgpt-settings h3{margin-top:0}#ai-chatgpt-login{background:#111;color:white;border:1px solid #111;border-radius:6px;padding:10px 16px}#ai-chatgpt-login:disabled{opacity:.55}#ai-chatgpt-welcome{padding:12px;margin-top:12px;border:1px solid #00869a;border-radius:8px}#ai-chatgpt-status{overflow-wrap:anywhere}
 
 label.dialog-label[hidden],label.check-line[hidden],.chatgpt-settings[hidden],#ai-chatgpt-welcome[hidden],#ai-budget-note[hidden]{display:none!important}
+.cad-ai-chat label.ai-model-strictness,.ai-modal label.ai-model-strictness{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 10px;align-items:center;margin:12px 0}
+.ai-model-strictness>span{grid-column:1/-1;line-height:1.5}
+.ai-model-strictness>input[type=range]{width:100%;min-width:0;margin:0}
+.ai-model-strictness>output{white-space:nowrap;font-variant-numeric:tabular-nums;font-size:12px}
 
 /* Reading-first chat: optional controls share collapsible categories. */
 .cad-ai-chat .ai-chat-category{min-width:0;flex:0 0 auto;border-bottom:1px solid var(--line);font-size:11px}

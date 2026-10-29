@@ -47,7 +47,7 @@ export function createFnpackResolver({readBlock,maxBytes=128*1024*1024,maxBlocks
  }
  async function hydrate(project,ids=null,{signal}={}){
   const selected=ids===null?null:new Set(ids);if(selected&&[...selected].some(id=>!project.nodes.some(n=>n.id===id)))throw Error('Geometrie zum Nachladen fehlt im Katalog.');
-  async function visit(value){if(isGeometryRef(value))return load(value,{signal});if(Array.isArray(value)){if(!value.length||typeof value[0]!=='object')return value;return Promise.all(value.map(visit));}if(value&&typeof value==='object'){const pairs=await Promise.all(Object.entries(value).map(async([k,v])=>[k,await visit(v)]));return Object.fromEntries(pairs);}return value;}
+  async function visit(value){if(isGeometryRef(value))return load(value,{signal});if(Array.isArray(value)){if(!value.some(child=>child&&typeof child==='object'))return value;return Promise.all(value.map(visit));}if(value&&typeof value==='object'){const pairs=await Promise.all(Object.entries(value).map(async([k,v])=>[k,await visit(v)]));return Object.fromEntries(pairs);}return value;}
   const nodes=[];for(const node of project.nodes)nodes.push(selected&&!selected.has(node.id)?node:await visit(node));return cadProjectSnapshot({...project,nodes});
  }
  return {hydrate,stats:()=>({reads,bytes,blocks:cache.size,residentBytes,evictions,maxBytes}),has:hash=>cache.has(hash),refs:geometryRefs};

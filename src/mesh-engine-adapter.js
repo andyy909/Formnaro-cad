@@ -15,6 +15,7 @@ import {eraseFillSelectedMesh,validateMeshEraseFillOptions,MESH_ERASE_FILL_LIMIT
 import {sculptMesh,validateMeshSculptOptions} from './mesh-sculpt.js';
 import {smoothSelectedMesh,validateMeshSmoothOptions,MESH_SMOOTH_LIMIT} from './mesh-smooth.js';
 import {reduceCurvedMesh} from './mesh-curved-reduce.js';
+import {reduceLargeMesh,largeMeshCatalog,validateLargeMeshReduceOptions} from './mesh-large-reduce.js';
 import {reducePlanarMesh,validateMeshReduceOptions} from './mesh-reduce.js';
 import {remeshPlanarMesh,validateMeshRemeshOptions} from './mesh-remesh.js';
 import {deriveMeshConnectors,assertConnectorNeighbors,validateConnectorOptions,validateConnectorReference} from './mesh-connectors.js';
@@ -147,7 +148,7 @@ export function createMeshEngineAdapter({kernel}={}){
     const counts=t=>Object.fromEntries(Object.entries(t.categories).map(([k,c])=>[k,c.count]));
     return {node:{id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',mesh:fixed.mesh},report:{...fixed.report,before:counts(before),after:counts(after)}};
   }
-  async function reduceSource(source,options){const reduced=await (options.method==='curved-v1'?reduceCurvedMesh:reducePlanarMesh)(source,options),node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',opacity:source.opacity??1,mesh:reduced.mesh};return {node,report:reduced.report,protection:reduced.protection};}
+  async function reduceSource(source,options){const reduced=await (options.method==='large-v1'?reduceLargeMesh:options.method==='curved-v1'?reduceCurvedMesh:reducePlanarMesh)(source,options),node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',opacity:source.opacity??1,mesh:reduced.mesh};return {node,report:reduced.report,protection:reduced.protection};}
   function remeshSource(source,options){const reduced=remeshPlanarMesh(source,options),node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',opacity:source.opacity??1,mesh:reduced.mesh};return {node,report:reduced.report,protection:reduced.protection};}
   function surgerySource(sources,options){const fixed=sources.length===2?bridgeMeshNodes(sources[0],sources[1],options):performMeshSurgery(sources[0],options),source=sources[0],node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',opacity:source.opacity??1,mesh:fixed.mesh};return {node,report:fixed.report,protection:fixed.protection};}
   function sculptSource(source,options){const fixed=sculptMesh(source,options),node={id:source.id,name:source.name,type:'import',pos:[0,0,0],rot:[0,0,0],size:[1,1,1],color:source.color??'#77a8b5',solid:source.meshRole!=='hole',opacity:source.opacity??1,mesh:fixed.mesh};return {node,report:fixed.report,protection:fixed.protection};}
@@ -256,6 +257,7 @@ export function createMeshEngineAdapter({kernel}={}){
       const result=analyzeMeshLids(n);lidCatalogCache.set(key,result);while(lidCatalogCache.size>4)lidCatalogCache.delete(lidCatalogCache.keys().next().value);return structuredClone(result);
     }
     if(kind==='autoRepair')return autoRepairCandidate(project,id,attemptedDigests);
+    if(kind==='largeReduceCatalog'){const n=project.nodes.find(n=>n.id===id);if(!n||n.kind!=='mesh'||flags(n,project).hidden||flags(n,project).locked)throw Error('Ein sichtbares, entsperrtes Netzteil auswählen.');return largeMeshCatalog(n);}
     if(kind==='reduceCatalog'){const p=cadProjectSnapshot(project),n=p.nodes.find(n=>n.id===id);if(!n||n.kind!=='mesh'||flags(n,p).hidden||flags(n,p).locked)throw Error('Ein sichtbares, entsperrtes Netzteil auswählen.');if(n.mesh.triangles.length/3>150000)throw Error('Vereinfachen unterstützt bis zu 150.000 Dreiecke je Netz.');return {geometryDigest:meshSelectionGeometryDigest(n),triangles:n.mesh.triangles.length/3,regions:(n.metadata?.meshProtection?.regions??[]).map(r=>({name:r.name,purpose:r.purpose,triangles:r.triangleIds.length}))};}
     if(kind==='surgeryCatalog'){const p=cadProjectSnapshot(project),n=p.nodes.find(n=>n.id===id);if(!n||n.kind!=='mesh'||flags(n,p).hidden||flags(n,p).locked)throw Error('Ein sichtbares, entsperrtes Netzteil auswählen.');return meshSurgeryCatalog(n);}
     if(kind==='remeshCatalog'){const p=cadProjectSnapshot(project),n=p.nodes.find(n=>n.id===id);if(!n||n.kind!=='mesh'||flags(n,p).hidden||flags(n,p).locked)throw Error('Ein sichtbares, entsperrtes Netzteil auswählen.');if(n.mesh.triangles.length/3>150000)throw Error('Neuvernetzen unterstützt bis zu 150.000 Dreiecke je Netz.');return {geometryDigest:meshSelectionGeometryDigest(n),triangles:n.mesh.triangles.length/3,regions:(n.metadata?.meshProtection?.regions??[]).map(r=>({name:r.name,purpose:r.purpose,triangles:r.triangleIds.length}))};}
@@ -453,8 +455,9 @@ export function createMeshEngineAdapter({kernel}={}){
       report=fixed.report;
       if(meshTopologyClass(first.mesh).type==='closedMesh'){const before=inspectSolid(first),after=inspectSolid(outputs[0]);report={...report,solidProven:true,volumeBefore:before.volume,volumeAfter:after.volume,volumeDifference:after.volume-before.volume,volumePercentChange:(after.volume-before.volume)/before.volume*100};}else report={...report,solidProven:false};
     }
-    else if(['mesh-reduce','mesh-remesh'].includes(op.type)){
+    else if(['mesh-reduce','mesh-large-reduce','mesh-remesh'].includes(op.type)){
       if(Object.keys(op).some(k=>!['type','id','options'].includes(k)))throw Error('Unbekannte Vereinfachungsfelder.');
+      if(op.type==='mesh-large-reduce'&&op.options?.method!=='large-v1'||op.type==='mesh-reduce'&&op.options?.method==='large-v1')throw Error('Große Netze im eigenen Vereinfachungswerkzeug bearbeiten.');
       const isRemesh=op.type==='mesh-remesh',options=(isRemesh?validateMeshRemeshOptions:validateMeshReduceOptions)(op.options),fixed=await (isRemesh?remeshSource:reduceSource)(first,options),recipe={type:isRemesh?'remesh':'reduce',options};
       outputs=[{...structuredClone(first),mesh:fixed.node.mesh,meshSource:keepMeshAppearance(first,retained(fixed.node,[first],recipe))}];
       outputs[0].metadata={...first.metadata,sourceReference:first.metadata?.sourceReference??{objectId:first.id,geometryDigest:projectObjectGeometryDigest(first),operation:'mesh-edit'}};
@@ -462,7 +465,7 @@ export function createMeshEngineAdapter({kernel}={}){
       report=fixed.report;
       // A closed material input must remain an independently proven material
       // body. Open sheets retain exact boundaries and are not called solids.
-      if(meshTopologyClass(first.mesh).type==='closedMesh'){const before=inspectSolid(first),after=inspectSolid(outputs[0]),allowance=['curved-v1','curved-isotropic-v1'].includes(options.method)?before.volume*.01:Math.max(1e-7,before.volume*2e-6);if(Math.abs(after.volume-before.volume)>allowance)throw Error('Die Vereinfachung überschreitet die Volumenprüfung.');report={...report,solidProven:true,volumeBefore:before.volume,volumeAfter:after.volume,volumeTolerance:allowance,volumeDifference:after.volume-before.volume,volumePercentChange:(after.volume-before.volume)/before.volume*100};}else report={...report,solidProven:false};
+      if(options.method!=='large-v1'&&meshTopologyClass(first.mesh).type==='closedMesh'){const before=inspectSolid(first),after=inspectSolid(outputs[0]),allowance=['curved-v1','curved-isotropic-v1'].includes(options.method)?before.volume*.01:Math.max(1e-7,before.volume*2e-6);if(Math.abs(after.volume-before.volume)>allowance)throw Error('Die Vereinfachung überschreitet die Volumenprüfung.');report={...report,solidProven:true,volumeBefore:before.volume,volumeAfter:after.volume,volumeTolerance:allowance,volumeDifference:after.volume-before.volume,volumePercentChange:(after.volume-before.volume)/before.volume*100};}else report={...report,solidProven:false};
     }
     else if(op.type==='mesh-connectors'){
       if(Object.keys(op).some(k=>!['type','ids','reference','options'].includes(k))||sources.length!==2)throw Error('Genau zwei Netzteile für eine gemeinsame Steckverbindung auswählen.');
@@ -501,7 +504,7 @@ export function createMeshEngineAdapter({kernel}={}){
     }
     const selected=new Set(ids),insertion=draft.nodes.findIndex(n=>selected.has(n.id));draft.nodes=draft.nodes.filter(n=>!selected.has(n.id));
     // Restoring originals must never overwrite unrelated roots with reused IDs.
-    const existing=new Set(draft.nodes.map(n=>n.id));for(const n of outputs){if(existing.has(n.id)){if(op.type!=='mesh-dissolve')throw Error('Die Kennung einer erhaltenen Netzquelle wird bereits verwendet.');n.id=crypto.randomUUID();}existing.add(n.id);if(!['mesh-role','mesh-simple-repair','mesh-close-hole','mesh-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill','mesh-surgery'].includes(op.type))inspectSolid(n);}
+    const existing=new Set(draft.nodes.map(n=>n.id));for(const n of outputs){if(existing.has(n.id)){if(op.type!=='mesh-dissolve')throw Error('Die Kennung einer erhaltenen Netzquelle wird bereits verwendet.');n.id=crypto.randomUUID();}existing.add(n.id);if(!['mesh-role','mesh-simple-repair','mesh-close-hole','mesh-reduce','mesh-large-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill','mesh-surgery'].includes(op.type))inspectSolid(n);}
     if(['mesh-split','mesh-extract-bodies'].includes(op.type))report={...report,review:{parts:meshPartitionReview(outputs,op.type==='mesh-split'?report.plane:null),scope:'stored-faces-near-plane',keepsAllMaterial:true}};
     draft.nodes.splice(insertion,0,...outputs);return {project:cadProjectSnapshot(draft),selectedIds:outputs.map(n=>n.id),report};
   }

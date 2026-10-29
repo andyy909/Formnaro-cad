@@ -4,19 +4,41 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {createRequire} from 'node:module';
-import {validateAssistantAction,searchProgramHelp,PROGRAM_TARGETS,programQuestion} from '../src/cad-program-help.js';
+import {validateAssistantAction,searchProgramHelp,PROGRAM_TARGETS,PROGRAM_ASSISTANT_CONTRACT,programQuestion} from '../src/cad-program-help.js';
 import {runCadAIRequest} from '../src/cad-ai-request.js';
 const require=createRequire(import.meta.url),{assistantReply}=require('../backend/ai-program-assistant.cjs'),{createModelingContext}=require('../backend/ai-modeling-context.cjs'),{generate}=require('../backend/ai-provider.cjs');
 test('Catalogue contains real tool procedures, prerequisites and unique semantic targets',()=>{
  assert.equal(new Set(PROGRAM_TARGETS.map(t=>t.id)).size,PROGRAM_TARGETS.length);
- assert.match(searchProgramHelp('Ausformung Loft')[0].description,/Zwei eigenständige native Skizzen/);
+ assert.match(searchProgramHelp('Ausformung Loft')[0].description,/Zwei bis acht eigenständige native Skizzen/);
+ assert.match(searchProgramHelp('Sweeping')[0].requirement,/Pfad im Dialog/);
  assert.match(searchProgramHelp('CAD in Netz')[0].description,/Netzkopie/);
  assert(programQuestion('Wo finde ich das Werkzeug?'));assert(programQuestion('Erkläre mir Loft'));
+});
+
+test('Parameter and joint documentation distinguish source bindings from rigid mesh parts',()=>{
+ const parameters=PROGRAM_TARGETS.find(t=>t.id==='tool:project-parameters'),joints=PROGRAM_TARGETS.find(t=>t.id==='tool:joints');
+ assert.match(parameters.description,/ohne.*Auswahl/);
+ assert.match(joints.requirement,/CAD- oder Netzmaterialteile/);
+ assert.match(joints.description,/keine.*parametrischen/);
 });
 test('Whole guide is validated before execution; external actions, file dialogs and model commits are rejected',()=>{
  for(const [target,action,value]of [['#ai-key','set','x'],['tool:import','click'],['tool:new','click'],['region:preview-apply','click'],['settings:theme','set','https://evil.invalid'],['shell:run','click'],['tool:undo','click']])assert.throws(()=>validateAssistantAction({kind:'guide',steps:[{target:'menu:cad',action:'click'},{target,action,...(value?{value}:{})}]}));
  assert.throws(()=>validateAssistantAction({kind:'guide',steps:[{target:'menu:cad',action:'click',selector:'body'}]}));
  assert.deepEqual(validateAssistantAction({kind:'guide',steps:[{target:'settings:theme',action:'set',value:'dark'}]}).steps[0].value,'dark');
+});
+test('Shape targets can only be shown, never clicked or set',()=>{
+ for(const id of ['shape:box','shape:cylinder','shape:sphere','shape:tube']){
+  assert(PROGRAM_TARGETS.some(t=>t.id===id&&t.click===false));
+  assert.equal(validateAssistantAction({kind:'guide',steps:[{action:'point',target:id}]}).steps[0].target,id);
+  assert.throws(()=>validateAssistantAction({kind:'guide',steps:[{action:'click',target:id}]}));
+ }
+});
+test('Provider receives incremental stage instructions and can reference prior aliases',async()=>{
+ const original=globalThis.fetch;let system='';
+ try{globalThis.fetch=async(_url,options)=>{system=JSON.parse(options.body).instructions;return new Response(JSON.stringify({output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({message:'OK'})}]}]}));};
+  await generate({baseUrl:'http://localhost:9999',model:'fixture',protocol:'responses'},'',{prompt:'Zeige einen Aufbau',context:{programAssistant:PROGRAM_ASSISTANT_CONTRACT},scene:{revision:'current'},chat:true});
+  assert.match(system,/only new commands/i);assert.match(system,/do not repeat/i);assert.match(system,/aliases.*earlier stages/i);
+ }finally{globalThis.fetch=original;}
 });
 test('Transport bounds help, guide, note and demonstration without accepting arbitrary nested fields',()=>{
  for(const value of [{kind:'os',command:'x'},{kind:'note',text:'x',path:'C:/outside'},{kind:'help',query:'x'.repeat(501)},{kind:'guide',steps:[{action:'click',target:'button[data-x]'}]},{kind:'demonstrate',title:'x',stages:[{text:'x',commands:[],url:'x'}]}])assert.throws(()=>assistantReply(value));
