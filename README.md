@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <strong>Von der ersten Form zum eigenen Bauteil.</strong><br>
-  CAD, 3D-Modelle und technische Zeichnungen für Modellbau und 3D-Druck.
+  <strong>Lokales CAD-Programm für Windows.</strong><br>
+  3D-Modelle und technische Zeichnungen für Modellbau und 3D-Druck.
 </p>
 
 <h3 align="center">
@@ -25,13 +25,13 @@
 
 ---
 
-## Deine Idee. Deine Maße. Dein Modell.
+## Über Formnaro
 
-Ein Halter für die Werkbank, ein Gehäuse für die Elektronik oder ein Ersatzteil für den Modellbau: Mit Formnaro baust du eigene Teile auf, passt vorhandene Modelle an und erstellst Zeichnungen dazu.
+Formnaro ist ein portables Programm zum Erstellen und Bearbeiten von 3D-Modellen und technischen Zeichnungen.
 
 Beginne mit einfachen Formen oder konstruiere mit Skizzen, Parametern und CAD-Werkzeugen. Die normale Modellierung funktioniert **offline**; deine Projekte speicherst du lokal. Änderungen prüfst du in der Vorschau und übernimmst sie anschließend mit der Möglichkeit, sie rückgängig zu machen.
 
-## Komplexere Bauteile – direkt in Formnaro
+## Beispielmodelle
 
 Diese drei Demonstrationsmodelle wurden in **Formnaro 0.114.0-r7** konstruiert. Die Bilder stammen direkt aus der 3D-Ansicht des Programms. Die bearbeitbaren Projekte kannst du selbst öffnen.
 
@@ -68,7 +68,7 @@ Das Projekt enthält **zwei unabhängig bedienbare Drehgelenke**. Unter „Gelen
 | **Ein eigenes Bauteil konstruieren** | Grundformen, bearbeitbare Skizzen, Bohrungen, Ausschnitte, Rundungen und weitere CAD-Werkzeuge. |
 | **Maße und Varianten anpassen** | Benannte Maße, Formeln und gemeinsame Projektparameter für zusammengehörige Teile. |
 | **Vorhandene 3D-Modelle bearbeiten** | STL- und andere Netzmodelle importieren, prüfen und gezielt bearbeiten; CAD-Modelle über STEP austauschen. |
-| **Komplexere Formen aufbauen** | Bézier- und B-Spline-Kurven, Lofts, Sweeps sowie Flächen, Prägungen und Vertiefungen. |
+| **Kurven und Flächen verwenden** | Bézier- und B-Spline-Kurven, Lofts, Sweeps sowie Flächen, Prägungen und Vertiefungen. |
 | **Eine Konstruktion dokumentieren** | Technische Ansichten, Schnitte und Bemaßungen mit Ausgabe als PDF, SVG oder DXF. |
 | **Teile und Baugruppen verwalten** | Flächenfarben, Materialgruppen, ausdrücklich eingegebene Dichte, Masse und Schwerpunkt, CSV-Stückliste und gespeicherte Explosionsansicht. |
 | **Vorlagen und Fotos verwenden** | Projektfotos, Referenzmaße und bestätigte technische Ansichten als Grundlage für bearbeitbare CAD-Entwürfe. |
