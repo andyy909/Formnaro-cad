@@ -119,6 +119,14 @@ Lass dir bei Modellieraufträgen, der Arbeit mit Referenzfotos oder bei Fragen z
 
 Die KI-Funktionen sind **optional**. Für Anfragen an einen Cloud-Anbieter brauchst du einen eingerichteten Zugang und eine Internetverbindung; mögliche Kosten hängen vom Anbieter ab. Die mitgelieferten Python- und FreeCAD-Werkzeuge rechnen lokal.
 
+### Vorschau: neuer Übungsmodus (lokal geprüft)
+
+Der neue Übungsmodus zeigt ausgewählte Modellierschritte mit echten Bedienelementen in einem eigenen, leeren Übungsfenster. Das Beispiel umfasst Grundformen, Maße, Positionen und eine Lochform.
+
+![Übungsmodus: Eine Platte mit einer Bohrung wird im getrennten Übungsfenster aufgebaut](bilder/formnaro-uebungsmodus.gif)
+
+Das GIF zeigt die erneute Ausführung eines zuvor von DeepSeek erzeugten Plans; während der Aufnahme läuft keine Live-KI-Anfrage. Der lokal geprüfte Übungsmodus ist eine Vorschau und **nicht im verlinkten öffentlichen Download 0.117.0-r8 enthalten**. Die gezeigten Schritte sind begrenzte Beispiele.
+
 <details>
 <summary><strong>Einblicke in KI-Aufträge und technische Fotoansichten</strong></summary>
 
