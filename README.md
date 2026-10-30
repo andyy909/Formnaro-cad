@@ -6,13 +6,17 @@
 
 **CAD und Netzbearbeitung für Modellbau und 3D-Druck.** Konstruiere Bauteile, bearbeite 3D-Modelle und erstelle technische Zeichnungen. Formnaro läuft lokal unter Windows; die normale Modellierung funktioniert offline.
 
-**[Für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.117.0-r8/Formnaro-v0.117.0-r8-Windows.zip)** · [Anleitungen](#anleitungen) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
+**[Für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.119.0-r3/Formnaro-v0.119.0-r3-Windows.zip)** · [Anleitungen](#anleitungen) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
 
-Windows 64 Bit · portabel · Download **0.117.0-r8** · ca. **1,89 GB**
+Windows 64 Bit · portabel · Download **0.119.0-r3** · ca. **1,9 GB**
 
-![In Formnaro konstruiertes Elektronikgehäuse mit abgehobenem Deckel und separater Platine](bilder/beispiel-elektronikgehaeuse.png)
+| **Easy Tinker** · einfacher Winkelhalter | **Normal** · Lagerhalter mit Langlöchern |
+| :---: | :---: |
+| [![Easy Tinker mit Formenpalette und einfachem Winkelhalter](docs/bilder/formnaro-easy-winkelhalter.png)](docs/bilder/formnaro-easy-winkelhalter.png) | [![Normal mit Werkzeugleisten und Lagerhalter](docs/bilder/formnaro-normal-lagerhalter.png)](docs/bilder/formnaro-normal-lagerhalter.png) |
+| **Solid** · Schraubstock als Baugruppe | **Fusion** · zweistufiges Schräggetriebe |
+| [![Solid mit Baugruppenwerkzeugen, Modellbaum und Schraubstock](docs/bilder/formnaro-solid-schraubstock.png)](docs/bilder/formnaro-solid-schraubstock.png) | [![Fusion mit Konstruktionsschritten und Schräggetriebe mit vier Zahnrädern](docs/bilder/formnaro-fusion-getriebe.png)](docs/bilder/formnaro-fusion-getriebe.png) |
 
-*Beispiel aus Formnaro 0.114.0-r7.* [Bearbeitbares Gehäuseprojekt](beispiele/elektronikgehaeuse.ocad) · [Lagerhalter](beispiele/lagerhalter.ocad) · [Getriebestudie](beispiele/getriebestudie.ocad)
+*Echte Programmaufnahmen: Easy Tinker, Normal und Solid aus 0.117.0-r8; Fusion aus 0.119.0-r2. Zum Vergrößern auf ein Bild klicken.*
 
 ## Schnell starten
 
@@ -28,11 +32,23 @@ FreeCAD und Python sind im Windows-Paket enthalten. Eine separate Installation i
 - **Maße bearbeiten:** Parameter, Formeln und Varianten für zusammengehörige Teile.
 - **Netze bearbeiten:** Modelle importieren, prüfen, reparieren und gezielt verändern.
 - **Zeichnungen erstellen:** Ansichten, Schnitte und Bemaßungen als PDF, SVG oder DXF ausgeben.
-- **Baugruppen organisieren:** Gelenke, Material, Masse, Stücklisten und Explosionsansichten.
+- **Baugruppen organisieren:** Gelenke, Zahnradkopplungen, Material, Masse, Stücklisten und Explosionsansichten.
 
 STEP, STL, OBJ, 3MF und GLB/glTF ermöglichen den Modellaustausch. Vier Bedienmodi stehen zur Wahl: **Easy Tinker, Normal, Solid und Fusion**. Änderungen lassen sich in der Vorschau prüfen und rückgängig machen.
 
 **Optionale KI-Unterstützung** hilft bei Modellieraufträgen, Referenzfotos und Bedienfragen. Cloud-Anfragen benötigen einen Anbieterzugang und Internet; je nach Anbieter können Kosten entstehen. Python- und FreeCAD-Werkzeuge rechnen lokal.
+
+### Getriebe in Bewegung
+
+![Vier Schrägzahnräder mit automatisch gekoppelten Wellen und 6:1 Untersetzung](docs/bilder/formnaro-schraeggetriebe-6zu1.gif)
+
+Zwei Stufen, vier Räder, **6:1 Untersetzung** – ein offenes Getriebekonzept etwa für einen langsamen Drehteller. Nur die Antriebswelle wird bewegt; die übrigen folgen der Kopplung. [Beispielprojekt herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.119.0-r3/schraeggetriebe-6zu1.ocad). Kinematische Demonstration aus 0.119.0-r2, keine Kontakt- oder Belastungssimulation.
+
+### KI in Aktion
+
+![KI-Übungsmodus: Formnaro führt die Modellierschritte für eine Platte mit Bohrung im eigenen Übungsfenster vor](bilder/formnaro-uebungsmodus.gif)
+
+*Vorschau des Übungsmodus:* Das GIF zeigt die Wiedergabe eines zuvor von DeepSeek erzeugten Plans, ohne Live-KI-Anfrage während der Aufnahme. Der Übungsmodus ist **nicht im Windows-Download 0.119.0-r3 enthalten**.
 
 ## Anleitungen
 
@@ -47,19 +63,10 @@ STEP, STL, OBJ, 3MF und GLB/glTF ermöglichen den Modellaustausch. Vier Bedienmo
 <!-- formnaro-development-status:start -->
 ## Entwicklungsstand
 
-Der Quellcode **0.120.0** enthält neuere Funktionen als der Windows-Download **0.117.0-r8**, darunter mitwachsende Bohrungen, verknüpfte Muster und direkte Skizzenmaße. Die vollständige gemeinsame GUI-, Windows-Paket-, Dauerlauf- und Wiederherstellungsabnahme dieses Entwicklungsstands steht noch aus.
+Der Quellcode **0.120.0** enthält neuere Funktionen als der Windows-Download **0.119.0-r3**, darunter mitwachsende Bohrungen, verknüpfte Muster und direkte Skizzenmaße. Die vollständige gemeinsame GUI-, Windows-Paket-, Dauerlauf- und Wiederherstellungsabnahme dieses Entwicklungsstands steht noch aus.
 
-[Prüfstand und Grenzen](docs/PRUEFSTAND-0.120.0.md) · [Ausbau und offene Punkte](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md) · [Prüfbericht des Windows-Downloads](https://github.com/andyy909/Formnaro-cad/releases/download/v0.117.0-r8/Pruefbericht.txt)
+[Prüfstand und Grenzen](docs/PRUEFSTAND-0.120.0.md) · [Ausbau und offene Punkte](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md) · [Prüfbericht des Windows-Downloads](https://github.com/andyy909/Formnaro-cad/releases/download/v0.119.0-r3/Pruefbericht.txt)
 <!-- formnaro-development-status:end -->
-
-<details>
-<summary>Vorschau: Übungsmodus</summary>
-
-Der Übungsmodus führt ausgewählte Modellierschritte in einem eigenen Übungsfenster vor. Er ist **nicht im Windows-Download 0.117.0-r8 enthalten**.
-
-[Demo ansehen](bilder/formnaro-uebungsmodus.gif) — Wiedergabe eines zuvor von DeepSeek erzeugten Plans; während der Aufnahme läuft keine Live-KI-Anfrage.
-
-</details>
 
 <details>
 <summary>Aus dem Quellcode starten</summary>
