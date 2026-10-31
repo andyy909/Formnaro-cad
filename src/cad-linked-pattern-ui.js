@@ -1,4 +1,5 @@
 import {cadLinkedPatternProblems} from './cad-linked-pattern-data.js';
+import {mountCadPatternConsumerEditor} from './cad-pattern-consumers-ui.js';
 import './cad-linked-pattern.css';
 
 /** The same revision-bound native operation is used for creation and editing. */
@@ -6,7 +7,7 @@ export function openCadLinkedPatternUI({item,project,revision,controller,view,mo
  const $=id=>document.getElementById(id),existing=project.linkedPatterns?.patterns.find(p=>p.sourceId===item.id||p.instances.some(i=>i.id===item.id)),source=existing?project.nodes.find(n=>n.id===existing.sourceId):project.nodes.find(n=>n.id===item.id);
  if(!source||source.kind!=='cad'||source.hidden||source.locked)throw Error('Ein sichtbares entsperrtes vollständiges CAD-Teil auswählen.');
  const center=source.stats.bounds.min.map((v,i)=>(v+source.stats.bounds.max[i])/2),m=source.transform,world=center.map((_,i)=>m[12+i]+m[i]*center[0]+m[4+i]*center[1]+m[8+i]*center[2]);
- let proposal=null,version=0;const run=fn=>safe(fn),number=id=>{const text=$(id).value.trim(),n=text?Number(text.replace(',','.')):NaN;if(!Number.isFinite(n))throw Error('Endliche Zahl eingeben.');return n;};
+ let proposal=null,version=0,consumerEditor=null,closing=false,collecting=false;const run=fn=>safe(fn),number=id=>{const text=$(id).value.trim(),n=text?Number(text.replace(',','.')):NaN;if(!Number.isFinite(n))throw Error('Endliche Zahl eingeben.');return n;};
  const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const old=existing??{kind:'line',count:3,step:[20,0,0],columns:3,rowStep:[0,20,0],center:[world[0]-30,world[1],world[2]],radius:30,startAngle:0,angle:360,rotateCopies:false,mirrorAxis:'x',mirrorOffset:0,excluded:[],instances:[]};
  const bindingFields=[['count','Anzahl'],['step.0','Schritt X'],['step.1','Schritt Y'],['step.2','Schritt Z'],['columns','Rasterspalten'],['rowStep.1','Raster-Zeilenabstand'],['radius','Kreisradius'],['angle','Gesamtwinkel']];
@@ -14,7 +15,7 @@ export function openCadLinkedPatternUI({item,project,revision,controller,view,mo
  const params=project.projectParameters?.parameters??[];
  function bindingSelect(field,label){const selected=old.bindings?.find(b=>b.field===field)?.parameterId,missing=selected&&!params.some(p=>p.id===selected);return `<label>${esc(label)}<select id="linked-bind-${field.replace('.','-')}"><option value="">Eigener Wert</option>${missing?`<option value="${esc(selected)}">Fehlender Parameter</option>`:''}${params.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></label>`;}
  modal(existing?'Verknüpftes Muster bearbeiten':'Verknüpftes Muster',`
-  <div class="linked-pattern-form"><p>Änderungen zuerst als Vorschau berechnen und anschließend übernehmen. Koordinaten gelten im Weltsystem.</p>
+  <div class="linked-pattern-form"><p>Änderungen zuerst als Vorschau berechnen und anschließend übernehmen. Koordinaten gelten im Weltsystem. Betroffene Zeichnungsansichten auf erhaltenen Kopien werden gemeinsam aktualisiert. Im Mustereditor folgen auch unterstützte Konturketten mit Zielskizzen auch innerhalb normaler CAD-Gruppen mit freien projektgebundenen Skizzenmaßen, Extrusionshöhen sowie gebundener Körpergröße und Position. Sichtbarkeit und Unterdrückung aus Projektvarianten bleiben erhalten. Zeichnungen mit solchen inaktiven Quellen behalten ihre bisherige Projektion mit einem Hinweis. Weitere gebundene Verbraucher bleiben gesperrt.</p>
   <label class="dialog-label">Muster<select id="linked-kind"><option value="line">Reihe</option><option value="grid">Raster</option><option value="circle">Kreis</option><option value="mirror">Spiegelung</option></select></label>
   <div id="linked-count-group"><label class="dialog-label">Anzahl einschließlich Quelle<input id="linked-count" value="${old.count}" inputmode="numeric"></label></div>
   <div id="linked-step-group"><div class="section-title">Abstand zwischen Kopien (mm)</div><div class="input-row">${[0,1,2].map(i=>`<label class="dialog-label">${'XYZ'[i]}<input id="linked-step-${i}" value="${old.step?.[i]??(i?0:20)}" inputmode="decimal"></label>`).join('')}</div></div>
@@ -23,25 +24,33 @@ export function openCadLinkedPatternUI({item,project,revision,controller,view,mo
   <div id="linked-mirror-group"><label class="dialog-label">Spiegelebene<select id="linked-axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select></label><label class="dialog-label">Spiegelebene Position (mm)<input id="linked-offset" value="${old.mirrorOffset??0}" inputmode="decimal"></label></div>
   <label class="dialog-label">Ausgelassene Positionen<input id="linked-excluded" value="${esc((old.excluded??[]).map(i=>i+1).join(','))}" placeholder="z. B. 2, 4"></label><p class="small-note">Positionsnummern ab 2, durch Komma getrennt.</p>
   <details class="linked-pattern-bindings"><summary>Projektparameter verbinden</summary><p class="small-note">Verbundenen Werten folgen aktive Varianten. Nach einem Variantenwechsel das Muster erneut als Vorschau berechnen und übernehmen.</p><div class="linked-pattern-binding-grid">${bindingFields.map(([field,label])=>bindingSelect(field,label)).join('')}</div></details>
-  <p id="linked-status" role="status"></p>
+  <div id="linked-consumers"></div><p id="linked-status" role="status"></p><label id="linked-accept-row" class="check-line" hidden><input id="linked-accept" type="checkbox"> Hinweise geprüft; notwendige Folgeänderungen ausdrücklich mit übernehmen.</label>
   ${existing?'<details class="linked-pattern-detach"><summary>Verknüpfungen lösen</summary><label class="dialog-label">Positionsnummer der Kopie<input id="linked-detach-index" value="2" inputmode="numeric"></label><button id="linked-detach-one">Einzelne Kopie lösen</button><label class="check-line"><input type="checkbox" id="linked-detach-confirm"> Ich verstehe: Vorhandene Teile bleiben unverändert, fehlende Teile werden nicht wiederhergestellt und die Mustersperre entfällt.</label><button id="linked-detach">Gesamtes Muster lösen</button></details>':''}
   <div class="modal-actions"><button id="linked-cancel">Abbrechen</button><button id="linked-preview">Vorschau berechnen</button><button id="linked-apply" class="primary" disabled>Übernehmen</button></div></div>`);
  $('linked-kind').value=old.kind;$('linked-axis').value=old.mirrorAxis??'x';for(const [field] of bindingFields){const select=$('linked-bind-'+field.replace('.','-'));select.value=old.bindings?.find(b=>b.field===field)?.parameterId??'';}function updateBindings(){const kind=$('linked-kind').value;for(const [field] of bindingFields)$('linked-bind-'+field.replace('.','-')).closest('label').hidden=!allowed(field,kind);for(const [group,visible] of [['linked-count-group',kind!=='mirror'],['linked-step-group',kind==='line'||kind==='grid'],['linked-grid-group',kind==='grid'],['linked-circle-group',kind==='circle'],['linked-mirror-group',kind==='mirror']])$(group).hidden=!visible;}$('linked-kind').addEventListener('change',updateBindings);updateBindings();if(existing){const problems=cadLinkedPatternProblems(project,existing);$('linked-status').textContent=problems.length?'Muster ist veraltet: '+problems[0].message:'Muster ist aktuell.';}
- function clear(){version++;if(proposal){controller.discard(proposal.previewId);proposal=null;}view.clearPreview();$('linked-apply').disabled=true;}
- function close(){clear();$('modal').close();}
- for(const el of document.querySelectorAll('#modal input,#modal select'))el.addEventListener('input',clear);
- $('linked-cancel').onclick=close;
- $('linked-preview').onclick=()=>run(async()=>{
-  clear();const epoch=version;if(controller.revision()!==revision)throw Error('Modell wurde geändert. Muster erneut öffnen.');
+ function readOperation(){
   const kind=$('linked-kind').value,count=kind==='mirror'?2:number('linked-count'),excluded=$('linked-excluded').value.trim()?$('linked-excluded').value.split(',').map(v=>Number(v.trim())-1):[];
   const p={version:1,id:existing?.id??crypto.randomUUID(),sourceId:source.id,kind,count,excluded,instances:(existing?.instances??[]).filter(v=>v.index<count),...(existing?.snapshot?{snapshot:existing.snapshot}:{})};
   if(kind==='line'||kind==='grid')p.step=[0,1,2].map(i=>number('linked-step-'+i));if(kind==='grid'){p.columns=number('linked-columns');p.rowStep=[0,number('linked-row'),0];}
   if(kind==='circle')Object.assign(p,{center:[0,1,2].map(i=>number('linked-center-'+i)),radius:number('linked-radius'),startAngle:number('linked-start'),angle:number('linked-angle'),rotateCopies:$('linked-rotate').checked});
   if(kind==='mirror')Object.assign(p,{mirrorAxis:$('linked-axis').value,mirrorOffset:number('linked-offset')});const bindings=bindingFields.filter(([field])=>allowed(field,kind)).map(([field])=>({field,parameterId:$('linked-bind-'+field.replace('.','-')).value})).filter(b=>b.parameterId);if(bindings.length)p.bindings=bindings;
-  $('linked-status').textContent='Muster wird berechnet …';const result=await controller.preview({kind:'linkedPattern',pattern:p},{revision,label:'Verknüpftes CAD-Muster'});if(epoch!==version){controller.discard(result.previewId);return;}
-  const display=await controller.display(result.project);if(epoch!==version){controller.discard(result.previewId);return;}proposal=result;view.setPreview(display.meshes,result.project);$('linked-apply').disabled=false;$('linked-status').textContent='Vorschau berechnet. Übernehmen oder abbrechen.';
+  return {kind:'linkedPattern',pattern:p};
+ }
+ function clear(invalidateConsumers=true){version++;if(proposal){controller.discard(proposal.previewId);proposal=null;}if(invalidateConsumers!==false)consumerEditor?.invalidate();view.clearPreview();$('linked-apply').disabled=true;$('linked-accept').checked=false;$('linked-accept-row').hidden=true;}
+ function close(){closing=true;consumerEditor?.dispose();clear(false);$('modal').removeEventListener('close',modalClosed);$('modal').close();}
+ function modalClosed(){if(!$('modal').open&&!collecting&&!closing)close();}
+ $('modal').addEventListener('close',modalClosed);
+ for(const el of document.querySelectorAll('#modal input:not(#linked-accept),#modal select'))el.addEventListener('input',clear);
+ consumerEditor=mountCadPatternConsumerEditor({host:$('linked-consumers'),project,patterns:existing?[existing]:[],controller,view,getOperation:readOperation,onInvalidate:()=>clear(false),onPause:()=>{collecting=true;$('modal').close();},onResume:()=>{if(!closing&&controller.revision()===revision){collecting=false;if(!$('modal').open)$('modal').showModal();}},toast});
+ $('linked-accept').onchange=()=>{$('linked-apply').disabled=!proposal||!!proposal.report?.requiresFreeCADAcceptance&&!$('linked-accept').checked;};
+ $('linked-cancel').onclick=close;
+ $('linked-preview').onclick=()=>run(async()=>{
+  clear(false);const epoch=version;if(controller.revision()!==revision)throw Error('Modell wurde geändert. Muster erneut öffnen.');
+  const operation=readOperation(),choices=consumerEditor.bindings();if(Object.keys(choices).length)operation.consumerBindings=choices;
+  $('linked-status').textContent='Muster wird berechnet …';const result=await controller.preview(operation,{revision,label:'Verknüpftes CAD-Muster'});if(epoch!==version){controller.discard(result.previewId);return;}
+  const display=await controller.display(result.project);if(epoch!==version){controller.discard(result.previewId);return;}proposal=result;view.clearSource();view.setPreview(display.meshes,result.project);$('linked-accept-row').hidden=!result.report?.requiresFreeCADAcceptance;$('linked-accept').checked=false;$('linked-apply').disabled=!!result.report?.requiresFreeCADAcceptance;$('linked-status').textContent='Vorschau berechnet. '+(result.drawingReport?.updatedViewIds.length??0)+' Zeichnungsansicht(en) und '+(result.report?.updatedLinkIds?.length??0)+' Konturverknüpfung(en) gemeinsam aktualisiert. '+(result.warnings?.join(' ')??'')+' Übernehmen oder abbrechen.';
  });
- $('linked-apply').onclick=()=>run(()=>{if(!proposal)throw Error('Zuerst Vorschau berechnen.');controller.apply({previewId:proposal.previewId,revision});proposal=null;view.clearPreview();$('modal').close();toast('Verknüpftes Muster übernommen.');});
+ $('linked-apply').onclick=()=>run(()=>{if(!proposal)throw Error('Zuerst Vorschau berechnen.');controller.apply({previewId:proposal.previewId,revision,...(proposal.report?.requiresFreeCADAcceptance?{acceptFeatureDependencies:$('linked-accept').checked}:{})});proposal=null;closing=true;consumerEditor.dispose();view.clearPreview();$('modal').removeEventListener('close',modalClosed);$('modal').close();toast('Verknüpftes Muster übernommen.');});
  if(existing)$('linked-detach-one').onclick=()=>run(async()=>{const index=number('linked-detach-index')-1;clear();const result=await controller.preview({kind:'linkedPatternDetachInstance',id:existing.id,index},{revision,label:'Musterkopie lösen'});controller.apply({previewId:result.previewId,revision});$('modal').close();toast('Musterkopie ist jetzt unabhängig.');});
  if(existing)$('linked-detach').onclick=()=>run(async()=>{if(!$('linked-detach-confirm').checked)throw Error('Bitte die Folgen des Lösens ausdrücklich bestätigen.');clear();const result=await controller.preview({kind:'linkedPatternDetach',id:existing.id,confirmConflict:true},{revision,label:'Musterverknüpfung lösen'});controller.apply({previewId:result.previewId,revision});$('modal').close();toast('Musterverknüpfung gelöst.');});
 }

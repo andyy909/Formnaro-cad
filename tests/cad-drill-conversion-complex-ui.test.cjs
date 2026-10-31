@@ -1,0 +1,6 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
+test('complex nested legacy conversion uses explicit branch, original-face and existing-binding choices in the actual dialog',()=>{
+ const root=path.resolve(__dirname,'..'),parent=path.join(root,'work','drill-conversion-complex-ui');fs.mkdirSync(parent,{recursive:true});const directory=fs.mkdtempSync(path.join(parent,'run-')),report=path.join(directory,'result.json');
+ const child=spawnSync(require('electron'),[path.join(__dirname,'fixtures','cad-drill-conversion-complex-ui.cjs'),'--verify-maintenance='+report],{cwd:root,encoding:'utf8',windowsHide:true,timeout:180000,env:{...process.env,PYTHONDONTWRITEBYTECODE:'1'}});fs.writeFileSync(path.join(directory,'process.log'),(child.stdout??'')+(child.stderr??''));
+ assert.equal(child.status,0,child.error?.message??(fs.existsSync(report)?fs.readFileSync(report,'utf8'):child.stderr));const result=JSON.parse(fs.readFileSync(report));assert.equal(result.ok,true);assert.equal(result.isolatedProfile,true);assert.deepEqual(result.errors,[]);assert.deepEqual(result.external,[]);assert(result.checks.length>=14);
+});

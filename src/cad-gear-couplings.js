@@ -39,8 +39,11 @@ function gearGraph(gears){
 }
 
 export function gearAxes(project,data,a,b){
- if(a.parentId!==b.parentId||!data.bases.includes(a.parentId))fail('Die beiden Drehgelenke benötigen dieselbe feste Basis. Bewegte Achsen werden noch nicht unterstützt.','GEAR_SUPPORT');
- const parent=project.nodes.find(n=>n.id===a.parentId);if(!parent)fail('Die feste Basis fehlt.','JOINT_REFERENCE_LOST');
+ // Joint values are relative to their parent. A shared rigid carrier may move
+ // through its own joint tree without changing the gears' relative axes or
+ // ratio. Distinct carriers (including planetary arrangements) stay unsupported.
+ if(a.parentId!==b.parentId)fail('Die beiden Drehgelenke benötigen denselben starren Träger. Unterschiedliche Träger werden noch nicht unterstützt.','GEAR_SUPPORT');
+ const parent=project.nodes.find(n=>n.id===a.parentId);if(!parent)fail('Der gemeinsame Träger fehlt.','JOINT_REFERENCE_LOST');
  const frames=[a,b].map(j=>multiplyCadMatrices(parent.transform,j.parentFrame));
  const dot=frames[0].slice(8,11).reduce((s,v,k)=>s+v*frames[1][8+k],0);
  if(Math.abs(Math.abs(dot)-1)>1e-7)fail('Die Drehachsen müssen parallel sein.','GEAR_AXIS');

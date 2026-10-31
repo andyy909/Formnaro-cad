@@ -3,3 +3,7 @@
 .ai-feature-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.ai-feature-chip{padding:5px 7px;border:1px solid #0c72c2;border-radius:6px;background:#edf6ff;color:#173b60;max-width:100%;overflow-wrap:anywhere}.ai-feature-chip button{background:transparent;border:0;color:inherit;cursor:pointer}.ai-feature-chip.stale{border-color:#aa4d0e}.ai-feature-scope-note{font-size:12px;margin:5px 0}
 [data-theme=dark] .ai-feature-panel{background:#1f2d3d;color:#eef4fc}[data-theme=dark] .ai-feature-chip{background:#203c5a;color:#f4f8ff}
 @media(max-width:700px){.ai-feature-panel{right:8px;top:8px;max-height:88%}}
+.ai-feature-panel.repair-picking{top:auto;bottom:12px;max-height:42%;width:min(390px,94%)}
+.ai-feature-panel.repair-picking>:not(header):not([data-repair-feature]):not([data-repair-status]),.ai-feature-panel.repair-picking [data-repair-feature]>:not([data-repair-stop]){display:none!important}
+.ai-feature-panel.consumer-contour-picking{top:auto;bottom:12px;max-height:42%;width:min(390px,94%)}
+.consumer-contour-picking>label,.consumer-contour-picking>[data-consumer-contour-start]{display:none!important}

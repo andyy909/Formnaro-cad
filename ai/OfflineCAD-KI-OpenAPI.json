@@ -23946,6 +23946,207 @@
                           "additionalProperties": false,
                           "required": [
                             "op",
+                            "request"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "freecadRerun"
+                            },
+                            "request": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "target",
+                                "sourceDigest",
+                                "parameters",
+                                "inputs"
+                              ],
+                              "properties": {
+                                "target": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "rootId",
+                                    "path"
+                                  ],
+                                  "properties": {
+                                    "rootId": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "path": {
+                                      "type": "array",
+                                      "maxItems": 12,
+                                      "items": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 200
+                                      }
+                                    }
+                                  }
+                                },
+                                "sourceDigest": {
+                                  "type": "string",
+                                  "pattern": "^[a-f0-9]{64}$"
+                                },
+                                "parameters": {
+                                  "type": "object"
+                                },
+                                "inputs": {
+                                  "type": "array",
+                                  "maxItems": 8,
+                                  "items": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                      "name",
+                                      "target"
+                                    ],
+                                    "properties": {
+                                      "name": {
+                                        "type": "string",
+                                        "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+                                      },
+                                      "target": {
+                                        "oneOf": [
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "rootId",
+                                              "path"
+                                            ],
+                                            "properties": {
+                                              "rootId": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 200
+                                              },
+                                              "path": {
+                                                "type": "array",
+                                                "maxItems": 12,
+                                                "items": {
+                                                  "type": "string",
+                                                  "minLength": 1,
+                                                  "maxLength": 200
+                                                }
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                },
+                                "inputBindings": {
+                                  "type": "array",
+                                  "maxItems": 32,
+                                  "items": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                      "target",
+                                      "sourceDigest",
+                                      "inputs"
+                                    ],
+                                    "properties": {
+                                      "target": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                          "rootId",
+                                          "path"
+                                        ],
+                                        "properties": {
+                                          "rootId": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          },
+                                          "path": {
+                                            "type": "array",
+                                            "maxItems": 12,
+                                            "items": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 200
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "sourceDigest": {
+                                        "type": "string",
+                                        "pattern": "^[a-f0-9]{64}$"
+                                      },
+                                      "inputs": {
+                                        "type": "array",
+                                        "maxItems": 8,
+                                        "items": {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "name",
+                                            "target"
+                                          ],
+                                          "properties": {
+                                            "name": {
+                                              "type": "string",
+                                              "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+                                            },
+                                            "target": {
+                                              "oneOf": [
+                                                {
+                                                  "type": "object",
+                                                  "additionalProperties": false,
+                                                  "required": [
+                                                    "rootId",
+                                                    "path"
+                                                  ],
+                                                  "properties": {
+                                                    "rootId": {
+                                                      "type": "string",
+                                                      "minLength": 1,
+                                                      "maxLength": 200
+                                                    },
+                                                    "path": {
+                                                      "type": "array",
+                                                      "maxItems": 12,
+                                                      "items": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                {
+                                                  "type": "string",
+                                                  "minLength": 1,
+                                                  "maxLength": 200
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
                             "target",
                             "note"
                           ],

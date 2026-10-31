@@ -1520,11 +1520,11 @@ Full machine-readable contract, shape catalogue and JSON Schema:
     "modules": "A script may supply modules:{name:ES-module-source} and load them locally with await api.importTool(name). Alternatively await api.importTool(name, sourceText) adds a tool module dynamically. This imports source text already supplied inside the program, not a filesystem path or remote URL. Imported tools execute inside the same opaque Worker, with the same CSP and model-only capability boundary. Modules can export functions/classes and use globalThis.formnaro for the same model API. Their transitive imports cannot access external network or files. Imported module results and generated geometry use the same preview, cancellation and validation pipeline."
   },
   "packageStorageContract": "Indexed .fnpack v1 stores project17 catalogues, exact SHA-256 geometry blocks and affine instances. The desktop range-reads requested root/source geometry only; omitted scene objects have geometryLoaded:false and package-catalogue-only bounds with no native proof or measured volume. Read assembly state geometryStorage/geometryResident/geometryBlocks/residentGeometryBlocks to distinguish file residency from the display set. Geometry operations load required root/source closures, exports load their complete material scope or fail, saves stream and retain unopened blocks. Use .fnpack for catalogue storage; ordinary .ocad and libraries contain complete geometry. Do not fabricate storage references, file capabilities, cached identities or source proofs.",
-  "jointsContract": "Project/library26 adds joints.version2 with gears:[{id,name,jointA,jointB,teethA,teethB,kind:external|internal,axisSign,phase}]. op:joint gear-create takes gear:{jointA,jointB,teethA,teethB,kind?,name?}; gear-remove takes gearId. Create separate revolute joints on the same fixed support and parallel axes. Any connected joint can drive the coupled graph; values propagate before limits/locks are checked. Moving axes, tooth contact and planetary gears are unsupported. Project/library16 optionally stores joints:{version:1,bases:[rootId],joints:[{id,name,kind:fixed|revolute|prismatic,parentId,childId,parentFrame:16affine,childFrame:16affine,value,limits?:{min,max}}]}. Frames are body-local full affine maps of a rigid world datum, preserving mirrors/shears. Top-level op:joint create takes joint:{kind,parentId,childId,origin:worldXYZ,axis?:worldDirection,name?,limits?}; initial value0. move takes values:[{jointId,value}] with angles in degrees or slide distances in mm. remove takes jointId; rebind takes jointId,origin,axis and preserves the current confirmed pose; limits takes jointId,limits; clear explicitly removes connections only. One command per preview, collected values allowed. Fixed bases and unique-parent tree, max256joints, no cycles. Missing/stale frames or locked affected bodies reject motion. app/joints is paged metadata-only, max50items; includeFrames explicit. Ordinary motion previews update display matrices, with no native/mesh construction, no geometry copying on slider events and no permanent project change. Apply makes one Undo. A separate explicit collision check examines only one pose and selected pair; CAD BRep pairs use native intersection, mesh pairs their mesh kernel; CAD/mesh pairs use a disclosed0.01mm tessellation target without guaranteed max deviation. No contact-without-volume or continuous collision-free path guarantee.",
+  "jointsContract": "Project/library26 adds joints.version2 with gears:[{id,name,jointA,jointB,teethA,teethB,kind:external|internal,axisSign,phase}]. op:joint gear-create takes gear:{jointA,jointB,teethA,teethB,kind?,name?}; gear-remove takes gearId. Create separate revolute joints with parallel axes and the same rigid parent body. This shared carrier may itself translate or rotate through the joint tree; tooth angles and coupling phase are relative to that carrier. Any connected joint can drive the coupled graph; values propagate before limits/locks are checked. Different parent bodies, axes moving relative to their shared carrier, tooth-contact simulation and planetary gears are unsupported. Project/library16 optionally stores joints:{version:1,bases:[rootId],joints:[{id,name,kind:fixed|revolute|prismatic,parentId,childId,parentFrame:16affine,childFrame:16affine,value,limits?:{min,max}}]}. Frames are body-local full affine maps of a rigid world datum, preserving mirrors/shears. Top-level op:joint create takes joint:{kind,parentId,childId,origin:worldXYZ,axis?:worldDirection,name?,limits?}; initial value0. move takes values:[{jointId,value}] with angles in degrees or slide distances in mm. remove takes jointId; rebind takes jointId,origin,axis and preserves the current confirmed pose; limits takes jointId,limits; clear explicitly removes connections only. One command per preview, collected values allowed. Fixed bases and unique-parent tree, max256joints, no cycles. Missing/stale frames or locked affected bodies reject motion. app/joints is paged metadata-only, max50items; includeFrames explicit. Ordinary motion previews update display matrices, with no native/mesh construction, no geometry copying on slider events and no permanent project change. Apply makes one Undo. A separate explicit collision check examines only one pose and selected pair; CAD BRep pairs use native intersection, mesh pairs their mesh kernel; CAD/mesh pairs use a disclosed0.01mm tessellation target without guaranteed max deviation. No contact-without-volume or continuous collision-free path guarantee.",
   "sketchConstraintsContract": "Sketch profile version3 extends version2 with constraints:[{id,type,refs:[{element,point?}],value?,mode?}]. Stable element IDs; point names start/end/through/center. Types coincident(two points), horizontal/vertical(one line), parallel/perpendicular/equalLength(two lines), equalRadius/concentric(two circles/arcs), symmetric(two points and one line axis), tangent(line and circle/arc or two rounds, mode external|internal), fixed(one element and numeric value object with its point fields and diameter for circles, or one point and numeric pair), length/angle(one line), distance(two points), radius(one round). Dimensional value is a bounded number/formula referencing sketch variables; coordinate formulas remain hard and never become solver output. Native sketch and mesh-create-source previews use the same bounded pure solver; contradictory requests fail atomically with conflict IDs. 128elements/256constraints/80iterations/1s, QR rank and damping, underdetermined allowed. UI solves only on release/explicit dimension edits using a small kernel-free worker; no 3D construction until explicit preview. Project/library15 required, v1/v2 remain unchanged. Existing project parameter catalog includes literal sketch.constraints.ID.value fields; bind upstream named variables for formula values.",
   "projectParametersContract": "Project/library13 retains projectParameters:{version:1,parameters:[{id,name,value:number|expression}],bindings:[{id,parameterId,target:{rootId,path},field}],variants:[{id,name,values:[{parameterId,value}],states:[{target,hidden?,suppressed?}]}],activeVariantId:null|id}. Format23 additionally supports projectParameters version2 with explicit freecad:[{target,inputs:[{name,target,unresolved?}]}]. Bind existing numeric script/plan fields freecad.parameters.KEY only from the actual catalog; no code editing. Configure every automatic run explicitly, including an empty inputs list for inputless programs. Input changes invalidate native receipts; libraries keep missing external inputs unresolved. The desktop coordinates actual FreeCAD jobs in the same dependency pass, one run per affected source, with native STEP checks and one Undo. Native post-edits may be reset by a parameter rerun and require explicit warning acceptance. Limits100parameters/500bindings/32variants. Stable parameter IDs survive naming changes; expressions reference unique variable names with arithmetic + - * /, parentheses and sind/cosd in degrees. Cycles, unknown names and invalid inactive variant expressions reject. Read actual binding field addresses from scene.projectParameterCatalog or app/projectParameterCatalog; never invent fields/source paths. Fields size.0-2 are explicit affine whole-object dimensions and preserve all sketch formulas; pos.0-2 are the source center in its parent frame (world for roots). params.Name edits existing numeric native form controls. sketch.variables.Name, sketch.dimensions.width/depth/diameter/height and stable sketch.elements.ID numeric coordinate/diameter fields bind only literal/free values; derived formulas stay strings and require binding an upstream free variable. modeling.offset/thickness/path.length/radius/angle edit the saved native operation, retaining original sources. Put and selectVariant stage a homogeneous parameter-only batch; a final explicit update is required for any bound geometry change. One controller preview computes the final active definition once, then Apply makes one Undo. Metadata-only unused values/renames/inactive variants or root visibility/suppression need no construction. Every affected native target and necessary ancestor is constructed at most once per Update, with exact verified finished-BRep cache reuse after shape eviction; unrelated native geometry remains unchanged. Active-variant suppressed targets still retain matching completed geometry; inactive variants are not precomputed. Source changes can leave stored bindings stale; every export of affected results, including drawing exports, requires successful update. Remove clears the table and bindings, keeps completed bodies, and restores captured variant baseline flags; nested suppression restoration can require final update. applied/baseStates are read-only internal stamps/baselines; omit them on put or pass the unchanged confirmed values. Preview replies expose bounded response.parameters and actual parameterReport {affectedIds,stateChangedIds,rebuiltIds,constructedIds,counts,metadataOnly}; this is inspectable data, not an automatically opened visual parameter editor. Existing API/MCP endpoint names and key-free local connection remain unchanged.",
-  "linkedPatternContract": "Read scene.linkedPatterns for up to 50 current linked body pattern definitions, stable instance identities and problems; total/truncated indicate additional patterns. A linkedPattern command must be the only command in a preview. Use action put with a complete version 1 pattern definition and existing sourceId to create or update; preserve the sourceId and omit internal instances and snapshot. Kinds are line, grid, circle and mirror; positions are zero-based and position 0 is the source. excluded lists omitted positions, bindings refer to project parameter IDs. action detachInstance takes id and index and preserves the detached part as independent geometry. action detach requires explicit confirm:true and preserves all geometry. Preview, check and apply against the current revision; existing locks, external references, conflicts and stale states use the same validation as the UI. The older pattern command continues to create independent copies.",
-  "contourLinkContract": "Project/library14 additionally retains contourLinks version1 and stable drawing curve/measure source roles. Read scene.contourLinks or app/contourLinks {offset,limit} for bounded current/stale/blocked references. Query cad/linkedFaceCandidate {source:{rootId,path},ray:{origin,direction}} (or transient faceIndex) to obtain an exact supported native-role or step-exact selector; never save face numbers or guess the nearest surface. Send one homogeneous contour command per preview: {op:\"contour\",action:\"create\",source,selector,height?,name?,targetSketch?}, update with optional ids/edits, rebind with id/source/selector/edits, or unlink with ids. update.ids collects necessary upstream and downstream dependencies; every affected geometry node is constructed at most once, unrelated geometry is reused. Source fields remain preserved, linked target profile elements are read-only; only free target variables and extrusion height may be edited. Geometry exchange or ambiguous STEP reference requires explicit rebind; identical original STEP geometry follows placement changes only on Update. Snapshot geometry, frames and element correspondence are internal read-only proof. Unlink preserves the last geometry without constructing. Source changes remain saveable but stale downstream exports are blocked; unrelated selected exports remain possible. Drawing update joins required source parameters/contours and semantic measured roles in one Preview/Apply/Undo. Native geometry/HLR runs only on explicit update; paper edits and zoom reuse cached curves. No cloud key or external provider is required.",
+  "linkedPatternContract": "Read scene.linkedPatterns for up to 50 current linked body pattern definitions, stable instance identities and problems; total/truncated indicate additional patterns. A linkedPattern command must be the only command in a preview. Use action put with a complete version 1 pattern definition and existing sourceId to create or update; preserve the sourceId and omit internal instances and snapshot. Kinds are line, grid, circle and mirror; positions are zero-based and position 0 is the source. excluded lists omitted positions, bindings refer to project parameter IDs. action detachInstance takes id and index and preserves the detached part as independent geometry. action detach requires explicit confirm:true and preserves all geometry. Preview, check and apply against the current revision; existing locks, external references, conflicts and stale states use the same validation as the UI. Affected technical drawing views on retained pattern copies update natively after the copies, including parameter/variant and coordinated drill updates, in the same preview and Undo. Referenced copies cannot be removed or excluded until their drawing source is explicitly changed. Other shared view inputs must be current. Native dimension correspondence is retained only when unambiguous; unresolved dimensions remain stored and block drawing export. Direct linkedPattern put in the pattern editor also updates current contour chains on retained whole-body copies, including native sketch targets nested inside ordinary CSG groups, then their drawings. Contour targets may retain project bindings to existing literal free sketch variables, literal extrusion-height fields, literal sketch.elements.ID circle diameter or start/through/end/center coordinates, size.0/1/2 or pos.0/1/2 controls; copied target controls are applied after all copies, in contour order. Size controls use the source axes and fixed corner while preserving the full affine map; position controls use the existing bounds-centre coordinates. The next contour reads the fully resized and positioned preceding source. Explicit profile-element bindings overlay the freshly read native source profile by exact element identity; original snapshot.profile remains the native source and removing a binding restores that source field. Collect connected endpoint bindings together; missing elements or invalid/open profiles reject the whole preview. Profile-only changes also validate unchanged source copies and update affected contour chains and drawings. Program/joint/KI/other pattern consumers and face annotations/colors remain blocked. Nested source addresses inside regenerated pattern copies still require explicit reassignment because copied child identities are not retained; missing or stale contour references require explicit repair first. Project parameter/variant updates also carry these current contour chains after all copies and before affected drawings in the same preview and Undo. Project parameter/variant updates may add or change bindings to those supported target controls. Coordinated drill rebind preserves the existing binding layout and may change values of existing supported target bindings. Pre-existing independently pending target bindings must first be explicitly updated. Target visibility and suppression states from saved project variants are supported on these contour chains, including explicitly addressed nested sketch targets. A shared CSG ancestor is rebuilt after its affected contour children in one topological pass. Changed nested suppression joins that final pass instead of rebuilding ancestors against provisional old copied contours. Protected source ancestors, hidden containers, lost addresses and additional metadata consumers remain blocked. Current variant-inactive targets still rebuild after copy changes. Views naming variant-hidden or suppressed sources retain their previous projection with an explicit warning and are not reported as updated; reactivation refreshes affected views even when only states change, without reconstructing unchanged geometry. Other missing or unsupported shared drawing inputs still reject the preview. Hidden containers and independently stale target values or references remain blocked. Coordinated drill face rebind also carries these supported copied contour chains after all copies and before affected drawings. Original-source contours explicitly owned by that coordinated plan are checked in the earlier native phase, including explicit repicking when required; lost or independently stale copied-contour references still require separate repair. FreeCAD, joint, KI and other downstream consumers on changed copies remain unsupported. The older pattern command continues to create independent copies.",
+  "contourLinkContract": "Project/library14 additionally retains contourLinks version1 and stable drawing curve/measure source roles. Read scene.contourLinks or app/contourLinks {offset,limit} for bounded current/stale/blocked references. Query cad/linkedFaceCandidate {source:{rootId,path},ray:{origin,direction}} (or transient faceIndex) to obtain an exact supported native-role or step-exact selector; never save face numbers or guess the nearest surface. Send one homogeneous contour command per preview: {op:\"contour\",action:\"create\",source,selector,height?,name?,targetSketch?}, update with optional ids/edits, rebind with id/source/selector/edits, or unlink with ids. update.ids collects necessary upstream and downstream dependencies; every affected geometry node is constructed at most once, unrelated geometry is reused. Source fields remain preserved; direct linked target profile edits remain read-only. Explicit project parameter bindings may replace existing literal profile-element coordinates or circle diameter after fresh native extraction, preserving exact element identity and the original snapshot.profile. Removing a binding restores its source field on Update. Collect connected endpoint controls together; invalid/open or missing-element profiles reject atomically. Free target variables and extrusion height remain editable. Geometry exchange or ambiguous STEP reference requires explicit rebind; identical original STEP geometry follows placement changes only on Update. Snapshot geometry, frames and element correspondence are internal read-only proof. Unlink preserves the last geometry without constructing. Source changes remain saveable but stale downstream exports are blocked; unrelated selected exports remain possible. Drawing update joins required source parameters/contours and semantic measured roles in one Preview/Apply/Undo. Native geometry/HLR runs only on explicit update; paper edits and zoom reuse cached curves. No cloud key or external provider is required.",
   "drawingContract": "Project/library12 can retain technical sheets under drawings:{version:1,sheets:[...]}. Read current project to obtain sheet/view/curve IDs. Send homogeneous drawing-only preview batches: {op:\"drawing\",action:\"put\",sheet:{id,name,paper:\"A4\"|\"A3\",orientation:\"portrait\"|\"landscape\",scale,titleBlock:{title,number,revision,author,date},views:[{id,kind:\"front\"|\"side\"|\"top\"|\"section\",sourceIds:[nativeRootId],position:[paperX,paperY],section?:{axis:0|1|2,offset}}],annotations:[{id,kind:\"label\",text,position}|{id,kind:\"length\"|\"angle\"|\"radius\"|\"diameter\",viewId,curveIds,position}]}}, {op:\"drawing\",action:\"update\",sheetId}, {op:\"drawing\",action:\"remove\",sheetId}. put retains unchanged confirmed projection caches when omitted, never accepts fabricated curves. Only explicit update computes native HLR/cuts in the existing cancellable CAD worker, then one revision-bound Preview/Apply/Undo covers the entire batch. Front=X/Z, side=Y/Z, top=X/Y; curve coordinates are model mm with Y up, paper placement/text positions are paper mm Y down. Length/radius/diameter refer one measured curve, angle two measured lines. Lost curve refs require explicit reassignment or annotation removal; there is no nearest-curve matching. Native source edits leave cached drawings stale and saveable; export blocks until successful update. Export {format:\"drawing-svg\"|\"drawing-dxf\"|\"drawing-pdf\",sheetId} uses current cached curves only. SVG/PDF preserve A4/A3 paper size/scale; local Electron PDF needs no external service. ASCII AC1015 DXF model geometry is 1:1 millimetres regardless of paper scale. Arbitrary imported curves retain exact native conics/rational Bézier data; bounded SVG representation discloses its curve error. Automatic dimension suggestions: {op:\"drawing\",action:\"dimension\",sheetId,mode:\"basic\"|\"detailed\"} uses fresh cached curves only, preserves authored dimensions and returns an ordinary revision-bound preview. Basic adds overall dimensions and circle diameters; detailed adds circle centre positions from minima, arc radii, edge lengths and non-right corner angles. New distance annotations require project/library18, with kind:\"distance\", axis:\"x\"|\"y\", curveIds:[oneOrTwoUniqueIds], anchors:[{curveIndex:0|1,point:\"a\"|\"b\"|\"center\"|\"minX\"|\"maxX\"|\"minY\"|\"maxY\"},secondAnchor]. Coordinates always derive from native curves, never user-supplied measurement values. Text placement is bounded by free paper space. Unsupported spline views skip overall/position suggestions explicitly. No inferred tolerances, GD&T or guarantee of complete manufacturing dimensioning.",
   "nativeModelingContract": {
     "commands": "Native batch commands: {op:\"modeling\",target,operation:{kind:\"face-offset\",faceIndex,offset}|{kind:\"shell\",faceIndices:[...],thickness},as?}; {op:\"profileModeling\",targets:[...],kind:\"loft\"|\"sweep\",path?,as?}. Scripts can pass these directly to api.run, or use {op:\"tool\",engine:\"cad\",operation:{kind:\"batch\",commands:[...]}}. These are batch commands, not standalone operation.kind names.",
@@ -1938,9 +1938,10 @@ Full machine-readable contract, shape catalogue and JSON Schema:
     "layOnFace": "Use layOnFace on one unlocked positive root. A world-space ray must hit its own native planar supporting face as the nearest visible CAD surface. The rigid pose is changed onto the workplane, or ground when ground=true. Full affine stretch, mirror, shear, sources and parameters are retained. An attached workplane detaches at its old world pose. Curved and non-supporting faces fail without model changes."
   },
   "referenceContract": {
+    "rebind": "Explicit native operation {kind:\"referenceRebind\",request:{features:[{id,target,ray?,edgeSignature?,originTarget?}],joints:[{jointId,parentId?,childId?,origin,axis}]}} stages joint and saved KI reference reassignment together. IDs and kinds come from existing saved references. Feature/sketch choose a current retained target path; face/bore choose one finished CAD root and a free world ray; edge chooses a current exact native edge signature. Never supply a replacement selector, hash or face index as proof. Existing origins are preserved when still unambiguous; originTarget explicitly confirms a current matching source or null explicitly removes edit authority. Joint origin/axis are explicit world coordinates, optional parentId/childId explicitly replace lost part references. All body poses, joint values, limits and gear definitions stay unchanged; incompatible trees, locked children and inconsistent coupled axes reject the whole preview. No source geometry is rebuilt. Apply remains revision-bound and explicit.",
     "tokens": "The local scene endpoint supplies native referencePoints for one selected visible root (up to 2000 points). Tokens and face indices are ephemeral within the model revision; after any earlier command in the same preview they are rejected, including references nested in tool commands. Inside scripts, cad/referencePoints issues opaque tokens bound to the queried root and exact current geometry; pass them to drill or editDrill, and requery after changing that root. Bare face indices are accepted only while the original root is unchanged. For a changed root, script cad/rayPick returns an additional opaque faceToken; pass it as options.faceToken to cad/faceSketch. The existing faceIndex remains a number. Tokens are invalid after the queried root changes; use an unindexed ray or a new preview for other operations. Native vertices, straight edge middles, full circle centers and plane area centroids have exact local/world coordinates. Ellipses and partial circles are excluded from circle centers. For a free face point use a world-space ray.",
     "placement": "placeAtReference changes only translation. Offsets are U/V/N in the target native plane frame, or the current workplane if a reference has no unambiguous face normal. A workplane target is {workplane:[u,v]}; omit referenceTarget in that case. Root orientation, mirror and shear stay unchanged.",
-    "drill": "drill acts on one unlocked positive CAD root. Legacy drill without associative:true keeps a fixed through length. Explicit associative:true creates an editable feature on a native box or unrounded circular native cylinder, or an existing same-source drill chain, with through or fixed depth. Cylinder bores must start on an axial end face and the complete bore and head must remain within that circular face. Unchanged STEP sources also support straight prismatic single solids with uniquely identified parallel planar entry and exit faces; the entire bore and head must fit within the trimmed face and solid. Elliptic native cylinders and other sources are unsupported. termination:plane and stopReference require the explicitly selected opposite planar face of the same box, circular cylinder or supported unchanged STEP prism. The selected STEP target must match the persisted exit face fingerprint; other target bodies are unsupported. Find saved drill data and nested target paths in scene objects[].drill and target. editDrill updates the selected feature through patch and optionally picks positionReference or stopReference; positions must remain on the original source face. patch.pattern creates or changes a line, grid, circle or mirror of holes on native box or cylinder faces; STEP bore patterns are not yet supported; skip contains zero-based positions except the original at index 0. detachDrillPattern makes one active nonzero index independent, subject to dependency restrictions. Pattern coordinates are local U/V millimeters on the native box face or cylinder end face. Pattern parameter bindings use existing project parameter commands. Native validation rejects ambiguous references, overlaps, invalid fields, locked sources and unsupported dependencies. Explicit tool {op:\"tool\",engine:\"cad\",operation:{kind:\"tool\",name:\"previewRebindDrills\",options:{id,bindings:[{path,reference:{ray},stopReference?:{ray}}]}} jointly reassigns one to thirteen retained drill references and rebuilds all dependent bores in one preview. Rays refer to the original uncut source, shown during UI picking; query that retained source before choosing a ray. Entry and opposite stop must both be chosen for termination:plane. Current project-parameter bindings and variants retain their source paths and stamps; parameter validity is checked before and after native rebuilding. Update stale parameter values before reassigning faces. Old face indices/tokens, replaced source IDs and external feature dependencies are refused. All unlisted drill references must still build. Dimensions and patterns remain unchanged. These commands only stage atomic previews; Apply is explicit. STEP source and face SHA-256 fingerprints are checked; replacing the source is rejected instead of guessing. STEP prism volume comparison uses bounded native tolerances, not a mathematical exactness proof. Clearance gap is radial per side; blind bottoms are flat."
+    "drill": "drill acts on one unlocked positive CAD root. Legacy drill without associative:true keeps a fixed through length. Explicit associative:true creates an editable feature on a native box or unrounded circular native cylinder, or an existing same-source drill chain, with through or fixed depth. Cylinder bores must start on an axial end face and the complete bore and head must remain within that circular face. Unchanged STEP sources also support straight prismatic single solids with uniquely identified parallel planar entry and exit faces; the entire bore and head must fit within the trimmed face and solid. Elliptic native cylinders and other sources are unsupported. termination:plane and stopReference require the explicitly selected opposite planar face of the same box, circular cylinder or supported unchanged STEP prism. The selected STEP target must match the persisted exit face fingerprint; other target bodies are unsupported. Find saved drill data and nested target paths in scene objects[].drill and target. editDrill updates the selected feature through patch and optionally picks positionReference or stopReference; positions must remain on the original source face. patch.pattern creates or changes a line, grid, circle or mirror of holes on native box or cylinder faces; STEP bore patterns are not yet supported; skip contains zero-based positions except the original at index 0. detachDrillPattern makes one active nonzero index independent, subject to dependency restrictions. Pattern coordinates are local U/V millimeters on the native box face or cylinder end face. Pattern parameter bindings use existing project parameter commands. Existing scalar fields drill.diameter/depth/headDiameter/headDepth/angle/gap can also be bound through the actual catalog; native dimensional rules still apply. Native validation rejects ambiguous references, overlaps, invalid fields, locked sources and unsupported dependencies. Explicit tool {op:\"tool\",engine:\"cad\",operation:{kind:\"tool\",name:\"previewRebindDrills\",options:{id,bindings:[{path,reference:{ray},stopReference?:{ray}}]}} jointly reassigns one to thirteen retained drill references and rebuilds all dependent bores in one preview. Rays refer to the original uncut source, shown during UI picking; query that retained source before choosing a ray. Entry and opposite stop must both be chosen for termination:plane. Current project-parameter bindings and variants retain their source paths; parameter validity is checked after native rebuilding. Optional options.parameterData is the complete existing parameter definition with only existing scalar/variant values changed; optional options.variantId selects an existing variant (null selects base values). Include parameterData explicitly to update pending values together with the selected face references in one preview/Undo. Binding targets, parameter names/IDs and variant structure cannot change here. Linked body patterns affected by the new drill geometry or parameter values rebuild together, preserving active root IDs and exclusions; locked or independently altered copies abort the whole operation. Pick rays on the confirmed original stock before parameter resizing. Optional options.contourBindings:[{id,reference:{ray}}] explicitly reassigns up to 32 existing linked contours whose retained source belongs to this same root; choose rays on the confirmed original source before resizing. Contour source and target IDs stay unchanged. Affected supported contours, saved bound FreeCAD programs and drawing views update in the same preview. Unrelated consumers and joint poses stay unchanged; a newly invalid joint frame aborts the operation. Saved KI references are retained and newly stale references are reported for explicit repicking. Affected pattern-copy consumers are coordinated after fresh copies: bound FreeCAD programs, linked contours, drawings and explicitly renewed saved KI/joint references. options.consumerBindings can include sources:[{target,sourcePath}], freecadInputs:[{target,sourceDigest,inputs:[{name,target}]}], contours:[{id,source?,ray}] and referenceBindings:{features,joints}. sourcePath is an explicitly chosen current template path; never guess copied child IDs or future edge signatures. The UI prepares a non-applyable native choice draft for final-geometry picks. Old face indices/tokens and unassigned lost or ambiguous references are refused. All unlisted drill references must still build. Dimensions and patterns remain unchanged. These commands only stage atomic previews; Apply is explicit. Optional options.sourceReplacement:{path,source:{rootId,path}} explicitly copies a current native box, circular cylinder or supported single STEP source into the retained stock slot without changing the chosen source. Every drill on that positive stock branch, including retained intermediate ordinary wrappers, needs fresh explicit entry/stop rays. Old wrappers, inactive tool definitions, IDs, authored metadata and existing parameter structure remain. STEP hole patterns remain unsupported. Lost construction slots use repairable format30; last saved BRep display is not proof of current construction, and affected exports remain blocked until repaired. STEP source and face SHA-256 fingerprints are checked; no replacement is guessed. STEP prism volume comparison uses bounded native tolerances, not a mathematical exactness proof. Clearance gap is radial per side; blind bottoms are flat."
   },
   "coordinateContract": {
     "matrices": "column-major 4x4, complete affine transform retained",
@@ -26346,6 +26347,207 @@ Full machine-readable contract, shape catalogue and JSON Schema:
                   "type": "number",
                   "minimum": -100000,
                   "maximum": 100000
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "op",
+                "request"
+              ],
+              "properties": {
+                "op": {
+                  "const": "freecadRerun"
+                },
+                "request": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "target",
+                    "sourceDigest",
+                    "parameters",
+                    "inputs"
+                  ],
+                  "properties": {
+                    "target": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "path": {
+                          "type": "array",
+                          "maxItems": 12,
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        }
+                      }
+                    },
+                    "sourceDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "parameters": {
+                      "type": "object"
+                    },
+                    "inputs": {
+                      "type": "array",
+                      "maxItems": 8,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "name",
+                          "target"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+                          },
+                          "target": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                  "rootId",
+                                  "path"
+                                ],
+                                "properties": {
+                                  "rootId": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 200
+                                  },
+                                  "path": {
+                                    "type": "array",
+                                    "maxItems": 12,
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "inputBindings": {
+                      "type": "array",
+                      "maxItems": 32,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "target",
+                          "sourceDigest",
+                          "inputs"
+                        ],
+                        "properties": {
+                          "target": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "rootId",
+                              "path"
+                            ],
+                            "properties": {
+                              "rootId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "path": {
+                                "type": "array",
+                                "maxItems": 12,
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                }
+                              }
+                            }
+                          },
+                          "sourceDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          },
+                          "inputs": {
+                            "type": "array",
+                            "maxItems": 8,
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "name",
+                                "target"
+                              ],
+                              "properties": {
+                                "name": {
+                                  "type": "string",
+                                  "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+                                },
+                                "target": {
+                                  "oneOf": [
+                                    {
+                                      "type": "object",
+                                      "additionalProperties": false,
+                                      "required": [
+                                        "rootId",
+                                        "path"
+                                      ],
+                                      "properties": {
+                                        "rootId": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 200
+                                        },
+                                        "path": {
+                                          "type": "array",
+                                          "maxItems": 12,
+                                          "items": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          }
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             },
@@ -60469,6 +60671,207 @@ Full machine-readable contract, shape catalogue and JSON Schema:
                   "type": "number",
                   "minimum": -100000,
                   "maximum": 100000
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "op",
+                "request"
+              ],
+              "properties": {
+                "op": {
+                  "const": "freecadRerun"
+                },
+                "request": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "target",
+                    "sourceDigest",
+                    "parameters",
+                    "inputs"
+                  ],
+                  "properties": {
+                    "target": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "path": {
+                          "type": "array",
+                          "maxItems": 12,
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        }
+                      }
+                    },
+                    "sourceDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "parameters": {
+                      "type": "object"
+                    },
+                    "inputs": {
+                      "type": "array",
+                      "maxItems": 8,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "name",
+                          "target"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+                          },
+                          "target": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                  "rootId",
+                                  "path"
+                                ],
+                                "properties": {
+                                  "rootId": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 200
+                                  },
+                                  "path": {
+                                    "type": "array",
+                                    "maxItems": 12,
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "inputBindings": {
+                      "type": "array",
+                      "maxItems": 32,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "target",
+                          "sourceDigest",
+                          "inputs"
+                        ],
+                        "properties": {
+                          "target": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "rootId",
+                              "path"
+                            ],
+                            "properties": {
+                              "rootId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "path": {
+                                "type": "array",
+                                "maxItems": 12,
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                }
+                              }
+                            }
+                          },
+                          "sourceDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          },
+                          "inputs": {
+                            "type": "array",
+                            "maxItems": 8,
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "name",
+                                "target"
+                              ],
+                              "properties": {
+                                "name": {
+                                  "type": "string",
+                                  "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+                                },
+                                "target": {
+                                  "oneOf": [
+                                    {
+                                      "type": "object",
+                                      "additionalProperties": false,
+                                      "required": [
+                                        "rootId",
+                                        "path"
+                                      ],
+                                      "properties": {
+                                        "rootId": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 200
+                                        },
+                                        "path": {
+                                          "type": "array",
+                                          "maxItems": 12,
+                                          "items": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          }
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             },

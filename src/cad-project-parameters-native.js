@@ -7,6 +7,9 @@ import {cadSelectionContext,cadFormLocalDimensions,cadInterfaceLocalBounds} from
 import {cadSketchRecipe} from './cad-sketch.js';
 import {validateCadModelingOperation} from './cad-modeling-data.js';
 import {validateCadDrillPattern} from './cad-drill-pattern.js';
+import {isCadDrillScalarField} from './cad-drill-parameter-fields.js';
+import {validateAssociativeBoxDrill} from './cad-associative-drill.js';
+import {validateAssociativeStepDrill} from './cad-step-drill.js';
 import {cadProjectParameterCatalog,cadParameterLiteral} from './cad-project-parameters-catalog.js';
 import {planCadProjectParameters,stampCadProjectParameters} from './cad-project-parameters-data.js';
 
@@ -26,10 +29,14 @@ function sketchSlot(sketch,field){
 /** Shared collected binding builder, also used by retained personal templates.
  * Recipes are edited together; one bottom-up pass constructs native geometry.
  * Pos/size use fresh bounds and preserve full affine maps and corner anchors. */
-export async function buildCadBoundSubset(input,bindings,{service,editRecipe,signal,allowLockedTemplate=false,states=[],dependentTargets=[],nodeOrder,beforeNode,freecadRun,freecadData,freecadTargets=[],freecadProgramParameters=[]}={}){
+export async function buildCadBoundSubset(input,bindings,{service,editRecipe,signal,allowLockedTemplate=false,states=[],dependentTargets=[],deferredContourTargets=[],nodeOrder,beforeNode,freecadRun,freecadData,freecadTargets=[],freecadProgramParameters=[]}={}){
  if(typeof service?.rebuildSubset!=='function'||typeof editRecipe!=='function'||!Array.isArray(bindings))throw Error('Gezielter nativer Maßaufbau fehlt.');
  aborted(signal);const baseline=cadProjectSnapshot(input),draft=cadProjectSnapshot(input),edits=new Map(),touched=new Set(),geometry=new Set(),roots=new Set(),before=service.constructionState(),freecadReports=[],freecadWarnings=[],freecadMetadata=new Map();
- function touch(context,{build=false}={}){if(context.node.kind!=='cad')return;roots.add(context.root.id);for(const node of context.chain)touched.add(node.id);if(build)geometry.add(context.node.id);for(const parent of context.chain.slice(0,-1))geometry.add(parent.id);}
+ const deferredProfiles=new Set(deferredContourTargets.map(target=>JSON.stringify([target.rootId,target.path])));
+ const geometryReasons=new Map();
+ function invalidate(id,reason){geometry.add(id);const reasons=geometryReasons.get(id)??new Set();reasons.add(reason);geometryReasons.set(id,reasons);}
+ function touch(context,{build=false}={}){if(context.node.kind!=='cad')return;roots.add(context.root.id);for(const node of context.chain)touched.add(node.id);const reason=(build?'source:':'effect:')+context.node.id;if(build)invalidate(context.node.id,reason);for(const parent of context.chain.slice(0,-1))invalidate(parent.id,reason);}
+ function unchangedSource(id){const reason='source:'+id;for(const [target,reasons]of geometryReasons){reasons.delete(reason);if(!reasons.size){geometryReasons.delete(target);geometry.delete(target);}}}
  for(const binding of bindings){
   aborted(signal);if(!Number.isFinite(binding.value))throw Error('Das Projektmaß muss endlich sein.');const original=cadSelectionContext(baseline,binding.target),context=cadSelectionContext(draft,binding.target),node=context.node,templateMesh=allowLockedTemplate&&['mesh','referenceMesh'].includes(node.kind)&&/^(?:size|pos)\.[012]$/.test(binding.field),property=templateMesh?{bindable:true}:cadProjectParameterCatalog(baseline,{targets:[binding.target]})[0].fields.find(f=>f.field===binding.field);
   if(!property||node.kind!=='cad'&&!templateMesh||original.sourceGeometryReadonly||original.locked&&!allowLockedTemplate||!property.bindable&&!(allowLockedTemplate&&original.locked))throw Error(property?.reason??'Das gebundene native Maß fehlt.');
@@ -39,17 +46,22 @@ export async function buildCadBoundSubset(input,bindings,{service,editRecipe,sig
   else if(isFreeCADParameterField(binding.field)){edit.freecad??={};edit.freecad[freeCADParameterKey(binding.field)]=binding.value;touch(context);}
   else if(binding.field.startsWith('params.')){edit.params[binding.field.slice(7)]=binding.value;touch(context,{build:true});}
   else if(binding.field.startsWith('drill.pattern.')){edit.drillPattern??=structuredClone(node.drill.pattern);const parts=binding.field.slice(14).split('.');if(parts.length===1)edit.drillPattern[parts[0]]=binding.value;else edit.drillPattern[parts[0]][Number(parts[1])]=binding.value;touch(context,{build:true});}
+  else if(isCadDrillScalarField(binding.field)){edit.drillScalars??={};edit.drillScalars[binding.field.slice(6)]=binding.value;touch(context,{build:true});}
+  else if(binding.field.startsWith('sketch.elements.')&&deferredProfiles.has(JSON.stringify([binding.target.rootId,binding.target.path]))){edit.deferredProfile=true;touch(context,{build:true});}
   else if(binding.field.startsWith('sketch.')){edit.sketch??=structuredClone(node.recipe.sketch);const slot=sketchSlot(edit.sketch,binding.field);if(!slot.object||!cadParameterLiteral(slot.object[slot.key]))throw Error('Abgeleitete Skizzenformel erhalten. Das freie Ausgangsmaß binden.');slot.object[slot.key]=String(binding.value);touch(context,{build:true});}
   else if(binding.field.startsWith('modeling.')){edit.modeling??=structuredClone(node.modeling);if(binding.field.startsWith('modeling.path.'))edit.modeling.path[binding.field.slice(14)]=binding.value;else edit.modeling[binding.field.slice(9)]=binding.value;touch(context,{build:true});}
   else throw Error('Unbekanntes gebundenes Maß.');
  }
  for(const edit of edits.values()){
   const node=cadSelectionContext(draft,edit.target).node;
-  if(Object.keys(edit.params).length){const recipe=await editRecipe({...node,locked:false},{params:edit.params});aborted(signal);if(!same(recipe,node.recipe)){node.recipe=recipe;edit.preserveMinimum=true;}else geometry.delete(node.id);}
-  if(edit.sketch){if(edit.sketch.version>=3){const result=solveSketchConstraints(edit.sketch,{signal});if(!result.ok)throw Object.assign(Error(result.message),{code:result.code,conflicts:result.conflicts});edit.sketch=result.sketch;}const recipe=cadSketchRecipe(edit.sketch);if(!same(recipe,node.recipe))node.recipe=recipe;else geometry.delete(node.id);}
-  if(edit.modeling){const {sourceSignature,...operation}=edit.modeling;node.modeling={version:1,...validateCadModelingOperation(operation),...(sourceSignature?{sourceSignature}:{})};if(same(node.modeling,edit.original.modeling))geometry.delete(node.id);}
-  if(edit.drillPattern){node.drill.pattern=validateCadDrillPattern(edit.drillPattern);if(same(node.drill.pattern,edit.original.drill.pattern))geometry.delete(node.id);}
+  if(Object.keys(edit.params).length){const recipe=await editRecipe({...node,locked:false},{params:edit.params});aborted(signal);if(!same(recipe,node.recipe)){node.recipe=recipe;edit.preserveMinimum=true;}}
+  if(edit.sketch){if(edit.sketch.version>=3){const result=solveSketchConstraints(edit.sketch,{signal});if(!result.ok)throw Object.assign(Error(result.message),{code:result.code,conflicts:result.conflicts});edit.sketch=result.sketch;}const recipe=cadSketchRecipe(edit.sketch);if(!same(recipe,node.recipe))node.recipe=recipe;}
+  if(edit.modeling){const {sourceSignature,...operation}=edit.modeling;node.modeling={version:1,...validateCadModelingOperation(operation),...(sourceSignature?{sourceSignature}:{})};}
+  if(edit.drillPattern||edit.drillScalars){const drill={...node.drill,...edit.drillScalars,...(edit.drillPattern?{pattern:validateCadDrillPattern(edit.drillPattern)}:{})};node.drill=drill.version===3?validateAssociativeStepDrill(drill):validateAssociativeBoxDrill(drill);}
  }
+ // Reapplying an unchanged control removes only that control's own reason.
+ // A descendant, placement or deferred contour may still require this ancestor.
+ for(const edit of edits.values()){const node=cadSelectionContext(draft,edit.target).node;if(!edit.deferredProfile&&['recipe','modeling','drill'].every(key=>same(node[key],edit.original[key])))unchangedSource(node.id);}
  // Only unknown final resizes need this persisted strict budget. Ordinary
  // source edits retain their existing construction tolerance and geometry.
  for(const edit of edits.values())if(edit.size.size){
@@ -90,10 +102,11 @@ export async function buildCadBoundSubset(input,bindings,{service,editRecipe,sig
  const stateChangedIds=[...new Set(states.map(state=>state.target.rootId))];return {project:cadProjectSnapshot(project),report:{affectedIds:[...new Set([...roots,...stateChangedIds])],stateChangedIds,rebuiltIds:[...new Set([...geometry,...freecadReports.map(r=>r.target.path.at(-1)??r.target.rootId)])],constructedIds:Object.keys(counts),counts,...(freecadReports.length?{freecad:freecadReports,freecadCounts:Object.fromEntries(freecadReports.map(r=>[r.target.path.at(-1)??r.target.rootId,1])),requiresFreeCADAcceptance:freecadWarnings.length>0,freecadWarnings}:{})}};
 }
 
-export async function updateCadProjectParameters(project,data,{service,editRecipe,signal,variantId}={}){
+export async function updateCadProjectParameters(project,data,{service,editRecipe,signal,variantId,dependentTargets=[]}={}){
  aborted(signal);const plan=planCadProjectParameters(project,data,{variantId});if(plan.problems.length)throw Object.assign(Error(plan.problems[0].message),{code:plan.problems[0].code,problems:plan.problems});
  const affected=new Set();for(const binding of plan.changedBindings)for(const node of cadSelectionContext(project,binding.target).chain)affected.add(node.id);for(const state of plan.changedStates)if(state.geometryChanged)for(const node of cadSelectionContext(project,state.target).chain)affected.add(node.id);
+ for(const target of dependentTargets)for(const node of cadSelectionContext(project,target).chain)affected.add(node.id);
  // Reapply unchanged size/position controls on rebuilt targets/ancestors after
  // intrinsic recipe edits, without touching unrelated bound sibling sources.
- const bindings=plan.evaluation.bindings.filter(binding=>affected.has(binding.target.path.at(-1)??binding.target.rootId)),result=await buildCadBoundSubset(project,bindings,{service,editRecipe,signal,states:plan.changedStates});result.project.projectParameters=stampCadProjectParameters(result.project,plan.data,{variantId});result.project=cadProjectSnapshot(result.project);return {...result,report:{...result.report,metadataOnly:plan.metadataOnly,staleBindingIds:plan.staleBindingIds}};
+ const bindings=plan.evaluation.bindings.filter(binding=>affected.has(binding.target.path.at(-1)??binding.target.rootId)),result=await buildCadBoundSubset(project,bindings,{service,editRecipe,signal,states:plan.changedStates,dependentTargets});result.project.projectParameters=stampCadProjectParameters(result.project,plan.data,{variantId});result.project=cadProjectSnapshot(result.project);return {...result,report:{...result.report,metadataOnly:dependentTargets.length?false:plan.metadataOnly,staleBindingIds:plan.staleBindingIds}};
 }

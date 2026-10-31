@@ -1,5 +1,6 @@
 import {encodeFnpackProject,createFnpackResolver} from '../src/cad-fnpack-data.js';
 import {hasGeometryRefs} from '../src/cad-geometry-ref.js';
+import {createCadAutomationAccess} from '../src/cad-automation-access.js';
 import test from 'node:test';import assert from 'node:assert/strict';import {Worker} from 'node:worker_threads';
 import freecad from '../backend/freecad.cjs';import {createCadController} from '../src/cad-controller.js';import {createCadProjectParameters,cadProjectParameterProblems} from '../src/cad-project-parameters-data.js';import {freeCADSourceDigest} from '../src/cad-freecad-source.js';import {parseCadProject} from '../src/cad-project.js';
 const target=rootId=>({rootId,path:[]}),binding=(id,parameterId,rootId,field)=>({id,parameterId,target:target(rootId),field}),factory=()=>{const w=new Worker(new URL('./fixtures/cad-node-worker.mjs',import.meta.url)),a={postMessage:v=>w.postMessage(v),terminate:()=>w.terminate()};w.on('message',v=>a.onmessage?.({data:v}));w.on('error',e=>a.onerror?.(e));return a;};
@@ -47,4 +48,61 @@ test('A cancelled coordinated rerun discards its completed primary job and modif
 
 test('A coordinated rerun resolves an explicitly confirmed sibling source inside the same retained group and preserves its container and unrelated part',async t=>{
  const {cad,seed,keep,a,b}=await fixture(t),grouped=await cad.execute({kind:'batch',commands:[{op:'group',targets:[seed,a],as:'group'}]}),rootId=grouped.aliases.group,target={rootId,path:[a]},input={rootId,path:[seed]},old=cad.snapshot(),before=cad.serialize(),source=old.nodes.find(n=>n.id===rootId).children.find(n=>n.id===a).metadata.freecadSource,p=await cad.previewFreeCADRerun({target,sourceDigest:freeCADSourceDigest(source.documentBase64),parameters:{length:28,width:5,height:4},inputs:[{name:'raw',target:input}]});assert.equal(cad.serialize(),before);const group=p.project.nodes.find(n=>n.id===rootId);assert.deepEqual(group.transform,old.nodes.find(n=>n.id===rootId).transform);assert(Math.abs(group.children.find(n=>n.id===a).stats.volume-1176)<1e-6);assert(Math.abs(p.project.nodes.find(n=>n.id===b).stats.volume-660)<1e-6);assert.deepEqual(p.project.nodes.find(n=>n.id===keep),old.nodes.find(n=>n.id===keep));assert.deepEqual(p.project.projectParameters.freecad.find(run=>run.target.rootId===rootId).inputs,[{name:'raw',target:input}]);assert.deepEqual(cadProjectParameterProblems(p.project),[]);cad.apply({...p,acceptFeatureDependencies:true});cad.undo();assert.equal(cad.serialize(),before);
+});
+
+test('Lost input mappings on two saved programs can be explicitly repaired in one native proposal and one Undo',async t=>{
+ const {cad,calls,a,b,keep,request}=await fixture(t),draft=cad.snapshot();
+ for(const run of draft.projectParameters.freecad)run.inputs=run.inputs.map(input=>({...input,target:target('lost-'+input.name),unresolved:true}));
+ await cad.open(draft);const before=cad.serialize(),depth=cad.state().undo,count=calls.length,source=draft.nodes.find(n=>n.id===b).metadata.freecadSource;
+ const operation={...request({length:20,width:5,height:3}),inputs:[{name:'raw',target:keep}],inputBindings:[{target:target(b),sourceDigest:freeCADSourceDigest(source.documentBase64),inputs:[{name:'base',target:target(a)}]}]},p=await cad.previewFreeCADRerun(operation);
+ assert.equal(cad.serialize(),before);assert.equal(calls.length-count,2);assert(Math.abs(p.project.nodes.find(n=>n.id===a).stats.volume-330)<1e-6);assert(Math.abs(p.project.nodes.find(n=>n.id===b).stats.volume-360)<1e-6);
+ assert.deepEqual(p.project.projectParameters.freecad,[{target:target(a),inputs:[{name:'raw',target:target(keep)}]},{target:target(b),inputs:[{name:'base',target:target(a)}]}]);assert.deepEqual(cadProjectParameterProblems(p.project),[]);assert.deepEqual(p.project.nodes.find(n=>n.id===keep),draft.nodes.find(n=>n.id===keep));
+ assert.equal(p.report.freecadInputRebindings.length,2);p.report.freecadDependencies.requiresAcceptance=false;assert.throws(()=>cad.apply(p),{code:'AI_FEATURE_DEPENDENCY_ACCEPTANCE_REQUIRED'});cad.apply({...p,acceptFeatureDependencies:true});assert.equal(cad.state().undo,depth+1);const saved=cad.serialize();assert.deepEqual(parseCadProject(saved).projectParameters.freecad,p.project.projectParameters.freecad);cad.undo();assert.equal(cad.serialize(),before);cad.redo();assert.equal(cad.serialize(),saved);
+ cad.undo();let scene=await cad.describe();const access=createCadAutomationAccess({controller:cad,getScene:()=>scene,refresh:async()=>{scene=await cad.describe();}}),catalog=(await access.sceneForAI()).freecadPrograms;assert(catalog.programs.some(program=>program.target.rootId===a&&program.sourceDigest===operation.sourceDigest));
+ const ai=await access.preview({revision:cad.revision(),commands:[{op:'freecadRerun',request:operation}]});assert.equal(cad.serialize(),before);assert.equal(ai.report.freecadInputRebindings.length,2);await assert.rejects(access.apply(ai),{code:'AI_FEATURE_DEPENDENCY_ACCEPTANCE_REQUIRED'});await access.apply({...ai,acceptFeatureDependencies:true});cad.undo();assert.equal(cad.serialize(),before);
+});
+
+test('Joint input reassignment rejects stale archives, changed saved input names, duplicate programs and cycles before launching native jobs',async t=>{
+ const {cad,calls,a,b,keep,request}=await fixture(t),before=cad.serialize(),count=calls.length,source=cad.snapshot().nodes.find(n=>n.id===b).metadata.freecadSource,extra={target:target(b),sourceDigest:freeCADSourceDigest(source.documentBase64),inputs:[{name:'base',target:keep}]};
+ for(const inputBindings of [[{...extra,sourceDigest:'0'.repeat(64)}],[{...extra,inputs:[{name:'renamed',target:keep}]}],[extra,extra],[{...extra,target:target(a)}],[{...extra,code:'replacement'}]])await assert.rejects(cad.previewFreeCADRerun({...request({length:20,width:5,height:3}),inputBindings}));
+ await assert.rejects(cad.previewFreeCADRerun({...request({length:20,width:5,height:3}),inputs:[{name:'raw',target:b}],inputBindings:[{...extra,inputs:[{name:'base',target:a}]}]}),e=>e.code==='DEPENDENCY_CYCLE'||e.code==='FREECAD_RERUN_CYCLE');
+ assert.equal(calls.length,count);assert.equal(cad.serialize(),before);
+});
+
+test('A lazy package repair reads only new confirmed program inputs and preserves the unavailable old source block',async t=>{
+ const {cad:made,a,b,seed,keep,request}=await fixture(t),draft=made.snapshot();for(const run of draft.projectParameters.freecad)run.inputs=run.inputs.map(input=>({...input,target:target('lost-'+input.name),unresolved:true}));await made.open(draft);
+ const encoded=encodeFnpackProject(made.snapshot()),blocks=new Map(encoded.blocks.map(block=>[block.sha256,block.bytes])),forbidden=encoded.project.nodes.find(n=>n.id===seed).brep.sha256,reads=[],resolver=createFnpackResolver({readBlock:async hash=>{reads.push(hash);if(hash===forbidden)throw Error('Old source block unavailable');return blocks.get(hash);}}),cad=createCadController({initial:encoded.project,createWorker:factory,resolveGeometry:resolver.hydrate,getDisplayIds:()=>[]});t.after(()=>cad.dispose());
+ const before=cad.serialize(),source=draft.nodes.find(n=>n.id===b).metadata.freecadSource,p=await cad.previewFreeCADRerun({...request({length:20,width:5,height:3}),inputs:[{name:'raw',target:keep}],inputBindings:[{target:target(b),sourceDigest:freeCADSourceDigest(source.documentBase64),inputs:[{name:'base',target:a}]}]});
+ assert.equal(reads.length,3);assert(!reads.includes(forbidden));assert(hasGeometryRefs(p.project.nodes.find(n=>n.id===seed)));assert.deepEqual(cadProjectParameterProblems(p.project),[]);assert.equal(cad.serialize(),before);cad.discard(p.previewId);
+});
+
+test('A failed second reassigned program preserves every old document, input mapping and an older valid proposal',async t=>{
+ const {cad,a,b,keep,request}=await fixture(t,{mode:'fail'}),draft=cad.snapshot();for(const run of draft.projectParameters.freecad)run.inputs=run.inputs.map(input=>({...input,target:target('lost-'+input.name),unresolved:true}));await cad.open(draft);
+ const before=cad.serialize(),depth=cad.state().undo,source=draft.nodes.find(n=>n.id===b).metadata.freecadSource,older=await cad.previewPhotos(null);
+ await assert.rejects(cad.previewFreeCADRerun({...request({length:48,width:5,height:4}),inputs:[{name:'raw',target:keep}],inputBindings:[{target:target(b),sourceDigest:freeCADSourceDigest(source.documentBase64),inputs:[{name:'base',target:a}]}]}),/BOUND_FOLLOWER_FAILED/);
+ assert.equal(cad.serialize(),before);assert.equal(cad.state().undo,depth);assert(cad.getPreview(older.previewId));cad.discard(older.previewId);
+});
+
+test('A stale upstream program must be explicitly included before its geometry can receive new downstream receipts',async t=>{
+ const {cad,calls,a,b,seed,request}=await fixture(t),draft=cad.snapshot(),copy=structuredClone(draft.nodes.find(n=>n.id===a));copy.id='stale-program';copy.name='Stale upstream';copy.transform[12]=200;draft.nodes.push(copy);draft.projectParameters.parameters.push({id:'copy-length',name:'copy_length',value:48});draft.projectParameters.bindings.push(binding('copy-length-binding','copy-length',copy.id,'freecad.parameters.length'));draft.projectParameters.freecad.push({target:target(copy.id),inputs:[{name:'raw',target:target(seed)}]});await cad.open(draft);
+ const before=cad.serialize(),count=calls.length,source=draft.nodes.find(n=>n.id===b).metadata.freecadSource,operation={...request({length:20,width:5,height:3}),inputBindings:[{target:target(b),sourceDigest:freeCADSourceDigest(source.documentBase64),inputs:[{name:'base',target:copy.id}]}]};
+ await assert.rejects(cad.previewFreeCADRerun(operation),{code:'FREECAD_RERUN_STALE_INPUT'});assert.equal(calls.length,count);assert.equal(cad.serialize(),before);
+ operation.inputBindings.push({target:target(copy.id),sourceDigest:freeCADSourceDigest(copy.metadata.freecadSource.documentBase64),inputs:[{name:'raw',target:seed}]});const p=await cad.previewFreeCADRerun(operation);assert(Math.abs(p.project.nodes.find(n=>n.id===copy.id).stats.volume-870)<1e-6);assert(Math.abs(p.project.nodes.find(n=>n.id===b).stats.volume-900)<1e-6);assert.deepEqual(cadProjectParameterProblems(p.project),[]);cad.discard(p.previewId);
+});
+
+test('A stale native replacement input is rejected rather than silently frozen into a current FreeCAD output',async t=>{
+ const {cad,calls,keep,request}=await fixture(t),draft=cad.snapshot();draft.projectParameters.parameters.push({id:'keep-width',name:'keep_width',value:4});draft.projectParameters.bindings.push(binding('keep-width-binding','keep-width',keep,'size.0'));await cad.open(draft);const before=cad.serialize(),count=calls.length;
+ await assert.rejects(cad.previewFreeCADRerun({...request({length:20,width:5,height:3}),inputs:[{name:'raw',target:keep}]}),{code:'FREECAD_RERUN_STALE_INPUT'});assert.equal(calls.length,count);assert.equal(cad.serialize(),before);
+});
+
+test('A stale contour chosen as a new program input must be refreshed before its geometry is consumed',async t=>{
+ const {cad,calls,keep,a,request}=await fixture(t),face=await cad.query('linkedFaceCandidate',{source:target(keep),ray:{origin:[-70,0,30],direction:[0,0,-1]}}),linked=await cad.previewContourLinks({action:'create',source:target(keep),selector:face.selector,height:2});cad.apply(linked);const linkId=linked.project.contourLinks.links.at(-1).id,profile=linked.aliases.sketch,draft=cad.snapshot();draft.nodes.find(n=>n.id===keep).transform[0]*=2;await cad.open(draft);
+ const before=cad.serialize(),count=calls.length,operation={...request({length:20,width:5,height:3}),inputs:[{name:'raw',target:profile}]};await assert.rejects(cad.previewFreeCADRerun(operation),{code:'FREECAD_RERUN_STALE_INPUT'});assert.equal(calls.length,count);assert.equal(cad.serialize(),before);
+ cad.apply(await cad.previewContourLinks({action:'update',ids:[linkId]}));const p=await cad.previewFreeCADRerun(operation);assert(Math.abs(p.project.nodes.find(n=>n.id===a).stats.volume-360)<1e-6);cad.discard(p.previewId);
+});
+
+test('A pattern copy that would become stale during this rerun cannot be consumed as a fresh program input',async t=>{
+ const {cad,calls,a,b,keep,request}=await fixture(t);cad.apply(await cad.preview({kind:'linkedPattern',pattern:{version:1,id:'input-pattern',sourceId:a,kind:'line',count:2,step:[100,0,0],excluded:[],instances:[]}}));const draft=cad.snapshot(),copy=draft.linkedPatterns.patterns[0].instances[0].id,source=draft.nodes.find(n=>n.id===b).metadata.freecadSource,before=cad.serialize(),count=calls.length;
+ await assert.rejects(cad.previewFreeCADRerun({...request({length:28,width:5,height:4}),inputBindings:[{target:target(b),sourceDigest:freeCADSourceDigest(source.documentBase64),inputs:[{name:'base',target:copy}]}]}),{code:'FREECAD_RERUN_STALE_INPUT'});assert.equal(calls.length,count);assert.equal(cad.serialize(),before);
+ cad.apply(await cad.preview({kind:'linkedPattern',pattern:{version:1,id:'independent-input-pattern',sourceId:keep,kind:'line',count:2,step:[0,100,0],excluded:[],instances:[]}}));const independent=cad.snapshot().linkedPatterns.patterns.find(pattern=>pattern.id==='independent-input-pattern').instances[0].id,p=await cad.previewFreeCADRerun({...request({length:28,width:5,height:4}),inputBindings:[{target:target(b),sourceDigest:freeCADSourceDigest(source.documentBase64),inputs:[{name:'base',target:independent}]}]});assert(Math.abs(p.project.nodes.find(n=>n.id===b).stats.volume-60)<1e-6);cad.discard(p.previewId);
 });

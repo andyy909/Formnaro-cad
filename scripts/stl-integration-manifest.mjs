@@ -11,6 +11,7 @@ export function integrationManifest(root=process.cwd()){
   const name=relative+'/'+entry.name;if(entry.isDirectory())scan(path.join(directory,entry.name),name);else files.push(name);
  }}
  for(const name of ['python-runtime','src','backend','scripts','tests','converter','parametric','dist','licenses','docs','cad-kernel-build','ai'])scan(path.join(root,name),name);
+ if(fs.existsSync(path.join(root,'public')))scan(path.join(root,'public'),'public');
  for(const name of ['electron.cjs','preload.cjs','package.json','package-lock.json','LICENSE.txt','index.html','vite.config.js','README.md','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt','.gitignore'])files.push(name);
  return files.sort().map(file=>({file,sha256:createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex')}));
 }

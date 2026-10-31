@@ -3,6 +3,9 @@ import {cadGeometryDigest} from './cad-geometry-digest.js';
 import {normalizeGeometryPayloads} from './cad-geometry-ref.js';
 import {cloneCadSources} from './cad-source-clone.js';
 import {evaluateCadProjectParameters,cadProjectParameterProblems} from './cad-project-parameters-data.js';
+import {patternDrawingReferenceScope} from './cad-linked-pattern-drawing-data.js';
+import {patternContourReferenceScope} from './cad-linked-pattern-contour-data.js';
+import {cadPatternConsumerReferenceScope} from './cad-pattern-consumers-data.js';
 
 // Data and placement planning only: callers must integrate this with the
 // project transaction, validation, persistence and stale-export guards.
@@ -76,7 +79,7 @@ export function stampCadLinkedPattern(project,pattern){
 
 /** Prepare a complete, atomic update on an independent project copy.
  * Externally referenced instances must be detached explicitly before update. */
-export function materializeCadLinkedPattern(project,value,{previous,newId=()=>globalThis.crypto.randomUUID()}={}){
+export function materializeCadLinkedPattern(project,value,{previous,newId=()=>globalThis.crypto.randomUUID(),drawingViews=[],contourIds=[],consumerPlan}={}){
  let p=resolveCadLinkedPatternParameters(project,value),draft=structuredClone(project),source=draft.nodes.find(n=>n.id===p.sourceId);
  if(!source||source.kind!=='cad'||source.locked||source.hidden)fail('Sichtbare, entsperrte CAD-Musterquelle erforderlich.');
  const prior=previous?validateCadLinkedPattern(previous):p;if(prior.id!==p.id||prior.sourceId!==p.sourceId)fail('Musterquelle kann nicht still ersetzt werden.');
@@ -86,8 +89,11 @@ export function materializeCadLinkedPattern(project,value,{previous,newId=()=>gl
  const affected=new Set([...p.instances,...prior.instances].map(v=>v.id));
  const referencedIds=new Set(affected);function collect(n){for(const child of n.children??[]){referencedIds.add(child.id);collect(child);}}for(const node of draft.nodes)if(affected.has(node.id))collect(node);
  function containsRef(v){if(typeof v==='string')return referencedIds.has(v);if(Array.isArray(v))return v.some(containsRef);return v&&typeof v==='object'&&Object.values(v).some(containsRef);}
- for(const name of ['projectParameters','contourLinks','joints','drawings','featureReferences','workplane'])if(containsRef(draft[name]))fail('Musterkopie besitzt einen externen Bezug. Diesen zuerst lösen.');
- for(const node of draft.nodes)if(!affected.has(node.id)&&containsRef(node))fail('Musterkopie besitzt einen Bezug aus einem anderen Teil. Diesen zuerst lösen.');
+ const drawingScope=patternDrawingReferenceScope(draft.drawings,drawingViews,affected,new Set(p.instances.filter(item=>!p.excluded.includes(item.index)).map(item=>item.id)));
+ const contourScope=patternContourReferenceScope(draft.contourLinks,contourIds,affected,new Set(p.instances.filter(item=>!p.excluded.includes(item.index)).map(item=>item.id)),consumerPlan);
+ const consumerScope=cadPatternConsumerReferenceScope(draft,consumerPlan);
+ for(const name of ['projectParameters','contourLinks','joints','drawings','featureReferences','workplane'])if(containsRef(name==='drawings'?drawingScope:name==='contourLinks'?contourScope:consumerScope[name]))fail('Musterkopie besitzt einen externen Bezug. Diesen zuerst lösen.');
+ for(const node of consumerScope.nodes)if(!affected.has(node.id)&&containsRef(node))fail('Musterkopie besitzt einen Bezug aus einem anderen Teil. Diesen zuerst lösen.');
  function blocked(node){return !!node.locked||!!node.hidden||(node.children??[]).some(blocked);}
  for(const instanceId of affected){const existing=draft.nodes.find(n=>n.id===instanceId),old=prior.snapshot?.instances.find(v=>v.id===instanceId);if(!existing){if(old)fail('Eine bestätigte Musterkopie fehlt. Bezug zuerst ausdrücklich lösen.');continue;}if(blocked(existing))fail('Gesperrte oder verborgene Musterkopie oder Quelle kann nicht aktualisiert werden.');if(!old||old.digest!==digest(existing))fail('Musterkopie wurde verändert. Zuerst Verknüpfung lösen oder erneut auswählen.');}
  const bounds=source.stats?.bounds;if(!bounds?.min||!bounds?.max)fail('Musterquelle benötigt gültige Grenzen.');let center=new Vector3(...bounds.min.map((v,k)=>(v+bounds.max[k])/2)).applyMatrix4(new Matrix4().fromArray(source.transform)).toArray();
@@ -104,9 +110,9 @@ export function materializeCadLinkedPattern(project,value,{previous,newId=()=>gl
   }
  }
  const placements=cadLinkedPatternPlacements(p,source.transform,center);draft.nodes=draft.nodes.filter(n=>!affected.has(n.id));
- const inserted=[];for(const place of placements){const copy=cloneCadSources(source),originalId=copy.id;copy.id=place.id;function fix(n){for(const step of n.finish?.steps??[])for(const ref of step.edges)if(ref.origin.rootId===originalId)ref.origin.rootId=copy.id;for(const child of n.children??[])fix(child);}fix(copy);copy.transform=place.transform;draft.nodes.push(copy);inserted.push(copy);}
+ const inserted=[],sourceMappings=[];for(const place of placements){const mapping=new Map(),copy=cloneCadSources(source,{mapping}),originalId=copy.id;copy.id=place.id;mapping.set(source.id,place.id);sourceMappings.push({rootId:place.id,sourceId:source.id,patternId:p.id,index:place.index,retained:prior.instances.some(item=>item.id===place.id),ids:mapping});function fix(n){for(const step of n.finish?.steps??[])for(const ref of step.edges)if(ref.origin.rootId===originalId)ref.origin.rootId=copy.id;for(const child of n.children??[])fix(child);}fix(copy);copy.transform=place.transform;draft.nodes.push(copy);inserted.push(copy);}
  p.snapshot={source:digest(source),definition:definitionDigest(p),instances:inserted.map(node=>({id:node.id,digest:digest(node)}))};
- return {project:draft,pattern:p};
+ return {project:draft,pattern:p,sourceMappings};
 }
 
 /** Return world-space transforms. Position zero is always the original source. */

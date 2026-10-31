@@ -1,6 +1,7 @@
 import {partFaceColors,hasCurrentPartSurfaceGroups} from './cad-part-properties.js';
 import {cadBounds,cadVolume,cadBoolean,readCadBrep,transformCad,validateCadSolid,writeCadBrep} from './cad-native-kernel.js';
 import {cadIdentity,multiplyCadMatrices} from './cad-affine.js';
+import {affineCadSketchCircle} from './cad-drill-stock-native.js';
 
 // Analysis results may be empty (disjoint bodies or exhausted color regions).
 // A nonempty volumetric result still has to pass the production solid checks.
@@ -9,7 +10,7 @@ function operation(oc,kind,left,right){
 }
 function placed(oc,node,matrix=node.transform){
   if(node.kind!=='cad')throw Error('Netzreferenzen sind kein Ziel für CAD-Prüfungen.');
-  const original=readCadBrep(oc,node.brep.data);try{return transformCad(oc,original,matrix);}finally{original.delete();}
+  const original=readCadBrep(oc,node.brep.data);try{return affineCadSketchCircle(oc,node,cadBounds(oc,original),matrix)??transformCad(oc,original,matrix);}finally{original.delete();}
 }
 
 export function cadCollisionNative(oc,left,right){

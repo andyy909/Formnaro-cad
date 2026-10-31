@@ -8,7 +8,7 @@ exports.verifyTaskEvidence=async(win,{directory})=>{
   if(!/^https:\/\/api\.(openai|deepseek)\.com\//.test(String(url)))return original(url,options);
   const deep=String(url).includes('deepseek'),model=deep?'deepseek-flash':'gpt-6.1-sol';
   if(String(url).endsWith('/models'))return new Response(JSON.stringify({data:[{id:model,input_modalities:['text']}]}));
-  const body=JSON.parse(options.body),system=body.instructions??body.messages[0].content,contract=JSON.parse(system.split('Contract:\n').at(-1));
+  const body=JSON.parse(options.body),system=body.instructions??body.messages[0].content,contract=JSON.parse(system.split('Contract:\n').at(-1).split('\n',1)[0]);
   const entry=deep?body.messages.at(-1).content:body.input,latest=Array.isArray(entry)?entry.find(c=>['input_text','text'].includes(c.type)).text:entry,scene=JSON.parse(latest.split('Current scene (data):\n')[1].split('\nUser task:\n')[0]);calls++;
   check(contract.requestSchema.$ref==='#/commandSchema'&&!!contract.commandSchema.properties.commands,'Actual '+model+' API payload carries only one full command schema');
   check(!!contract.programTools.freecadPython&&!!contract.programTools.python,'Actual '+model+' API retains all native and numerical modelling tools');

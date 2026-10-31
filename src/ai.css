@@ -87,6 +87,13 @@ body .cad-ai-chat.chat-expanded{background:#fff!important}[data-theme=dark] .cad
 .freecad-document-review .freecad-program-parameters { max-height: 25vh; }
 .freecad-edit-report { max-height: 40vh; overflow: auto; overflow-wrap: anywhere; padding-block: 8px; }
 .ai-freecad-document-tree input[type=number],.ai-freecad-document-tree select { width: 100%; min-width: 80px; box-sizing: border-box; }
+.freecad-link-editor,.freecad-link-editor > div { display: grid; gap: 6px; }
+.freecad-link-editor > div { padding-block: 4px; }
+.freecad-link-editor > div > div { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.freecad-link-editor small { flex-basis: 100%; }
+.ai-freecad-document-tree .freecad-link-editor select { min-width: 0; max-width: 100%; }
+.ai-freecad-document-tree .freecad-link-editor input[type=number] { width: 80px; }
+.freecad-link-editor span { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .ai-freecad-document > button { margin: 4px; }
 .ai-freecad-document-tree { max-height: 60vh; overflow: auto; overflow-wrap: anywhere; }
 .ai-freecad-document-tree ul { padding-inline-start: 18px; }

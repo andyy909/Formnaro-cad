@@ -1,4 +1,11 @@
 import {rejectStaleCadReferences} from './cad-ai-reference-guard.js';
+import {rebindCadDrillsCoordinated} from './cad-drill-rebind-coordinated.js';
+import {updateCadLinkedPatternWithConsumers} from './cad-pattern-consumers-native.js';
+import {rebindCadReferencesNative} from './cad-reference-rebind-native.js';
+import {planCadPatternDrawings} from './cad-linked-pattern-drawing-data.js';
+import {updateCadPatternDrawings} from './cad-linked-pattern-drawings-native.js';
+import {planCadPatternContours} from './cad-linked-pattern-contour-data.js';
+import {updateCadPatternContours,mergeCadContourBuildReports} from './cad-linked-pattern-contours-native.js';
 import {hasGeometryRefs,isGeometryRef} from './cad-geometry-ref.js';
 import {validateCadLinkedPattern,materializeCadLinkedPattern,stampCadLinkedPattern,cadLinkedPatternProblems,assertCadLinkedPatternCopyReady} from './cad-linked-pattern-data.js';
 import {remapCadJoints,validateCadJoints} from './cad-joints-data.js';
@@ -24,7 +31,7 @@ import {cadIdentity,cadPoint,multiplyCadMatrices,inverseCadMatrix,cadFrameSource
 import {createCadTransactions} from './cad-transactions.js';
 import {createCadToolsNative} from './cad-tools-native.js';
 import {buildCadPluginShape} from './cad-plugin-recipes.js';
-import {cadPreserveFormBounds,cadFitFormDimensions,CAD_SHAPES} from './cad-form-controls.js';
+import {cadPreserveFormBounds,cadFitFormDimensions,cadEditFormRecipe,CAD_SHAPES} from './cad-form-controls.js';
 import {cadContoursFromSvgSubpaths} from './cad-original-contours.js';
 import {buildCadTemplate} from './cad-template-recipes.js';
 import {readStlReconstructionMesh} from './cad-stl-input.js';
@@ -56,7 +63,7 @@ export {cloneCadSources} from './cad-source-clone.js';
 /** All renderer and automation commands reach this native worker boundary.
  * Native intermediate builds supply exact bounds and topology correspondence;
  * the complete batch remains one unconfirmed candidate and one Undo entry. */
-export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
+export function createCadCommandRouter({oc,service,makeRecipe,editRecipe=(node,patch)=>cadEditFormRecipe(node,patch,{oc})}={}){
   if(!oc||!service)throw TypeError('Nativer CAD-Dienst fehlt.');
   function catalogueBounds(local,matrix){const points=Array.from({length:8},(_,i)=>cadPoint(matrix,[0,1,2].map(k=>i&(1<<k)?local.max[k]:local.min[k]))),min=[0,1,2].map(k=>Math.min(...points.map(p=>p[k]))),max=[0,1,2].map(k=>Math.max(...points.map(p=>p[k])));return {min,max,size:min.map((v,k)=>max[k]-v),center:min.map((v,k)=>(v+max[k])/2),basis:'package-catalog-bounds',nativeProven:false};}
   function shapeBounds(node,matrix){
@@ -305,9 +312,10 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
     if(jointOriginal&&jointCopies.size){const count=Math.max(...[...jointCopies.values()].map(v=>v.length));for(let i=0;i<count;i++){const mapping=new Map([...jointCopies].flatMap(([id,list])=>list[i]?[[id,list[i]]]:[])),copied=remapCadJoints(jointOriginal,mapping);if(copied.joints.length)project.joints=validateCadJoints({version:1,bases:[...new Set([...(project.joints?.bases??[]),...copied.bases])],joints:[...(project.joints?.joints??[]),...copied.joints]});}}
     try{return {project:await service.rebuild(project,{baseline:rebuildBaseline,progress:value=>progress?.(.8+value*.2)}),aliases,changes:operation.commands.map(c=>({op:c.op,target:c.target??c.as??null})),warnings:[]};}catch(error){error.code??='CAD_ERROR';error.feedback=aiFeedback(error);throw error;}
   }
-  async function run(input,operation,{baseline=input,progress}={}){
+  async function run(input,operation,{baseline=input,progress,signal,freecadRun,collectConsumerChoices=false}={}){
     const project=cadProjectSnapshot(input);if(!operation||typeof operation.kind!=='string')fail('INVALID_COMMAND','CAD-Auftrag fehlt.');
     switch(operation.kind){
+      case 'referenceRebind':fields(operation,['kind','request']);return rebindCadReferencesNative(project,operation.request,{oc,service,signal});
       case 'linkedPatternDetachInstance':{
         fields(operation,['kind','id','index']);if(cadProjectRevision(project)!==cadProjectRevision(baseline))fail('UNCONFIRMED_PROJECT','Das Lösen benötigt den bestätigten Modellstand.');
         const current=project.linkedPatterns?.patterns.find(p=>p.id===operation.id),instance=current?.instances.find(i=>i.index===operation.index);if(!instance||current.excluded.includes(operation.index))fail('INVALID_COMMAND','Eine vorhandene Musterkopie auswählen.');
@@ -327,15 +335,12 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
         return {project:cadProjectSnapshot(project),changes:[{op:'linkedPatternDetach',target:existing.sourceId}],warnings:[]};
       }
       case 'linkedPattern':{
-        fields(operation,['kind','pattern']);if(cadProjectRevision(project)!==cadProjectRevision(baseline))fail('UNCONFIRMED_PROJECT','Muster benötigt den bestätigten Modellstand.');
+        fields(operation,['kind','pattern','consumerBindings']);if(cadProjectRevision(project)!==cadProjectRevision(baseline))fail('UNCONFIRMED_PROJECT','Muster benötigt den bestätigten Modellstand.');
         const requested=validateCadLinkedPattern(operation.pattern),previous=project.linkedPatterns?.patterns.find(p=>p.id===requested.id),context=address(project,requested.sourceId,{});editable(context);
         if(context.parent||containerFlags(project,context.node).hidden)fail('INVALID_COMMAND','Eine sichtbare vollständige CAD-Quelle auswählen.');
         if(!previous&&requested.snapshot)fail('INVALID_COMMAND','Neues Muster darf keinen vorherigen Zustand behaupten.');
         for(const item of previous?.instances??[]){const node=project.nodes.find(n=>n.id===item.id);if(node&&(containerFlags(project,node).locked||containerFlags(project,node).hidden))fail('LOCKED_CAD_OBJECT','Gesperrte oder verborgene Musterkopie kann nicht aktualisiert werden.');}
-        const result=materializeCadLinkedPattern(project,requested,{previous}),list=project.linkedPatterns?.patterns??[];
-        result.project.linkedPatterns={version:1,patterns:[...list.filter(p=>p.id!==requested.id),result.pattern]};
-        const rebuilt=await service.rebuild(result.project,{baseline,progress}),pattern=stampCadLinkedPattern(rebuilt,result.pattern);rebuilt.linkedPatterns={version:1,patterns:[...list.filter(p=>p.id!==requested.id),pattern]};
-        return {project:cadProjectSnapshot(rebuilt),changes:[{op:'linkedPattern',target:requested.sourceId}],warnings:[]};
+        return updateCadLinkedPatternWithConsumers(project,requested,{oc,service,editRecipe,signal,freecadRun,consumerBindings:operation.consumerBindings,baseline,progress,collectConsumerChoices});
       }
       case 'cadToMesh':{fields(operation,['kind','target','quality','id']);if(cadProjectRevision(project)!==cadProjectRevision(baseline))fail('UNCONFIRMED_PROJECT','Eine Netzkopie benötigt den bestätigten CAD-Stand, keine veränderte Vorschau.');const {node,report}=cadMeshCopyNative(oc,project,operation);project.nodes.push(node);return {project:await service.rebuild(project,{baseline,progress}),report,changes:[{op:'cadToMesh',target:operation.target}],warnings:[]};}
       case 'create':fields(operation,['kind','recipe','options']);project.nodes.push(service.nativeNode(operation.recipe,operation.options));break;
@@ -405,8 +410,9 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe}={}){
       case 'tool':{
         fields(operation,['kind','name','options']);const store=createCadTransactions({initial:project,build:(p,context)=>service.rebuild(p,{baseline:context.baseline})}),tools=createCadToolsNative({oc,service,transactions:store});
         if(!['previewAlign','previewAnchor','previewWorkplane','previewPlace','previewLayOnFace','previewSplit','previewExtract','previewReferencePlacement','previewDrill','previewConvertDrill','previewRebindDrills','previewEditDrill','previewDetachDrillPattern','previewGroup','previewEditSource','previewSuppressSource','previewDissolve'].includes(operation.name))fail('INVALID_COMMAND','Unbekanntes natives CAD-Werkzeug.');
-        const drillOptions={previewRebindDrills:['id','bindings'],previewConvertDrill:['id','confirmed','reference','kind','through','termination','stopReference','diameter','depth','headDiameter','headDepth','angle','gap','offset'],previewDrill:['id','reference','kind','through','termination','stopReference','diameter','depth','headDiameter','headDepth','angle','gap','offset','associative','resultId'],previewEditDrill:['id','path','patch','positionReference','stopReference'],previewDetachDrillPattern:['id','path','index']}[operation.name];if(drillOptions)fields(operation.options,drillOptions);
-        const result=await tools[operation.name]({...operation.options,revision:store.revision()});return {project:result.project};
+        const drillOptions={previewRebindDrills:['id','bindings','parameterData','variantId','contourBindings','referenceBindings','sourceReplacement','consumerBindings'],previewConvertDrill:['id','path','bindingRemap','confirmed','reference','kind','through','termination','stopReference','diameter','depth','headDiameter','headDepth','angle','gap','offset'],previewDrill:['id','reference','kind','through','termination','stopReference','diameter','depth','headDiameter','headDepth','angle','gap','offset','associative','resultId'],previewEditDrill:['id','path','patch','positionReference','stopReference'],previewDetachDrillPattern:['id','path','index']}[operation.name];if(drillOptions)fields(operation.options,drillOptions);
+        if(operation.name==='previewRebindDrills')return rebindCadDrillsCoordinated(project,operation.options,{oc,service,editRecipe,signal,freecadRun,collectConsumerChoices});
+        const result=await tools[operation.name]({...operation.options,revision:store.revision()});return {project:result.project,...(operation.name==='previewConvertDrill'?{warnings:result.warnings??[],report:result.report??{}}:{})};
       }
       case 'sketchAttachment':{
         const prepared=prepareSketchAttachment(project,operation);if(prepared.engine!=='cad')throw Error('Für ein Netzteil das Netz-Anbauwerkzeug verwenden.');

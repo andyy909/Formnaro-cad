@@ -24,6 +24,8 @@ import {findAssociativeDrillBox} from './cad-associative-drill.js';
 import {cadDrillPatternAnchors} from './cad-drill-pattern.js';
 import {reassignCadDrillReferences} from './cad-drill-rebind-native.js';
 import {cadProjectParameterProblems} from './cad-project-parameters-data.js';
+import {convertCadLegacyDrill} from './cad-drill-conversion-native.js';
+import {cadSelectionContext} from './cad-interface-state.js';
 
 const HIT_TOLERANCE=1e-7;
 const fail=(code,message)=>{const error=Error(message);error.code=code;throw error;};
@@ -177,36 +179,16 @@ export function createCadToolsNative({oc,service,transactions}={}){
     if(before-after<=Math.max(before*1e-12,1e-8))fail('NO_CAD_DRILL_MATERIAL','Die gewählte Bohrung entfernt an dieser Stelle kein Material.');
     return submit(candidate,revision,'Native CAD-Bohrung erstellen');
   }
-  async function previewConvertDrill({id,confirmed=false,revision,...options}={}){
-    const p=baseline(revision),legacy=root(p,id);editableDrillSource(p,legacy);
+  async function previewConvertDrill({id,path=[],bindingRemap=[],confirmed=false,revision,...options}={}){
+    const p=baseline(revision);root(p,id);if(!Array.isArray(path)||path.length>12||path.some(part=>typeof part!=='string'||!part))fail('INVALID_CAD_DRILL_CONVERSION','Einen gültigen vollständigen Bohrgruppenpfad wählen.');const context=cadSelectionContext(p,{rootId:id,path}),legacy=context.node;
+    if(context.locked)fail('LOCKED_CAD_OBJECT','Bohrgruppe oder Container ist gesperrt.');if(context.hidden||context.chain.some(node=>node.suppressed))fail('HIDDEN_CAD_REFERENCE','Eine sichtbare aktive alte Bohrgruppe wählen.');if(context.sourceGeometryReadonly||context.chain.slice(0,-1).some(node=>node.source!=='group'||node.drill||node.finish||node.partition||node.extraction||node.modeling))fail('INVALID_CAD_DRILL_CONVERSION','Verschachtelte Bohrgruppen nur innerhalb gewöhnlicher CSG-Gruppen überführen.');editableDrillSource(p,legacy);
     if(confirmed!==true)fail('CAD_DRILL_CONFIRMATION_REQUIRED','Nennmaße, Spiel und Endbedingung der alten Bohrung ausdrücklich bestätigen.');
-    const children=legacy.children??[],sources=children.filter(n=>n.solid&&!n.suppressed),cutters=children.filter(n=>!n.solid&&!n.suppressed);
-    if(legacy.suppressed||legacy.annotations?.length||legacy.metadata?.stepFaceColors||cutters.some(n=>n.annotations?.length||n.metadata))fail('INVALID_CAD_DRILL_CONVERSION','Unterdrückte Bohrgruppen, Flächenfarben und beschriftete oder mit Zusatzdaten versehene Bohrwerkzeuge benötigen eine gesonderte Zuordnung.');
-    if(!legacy.solid||legacy.source!=='group'||legacy.operation!=='union'||legacy.drill||legacy.finish||legacy.partition||legacy.extraction||legacy.modeling||sources.length!==1||!cutters.length||children.some(n=>n.suppressed)||cutters.some(n=>n.source!=='native'||!['cylinder','countersink'].includes(n.recipe?.type)))fail('INVALID_CAD_DRILL_CONVERSION','Eine alte Bohrgruppe mit genau einer positiven Quelle und nativen Bohrwerkzeugen wählen.');
-    if(p.projectParameters||p.workplane.reference||p.drawings?.sheets?.length||p.joints?.joints?.length||p.joints?.bases?.length||p.contourLinks?.links?.length||p.linkedPatterns?.patterns?.length||p.featureReferences?.items?.length)fail('CAD_DRILL_DEPENDENCIES_UNSUPPORTED','Vor der Überführung müssen bestehende Parameter- und Merkmalsbezüge getrennt werden.');
     const allowed=['reference','kind','through','termination','stopReference','diameter','depth','headDiameter','headDepth','angle','gap','offset'];
     if(Object.keys(options).some(key=>!allowed.includes(key))||!['kind','through','diameter','depth','headDiameter','headDepth','angle','gap'].every(key=>Object.hasOwn(options,key)))fail('INVALID_CAD_DRILL_CONVERSION','Alle Bohrdaten und die Endbedingung ausdrücklich angeben.');
     if([options.reference,options.stopReference].some(ref=>ref&&(ref.token!==undefined||ref.faceIndex!==undefined)))fail('INVALID_CAD_DRILL_CONVERSION','Zur Überführung einen freien Flächenpunkt wählen; alte Marker und Flächennummern gehören zur bearbeiteten Geometrie.');
-    const base=structuredClone(sources[0]);base.transform=multiplyCadMatrices(legacy.transform,base.transform);
-    const index=p.nodes.indexOf(legacy);p.nodes[index]=base;
-    // Reuse exactly the creation validator and native builder in an isolated
-    // draft. No proposal reaches the real store until the geometry agrees.
-    const draftRevision=cadProjectRevision(p),draft={snapshot:()=>cadProjectSnapshot(p),revision:()=>draftRevision,preview:({project})=>({project})};
-    const builder=createCadToolsNative({oc,service,transactions:draft});
-    const built=await builder.previewDrill({...options,id:base.id,resultId:id,associative:true,revision:draftRevision});
-    const converted=built.project.nodes[index];
-    for(const key of ['name','hidden','locked','color','opacity','multicolor','metadata','layerId','folderId']){
-      if(legacy[key]!==undefined)converted[key]=structuredClone(legacy[key]);else delete converted[key];
-    }
-    let before,after,missing,added;
-    try{
-      before=service.worldShape(legacy);after=service.worldShape(converted);
-      missing=cadBoolean(oc,'difference',before,after,{allowEmpty:true});added=cadBoolean(oc,'difference',after,before,{allowEmpty:true});
-      const tolerance=Math.max(1e-7,cadVolume(oc,before)*1e-9);
-      if((missing&&cadVolume(oc,missing)>tolerance)||(added&&cadVolume(oc,added)>tolerance))fail('CAD_DRILL_CONVERSION_MISMATCH','Die bestätigten Bohrdaten stimmen geometrisch nicht mit der alten Bohrgruppe überein.');
-    }finally{added?.delete();missing?.delete();after?.delete();before?.delete();}
+    const built=await convertCadLegacyDrill(p,{id,path,bindingRemap,options},{oc,service,createTools:createCadToolsNative});
     baseline(revision);
-    return submit(built.project,revision,'Alte Bohrgruppe als mitwachsende Bohrung übernehmen');
+    const proposal=await submit(built.project,revision,'Alte Bohrgruppe als mitwachsende Bohrung übernehmen');return {...proposal,warnings:built.warnings,report:built.report};
   }
   function previewRebindDrills({id,bindings,revision}={}){
     const p=baseline(revision),node=root(p,id);editableDrillSource(p,node);

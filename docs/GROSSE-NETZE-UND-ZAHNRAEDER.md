@@ -33,8 +33,9 @@ Undo-Schritt; Abbrechen verändert das Modell nicht.
 
 ## Zahnradkopplungen
 
-Zunächst für jedes Rad ein eigenes Drehgelenk mit derselben festen Basis
-anlegen. Der Bezugspunkt liegt auf der jeweiligen Radachse. Die Achsen müssen
+Zunächst für jedes Rad ein eigenes Drehgelenk auf demselben starren Träger
+anlegen. Der gemeinsame Träger darf über seine eigenen Gelenke verschoben oder
+gedreht werden. Winkel und Anfangsphase gelten relativ zu diesem Träger. Der Bezugspunkt liegt auf der jeweiligen Radachse. Die Achsen müssen
 parallel sein; entgegengesetzte Achsenrichtungen werden berücksichtigt.
 
 Im Gelenkbereich **Zahnräder koppeln** zwei Drehgelenke, ihre Zähnezahlen und
@@ -52,7 +53,8 @@ Beziehungen. Beim Lösen eines Gelenks werden dessen Kopplungen mitgelöst.
 
 Die Kopplung ist eine kinematische Winkelbeziehung. Sie erkennt keine Zähne
 aus importierten Netzen, prüft keinen Zahneingriff und simuliert keine Kräfte,
-Reibung oder bewegten Achsen. Planetengetriebe werden nicht unterstützt.
+Reibung oder relativ zueinander bewegte Achsen. Unterschiedliche Träger und
+Planetengetriebe werden nicht unterstützt.
 
 ## KI-Modellstrenge
 

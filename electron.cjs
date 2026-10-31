@@ -94,7 +94,7 @@ app.whenReady().then(() => {
     callback({ cancel: /^https?:/i.test(details.url) });
   });
   const win = new BrowserWindow({ show:!verifyPath, width: 1500, height: 950, minWidth: 1000, minHeight: 680,
-    title: practiceChild?'Formnaro · Übungsmodus':'Formnaro', backgroundColor: '#edf1f5',
+    title: practiceChild?'Formnaro · Übungsmodus':'Formnaro', icon:path.join(__dirname,'dist','formnaro-icon.png'), backgroundColor: '#edf1f5',
     webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, offscreen:!!verifyPath, preload:path.join(__dirname,'preload.cjs'), additionalArguments:['--formnaro-portable-data','--formnaro-stl-converter','--formnaro-error-log',...(practiceChild?['--formnaro-practice']:[])], backgroundThrottling:!verifyPath } });
   if(practiceChild)require('./backend/practice-child.cjs').installPracticeChild(win);
   else require('./backend/practice-runner.cjs').installPracticeRunner(win,{ipcMain:require('electron').ipcMain,app});

@@ -175,3 +175,18 @@ Grundformziele sind nur Zeigeziele, anschließend wird eine geprüfte Vorschau
 berechnet. Isolierte UI-Prüfungen erfassen Zielanzeige vor der Berechnung,
 Modell-/Undo-Erhalt, Abbruch und Wiedergabe; die komplette frühere Abnahme wird
 nicht als neuer vollständiger Regressionstest ausgegeben.
+
+
+## Formnaro-Programmsymbol
+
+Das blau-limettengrüne F liegt als transparente PNG-Datei in
+`public/formnaro-icon.png` und als Windows-ICO mit 16/24/32/48/64/128/256 Pixeln
+in `public/formnaro-icon.ico`. Vite übernimmt beide Dateien nach `dist`.
+Kopfzeile, Favicon und Electron-Fenster verwenden dieselbe PNG-Datei.
+Der aktuelle Windows-Paketweg friert `public` mit ein und übergibt die ICO-Datei
+aus dem Stage-Verzeichnis an Electron Packager, damit neue EXE-Dateien das
+Programmsymbol enthalten. Das Quellmanifest erfasst auch die Originalassets.
+
+Bestehende freigegebene EXE-/ASAR-Dateien werden dafür nicht nachträglich
+verändert. Lokale Windows-Verknüpfungen können separat eine dauerhafte
+ICO-Datei verwenden; ihre Startziele und Argumente bleiben dabei erhalten.

@@ -1,6 +1,7 @@
 import {isFreeCADParameterField,freeCADParameterValue,freeCADParameterInputSignature,remapFreeCADParameterRuns} from './cad-freecad-parameter-data.js';
 import {sketchExpression} from './sketch-expression.js';
 import {cadGeometryDigest} from './cad-geometry-digest.js';
+import {isCadDrillScalarField} from './cad-drill-parameter-fields.js';
 
 // Scalar dependencies and correspondence only. This module never imports a
 // CAD/mesh kernel or schedules work during table input, selection or camera use.
@@ -27,7 +28,7 @@ export function validateCadProjectParameterTarget(value){fields(value,['rootId',
 export function cadProjectParameterLiteral(value){if(typeof value==='number')return finite(value);if(typeof value==='string'&&LITERAL.test(value.trim().replaceAll('−','-')))return finite(Number(value.trim().replaceAll('−','-')));return null;}
 function expression(value){if(typeof value==='number')return finite(value);if(typeof value!=='string'||!value.trim()||value.length>200)fail('Maßformel benötigt 1–200 Zeichen.');const clean=value.replaceAll('−','-'),tokens=clean.match(TOKEN)??[];if(tokens.join('')!==clean.replace(/\s/g,''))fail('Nur Zahlen, Parameternamen, + − * /, Klammern, sind und cosd verwenden.');return value;}
 function refs(value){if(typeof value==='number')return [];const tokens=value.replaceAll('−','-').match(TOKEN)??[];return [...new Set(tokens.filter((t,i)=>/^[A-Za-z_]/.test(t)&&tokens[i+1]!=='('))];}
-function field(value){text(value,300);if(isFreeCADParameterField(value))return value;if(/^drill\.pattern\.(?:count|columns|rows|offset|radius|angle|startAngle|(?:step|rowStep|center)\.[01])$/.test(value)||/^sketch\.constraints\..+\.value$/.test(value)||/^(?:size|pos)\.[012]$/.test(value)||/^params\.[A-Za-z][A-Za-z0-9_]{0,39}$/.test(value)&&!BAD.has(value.slice(7))||/^modeling\.(?:offset|thickness|path\.(?:length|radius|angle))$/.test(value)||/^sketch\.variables\.[A-Za-z_][A-Za-z0-9_]{0,39}$/.test(value)||/^sketch\.dimensions\.(?:width|depth|diameter|height)$/.test(value)||/^sketch\.elements\..+\.(?:diameter|(?:start|through|end|center|control(?:[1-9]|1[0-4]))\.[01])$/.test(value))return value;fail('Unbekanntes Bindungsfeld.');}
+function field(value){text(value,300);if(isFreeCADParameterField(value)||isCadDrillScalarField(value))return value;if(/^drill\.pattern\.(?:count|columns|rows|offset|radius|angle|startAngle|(?:step|rowStep|center)\.[01])$/.test(value)||/^sketch\.constraints\..+\.value$/.test(value)||/^(?:size|pos)\.[012]$/.test(value)||/^params\.[A-Za-z][A-Za-z0-9_]{0,39}$/.test(value)&&!BAD.has(value.slice(7))||/^modeling\.(?:offset|thickness|path\.(?:length|radius|angle))$/.test(value)||/^sketch\.variables\.[A-Za-z_][A-Za-z0-9_]{0,39}$/.test(value)||/^sketch\.dimensions\.(?:width|depth|diameter|height)$/.test(value)||/^sketch\.elements\..+\.(?:diameter|(?:start|through|end|center|control(?:[1-9]|1[0-4]))\.[01])$/.test(value))return value;fail('Unbekanntes Bindungsfeld.');}
 function state(value,baseline=false){fields(value,['target','hidden','suppressed']);const out={target:validateCadProjectParameterTarget(value.target)};for(const key of ['hidden','suppressed'])if(value[key]!==undefined)out[key]=bool(value[key]);if(baseline&&(['hidden','suppressed'].some(k=>out[k]===undefined))||!baseline&&out.hidden===undefined&&out.suppressed===undefined)fail('Variantenstatus benötigt Sichtbarkeit oder Unterdrückung.');return out;}
 
 function evaluateDefinition(data,variantId=data.activeVariantId,effects=true){
@@ -66,6 +67,7 @@ export function cadProjectParameterFieldValue(node,key){
  if(isFreeCADParameterField(key))return freeCADParameterValue(node,key);
  if(key.startsWith('params.')){const k=key.slice(7);if(Object.hasOwn(node.recipe?.params??{},k))raw=node.recipe.params[k];}
  else if(key.startsWith('drill.pattern.')){const parts=key.slice(14).split('.');raw=parts.length===1?node.drill?.pattern?.[parts[0]]:node.drill?.pattern?.[parts[0]]?.[Number(parts[1])];}
+ else if(isCadDrillScalarField(key))raw=node.drill?.[key.slice(6)];
  else if(key.startsWith('modeling.')){const parts=key.slice(9).split('.');raw=parts.length===1?node.modeling?.[parts[0]]:node.modeling?.path?.[parts[1]];}
  else if(key.startsWith('sketch.variables.'))raw=node.recipe?.sketch?.variables?.find(v=>v.name===key.slice(17))?.value;
  else if(key.startsWith('sketch.dimensions.'))raw=node.recipe?.sketch?.dimensions?.[key.slice(18)];

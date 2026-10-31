@@ -19,12 +19,12 @@ async function fixture(kind='plain'){
 for(const kind of ['plain','counterbore','countersink'])test('Alte Bohrgruppe ausdrücklich überführen: '+kind,async()=>{
  const {service,transactions:t,tools}=await fixture(kind);try{
   const before=t.snapshot(),revision=t.revision(),proposal=await tools.previewConvertDrill({...dimensions,kind,id:'legacy',confirmed:true,revision});
-  assert.deepEqual(t.snapshot(),before);assert.equal(proposal.project.nodes[0].id,'legacy');assert.equal(proposal.project.nodes[0].children[0].id,'body');assert.equal(proposal.project.nodes[0].drill.kind,kind);
+  assert.deepEqual(t.snapshot(),before);assert.equal(proposal.project.nodes[0].id,'legacy');assert.equal(proposal.project.nodes[0].children[0].children[0].id,'body');assert.equal(proposal.project.nodes[0].drill.kind,kind);assert.equal(proposal.project.nodes[0].children[0].children.length,before.nodes[0].children.length);assert(proposal.project.nodes[0].children[0].children.slice(1).every(node=>node.suppressed));
   t.discard(proposal.previewId);assert.deepEqual(t.snapshot(),before);
   t.apply(await tools.previewConvertDrill({...dimensions,kind,id:'legacy',confirmed:true,revision}));const converted=t.snapshot();assert.deepEqual(parseCadProject(serializeCadProject(converted)),converted);
   const encoded=encodeFnpackProject(converted),blocks=new Map(encoded.blocks.map(b=>[b.sha256,b.bytes])),hydrated=await createFnpackResolver({readBlock:async hash=>blocks.get(hash)}).hydrate(encoded.project);assert.deepEqual(stripGeometryIdentity(hydrated),converted);
   t.undo();assert.deepEqual(t.snapshot(),before);t.redo();assert.deepEqual(t.snapshot(),converted);
-  t.apply(await tools.previewEditSource({groupId:'legacy',path:['body'],patch:{recipe:{type:'box',size:[40,20,12]}},revision:t.revision()}));
+  t.apply(await tools.previewEditSource({groupId:'legacy',path:[converted.nodes[0].children[0].id,'body'],patch:{recipe:{type:'box',size:[40,20,12]}},revision:t.revision()}));
   assert.ok(t.snapshot().nodes[0].stats.volume<9600);assert.ok(t.snapshot().nodes[0].stats.volume>converted.nodes[0].stats.volume);
  }finally{service.dispose();}
 });
@@ -47,9 +47,9 @@ test('Überführung über denselben Router wie die Oberfläche',async()=>{
   await assert.rejects(router.run(input,{kind:'tool',name:'previewConvertDrill',options:{...dimensions,id:'legacy',confirmed:true,unknown:true}}),{code:'INVALID_COMMAND'});
  }finally{service.dispose();}
 });
-test('Sperren und Zusatzdaten alter Bohrgruppen bleiben geschützt',async()=>{
+test('Gesperrte und unterdrückte alte Bohrgruppen bleiben geschützt',async()=>{
  const {service,transactions:t}=await fixture();try{
-  for(const change of [p=>p.nodes[0].locked=true,p=>p.nodes[0].children[1].locked=true,p=>p.nodes[0].suppressed=true,p=>p.nodes[0].children[1].metadata={notes:'Behalten'},p=>p.nodes[0].metadata={stepFaceColors:[{faceIndex:1,color:'#ff0000',opacity:1}]}]){
+  for(const change of [p=>p.nodes[0].locked=true,p=>p.nodes[0].children[1].locked=true,p=>p.nodes[0].suppressed=true]){
    const project=t.snapshot();change(project);const store=createCadTransactions({initial:project,build:(p,c)=>service.rebuild(p,{baseline:c.baseline})}),tools=createCadToolsNative({oc,service,transactions:store});
    await assert.rejects(tools.previewConvertDrill({...dimensions,id:'legacy',confirmed:true,revision:store.revision()}));assert.deepEqual(store.snapshot(),project);assert.equal(store.state().previews,0);
   }

@@ -2,7 +2,7 @@ import {Matrix3,Matrix4,Vector3} from 'three';
 import {cadIdentity,cadPoint,inverseCadMatrix,multiplyCadMatrices} from './cad-affine.js';
 import {cadBounds,readCadBrep} from './cad-native-kernel.js';
 import {resolveCadReferenceNative} from './cad-reference-points.js';
-import {findAssociativeDrillBox} from './cad-associative-drill.js';
+import {findAssociativeDrillBox,cadDrillStockSourceChild} from './cad-associative-drill.js';
 import {identifyCadBoxFaceAnchor} from './cad-box-face-anchor.js';
 import {identifyCadCylinderFaceAnchor} from './cad-cylinder-face-anchor.js';
 import {describeStepDrill,findAssociativeStepDrillSource} from './cad-step-drill.js';
@@ -13,7 +13,7 @@ const normal=(matrix,value)=>new Vector3(...value).applyNormalMatrix(new Matrix3
 // Resolve every choice against the retained source, never against a cached
 // drilled result or a face number from another geometry. Construction happens
 // only after all recipes have been assigned, in the caller's single preview.
-export function reassignCadDrillReferences(oc,root,bindings){
+export function reassignCadDrillReferences(oc,root,bindings,{replacement}={}){
  if(!Array.isArray(bindings)||!bindings.length||bindings.length>13)fail('Eine bis 13 Bohrungen ausdrücklich neu zuordnen.');
  const seen=new Set(),updates=[];
  for(const binding of bindings){
@@ -22,10 +22,11 @@ export function reassignCadDrillReferences(oc,root,bindings){
   if(!Array.isArray(path)||path.length>12||path.some(v=>typeof v!=='string'||!v)||seen.has(JSON.stringify(path)))fail('Eindeutige vorhandene Bohrungsquellenpfade wählen.');
   seen.add(JSON.stringify(path));
   let node=root,world=node.transform;
-  for(const id of path){if(!node.drill||node.children?.length!==1||node.children[0].id!==id)fail('Die gewählte Bohrung ist nicht mehr vorhanden.');node=node.children[0];world=multiplyCadMatrices(world,node.transform);}
+  for(const id of path){const child=node.children?.find(child=>child.id===id);if(!child)fail('Die gewählte Bohrung ist nicht mehr vorhanden.');node=child;world=multiplyCadMatrices(world,node.transform);}
   if(!node.drill||node.children?.length!==1||node.suppressed)fail('Eine aktive mitwachsende Bohrung wählen.');
-  const drill=structuredClone(node.drill),source=node.children[0];
-  const base=drill.version===3?findAssociativeStepDrillSource(source):findAssociativeDrillBox(source,drill.version);
+  let drill=structuredClone(node.drill);const source=node.children[0],replaced=replacement?.drills.some(entry=>entry.id===node.id);
+  let base;if(replaced){let stock=source,matrix=stock.transform;while(stock?.source==='group'){const child=stock.drill&&stock.children?.length===1?stock.children[0]:cadDrillStockSourceChild(stock,replacement.version);if(!child)break;stock=child;matrix=multiplyCadMatrices(matrix,stock.transform);}base={node:stock,matrix};const common={};for(const field of ['kind','diameter','depth','headDiameter','headDepth','angle','gap','termination','pattern'])if(drill[field]!==undefined)common[field]=drill[field];drill={...common,version:replacement.version,sourceId:source.id,boxId:stock.id};}
+  else base=drill.version===3?findAssociativeStepDrillSource(source):findAssociativeDrillBox(source,drill.version);
   if(!base||base.node.id!==drill.boxId||source.id!==drill.sourceId)fail('Die erhaltene Originalquelle fehlt. Ein Quellenersatz wird nicht automatisch zugeordnet.');
   const worldBase=multiplyCadMatrices(world,base.matrix),inverse=inverseCadMatrix(worldBase);
   const picked=value=>{

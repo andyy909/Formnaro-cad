@@ -1,5 +1,7 @@
 import {cadPoint} from './cad-affine.js';
-import {cadAffineVolume,validateCadSolid} from './cad-native-kernel.js';
+import {cadAffineVolume,validateCadSolid,writeCadBrep} from './cad-native-kernel.js';
+import {resolveCadSketch} from './cad-sketch.js';
+import {buildCadRecipe} from './cad-recipes.js';
 
 // A general OCCT transform turns even primitive stock into trimmed B-splines.
 // Cutting those faces can produce sliver edges that fail STEP reader Boolean
@@ -9,8 +11,31 @@ export function affineCadDrillStock(oc,source,bounds){
  const recipe=source.recipe,params=recipe?.params??{},matrix=source.transform;
  const box=recipe?.type==='box',cylinder=recipe?.type==='cylinder'&&recipe.size[0]===recipe.size[1];
  if(source.source!=='native'||!box&&!cylinder||params.edgeSize&&params.edgeStyle!=='none')return null;
+ return affinePrism(oc,matrix,bounds,box);
+}
+
+// Circle profiles need the same exact working extrusion when an explicit
+// contour size binding stretches their placement. Keep the native profile,
+// source BRep and target identity intact; arbitrary profiles still use OCCT.
+export function affineCadSketchCircle(oc,source,bounds,matrix=source.transform){
+ if(source.source!=='native'||source.recipe?.type!=='sketch'||source.recipe.sketch.version!==2)return null;
+ const resolved=resolveCadSketch(source.recipe.sketch),outer=resolved.native?.outer;
+ const circle=resolved.kind==='profile'&&!resolved.native.holes.length&&outer.length===1&&outer[0].kind==='ellipse'&&outer[0].rx===outer[0].ry&&Math.abs((outer[0].endAngle??2*Math.PI)-(outer[0].startAngle??0)-2*Math.PI)<1e-12;
+ if(!circle||similarity(matrix))return null;
+ // Export may receive stored native data without a fresh service rebuild.
+ // Recipe metadata alone must never replace a different retained BRep.
+ const canonical=buildCadRecipe(oc,source.recipe);
+ try{if(writeCadBrep(oc,canonical)!==source.brep.data)return null;}finally{canonical.delete();}
+ return affinePrism(oc,matrix,bounds,false);
+}
+
+function similarity(matrix){
  const columns=[0,4,8].map(i=>matrix.slice(i,i+3)),dot=(a,b)=>a.reduce((sum,v,i)=>sum+v*b[i],0),lengths=columns.map(c=>dot(c,c)),scale=Math.max(...lengths);
- if(lengths.every(v=>Math.abs(v-lengths[0])<=scale*1e-12)&&[[0,1],[0,2],[1,2]].every(([i,j])=>Math.abs(dot(columns[i],columns[j]))<=scale*1e-12))return null;
+ return lengths.every(v=>Math.abs(v-lengths[0])<=scale*1e-12)&&[[0,1],[0,2],[1,2]].every(([i,j])=>Math.abs(dot(columns[i],columns[j]))<=scale*1e-12);
+}
+function affinePrism(oc,matrix,bounds,box){
+ if(similarity(matrix))return null;
+ const columns=[0,4,8].map(i=>matrix.slice(i,i+3)),dot=(a,b)=>a.reduce((sum,v,i)=>sum+v*b[i],0);
  const owned=[],keep=value=>(owned.push(value),value);
  let solid;
  try{

@@ -5,6 +5,8 @@ import {validateFreeCADSource,freeCADSourceDigest} from './cad-freecad-source.js
 import {cadSelectionContext as resolveRerunContext} from './cad-interface-state.js';
 import {resolveFreeCADDocumentTarget} from './cad-freecad-target.js';
 import {planCadAIFeatureDependencies} from './cad-ai-feature-dependencies.js';
+import {prepareFreeCADInputBindings} from './cad-freecad-input-rebind-data.js';
+import {assertFreeCADInputReadiness} from './cad-freecad-input-readiness.js';
 
 const canonical=v=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
 export const sameFreeCADData=(a,b)=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
@@ -35,32 +37,26 @@ export function assertFreeCADReplacementProgram(old,source){
 }
 
 export function prepareFreeCADRerun(project,request){
- if(!plain(request)||Object.keys(request).some(k=>!['target','sourceDigest','parameters','inputs'].includes(k)))fail('Neulauf benötigt Ziel, Quellrevision, Parameter und ausdrückliche aktuelle Eingaben.');
+ if(!plain(request)||Object.keys(request).some(k=>!['target','sourceDigest','parameters','inputs','inputBindings'].includes(k)))fail('Neulauf benötigt Ziel, Quellrevision, Parameter und ausdrückliche aktuelle Eingaben.');
  const context=resolveFreeCADDocumentTarget(project,request.target,{write:true}),saved=validateFreeCADSource(context.node.metadata.freecadSource);
  if(request.sourceDigest!==freeCADSourceDigest(saved.documentBase64))fail('Die FreeCAD-Quelle wurde geändert. Neu lesen.','STALE_REVISION');
  const mode=saved.script?'script':saved.plan?'plan':null;if(!mode)fail('Dieses native Dokument enthält kein gespeichertes Skript oder CAD-Programm.');
  const original=saved[mode],parameters=validateFreeCADRerunParameters(request.parameters,original.parameters??{});
+ const staged=prepareFreeCADInputBindings(project,{target:context.target,inputs:request.inputs,inputBindings:request.inputBindings});project=staged.project;
  const ownBindings=(project.projectParameters?.bindings??[]).filter(binding=>freeCADTargetKey(binding.target)===freeCADTargetKey(context.target)&&isFreeCADParameterField(binding.field));
- const controls=ownBindings.filter(binding=>!sameFreeCADData(parameters[freeCADParameterKey(binding.field)],original.parameters?.[freeCADParameterKey(binding.field)])).map(binding=>({target:context.target,field:binding.field,value:parameters[freeCADParameterKey(binding.field)]})),parameterPlan=planCadAIFeatureDependencies(project,controls,{targets:[context.target]});
+ const controls=ownBindings.filter(binding=>!sameFreeCADData(parameters[freeCADParameterKey(binding.field)],original.parameters?.[freeCADParameterKey(binding.field)])).map(binding=>({target:context.target,field:binding.field,value:parameters[freeCADParameterKey(binding.field)]})),parameterPlan=planCadAIFeatureDependencies(project,controls,{targets:staged.targets});
  if(ownBindings.length){const evaluated=evaluateCadProjectParameters(parameterPlan.data);for(const binding of evaluated.bindings.filter(binding=>ownBindings.some(old=>old.id===binding.id)))parameters[freeCADParameterKey(binding.field)]=binding.value;}
- if(!Array.isArray(request.inputs)||request.inputs.length>8)fail('Bis zu acht aktuelle Quellen ausdrücklich wählen; ohne Quellen eine leere Liste verwenden.');
- const affected=new Set(planCadAIFeatureDependencies(project,[],{targets:[context.target]}).targets.map(t=>t.rootId)),seen=new Set(),inputs=[],inputReview=[];
- for(const input of request.inputs){
-  if(!plain(input)||Object.keys(input).some(k=>!['name','target'].includes(k))||typeof input.name!=='string'||!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(input.name)||seen.has(input.name))fail('Eindeutige einfache Quellnamen und vorhandene Teile wählen.');
-  const selectedTarget=typeof input.target==='string'?{rootId:input.target,path:[]}:plain(input.target)&&Object.keys(input.target).every(k=>['rootId','path'].includes(k))&&typeof input.target.rootId==='string'&&Array.isArray(input.target.path)&&input.target.path.every(id=>typeof id==='string')?input.target:null;
-  if(!selectedTarget||!ownBindings.length&&selectedTarget.path.length)fail('Eine vorhandene CAD- oder Netzquelle wählen.');
-  const selected=resolveRerunContext(project,selectedTarget),node=selected.node;if(!['cad','mesh','referenceMesh'].includes(node.kind))fail('Eine vorhandene CAD- oder Netzquelle wählen.');
-  const containsResult=selectedTarget.rootId===context.target.rootId&&selectedTarget.path.length<=context.target.path.length&&selectedTarget.path.every((id,index)=>id===context.target.path[index]);
-  if(containsResult||!ownBindings.length&&affected.has(selectedTarget.rootId))fail('Das Ergebnis und seine Folgegeometrie dürfen keine Eingabe des eigenen Neulaufs sein.','FREECAD_RERUN_CYCLE');
-  seen.add(input.name);inputs.push({name:input.name,target:selectedTarget.rootId});inputReview.push({name:input.name,target:structuredClone(selectedTarget),label:node.name});
- }
+ const inputReview=staged.inputReview,inputs=inputReview.map(input=>({name:input.name,target:input.target.rootId}));
+ if(!ownBindings.length&&inputReview.some(input=>parameterPlan.targets.some(target=>target.rootId===input.target.rootId)))fail('Das Ergebnis und seine Folgegeometrie dürfen keine Eingabe des eigenen Neulaufs sein.','FREECAD_RERUN_CYCLE');
  let coordinated;
  if(ownBindings.length){
   const data=structuredClone(parameterPlan.data),config=data.freecad.find(run=>freeCADTargetKey(run.target)===freeCADTargetKey(context.target));if(!config)fail('Die bestätigte Eingabezuordnung des gebundenen Programms fehlt.');config.inputs=inputReview.map(input=>({name:input.name,target:input.target}));
-  const validated=validateCadProjectParameters(data),planned=planCadProjectParameters(project,validated),graph=buildCadDependencyGraph(project,{projectParameters:planned.data}),seeds=[cadDependencyNodeId('freecadRun',context.target),...parameterPlan.changedBindings.map(binding=>cadDependencyNodeId('binding',binding.id))],affected=cadDependencyAffected(graph,seeds);
+  const validated=validateCadProjectParameters(data),planned=planCadProjectParameters(project,validated),graph=buildCadDependencyGraph(project,{projectParameters:planned.data}),seeds=[...staged.targets.map(target=>cadDependencyNodeId('freecadRun',target)),...parameterPlan.changedBindings.map(binding=>cadDependencyNodeId('binding',binding.id))],affected=cadDependencyAffected(graph,seeds);
+  const freecadTargets=affected.filter(node=>node.kind==='freecadRun').map(node=>node.target),runKeys=new Set(freecadTargets.map(freeCADTargetKey));assertFreeCADInputReadiness(project,{data:planned.data,graph,freecadTargets,bindingIds:parameterPlan.changedBindings.map(binding=>binding.id),inputTargets:planned.data.freecad.filter(run=>runKeys.has(freeCADTargetKey(run.target))).flatMap(run=>run.inputs.map(input=>input.target))});
   const targets=[...new Map(affected.filter(node=>node.target&&node.kind==='geometry').map(node=>[freeCADTargetKey(node.target),node.target])).values()];for(const target of targets){const selected=resolveRerunContext(project,target);if(selected.locked||selected.hidden||selected.sourceGeometryReadonly)fail('Eine notwendige abhängige Quelle ist gesperrt, ausgeblendet oder geometrisch geschützt.','AI_FEATURE_DEPENDENCY_LOCKED');}
   coordinated={data:planned.data,bindingIds:parameterPlan.changedBindings.map(binding=>binding.id),freecadTargets:affected.filter(node=>node.kind==='freecadRun').map(node=>node.target),targets,drawingViews:affected.filter(node=>node.kind==='drawingView').map(node=>({sheetId:node.sheetId,viewId:node.viewId})),review:parameterPlan.review};
  }
+ else assertFreeCADInputReadiness(project,{data:parameterPlan.data,graph:buildCadDependencyGraph(project,{projectParameters:parameterPlan.data}),inputTargets:inputReview.map(input=>input.target)});
  const parameterChanges=Object.keys(parameters).filter(k=>!sameFreeCADData(parameters[k],original.parameters[k])).map(name=>({name,before:structuredClone(original.parameters[name]),value:structuredClone(parameters[name])}));
- return {context,saved,mode,parameters,coordinated,operation:{kind:'build',[mode]:{...original,parameters},inputs},parameterChanges,inputReview,replacesNative:saved.version===2&&saved.mode==='native'};
+ return {context,saved,mode,parameters,coordinated,rerunTargets:staged.targets,inputRebindings:staged.inputRebindings,operation:{kind:'build',[mode]:{...original,parameters},inputs},parameterChanges,inputReview,replacesNative:saved.version===2&&saved.mode==='native'};
 }

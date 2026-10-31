@@ -6,17 +6,17 @@
 
 **CAD und Netzbearbeitung für Modellbau und 3D-Druck.** Konstruiere Bauteile, bearbeite 3D-Modelle und erstelle technische Zeichnungen. Formnaro läuft lokal unter Windows; die normale Modellierung funktioniert offline.
 
-**[Für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.119.0-r3/Formnaro-v0.119.0-r3-Windows.zip)** · [Anleitungen](#anleitungen) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
+**[Für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/Formnaro-v0.120.0-r4-Windows.zip)** · [Anleitungen](#anleitungen) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
 
-Windows 64 Bit · portabel · Download **0.119.0-r3** · ca. **1,9 GB**
+Windows 64 Bit · portabel · Download **0.120.0-r4** · gezielt geprüfte Entwicklungsausgabe · ca. **1,9 GB**
 
 | **Easy Tinker** · einfacher Winkelhalter | **Normal** · Lagerhalter mit Langlöchern |
 | :---: | :---: |
 | [![Easy Tinker mit Formenpalette und einfachem Winkelhalter](docs/bilder/formnaro-easy-winkelhalter.png)](docs/bilder/formnaro-easy-winkelhalter.png) | [![Normal mit Werkzeugleisten und Lagerhalter](docs/bilder/formnaro-normal-lagerhalter.png)](docs/bilder/formnaro-normal-lagerhalter.png) |
-| **Solid** · Schraubstock als Baugruppe | **Fusion** · zweistufiges Schräggetriebe |
-| [![Solid mit Baugruppenwerkzeugen, Modellbaum und Schraubstock](docs/bilder/formnaro-solid-schraubstock.png)](docs/bilder/formnaro-solid-schraubstock.png) | [![Fusion mit Konstruktionsschritten und Schräggetriebe mit vier Zahnrädern](docs/bilder/formnaro-fusion-getriebe.png)](docs/bilder/formnaro-fusion-getriebe.png) |
+| **Solid** · ATLAS-5-Portalfräse | **Fusion** · zweistufiges Schräggetriebe |
+| [![Solid mit ATLAS-5-Portalfräse, fünf Achsen und gekoppeltem A-Antrieb](docs/bilder/formnaro-solid-atlas5.png)](docs/bilder/formnaro-solid-atlas5.png) | [![Fusion mit Konstruktionsschritten und Schräggetriebe mit vier Zahnrädern](docs/bilder/formnaro-fusion-getriebe.png)](docs/bilder/formnaro-fusion-getriebe.png) |
 
-*Echte Programmaufnahmen: Easy Tinker, Normal und Solid aus 0.117.0-r8; Fusion aus 0.119.0-r2. Zum Vergrößern auf ein Bild klicken.*
+*Echte Programmaufnahmen: Easy Tinker und Normal aus 0.117.0-r8; Solid mit ATLAS-5 aus 0.120.0-r4; Fusion aus 0.119.0-r2. Zum Vergrößern auf ein Bild klicken.*
 
 ## Schnell starten
 
@@ -38,6 +38,12 @@ STEP, STL, OBJ, 3MF und GLB/glTF ermöglichen den Modellaustausch. Vier Bedienmo
 
 **Optionale KI-Unterstützung** hilft bei Modellieraufträgen, Referenzfotos und Bedienfragen. Cloud-Anfragen benötigen einen Anbieterzugang und Internet; je nach Anbieter können Kosten entstehen. Python- und FreeCAD-Werkzeuge rechnen lokal.
 
+### ATLAS-5 in Bewegung
+
+![ATLAS-5: X-, Y- und Z-Verfahrt, A-Schwenkwiege mit gekoppeltem Ritzel sowie C-Rundtisch](docs/bilder/formnaro-atlas5-bewegung.gif)
+
+**144 Bauteile, 78 Gelenke und fünf Achsen.** Das kurze GIF zeigt die tatsächlichen Gelenkbewegungen in Formnaro 0.120.0-r4. Wiege und Ritzel sind mit **48:20** gekoppelt und werden gemeinsam vom Y-Träger mitgenommen. [Bearbeitbares Beispiel herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad). Die Aufnahme entstand in einer getrennten Modellkopie ohne KI-Anfrage; sie demonstriert Kinematik, keine Kontaktkräfte oder Fertigungsfreigabe.
+
 ### Getriebe in Bewegung
 
 ![Vier Schrägzahnräder mit automatisch gekoppelten Wellen und 6:1 Untersetzung](docs/bilder/formnaro-schraeggetriebe-6zu1.gif)
@@ -48,7 +54,7 @@ Zwei Stufen, vier Räder, **6:1 Untersetzung** – ein offenes Getriebekonzept e
 
 ![KI-Übungsmodus: Formnaro führt die Modellierschritte für eine Platte mit Bohrung im eigenen Übungsfenster vor](bilder/formnaro-uebungsmodus.gif)
 
-*Vorschau des Übungsmodus:* Das GIF zeigt die Wiedergabe eines zuvor von DeepSeek erzeugten Plans, ohne Live-KI-Anfrage während der Aufnahme. Der Übungsmodus ist **nicht im Windows-Download 0.119.0-r3 enthalten**.
+Das GIF zeigt die Wiedergabe eines zuvor von DeepSeek erzeugten Plans, ohne Live-KI-Anfrage während der Aufnahme. Der begrenzte Übungsmodus ist im neuen Entwicklungsdownload enthalten und arbeitet in einem getrennten Übungsfenster.
 
 ## Anleitungen
 
@@ -63,9 +69,9 @@ Zwei Stufen, vier Räder, **6:1 Untersetzung** – ein offenes Getriebekonzept e
 <!-- formnaro-development-status:start -->
 ## Entwicklungsstand
 
-Der Quellcode **0.120.0** enthält neuere Funktionen als der Windows-Download **0.119.0-r3**, darunter mitwachsende Bohrungen, verknüpfte Muster und direkte Skizzenmaße. Die vollständige gemeinsame GUI-, Windows-Paket-, Dauerlauf- und Wiederherstellungsabnahme dieses Entwicklungsstands steht noch aus.
+Windows-Download und Quellstand **0.120.0-r4** enthalten mitwachsende Bohrungen, verknüpfte Muster, direkte Skizzenmaße sowie Zahnradkopplungen auf gemeinsam bewegten Trägern. **18 gezielte Quelltests, 22 Prüfgruppen im isolierten Quelllauf und 33 Prüfgruppen an der tatsächlichen Windows-EXE sind bestanden.** Der Download ist eine Entwicklungsausgabe; eine neue vollständige Gesamt-, Dauerlauf- und Wiederherstellungsabnahme steht aus.
 
-[Prüfstand und Grenzen](docs/PRUEFSTAND-0.120.0.md) · [Ausbau und offene Punkte](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md) · [Prüfbericht des Windows-Downloads](https://github.com/andyy909/Formnaro-cad/releases/download/v0.119.0-r3/Pruefbericht.txt)
+[Prüfstand dieser Ausgabe](docs/VEROEFFENTLICHUNG-0.120.0-r4.md) · [Ausbau und offene Punkte](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md) · [Prüfbericht des Downloads](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/Pruefbericht.txt)
 <!-- formnaro-development-status:end -->
 
 <details>
@@ -90,3 +96,4 @@ Für FreeCAD-Funktionen im Entwicklungscheckout: `npm run setup:cad-runtime`. We
 Fehler oder Ideen? Erstelle ein [Issue](https://github.com/andyy909/Formnaro-cad/issues). Bei Fehlern helfen die verwendete Version und nachvollziehbare Schritte.
 
 Der eigene Anwendungscode steht unter **[MIT](LICENSE.txt)**. Fremdkomponenten behalten ihre [eigenen Lizenzen](THIRD-PARTY-LICENSES.txt); der kombinierte CAD-Kern ist nicht insgesamt MIT-lizenziert. [Lizenzdetails](docs/LIZENZ-MIT.md) · [CAD-Quellen und Build](licenses/CAD-Quellen-und-Build.txt).
+

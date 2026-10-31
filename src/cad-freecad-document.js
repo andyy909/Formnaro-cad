@@ -26,6 +26,9 @@ export async function runFreeCADDocument(source,options={}){const saved=validate
 export const readFreeCADDocument=(source,options)=>runFreeCADDocument(source,{...options,action:'inspect',edits:undefined});
 export async function editFreeCADDocument(source,options){
  const saved=validateFreeCADSource(source),result=await runFreeCADDocument(saved,{...options,action:'edit'}),changes=[...(result.changes??[]).map(c=>({...c,derived:false})),...(result.dependentChanges??[]).map(({expression,...c})=>({...c,derived:true,...(typeof expression==='string'?{expression}:{})}))];
- const updated=validateFreeCADSource({...saved,version:2,documentBase64:result.documentBase64,documentDigest:await freeCADDocumentDigest(result.documentBase64),resultObject:result.tree.resultObject,mode:'native',engineVersion:result.engineVersion,changes});
+ // History values are bounded display text; the FCStd archive owns complete
+ // native object/subelement links, including long collected link lists.
+ const history=changes.map(change=>({...change,...Object.fromEntries(['before','value'].map(key=>[key,change[key]===null||typeof change[key]==='object'?JSON.stringify(change[key]).slice(0,512):change[key]]))}));
+ const updated=validateFreeCADSource({...saved,version:2,documentBase64:result.documentBase64,documentDigest:await freeCADDocumentDigest(result.documentBase64),resultObject:result.tree.resultObject,mode:'native',engineVersion:result.engineVersion,changes:history});
  return {source:updated,bytes:Uint8Array.from(atob(result.stepBase64),c=>c.charCodeAt(0)),report:result};
 }

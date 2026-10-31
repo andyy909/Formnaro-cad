@@ -43,7 +43,8 @@ body.solid-workbench main>.left-panel,body.solid-workbench main>.right-panel{dis
 .solid-manager-content[hidden]{display:none!important}
 .solid-manager-content h2{font-size:13px;margin:3px 0 13px}
 .solid-manager .sidebar-object-section{height:auto!important;min-height:180px;overflow:visible;display:flex;flex-direction:column;flex:1}
-.solid-manager #object-list{overflow:visible;max-height:none;flex:none;min-height:80px}
+/* The manager scrolls the whole section; override the shared 95px list flex basis. */
+.solid-manager .sidebar-object-section #object-list{overflow:visible;max-height:none;flex:none;min-height:80px}
 .solid-manager .organization-tools{display:none}
 .solid-manager .sidebar-object-section .sidebar-bottom{flex-wrap:wrap}
 .solid-manager .shape-library-section{height:auto!important;overflow:visible}

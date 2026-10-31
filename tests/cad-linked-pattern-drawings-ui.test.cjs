@@ -1,0 +1,5 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
+test('pattern editor updates copied-body drawings with one Apply and one Undo',()=>{
+ const root=path.resolve(__dirname,'..'),parent=path.join(root,'work','pattern-drawings-ui');fs.mkdirSync(parent,{recursive:true});const directory=fs.mkdtempSync(path.join(parent,'run-')),report=path.join(directory,'result.json'),child=spawnSync(require('electron'),[path.join(__dirname,'fixtures','cad-linked-pattern-drawings-ui.cjs'),'--verify-maintenance='+report],{cwd:root,encoding:'utf8',windowsHide:true,timeout:180000});assert.equal(child.status,0,child.error?.message??(fs.existsSync(report)?fs.readFileSync(report,'utf8'):child.stderr));
+ const result=JSON.parse(fs.readFileSync(report,'utf8'));assert(result.ok&&result.isolatedProfile);assert.deepEqual(result.errors,[]);assert.deepEqual(result.external,[]);assert.equal(result.checks.length,9);for(const file of ['choices.png','preview.png','applied.png','model.ocad','model.step','drawing.svg'])assert(fs.statSync(path.join(directory,file)).size>500);
+});

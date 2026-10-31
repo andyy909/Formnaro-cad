@@ -31,12 +31,20 @@ export function validateAssociativeBoxDrill(value){
 // It deliberately refuses unknown source types rather than guessing a face.
 export function findAssociativeDrillBox(source,version=1){
  let node=source,matrix=source?.transform;
- while(node?.source==='group'&&node.drill&&node.drill.version===version&&node.children?.length===1&&!node.suppressed){node=node.children[0];matrix=multiplyCadMatrices(matrix,node.transform);}
+ while(node?.source==='group'&&!node.suppressed){const child=cadDrillStockSourceChild(node,version);if(!child)break;node=child;matrix=multiplyCadMatrices(matrix,node.transform);}
  if(node?.source!=='native'||!node.solid||node.suppressed)return null;
  if(version===1&&node.recipe?.type!=='box')return null;
  if(version===2){const recipe=node.recipe,p=recipe?.params??{},size=recipe?.size;if(recipe?.type!=='cylinder'||!Array.isArray(size)||size.length!==3||size[0]!==size[1]||p.edgeSize&&p.edgeStyle!=='none')return null;}
  if(![1,2].includes(version))return null;
  return {node,matrix};
+}
+/** Ordinary stock wrappers retain inactive original tool definitions after an
+ * explicit conversion. No active cut or feature wrapper may be skipped. */
+export function cadDrillStockSourceChild(node,version){
+ if(node?.source!=='group'||node.suppressed)return null;
+ if(node.drill)return node.drill.version===version&&node.children?.length===1?node.children[0]:null;
+ if(node.finish||node.partition||node.extraction||node.modeling||!['union','intersection'].includes(node.operation))return null;
+ const active=(node.children??[]).filter(child=>!child.suppressed);return active.length===1&&active[0].solid?active[0]:null;
 }
 export function buildAssociativeBoxDrill(oc,source,drill){
  const box=findAssociativeDrillBox(source,drill?.version??1);

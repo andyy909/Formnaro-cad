@@ -55,6 +55,24 @@ export function cadJointProblems(project,data=project.joints){
  for(const g of valid.gears??[])try{if(gearAxes(project,valid,valid.joints.find(j=>j.id===g.jointA),valid.joints.find(j=>j.id===g.jointB))!==g.axisSign)throw Object.assign(Error('Zahnräder: Achsenrichtung geändert. Kopplung neu anlegen.'),{code:'GEAR_AXIS'});}catch(error){problems.push({code:error.code,message:error.message,jointId:g.id});}
  return problems;
 }
+/** Reassign explicitly named datums/parts together, preserving every pose,
+ * joint value, limit and coupling. No motion is applied to model geometry. */
+export function rebindCadJointReferences(project,bindings){
+ const data=validateCadJoints(project.joints??createCadJoints()),previous=cadJointProblems(project,data),selected=new Set(),replacedBases=new Set(),selectedChildren=new Set();
+ if(!Array.isArray(bindings)||bindings.length>256)fail('Höchstens 256 Gelenke ausdrücklich neu zuordnen.');
+ for(const binding of bindings){
+  object(binding,['jointId','parentId','childId','origin','axis']);const joint=data.joints.find(j=>j.id===binding.jointId);if(!joint||selected.has(joint.id))fail('Eine vorhandene Verbindung höchstens einmal wählen.');selected.add(joint.id);
+  if(project.nodes.some(n=>n.id===joint.childId))editable(project,joint.childId);
+  for(const field of ['parentId','childId'])if(binding[field]!==undefined){id(binding[field]);if(binding[field]!==joint[field]&&data.bases.includes(joint[field]))replacedBases.add(joint[field]);joint[field]=binding[field];}
+  const parent=materialNode(project,joint.parentId),child=editable(project,joint.childId),world=cadJointWorldFrame(binding.origin,binding.axis);selectedChildren.add(child.id);
+  joint.parentFrame=multiplyCadMatrices(inverseCadMatrix(parent.transform),world);joint.childFrame=multiplyCadMatrices(multiplyCadMatrices(inverseCadMatrix(child.transform),world),cadJointMotionMatrix(joint.kind,joint.value));
+ }
+ const children=new Set(data.joints.map(j=>j.childId)),used=new Set(data.joints.flatMap(j=>[j.parentId,j.childId]));data.bases=data.bases.filter(id=>!(replacedBases.has(id)&&!used.has(id))&&!(selectedChildren.has(id)&&children.has(id)));
+ for(const joint of data.joints)if(!children.has(joint.parentId)&&!data.bases.includes(joint.parentId))data.bases.push(joint.parentId);
+ const checked=validateCadJoints(data),roots=new Set(checked.joints.filter(j=>selected.has(j.id)).flatMap(j=>[j.parentId,j.childId])),gears=new Set((checked.gears??[]).filter(g=>selected.has(g.jointA)||selected.has(g.jointB)).map(g=>g.id)),key=p=>JSON.stringify([p.code,p.jointId,p.rootId]);
+ const problems=cadJointProblems({...project,joints:checked},checked).filter(p=>selected.has(p.jointId)||gears.has(p.jointId)||roots.has(p.rootId)||!previous.some(old=>key(old)===key(p)));if(problems.length)fail(problems[0].message,problems[0].code,{problems});
+ return checked;
+}
 /** Keeps references to confirmed nodes, not copies of BReps/mesh arrays. Every
  * preview produces only bounded joint values and affected display matrices. */
 export function compileCadJointMotion(project,data=project.joints){

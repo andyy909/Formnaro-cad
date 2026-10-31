@@ -52,19 +52,30 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
       if(['exportModel','exportMeshes','exportStep'].includes(request.job))await verifyStepDrillExports(service,project,{ids:request.options?.ids});
       if(request.job==='query'&&['svgProjection','drawingProjection'].includes(request.query?.kind))await verifyStepDrillExports(service,project,{ids:request.query.options?.ids});
       switch(request.job){
+        case 'patternConsumerChoices':{
+          const operation=request.operation,options={oc:kernel,service,collectConsumerChoices:true,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})};
+          if(operation?.kind==='projectParameters'){
+            if(Object.keys(operation).some(key=>!['kind','data','variantId','consumerBindings'].includes(key))||!project.linkedPatterns?.patterns.length||!planCadParameterPatterns(project,operation.data,{variantId:operation.variantId}).requiresPatternUpdate)throw Error('Eine betroffene Muster-/Parameteränderung für die Bezugswahl wählen.');
+            result=await updateCadParameterPatterns(project,operation,options);
+          }else if(operation?.kind==='linkedPattern'||operation?.kind==='tool'&&operation.name==='previewRebindDrills')result=await router.run(project,operation,{baseline,progress,...options});
+          else throw Error('Unbekannter Auftrag zur gemeinsamen Bezugswahl.');
+          if(!result.consumerChoices)throw Error('Der native Auftrag hat keine gesonderte Bezugswahl geliefert.');
+          break;
+        }
         case 'command':
           if(request.operation?.kind==='freecadBoundRerun')result=await rerunBoundFreeCADNative(project,request.operation,{oc:kernel,service,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
           else if(request.operation?.kind==='freecadReplacement')result=await replaceFreeCADDocumentNative(project,request.operation,{oc:kernel,service,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
           else if(request.operation?.kind==='featureEdits')result=await editCadAIFeaturesNative(project,request.operation,{oc:kernel,service,router,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
-          else if(request.operation?.kind==='associativeUpdate')result=await updateCadAssociative(project,request.operation,{oc:kernel,service,editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
+          else if(request.operation?.kind==='associativeUpdate')result=await updateCadAssociative(project,request.operation,{oc:kernel,service,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
           else if(request.operation?.kind==='projectParameters'){
-            if(Object.keys(request.operation).some(key=>!['kind','data','variantId'].includes(key)))throw Error('Unbekannte Felder der Projektmaß-Aktualisierung.');
-            if(project.linkedPatterns?.patterns.length&&planCadParameterPatterns(project,request.operation.data,{variantId:request.operation.variantId}).patterns.length)result=await updateCadParameterPatterns(project,request.operation,{oc:kernel,service,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
+            if(Object.keys(request.operation).some(key=>!['kind','data','variantId','consumerBindings'].includes(key)))throw Error('Unbekannte Felder der Projektmaß-Aktualisierung.');
+            if(project.linkedPatterns?.patterns.length&&planCadParameterPatterns(project,request.operation.data,{variantId:request.operation.variantId}).requiresPatternUpdate)result=await updateCadParameterPatterns(project,request.operation,{oc:kernel,service,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
+            else if(request.operation.consumerBindings!==undefined)throw Error('Gemeinsame Kopienbezüge benötigen eine betroffene Musteränderung.');
             else if(project.contourLinks?.links.length||request.operation.data?.version===2)result=await updateCadAssociative(project,{...request.operation,kind:'associativeUpdate'},{oc:kernel,service,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})});
             else result={...await updateCadProjectParameters(project,request.operation.data,{service,editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts}),variantId:request.operation.variantId}),changes:[{op:'projectParameters',label:'Projektmaße aktualisieren'}],aliases:{},warnings:[]};
-          }else result=await router.run(project,request.operation,{baseline,progress});
+          }else result=await router.run(project,request.operation,{baseline,progress,freecadRun:value=>hostRequest(message,value)});
           if(request.display)result.display=service.display(result.project,request.quality);break;
-        case 'rebuild':result={project:await service.rebuild(project,{progress,baseline})};if(request.display)result.display=service.display(result.project,request.quality);break;
+        case 'rebuild':result={project:await service.rebuild(project,{progress,baseline,restoreUnresolvedSources:request.restoreUnresolvedSources===true})};if(request.display)result.display=service.display(result.project,request.quality);break;
         case 'create':{
           project.nodes.push(service.nativeNode(request.recipe,request.options));result={project:await service.rebuild(project,{progress,baseline})};if(request.display)result.display=service.display(result.project,request.quality);break;
         }

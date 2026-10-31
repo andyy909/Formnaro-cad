@@ -22,6 +22,8 @@ import {extractCadNative} from './cad-extraction-native.js';
 import {cadGeometryDigest,cadSourceGeometryDigest} from './cad-geometry-digest.js';
 import {cadModelingNative,cadProfileModelingNative} from './cad-modeling-native.js';
 import {buildAssociativeBoxDrill} from './cad-associative-drill.js';
+import {affineCadSketchCircle} from './cad-drill-stock-native.js';
+import {cadDrillSourceProblems,assertCadDrillSourcesReady} from './cad-drill-source-data.js';
 
 // This independent service is not enabled in the v4 application. Unsupported
 // construction or transformation fails instead of entering a mesh code path.
@@ -36,6 +38,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     if([...min,...max].some(v=>Math.abs(v)>100000)||min.some((v,k)=>max[k]-v>10000))throw Error('Netzreferenz überschreitet den darstellbaren Arbeitsbereich.');
   }
   function bodyRecord(shape){const checked=validateCadSolid(oc,shape);return {shape,brep:writeCadBrep(oc,shape),stats:{bounds:{min:checked.bounds.min,max:checked.bounds.max},volume:checked.volume,solids:checked.solids}};}
+  function placed(node){const local=readCadBrep(oc,node.brep.data);try{return affineCadSketchCircle(oc,node,cadBounds(oc,local))??transformCad(oc,local,node.transform);}finally{local.delete();}}
   function snapshotNode(node,record){return {...node,brep:{format:'OpenCascade-BRep',data:record.brep,triangulation:false},stats:structuredClone(record.stats)};}
   // Induced matrix norm sqrt(||A||1 ||A||infinity) bounds the amplification
   // of any local curve error, including ancestor shear and reflection.
@@ -79,7 +82,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
         if(!solids.length)throw Error('CAD-Gruppe benötigt mindestens eine aktive Körperquelle.');
         const operands=[];
         try{
-          for(const child of solids){const local=readCadBrep(oc,child.brep.data);try{operands.push(transformCad(oc,local,child.transform));}finally{local.delete();}}
+          for(const child of solids)operands.push(placed(child));
           if(operands.length===1)shape=operands.shift();
           else if(node.operation==='intersection'){
             shape=operands.shift();for(const operand of operands){const combined=cadBoolean(oc,'intersection',shape,operand);shape.delete();shape=combined;}
@@ -87,7 +90,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
         }finally{operands.forEach(operand=>operand.delete());}
         const cutters=[];
         try{
-          for(const hole of holes){const local=readCadBrep(oc,hole.brep.data);try{cutters.push(transformCad(oc,local,hole.transform));}finally{local.delete();}}
+          for(const hole of holes)cutters.push(placed(hole));
           if(cutters.length){let cut;
             try{cut=cadCutMany(oc,shape,cutters);}catch(error){if(cutters.length<2)throw error;
               // Preserve the proven sequential path for native batch failures.
@@ -177,13 +180,16 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     bounds.min=bounds.min.map((v,k)=>v+world[12+k]);bounds.max=bounds.max.map((v,k)=>v+world[12+k]);bounds.center=bounds.center.map((v,k)=>v+world[12+k]);
     return result;
   }
-  async function rebuild(project,{signal,progress,baseline,catalogOnly=false}={}){
+  async function rebuild(project,{signal,progress,baseline,catalogOnly=false,restoreUnresolvedSources=false}={}){
     alive(signal);const draft=cadProjectSnapshot(project),total=draft.nodes.length;let completed=0;
     function visit(node,parent){
       alive(signal);if(node.kind!=='cad'){referenceBounds(node);return node;}
       const world=multiplyCadMatrices(parent,node.transform);
       if(node.extraction&&cadSourceGeometryDigest(node.children[0])!==node.extraction.sourceSignature){const error=Error('Die Originalgeometrie wurde geändert. Körper erneut herauslösen.');error.code='CAD_REEXTRACT_REQUIRED';throw error;}
       if(node.children)node.children=node.children.map(child=>visit(child,node.extraction?.constructionFrame??world));
+      if(restoreUnresolvedSources&&cadDrillSourceProblems({nodes:[node]},{includeHidden:true}).length){
+        const preserved=readCadBrep(oc,node.brep.data);try{const record=bodyRecord(preserved);record.brep=node.brep.data;return snapshotNode(node,record);}finally{preserved.delete();}
+      }
       const {entry,release}=cached(node,world,signal);
       try{return snapshotNode(node,entry);}finally{release();}
     }
@@ -282,13 +288,16 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     }
     return result;
   }
+  // Reference queries retain the original BRep domains even when an exact
+  // analytic working extrusion is used for CSG or production export.
   function worldShape(node){alive();if(node.kind!=='cad')throw Error('Netzreferenzen sind keine CAD-Produktionsteile.');const local=readCadBrep(oc,node.brep.data);try{return transformCad(oc,local,node.transform);}finally{local.delete();}}
   function productionNodes(project,{ids}={}){
     alive();const draft=cadProjectSnapshot(project);
     if(ids!==undefined&&(!Array.isArray(ids)||!ids.length||new Set(ids).size!==ids.length||ids.some(id=>!draft.nodes.some(n=>n.id===id))))throw Error('Ungültiger CAD-Exportumfang.');
     const layers=new Map(draft.layers.map(layer=>[layer.id,layer])),folders=new Map(draft.folders.map(folder=>[folder.id,folder]));
     function visible(node){if(node.hidden||layers.get(node.layerId)?.hidden)return false;let id=node.folderId;while(id){const folder=folders.get(id);if(folder.hidden)return false;id=folder.parentId;}return true;}
-    return draft.nodes.filter(node=>node.kind==='cad'&&node.solid&&!node.suppressed&&visible(node)&&(!ids||ids.includes(node.id)));
+    const nodes=draft.nodes.filter(node=>node.kind==='cad'&&node.solid&&!node.suppressed&&visible(node)&&(!ids||ids.includes(node.id)));
+    assertCadDrillSourcesReady(draft,{ids:nodes.map(node=>node.id)});return nodes;
   }
   function exportMesh(shape,quality){
     const key=JSON.stringify([writeCadBrep(oc,shape),quality]);let mesh=exportMeshCache.get(key);

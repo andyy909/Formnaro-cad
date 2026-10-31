@@ -43,7 +43,8 @@ body.fusion-workbench main>.left-panel,body.fusion-workbench main>.right-panel{d
 .fusion-manager-content[hidden]{display:none!important}
 .fusion-manager-content h2{font-size:13px;margin:3px 0 13px}
 .fusion-manager .sidebar-object-section{height:auto!important;min-height:180px;overflow:visible;display:flex;flex-direction:column;flex:1}
-.fusion-manager #object-list{overflow:visible;max-height:none;flex:none;min-height:80px}
+/* The manager scrolls the whole section; override the shared 95px list flex basis. */
+.fusion-manager .sidebar-object-section #object-list{overflow:visible;max-height:none;flex:none;min-height:80px}
 .fusion-manager .organization-tools{display:none}
 .fusion-manager .sidebar-object-section .sidebar-bottom{flex-wrap:wrap}
 .fusion-manager .shape-library-section{height:auto!important;overflow:visible}

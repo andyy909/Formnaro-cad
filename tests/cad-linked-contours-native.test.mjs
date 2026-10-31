@@ -94,10 +94,10 @@ test('drawing dimensions follow one exact primitive edge-role set and reject alt
  }finally{service.dispose();}
 });
 
-test('generic sketch commands and the parameter catalog protect driven profile coordinates while retaining free heights',async()=>{
+test('generic sketch commands protect driven profiles while explicit parameter bindings remain available',async()=>{
  const service=createCadService({oc,maxEntries:2}),router=createCadCommandRouter({oc,service});try{
   const a=service.nativeNode(cadRecipeForShape('box',{size:[20,12,6]}),{id:'A'}),initial=await service.rebuild(createCadProject({nodes:[a]})),ab=await linked(service,initial,target('A'),'AB','B',5),before=serializeCadProject(ab.project),sketch=structuredClone(ab.project.nodes.find(n=>n.id==='B').recipe.sketch);for(const e of sketch.elements)for(const key of ['start','end'])if(e[key])e[key][0]=String(Number(e[key][0])+1);await assert.rejects(router.run(ab.project,{kind:'batch',commands:[{op:'sketch',target:'B',sketch}]}),{code:'CONTOUR_TARGET_PROFILE_READONLY'});assert.equal(serializeCadProject(ab.project),before);
-  const {cadProjectParameterCatalog}=await import('../src/cad-project-parameters-catalog.js'),catalog=cadProjectParameterCatalog(ab.project,{targets:[target('B')]})[0];assert.ok(catalog.fields.filter(f=>f.field.startsWith('sketch.elements.')).every(f=>!f.bindable&&/Quelle/.test(f.reason)));assert.equal(catalog.fields.find(f=>f.field==='sketch.variables.hoehe').bindable,true);
+  const {cadProjectParameterCatalog}=await import('../src/cad-project-parameters-catalog.js'),catalog=cadProjectParameterCatalog(ab.project,{targets:[target('B')]})[0];assert.ok(catalog.fields.filter(f=>f.field.startsWith('sketch.elements.')).every(f=>f.bindable));assert.equal(catalog.fields.find(f=>f.field==='sketch.variables.hoehe').bindable,true);
  }finally{service.dispose();}
 });
 

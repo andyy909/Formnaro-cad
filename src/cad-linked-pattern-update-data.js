@@ -1,5 +1,7 @@
 import {buildCadDependencyGraph,cadDependencyAffected,cadDependencyNodeId} from './cad-dependency-graph.js';
 import {createCadProjectParameters,evaluateCadProjectParameters,planCadProjectParameters} from './cad-project-parameters-data.js';
+import {patternsForCadContourStates} from './cad-linked-pattern-contour-data.js';
+import {cadContourProfileBindingChangeIds} from './cad-contour-profile-bindings.js';
 
 // Pattern-only scalar changes do not appear in ordinary geometry bindings.
 // Compute their affected closure from evaluated before/after values, including
@@ -12,5 +14,6 @@ export function planCadParameterPatterns(project,data,{variantId}={}){
  for(const b of plan.changedBindings)seeds.push(cadDependencyNodeId('binding',b.id));
  for(const state of plan.changedStates)seeds.push(cadDependencyNodeId('geometry',state.target));
  const affected=seeds.length?cadDependencyAffected(graph,[...new Set(seeds)]):[],patterns=affected.filter(n=>n.kind==='pattern').map(n=>project.linkedPatterns.patterns.find(p=>p.id===n.patternId));
- return {plan,graph,affected,patterns};
+ const profileIds=new Set(cadContourProfileBindingChangeIds(project,plan.evaluation.bindings)),profileTargets=(project.contourLinks?.links??[]).filter(link=>profileIds.has(link.id)).map(link=>({target:link.target})),statePatterns=patternsForCadContourStates(project,[...plan.changedStates,...profileTargets]);
+ return {plan,graph,affected,patterns,statePatterns,requiresPatternUpdate:!!(patterns.length||statePatterns.length)};
 }

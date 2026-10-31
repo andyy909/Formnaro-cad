@@ -1,6 +1,10 @@
 // UI localization keeps authored text separately from rendered translations.
 // Project names, user object names and plugin metadata are never rewritten.
 const pairs=`
+Mitwachsende Bohrung|Associative hole
+Bohrung bearbeiten|Edit hole
+Die Bohrungen werden aus der erhaltenen Originalquelle berechnet. „Gruppe auflösen“ würde die Bohrungen entfernen. Nutze „Bohrung bearbeiten“ für Maße und Muster.|The holes are calculated from the retained original source. Ungrouping would remove the holes. Use “Edit hole” to change dimensions and patterns.
+Diese mitwachsende Bohrung lässt sich nicht mit „Gruppe auflösen“ zerlegen: Dabei gingen die berechneten Bohrungen verloren. Über „Bohrung bearbeiten“ kannst du Maße und Muster ändern.|This associative hole cannot be ungrouped because that would lose the calculated holes. Use “Edit hole” to change dimensions and patterns.
 Automatische Bemaßung|Automatic dimensioning
 Grundbemaßung|Basic dimensions
 Detaillierte Bemaßung|Detailed dimensions

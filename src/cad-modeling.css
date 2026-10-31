@@ -37,3 +37,5 @@ body .solid-operation-host .cad-modeling-extended,body .fusion-operation-host .c
 #cad-surfaces-panel input[type=checkbox]{width:auto}
 #cad-surfaces-panel fieldset{min-width:0;margin:10px 0;padding:6px}
 #cad-surfaces-panel [data-surface-faces]>div{overflow-wrap:anywhere;font-size:12px;margin:6px 0}
+
+.cad-modeling-panel [data-modeling-accept]{width:auto;flex:0 0 auto}

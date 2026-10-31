@@ -3,6 +3,7 @@ import {FREECAD_PARAMETER_PREFIX} from './cad-freecad-parameter-data.js';
 import {SCHEMAS} from './parameters.js';
 import {cadSelectionContext,cadFormLocalDimensions,cadInterfaceLocalBounds} from './cad-interface-state.js';
 import {cadPoint} from './cad-affine.js';
+import {CAD_DRILL_SCALAR_FIELDS} from './cad-drill-parameter-fields.js';
 
 // This catalog reads retained values only: no worker, geometry construction or
 // expression rewriting occurs while opening the parameter editor.
@@ -13,9 +14,10 @@ export function cadProjectParameterCatalog(project,{targets}={}){
  if(targets===undefined)targets=(project.nodes??[]).filter(n=>n.kind==='cad').map(n=>({rootId:n.id,path:[]}));
  if(!Array.isArray(targets)||targets.length>500)throw Error('Höchstens 500 Parameterziele auswählen.');
  return targets.map(target=>{
-  const context=cadSelectionContext(project,target),{node}=context,fields=[],driven=project.contourLinks?.links.some(link=>link.target.rootId===target.rootId&&JSON.stringify(link.target.path)===JSON.stringify(target.path)),blocked=context.locked?'Objekt, Quelle oder Container ist gesperrt.':context.sourceGeometryReadonly?'Diese erhaltene Geometriequelle ist geschützt.':node.kind!=='cad'?'Projektmaße benötigen native CAD-Teile.':null;
-  const add=(field,label,value,{unit='mm',literal=true,reason}={})=>{if(driven&&field.startsWith('sketch.elements.'))reason='Diese Kontur folgt ihrer Quelle. Ein freies Quellmaß binden oder die Verknüpfung lösen; die Zielhöhe bleibt bearbeitbar.';const bindable=!blocked&&!reason&&(!literal||cadParameterLiteral(value));fields.push({field,label,value:numeric(value)??value,unit,bindable,...(!bindable?{reason:blocked??reason??'Abgeleitete Formel erhalten. Stattdessen das freie Ausgangsmaß binden.'}:{})});};
+  const context=cadSelectionContext(project,target),{node}=context,fields=[],blocked=context.locked?'Objekt, Quelle oder Container ist gesperrt.':context.sourceGeometryReadonly?'Diese erhaltene Geometriequelle ist geschützt.':node.kind!=='cad'?'Projektmaße benötigen native CAD-Teile.':null;
+  const add=(field,label,value,{unit='mm',literal=true,reason}={})=>{const bindable=!blocked&&!reason&&(!literal||cadParameterLiteral(value));fields.push({field,label,value:numeric(value)??value,unit,bindable,...(!bindable?{reason:blocked??reason??'Abgeleitete Formel erhalten. Stattdessen das freie Ausgangsmaß binden.'}:{})});};
   if(node.kind==='cad'){
+   if(node.drill)for(const {field,label,unit}of CAD_DRILL_SCALAR_FIELDS)if(typeof node.drill[field.slice(6)]==='number')add(field,label,node.drill[field.slice(6)],{unit});
    if(node.drill?.pattern){const p=node.drill.pattern;for(const [key,label,unit]of [['count','Bohrungsmuster Anzahl',''],['columns','Bohrungsmuster Spalten',''],['rows','Bohrungsmuster Zeilen',''],['offset','Bohrungsmuster Spiegelabstand','mm'],['radius','Lochkreisradius','mm'],['angle','Lochkreiswinkel','°'],['startAngle','Lochkreis Startwinkel','°']])if(typeof p[key]==='number')add('drill.pattern.'+key,label,p[key],{unit});for(const [key,label]of [['step','Musterabstand'],['rowStep','Musterzeilenabstand'],['center','Lochkreismittelpunkt']])if(Array.isArray(p[key]))for(let i=0;i<2;i++)add('drill.pattern.'+key+'.'+i,label+' '+['U','V'][i],p[key][i]);}
    const sizes=cadFormLocalDimensions(node),bounds=cadInterfaceLocalBounds(node),center=cadPoint(node.transform,bounds.min.map((v,k)=>(v+bounds.max[k])/2));
    for(let k=0;k<3;k++){add('size.'+k,['Objektbreite','Objekttiefe','Objekthöhe'][k],sizes[k]);add('pos.'+k,(target.path.length?'Lokaler Mittelpunkt ':'Welt-Mittelpunkt ')+['X','Y','Z'][k],center[k]);}

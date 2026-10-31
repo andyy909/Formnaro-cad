@@ -29,7 +29,7 @@ export function cadFrameSources(nodes,frame){
 // Return the original CAD sources with their complete affine placement.
 // This performs no decomposition, re-generation, triangulation or mesh baking.
 export function dissolveCadGroup(group){
-  if(group.drill)throw Error('Die verknüpfte Bohrung kann nicht gewöhnlich aufgelöst werden.');
+  if(group.drill)throw Error('Diese mitwachsende Bohrung lässt sich nicht mit „Gruppe auflösen“ zerlegen: Dabei gingen die berechneten Bohrungen verloren. Über „Bohrung bearbeiten“ kannst du Maße und Muster ändern.');
   if(group.extraction)throw Error('Ein herausgelöster Körper kann nicht gewöhnlich aufgelöst werden; dabei würde das vollständige Original wieder erscheinen.');
   if(group.partition)throw Error('Ein geteiltes Teil kann nicht gewöhnlich aufgelöst werden; dabei würde das vollständige Original wieder erscheinen.');
   if(group.kind!=='cad'||group.source!=='group'||!Array.isArray(group.children))throw Error('Eine boolesche CAD-Gruppe auswählen.');
