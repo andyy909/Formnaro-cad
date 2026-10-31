@@ -31,7 +31,7 @@ Für die normale Nutzung genügt **„Nur das Programm“**. Das große Paket is
 2. Alle Unterordner zusammenlassen und **„Formnaro starten“** doppelklicken.
 3. Ein neues Projekt anlegen oder ein Beispiel öffnen.
 
-Die kleine Portable-ZIP enthält das ausführbare Programm mit den benötigten Laufzeiten, Lizenzen und drei Beispielmodellen – ohne Entwicklungswerkzeuge und Testdateien. FreeCAD und Python sind enthalten; eine separate Installation ist nicht nötig. Das optionale Modell für Offline-Sprache wird bei Bedarf direkt im Programm heruntergeladen. Zum Starten wird nur die Windows-ZIP benötigt; die separaten Quellenarchive sind für Entwickler.
+Die kleine Portable-ZIP enthält das ausführbare Programm mit den benötigten Laufzeiten, Lizenzen und drei Beispielmodellen – ohne Entwicklungswerkzeuge und eigene Tests. FreeCAD und Python sind enthalten; eine separate Installation ist nicht nötig. Das optionale Modell für Offline-Sprache wird bei Bedarf direkt im Programm heruntergeladen. Zum Starten wird nur die Windows-ZIP benötigt; die separaten Quellenarchive sind für Entwickler.
 
 ## Funktionen
 
@@ -61,7 +61,7 @@ Zwei Stufen, vier Räder, **6:1 Untersetzung** – ein offenes Getriebekonzept e
 
 ![KI-Übungsmodus: Formnaro führt die Modellierschritte für eine Platte mit Bohrung im eigenen Übungsfenster vor](bilder/formnaro-uebungsmodus.gif)
 
-Das GIF zeigt die Wiedergabe eines zuvor von DeepSeek erzeugten Plans, ohne Live-KI-Anfrage während der Aufnahme. Der begrenzte Übungsmodus ist im neuen Entwicklungsdownload enthalten und arbeitet in einem getrennten Übungsfenster.
+Das GIF zeigt die Wiedergabe eines zuvor von DeepSeek erzeugten Plans, ohne Live-KI-Anfrage während der Aufnahme. Der begrenzte Übungsmodus ist in beiden oben verlinkten Windows-Paketen enthalten und arbeitet in einem getrennten Übungsfenster.
 
 ## Anleitungen
 
@@ -76,9 +76,9 @@ Das GIF zeigt die Wiedergabe eines zuvor von DeepSeek erzeugten Plans, ohne Live
 <!-- formnaro-development-status:start -->
 ## Entwicklungsstand
 
-Der Windows-Download **0.122.0-r3** verkleinert die Portable-ZIP auf **671 MB** (entpackt etwa **1,78 GB**). Gegenüber 0.120.0-r4 ist der Download rund **65 % kleiner**. **42 gezielte Unit-Prüfungen und 363 UI-Prüfschritte über r2/r3** sind dokumentiert; ZIP-Inhalte, frische Extraktion und die drei Beispielmodelle wurden geprüft. Die Ausgabe bleibt eine Entwicklungsausgabe; eine unabhängige Prüfung auf einer frischen Windows-Installation und eine neue allgemeine Gesamtabnahme stehen aus.
+Der Windows-Download **0.122.0-r3** verkleinert die Portable-ZIP auf **671 MB** (entpackt etwa **1,78 GB**). Gegenüber 0.120.0-r4 ist der Download rund **65 % kleiner**. **42 gezielte Unit-Prüfungen und 363 UI-Prüfschritte über r2/r3** sind dokumentiert; ZIP-Inhalte, frische Extraktion und die drei Beispielmodelle wurden geprüft. Zum Prüfstatus: Eine unabhängige Prüfung auf einer frischen Windows-Installation und eine neue allgemeine Gesamtabnahme stehen aus.
 
-Der zugehörige Quellstand liegt unter [v0.122.0-r3](https://github.com/andyy909/Formnaro-cad/tree/v0.122.0-r3); der Entwicklungszweig `main` bleibt beim bisherigen Programmstand.
+Der zugehörige Quellstand liegt unter [v0.122.0-r3](https://github.com/andyy909/Formnaro-cad/tree/v0.122.0-r3); der Programmcode im Zweig `main` steht noch auf **0.120.0-r4**.
 
 [Prüfbericht des Downloads](https://github.com/andyy909/Formnaro-cad/releases/download/v0.122.0-r3/Paket-Analyse.txt) · [Ausbau und offene Punkte](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md)
 <!-- formnaro-development-status:end -->
@@ -89,7 +89,7 @@ Der zugehörige Quellstand liegt unter [v0.122.0-r3](https://github.com/andyy909
 Mit Node.js 22.16 oder neuer und npm:
 
 ```sh
-git clone https://github.com/andyy909/Formnaro-cad.git
+git clone --branch v0.122.0-r3 https://github.com/andyy909/Formnaro-cad.git
 cd Formnaro-cad
 npm ci
 npm run build
