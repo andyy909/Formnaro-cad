@@ -6,17 +6,17 @@
 
 **CAD und Netzbearbeitung für Modellbau und 3D-Druck.** Konstruiere Bauteile, bearbeite 3D-Modelle und erstelle technische Zeichnungen. Formnaro läuft lokal unter Windows; die normale Modellierung funktioniert offline.
 
-**[Für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/Formnaro-v0.120.0-r4-Windows.zip)** · [Anleitungen](#anleitungen) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
+**[Für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.122.0-r3/Formnaro-v0.122.0-r3-Windows.zip)** · [Anleitungen](#anleitungen) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
 
-Windows 64 Bit · portabel · Download **0.120.0-r4** · gezielt geprüfte Entwicklungsausgabe · ca. **1,9 GB**
+Windows 64 Bit · portabel · Download **0.122.0-r3** · gezielt geprüfte Entwicklungsausgabe · ca. **671 MB**
 
-| **Easy Tinker** · einfacher Winkelhalter | **Normal** · Lagerhalter mit Langlöchern |
+| **Easy Tinker** · Lagerhalter (Dark Mode) | **Normal** · Schraubstock (Dark Mode) |
 | :---: | :---: |
-| [![Easy Tinker mit Formenpalette und einfachem Winkelhalter](docs/bilder/formnaro-easy-winkelhalter.png)](docs/bilder/formnaro-easy-winkelhalter.png) | [![Normal mit Werkzeugleisten und Lagerhalter](docs/bilder/formnaro-normal-lagerhalter.png)](docs/bilder/formnaro-normal-lagerhalter.png) |
-| **Solid** · ATLAS-5-Portalfräse | **Fusion** · zweistufiges Schräggetriebe |
+| [![Easy Tinker mit Lagerhalter und Formenpalette im Dark Mode](docs/bilder/formnaro-easy-lagerhalter-dark.png)](docs/bilder/formnaro-easy-lagerhalter-dark.png) | [![Normal mit Präzisionsschraubstock im Dark Mode](docs/bilder/formnaro-normal-schraubstock-dark.png)](docs/bilder/formnaro-normal-schraubstock-dark.png) |
+| **Solid** · ATLAS-5-Portalfräse (Light Mode) | **Fusion** · zweistufiges Schräggetriebe (Light Mode) |
 | [![Solid mit ATLAS-5-Portalfräse, fünf Achsen und gekoppeltem A-Antrieb](docs/bilder/formnaro-solid-atlas5.png)](docs/bilder/formnaro-solid-atlas5.png) | [![Fusion mit Konstruktionsschritten und Schräggetriebe mit vier Zahnrädern](docs/bilder/formnaro-fusion-getriebe.png)](docs/bilder/formnaro-fusion-getriebe.png) |
 
-*Echte Programmaufnahmen: Easy Tinker und Normal aus 0.117.0-r8; Solid mit ATLAS-5 aus 0.120.0-r4; Fusion aus 0.119.0-r2. Zum Vergrößern auf ein Bild klicken.*
+*Echte Programmaufnahmen: Easy Tinker und Normal im Dark Mode aus 0.117.0-r8; Solid mit ATLAS-5 im Light Mode aus 0.120.0-r4; Fusion im Light Mode aus 0.119.0-r2. Zum Vergrößern auf ein Bild klicken.*
 
 ## Schnell starten
 
@@ -24,7 +24,7 @@ Windows 64 Bit · portabel · Download **0.120.0-r4** · gezielt geprüfte Entwi
 2. Alle Unterordner zusammenlassen und **„Formnaro starten“** doppelklicken.
 3. Ein neues Projekt anlegen oder ein Beispiel öffnen.
 
-FreeCAD und Python sind im Windows-Paket enthalten. Eine separate Installation ist dafür nicht nötig.
+Die kleine Portable-ZIP enthält das ausführbare Programm mit den benötigten Laufzeiten, Lizenzen und drei Beispielmodellen – ohne Entwicklungswerkzeuge und Testdateien. FreeCAD und Python sind enthalten; eine separate Installation ist nicht nötig. Das optionale Modell für Offline-Sprache wird bei Bedarf direkt im Programm heruntergeladen. Zum Starten wird nur die Windows-ZIP benötigt; die separaten Quellenarchive sind für Entwickler.
 
 ## Funktionen
 
@@ -42,7 +42,7 @@ STEP, STL, OBJ, 3MF und GLB/glTF ermöglichen den Modellaustausch. Vier Bedienmo
 
 ![ATLAS-5: X-, Y- und Z-Verfahrt, A-Schwenkwiege mit gekoppeltem Ritzel sowie C-Rundtisch](docs/bilder/formnaro-atlas5-bewegung.gif)
 
-**144 Bauteile, 78 Gelenke und fünf Achsen.** Das kurze GIF zeigt die tatsächlichen Gelenkbewegungen in Formnaro 0.120.0-r4. Wiege und Ritzel sind mit **48:20** gekoppelt und werden gemeinsam vom Y-Träger mitgenommen. [Bearbeitbares Beispiel herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad). Die Aufnahme entstand in einer getrennten Modellkopie ohne KI-Anfrage; sie demonstriert Kinematik, keine Kontaktkräfte oder Fertigungsfreigabe.
+**144 Bauteile, 78 Gelenke und fünf Achsen.** Das kurze GIF zeigt die tatsächlichen Gelenkbewegungen in Formnaro 0.120.0-r4. Wiege und Ritzel sind mit **48:20** gekoppelt und werden gemeinsam vom Y-Träger mitgenommen. [Bearbeitbares Beispiel herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad). Das Modell wurde mit Codex (Astra) über die lokale MCP-Schnittstelle von Formnaro konstruiert. Die Animation wurde anschließend in einer getrennten Modellkopie aufgenommen, ohne eine erneute KI-Anfrage während der Aufnahme. Sie demonstriert Kinematik, keine Kontaktkräfte oder Fertigungsfreigabe.
 
 ### Getriebe in Bewegung
 
@@ -69,9 +69,11 @@ Das GIF zeigt die Wiedergabe eines zuvor von DeepSeek erzeugten Plans, ohne Live
 <!-- formnaro-development-status:start -->
 ## Entwicklungsstand
 
-Windows-Download und Quellstand **0.120.0-r4** enthalten mitwachsende Bohrungen, verknüpfte Muster, direkte Skizzenmaße sowie Zahnradkopplungen auf gemeinsam bewegten Trägern. **18 gezielte Quelltests, 22 Prüfgruppen im isolierten Quelllauf und 33 Prüfgruppen an der tatsächlichen Windows-EXE sind bestanden.** Der Download ist eine Entwicklungsausgabe; eine neue vollständige Gesamt-, Dauerlauf- und Wiederherstellungsabnahme steht aus.
+Der Windows-Download **0.122.0-r3** verkleinert die Portable-ZIP auf **671 MB** (entpackt etwa **1,78 GB**). Gegenüber 0.120.0-r4 ist der Download rund **65 % kleiner**. **42 gezielte Unit-Prüfungen und 363 UI-Prüfschritte über r2/r3** sind dokumentiert; ZIP-Inhalte, frische Extraktion und die drei Beispielmodelle wurden geprüft. Die Ausgabe bleibt eine Entwicklungsausgabe; eine unabhängige Prüfung auf einer frischen Windows-Installation und eine neue allgemeine Gesamtabnahme stehen aus.
 
-[Prüfstand dieser Ausgabe](docs/VEROEFFENTLICHUNG-0.120.0-r4.md) · [Ausbau und offene Punkte](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md) · [Prüfbericht des Downloads](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/Pruefbericht.txt)
+Der zugehörige Quellstand liegt unter [v0.122.0-r3](https://github.com/andyy909/Formnaro-cad/tree/v0.122.0-r3); der Entwicklungszweig `main` bleibt beim bisherigen Programmstand.
+
+[Prüfbericht des Downloads](https://github.com/andyy909/Formnaro-cad/releases/download/v0.122.0-r3/Paket-Analyse.txt) · [Ausbau und offene Punkte](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md)
 <!-- formnaro-development-status:end -->
 
 <details>
