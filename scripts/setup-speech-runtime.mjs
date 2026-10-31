@@ -6,7 +6,7 @@ const root=path.resolve('speech-runtime'),manifest=JSON.parse(await fs.readFile(
 const sha=b=>createHash('sha256').update(b).digest('hex');
 async function fetchVerified(url,expected){const response=await fetch(url);if(!response.ok)throw Error('Download failed: '+response.status);const bytes=new Uint8Array(await response.arrayBuffer());if(sha(bytes)!==expected)throw Error('Download SHA-256 mismatch');return bytes;}
 let archive;
-for(const item of manifest.files){
+for(const item of manifest.files.filter(item=>process.argv.includes('--with-model')||!item.name.endsWith('.bin'))){
  const target=path.join(root,item.name);try{if(sha(await fs.readFile(target))===item.sha256)continue;}catch{}
  let bytes;
  if(item.name.endsWith('.bin'))bytes=await fetchVerified(manifest.modelUrl,item.sha256);

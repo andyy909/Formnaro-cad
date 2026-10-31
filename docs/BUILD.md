@@ -190,3 +190,87 @@ Programmsymbol enthalten. Das Quellmanifest erfasst auch die Originalassets.
 Bestehende freigegebene EXE-/ASAR-Dateien werden dafür nicht nachträglich
 verändert. Lokale Windows-Verknüpfungen können separat eine dauerhafte
 ICO-Datei verwenden; ihre Startziele und Argumente bleiben dabei erhalten.
+
+
+## Portable-Ausgabe ab 0.121.0
+
+Die Standardausgabe enthält die Whisper-Engine, aber kein Sprachmodell.
+`node scripts/setup-speech-runtime.mjs` bereitet nur die Engine vor;
+`--with-model` lädt zusätzlich das Modell für lokale Entwicklung herunter.
+Im Programm ist der Download eine ausdrückliche Aktion in der Spracheingabe.
+Die Datei wird gestreamt, auf feste Größe und SHA256 geprüft und erst danach
+im portablen Datenordner `Sprachmodelle` aktiviert. Abbruch und Fehler entfernen
+die partielle Datei. CAD, Python und Konverter benötigen diesen Download nicht.
+
+`scripts/portable-runtime-policy.mjs` definiert die enge Streichliste für
+Debugsymbole, Linker-/CMake-/Qt-Buildmetadaten und benannte Qt-Entwicklungsprogramme.
+Die benannten optionalen BIM-/FEM-/CAM-/Idf-/OpenSCAD-/Robot-/ReverseEngineering-/Inspection-/AddonManager-/Test-/Tux-Workbenches sowie deren ausdrücklich gelistete native Module werden ausgelassen. Kern-DLLs, Python-Abhängigkeiten, Qt-Plugins und Lizenztexte bleiben erhalten. Upstream-Testverzeichnisse und FreeCAD-Beispieldaten werden nicht benötigt.
+Die CAD-Dateiliste und ihr ASAR-Pin werden nach der Auswahl neu erstellt.
+Das Quellenarchiv `Formnaro-FreeCAD-Quellen-1.1.4.zip` wird separat erzeugt und muss
+bei einer Veröffentlichung neben dem Windows-Paket angeboten werden.
+Die App erhält das Benutzerhandbuch; Bridgeclient, Build-, Release- und
+Diagnoseskripte bleiben im Quellrepository. Auch Backend-Verifikationen und
+Testfixtures gehören nicht in das ASAR. `scripts/verify-portable.mjs` lädt sie
+nur während der expliziten Entwicklerabnahme über einen kurzlebigen lokalen
+Inspector in die echte gepackte EXE. Produktionsmodule werden dabei immer aus
+deren unverändertem ASAR aufgelöst. Dieses Prüfwerkzeug wird nicht ausgeliefert.
+
+Vor der Laufzeitauswahl prüft `scripts/audit-freecad-imports.py` die tatsächlichen AST-Imports der Worker gegen die ausgelassenen Workbenches und protokolliert dynamische Importstellen. Die Prüfung verwendet den eingebetteten Python-Interpreter als Buildwerkzeug. Statische Imports allein beweisen keine vollständige Abhängigkeitshülle; native GUI-/Python-/Dokumenttests bleiben erforderlich.
+
+Nach erfolgreicher Paketprüfung erzeugt `scripts/package-portable-zip.py` eine
+neue Windows-ZIP mit drei relativen Start-/Ordnerlinks und leeren portablen
+Daten-/Projektordnern. Das Skript blockiert Entwicklerordner, persönliche
+Konfigurationsdateien und mitgelieferte Sprachmodelle und liest jeden ZIP-Eintrag
+zur SHA256-Prüfung zurück. Lizenzverzeichnisse behalten ihre Upstream-Pfade.
+Der Paketlauf verwendet dafür den eingebetteten Python-Interpreter; dieses
+Buildskript und seine Linkvorlagen werden nicht in die Anwendung kopiert.
+
+Die drei ausdrücklich gewählten Endnutzerbeispiele liegen versioniert unter `packaging/examples`: gekoppelte ATLAS-5-Fräse, großes 6:1-Schräggetriebe und Präzisionsschraubstock. Der ZIP-Schritt prüft ihre Manifest-SHAs und legt sie unter `Projekte/Beispiele` ab. Sie gehören nicht zu den entfernten Entwickler-Testdaten. Die Python-Buildwerkzeuge werden mit `-B`/`PYTHONDONTWRITEBYTECODE=1` gestartet, damit sie keine Bytecode-Caches in der fertig zusammengestellten Laufzeit erzeugen.
+
+
+## Vertieftes Laufzeitprofil ab 0.122.0
+
+`scripts/portable-freecad-profile.json` enthält die geprüften Paketgrenzen und
+SHA256-gepinnten zusätzlichen nativen Auslassungen für FreeCAD 1.1.4/Python 3.11.
+Ein anderer Hash verlangt ein neues Audit. Kern-EXEs, Kern-Pythonmodule, der
+Software-OpenGL-Rückfall und benötigte VC-/ICU-/OCCT-Bibliotheken sind geschützt.
+Die Python-OCC-Wrapper sind zusätzliche Bindings, nicht FreeCADs nativer Part-
+Kernel. Sie werden mit unbenutzten IFC-/VTK-/SciPy-/pandas-/SymPy-/Matplotlib-
+Paketen im nativen CAD-Prozess entfernt. Die separate wissenschaftliche
+Pyodide-Analyse bleibt unverändert verfügbar.
+
+`scripts/audit-native-dependencies.py` untersucht PE-Imports, verzögerte Imports
+und weitergeleitete Exporte. Die expliziten dynamischen Wurzeln umfassen Qt-
+Plugins, native Pythonmodule, OCCT-TK-Bibliotheken, VC/ICU und Software-OpenGL.
+OpenBLAS bleibt erhalten, weil libblas/libcblas ihre Exporte dorthin weiterleiten.
+Zusätzlich werden geladene Bibliothekspfade und reale native Funktionen geprüft.
+Das Audit benötigt das Entwicklungswerkzeug `pefile`; es gehört nicht ins Paket.
+Statische PE-Tabellen beweisen nicht jeden dynamischen Bibliotheksaufruf.
+Die aktuelle Release-Pipeline führt die vier nativen Prüfungen automatisch aus.
+Build-Abhängigkeit: `python -m pip install -r scripts/requirements-packaging.txt`.
+Ein anderer Entwicklungsinterpreter kann mit `FORMNARO_NATIVE_AUDIT_PYTHON`
+ausgewählt werden; der Endnutzer benötigt weder pip noch diesen Interpreter.
+
+```
+python -B scripts/audit-native-dependencies.py --runtime <FreeCAD-Laufzeit> --output work/freecad-dependencies.json
+python -B scripts/audit-native-dependencies.py --kind converter --runtime <Konverter-Laufzeit> --output work/converter-dependencies.json
+python -B scripts/audit-native-dependencies.py --kind speech --runtime <Sprach-Laufzeit> --output work/speech-dependencies.json
+python -B scripts/audit-native-dependencies.py --kind electron --runtime <Electron-Laufzeit> --output work/electron-dependencies.json
+```
+
+Der Konverter nutzt seinen separat vorbereiteten minimalen Build und die
+geprüfte Auswahl aus `converter/provenance.json`; Anleitung unter converter/README.md.
+Konverter-Prüfdateien bleiben bei den externen Prüfhelfern. Electron enthält
+nur `de`, `en-US`, `en-GB`; ein Start mit `--lang=fr-FR` prüft den Rückfall.
+Die DLLs für Grafik-/Software-Rendering werden nicht als Compilerballast entfernt.
+Java/JRE/JDK ist keine Formnaro-Laufzeitkomponente. `node_modules` bleibt komplett
+außerhalb der portablen App; benötigter Frontendcode ist im Vite-Build gebündelt.
+
+Die Spracheingabe erhält vier app-lokale Microsoft-Laufzeit-DLLs aus der
+hashgeprüften CAD-Laufzeit (`msvcp140`, `vcruntime140`, `vcruntime140_1`, `vcomp140`).
+Sie werden im ausgelieferten Sprachmanifest ergänzt; das ursprüngliche
+Downloadmanifest der Whisper-Engine bleibt unverändert. Dadurch benötigt der
+Sprachprozess keine separat installierte Visual-C++-Runtime. Die vorhandenen
+Upstream-Lizenzhinweise bleiben mitgeliefert. Für vollständige Neubauten ist
+die vollständige, gepinnte FreeCAD-Eingabe einschließlich Quellen erforderlich;
+eine bereits gekürzte Portable-Ausgabe ersetzt diese Build-Eingabe nicht.

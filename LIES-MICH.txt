@@ -1,3 +1,37 @@
+Formnaro 0.122.0 – Kleinere portable CAD-Laufzeit, 31.10.2026
+
+FreeCAD-Kern und Python-Brücke bleiben eingebettet. Zusätzliche Python-OCC-
+Bindings, unbenutzte wissenschaftliche Pakete im nativen CAD-Prozess und
+überprüfte unbenutzte native Bibliotheken sind ausgelassen. Die getrennte
+wissenschaftliche Analyse mit NumPy/SciPy bleibt verfügbar.
+Der Konverter enthält seine benötigten VTK-Typen und Rechenbibliotheken;
+allgemeine VTK-Viewer, VR und unbenutzte JIT-Pakete gehören nicht zur Bridge.
+Die Oberfläche unterstützt Deutsch und Englisch. Electron behält die dafür
+benötigten Sprachdateien; andere Windows-Sprachen verwenden den englischen
+Chromium-Rückfall. Eine Java-Installation wird nicht verwendet.
+Start: ZIP vollständig entpacken und „Formnaro starten“ öffnen.
+Das Sprachmodell bleibt optional und wird auf Wunsch im Programm geladen.
+
+Formnaro 0.121.0 – Portable ohne mitgeliefertes Sprachmodell, 31.10.2026
+
+Windows x64: ZIP vollständig entpacken und „Formnaro starten“ öffnen.
+FreeCAD, Python, Konverter und CAD-Kern sind enthalten; dafür ist keine
+zusätzliche Installation und kein Download erforderlich.
+Nur die optionale Offline-Spracheingabe braucht einmalig das Sprachmodell:
+KI-Chat > Bilder, Referenzen und Sprache > Sprachmodell herunterladen.
+Der Download (574 MB) erfolgt erst per Klick, zeigt den Fortschritt und lässt
+sich abbrechen. Formnaro prüft die Datei vor der Verwendung. Danach arbeitet
+die lokale Spracheingabe ohne Internet. Das Modell liegt in
+Programmdateien/Daten/Sprachmodelle und bleibt beim Mitnehmen dieses Ordners
+auf einen anderen PC erhalten. Bei Fehler oder Abbruch kann der Download
+erneut gestartet werden. Für den Download wird freier Speicher benötigt.
+
+Entwicklungs-, Build- und Diagnoseskripte werden nicht als Werkzeugsammlung
+mitgeliefert. Der öffentliche KI-Schnittstellenclient bleibt im Quellrepository.
+Lizenztexte bleiben enthalten. Die zugehörigen FreeCAD-Quellen befinden sich
+im separaten Archiv Formnaro-FreeCAD-Quellen-1.1.4.zip neben dem Windows-Paket;
+sie sind zum Ausführen nicht erforderlich.
+
 Formnaro 0.120.0 – Übungsmodus, 29.10.2026
 
 Der Übungsmodus führt begrenzte Modellieraufgaben in einem getrennten

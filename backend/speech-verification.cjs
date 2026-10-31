@@ -9,7 +9,18 @@ exports.verifySpeech=async function(win,{directory,tempDirectory}){
   await run('window.__cadTest.aiUI.chat.open()');await until("!document.getElementById('ai-chat-mic').disabled");
   await click('#ai-chat-tools > summary');await until("document.getElementById('ai-chat-tools').open");await pause(200);
   check(await run("document.getElementById('ai-chat-mic').getBoundingClientRect().width>0"),'Speech controls become visible through the images, references and speech category');
-  const status=await run('window.offlinecadDesktop.getSpeechStatus()');check(status.available&&status.local&&status.engine==='Whisper large-v3-turbo','Bundled verified local Whisper is available without an API key');
+  let status=await run('window.offlinecadDesktop.getSpeechStatus()');
+  if(!status.available){
+   check(status.downloadRequired&&!status.downloading,'Missing optional model does not start a network download');
+   check(await run("!document.getElementById('ai-chat-speech-download').hidden"),'Optional model download is offered inside the program');
+   await run("document.getElementById('ai-chat-speech-download').scrollIntoView({block:'nearest'});void 0");
+   check(await run("(()=>{const e=document.getElementById('ai-chat-speech-download'),r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));})()"),'Download button is reachable in the visible chat scroll area');
+   await click('#ai-chat-speech-download');await until("window.offlinecadDesktop.getSpeechStatus().then(s=>s.downloading||s.available)");await shot('model-download');
+   await until("window.offlinecadDesktop.getSpeechStatus().then(s=>{if(s.downloadError&&!s.downloading)throw Error(s.downloadError);return s.available;})",1800000);
+   check(fs.existsSync(path.join(directory,'portable-data','Sprachmodelle','ggml-large-v3-turbo-q5_0.bin')),'Verified downloaded model is stored in portable data');
+   status=await run('window.offlinecadDesktop.getSpeechStatus()');
+  }
+  check(status.available&&status.local&&status.engine==='Whisper large-v3-turbo','Verified local Whisper model is available without an API key');
   await run(`window.__speechBefore=window.__cadTest.serialize();window.__speechStreams=[];const get=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);navigator.mediaDevices.getUserMedia=async options=>{const s=await get(options);window.__speechStreams.push(s);return s;};document.getElementById('ai-chat-prompt').value='Vorhandener Auftrag.';`);
   await click('#ai-chat-mic');await until("document.getElementById('ai-chat-mic').getAttribute('aria-pressed')==='true'");
   check(await run("document.getElementById('ai-chat-send').disabled&&document.getElementById('ai-chat-prompt').disabled"),'Recording blocks sending and protects existing draft');

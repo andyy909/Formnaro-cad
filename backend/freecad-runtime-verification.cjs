@@ -20,7 +20,7 @@ exports.verifyFreeCADRuntime=async(win,{directory})=>{
   const before=await js('window.__cadTest.serialize()'),undo=await js('window.__cadTest.undoDepth()'),t=performance.now();
   // Native execution through the public desktop bridge and the established
   // controller command lifecycle (same path in all four workbench modes).
-  const r=await freecad.run({inspectOnly:true,script:{version:1,gui:true,code:"import sys,FreeCADGui,ImportGui,Draft\nmeasurements={'gui':bool(App.GuiUp),'python':sys.version,'prefix':sys.prefix,'freecad':App.getHomePath(),'draft':hasattr(Draft,'make_wire')}"}});
+  const r=await freecad.run({inspectOnly:true,script:{version:1,gui:true,code:"import sys,FreeCADGui,ImportGui,Draft,PartDesign,Sketcher,Mesh,MeshPart,Surface,Import,TechDraw,Points,Spreadsheet\nmeasurements={'gui':bool(App.GuiUp),'python':sys.version,'prefix':sys.prefix,'freecad':App.getHomePath(),'draft':hasattr(Draft,'make_wire')}"}});
   timings.push({operation:mode+'-offscreen-gui',ms:performance.now()-t});
   const runtimeRootPhysical=fs.realpathSync(status.root),freecadHomePhysical=fs.realpathSync(r.measurements.freecad),homeRelative=path.relative(runtimeRootPhysical,freecadHomePhysical);
   const homeInsideRuntime=homeRelative===''||(!path.isAbsolute(homeRelative)&&homeRelative!=='..'&&!homeRelative.startsWith('..'+path.sep));

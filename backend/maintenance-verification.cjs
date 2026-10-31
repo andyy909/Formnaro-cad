@@ -23,11 +23,23 @@ exports.verifyMaintenance=async(win,{directory,dataPath,startupWriteFailed})=>{
  check(await run("!!document.querySelector('meta[http-equiv=\"Content-Security-Policy\"]')"),'Production page has an explicit CSP');
  await run('window.__cadTest.settled()');
  fs.writeFileSync(path.join(directory,'maintenance-system-light.png'),(await win.webContents.capturePage()).toPNG());
+ if(process.env.FORMNARO_VERIFY_PORTABLE_EXAMPLES==='1'){
+  const base=path.join(path.dirname(process.execPath),'Projekte','Beispiele');
+  for(const name of ['atlas-5','schraeggetriebe-6zu1','solid-schraubstock']){
+   const file=path.join(base,name+'.ocad'),bytes=fs.readFileSync(file),project=JSON.parse(bytes);
+   await run('window.__cadTest.controller.open('+JSON.stringify(project)+')');await run('window.__cadTest.settled()');
+   check(await run('window.__cadTest.getModel().nodes.length')===project.nodes.length,name+': actual packaged example opens with every root');
+   if(name==='atlas-5')check(await run('window.__cadTest.getModel().joints.gears.length')===1,'ATLAS example retains its saved pinion coupling');
+   await run("window.__cadTest.view.setView('iso');window.__cadTest.view.fit();window.__cadTest.view.renderReady()");
+   fs.writeFileSync(path.join(directory,name+'.png'),(await win.webContents.capturePage()).toPNG());
+   check(fs.readFileSync(file).equals(bytes),name+': example file remains unchanged');
+  }
+ }
  const original=win.webContents.getURL(),target=new URL(original);target.pathname=target.pathname.replace(/index\.html$/,'blocked-audit-navigation.html');let attempted=false;
  const observe=(_event,url)=>{if(url===target.href)attempted=true;};win.webContents.on('will-navigate',observe);
  try{await run(`location.assign(${JSON.stringify(target.href)})`);await run('new Promise(r=>setTimeout(r,200))');}
  finally{win.webContents.removeListener('will-navigate',observe);}
  check(attempted&&win.webContents.getURL()===original&&await run('window.__cadReady===true&&!window.__cadError'),'Real renderer navigation to a different local document is blocked and the editor remains usable');
- const speech=await run('window.offlinecadDesktop.getSpeechStatus()');check(speech.available&&speech.local,'Stream-verified bundled speech remains available through the real main-frame IPC');
+ const speech=await run('window.offlinecadDesktop.getSpeechStatus()');check(speech.local&&(speech.available||speech.downloadRequired&&!speech.downloading),'Real main-frame IPC supports installed speech or the explicitly downloadable optional model');
  return {ok:true,checks,cloudRequests:0,screenshots:[path.join(directory,'maintenance-dark.png'),path.join(directory,'maintenance-system-light.png')]};
 };

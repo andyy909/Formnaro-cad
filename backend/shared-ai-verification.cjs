@@ -1,7 +1,8 @@
 // Runs only with an explicit verification flag, in a separate temporary profile.
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 async function verifySharedAI(win,{directory,fixtures}){
-  const checks=[],calls=[],js=code=>win.webContents.executeJavaScript(code),pause=ms=>new Promise(r=>setTimeout(r,ms));let mode='protect';
+  fixtures=path.join(__dirname,'../converter/examples');
+ const checks=[],calls=[],js=code=>win.webContents.executeJavaScript(code),pause=ms=>new Promise(r=>setTimeout(r,ms));let mode='protect';
   const check=(value,label)=>{assert(value,label);checks.push(label);fs.writeFileSync(path.join(directory,'progress.json'),JSON.stringify({checks},null,2));};
   const until=async code=>{const start=Date.now();while(Date.now()-start<120000){if(await js(code))return;await pause(40);}throw Error('Timeout: '+code+'; Status: '+await js("document.getElementById(\"converter-status\")?.textContent"));};
   const click=id=>js(`document.getElementById(${JSON.stringify(id)}).click()`);

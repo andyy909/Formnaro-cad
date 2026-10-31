@@ -106,7 +106,7 @@ app.whenReady().then(() => {
   require('./backend/ai-tool-library.cjs').installToolLibrary(win,{directory:path.join(dataPath,'KI-Werkzeuge'),ipcMain:require('electron').ipcMain});
   require('./backend/error-log.cjs').installErrorLog(win,{directory:path.join(dataPath,'Fehlerprotokolle'),version:app.getVersion()});
   require('./backend/desktop-ai.cjs').installDesktopAI(win,{settingsFile:path.join(dataPath,'ai-settings.json'),fallbackFile:fs.existsSync(path.join(dataPath,'profil.json'))?undefined:legacyAIFile});
-  const speechService=require('./backend/speech.cjs').installSpeech(win,{directory:app.isPackaged?path.join(process.resourcesPath,'speech'):path.join(__dirname,'speech-runtime'),settingsDirectory:dataPath,tempDirectory:verifyPath?path.join(path.dirname(verifyPath),'speech-temp'):path.join(app.getPath('temp'),'Formnaro-Speech')});
+  const speechService=require('./backend/speech.cjs').installSpeech(win,{directory:app.isPackaged?path.join(process.resourcesPath,'speech'):path.join(__dirname,'speech-runtime'),settingsDirectory:dataPath,modelDirectory:path.join(dataPath,'Sprachmodelle'),tempDirectory:verifyPath?path.join(path.dirname(verifyPath),'speech-temp'):path.join(app.getPath('temp'),'Formnaro-Speech')});
   let speechQuitting=false;app.on('before-quit',event=>{if(!speechService.hasActive())return;event.preventDefault();if(speechQuitting)return;speechQuitting=true;speechService.dispose().finally(()=>app.quit());});
   require('./backend/speech-permissions.cjs').installSpeechPermissions(win,{entry:path.join(__dirname,'dist','index.html')});
   require('./backend/edit-menu.cjs').installEditMenu(win,{getLanguage:()=>{try{return JSON.parse(programStore.read('offlinecad-settings-v1').value||'{}').language||'de';}catch{return 'de';}}});
@@ -115,7 +115,7 @@ app.whenReady().then(() => {
   if(pythonVerifyArg||autoDimensionsVerifyArg||drawingsVerifyArg||linkedContoursVerifyArg)mixedDialogs.exportDialog.showSaveDialog=async()=>({filePath:mixedDialogs.files.save});
   require('./backend/drawing-pdf.cjs').installDrawingPdf(win);
   require('./backend/files.cjs').installFiles(win,{ipcMain:require('electron').ipcMain,dialog:require('electron').dialog,sequenceFile:path.join(dataPath,'export-series.json'),...(mixedDialogs?{ipcMain:require('electron').ipcMain,dialog:mixedDialogs.exportDialog}:stlVerifyArg?{ipcMain:require('electron').ipcMain,dialog:{showSaveDialog:async(_win,options)=>{if(globalThis.__cancelStlVerificationSave)return {canceled:true};const directory=path.join(path.dirname(verifyPath),'exports');fs.mkdirSync(directory,{recursive:true});return {filePath:path.join(directory,path.basename(options.defaultPath))};}}}:{} )});
-  const converterDirectory=app.isPackaged?path.join(process.resourcesPath,'converter'):path.join(__dirname,'converter/runtime-v010-security');
+  const converterDirectory=require('./backend/stl-converter.cjs').runtimeDirectory({packaged:app.isPackaged,resourcesPath:process.resourcesPath});
   const stlConverter=require('./backend/stl-converter.cjs').installStlConverter(win,{directory:converterDirectory});
   const {installProjects,projectDirectory}=require('./backend/projects.cjs');
   const projectStore=installProjects(win,{directory:projectDirectory(app,{verificationPath:verifyPath}),...(fnpackVerifyArg?{onPackRead:event=>packReads.push(event)}:{}),...(mixedDialogs?{dialog:mixedDialogs.projectDialog}:{})});

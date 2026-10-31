@@ -1,4 +1,4 @@
-"""Convenience helpers. The complete installed FreeCAD API stays available."""
+"""Convenience helpers. The installed FreeCAD API stays available; optional workbenches may be omitted in portable builds."""
 import importlib
 import FreeCAD as App
 import Part

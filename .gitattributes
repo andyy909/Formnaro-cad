@@ -12,3 +12,14 @@ cad-kernel-build/runtime/** -text
 # License/font hashes cover original upstream bytes, including line endings.
 licenses/** -text
 src/fonts/** -text
+
+# Portable example and shell-link assets must keep their exact distribution bytes.
+packaging/examples/*.ocad -text
+packaging/windows/*.lnk -text
+
+# Upstream converter provenance pins exact source bytes.
+converter/stlstep/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+converter/headless-vtk/** -text
+converter/Formnaro-Konverter.spec -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+converter/pyproject.toml -text
+converter/uv.lock -text

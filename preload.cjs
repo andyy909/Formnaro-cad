@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld('offlinecadDesktop',{
  readAIContextNote:value=>invoke('cad-ai:note-read',value),appendAIContextNote:value=>invoke('cad-ai:note-append',value),
  ...(process.argv.includes('--formnaro-error-log')?{recordError:value=>invoke('cad-log:write',value),openErrorLogFolder:()=>invoke('cad-log:folder'),getErrorLogStatus:()=>invoke('cad-log:status')}:{}),
  ...(process.argv.includes('--formnaro-portable-data')?{initializeProgramData:value=>invokeSync('cad-data:initialize',value),changeProgramData:value=>({...invokeSync('cad-data:change',value),value:value.value}),openProgramDataFolder:()=>invoke('cad-data:folder')}:{}),
- getSpeechStatus:()=>invoke('cad-speech:status'),getOnlineSpeechStatus:()=>invoke('cad-speech:online-status'),saveOnlineSpeechKey:value=>invoke('cad-speech:online-save',value),transcribeSpeech:value=>invoke('cad-speech:transcribe',value),cancelSpeech:value=>invoke('cad-speech:cancel',value),
+ getSpeechStatus:()=>invoke('cad-speech:status'),downloadSpeechModel:()=>invoke('cad-speech:download-model'),cancelSpeechModelDownload:()=>invoke('cad-speech:cancel-download'),getOnlineSpeechStatus:()=>invoke('cad-speech:online-status'),saveOnlineSpeechKey:value=>invoke('cad-speech:online-save',value),transcribeSpeech:value=>invoke('cad-speech:transcribe',value),cancelSpeech:value=>invoke('cad-speech:cancel',value),
  getFreeCADStatus:()=>invoke('cad-freecad:status'),runFreeCADReply:value=>ipcRenderer.invoke('cad-freecad:run',value),cancelFreeCAD:value=>invoke('cad-freecad:cancel',value),
  saveFile:value=>invoke('cad-file:save',value),
  cancelFileSave:value=>invoke('cad-file:cancel',value),

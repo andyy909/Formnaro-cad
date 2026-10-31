@@ -4996,3 +4996,96 @@ Dies ist ein Funktionszwischenstand mit gezielten nativen und Controllerprüfung
 Mitwachsende Bohrungen zeigen im Eigenschaftenbereich ihren Merkmaltyp, den Grund für die gesperrte gewöhnliche Gruppenauflösung und einen direkten Button zum bestehenden Bohrungseditor. Die normale Gruppenoperation wird für diese Merkmale ausgeblendet; gewöhnliche CSG-Gruppen behalten sie. Die Fehlermeldung nennt Grund und Bearbeitungsweg, mit englischer Übersetzung.
 Die Objektlisten in Solid und Fusion überschreiben jetzt ausdrücklich die allgemeine 95-Pixel-Flexbasis. Der jeweilige Manager scrollt die vollständige Liste; untere Buttons und Solid-Hinweis folgen nach den Einträgen. Eine isolierte Electron-Regression mit 14 Teilen prüft wiederholte Moduswechsel, den Bohrungseditor, normale Gruppen sowie unverändertes Modell und Undo.
 
+
+
+### 31.10.2026 – Portable-Laufzeit und optionales Sprachmodell (0.121.0)
+
+Die lokale Whisper-Engine bleibt enthalten, das große Sprachmodell wird erst
+nach ausdrücklichem Klick in der Spracheingabe heruntergeladen. Der feste
+574.041.195-Byte-Download wird gestreamt, auf SHA256 geprüft und erst nach
+vollständiger Prüfung atomar in `Daten/Sprachmodelle` aktiviert. Fortschritt,
+Abbruch, erneuter Versuch und Weiterverwendung nach Neustart sind vorgesehen.
+Online-Sprache und CAD funktionieren ohne dieses optionale Modell.
+
+Die Portable-Auswahl wird durch `scripts/portable-runtime-policy.mjs` bestimmt.
+Ein AST-Audit der Python-Worker protokolliert direkte und dynamische Imports;
+die dynamische Python-API und der zugesagte Kernmodulkatalog werden zusätzlich
+nativ geprüft. Ausgelassen werden benannte ungenutzte optionale Workbenches,
+Buildmetadaten, Qt-Entwicklungsprogramme, Debugsymbole, upstream Testdaten und
+ersetzbare Python-Bytecode-Caches. Laufzeit-DLLs, benötigte Python-Pakete,
+Kern-Workbenches, Qt-Plugins und Lizenztexte bleiben erhalten. Die ausgewählte
+CAD-Dateiliste und ihr ASAR-Pin werden passend neu erzeugt. Die FreeCAD-Quellen
+und der Launcherquelltext werden separat als Quellenarchiv bereitgestellt.
+
+App-Buildskripte, Testfixtures und Backend-Verifikationen werden nicht in die
+Endnutzer-App kopiert. Die Entwicklungsabnahme lädt ihre Prüfhelfer mit
+`scripts/verify-portable.mjs` von außen in die unveränderte gepackte EXE;
+Produktionsmodule werden aus deren ASAR aufgelöst. Der ZIP-Schritt verwendet
+den eingebetteten Python-Interpreter ohne Bytecode-Schreibzugriffe und prüft
+jeden Archiv-Eintrag per SHA256. Die relativen Windows-Links liegen unter
+`packaging/windows`. Genau drei ausdrücklich ausgewählte Benutzerbeispiele
+liegen unter `packaging/examples`: gekoppelte ATLAS-5-Fräse, großes
+6:1-Schräggetriebe und Präzisionsschraubstock. Sie werden hashgeprüft unter
+`Projekte/Beispiele` mitgeliefert.
+
+Dies ist eine gezielt geprüfte Portable-Änderung. Der Entwicklungsrechner und
+die mitgelieferten Laufzeiten liefern die Prüfumgebung; ein unabhängiger Lauf
+auf einer frischen Windows-Installation ist damit nicht nachgewiesen.
+
+Der lokale gezielte Prüfstand 0.121.0-r4 umfasst 36 Unit-Prüfungen und 336 gepackte/entpackte UI-Prüfschritte, darunter alle drei Beispielmodelle, native GUI-Imports, Python, wissenschaftliche Analyse, Konverter, Dokumentänderungen, Kurven/Lofts, Flächen und Sprache. Die 1.082.802.220-Byte-Windows-ZIP wurde vollständig zurückgelesen und frisch entpackt hashgeprüft; alle drei relativen Links wurden auf den neuen Entpackort aufgelöst. Dies ersetzt keine unabhängige Windows-Neuinstallations- oder Gesamtabnahme.
+
+### 31.10.2026 – Vertieftes Portable-Profil (0.122.0)
+
+Die native CAD-Umgebung wird anhand eines versionsgebundenen Profils in
+`scripts/portable-freecad-profile.json` ausgewählt. Zusätzliche Python-OCC-,
+IFC-, VTK-, SciPy-, pandas-, SymPy- und Matplotlib-Pakete werden im FreeCAD-
+Prozess nicht benötigt. Der native Part-/OCCT-Kern, NumPy, die verwendeten
+PySide-Bindings, Qt-Plugins und Kern-Workbenches bleiben erhalten. Die separate
+wissenschaftliche Analyse läuft weiter in Pyodide. Benannte unbenutzte native
+Bibliotheken werden nur bei passendem SHA256 ausgelassen; geänderte Eingaben
+erfordern ein neues Audit. OpenBLAS bleibt wegen weitergeleiteter BLAS-Exporte
+erhalten, ebenso Software-OpenGL und benötigte Microsoft-Laufzeitbibliotheken.
+
+Der minimale Konverter friert unveränderte, bytegenau gepinnte Enginequellen
+ein. Eine nur beim Einfrieren verwendete private VTK-Typebridge verhindert das
+Laden des allgemeinen VTK-Umbrellas mit VR, Filmcodecs und unnötigen Dateilesern.
+Tatsächlich direkt importierte VTK-, OCCT-, SciPy- und CasADi-Komponenten bleiben
+enthalten; Numba/LLVM sowie Viewer-/Notebook-Pakete entfallen. Der ausgewählte
+Laufzeitordner und EXE-Hash stehen in `converter/provenance.json` und werden
+sowohl vom Entwicklungsstart als auch vom Packaging verwendet. Die Bridge
+verspricht keine allgemeine VTK-Umgebung.
+
+Electron erhält die Sprachpakete de/en-US/en-GB. Andere App-Sprachen fallen
+auf eine enthaltene Chromium-Lokalisierung zurück. Grafik- und Software-
+Rendering-Bibliotheken bleiben enthalten. Die App bringt kein node_modules,
+JDK oder JRE mit. Quell-, Build- und Prüfwerkzeuge bleiben außerhalb des Pakets.
+
+Die Whisper-Engine benötigt vier app-lokale Microsoft-DLLs zusätzlich zu ihren
+eigenen Dateien. Diese werden aus der manifestgeprüften CAD-Laufzeit kopiert
+und im ausgelieferten Sprachmanifest gehasht; das originale Whisper-
+Downloadmanifest wird nicht verändert. Das Sprachmodell bleibt optional.
+Der aktuelle Releasebau prüft die PE-Abhängigkeiten aller vier Komponenten
+einschließlich Delay-Imports, Exportweiterleitungen und wesentlicher Wurzeln.
+`pefile` ist nur eine Entwicklungsabhängigkeit. Ein vollständiger FreeCAD-
+Quelleneingang ist zum Erzeugen des separaten Quellenarchivs erforderlich.
+
+Gezielte Abnahme: 42 Unit-Prüfungen; der breitere gepackte r2-Prüflauf umfasst
+302 UI-Schritte. r3 verwendet dieselben EXE-/ASAR-Bytes und ergänzt nur die
+Sprach-Laufzeit-DLLs samt Manifest/Hinweis. Seine Sprach-UI-Prüfung besteht mit
+21 Schritten; ein zusätzlicher echter Sprachprozess lädt nachweislich alle
+vier Microsoft-DLLs aus dem Sprachordner. Native CAD-Proben prüfen zwölf
+Kernmodule, QtUiLoader, NumPy, STEP-Rücklesen, Mesh, Draft und Points mit
+Bibliothekspfaden ausschließlich aus dem Paket und Windows. Diese Prüfungen
+beweisen keine unabhängige frische Windows-Installation oder Gesamtabnahme.
+
+Die finale lokale 0.122.0-r3-ZIP umfasst 670.687.987 Byte, entpackt
+1.780.844.172 Byte. Das sind gegenüber 0.121.0-r4 weitere 38,1 Prozent weniger
+Download und 44,4 Prozent weniger entpackte Nutzdaten. Jeder ZIP-Eintrag wurde
+zurückgelesen; 15.802 frisch extrahierte Dateien und drei relative Windows-Links
+wurden geprüft. Die entpackte EXE besteht weitere 17 Start-/Beispielprüfschritte
+und 23 Laufzeitprüfschritte. Alle drei Beispielansichten wurden auch visuell
+geprüft. Der dokumentierte gezielte Gesamtprüfumfang über r2/r3 beträgt damit
+363 UI-Schritte; die beiden Revisionen haben identische EXE-/ASAR- und
+CAD-/Konverterdateien. 1.126 Produktionsquelldateien stimmen weiterhin mit
+dem tatsächlichen Bausnapshot überein. Die neue Ausgabe wurde lokal erstellt,
+ohne GitHub-Veröffentlichung oder unabhängige Windows-Neuinstallationsabnahme.

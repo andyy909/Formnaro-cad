@@ -46,8 +46,7 @@ zusätzliche unveränderte Engine-/CAD-Ressourcengrenzen gelten.
 Entwicklung: PyInstaller converter/Formnaro-Konverter.spec erzeugt einen eigenen
 Headless-Konverter. Neue Builds liegen getrennt in runtime-v010-build und
 runtime-v010. Frühere Runtime-/App-Ausgaben werden nicht ersetzt. Die portable
-Desktop-Ausgabe benutzt resources/converter/Formnaro-Konverter.exe mit _internal,
-synthetischen Beispielen und vollständigen Drittanbieter-Lizenzen.
+Desktop-Ausgabe benutzt resources/converter/Formnaro-Konverter.exe mit _internal und vollständigen Drittanbieter-Lizenzen. Konverter-Prüfdateien bleiben im Quell-/Abnahmeordner und gehören nicht in die portable Laufzeit.
 Abnahme und Build-/Runtime-SHAs stehen unter work/stl-v010-integration; sie müssen
 nach jeder Produktänderung erneuert werden. Eine bloße Upstream-Abnahme ersetzt
 keinen Test dieser konkreten Formnaro-Anbindung.
@@ -63,3 +62,30 @@ eines ausgewählten Netzobjekts ist weiterhin Paket 11.
 
 
 Sicherheitsbuild 0.103.1: unveränderte Engine-Pythonmodule und Bridge, neu gefrorene Abhängigkeiten Pillow 13.0.0 und setuptools 84.2.1. pyproject/uv.lock und die dadurch veränderten Build-Pins sind in provenance.json getrennt vom bisherigen Build dokumentiert. Neue Laufzeit: runtime-v010-security. scripts/prepare-security-converter.py prüft Engine-Quellen, tatsächliches PIL._version im gefrorenen Archiv sowie die Imaging-Binärdatei und ergänzt aktuelle Paketmetadaten/Lizenzen. Vorbereitender PyInstaller-Aufruf: converter/.venv/Scripts/python.exe -m PyInstaller --noconfirm --distpath converter/runtime-v010-security-build --workpath work/security-0104/pyinstaller converter/Formnaro-Konverter.spec. Alte Laufzeiten und freigegebene Programme werden nicht überschrieben.
+
+
+## Minimaler Headless-Build ab 0.122.0
+
+`Formnaro-Konverter.spec` friert die unveränderten Enginealgorithmen für das
+feste Dateiprotokoll ein. Die private `headless-vtk/vtk.py` stellt echte
+VTK-Kerntypen bereit, die OCP beim Initialisieren importiert. Der allgemeine
+VTK-Umbrella würde zusätzlich VR, Filmcodecs und viele Dateileser laden.
+Direkte VTK-Importe von CadQuery bleiben mit ihren Standardhooks enthalten.
+Die Bridge ist keine allgemeine VTK-Python-Umgebung. Viewer-/Notebook-/Trame-
+und unbenutzte NumPy-JIT-Pakete (Numba/LLVM) werden nicht eingefroren.
+SciPy, CasADi und die tatsächlich importierten VTK-/OCCT-Bibliotheken bleiben.
+
+Der vorbereitete Laufzeitordner wird über `provenance.json` ausgewählt;
+Entwicklungsstart und Packaging nutzen dieselbe Auswahl. Ein separater Build
+kann mit dem vorbereiteten Converter-venv so erfolgen:
+
+```
+converter/.venv/Scripts/python.exe -B -m PyInstaller --noconfirm --distpath <neuer-dist-ordner> --workpath <neuer-build-ordner> converter/Formnaro-Konverter.spec
+converter/.venv/Scripts/python.exe -B scripts/prepare-minimal-converter.py --built <dist>/Formnaro-Konverter --baseline <vorbereitete-lizenzierte-security-runtime> --output converter/runtime-v010-minimal --report work/converter-minimal.json
+```
+
+Die Vorbereitung prüft die unveränderten Engine-Quellpins, Pillow 13.0.0,
+Setuptools 84.2.1 und identische verbleibende native Abhängigkeitsdateien gegen
+die lizenzierte Basis. Sie übernimmt die vollständigen Lizenzhinweise und
+protokolliert Spec, private Typebridge, Abhängigkeitsversionen und EXE-Hash.
+Frühere Programm- und Runtime-Ausgaben werden nicht überschrieben.

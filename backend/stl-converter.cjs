@@ -16,6 +16,12 @@ function validate(args){
  if(args.commands!==undefined&&(!Array.isArray(args.commands)||args.commands.length>20||Buffer.byteLength(JSON.stringify(args.commands))>JSON_LIMIT))throw Error('Ungültige Regionsbefehle.');
  return options;
 }
+function runtimeDirectory({packaged=false,resourcesPath=process.resourcesPath,root=path.resolve(__dirname,'..')}={}){
+ if(packaged){if(typeof resourcesPath!=='string')throw Error('Portable resources directory missing');return path.join(resourcesPath,'converter');}
+ const meta=JSON.parse(require('node:fs').readFileSync(path.join(root,'converter/provenance.json'),'utf8'));
+ if(!/^runtime-v010(?:-[a-z0-9]+)*$/.test(meta.runtimeDirectory))throw Error('Invalid converter runtime directory');
+ return path.join(root,'converter',meta.runtimeDirectory);
+}
 function createStlConverter({command,prefix=[],tempRoot=os.tmpdir(),timeoutMs=600000,onProgress=()=>{},spawnProcess=spawn}={}){
  let active=null;
  async function cancel(id){const job=active;if(!job||id!==undefined&&job.id!==id)return false;job.cancelled=true;job.child?.kill();await job.done;return true;}
@@ -80,4 +86,4 @@ function installStlConverter(win,{directory,ipcMain=require('electron').ipcMain,
  const stop=()=>{void runner.cancel();};win.once('closed',stop);win.webContents.on('render-process-gone',stop);win.webContents.on('did-start-navigation',(_event,_url,inPlace,mainFrame)=>{if(mainFrame&&!inPlace)stop();});
  return runner;
 }
-module.exports={validate,createStlConverter,installStlConverter};
+module.exports={runtimeDirectory,validate,createStlConverter,installStlConverter};
