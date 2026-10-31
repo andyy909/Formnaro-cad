@@ -4,89 +4,93 @@
 
 # Formnaro
 
-**CAD und Netzbearbeitung für Modellbau und 3D-Druck.** Konstruiere Bauteile, bearbeite 3D-Modelle und erstelle technische Zeichnungen. Formnaro läuft lokal unter Windows; die normale Modellierung funktioniert offline.
+**English** | [Deutsch](README.de.md)
 
-**Windows 64 Bit · portabel – zwei Downloads zur Auswahl:**
+**CAD and mesh editing for model making and 3D printing.** Design parts, edit 3D models and create technical drawings. Formnaro runs locally on Windows; regular modelling works offline.
 
-| Download | Version | Größe | Inhalt |
+**Windows 64-bit · portable — choose between two downloads:**
+
+| Download | Version | Size | Contents |
 | --- | --- | --- | --- |
-| **[Nur das Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.122.0-r3/Formnaro-v0.122.0-r3-Windows.zip)** | **0.122.0-r3** | ca. **671 MB** | Kleine Portable-Version mit benötigten Laufzeiten, Lizenzen und Beispielen; ohne Entwicklungswerkzeuge und eigene Tests. |
-| **[Großes Entwicklungspaket herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/Formnaro-v0.120.0-r4-Windows.zip)** | **0.120.0-r4** | ca. **1,9 GB** | Bisheriges, ungekürztes Paket mit zusätzlichen Entwicklungs- und Testbestandteilen. |
+| **[Download the application](https://github.com/andyy909/Formnaro-cad/releases/download/v0.122.0-r3/Formnaro-v0.122.0-r3-Windows.zip)** | **0.122.0-r3** | approx. **671 MB** | Compact portable package with the required runtimes, licences and examples; without development tools or the project's own tests. |
+| **[Download the full development package](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/Formnaro-v0.120.0-r4-Windows.zip)** | **0.120.0-r4** | approx. **1.9 GB** | The previous, untrimmed package, including additional development and test components. |
 
-Für die normale Nutzung genügt **„Nur das Programm“**. Das große Paket ist die ältere Ausgabe **0.120.0-r4**; die kleine Portable-Version ist **0.122.0-r3**. Den Quellcode zum Weiterentwickeln findest du zusätzlich in den Quellenarchiven der jeweiligen [Version](https://github.com/andyy909/Formnaro-cad/releases).
+For everyday use, **“Download the application”** is sufficient. The full package is the older **0.120.0-r4** release; the compact portable package is **0.122.0-r3**. Source archives for further development are also available with each [release](https://github.com/andyy909/Formnaro-cad/releases).
 
-[Anleitungen](#anleitungen) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
+[Documentation](#documentation) · [Release notes](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
 
-| **Easy Tinker** · Lagerhalter (Dark Mode) | **Normal** · Schraubstock (Dark Mode) |
+| **Easy Tinker** · bearing bracket (dark mode) | **Normal** · precision vise (dark mode) |
 | :---: | :---: |
-| [![Easy Tinker mit Lagerhalter und Formenpalette im Dark Mode](docs/bilder/formnaro-easy-lagerhalter-dark.png)](docs/bilder/formnaro-easy-lagerhalter-dark.png) | [![Normal mit Präzisionsschraubstock im Dark Mode](docs/bilder/formnaro-normal-schraubstock-dark.png)](docs/bilder/formnaro-normal-schraubstock-dark.png) |
-| **Solid** · ATLAS-5-Portalfräse (Light Mode) | **Fusion** · zweistufiges Schräggetriebe (Light Mode) |
-| [![Solid mit ATLAS-5-Portalfräse, fünf Achsen und gekoppeltem A-Antrieb](docs/bilder/formnaro-solid-atlas5.png)](docs/bilder/formnaro-solid-atlas5.png) | [![Fusion mit Konstruktionsschritten und Schräggetriebe mit vier Zahnrädern](docs/bilder/formnaro-fusion-getriebe.png)](docs/bilder/formnaro-fusion-getriebe.png) |
+| [![Easy Tinker with a bearing bracket and shape palette in dark mode](docs/bilder/formnaro-easy-lagerhalter-dark.png)](docs/bilder/formnaro-easy-lagerhalter-dark.png) | [![Normal with a precision vise in dark mode](docs/bilder/formnaro-normal-schraubstock-dark.png)](docs/bilder/formnaro-normal-schraubstock-dark.png) |
+| **Solid** · ATLAS-5 gantry mill (light mode) | **Fusion** · two-stage helical gearbox (light mode) |
+| [![Solid with the ATLAS-5 gantry mill, five axes and a coupled A-axis drive](docs/bilder/formnaro-solid-atlas5.png)](docs/bilder/formnaro-solid-atlas5.png) | [![Fusion with construction steps and a four-gear helical gearbox](docs/bilder/formnaro-fusion-getriebe.png)](docs/bilder/formnaro-fusion-getriebe.png) |
 
-*Echte Programmaufnahmen: Easy Tinker und Normal im Dark Mode aus 0.117.0-r8; Solid mit ATLAS-5 im Light Mode aus 0.120.0-r4; Fusion im Light Mode aus 0.119.0-r2. Zum Vergrößern auf ein Bild klicken.*
+*Actual application screenshots: Easy Tinker and Normal in dark mode from 0.117.0-r8; Solid with ATLAS-5 in light mode from 0.120.0-r4; Fusion in light mode from 0.119.0-r2. Click an image to enlarge it.*
 
-## Schnell starten
+## Quick start
 
-1. Windows-ZIP herunterladen und vollständig in einen eigenen Ordner entpacken.
-2. Alle Unterordner zusammenlassen und **„Formnaro starten“** doppelklicken.
-3. Ein neues Projekt anlegen oder ein Beispiel öffnen.
+1. Download the Windows ZIP and extract it completely into its own folder.
+2. Keep all subfolders together and double-click **“Formnaro starten”** (“Start Formnaro”).
+3. Create a new project or open an example.
 
-Die kleine Portable-ZIP enthält das ausführbare Programm mit den benötigten Laufzeiten, Lizenzen und drei Beispielmodellen – ohne Entwicklungswerkzeuge und eigene Tests. FreeCAD und Python sind enthalten; eine separate Installation ist nicht nötig. Das optionale Modell für Offline-Sprache wird bei Bedarf direkt im Programm heruntergeladen. Zum Starten wird nur die Windows-ZIP benötigt; die separaten Quellenarchive sind für Entwickler.
+The compact portable ZIP contains the application, required runtimes, licences and three example models, without development tools or the project's own tests. FreeCAD and Python are included; no separate installation is needed. The optional offline speech model can be downloaded from within the application when needed. Only the Windows ZIP is required to run Formnaro; the separate source archives are for developers.
 
-## Funktionen
+## Features
 
-- **Bauteile konstruieren:** Grundformen, Skizzen, Bohrungen, Ausschnitte, Rundungen, Loft und Sweep.
-- **Maße bearbeiten:** Parameter, Formeln und Varianten für zusammengehörige Teile.
-- **Netze bearbeiten:** Modelle importieren, prüfen, reparieren und gezielt verändern.
-- **Zeichnungen erstellen:** Ansichten, Schnitte und Bemaßungen als PDF, SVG oder DXF ausgeben.
-- **Baugruppen organisieren:** Gelenke, Zahnradkopplungen, Material, Masse, Stücklisten und Explosionsansichten.
+- **Design parts:** primitives, sketches, holes, cutouts, fillets, lofts and sweeps.
+- **Edit dimensions:** parameters, formulas and variants for related parts.
+- **Edit meshes:** import, inspect, repair and selectively modify models.
+- **Create drawings:** export views, sections and dimensions as PDF, SVG or DXF.
+- **Organise assemblies:** joints, gear couplings, materials, mass, bills of materials and exploded views.
 
-STEP, STL, OBJ, 3MF und GLB/glTF ermöglichen den Modellaustausch. Vier Bedienmodi stehen zur Wahl: **Easy Tinker, Normal, Solid und Fusion**. Änderungen lassen sich in der Vorschau prüfen und rückgängig machen.
+STEP, STL, OBJ, 3MF and GLB/glTF support model exchange. Choose from four interface modes: **Easy Tinker, Normal, Solid and Fusion**. Changes can be checked in a preview and undone.
 
-**Optionale KI-Unterstützung** hilft bei Modellieraufträgen, Referenzfotos und Bedienfragen. Cloud-Anfragen benötigen einen Anbieterzugang und Internet; je nach Anbieter können Kosten entstehen. Python- und FreeCAD-Werkzeuge rechnen lokal.
+**Optional AI assistance** helps with modelling tasks, reference photos and application questions. Cloud requests require a provider account or API access and an internet connection; provider charges may apply. Python and FreeCAD tools run locally.
 
-### ATLAS-5 in Bewegung
+### ATLAS-5 in motion
 
-![ATLAS-5: X-, Y- und Z-Verfahrt, A-Schwenkwiege mit gekoppeltem Ritzel sowie C-Rundtisch](docs/bilder/formnaro-atlas5-bewegung.gif)
+![ATLAS-5: X, Y and Z travel, an A-axis tilting cradle with a coupled pinion, and a C-axis rotary table](docs/bilder/formnaro-atlas5-bewegung.gif)
 
-**144 Bauteile, 78 Gelenke und fünf Achsen.** Das kurze GIF zeigt die tatsächlichen Gelenkbewegungen in Formnaro 0.120.0-r4. Wiege und Ritzel sind mit **48:20** gekoppelt und werden gemeinsam vom Y-Träger mitgenommen. [Bearbeitbares Beispiel herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad). Das Modell wurde mit Codex (Astra) über die lokale MCP-Schnittstelle von Formnaro konstruiert. Die Animation wurde anschließend in einer getrennten Modellkopie aufgenommen, ohne eine erneute KI-Anfrage während der Aufnahme. Sie demonstriert Kinematik, keine Kontaktkräfte oder Fertigungsfreigabe.
+**144 parts, 78 joints and five axes.** This short GIF shows actual joint movements in Formnaro 0.120.0-r4. The cradle and pinion are coupled at **48:20** and move together with the Y-axis carrier. [Download the editable example](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad). The model was constructed with Codex (Astra) through Formnaro's local MCP interface. The animation was then recorded using a separate model copy, without another AI request during recording. It demonstrates kinematics, not contact forces or approval for manufacturing.
 
-### Getriebe in Bewegung
+### Gearbox in motion
 
-![Vier Schrägzahnräder mit automatisch gekoppelten Wellen und 6:1 Untersetzung](docs/bilder/formnaro-schraeggetriebe-6zu1.gif)
+![Four helical gears with automatically coupled shafts and a 6:1 reduction ratio](docs/bilder/formnaro-schraeggetriebe-6zu1.gif)
 
-Zwei Stufen, vier Räder, **6:1 Untersetzung** – ein offenes Getriebekonzept etwa für einen langsamen Drehteller. Nur die Antriebswelle wird bewegt; die übrigen folgen der Kopplung. [Beispielprojekt herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.119.0-r3/schraeggetriebe-6zu1.ocad). Kinematische Demonstration aus 0.119.0-r2, keine Kontakt- oder Belastungssimulation.
+Two stages, four gears and a **6:1 reduction ratio** — an open gearbox concept, for example for a slow rotary table. Only the input shaft is driven; the others follow through the coupling. [Download the example project](https://github.com/andyy909/Formnaro-cad/releases/download/v0.119.0-r3/schraeggetriebe-6zu1.ocad). This is a kinematic demonstration from 0.119.0-r2, not a contact or load simulation.
 
-### KI in Aktion
+### AI in action
 
-![KI-Übungsmodus: Formnaro führt die Modellierschritte für eine Platte mit Bohrung im eigenen Übungsfenster vor](bilder/formnaro-uebungsmodus.gif)
+![AI practice mode: Formnaro demonstrates the modelling steps for a plate with a hole in a separate practice window](bilder/formnaro-uebungsmodus.gif)
 
-Das GIF zeigt die Wiedergabe eines zuvor von DeepSeek erzeugten Plans, ohne Live-KI-Anfrage während der Aufnahme. Der begrenzte Übungsmodus ist in beiden oben verlinkten Windows-Paketen enthalten und arbeitet in einem getrennten Übungsfenster.
+The GIF replays a plan previously generated by DeepSeek, without a live AI request during recording. The limited practice mode is included in both Windows packages linked above and runs in a separate practice window.
 
-## Anleitungen
+## Documentation
 
-| Thema | Weiterlesen |
+The linked guides are currently mainly in German.
+
+| Topic | Read more |
 | --- | --- |
-| Bedienung | [Grundlagen](LIES-MICH.txt) · [Solid](docs/SOLID-MODUS.md) · [Fusion](docs/FUSION-MODUS.md) |
-| Konstruktion | [Parameter und Varianten](docs/PROJEKTPARAMETER.md) · [Kurven, Loft und Sweep](docs/CAD-KURVEN.md) |
-| Zeichnungen und Baugruppen | [Technische Zeichnungen](docs/TECHNISCHE-ZEICHNUNGEN.md) · [Teile, Material und Stücklisten](docs/TEILE-MATERIAL-BAUGRUPPEN.md) |
-| KI-Unterstützung | [KI-Aufträge](docs/KI-AUFTRAEGE.md) · [Foto-Assistent](docs/FOTO-ASSISTENT.md) · [Programm-Assistent](docs/PROGRAMM-ASSISTENT.md) |
-| Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/PROJEKTKONTEXT.md) |
+| Getting around | [Basics](LIES-MICH.txt) · [Solid](docs/SOLID-MODUS.md) · [Fusion](docs/FUSION-MODUS.md) |
+| Modelling | [Parameters and variants](docs/PROJEKTPARAMETER.md) · [Curves, lofts and sweeps](docs/CAD-KURVEN.md) |
+| Drawings and assemblies | [Technical drawings](docs/TECHNISCHE-ZEICHNUNGEN.md) · [Parts, materials and bills of materials](docs/TEILE-MATERIAL-BAUGRUPPEN.md) |
+| AI assistance | [AI tasks](docs/KI-AUFTRAEGE.md) · [Photo assistant](docs/FOTO-ASSISTENT.md) · [Application assistant](docs/PROGRAMM-ASSISTENT.md) |
+| Development | [Build instructions](docs/BUILD.md) · [Architecture](docs/PROJEKTKONTEXT.md) |
 
 <!-- formnaro-development-status:start -->
-## Entwicklungsstand
+## Development status
 
-Der Windows-Download **0.122.0-r3** verkleinert die Portable-ZIP auf **671 MB** (entpackt etwa **1,78 GB**). Gegenüber 0.120.0-r4 ist der Download rund **65 % kleiner**. **42 gezielte Unit-Prüfungen und 363 UI-Prüfschritte über r2/r3** sind dokumentiert; ZIP-Inhalte, frische Extraktion und die drei Beispielmodelle wurden geprüft. Zum Prüfstatus: Eine unabhängige Prüfung auf einer frischen Windows-Installation und eine neue allgemeine Gesamtabnahme stehen aus.
+The **0.122.0-r3** Windows download reduces the portable ZIP to **671 MB** (about **1.78 GB** extracted). The download is approximately **65% smaller** than 0.120.0-r4. **42 targeted unit checks and 363 UI test steps across r2/r3** are documented; ZIP contents, a fresh extraction and the three example models have been checked. Verification status: an independent check on a fresh Windows installation and a new comprehensive acceptance run remain outstanding.
 
-Der zugehörige Quellstand liegt unter [v0.122.0-r3](https://github.com/andyy909/Formnaro-cad/tree/v0.122.0-r3); der Programmcode im Zweig `main` steht noch auf **0.120.0-r4**.
+The matching source is available at [v0.122.0-r3](https://github.com/andyy909/Formnaro-cad/tree/v0.122.0-r3); application code on the `main` branch is still at **0.120.0-r4**.
 
-[Prüfbericht des Downloads](https://github.com/andyy909/Formnaro-cad/releases/download/v0.122.0-r3/Paket-Analyse.txt) · [Ausbau und offene Punkte](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md)
+[Download verification report](https://github.com/andyy909/Formnaro-cad/releases/download/v0.122.0-r3/Paket-Analyse.txt) · [Development progress and open items](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md)
 <!-- formnaro-development-status:end -->
 
 <details>
-<summary>Aus dem Quellcode starten</summary>
+<summary>Run from source</summary>
 
-Mit Node.js 22.16 oder neuer und npm:
+With Node.js 22.16 or later and npm:
 
 ```sh
 git clone --branch v0.122.0-r3 https://github.com/andyy909/Formnaro-cad.git
@@ -96,13 +100,12 @@ npm run build
 npm start
 ```
 
-Für FreeCAD-Funktionen im Entwicklungscheckout: `npm run setup:cad-runtime`. Weitere Laufzeiten, Tests und Paketierung beschreibt die [Bauanleitung](docs/BUILD.md).
+For FreeCAD features in a development checkout, run `npm run setup:cad-runtime`. The [build instructions](docs/BUILD.md) cover additional runtimes, tests and packaging.
 
 </details>
 
-## Mitmachen und Lizenz
+## Contributing and licence
 
-Fehler oder Ideen? Erstelle ein [Issue](https://github.com/andyy909/Formnaro-cad/issues). Bei Fehlern helfen die verwendete Version und nachvollziehbare Schritte.
+Found a bug or have an idea? Open an [issue](https://github.com/andyy909/Formnaro-cad/issues). For bug reports, include the version you used and steps to reproduce the problem.
 
-Der eigene Anwendungscode steht unter **[MIT](LICENSE.txt)**. Fremdkomponenten behalten ihre [eigenen Lizenzen](THIRD-PARTY-LICENSES.txt); der kombinierte CAD-Kern ist nicht insgesamt MIT-lizenziert. [Lizenzdetails](docs/LIZENZ-MIT.md) · [CAD-Quellen und Build](licenses/CAD-Quellen-und-Build.txt).
-
+The application's own code is licensed under **[MIT](LICENSE.txt)**. Third-party components retain their [own licences](THIRD-PARTY-LICENSES.txt); the combined CAD kernel is not entirely MIT-licensed. [Licence details](docs/LIZENZ-MIT.md) · [CAD sources and build information](licenses/CAD-Quellen-und-Build.txt).
