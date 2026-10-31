@@ -6,9 +6,16 @@
 
 **CAD und Netzbearbeitung für Modellbau und 3D-Druck.** Konstruiere Bauteile, bearbeite 3D-Modelle und erstelle technische Zeichnungen. Formnaro läuft lokal unter Windows; die normale Modellierung funktioniert offline.
 
-**[Für Windows herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.122.0-r3/Formnaro-v0.122.0-r3-Windows.zip)** · [Anleitungen](#anleitungen) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
+**Windows 64 Bit · portabel – zwei Downloads zur Auswahl:**
 
-Windows 64 Bit · portabel · Download **0.122.0-r3** · gezielt geprüfte Entwicklungsausgabe · ca. **671 MB**
+| Download | Version | Größe | Inhalt |
+| --- | --- | --- | --- |
+| **[Nur das Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.122.0-r3/Formnaro-v0.122.0-r3-Windows.zip)** | **0.122.0-r3** | ca. **671 MB** | Kleine Portable-Version mit benötigten Laufzeiten, Lizenzen und Beispielen; ohne Entwicklungswerkzeuge und eigene Tests. |
+| **[Großes Entwicklungspaket herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/Formnaro-v0.120.0-r4-Windows.zip)** | **0.120.0-r4** | ca. **1,9 GB** | Bisheriges, ungekürztes Paket mit zusätzlichen Entwicklungs- und Testbestandteilen. |
+
+Für die normale Nutzung genügt **„Nur das Programm“**. Das große Paket ist die ältere Ausgabe **0.120.0-r4**; die kleine Portable-Version ist **0.122.0-r3**. Den Quellcode zum Weiterentwickeln findest du zusätzlich in den Quellenarchiven der jeweiligen [Version](https://github.com/andyy909/Formnaro-cad/releases).
+
+[Anleitungen](#anleitungen) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
 
 | **Easy Tinker** · Lagerhalter (Dark Mode) | **Normal** · Schraubstock (Dark Mode) |
 | :---: | :---: |
