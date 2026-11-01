@@ -25,3 +25,8 @@ Der Client liest den lokalen Zugriffstoken intern. Verbindungsdatei und Token
 nicht ausgeben, in Prompts aufnehmen oder in Auslieferungen kopieren. Formnaro
 muss geöffnet und die lokale KI-Schnittstelle aktiviert sein. Es wird kein
 zusätzlicher Cloud-API-Schlüssel für diese Verbindung benötigt.
+
+Beim Modellieren die gemeinsame Regel `context.designFreedom` aus
+`ai/FORMNARO-MODELLIERFREIRAUM.json` beachten. Sie gilt für fehlende Maße und
+Entwurfsdetails, auch bei Türen/Fenstern, unabhängig von der Modellstrenge.
+Die lokale MCP-Anbindung übermittelt sie beim Verbindungsaufbau und im Kontext.

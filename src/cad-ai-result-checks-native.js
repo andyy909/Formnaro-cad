@@ -51,7 +51,7 @@ export function checkCadAIResultNative({oc,project,scene,checks,aliases={}}){
   if(!['clearance','bore'].includes(check.kind)){
    const expected=Array.isArray(check.expected)?check.expected:[check.expected],measured=Array.isArray(actual)?actual:[actual];
    if(measured.length!==expected.length||measured.some(v=>!Number.isFinite(v)))throw Object.assign(Error('Ergebnisprüfung konnte keinen endlichen Messwert bestimmen.'),{code:'AI_CHECK_UNAVAILABLE'});
-   if(measured.some((v,k)=>Math.abs(v-expected[k])>(check.kind==='solids'?0:tolerance)))throw aiCheckFailure(check,i+1,actual);
+   if(measured.some((v,k)=>expected[k]!==null&&Math.abs(v-expected[k])>(check.kind==='solids'?0:tolerance)))throw aiCheckFailure(check,i+1,actual);
   }
   reports.push({kind:check.kind,target:structuredClone(object.target),...(check.other?{other:structuredClone(resolveAIResultTarget(scene,check.other,aliases).target)}:{}),...(check.edge?{edge:check.edge}:{}),...(check.space?{space:check.space}:{}),expected:check.expected??check.diameter,actual,tolerance:check.kind==='solids'?0:tolerance,passed:true,evidence:object.kind==='cad'?'native-brep':'source-bounds'});
  }

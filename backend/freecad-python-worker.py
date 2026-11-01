@@ -1,5 +1,5 @@
 """Full native FreeCAD scripting inside the Windows CAD AppContainer."""
-import os,sys,json,traceback,zipfile,io
+import os,sys,json,traceback,zipfile,io,math
 from pathlib import Path
 import FreeCAD as App
 import Part
@@ -27,6 +27,7 @@ try:
     doc=getattr(value,'Document',None) or namespace.get('doc') or App.ActiveDocument
     if doc:doc.recompute()
     shape=getattr(value,'Shape',value)
+    if shape is not None and not isinstance(shape,Part.Shape):raise ValueError('Set result to a native Part.Shape or document object containing Shape')
     report=inspect_shape(shape,True) if shape is not None else None
     measurements=namespace.get('measurements',{})
     # Fail on non-JSON values instead of silently dropping exact measurements.
@@ -37,6 +38,7 @@ try:
         shape.exportStep(str(job/'result.step'))
         readback=Part.read(str(job/'result.step'));readback_proof=inspect_shape(readback)
         if not readback_proof['valid'] or not readback_proof['closed'] or readback_proof['solids']!=report['solids'] or readback_proof['check']!='passed':raise ValueError('Exported STEP readback failed: '+json.dumps(readback_proof))
+        if not math.isfinite(report['volume']) or not math.isfinite(readback_proof['volume']) or abs(readback_proof['volume']-report['volume'])>max(1e-6,abs(report['volume'])*1e-8):raise ValueError('Exported STEP readback volume differs from the native result')
         if not hasattr(value,'Shape'):
             value=doc.addObject('Part::Feature','Result');value.Shape=shape
         if 'FormnaroPython' not in value.PropertiesList:value.addProperty('App::PropertyString','FormnaroPython','Formnaro')

@@ -9,10 +9,12 @@ import json
 import math
 import uuid
 import re
+import weakref
 
 __version__ = "1.3.0"
 _rpc = None
-_models = []
+_models = weakref.WeakValueDictionary()
+_pending_models = {}
 
 
 class FormnaroError(RuntimeError):
@@ -119,12 +121,15 @@ class Model:
         self._cursor = 0
         self._prefix = "py" + uuid.uuid4().hex[:12]
         self._sequence = 0
-        _models.append(self)
+        self._registry_id = id(self)
+        _models[self._registry_id] = self
 
     def command(self, command):
         if len(self.commands) >= 2000:
             raise ValueError("At most 2000 modelling operations per Python run")
         self.commands.append(json.loads(json.dumps(command, allow_nan=False)))
+        if _rpc is not None:
+            _pending_models[self._registry_id] = self
         return self
 
     def _part(self, command, alias=None):
@@ -324,6 +329,7 @@ class Model:
         while self._cursor < len(self.commands):
             await _rpc("run", self.commands[self._cursor])
             self._cursor += 1
+        _pending_models.pop(self._registry_id, None)
 
     async def snapshot(self):
         await self.flush()
@@ -338,7 +344,7 @@ model = Model()
 
 
 async def _flush_all():
-    for item in _models:
+    for item in list(_models.values()):
         await item.flush()
 
 
@@ -373,8 +379,13 @@ class Client:
             raise RuntimeError("Python inside the application requires Formnaro 0.90 or newer")
         return self.preview([{"op": "python", "code": code}], revision=revision, label=label, checks=checks)
 
-    def apply(self, proposal):
-        return self._transport.request("apply", {k: proposal[k] for k in ("previewId", "revision")})
+    def apply(self, proposal, *, accept_feature_dependencies=False):
+        if not isinstance(accept_feature_dependencies, bool):
+            raise ValueError("accept_feature_dependencies must be a boolean")
+        request = {k: proposal[k] for k in ("previewId", "revision")}
+        if accept_feature_dependencies:
+            request["acceptFeatureDependencies"] = True
+        return self._transport.request("apply", request)
 
     def export(self, format="step", *, ids=None):
         import base64

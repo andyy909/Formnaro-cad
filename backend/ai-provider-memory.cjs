@@ -2,6 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),{createHash}=require('node
 const {createModelingContext,validateJournal,NOTE_LIMIT}=require('./ai-modeling-context.cjs');
 function contextKey(id){
  if(id==='chatgpt')return 'ChatGPT';
+ if(id==='mistral-vibe')return 'Mistral-Vibe';
  const origin=new URL(id).origin;if(origin!==id||!['http:','https:'].includes(new URL(id).protocol))throw Error('Ungültiger Kontext-Anbieter.');
  if(id==='https://api.openai.com')return 'OpenAI-API';
  if(id==='https://api.deepseek.com')return 'DeepSeek';

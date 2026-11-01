@@ -43,7 +43,7 @@ test('Provider journals are isolated, completed tasks cannot execute twice, and 
  const {store}=setup(t),original=act(store,start);assert.deepEqual(act(store,{action:'list'},'other-provider'),[]);assert.throws(()=>act(store,{action:'read',id:original.id},'other-provider'),{code:'AI_TASK_PROVIDER_MISMATCH'});
  assert.throws(()=>act(store,{...start,input:{prompt:'x',requestConfig:{apiKey:'MUST_NOT_STORE'}}}),/Zugangsdaten/);
  const run=act(store,{action:'claim',...update(original)});assert.throws(()=>act(store,{action:'checkpoint',...update(run,run.lease,{value:{...checkpoint(1),apiKey:'MUST_NOT_STORE'}})}),/Zugangsdaten/);
- const done=act(store,{action:'finish',...update(run,run.lease,{status:'applied'})});assert.throws(()=>act(store,{action:'claim',...update(done)}),{code:'AI_TASK_FINISHED'});
+ const saved=act(store,{action:'checkpoint',...update(run,run.lease,{value:{...checkpoint(1),candidate:{project:{nodes:[]}}}})});const done=act(store,{action:'finish',...update(saved,run.lease,{status:'applied'})});assert.throws(()=>act(store,{action:'claim',...update(done)}),{code:'AI_TASK_FINISHED'});
 });
 test('A failed atomic write leaves the previous checkpoint and generation intact',t=>{
  let reject=false;const {store,directory}=setup(t,{write:(file,text)=>{if(reject)throw Error('simulated disk full');require('../backend/program-storage.cjs').writeAtomicSync(file,text);}});

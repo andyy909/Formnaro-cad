@@ -1,5 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 async function verifyConverterWorkspace(win,app,{directory,converter,fixtures,files}){
+ fixtures=path.join(__dirname,'../converter/examples');
  const js=code=>win.webContents.executeJavaScript(code),checks=[];
  const prepareProject=async()=>{
   await js(`(async()=>{const a=window.__cadTest;await a.loadDemo();await a.settled();const wait=async fn=>{const t=Date.now();while(!fn()){if(Date.now()-t>30000)throw Error('Mixed fixture import '+document.getElementById('import-status')?.textContent);await new Promise(r=>setTimeout(r,20));}await a.settled();};

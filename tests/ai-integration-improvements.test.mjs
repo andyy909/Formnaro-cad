@@ -12,9 +12,14 @@ import {validateAIResultChecks,aiProposalWarning} from '../src/cad-ai-result-che
 import {visualReviewInput} from '../src/cad-ai-visual-review.js';
 const {providerContext}=createRequire(import.meta.url)('../backend/ai-provider-context.cjs');
 const scene=()=>({revision:'r',selectionTargets:[]}),image={name:'preview.png',mimeType:'image/png',dataUrl:'data:image/png;base64,iVBORw0KGgo='};
+function expandProviderDictionary(root){
+ const expand=(value,chain=[])=>{if(!value||typeof value!=='object')return value;if(Array.isArray(value))return value.map(v=>expand(v,chain));if(Object.keys(value).length===1&&typeof value.$ref==='string'&&(value.$ref==='#/commandSchema'||value.$ref.startsWith('#/providerDefinitions/'))){const ref=value.$ref;assert(!chain.includes(ref),'Cyclic provider reference');const target=ref.slice(2).split('/').reduce((v,key)=>v?.[key],root);assert.notEqual(target,undefined,'Missing provider reference: '+ref);return expand(target,[...chain,ref]);}return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,expand(v,chain)]));};
+ const {providerDefinitions,providerEncoding,...contract}=root;return expand(contract);
+}
 
-test('Provider schema alias retains all commands and notes; constrained-sketch contract agrees',()=>{
- const c=cadAIContext(),p=providerContext(c);assert.deepEqual(p.requestSchema,{$ref:'#/commandSchema'});assert.deepEqual(p.commandSchema,c.commandSchema);assert.deepEqual(c.requestSchema,c.commandSchema);assert(JSON.stringify(c).length-JSON.stringify(p).length>100000);assert(!c.sketchContract.includes('No persistent'));assert.match(c.sketchContract,/Version3/);
+test('Provider dictionary reconstructs every command, parameter and note without data loss',()=>{
+ const c=cadAIContext(),p=providerContext(c);assert.deepEqual(p.requestSchema,{$ref:'#/commandSchema'});assert.deepEqual(expandProviderDictionary(p),c);assert.deepEqual(c.requestSchema,c.commandSchema);assert(JSON.stringify(c).length-JSON.stringify(p).length>100000);assert(!c.sketchContract.includes('No persistent'));assert.match(c.sketchContract,/Version3/);
+ const damaged=structuredClone(p);delete damaged.providerDefinitions[Object.keys(damaged.providerDefinitions)[0]];assert.throws(()=>expandProviderDictionary(damaged),/Missing provider reference/);
  const different={commandSchema:{a:1},requestSchema:{b:2}};assert.equal(providerContext(different),different);
 });
 
@@ -24,8 +29,10 @@ test('All failed measured values reach correction with immutable requirements',a
  assert.equal(r.correctionAttempts,1);const data=JSON.parse(feedback.split('\n')[1]);assert.deepEqual(data.feedback.failures.map(f=>f.actual),[65,2]);assert.deepEqual(r.checks,checks);
 });
 
-test('UI preserves the actual reportBudget argument',()=>{
- const source=readFileSync(new URL('../src/cad-ai-ui.js',import.meta.url),'utf8');assert.match(source,/analyze:trackedAIAnalysis/);assert.match(source,/access\.analyze\(requests,options\)/);
+test('Analysis passes the request budget and clears its busy state after a failed measurement',async()=>{
+ const requests=[{id:'measure',engine:'cad',kind:'bounds'}],options={reportBudget:2048,allowIntermediate:true},states=[],failure=Error('Measurement failed');
+ const analyze=trackedAIAnalysis(async(actual,actualOptions)=>{assert.equal(actual,requests);assert.deepEqual(actualOptions,options);throw failure;},value=>states.push(value));
+ await assert.rejects(analyze(requests,options),error=>error===failure);assert.deepEqual(states,[true,false]);
 });
 
 test('Visual review receives measured uncommitted candidate; correction reruns pinned checks and review',async()=>{

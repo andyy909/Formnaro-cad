@@ -7,8 +7,9 @@ export const CAD_JOINT_COMMAND_SCHEMAS=[
  command('remove',{jointId:id}),command('rebind',{jointId:id,origin:vector,axis:vector}),command('limits',{jointId:id,limits}),command('clear',{}),
  command('gear-create',{gear:{type:'object',additionalProperties:false,required:['jointA','jointB','teethA','teethB'],properties:{id,name:id,jointA:id,jointB:id,teethA:{type:'integer',minimum:1,maximum:10000},teethB:{type:'integer',minimum:1,maximum:10000},kind:{enum:['external','internal']}}}}),command('gear-remove',{gearId:id})
 ];
-export async function previewCadJointCommands(controller,{commands,revision,label='KI-Gelenke'}={}){
- if(!Array.isArray(commands)||commands.length!==1||commands[0]?.op!=='joint')throw Object.assign(Error('Eine Gelenkaktion in ihrer eigenen Vorschau senden; mehrere Bewegungswerte gesammelt in values.'),{code:'JOINT_COMMAND'});
+export async function previewCadJointCommands(controller,{commands,revision,label='KI-Gelenke',livePreview=false}={}){
+ if(!Array.isArray(commands)||!commands.length||!commands.some(c=>c?.op==='joint'))throw Object.assign(Error('Mindestens einen gültigen Gelenkbefehl senden.'),{code:'JOINT_COMMAND'});
+ if(commands.length!==1)return controller.preview({kind:'batch',commands},{revision,label,livePreview});
  const {op,...request}=commands[0];return controller.previewJoints(request,{revision,label});
 }
 export function cadJointsSummary(project,options={}){

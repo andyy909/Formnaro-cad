@@ -50,6 +50,16 @@ export function pythonWorkerMain(){
    const py=await loadPyodide({indexURL:'https://formnaro-python.invalid/',packageBaseUrl:'https://formnaro-python.invalid/',stdLibURL:blob(m.runtime.stdlib,'application/zip'),lockFileContents:m.runtime.lock,packages:[],enableRunUntilComplete:false,
     createPyodideModule:settings=>createModule(settings),
     stdout:line=>{if(output.length<16000)output+=(String(line)+'\n').slice(0,16000-output.length);},stderr:line=>{if(errors.length<16000)errors+=(String(line)+'\n').slice(0,16000-errors.length);}});
+   // Parse every Python source in a batch before the first source can construct
+   // geometry. The source strings are data for ast.parse, never executed here.
+   if(m.syntaxSources?.length){
+    py.globals.set('_formnaro_syntax_sources_json',JSON.stringify(m.syntaxSources));
+    try{py.runPython(`import ast as _formnaro_syntax_ast, json as _formnaro_syntax_json
+for _formnaro_syntax_item in _formnaro_syntax_json.loads(_formnaro_syntax_sources_json):
+    _formnaro_syntax_ast.parse(_formnaro_syntax_item['code'], filename='<Formnaro-Python Befehl '+str(_formnaro_syntax_item['index']+1)+'>', mode='exec')
+del _formnaro_syntax_ast, _formnaro_syntax_json, _formnaro_syntax_item, _formnaro_syntax_sources_json
+`);}catch(error){throw Object.assign(Error(String(error.message??error)),{code:'AI_PYTHON_SYNTAX'});}
+   }
    const loadErrors=[];await py.loadPackage(m.runtime.packages.map(p=>p.name),{errorCallback:message=>loadErrors.push(String(message))});if(loadErrors.length)throw Error('Lokale Analysebibliotheken konnten nicht geladen werden: '+loadErrors.join('; '));
    py.registerJsModule('_formnaro_bridge',{call:async(method,args)=>JSON.stringify(await rpc(method,JSON.parse(args)))});
    py.globals.set('_formnaro_source',m.runtime.sdk);
@@ -82,8 +92,8 @@ del _formnaro_analysis_source
  };
 }
 
-export async function runPython({code,call,signal,timeoutMs=120000,...environment}){
+export async function runPython({code,call,signal,syntaxSources,timeoutMs=120000,...environment}){
  if(signal?.aborted)throw Object.assign(Error('Python-Berechnung abgebrochen.'),{name:'AbortError',code:'ABORTED'});
  const data=await runtime();
- return runCadAIScript({code,call,signal,timeoutMs,...environment,workerSource:`(${pythonWorkerMain.toString()})();`,payload:{runtime:data}});
+ return runCadAIScript({code,call,signal,timeoutMs,...environment,workerSource:`(${pythonWorkerMain.toString()})();`,payload:{runtime:data,syntaxSources}});
 }

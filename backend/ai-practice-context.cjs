@@ -1,0 +1,5 @@
+const {policy}=require('./practice-ui-policy.cjs');
+function lockPracticeContext(context={}){
+ return {practiceOnly:true,practicePolicy:{version:1,taskLocked:true,construction:'visible-ui',reads:['tool-reference','practice-feedback','images'],directGeometry:false,scripts:false,parentProject:false},units:context.units??'mm',designFreedom:structuredClone(context.designFreedom??{}),shapes:structuredClone(context.shapes??[]),agentUI:Object.fromEntries(Object.entries(require('./ai-tool-reference.cjs').compactToolContext({agentUI:context.agentUI??{}}).agentUI).filter(([k])=>['requestSchema','targets','scope','layoutContextFile'].includes(k))),programAssistant:{practiceOnly:true},toolReference:{version:1,readOnly:true,request:{toolReference:{tool:'tool:ID'}},search:{toolReference:{query:'name or purpose'}},modeling:{toolReference:{section:'modeling'}},scope:'Practice UI only; modeling lookup returns only visibly replayable create/joint definitions.'},practiceCommandSchema:{oneOf:structuredClone(policy.commands)}};
+}
+module.exports={lockPracticeContext};

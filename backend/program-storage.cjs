@@ -31,7 +31,7 @@ function createProgramStore(directory,{legacyAIFile,write=writeAtomicSync,cadOnl
       // The policy is one-way: later legacy requests cannot re-enable meshes.
       cadOnly=true;legacy=legacy.values;
     }
-    let migrated=false;
+    let migrated=false;const warnings=[];
     if(!fs.existsSync(path.join(directory,MARKER))){
       if(!legacy||typeof legacy!=='object'||Array.isArray(legacy)||Object.keys(legacy).some(k=>!Object.hasOwn(entries,k)))throw Error('Ungültige Datenübernahme.');
       const keys=Object.keys(legacy).filter(allowed);
@@ -41,8 +41,8 @@ function createProgramStore(directory,{legacyAIFile,write=writeAtomicSync,cadOnl
         fs.mkdirSync(stage,{recursive:true});
         for(const key of keys)write(path.join(stage,entries[key].file),legacy[key]);
         if(legacyAIFile&&fs.existsSync(legacyAIFile)){
-          if(fs.statSync(legacyAIFile).size>65536)throw Object.assign(Error('KI-Einstellungen sind zu groß.'),{code:'INVALID_LEGACY_AI'});
-          write(path.join(stage,'ai-settings.json'),fs.readFileSync(legacyAIFile));
+          if(fs.statSync(legacyAIFile).size>65536)warnings.push('Alte KI-Einstellungen sind zu groß und wurden nicht übernommen. Die ursprüngliche Datei bleibt erhalten.');
+          else{const bytes=fs.readFileSync(legacyAIFile);if(bytes.length>65536)warnings.push('Alte KI-Einstellungen wurden während der Übernahme zu groß und bleiben unverändert.');else write(path.join(stage,'ai-settings.json'),bytes);}
         }
         write(path.join(stage,MARKER),JSON.stringify(FORMAT,null,2)+'\n');
         // Commit the complete import; an existing portable folder always wins.
@@ -68,7 +68,7 @@ function createProgramStore(directory,{legacyAIFile,write=writeAtomicSync,cadOnl
       try{const item=read(key);if(item.value!==null)values[key]=item.value;revisions[key]=item.revision;}
       catch(error){unavailable[key]=error.message;}
     }
-    initialized=true;return {values,revisions,directory,migrated,cadOnly,unavailable:{...unavailable}};
+    initialized=true;return {values,revisions,directory,migrated,cadOnly,unavailable:{...unavailable},...(warnings.length?{warnings}:{})};
   }
   function change(args){
     if(!initialized)throw Error('Portable Daten wurden noch nicht geladen.');marker();

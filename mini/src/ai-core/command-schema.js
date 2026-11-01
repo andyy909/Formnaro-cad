@@ -1,1 +1,0 @@
-export const TARGET_SCHEMA={oneOf:[{type:'string'},{type:'object',required:['rootId','path'],additionalProperties:false,properties:{rootId:{type:'string'},path:{type:'array',maxItems:12,items:{type:'string'}}}}]};

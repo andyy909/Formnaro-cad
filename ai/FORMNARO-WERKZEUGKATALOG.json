@@ -1,0 +1,884 @@
+{
+  "tools": [
+    {
+      "id": "tool:edit-feature",
+      "key": "edit-feature",
+      "label": "Feature bearbeiten",
+      "requirement": "oneEditable",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:properties",
+      "key": "properties",
+      "label": "Eigenschaften",
+      "requirement": "selected",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:sketch-on-part",
+      "key": "sketch-on-part",
+      "label": "Skizze auf Fläche",
+      "requirement": "Ein sichtbares, entsperrtes Materialteil auswählen und eine geeignete Fläche wählen.",
+      "path": "CAD-Werkzeuge",
+      "description": "Eine gemessene ebene Teilfläche als Skizzierebene wählen; Konturen und Löcher bleiben im lokalen Flächenrahmen.",
+      "click": true
+    },
+    {
+      "id": "tool:extrude",
+      "key": "extrude",
+      "label": "Extrudierter Aufsatz",
+      "requirement": "Geschlossene Kontur; für einen Aufsatz eine passende Ausgangsfläche.",
+      "path": "Solid → Features / Fusion → Volumenkörper → Erstellen",
+      "description": "Ein geschlossenes Profil senkrecht zu seiner Skizzierebene austragen. Höhe und Richtung in der Vorschau prüfen.",
+      "click": false
+    },
+    {
+      "id": "tool:cut",
+      "key": "cut",
+      "label": "Linearer Schnitt",
+      "requirement": "Sichtbares, entsperrtes Materialteil.",
+      "path": "Solid → Features / Fusion → Volumenkörper → Erstellen",
+      "description": "Ein Profil als linearen Materialausschnitt verwenden. Tiefe und Richtung müssen den gewünschten Bereich erreichen.",
+      "click": false
+    },
+    {
+      "id": "tool:round",
+      "key": "round",
+      "label": "Verrundung",
+      "requirement": "Ein bearbeitbares Teil und passende Kanten.",
+      "path": "Kanten → Verrundung",
+      "description": "Gemessene Kanten mit Radius verrunden. Ein zu großer Radius oder ungeeignete Kanten können geometrisch scheitern.",
+      "click": true
+    },
+    {
+      "id": "tool:chamfer",
+      "key": "chamfer",
+      "label": "Fase",
+      "requirement": "Ein bearbeitbares Teil und passende Kanten.",
+      "path": "Kanten → Fase",
+      "description": "Eine Fase an ausgewählten Kanten erzeugen. Maß und betroffene Kanten vor Übernehmen prüfen.",
+      "click": true
+    },
+    {
+      "id": "tool:drill",
+      "key": "drill",
+      "label": "Bohrung",
+      "requirement": "Materialteil auswählen; Bezugspunkt und Achse festlegen.",
+      "path": "CAD-Werkzeuge",
+      "description": "Normale Bohrung, kegelige Senkung oder zylindrische Kopfaufnahme an einem geprüften Flächenbezug. Durchmesser, Tiefe und Richtung prüfen.",
+      "click": true
+    },
+    {
+      "id": "tool:cad-shell",
+      "key": "cad-shell",
+      "label": "Wandung",
+      "requirement": "Ein nativer Materialkörper.",
+      "path": "CAD-Werkzeuge",
+      "description": "Einen nativen CAD-Körper aushöhlen; Öffnungsflächen und Wandstärke in einer Vorschau prüfen.",
+      "click": true
+    },
+    {
+      "id": "tool:cad-face-offset",
+      "key": "cad-face-offset",
+      "label": "Fläche versetzen",
+      "requirement": "Ein nativer Materialkörper.",
+      "path": "CAD-Werkzeuge",
+      "description": "Eine native Fläche um einen angegebenen Abstand versetzen und die entstehende Körpergeometrie prüfen.",
+      "click": true
+    },
+    {
+      "id": "tool:cad-contour",
+      "key": "cad-contour",
+      "label": "Kontur übernehmen",
+      "requirement": "Geeignete ebene CAD-Fläche; unterstützte Konturelemente.",
+      "path": "CAD-Werkzeuge",
+      "description": "Native Linien, Kreise, Kreisbögen und Löcher einer gemessenen ebenen CAD-Fläche in eine eigene Skizze übernehmen.",
+      "click": true
+    },
+    {
+      "id": "tool:duplicate",
+      "key": "duplicate",
+      "label": "Duplizieren",
+      "requirement": "editable",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:copy",
+      "key": "copy",
+      "label": "Kopieren",
+      "requirement": "selected",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:paste",
+      "key": "paste",
+      "label": "Einfügen",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:delete",
+      "key": "delete",
+      "label": "Löschen",
+      "requirement": "editable",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:hide",
+      "key": "hide",
+      "label": "Ausblenden",
+      "requirement": "editable",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:show-all",
+      "key": "show-all",
+      "label": "Alle einblenden",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:lock",
+      "key": "lock",
+      "label": "Sperren / entsperren",
+      "requirement": "selected",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:isolate",
+      "key": "isolate",
+      "label": "Isolieren",
+      "requirement": "selected",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:end-isolation",
+      "key": "end-isolation",
+      "label": "Isolierung beenden",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:group",
+      "key": "group",
+      "label": "Gruppieren / vereinigen",
+      "requirement": "Mehrere passende entsperrte Teile auswählen.",
+      "path": "Anordnen → Gruppieren",
+      "description": "Mehrere Materialteile vereinigen; als Bohrung markierte spätere Quellen werden abgezogen. Originalquellen bleiben in der Gruppe erhalten.",
+      "click": false
+    },
+    {
+      "id": "tool:ungroup",
+      "key": "ungroup",
+      "label": "Gruppe auflösen",
+      "requirement": "Eine passende Gruppe auswählen.",
+      "path": "Anordnen → Gruppe auflösen",
+      "description": "Eine erhaltene Gruppe wieder in ihre Quellen zerlegen. Das ist kein beliebiges Auftrennen eines importierten STEP-Körpers.",
+      "click": false
+    },
+    {
+      "id": "tool:align",
+      "key": "align",
+      "label": "Ausrichten",
+      "requirement": "Mindestens zwei vollständige Teile auswählen. Die feste Referenz bleibt unverändert; gesperrte Teile werden nicht bewegt.",
+      "path": "Obere Werkzeugleiste → Ausrichten",
+      "description": "Mindestens zwei Teile über das echte Ausrichtpanel an Minimum, Mitte oder Maximum einer Achse ausrichten. Die Schaltflächen X Mitte/Y Mitte/Z Mitte haben die Ziele ui:id:align-x-center, ui:id:align-y-center, ui:id:align-z-center; für −/+ lauten die Endungen min/max. Danach ui:id:align-close. Ohne feste Referenz gilt die gemeinsame Auswahlgrenze; ein Klick auf eine ausgewählte Körperfläche bestimmt eine feste Referenz.",
+      "click": false
+    },
+    {
+      "id": "tool:mirror",
+      "key": "mirror",
+      "label": "Spiegeln",
+      "requirement": "editable",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:array",
+      "key": "array",
+      "label": "Muster",
+      "requirement": "Geeignete entsperrte Auswahl.",
+      "path": "Eigenschaften → Weitere Operationen → Anordnen … (Muster)",
+      "description": "Eine Anordnung aus ausgewählten Teilen aufbauen. Anzahl, Abstände und Ausrichtung in der Vorschau prüfen.",
+      "click": true
+    },
+    {
+      "id": "tool:center",
+      "key": "center",
+      "label": "Zur Mitte",
+      "requirement": "Mindestens ein entsperrtes Teil auswählen. Versetzt oder erhöht gewünschte Teile anschließend gezielt positionieren; Zur Mitte setzt auch die Höhe zurück.",
+      "path": "Obere Werkzeugleiste → Zur Mitte",
+      "description": "Die gesamte Auswahl gemeinsam zur Weltmitte X=0/Y=0 verschieben und ihre gemeinsame Unterkante auf Z=0 absetzen. Abstände zwischen ausgewählten Teilen bleiben erhalten. Im Übungsmodus dieses Werkzeug zum Zentrieren vorführen statt X/Y mit Nullen zu beschreiben.",
+      "click": false
+    },
+    {
+      "id": "tool:drop",
+      "key": "drop",
+      "label": "Auf Arbeitsebene absetzen",
+      "requirement": "Mindestens ein entsperrtes Teil auswählen.",
+      "path": "Anordnen → Absetzen",
+      "description": "Ausgewählte Teile mit ihrer Unterseite auf die aktuelle Arbeitsebene absetzen. Seitliche Positionen bleiben erhalten; hierfür keine Höhe aus halben Bauteilmaßen ausrechnen.",
+      "click": false
+    },
+    {
+      "id": "tool:lay-on-face",
+      "key": "lay-on-face",
+      "label": "Auf Fläche legen",
+      "requirement": "oneEditable",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:reference-place",
+      "key": "reference-place",
+      "label": "An Bezugspunkt",
+      "requirement": "oneEditable",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:measure",
+      "key": "measure",
+      "label": "Messen",
+      "requirement": "Je nach Messart passende Teile oder Flächen.",
+      "path": "Ansicht & Prüfen → Messen",
+      "description": "Abstände und native geometrische Bezüge messen. Ansicht und Darstellungsfeinheit sind keine Maßgenauigkeitsprüfung.",
+      "click": true
+    },
+    {
+      "id": "tool:inspect",
+      "key": "inspect",
+      "label": "Modell prüfen",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:section",
+      "key": "section",
+      "label": "Schnittansicht",
+      "requirement": "Ein Modell in der Arbeitsfläche.",
+      "path": "Ansicht & Prüfen → Schnittansicht",
+      "description": "Eine Schnittansicht verwenden, um Innenräume und Wandverläufe zu sehen. Sie entfernt kein Material aus dem gespeicherten Körper.",
+      "click": true
+    },
+    {
+      "id": "tool:thickness",
+      "key": "thickness",
+      "label": "Wanddickenkarte",
+      "requirement": "Geeignete sichtbare Auswahl.",
+      "path": "Ansicht & Prüfen → Wanddickenkarte",
+      "description": "Eine Wanddickenkarte berechnen. Gemessene Stellen und nicht erfasste Bereiche getrennt beurteilen.",
+      "click": true
+    },
+    {
+      "id": "tool:model-compare",
+      "key": "model-compare",
+      "label": "Modellvergleich",
+      "requirement": "Vorlage und Kandidat auswählen.",
+      "path": "Ansicht & Prüfen → Modelle vergleichen",
+      "description": "Zwei Modelle in ihrer Weltposition beidseitig vergleichen. Die Anzeige nennt Stichprobenabweichungen und nicht gemessene Dreiecke; kein globaler Genauigkeitsbeweis.",
+      "click": true
+    },
+    {
+      "id": "tool:sketch",
+      "key": "sketch",
+      "label": "Skizze / Extrusion",
+      "requirement": "Ohne Auswahl neue Skizze; vorhandene bearbeitbare Skizze separat bearbeiten.",
+      "path": "CAD-Werkzeuge → Skizze",
+      "description": "Eine ebene Skizze mit benannten Maßen erstellen und durch Extrusion zu Material oder einem Ausschnitt machen.",
+      "click": true
+    },
+    {
+      "id": "tool:edit-sketch",
+      "key": "edit-sketch",
+      "label": "Skizze bearbeiten",
+      "requirement": "sketch",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:project-parameters",
+      "key": "project-parameters",
+      "label": "Gleichungen & Maße",
+      "requirement": "Zum Öffnen keine Auswahl erforderlich. Bindungen benötigen geeignete erhaltene Quellfelder statt beliebiger importierter STEP-Maße.",
+      "path": "CAD-Werkzeuge",
+      "description": "Benannte Projektmaße, Formeln, Bindungen und Varianten verwalten und Änderungen gesammelt berechnen. Die Tabelle lässt sich auch ohne eine Auswahl öffnen; für geometrische Bindungen braucht es geeignete erhaltene Quellfelder.",
+      "click": true
+    },
+    {
+      "id": "tool:drawing",
+      "key": "drawing",
+      "label": "Technische Zeichnung",
+      "requirement": "Geeignete CAD-Quellen.",
+      "path": "CAD-Werkzeuge",
+      "description": "Technische Zeichnungsblätter mit nativen Projektionen, Ansichten und Bemaßung erstellen. Zeichnungen nach Modelländerungen ausdrücklich aktualisieren.",
+      "click": true
+    },
+    {
+      "id": "tool:split",
+      "key": "split",
+      "label": "Mit Ebene teilen",
+      "requirement": "Ein geeignetes entsperrtes Teil auswählen.",
+      "path": "CAD-Werkzeuge",
+      "description": "Einen Körper durch eine Ebene teilen und beide Seiten als unabhängige Ergebnisse erhalten.",
+      "click": true
+    },
+    {
+      "id": "tool:extract",
+      "key": "extract",
+      "label": "Körper herauslösen",
+      "requirement": "Ein nativer CAD-Körper mit getrennten Materialkörpern.",
+      "path": "CAD-Werkzeuge",
+      "description": "Getrennte Materialkörper einer nativen CAD-Quelle unabhängig herauslösen; Hohlräume sind keine zusätzlichen Körper.",
+      "click": true
+    },
+    {
+      "id": "tool:cad-to-mesh",
+      "key": "cad-to-mesh",
+      "label": "CAD in Netz umwandeln",
+      "requirement": "Ein CAD-Teil auswählen.",
+      "path": "Umwandeln → CAD in Netz",
+      "description": "Eine unabhängige Netzkopie mit wählbarer Feinheit aus einem CAD-Körper erzeugen. Die CAD-Quelle bleibt erhalten.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-to-cad",
+      "key": "mesh-to-cad",
+      "label": "Netz in CAD umwandeln",
+      "requirement": "Ein Netz auswählen; beschädigte oder offene Netze können abgelehnt werden.",
+      "path": "Umwandeln → Netz in CAD",
+      "description": "Eine zusätzliche CAD-Kopie des ausgewählten Netzes durch den lokalen Konverter berechnen und gegen die unveränderte Quelle prüfen. Die Umwandlung garantiert keine parametrischen Skizzen, Bohrungsmerkmale oder maßgenauen Nachbau.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-tools",
+      "key": "mesh-tools",
+      "label": "Netz-Werkzeuge",
+      "requirement": "mesh",
+      "path": "Netz-Werkzeuge",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-select",
+      "key": "mesh-select",
+      "label": "Netzflächen auswählen",
+      "requirement": "mesh",
+      "path": "Netz-Werkzeuge",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-repair",
+      "key": "mesh-repair",
+      "label": "Netz reparieren",
+      "requirement": "Ein entsperrtes vollständiges Netzteil; Werkzeuggrenzen beachten.",
+      "path": "Netz-Werkzeuge",
+      "description": "Das vorhandene begrenzte Netzreparaturwerkzeug verwenden. Reparaturen können Formabweichungen verursachen und werden nicht automatisch zu einem präzisen CAD-Nachbau.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-reduce",
+      "key": "mesh-reduce",
+      "label": "Netz reduzieren",
+      "requirement": "Ein geeignetes entsperrtes Netz.",
+      "path": "Netz-Werkzeuge",
+      "description": "Planare Bereiche eines Netzes unter einer expliziten Abweichungsgrenze vereinfachen; geschützte Bereiche erhalten.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-sculpt",
+      "key": "mesh-sculpt",
+      "label": "Modellierpinsel",
+      "requirement": "mesh",
+      "path": "Netz-Werkzeuge",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-hollow",
+      "key": "mesh-hollow",
+      "label": "Netz aushöhlen",
+      "requirement": "mesh",
+      "path": "Netz-Werkzeuge",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:functions",
+      "key": "functions",
+      "label": "Funktionen …",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:stl-to-step",
+      "key": "stl-to-step",
+      "label": "STL zu STEP",
+      "requirement": "Datei manuell auswählen; Vergleich und Geometrieprüfung beachten.",
+      "path": "Umwandeln / Funktionen → STL zu STEP",
+      "description": "STL-Datei im lokalen Konverter analysieren und native Flächen prüfen. Eine STEP-Ausgabe allein beweist keine analytisch nachkonstruierten Radien oder Maßhaltigkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:undo",
+      "key": "undo",
+      "label": "Rückgängig",
+      "requirement": "Eine bestätigte Modelländerung.",
+      "path": "Symbolleiste → Rückgängig (Strg+Z)",
+      "description": "Den letzten bestätigten Modellschritt rückgängig machen. Eine noch nicht übernommene KI-Vorschau stattdessen verwerfen.",
+      "click": false
+    },
+    {
+      "id": "tool:redo",
+      "key": "redo",
+      "label": "Wiederholen",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:fit",
+      "key": "fit",
+      "label": "Einpassen",
+      "requirement": "Sichtbare Geometrie; keine Auswahl erforderlich.",
+      "path": "Ansicht & Prüfen → Einpassen",
+      "description": "Nur die Ansicht so zoomen, dass die sichtbaren Teile gut im Fenster liegen. Einpassen verändert keine Modellkoordinaten und ersetzt weder Zur Mitte noch Ausrichten.",
+      "click": false
+    },
+    {
+      "id": "tool:view-iso",
+      "key": "view-iso",
+      "label": "Isometrisch",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:view-front",
+      "key": "view-front",
+      "label": "Vorne",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:view-top",
+      "key": "view-top",
+      "label": "Oben",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:view-right",
+      "key": "view-right",
+      "label": "Rechts",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:projection",
+      "key": "projection",
+      "label": "Perspektive / Orthografisch",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:workplane-set",
+      "key": "workplane-set",
+      "label": "Arbeitsebene setzen",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:workplane-top",
+      "key": "workplane-top",
+      "label": "Ebene auf Auswahloberseite",
+      "requirement": "oneEditable",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:reset-plane",
+      "key": "reset-plane",
+      "label": "Grundebene",
+      "requirement": "always",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:mode-translate",
+      "key": "mode-translate",
+      "label": "Verschieben",
+      "requirement": "editable",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:mode-rotate",
+      "key": "mode-rotate",
+      "label": "Drehen",
+      "requirement": "editable",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:mode-scale",
+      "key": "mode-scale",
+      "label": "Größe",
+      "requirement": "editable",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:edges",
+      "key": "edges",
+      "label": "Kanten bearbeiten",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:general-fit",
+      "key": "general-fit",
+      "label": "Passung",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:cad-loft",
+      "key": "cad-loft",
+      "label": "Übergang zwischen Skizzen",
+      "requirement": "Zwei bis acht entsperrte native Skizzen auswählen.",
+      "path": "CAD-Werkzeuge",
+      "description": "Zwei bis acht eigenständige native Skizzen durch einen Übergang verbinden. In Solid heißt das Ausformung, in Fusion Erhebung. Innenöffnungen sind nicht zulässig.",
+      "click": true
+    },
+    {
+      "id": "tool:cad-sweep",
+      "key": "cad-sweep",
+      "label": "Profil entlang eines Pfads",
+      "requirement": "Genau eine eigenständige native Skizze auswählen; den Pfad im Dialog festlegen, kein zweites Pfadobjekt auswählen.",
+      "path": "CAD-Werkzeuge",
+      "description": "Ein Profil entlang eines im Dialog festgelegten geraden, kreisbogenförmigen oder zusammengesetzten Pfades austragen. Solid nennt das Austragung, Fusion Sweeping.",
+      "click": true
+    },
+    {
+      "id": "tool:sketch-templates",
+      "key": "sketch-templates",
+      "label": "Beispielskizzen",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:linked-contours",
+      "key": "linked-contours",
+      "label": "Konturverknüpfungen",
+      "requirement": "Passende vorhandene CAD-/Skizzenquellen.",
+      "path": "CAD-Werkzeuge",
+      "description": "Konturen und Projektionen mit explizit erhaltenen Quellen verknüpfen. Geänderte Quellen gesammelt aktualisieren; mehrdeutige Bezüge neu zuweisen.",
+      "click": true
+    },
+    {
+      "id": "tool:joints",
+      "key": "joints",
+      "label": "Gelenke und Bewegung",
+      "requirement": "Mindestens zwei verschiedene entsperrte CAD- oder Netzmaterialteile zum Anlegen einer Verbindung; keine Lochteile.",
+      "path": "CAD-Werkzeuge / Solid → Baugruppe / Fusion → Volumenkörper",
+      "description": "Starre Teile mit festen, Dreh- oder Schiebegelenken verbinden und Stellungen vorführen. CAD- und Netzmaterialteile sind möglich; keine parametrischen CAD-Quellen notwendig. Eine feste Basis wird erhalten. Die Kollisionsprüfung gilt nur für die ausdrücklich geprüfte Stellung, nicht den gesamten Bewegungsweg.",
+      "click": true
+    },
+    {
+      "id": "tool:cad-edit-modeling",
+      "key": "cad-edit-modeling",
+      "label": "CAD-Bearbeitung ändern",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-inspector",
+      "key": "mesh-inspector",
+      "label": "Netzinspektor",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Netz-Werkzeuge",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-close-hole",
+      "key": "mesh-close-hole",
+      "label": "Öffnung schließen",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Netz-Werkzeuge",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-connectors",
+      "key": "mesh-connectors",
+      "label": "Passstifte und Aufnahmen",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Netz-Werkzeuge",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-curved-reduce",
+      "key": "mesh-curved-reduce",
+      "label": "Gekrümmtes Netz vereinfachen",
+      "requirement": "Genau ein sichtbares, entsperrtes vollständiges Netzteil auswählen.",
+      "path": "Netz-Werkzeuge",
+      "description": "Gekrümmte Netzbereiche bis 150.000 Dreiecke toleranzgesteuert vereinfachen. Standardbudget 0,02 mm; Optimiererschätzung und beidseitige Stichproben sind kein globaler Fehlernachweis. Bei geschlossenen Körpern gilt zusätzlich maximal 1 % Volumenänderung.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-large-reduce",
+      "key": "mesh-large-reduce",
+      "label": "Große Netze vereinfachen",
+      "requirement": "Genau ein sichtbares, entsperrtes vollständiges Netzteil auswählen.",
+      "path": "Netz-Werkzeuge",
+      "description": "Große Netze bis 2 Millionen Dreiecke und 1 Million Punkte vereinfachen; Zielzahl und Detailtreue 0–100 einstellen. Die Abweichung ist eine Optimiererschätzung, kein globaler Fehlernachweis. Vorschau und Bericht prüfen.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-remesh",
+      "key": "mesh-remesh",
+      "label": "Netz neu vernetzen",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Netz-Werkzeuge",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-smooth",
+      "key": "mesh-smooth",
+      "label": "Netzflächen glätten",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Netz-Werkzeuge",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-erase-fill",
+      "key": "mesh-erase-fill",
+      "label": "Netzflächen entfernen und füllen",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Netz-Werkzeuge",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:mesh-make-solid",
+      "key": "mesh-make-solid",
+      "label": "Netz verfestigen",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Netz-Werkzeuge",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:ruler",
+      "key": "ruler",
+      "label": "Lineal",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": true
+    },
+    {
+      "id": "tool:export",
+      "key": "export",
+      "label": "Export",
+      "requirement": "Format und gewünschte Teile im Exportdialog wählen; das Speichern bestätigt der Nutzer.",
+      "path": "Kopfzeile → Export",
+      "description": "STEP enthält CAD-Geometrie; STL/OBJ enthalten Dreiecksnetze. OCAD bewahrt das Formnaro-Projekt mit seinen erhaltenen Quellen. Anzeigequalität und Exportqualität sind getrennt.",
+      "click": true
+    },
+    {
+      "id": "tool:import",
+      "key": "import",
+      "label": "Import",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:new",
+      "key": "new",
+      "label": "Neues Projekt",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:open",
+      "key": "open",
+      "label": "Projekt öffnen",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:save",
+      "key": "save",
+      "label": "Projekt speichern",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    },
+    {
+      "id": "tool:projects",
+      "key": "projects",
+      "label": "Letzte Projekte",
+      "requirement": "Werkzeugvoraussetzungen beachten.",
+      "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
+      "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
+      "click": false
+    }
+  ],
+  "tabs": {
+    "solid": {
+      "sketch": "sketch",
+      "sketch-on-part": "sketch",
+      "cad-contour": "sketch",
+      "linked-contours": "sketch",
+      "sketch-templates": "sketch",
+      "extrude": "features",
+      "cut": "features",
+      "round": "features",
+      "chamfer": "features",
+      "drill": "features",
+      "cad-shell": "features",
+      "cad-loft": "features",
+      "cad-sweep": "features",
+      "array": "features",
+      "cad-face-offset": "features",
+      "cad-edit-modeling": "features",
+      "project-parameters": "features",
+      "measure": "evaluate",
+      "ruler": "evaluate",
+      "section": "evaluate",
+      "thickness": "evaluate",
+      "inspect": "evaluate",
+      "model-compare": "evaluate",
+      "drawing": "evaluate",
+      "joints": "assembly",
+      "group": "assembly",
+      "ungroup": "assembly",
+      "mesh-tools": "mesh",
+      "mesh-select": "mesh",
+      "mesh-inspector": "mesh",
+      "mesh-repair": "mesh",
+      "mesh-close-hole": "mesh",
+      "mesh-reduce": "mesh",
+      "mesh-curved-reduce": "mesh",
+      "mesh-large-reduce": "mesh",
+      "mesh-sculpt": "mesh",
+      "mesh-hollow": "mesh",
+      "mesh-features": "mesh",
+      "cad-to-mesh": "mesh",
+      "mesh-to-cad": "mesh",
+      "stl-to-step": "mesh"
+    },
+    "fusion": {
+      "sketch": "sketch",
+      "sketch-on-part": "sketch",
+      "cad-contour": "sketch",
+      "linked-contours": "sketch",
+      "sketch-templates": "sketch",
+      "extrude": "solid",
+      "cut": "solid",
+      "round": "solid",
+      "chamfer": "solid",
+      "drill": "solid",
+      "cad-shell": "solid",
+      "cad-loft": "solid",
+      "cad-sweep": "solid",
+      "cad-face-offset": "solid",
+      "array": "solid",
+      "group": "solid",
+      "joints": "solid",
+      "project-parameters": "solid",
+      "measure": "tools",
+      "ruler": "tools",
+      "section": "tools",
+      "thickness": "tools",
+      "inspect": "tools",
+      "model-compare": "tools",
+      "drawing": "tools",
+      "functions": "tools",
+      "cad-edit-modeling": "tools",
+      "mesh-tools": "mesh",
+      "mesh-select": "mesh",
+      "mesh-inspector": "mesh",
+      "mesh-repair": "mesh",
+      "mesh-close-hole": "mesh",
+      "mesh-reduce": "mesh",
+      "mesh-curved-reduce": "mesh",
+      "mesh-large-reduce": "mesh",
+      "mesh-sculpt": "mesh",
+      "mesh-hollow": "mesh",
+      "mesh-features": "mesh",
+      "cad-to-mesh": "mesh",
+      "mesh-to-cad": "mesh",
+      "stl-to-step": "mesh"
+    }
+  }
+}

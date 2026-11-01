@@ -26,7 +26,10 @@ function requirements(value){
  for(const target of value.protectedTargets)need(plain(target)&&Object.keys(target).sort().join(',')==='path,rootId'&&typeof target.rootId==='string'&&target.rootId.length>0&&target.rootId.length<=200&&Array.isArray(target.path)&&target.path.length<=12&&target.path.every(x=>typeof x==='string'&&x.length>0&&x.length<=200),'Ungültiger geschützter Teil.');return copy(value);
 }
 function inputData(value){
- need(plain(value)&&Object.keys(value).every(k=>['prompt','images','history','chat','photoReferences','featureReferences','usageTaskId','modelStrictness'].includes(k)),'Nur Auftragsinhalt speichern; Zugangsdaten und Anbieterkonfiguration bleiben getrennt.');
+ need(plain(value)&&Object.keys(value).every(k=>['prompt','images','history','chat','photoReferences','featureReferences','usageTaskId','modelStrictness','modelChecks','modelCheckConfig','conversationId'].includes(k)),'Nur Auftragsinhalt speichern; Zugangsdaten und Anbieterkonfiguration bleiben getrennt.');
+ need(value.conversationId===undefined||typeof value.conversationId==='string'&&/^[-a-zA-Z0-9]{1,80}$/.test(value.conversationId),'Ungültige Gesprächskennung.');
+ if(value.modelCheckConfig!==undefined)require('./model-check-config.cjs').validateModelCheckConfig(value.modelCheckConfig);
+ need(value.modelChecks===undefined||typeof value.modelChecks==='boolean','Ungültiger Modellprüfmodus.');
  need(value.modelStrictness===undefined||Number.isInteger(value.modelStrictness)&&value.modelStrictness>=0&&value.modelStrictness<=100,'KI-Modellstrenge: 0 bis 100.');
  need(typeof value.prompt==='string'&&value.prompt.length<=10000,'Ungültiger gespeicherter Auftrag.');return copy(value);
 }
@@ -80,7 +83,7 @@ function createAITaskStore({directory,write=writeTaskAtomicSync,maxTasks=40,maxB
    if(args.action==='checkpoint'){
     const r=leased(args,provider);need(plain(args.value)&&Object.keys(args.value).every(k=>['phase','candidateSettled','binding','progress','taskEvidence','evidenceCheckpoint','requiredChecks','requiredChecksLocked','photoState','analysisResults','correction','lastResult','candidate','counters','workspace'].includes(k)),'Ungültiger Zwischenstand; keine Zugangsdaten oder Anbieterkonfiguration speichern.');progress(args.value.progress,r.maxSteps,r.requirements.purpose);need(args.value.progress.usedSteps>=(r.checkpoint?.progress.usedSteps??0),'Ein Fortsetzen darf verbrauchte Arbeitsschritte nicht zurücksetzen.','AI_TASK_BUDGET_REWIND');return save({...update(r,'running'),checkpoint:copy(args.value)});
    }
-   const r=leased(args,provider);need(['interrupted','review','stopped','applied','discarded'].includes(args.status),'Ungültiger Abschlusszustand.');const saved=save(update(r,args.status));leases.delete(r.id);return saved;
+   const r=leased(args,provider);need(['interrupted','review','stopped','applied','discarded'].includes(args.status),'Ungültiger Abschlusszustand.');need(args.status!=='applied'||r.checkpoint?.candidate?.project,'Gespeicherte Modellvorschau fehlt.');const saved=save(update(r,args.status));leases.delete(r.id);return saved;
  }
  return {
   request(args,provider){
@@ -88,6 +91,7 @@ function createAITaskStore({directory,write=writeTaskAtomicSync,maxTasks=40,maxB
    try{connection.exec('BEGIN IMMEDIATE');started=true;const result=request(args,provider);connection.exec('COMMIT');return result;}
    catch(e){if(started){try{connection.exec('ROLLBACK');}catch{}}if(e.errcode===5||/database is locked/i.test(e.message))throw error('Ein anderer Prozess aktualisiert gerade die KI-Aufträge. Erneut versuchen.','BUSY');throw e;}
   },
+  releaseOwned(){if(!db||!owned.size)return 0;let count=0;db.exec('BEGIN IMMEDIATE');try{for(const [id,token]of owned)count+=db.prepare('DELETE FROM leases WHERE id=? AND pid=? AND token=?').run(id,process.pid,token).changes;db.exec('COMMIT');owned.clear();return count;}catch(error){try{db.exec('ROLLBACK');}catch{}throw error;}},
   close(){if(db){need(owned.size===0,'Laufende Aufträge vor dem Schließen abschließen.','BUSY');db.close();db=null;}}
  };
 }

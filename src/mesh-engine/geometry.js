@@ -4,7 +4,7 @@ import {buildParametric} from './parametric-geometry.js';
 import {resolveSketch,validSketch} from './mesh-sketch.js';
 import {validMarks} from './mesh-marks.js';
 import {validPartition} from './mesh-partition-schema.js';
-const validCad=()=>false,validFinish=()=>false;
+import {validCad,validFinish} from '../cad-data.js';
 let kernel;
 export function setKernel(module) { kernel = module; }
 // Preserve signed disconnected shells without a Boolean rebuild.

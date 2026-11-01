@@ -108,7 +108,7 @@ export function createMeshEngineAdapter({kernel}={}){
   // The legacy worker consumes an independent normalized world-space mesh. No
   // decomposition into rotation/scale can discard shear or a mirrored axis.
   function worldSource(node){
-    try{inspectSolid(node);}catch(error){return [{id:node.id,rootId:node.id,kind:'mesh',name:node.name,color:node.color??'#77a8b5',opacity:node.opacity??1,transform:[...node.transform],mesh:structuredClone(node.mesh),warnings:['Quellenfarben benötigen einen geprüften Körper. '+error.message]}];}const local=fromMesh(node.mesh);let world,centred,scaled;
+    inspectSolid(node);const local=fromMesh(node.mesh);let world,centred,scaled;
     try{world=positive(local.transform(node.transform));const box=world.boundingBox(),pos=box.min.map((v,i)=>(v+box.max[i])/2),size=box.min.map((v,i)=>box.max[i]-v);
       if(size.some(v=>v<.01||v>10000)||pos.some(v=>Math.abs(v)>100000))throw Error('Netzwerkzeug: Ergebnis außerhalb des Arbeitsbereichs.');
       centred=world.translate(pos.map(v=>-v));scaled=centred.scale(size.map(v=>1/v));

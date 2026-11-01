@@ -12,8 +12,8 @@
 
 | Download | Version | Size | Contents |
 | --- | --- | --- | --- |
-| **[Download the application](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r28/Formnaro-v0.125.0-r28-Windows.zip)** | **0.125.0-r28** | approx. **668 MB** | Portable application, required runtimes, licences and start instructions. |
-| [Separate source archives](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r28) | **0.125.0-r28** | **117 / 98 / 78 MB** | Formnaro, FreeCAD and CAD-kernel sources; optional downloads for development. |
+| **[Download the application](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r35/Formnaro-v0.125.0-r35-Windows.zip)** | **0.125.0-r35** | approx. **667 MB** | Portable application, required runtimes, licences and start instructions. |
+| [Separate source archives](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r35) | **0.125.0-r35** | **111 / 98 / 78 MB** | Formnaro, FreeCAD and CAD-kernel sources; optional downloads for development. |
 
 For everyday use, download only the application ZIP. Source archives are always separate release assets. [Packaging policy](docs/PORTABLE-PAKETE.md).
 
@@ -77,7 +77,7 @@ Three functions are shown in a separate practice window using Formnaro's control
 
 For this open-ended request, the example uses 20 / 40 / 20 teeth, a 1.5 mm module and a 6 mm width. Codex prepared the plan before playback; the practice window executes it through the actual controls without further model requests. The displayed **3,381,395 tokens including cached input** cover the entire gear task: planning, recording and verification.
 
-Recorded with the locally tested development build **0.125.0-r35**. The program download linked above is unchanged.
+Recorded with the locally tested development build **0.125.0-r35**. The program download linked above now provides this build.
 
 ## Documentation
 
@@ -94,13 +94,13 @@ The linked guides are currently mainly in German.
 <!-- formnaro-development-status:start -->
 ## Development status
 
-The **0.125.0-r28** application ZIP is approximately **668 MB**. Matching source archives are separate downloads. This update clears failed intermediate construction previews in the built-in Python/JSON dialog and external requests; it retains the background-construction, cancellation and renderer-recovery fixes.
+The **0.125.0-r35** portable application includes on-demand AI tool information, improved practice lessons, centring/alignment controls and separate task conversations. Matching source archives are separate downloads.
 
-**133 source tests, 29 packaged-EXE checks and a complete 40-command construction preview** passed. STEP/STL exports were checked with independent readers. The compact ZIP was fully read back and started from a fresh Unicode extraction with a foreign working directory. These are targeted checks on the available Windows machine; a new all-features regression, clean-Windows-VM acceptance and live-provider quality measurements are not claimed.
+The frozen r35 build passed **79 targeted source tests, four practice lessons, two normal modelling tests and four screenshot routes**. The packaged EXE was checked with isolated profiles and normal close/exit. The new download ZIP was fully read with CRC/SHA-256 checks and tested after fresh Unicode extraction from a foreign working directory. These are targeted checks, without a new all-features regression or clean-Windows-VM acceptance.
 
-Matching application sources: [versioned tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r28) or [frozen source archive](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r28/Formnaro-Quellcode-v0.125.0-r28.zip).
+Known limits include CAD-kernel failures with some long screw threads; automatic screw/tilt coupling and broader practical tool coverage remain open.
 
-[Download verification report](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r28/Paket-Pruefstand.json) · [Development progress and open items](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md)
+Matching sources: [versioned tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r35) · [source ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r35/Formnaro-Quellcode-v0.125.0-r35.zip) · [verification report](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r35/Paket-Pruefstand.json)
 <!-- formnaro-development-status:end -->
 
 <details>
@@ -109,7 +109,7 @@ Matching application sources: [versioned tag](https://github.com/andyy909/Formna
 With Node.js 22.16 or later and npm:
 
 ```sh
-git clone --branch v0.125.0-r28 https://github.com/andyy909/Formnaro-cad.git
+git clone --branch v0.125.0-r35 https://github.com/andyy909/Formnaro-cad.git
 cd Formnaro-cad
 npm ci
 npm run build
