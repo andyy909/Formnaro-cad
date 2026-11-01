@@ -20,15 +20,15 @@ function faces(oc,shape){const explorer=new oc.TopExp_Explorer(shape,oc.TopAbs_S
 export function projectCadFaceAnchorNative(oc,shape,anchor,{tolerance=1e-6}={}){
   if(!cadNativeCapabilities(oc).rayHits)throw Error('CAD-Flächenneuzuordnung benötigt die native Strahl-/Normalschnittstelle.');
   if(!Number.isFinite(tolerance)||tolerance<=0||tolerance>1e-4||!Array.isArray(anchor?.point)||anchor.point.length!==3||!anchor.point.every(Number.isFinite)||!Array.isArray(anchor.normal)||anchor.normal.length!==3)throw Error('Ungültiger CAD-Flächenanker.');
-  const n=unit(anchor.normal),point=new oc.gp_Pnt(...anchor.point),maker=new oc.BRepBuilderAPI_MakeVertex(point),vertex=maker.Vertex(),list=faces(oc,shape),matches=[];
-  try{for(const face of list){const distance=new oc.BRepExtrema_DistShapeShape(vertex,face);try{
+  const n=unit(anchor.normal),matches=[];let point,maker,vertex,list=[];
+  try{point=new oc.gp_Pnt(...anchor.point);maker=new oc.BRepBuilderAPI_MakeVertex(point);vertex=maker.Vertex();list=faces(oc,shape);for(const face of list){const distance=new oc.BRepExtrema_DistShapeShape(vertex,face);try{
     if(!distance.IsDone()||!Number.isFinite(distance.Value()))throw Error('Nativer CAD-Flächenprojektor fehlgeschlagen.');if(distance.Value()>tolerance||distance.NbSolution()<1)continue;
     const value=distance.PointOnShape2(1);let projected;try{projected=[value.X(),value.Y(),value.Z()];}finally{value.delete();}
     const offset=Math.max(1e-4,tolerance*16),origin=projected.map((v,k)=>v+n[k]*offset),hits=cadRayHits(oc,face,{origin,direction:n.map(v=>-v),near:0,far:2*offset,tolerance:Math.min(1e-7,tolerance/4)});
     const relevant=hits.filter(hit=>near(hit.point,projected,tolerance)&&new Vector3(...unit(hit.normal)).dot(new Vector3(...n))>1-1e-8);
     if(relevant.length===1)matches.push({point:[...relevant[0].point],normal:unit(relevant[0].normal)});
   }finally{distance.delete();}}return matches;}
-  finally{list.forEach(face=>face.delete());vertex.delete();maker.delete();point.delete();}
+  finally{list.forEach(face=>face.delete());vertex?.delete();maker?.delete();point?.delete();}
 }
 
 function sourceNode(root,path){let node=root,matrix=cadIdentity();for(const id of path){node=node.children?.find(child=>child.id===id);if(!node||node.suppressed)return null;matrix=multiplyCadMatrices(matrix,node.transform);}return {node,matrix};}

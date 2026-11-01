@@ -85,6 +85,7 @@ body .cad-ai-chat.chat-expanded{background:#fff!important}[data-theme=dark] .cad
 .freecad-program-input { display: flex; gap: 8px; margin-block: 8px; }
 .freecad-document-preview .freecad-program-parameters,.freecad-document-preview [data-freecad-mode] { display: none; }
 .freecad-document-review .freecad-program-parameters { max-height: 25vh; }
+#ai-chat-form > .ai-chat-actions { flex-wrap: wrap; }
 .freecad-edit-report { max-height: 40vh; overflow: auto; overflow-wrap: anywhere; padding-block: 8px; }
 .ai-freecad-document-tree input[type=number],.ai-freecad-document-tree select { width: 100%; min-width: 80px; box-sizing: border-box; }
 .freecad-link-editor,.freecad-link-editor > div { display: grid; gap: 6px; }
@@ -103,3 +104,5 @@ body .cad-ai-chat.chat-expanded{background:#fff!important}[data-theme=dark] .cad
 .ai-freecad-document-tree th:nth-child(1) { width: 21%; }
 .ai-freecad-document-tree th:nth-child(2) { width: 43%; }
 .ai-freecad-document-tree th:nth-child(3) { width: 9%; }
+.ai-agent-dialog{width:min(920px,calc(100vw - 32px));height:min(850px,calc(100dvh - 32px));max-height:calc(100dvh - 32px);box-sizing:border-box;padding:20px;border:1px solid var(--border,#a5b4c5);border-radius:14px;background:var(--panel,#fff);color:var(--text,#20374a);overflow:auto}
+.ai-agent-dialog[open]{display:flex;flex-direction:column;gap:10px}.ai-agent-dialog::backdrop{background:#10203380}.ai-agent-heading{display:flex;align-items:center;gap:10px}.ai-agent-heading h2{flex:1;margin:0;font-size:1.15rem}.ai-agent-selectors{display:flex;flex-wrap:wrap;gap:8px;align-items:end}.ai-agent-selectors label{display:flex;flex:1 1 200px;flex-direction:column;gap:4px}.ai-agent-selectors select{min-width:0;width:100%}#ai-agent-log{flex:1 1 200px;min-height:100px;overflow:auto;border:1px solid var(--border,#a5b4c5);border-radius:8px;padding:10px}#ai-agent-log article{white-space:pre-wrap;overflow-wrap:anywhere;padding:8px 10px;border-radius:8px;margin:5px 0}.ai-agent-user{background:#7fa7d526}.ai-agent-assistant{background:#91b94a19}.ai-agent-tool{font-size:.82rem;opacity:.8}.ai-agent-error,.ai-agent-notice{border-left:3px solid #be6c1c}#ai-agent-form{display:flex;flex-direction:column;gap:6px}#ai-agent-prompt{width:100%;box-sizing:border-box;resize:vertical;min-height:60px;max-height:180px}#ai-agent-connection,#ai-agent-status{margin:0;font-size:.85rem}#ai-open-agent{margin:6px 0;width:100%}

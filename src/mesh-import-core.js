@@ -115,15 +115,19 @@ export async function prepareImportStl(buffer,{unit=1,repair=true,simplify=true,
  const sourceSha256=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',buffer)),v=>v.toString(16).padStart(2,'0')).join('');abort(signal);
  onProgress('Identische Punkte zusammenfassen …');let mesh=await compactImportPositions(source.positions,{signal});source.positions=null;
  const report={format:'FormnaroMeshImport',version:1,sourceSha256,inputTriangles:source.inputTriangles,encoding:source.encoding,unit,coordinatesMoved:false,originalFileChanged:false,repair:{status:repair?'pending':'disabled'},simplification:{changed:false},warnings:[]};
- if(repair&&mesh.triangles.length/3<=MESH_IMPORT_LIMITS.workingTriangles){
+ async function clean(){
   onProgress('Netz automatisch bereinigen …');
   const {buildMeshSelectionTopology}=await import('./mesh-selection-data.js'),{repairSimpleTopology}=await import('./mesh-simple-repair.js');
   const original={verts:Array.from(mesh.verts),triangles:Array.from(mesh.triangles)},topology=buildMeshSelectionTopology(original,{signal});
   try{const fixed=repairSimpleTopology(topology,{method:'simple-v1',geometryDigest:topology.geometryDigest,removeDegenerate:true,removeDuplicates:true,orient:true,smallTriangleLimit:0,removeComponents:[]},{signal});mesh={verts:new Float32Array(fixed.mesh.verts),triangles:new Uint32Array(fixed.mesh.triangles)};report.repair={status:'cleaned',...fixed.report};}
   catch(error){if(error.name==='AbortError')throw error;if(error.code!=='MESH_REPAIR_NO_CHANGE')throw error;report.repair={status:'no-change'};}
- }else if(repair){report.repair={status:'deferred',reason:'Zuerst große Arbeitskopie verkleinern.'};}
+
+ }
+ if(repair&&mesh.triangles.length/3<=MESH_IMPORT_LIMITS.workingTriangles)await clean();
+ else if(repair)report.repair={status:'deferred',reason:'Zuerst große Arbeitskopie verkleinern.'};
  if(simplify&&mesh.triangles.length/3>MESH_IMPORT_LIMITS.workingTriangles){onProgress('Großes Netz kontrolliert vereinfachen …');const result=await simplifyImportMesh(mesh,{targetTriangles,maxError,signal});mesh=result.mesh;report.simplification=result.report;}
  if(mesh.triangles.length/3>MESH_IMPORT_LIMITS.workingTriangles)fail('Das Netz bleibt über 500.000 Dreiecken. Vereinfachung einschalten oder Fehlerwert anpassen. Das Original bleibt unverändert.','MESH_IMPORT_WORKING_LIMIT');
+ if(repair&&report.repair.status==='deferred')await clean();
  onProgress('Ergebnis prüfen …');report.topology=inspectImportTopology(mesh,{signal});report.outputTriangles=mesh.triangles.length/3;report.outputVertices=mesh.verts.length/3;
  if(report.topology.boundary||report.topology.nonmanifold||report.topology.orientation||report.topology.degenerate)report.warnings.push('Netz enthält offene oder beschädigte Verbindungen. Es wird trotzdem geladen; Körperwerkzeuge benötigen eine Reparatur.');
  if(report.simplification.changed)report.warnings.push('Vereinfachte Arbeitskopie. Fehlerwert ist eine Algorithmusschätzung, kein globaler Maßnachweis. Originaldatei zum erneuten Import behalten.');

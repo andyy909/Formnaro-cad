@@ -4,11 +4,11 @@ const entries=require('../backend/program-data.json');
 const temp=()=>fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-portable-'));
 const settings='offlinecad-settings-v1',library='offlinecad-library-v1';
 
-test('Migration preserves the specific oversized legacy-settings validation instead of claiming a disk error',t=>{
+test('Migration skips oversized legacy AI settings with a warning while preserving the original',t=>{
  const root=temp();t.after(()=>{assert.equal(path.dirname(root),os.tmpdir());fs.rmSync(root,{recursive:true,force:true});});
  const legacyAIFile=path.join(root,'legacy-ai.json');fs.writeFileSync(legacyAIFile,'x'.repeat(65537));
  const directory=path.join(root,'Daten'),store=createProgramStore(directory,{legacyAIFile});
- assert.throws(()=>store.initialize(),/KI-Einstellungen sind zu groß/);assert.equal(fs.existsSync(directory),false);assert.equal(fs.statSync(legacyAIFile).size,65537);
+ const result=store.initialize();assert.match(result.warnings[0],/zu groß/);assert.equal(fs.existsSync(path.join(directory,'profil.json')),true);assert.equal(fs.existsSync(path.join(directory,'ai-settings.json')),false);assert.equal(fs.statSync(legacyAIFile).size,65537);
 });
 test('Generic atomic settings writer retries a short Windows lock without exposing a partial settings file',t=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-atomic-settings-')),file=path.join(root,'ai-settings.json');fs.writeFileSync(file,'old settings');t.after(()=>{assert.equal(path.dirname(root),os.tmpdir());fs.rmSync(root,{recursive:true,force:true});});let calls=0;const delays=[];

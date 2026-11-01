@@ -11,7 +11,7 @@ function validateTool(v){
 function createToolLibrary(directory){
  directory=path.resolve(directory);
  function ready(){fs.mkdirSync(directory,{recursive:true});if(fs.lstatSync(directory).isSymbolicLink()||fs.realpathSync(directory).toLowerCase()!==directory.toLowerCase())fail('Werkzeugordner darf keine Verknüpfung sein.');}
- function read(revision){if(typeof revision!=='string'||! /^[a-f0-9]{64}$/.test(revision))fail('Werkzeugrevision aus dem Katalog wählen.');ready();const file=path.join(directory,revision+'.json');if(fs.lstatSync(file).isSymbolicLink()||fs.statSync(file).size>4300000)fail('Ungültige Werkzeugdatei.');const saved=JSON.parse(fs.readFileSync(file,'utf8')),tool=validateTool(saved.tool);if(hash(JSON.stringify(tool))!==revision||saved.revision!==revision)fail('Werkzeug-Prüfsumme stimmt nicht.');return saved;}
+ function read(revision){if(typeof revision!=='string'||! /^[a-f0-9]{64}$/.test(revision))fail('Werkzeugrevision aus dem Katalog wählen.');ready();const file=path.join(directory,revision+'.json');if(fs.lstatSync(file).isSymbolicLink()||fs.statSync(file).size>4300000)fail('Ungültige Werkzeugdatei.');const saved=JSON.parse(fs.readFileSync(file,'utf8'));if(saved?.format!=='FormnaroTool'||saved.version!==1||typeof saved.createdAt!=='string'||saved.createdAt.length>64||!Number.isFinite(Date.parse(saved.createdAt))||typeof saved.evidence!=='string')fail('Werkzeug-Metadaten sind ungültig.');const tool=validateTool(saved.tool);if(hash(JSON.stringify(tool))!==revision||saved.revision!==revision)fail('Werkzeug-Prüfsumme stimmt nicht.');return saved;}
  function request(args={}){
   if(!args||Object.getPrototypeOf(args)!==Object.prototype||Object.keys(args).some(k=>!['action','tool','revision','search','offset','limit'].includes(k)))fail('Ungültige Werkzeugabfrage.');
   ready();
@@ -26,8 +26,10 @@ function createToolLibrary(directory){
   }
   if(args.action==='list'||args.action==='search'){
    if(typeof (args.search??'')!=='string'||(args.search??'').length>200||!Number.isSafeInteger(args.offset??0)||(args.offset??0)<0||!Number.isSafeInteger(args.limit??20)||(args.limit??20)<1||(args.limit??20)>100)fail('Werkzeugsuche: Text, offset und limit 1–100 wählen.');
-   const rows=fs.readdirSync(directory).filter(n=>/^[a-f0-9]{64}\.json$/.test(n)).map(n=>read(n.slice(0,-5))).filter(r=>(r.tool.name+' '+r.tool.description+' '+r.tool.tags.join(' ')).toLowerCase().includes((args.search??'').toLowerCase())).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)||a.revision.localeCompare(b.revision));
-   const offset=args.offset??0,limit=args.limit??20;return {total:rows.length,offset,nextOffset:offset+limit<rows.length?offset+limit:null,tools:rows.slice(offset,offset+limit).map(r=>({revision:r.revision,createdAt:r.createdAt,name:r.tool.name,description:r.tool.description,language:r.tool.language,tags:r.tool.tags,evidence:r.evidence}))};
+   const rows=[],unavailable=[],search=(args.search??'').toLowerCase();
+   for(const name of fs.readdirSync(directory).filter(n=>/^[a-f0-9]{64}\.json$/.test(n))){const revision=name.slice(0,-5);let r;try{r=read(revision);}catch{unavailable.push({revision,error:'Werkzeugdatei beschädigt oder nicht lesbar; unverändert erhalten.'});continue;}if((r.tool.name+' '+r.tool.description+' '+r.tool.tags.join(' ')).toLowerCase().includes(search))rows.push({revision:r.revision,createdAt:r.createdAt,name:r.tool.name,description:r.tool.description,language:r.tool.language,tags:r.tool.tags,evidence:r.evidence});}
+   rows.sort((a,b)=>b.createdAt.localeCompare(a.createdAt)||a.revision.localeCompare(b.revision));
+   const offset=args.offset??0,limit=args.limit??20;return {total:rows.length,offset,nextOffset:offset+limit<rows.length?offset+limit:null,tools:rows.slice(offset,offset+limit),...(unavailable.length?{unavailable}:{})};
   }
   fail('Werkzeugbibliothek: list/search/read/save wählen.');
  }

@@ -30,10 +30,10 @@ function createChatGPTAuth({directory,encrypt,decrypt,canEncrypt,openExternal,fe
   for(let attempt=0;attempt<5;attempt++){
    try{const fd=fs.openSync(lockFile,'wx',0o600);try{fs.writeFileSync(fd,String(process.pid));}finally{fs.closeSync(fd);}acquired=true;break;}catch(e){
     if(e.code!=='EEXIST')throw e;
-    let live=true;
-    try{const pid=Number(fs.readFileSync(lockFile,'utf8'));if(Number.isInteger(pid)&&pid>0)process.kill(pid,0);}catch(error){if(error.code==='ENOENT')continue;if(error.code==='ESRCH')live=false;}
+    let live=true,observed,stamp;
+    try{stamp=fs.statSync(lockFile);observed=fs.readFileSync(lockFile,'utf8');const pid=Number(observed);if(Number.isInteger(pid)&&pid>0)process.kill(pid,0);else live=Date.now()-stamp.mtimeMs<5000;}catch(error){if(error.code==='ENOENT')continue;if(error.code==='ESRCH')live=false;}
     if(live)throw Error('Eine andere Formnaro-Instanz bearbeitet die ChatGPT-Anmeldung.');
-    try{fs.unlinkSync(lockFile);}catch(error){if(error.code!=='ENOENT')throw error;}
+    try{const current=fs.statSync(lockFile);if(current.ino!==stamp?.ino||current.mtimeMs!==stamp?.mtimeMs||fs.readFileSync(lockFile,'utf8')!==observed)continue;fs.unlinkSync(lockFile);}catch(error){if(error.code!=='ENOENT')throw error;}
    }
   }
   if(!acquired)throw Error('ChatGPT-Anmeldesperre wurde wiederholt geändert. Bitte erneut versuchen.');

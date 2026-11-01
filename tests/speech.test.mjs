@@ -66,3 +66,15 @@ test('Timeout and invalid runtime do not leave audio behind or execute unverifie
  await assert.rejects(service.transcribe({requestId:'timeout',bytes:audio()}),/zu lange/);assert.deepEqual(await fs.readdir(fixturePaths.tempDirectory),[]);
  await fs.writeFile(path.join(fixturePaths.directory,'whisper-cli.exe'),'changed');const broken=speech.createSpeechService({...fixturePaths,spawnProcess(){assert.fail('Must not execute');}});assert.equal((await broken.status()).available,false);await assert.rejects(broken.transcribe({requestId:'broken',bytes:audio()}),/beschädigt/);
 });
+
+test('Optional model absence is actionable; online speech works before downloading and local speech uses the verified portable model',async t=>{
+ const f=await fixture(t),modelFile=path.join(f.directory,'ggml-small-q5_1.bin'),bytes=await fs.readFile(modelFile);await fs.unlink(modelFile);
+ const modelDirectory=path.join(f.directory,'portable-models');const model={file:'ggml-small-q5_1.bin',bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex'),url:'https://example.invalid/model'};
+ const modelStore=(await import('../backend/speech-model.cjs')).default.createModelStore({directory:modelDirectory,model,fetchImpl:async()=>new Response(bytes)});
+ const service=speech.createSpeechService({...f,modelStore,online:{transcribe:async()=>({text:'Online works'})},spawnProcess(exe,args){assert.equal(args[args.indexOf('-m')+1],path.join(modelDirectory,model.file));const child=new EventEmitter();setImmediate(async()=>{await fs.writeFile(args[args.indexOf('-of')+1]+'.txt','Portable offline works');child.emit('close',0);});return child;}});
+ const missing=await service.status();assert.equal(missing.available,false);assert.equal(missing.downloadRequired,true);assert.equal(missing.downloading,false);
+ await assert.rejects(service.transcribe({requestId:'local-before',bytes:audio()}),/herunterladen/);
+ assert.equal((await service.transcribe({requestId:'online-before',mode:'online',bytes:audio()})).text,'Online works');
+ await service.downloadModel();assert.equal((await service.status()).available,true);assert.equal((await service.transcribe({requestId:'local-after',bytes:audio()})).text,'Portable offline works');
+ await service.dispose();
+});

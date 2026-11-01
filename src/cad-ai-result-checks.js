@@ -1,7 +1,7 @@
 import {TARGET_SCHEMA} from './command-schema.js';
 
 export const MAX_AI_RESULT_CHECKS=32;
-export function aiProposalWarning(proposal){return proposal?.correctionError?.message||(proposal?.photoComparison?.some(r=>r.unavailable||r.matches===false)?'Fotovergleich: Abweichung oder Prüfung nicht vollständig.':'')||(proposal?.independentCheck?.passed===false?'FreeCAD meldet Geometriefehler.':proposal?.independentCheck?.status==='unavailable'?'FreeCAD-Prüfung nicht abgeschlossen: '+proposal.independentCheck.reason:'')||(['unavailable','incomplete'].includes(proposal?.visualReview?.status)?proposal.visualReview.reason||'Bildprüfung nicht abgeschlossen.':'');}
+export function aiProposalWarning(proposal){return (proposal?.verification?.skipped?'Probemodus: ALLE automatischen Modellprüfungen ausgeschaltet. Keine Maß-, Körperzahl-, Foto- oder Bildprüfung durchgeführt. ':'')||proposal?.correctionError?.message||(proposal?.photoComparison?.some(r=>r.unavailable||r.matches===false)?'Fotovergleich: Abweichung oder Prüfung nicht vollständig.':'')||(proposal?.independentCheck?.passed===false?'FreeCAD meldet Geometriefehler.':proposal?.independentCheck?.status==='unavailable'?'FreeCAD-Prüfung nicht abgeschlossen: '+proposal.independentCheck.reason:'')||(['unavailable','incomplete'].includes(proposal?.visualReview?.status)?proposal.visualReview.reason||'Bildprüfung nicht abgeschlossen.':'');}
 export function appendAIIndependentCheck(root,proposal,language='de'){
  const c=proposal?.independentCheck;if(!c||c.status==='not-applicable')return;const p=document.createElement('p');p.dataset.aiIndependentCheck='';
  p.textContent=c.passed===true?(language==='en'?'FreeCAD: exported geometry is valid. Dimensions require the separate checks.':'FreeCAD: Exportgeometrie gültig. Maßhaltigkeit wird durch die separaten Prüfungen belegt.'):c.passed===false?'FreeCAD: Geometriefehler im Export. Entwurf nur mit Warnung übernehmen.':'FreeCAD-Prüfung nicht abgeschlossen: '+c.reason;
@@ -9,10 +9,11 @@ export function appendAIIndependentCheck(root,proposal,language='de'){
 }
 const vector={type:'array',minItems:3,maxItems:3,items:{type:'number',minimum:-100000,maximum:100000}};
 const positive={type:'number',exclusiveMinimum:0,maximum:10000};
+const partialVector=items=>({...vector,items:{anyOf:[items,{type:'null'}]},contains:{type:'number'}});
 const definitions={
  bore:{required:['from','to','diameter'],properties:{from:vector,to:vector,diameter:positive,minWall:positive}},
- size:{required:['space','expected'],properties:{space:{enum:['edit','worldAxes']},expected:{...vector,items:positive}}},
- bounds:{required:['edge','expected'],properties:{edge:{enum:['min','max','center','size']},expected:vector}},
+ size:{required:['space','expected'],properties:{space:{enum:['edit','worldAxes']},expected:partialVector(positive)}},
+ bounds:{required:['edge','expected'],properties:{edge:{enum:['min','max','center','size']},expected:partialVector(vector.items)}},
  volume:{required:['expected'],properties:{expected:{type:'number',exclusiveMinimum:0,maximum:1e12}}},
  solids:{required:['expected'],properties:{expected:{type:'integer',minimum:1,maximum:500}}},
  distance:{required:['other','expected'],properties:{other:TARGET_SCHEMA,expected:{type:'number',minimum:0,maximum:200000}}},
@@ -28,6 +29,7 @@ function target(value){
  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['rootId','path'].includes(k))||!id(value.rootId)||!Array.isArray(value.path)||value.path.length>12||!value.path.every(id))invalid('vollständiges Ziel oder eindeutigen Alias angeben.');
 }
 const vec=value=>Array.isArray(value)&&value.length===3&&value.every(v=>Number.isFinite(v)&&Math.abs(v)<=100000);
+const expectedVec=value=>Array.isArray(value)&&value.length===3&&value.some(Number.isFinite)&&value.every(v=>v===null||Number.isFinite(v)&&Math.abs(v)<=100000);
 export function validateAIResultChecks(value=[]){
  if(!Array.isArray(value)||value.length>MAX_AI_RESULT_CHECKS)invalid('höchstens 32 Prüfungen angeben.');
  if(JSON.stringify(value).length>6000)invalid('Prüfauftrag ist größer als 6000 Zeichen.');
@@ -39,8 +41,8 @@ export function validateAIResultChecks(value=[]){
   if(check.kind==='surfaceDeviation'&&(!Number.isFinite(check.expected)||check.expected<0||check.expected>1000||!Number.isSafeInteger(check.maxSamples??12000)||(check.maxSamples??12000)<1||(check.maxSamples??12000)>12000))invalid('Oberflächenvergleich: 0 bis 1000 mm maximale Stichprobenabweichung und 1 bis 12.000 Stichprobendreiecke je Richtung wählen.');
   if(check.kind==='radialClearance'&&(!vec(check.from)||!vec(check.to)||Math.hypot(...check.to.map((v,k)=>v-check.from[k]))<.01||!Number.isFinite(check.expected)||check.expected<0||check.expected>5||!Number.isInteger(check.samples??9)||(check.samples??9)<3||(check.samples??9)>33))invalid('Radialspiel: Weltachse, 0 bis 5 mm Mindestspiel und 3 bis 33 Schnitte angeben.');
   if(check.tolerance!==undefined&&(!Number.isFinite(check.tolerance)||check.tolerance<1e-6||check.tolerance>.1))invalid('Toleranz muss zwischen 0,000001 und 0,1 liegen.');
-  if(['size','bounds'].includes(check.kind)&&!vec(check.expected))invalid('drei endliche Sollwerte angeben.');
-  if(check.kind==='size'&&(!['edit','worldAxes'].includes(check.space)||check.expected.some(v=>v<=0||v>10000)))invalid('Objektachsmaße und gültigen Maßraum angeben.');
+  if(['size','bounds'].includes(check.kind)&&!expectedVec(check.expected))invalid('drei Sollwerte mit mindestens einem endlichen Wert angeben; null lässt eine nicht vorgegebene Achse frei.');
+  if(check.kind==='size'&&(!['edit','worldAxes'].includes(check.space)||check.expected.some(v=>v!==null&&(v<=0||v>10000))))invalid('Objektachsmaße und gültigen Maßraum angeben.');
   if(check.kind==='bounds'&&!['min','max','center','size'].includes(check.edge))invalid('min, max, center oder size wählen.');
   if(['volume','distance'].includes(check.kind)&&(!Number.isFinite(check.expected)||check.expected<(check.kind==='volume'?Number.MIN_VALUE:0)||check.expected>(check.kind==='volume'?1e12:200000)))invalid('endlichen Sollwert im Arbeitsbereich angeben.');
   if(check.kind==='solids'&&(!Number.isSafeInteger(check.expected)||check.expected<1||check.expected>500))invalid('1 bis 500 native Materialkörper angeben.');
@@ -72,6 +74,7 @@ export function aiCheckFailure(check,index,actual){
  return Object.assign(Error(message),{code:'AI_RESULT_MISMATCH',feedback:{checkIndex:index,checkKind:check.kind,target:check.target,expected,actual,tolerance:check.kind==='solids'?0:check.tolerance??.01,retryable:true}});
 }
 export function aiVerificationText(verification,language='de'){
+ if(verification?.skipped)return language==='en'?'UNCHECKED TRIAL: all automatic model-result checks are disabled. No proof of correctness.':'UNGEPRÜFTE PROBE: Alle automatischen Modellprüfungen ausgeschaltet. Kein Nachweis für die Richtigkeit.';
  const count=verification?.checks?.length??0;
  const failed=verification?.checks?.filter(c=>c.passed===false).length??0;
  if(failed)return language==='en'?`${failed} of ${count} result checks failed or could not be measured. Review the preview; you can discard it or apply with errors.`:`${failed} von ${count} Ergebnisprüfungen fehlgeschlagen oder nicht messbar. Vorschau prüfen und verwerfen oder mit Fehlern übernehmen.`;
@@ -84,7 +87,7 @@ export function appendAIVerification(root,verification,scene,language='de',doc=g
  if(!verification?.checks?.length)return;
  const details=doc.createElement('details'),summary=doc.createElement('summary'),list=doc.createElement('ul');summary.textContent=english?'Show measured requirements':'Geprüfte Anforderungen anzeigen';details.append(summary,list);
  const labels=english?{size:'Object dimensions',bounds:'World bounds',volume:'Volume',solids:'Material bodies',distance:'Minimum distance',clearance:'Free corridor'}:{size:'Objektachsmaße',bounds:'Weltbegrenzung',volume:'Volumen',solids:'Materialkörper',distance:'Mindestabstand',clearance:'Freier Korridor'};
- const number=value=>Array.isArray(value)?value.map(number).join(' × '):Number(value).toLocaleString(english?'en-US':'de-DE',{useGrouping:false,maximumFractionDigits:6});
+ const number=value=>value===null?(english?'free':'frei'):Array.isArray(value)?value.map(number).join(' × '):Number(value).toLocaleString(english?'en-US':'de-DE',{useGrouping:false,maximumFractionDigits:6});
  for(const check of verification.checks){const item=doc.createElement('li'),object=scene?.objects?.find(n=>n.target.rootId===check.target.rootId&&JSON.stringify(n.target.path)===JSON.stringify(check.target.path));item.dataset.noTranslate='';if(check.passed===false){item.className='ai-error';item.textContent=`${object?.name??''}: ${english?'Failed / unavailable':'Fehlgeschlagen / nicht messbar'} · ${check.error?.message??check.kind}`;list.append(item);continue;}if(check.kind==='bore'){item.textContent=`${object?.name??''}: ${english?'Bore':'Bohrung'} Ø ${number(check.actual.diameter)} mm · ${english?'cylindrical depth':'zylindrische Tiefe'} ${number(check.actual.depth)} mm · ${english?'surrounding material':'umgebendes Material'} ≥ ${number(check.actual.minWall)} mm`;list.append(item);continue;}if(check.kind==='surfaceDeviation'){item.textContent=`${object?.name??''}: ${english?'Sampled surface deviation':'Oberflächenabweichung in Stichproben'} ${number(check.actual.sampledMaximum)} mm · ${english?'allowed maximum':'erlaubtes Maximum'} ${number(check.expected)} mm · ${english?'no global guarantee':'keine globale Fehlergarantie'}`;list.append(item);continue;}if(check.kind==='radialClearance'){item.textContent=`${object?.name??''}: ${english?'Radial gap lower bound':'Radialspiel-Untergrenze'} ${number(check.actual.minimumGapLowerBound)} mm · ${english?'required minimum':'gefordertes Minimum'} ${number(check.expected)} mm · ${check.actual.samples} ${english?'section planes; continuous slab verification':'Schnittebenen; Zwischenhöhen durchgehend geprüft'} · ± ${number(check.tolerance)} mm`;list.append(item);continue;}if(check.kind==='bore'&&(!Number.isFinite(check.minWall??.1)||(check.minWall??.1)<=2*(check.tolerance??.01)||(check.minWall??.1)>10000))invalid('Bohrung: minWall muss groesser als die doppelte Toleranz und hoechstens 10000 mm sein.');
   if(['clearance','bore'].includes(check.kind)){item.textContent=`${object?.name??''}: ${labels.clearance} · ${english?'minimum free diameter':'freier Mindestdurchmesser'} ${number(check.actual.diameterChecked)} mm · ${english?'requested':'gewünscht'} ${number(check.expected)} mm · ${english?'radial allowance':'radialer Spielraum'} ${number(check.tolerance)} mm`;list.append(item);continue;}item.textContent=`${object?.name??''}: ${labels[check.kind]}${check.edge?' ('+check.edge+')':''} · ${english?'expected':'Soll'} ${number(check.expected)} · ${english?'measured':'Ist'} ${number(check.kind==='clearance'?check.actual.diameterChecked:check.actual)}${check.kind==='solids'?'':` · ± ${number(check.tolerance)} ${check.kind==='volume'?'mm³':'mm'}`}`;list.append(item);}
  root.append(details);

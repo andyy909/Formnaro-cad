@@ -8,6 +8,12 @@ function declaredEfforts(model){
 function reasoningEfforts(config,model){
  const host=new URL(config.baseUrl).hostname;
  if(host==='api.deepseek.com')return ['low','high','max'];
+ if(host==='api.mistral.ai'){
+  const declared=declaredEfforts(model);if(declared!==null)return declared;
+  if(/^mistral-large-4(?:-0)?$/.test(config.model))return ['low','medium','high'];
+  if(/^(?:mistral-medium-(?:3[.-]5|2604)|mistral-small-(?:2603|4(?:-0)?))$/.test(config.model))return ['none','high'];
+  return [];
+ }
  if(host!=='api.openai.com')return [];
  const declared=declaredEfforts(model);if(declared!==null)return declared;
  if(/^gpt-(?:6-astra|6\.1-sol)(?:-\d{4}-\d{2}-\d{2})?$/.test(config.model))return ['low','medium','high','xhigh','max'];
@@ -20,6 +26,11 @@ function reasoningEfforts(config,model){
 }
 function requestEffort(config,model){
  const host=new URL(config.baseUrl).hostname;if(host==='api.deepseek.com')return config.reasoningEffort;
+ if(host==='api.mistral.ai'){
+  const effort=config.mistralReasoningEffort??'auto';if(effort==='auto')return undefined;
+  if(config.authMode!=='mistral-vibe'&&!reasoningEfforts(config,model).includes(effort))throw Error('Diese Mistral-Denkstufe ist für das gewählte Modell nicht bestätigt.');
+  return effort;
+ }
  if(host!=='api.openai.com'||!config.openAIReasoningEffort||config.openAIReasoningEffort==='auto')return undefined;
  if(!reasoningEfforts(config,model).includes(config.openAIReasoningEffort))throw Error('Diese Denkstufe ist für das gewählte Modell nicht bestätigt. Bitte Automatisch oder eine angebotene Denkstufe wählen.');
  return config.openAIReasoningEffort;

@@ -32,12 +32,17 @@ class CadContainer {
  [DllImport("kernel32.dll",SetLastError=true)] static extern bool SetInformationJobObject(IntPtr job,int cls,ref JOBLIMIT info,int length);
  [DllImport("kernel32.dll",SetLastError=true)] static extern bool AssignProcessToJobObject(IntPtr job,IntPtr process);
  [DllImport("kernel32.dll")] static extern uint ResumeThread(IntPtr thread);
+ [DllImport("kernel32.dll")] static extern bool TerminateProcess(IntPtr process,uint code);
  static void Win(bool ok){if(!ok)throw new Win32Exception(Marshal.GetLastWin32Error());}
- static string Quote(string s){return "\""+s.Replace("\\", "\\").Replace("\"","\\\"")+"\"";}
+ static string Quote(string s){
+  var result=new StringBuilder("\"");int slashes=0;
+  foreach(char c in s){if(c=='\\'){slashes++;continue;}if(c=='"'){result.Append('\\',slashes*2+1).Append('"');slashes=0;continue;}result.Append('\\',slashes).Append(c);slashes=0;}
+  result.Append('\\',slashes*2).Append('"');return result.ToString();
+ }
  static int Main(string[] args){
   if(args.Length==2&&args[0]=="--cleanup"&&System.Text.RegularExpressions.Regex.IsMatch(args[1],"^formnaro[.]cad[.][a-f0-9]{32}$")){DeleteAppContainerProfile(args[1]);return 0;}
   string name=args.Length==4?args[3]:"formnaro.cad."+Guid.NewGuid().ToString("N");IntPtr sid=IntPtr.Zero,attrs=IntPtr.Zero,capsPtr=IntPtr.Zero,job=IntPtr.Zero;
-  PROCESS pi=new PROCESS();
+  PROCESS pi=new PROCESS();bool completed=false;
   try{
    if((args.Length!=3&&args.Length!=4)||!System.Text.RegularExpressions.Regex.IsMatch(name,"^formnaro[.]cad[.][a-f0-9]{32}$"))throw new ArgumentException("Expected executable, job directory, worker filename, optional package name");
    string exe=Path.GetFullPath(args[0]),dir=Path.GetFullPath(args[1]),worker=Path.GetFullPath(args[2]);
@@ -69,9 +74,9 @@ class CadContainer {
     STARTUPEX si=new STARTUPEX();si.si.cb=Marshal.SizeOf(si);si.si.flags=0x100;si.si.input=ih;si.si.output=lh;si.si.error=lh;si.attributes=attrs;
     string command=Quote(exe)+" --user-cfg "+Quote(Path.Combine(dir,"user.cfg"))+" --system-cfg "+Quote(Path.Combine(dir,"system.cfg"))+" "+Quote(worker);
     Win(CreateProcess(exe,new StringBuilder(command),IntPtr.Zero,IntPtr.Zero,true,0x00080000|0x08000000|0x00000004,IntPtr.Zero,dir,ref si,out pi));
-    Win(AssignProcessToJobObject(job,pi.process));ResumeThread(pi.thread);WaitForSingleObject(pi.process,0xffffffff);uint code;Win(GetExitCodeProcess(pi.process,out code));return unchecked((int)code);
+    Win(AssignProcessToJobObject(job,pi.process));Win(ResumeThread(pi.thread)!=0xffffffff);WaitForSingleObject(pi.process,0xffffffff);uint code;Win(GetExitCodeProcess(pi.process,out code));completed=true;return unchecked((int)code);
    }
   }catch(Exception e){Console.Error.WriteLine("CAD_CONTAINER: "+e.Message);return 125;}
-  finally{if(job!=IntPtr.Zero)CloseHandle(job);if(pi.thread!=IntPtr.Zero)CloseHandle(pi.thread);if(pi.process!=IntPtr.Zero)CloseHandle(pi.process);if(attrs!=IntPtr.Zero){DeleteProcThreadAttributeList(attrs);Marshal.FreeHGlobal(attrs);}if(capsPtr!=IntPtr.Zero)Marshal.FreeHGlobal(capsPtr);if(sid!=IntPtr.Zero)FreeSid(sid);DeleteAppContainerProfile(name);}
+  finally{if(pi.process!=IntPtr.Zero&&!completed){TerminateProcess(pi.process,125);WaitForSingleObject(pi.process,5000);}if(job!=IntPtr.Zero)CloseHandle(job);if(pi.thread!=IntPtr.Zero)CloseHandle(pi.thread);if(pi.process!=IntPtr.Zero)CloseHandle(pi.process);if(attrs!=IntPtr.Zero){DeleteProcThreadAttributeList(attrs);Marshal.FreeHGlobal(attrs);}if(capsPtr!=IntPtr.Zero)Marshal.FreeHGlobal(capsPtr);if(sid!=IntPtr.Zero)FreeSid(sid);DeleteAppContainerProfile(name);}
  }
 }

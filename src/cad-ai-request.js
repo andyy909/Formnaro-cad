@@ -9,21 +9,23 @@ import {compactAIRequestContext,createAITaskEvidence} from './cad-ai-task-eviden
 import {createPhotoTask,addPhotoImages} from './cad-photo-task.js';
 import {createAITaskProgress,aiCandidateQuality,compareAIQuality,aiCandidateGeometry} from './cad-ai-task-progress.js';
 // One user request may repair failed output/previews; it never commits a model.
-export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,onUsage=()=>{},onCorrection=()=>{},onAnalysis=()=>{},onVisualReview=()=>{},visualReview=true,maxCorrections,maxSteps=7,requirements,purpose=requirements?.purpose??'technical',onProgress,resume,restoreOnly=false}){
+export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,onUsage=()=>{},onCorrection=()=>{},onAnalysis=()=>{},onVisualReview=()=>{},onCandidate=async()=>{},visualReview=true,maxCorrections,maxSteps=7,requirements,purpose=requirements?.purpose??'technical',onProgress,resume,restoreOnly=false}){
  if(!Number.isSafeInteger(maxSteps)||maxSteps<7||maxSteps>80)throw Error('KI-Arbeitsschritte: 7 bis 80 wählen.');
- const modelPolicy=aiModellingPolicy(input.modelStrictness??100);
- const extended=maxSteps>7,correctionLimit=maxCorrections??(extended?maxSteps-1:2),analysisLimit=extended?maxSteps-1:2,reviewLimit=extended?maxSteps-1:2;
+ if(input.modelChecks!==undefined&&typeof input.modelChecks!=='boolean')throw Error('Modellprüfung: gültigen Probemodus wählen.');
+ const modelChecks=input.modelChecks!==false,modelPolicy=modelChecks?aiModellingPolicy(input.modelStrictness??100):{...aiModellingPolicy(0),checksEnabled:false,measurementEnforcement:'disabled',instructions:'The user explicitly selected a trial with ALL automatic model-result checks disabled for this request. Return the first executable complete proposal with checks:[], without dimensional, volume, body-count, photo or visual acceptance checks, analysis-only validation rounds or self-rejection based on model quality. Do not retry solely to improve the model. Clearly report that this is an unchecked trial, never claim that requirements passed. Choose missing dimensions freely. Executable command/schema validity, original source protections, unrelated parts, revision checks, Formnaro-only tools and explicit Apply remain required.'};
+ if(!modelChecks)visualReview=false;
+ const extended=maxSteps>7,correctionLimit=modelChecks?(maxCorrections??(extended?maxSteps-1:2)):0,analysisLimit=extended?maxSteps-1:2,reviewLimit=extended?maxSteps-1:2;
  const fixedRequirements=requirements?validateAITaskRequirements(requirements):null;if(fixedRequirements&&fixedRequirements.purpose!==purpose)throw Object.assign(Error('Die Qualitätsart darf die gespeicherten Auftragsvorgaben nicht ersetzen.'),{code:'AI_TASK_REQUIREMENTS_INVALID'});
  const protectedSources=captureAITaskProtection(fixedRequirements?.protectedTargets.length?access.project?.():null,fixedRequirements?.protectedTargets??[]);
  const original=access.scene(),selection=JSON.stringify(original.selectionTargets??[]),binding=captureAIRequestBinding({scene:original,project:access.project?.(),input,requirements:fixedRequirements,featureScope:access.context()?.featureScope});
- const restored=resume?validateAIRequestResume(resume,{binding,maxSteps,purpose,requiredChecks:fixedRequirements?.checks,mode:restoreOnly?'restore':'continue'}):null,progress=restored?.progress??createAITaskProgress({maxSteps,purpose}),taskEvidence=restored?.evidence??createAITaskEvidence(original.revision);
+ const restored=resume?validateAIRequestResume(resume,{binding,maxSteps,purpose,requiredChecks:modelChecks?fixedRequirements?.checks:[],mode:restoreOnly?'restore':'continue'}):null,progress=restored?.progress??createAITaskProgress({maxSteps,purpose}),taskEvidence=restored?.evidence??createAITaskEvidence(original.revision);
  function current(){if(!isCurrent()){const e=Error('KI-Anfrage abgebrochen.');e.name='AbortError';throw e;}const scene=access.scene();if(scene.revision!==original.revision||JSON.stringify(scene.selectionTargets??[])!==selection){const e=Error('CAD-Modell oder Auswahl wurde geändert. Bitte erneut senden.');e.code='STALE_REVISION';throw e;}return scene;}
  async function observed(phase){current();if(typeof onProgress!=='function')return;try{await onProgress(structuredClone({phase,...(phase==='candidate'?{candidateSettled:true}:{}),binding,progress:progress.snapshot(),taskEvidence:taskEvidence.snapshot(),evidenceCheckpoint:taskEvidence.checkpoint(),...(photoTask?{photoState:photoTask.checkpoint()}:{}),...(typeof access.captureTaskRuntime==='function'?{workspace:access.captureTaskRuntime()}:{}),requiredChecks:requiredChecks??[],requiredChecksLocked:requiredChecks!==undefined,analysisResults,correction,lastResult:lastResult??null,candidate:retained??null,counters:{analysisRounds,correctionAttempts,visualReviews}}));}catch(error){throw Object.assign(Error('KI-Auftragszustand konnte nicht gespeichert werden: '+error.message),{code:'AI_TASK_CHECKPOINT_FAILED',feedback:{retryable:false}});}current();}
  if(restored){if(input.photoReferences?.length&&!restored.saved.photoState)throw Object.assign(Error('Die gespeicherten Fotoausschnitte fehlen. Auftrag nicht mit unvollständigen Bildbezügen fortsetzen.'),{code:'AI_TASK_RESUME_INVALID'});if(typeof access.restoreTaskRuntime!=='function')throw Object.assign(Error('Der gespeicherte Arbeitsbereich kann hier nicht sicher fortgesetzt werden.'),{code:'AI_TASK_RESUME_UNAVAILABLE'});if(restored.saved.candidate&&typeof access.restoreCandidate!=='function')throw Object.assign(Error('Gespeicherten Kandidaten zuerst als neue geprüfte Vorschau wiederherstellen.'),{code:'AI_TASK_RESUME_UNAVAILABLE'});}
  else if(!access.programOnly)await access.beginTask?.();
  const baseInput=input,photoTask=await createPhotoTask(input,restored?.saved.photoState);current();let photoReports=[],photoImageOmissions=[];
  if(photoTask){const packed=addPhotoImages(baseInput,[...photoTask.initialImages,...photoTask.takeImages()]);input={...input,images:packed.images};photoImageOmissions=packed.omitted;}
- let correction=restored?.saved.correction??'',lastResult=restored?.saved.lastResult??undefined,lastFailure,requiredChecks=restored?(restored.saved.requiredChecksLocked?restored.checks:undefined):(fixedRequirements?.checks.length?structuredClone(fixedRequirements.checks):undefined),analysisRounds=restored?.saved.counters.analysisRounds??0,correctionAttempts=restored?.saved.counters.correctionAttempts??0,retained;const analysisResults=restored?.analysisResults??[];let visualInput=null,visualReviews=restored?.saved.counters.visualReviews??0,programHelpBudget=!!access.programOnly&&!access.practiceRequested,programHelpRequests=0;
+ let correction=restored?.saved.correction??'',lastResult=restored?.saved.lastResult??undefined,lastFailure,requiredChecks=!modelChecks?[]:restored?(restored.saved.requiredChecksLocked?restored.checks:undefined):(fixedRequirements?.checks.length?structuredClone(fixedRequirements.checks):undefined),analysisRounds=restored?.saved.counters.analysisRounds??0,correctionAttempts=restored?.saved.counters.correctionAttempts??0,retained;const analysisResults=restored?.analysisResults??[];let visualInput=null,visualReviews=restored?.saved.counters.visualReviews??0,programHelpBudget=!!access.programOnly&&!access.practiceRequested,programHelpRequests=0;
  async function finish(error){
   const value=retained;if(value.proposal.visualReview?.status==='pending')value.proposal.visualReview={status:'incomplete',reason:error?.message??'Keine abgeschlossene Bildprüfung.'};
   if(error)value.proposal={...value.proposal,correctionError:{code:error.code??'AI_CORRECTION_FAILED',message:error.message}};
@@ -35,11 +37,12 @@ export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,
   const saved=restored.saved.candidate,proposal=await access.restoreCandidate(saved,{checks:requiredChecks??[],revision:original.revision});if(proposal?.verification)proposal.verification.modellingPolicy=aiStrictnessDecision(proposal.verification,modelPolicy.strictness);
   try{current();const project=access.getPreview?.(proposal?.previewId);if(!proposal||proposal.previewId===saved.proposal.previewId||proposal.revision!==original.revision||!project||proposal.verification?.version!==1||!Array.isArray(proposal.verification.checks)||proposal.verification.checks.length!==(requiredChecks?.length??0))throw Object.assign(Error('Die gespeicherte Vorschau wurde nicht neu geprüft.'),{code:'AI_TASK_RESUME_INVALID'});verifyAITaskProtection(project,protectedSources);retained={result:saved.result,proposal};}
   catch(error){if(proposal?.previewId&&proposal.previewId!==saved.proposal.previewId)access.discard?.(proposal.previewId);throw error;}
-  if(typeof access.inspectFreeCADPreview==='function'){
+  if(modelChecks&&typeof access.inspectFreeCADPreview==='function'){
    try{proposal.independentCheck=await access.inspectFreeCADPreview(proposal.previewId);current();}
    catch(error){current();if(/STALE|ABORT|CANCEL/.test(error.code??''))throw error;proposal.independentCheck={status:'unavailable',reason:error.message};}
   }
  }
+ if(!modelChecks&&retained){retained.proposal.verification={version:1,checks:[],skipped:true,scope:'User-selected unchecked trial.'};retained.proposal.visualReview={status:'skipped'};}
  if(restored)await access.restoreTaskRuntime(restored.saved.workspace);
  if(restored&&retained&&photoTask){retained.proposal.photoComparison=(await photoTask.compare(retained.proposal.previewId,access.inspectPhotoPreview)).map(r=>({...r,previewId:retained.proposal.previewId,revision:original.revision}));photoReports=retained.proposal.photoComparison.map(({overlay,...report})=>report);if(retained.proposal.photoComparison.some(r=>r.matches===false)){const packed=addPhotoImages(baseInput,[...photoTask.initialImages,...retained.proposal.photoComparison.flatMap(r=>r.overlay?[r.overlay]:[])]);input={...input,images:packed.images};photoImageOmissions=packed.omitted;}}
  if(restoreOnly){if(!restored||!retained)throw Object.assign(Error('Gespeicherter Entwurf fehlt.'),{code:'AI_TASK_RESUME_INVALID'});const value=retained;retained=null;return {...value.result,proposal:value.proposal,correctionAttempts,analysisRounds,visualReviews,taskProgress:progress.snapshot()};}
@@ -70,7 +73,7 @@ export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,
     if(access.restrictedFeatures&&result.assistant?.kind!=='help')throw Object.assign(Error('Dieser Auftrag erlaubt nur die angehängten Merkmalsbezüge. Bedienhilfen, Notizen und freie Vorführungen gehören in einen getrennten Auftrag.'),{code:'AI_FEATURE_SCOPE_VIOLATION',feedback:{retryable:true}});
     if(!access.programAssistant||result.revision!==original.revision||['commands','analysis','review','checks'].some(k=>result[k]!==undefined))throw Error('Ungültige Programm-Assistentenantwort.');
     if(result.assistant.kind==='demonstrate'){
-     const checks=requiredChecks??(result.assistant.checks?.length?validateAIResultChecks(result.assistant.checks):undefined);if(checks)requiredChecks=checks;
+     const checks=!modelChecks?[]:requiredChecks??(result.assistant.checks?.length?validateAIResultChecks(result.assistant.checks):undefined);if(checks)requiredChecks=checks;
      const demo=await access.programAssistant.demonstrate(result.assistant,{preview:access.preview,checks,isCurrent});preparedProposal=demo.proposal;
      result={revision:result.revision,label:result.assistant.title,commands:demo.commands,...(checks?{checks}:{}),message:result.message??'Vorführung abgeschlossen. Die Vorschau kann übernommen oder verworfen werden.',assistantReport:demo.report};
     }else{
@@ -106,21 +109,24 @@ export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,
    if(!result.commands)return retained?await finish(Error(result.question||result.message||'Die Korrektur lieferte keinen neuen Entwurf.')):result;
    // Keep the first well-formed requirements through automatic correction.
    // An omitted/relaxed check must never turn a rejected result into a pass.
-   if(requiredChecks)result={...result,checks:structuredClone(requiredChecks)};
-   else if(result.checks?.length)requiredChecks=validateAIResultChecks(result.checks);
+   if(!modelChecks){requiredChecks=[];result={...result,checks:[]};}
+   else if(requiredChecks)result={...result,checks:structuredClone(requiredChecks)};
+   else if(result.checks!==undefined)requiredChecks=validateAIResultChecks(result.checks);
    const proposal=preparedProposal??await access.preview({revision:result.revision,label:result.label,commands:result.commands,...(result.checks!==undefined?{checks:result.checks}:{})},{retainFailedChecks:true});
    try{current();if(protectedSources.length){if(typeof access.getPreview!=='function')throw Object.assign(Error('Der native Vorschauzustand für den Auftragsschutz fehlt.'),{code:'AI_TASK_PROTECTION_UNAVAILABLE',feedback:{retryable:false}});verifyAITaskProtection(access.getPreview(proposal.previewId),protectedSources);}}catch(error){access.discard?.(proposal.previewId);throw error;}
-   if(typeof access.inspectFreeCADPreview==='function'){
+   if(!retained||compareAIQuality(aiCandidateQuality(proposal),aiCandidateQuality(retained.proposal))<0){try{await onCandidate(proposal);current();}catch(error){access.discard?.(proposal.previewId);throw error;}}
+   if(modelChecks&&typeof access.inspectFreeCADPreview==='function'){
     try{proposal.independentCheck=await access.inspectFreeCADPreview(proposal.previewId);current();}
     catch(error){current();if(/STALE|ABORT|CANCEL/.test(error.code??''))throw error;proposal.independentCheck={status:'unavailable',reason:error.message};}
    }
    if(proposal.verification)proposal.verification.modellingPolicy=aiStrictnessDecision(proposal.verification,modelPolicy.strictness);
    // A later failed correction must not evict an already better usable draft.
-   if(photoTask){proposal.photoComparison=(await photoTask.compare(proposal.previewId,access.inspectPhotoPreview)).map(r=>({...r,previewId:proposal.previewId,revision:original.revision}));current();photoReports=proposal.photoComparison.map(({overlay,...report})=>report);}
+   if(modelChecks&&photoTask){proposal.photoComparison=(await photoTask.compare(proposal.previewId,access.inspectPhotoPreview)).map(r=>({...r,previewId:proposal.previewId,revision:original.revision}));current();photoReports=proposal.photoComparison.map(({overlay,...report})=>report);}
    const candidateGeometry=typeof access.getPreview==='function'?aiCandidateGeometry(access.getPreview(proposal.previewId)):undefined;
    if(!retained||compareAIQuality(aiCandidateQuality(proposal),aiCandidateQuality(retained.proposal))<0){
     if(retained)access.discard?.(retained.proposal.previewId);retained={result,proposal};
-   }else access.discard?.(proposal.previewId);
+   }else{access.discard?.(proposal.previewId);await onCandidate(retained.proposal);current();}
+   if(!modelChecks){proposal.verification={version:1,checks:[],skipped:true,scope:'User-selected unchecked trial. No model-result verification performed.'};proposal.visualReview={status:'skipped',reason:'Probemodus: Modellprüfungen ausgeschaltet.'};return await finish();}
    progress.candidate(retained.proposal);
    if(proposal.verification?.passed===false&&!aiStrictnessDecision(proposal.verification,modelPolicy.strictness).accepted){
     const failures=proposal.verification.checks.filter(c=>c.passed===false),failed=failures[0];

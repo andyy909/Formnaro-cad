@@ -1,9 +1,5 @@
 const {reasoningEfforts}=require('./ai-reasoning.cjs');
-const BUILTIN_PROVIDERS=[
- {id:'chatgpt',label:'ChatGPT-Abo',authMode:'chatgpt',baseUrl:'https://api.openai.com/v1',model:''},
- {id:'https://api.deepseek.com',label:'DeepSeek',baseUrl:'https://api.deepseek.com',model:'deepseek-flash'},
- {id:'https://api.openai.com',label:'OpenAI / GPT',baseUrl:'https://api.openai.com/v1',model:''}
-];
+const {BUILTIN_PROVIDERS}=require('./ai-provider-presets.cjs');
 const DEEPSEEK_MODELS=[
  {id:'deepseek-flash',name:'DeepSeek V4.1 Flash',vision:true},
  {id:'deepseek-v4-pro',name:'DeepSeek V4 Pro',vision:false},

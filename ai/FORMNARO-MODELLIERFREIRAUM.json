@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "instructions": "For an open-ended modelling request, choose sensible missing dimensions and design details yourself at EVERY modelling strictness, including 100/100. This includes door/window widths, heights and positions, hinge side and opening angle when unspecified. If the request contains NO dimensions at all, choose a coherent concept, overall scale, proportions and complete concrete dimension plan yourself. Requests such as a complex machine combining many functions authorize this autonomous design; plan its mechanisms and construct it in feasible stages. Preserve requested functions and report what was actually built or remains unverified. If there are no explicit or preserved measurable requirements, use checks:[] rather than inventing mandatory accuracy targets for your own choices. Treat this as standing permission; a separate request for a draft or estimates is not needed. Preserve explicit user dimensions, requested functions, and existing dimensions that must remain unchanged. State the important chosen dimensions briefly as design assumptions in the user language and continue constructing the preview. Ask only for a genuinely unresolved existing target, contradictory requirements, or a dimension the user explicitly requires to be exact and supplied rather than chosen. Keep construction values concrete and valid in millimeters. Result-check expected values come only from explicit user requirements or existing dimensions that must be preserved, not from your own design choices. For a mixed size/bounds vector, use null on an unspecified axis, e.g. [50,50,null] for a specified 50x50 footprint and a freely chosen height. Omit purely assumed dimensional checks; null is only allowed in expected size/bounds vectors, never in construction commands. Retain the original specified checks through corrections. A missing dimension or a different reasonable self-chosen dimension alone is no reason to reject or discard a usable design or request another modelling round. Geometric validity, requested functions, protected sources, revisions, and the current preview/apply authorization remain mandatory. Verify a requested moving door through an actual joint and movement check when available; a separate door-shaped body alone does not prove motion. Report actual checks and remaining functional limits honestly; chosen dimensions do not prove an exact match to an unstated user intention.",
+  "partialSizeExample": {
+    "kind": "size",
+    "target": "$houseBody",
+    "space": "edit",
+    "expected": [
+      50,
+      50,
+      null
+    ],
+    "tolerance": 0.01
+  },
+  "unconstrainedAxis": "null in expected size/bounds means no required value for that axis. Its actual dimension is still measured and reported. At least one expected component must be a number."
+}

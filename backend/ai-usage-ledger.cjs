@@ -20,7 +20,7 @@ function createAIUsageLedger({file,now=()=>new Date(),write=writeAtomicSync,reda
   if(cache)return cache;
   try{const st=fs.lstatSync(file);if(!st.isFile()||st.isSymbolicLink()||st.size>MAX_BYTES)throw Error();const data=JSON.parse(fs.readFileSync(file,'utf8'));
    if(data.format!=='Formnaro-KI-Verbrauch'||data.version!==1||!Array.isArray(data.rows)||data.rows.length>20000)throw Error();
-   for(const r of data.rows){if(!/^\d{4}-\d{2}-\d{2}$/.test(r.day)||typeof r.provider!=='string'||r.provider.length>500||typeof r.model!=='string'||r.model.length>200||!['api-key','chatgpt'].includes(r.authMode)||!CATEGORIES.includes(r.category)||Object.keys(r).some(k=>!['day','provider','model','authMode','category',...Object.keys(empty())].includes(k))||Object.keys(empty()).some(k=>!finite(r[k])||!k.startsWith('cost')&&!Number.isSafeInteger(r[k])))throw Error();}
+   for(const r of data.rows){if(!/^\d{4}-\d{2}-\d{2}$/.test(r.day)||typeof r.provider!=='string'||r.provider.length>500||typeof r.model!=='string'||r.model.length>200||!['api-key','chatgpt','mistral-vibe'].includes(r.authMode)||!CATEGORIES.includes(r.category)||Object.keys(r).some(k=>!['day','provider','model','authMode','category',...Object.keys(empty())].includes(k))||Object.keys(empty()).some(k=>!finite(r[k])||!k.startsWith('cost')&&!Number.isSafeInteger(r[k])))throw Error();}
    return cache=data;
   }catch(e){if(e.code==='ENOENT')return cache={format:'Formnaro-KI-Verbrauch',version:1,since:now().toISOString(),rows:[]};warning='Verbrauchsstatistik konnte nicht gelesen werden. Vorhandene Datei bleibt erhalten.';throw Error(warning);}
  }
@@ -28,7 +28,7 @@ function createAIUsageLedger({file,now=()=>new Date(),write=writeAtomicSync,reda
  function record({usage,config,provider,taskId,args}){
   try{
    const stored=load(),data=structuredClone(stored),key=typeof taskId==='string'&&/^[-a-zA-Z0-9]{1,80}$/.test(taskId)?provider+':'+taskId:null,known=key&&tasks.get(key),category=known?.category??categoryFor(args),isNew=!known;
-   const id={day:day(now()),provider:redact(provider).slice(0,500),model:redact(config.model).slice(0,200),authMode:config.authMode??'api-key',category};
+   const id={day:day(now()),provider:redact(provider).slice(0,500),model:redact(usage?.model??config.model).slice(0,200),authMode:config.authMode??'api-key',category};
    let row=data.rows.find(r=>Object.keys(id).every(k=>r[k]===id[k]));if(!row){row={...id,...empty()};data.rows.push(row);}
    row.requests++;if(isNew)row.tasks++;
    for(const [field,missing]of [['inputTokens','inputMissing'],['outputTokens','outputMissing'],['cachedInputTokens','cacheMissing'],['reasoningTokens','reasoningMissing']]){if(finite(usage?.[field]))row[field]+=usage[field];else row[missing]++;}
@@ -41,7 +41,7 @@ function createAIUsageLedger({file,now=()=>new Date(),write=writeAtomicSync,reda
   let data;try{data=load();}catch{return {warning,available:false,rows:[]};}
   const start=now();if(period==='30days')start.setDate(start.getDate()-29);const from=period==='all'?'':day(start);
   const rows=CATEGORIES.map(category=>({category,api:empty(),subscription:empty()}));
-  for(const r of data.rows){if(r.day<from||provider&&r.provider!==provider)continue;const target=rows.find(x=>x.category===r.category)[r.authMode==='chatgpt'?'subscription':'api'];for(const k of Object.keys(empty()))target[k]+=r[k];}
+  for(const r of data.rows){if(r.day<from||provider&&r.provider!==provider)continue;const target=rows.find(x=>x.category===r.category)[['chatgpt','mistral-vibe'].includes(r.authMode)?'subscription':'api'];for(const k of Object.keys(empty()))target[k]+=r[k];}
   return {available:true,since:data.since,updatedAt:now().toISOString(),period,rows,warning,containsPrompts:false};
  }
  return {record,statistics};

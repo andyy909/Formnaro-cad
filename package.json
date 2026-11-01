@@ -1,11 +1,11 @@
 {
   "name": "formnaro",
   "productName": "Formnaro",
-  "version": "0.120.0",
+  "version": "0.125.0",
   "private": true,
   "author": "Andreas Klisch",
   "license": "MIT",
-  "description": "Lokaler 3D-Editor für Modellbau und 3D-Druck",
+  "description": "Lokaler 3D-Editor fÃ¼r Modellbau und 3D-Druck",
   "type": "module",
   "main": "electron.cjs",
   "scripts": {
@@ -202,7 +202,9 @@
     "package:ai-tasks": "node scripts/package-ai-tasks.mjs",
     "test:ai-task-restart": "node scripts/verify-ai-task-restart.mjs",
     "package:surfaces": "node scripts/package-surfaces.mjs",
-    "test:surfaces": "node --test --test-concurrency=1 tests/cad-surfaces.test.mjs tests/freecad-surfaces.test.cjs tests/surfaces-release-config.test.mjs"
+    "test:surfaces": "node --test --test-concurrency=1 tests/cad-surfaces.test.mjs tests/freecad-surfaces.test.cjs tests/surfaces-release-config.test.mjs",
+    "setup:windows-dictation": "node scripts/setup-windows-dictation.mjs",
+    "prebuild": "node scripts/setup-windows-dictation.mjs"
   },
   "dependencies": {
     "fflate": "0.8.3",
