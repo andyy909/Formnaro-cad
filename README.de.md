@@ -8,14 +8,14 @@
 
 **CAD und Netzbearbeitung für Modellbau und 3D-Druck.** Konstruiere Bauteile, bearbeite 3D-Modelle und erstelle technische Zeichnungen. Formnaro läuft lokal unter Windows; die normale Modellierung funktioniert offline.
 
-**Windows 64 Bit · portabel – zwei Downloads zur Auswahl:**
+**Windows 64 Bit · portabel – Programm und separate Quellen:**
 
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
-| **[Nur das Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.122.0-r3/Formnaro-v0.122.0-r3-Windows.zip)** | **0.122.0-r3** | ca. **671 MB** | Kleine Portable-Version mit benötigten Laufzeiten, Lizenzen und Beispielen; ohne Entwicklungswerkzeuge und eigene Tests. |
-| **[Großes Entwicklungspaket herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/Formnaro-v0.120.0-r4-Windows.zip)** | **0.120.0-r4** | ca. **1,9 GB** | Bisheriges, ungekürztes Paket mit zusätzlichen Entwicklungs- und Testbestandteilen. |
+| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r28/Formnaro-v0.125.0-r28-Windows.zip)** | **0.125.0-r28** | ca. **668 MB** | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
+| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r28) | **0.125.0-r28** | **117 / 98 / 78 MB** | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
 
-Für die normale Nutzung genügt **„Nur das Programm“**. Das große Paket ist die ältere Ausgabe **0.120.0-r4**; die kleine Portable-Version ist **0.122.0-r3**. Den Quellcode zum Weiterentwickeln findest du zusätzlich in den Quellenarchiven der jeweiligen [Version](https://github.com/andyy909/Formnaro-cad/releases).
+Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
 [Anleitungen](#anleitungen) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
 
@@ -31,9 +31,9 @@ Für die normale Nutzung genügt **„Nur das Programm“**. Das große Paket is
 
 1. Windows-ZIP herunterladen und vollständig in einen eigenen Ordner entpacken.
 2. Alle Unterordner zusammenlassen und **„Formnaro starten“** doppelklicken.
-3. Ein neues Projekt anlegen oder ein Beispiel öffnen.
+3. Ein neues Projekt anlegen oder ein vorhandenes Modell öffnen.
 
-Die kleine Portable-ZIP enthält das ausführbare Programm mit den benötigten Laufzeiten, Lizenzen und drei Beispielmodellen – ohne Entwicklungswerkzeuge und eigene Tests. FreeCAD und Python sind enthalten; eine separate Installation ist nicht nötig. Das optionale Modell für Offline-Sprache wird bei Bedarf direkt im Programm heruntergeladen. Zum Starten wird nur die Windows-ZIP benötigt; die separaten Quellenarchive sind für Entwickler.
+Die Portable-ZIP enthält das Programm, benötigte Laufzeiten, Lizenzen und Startanleitungen. FreeCAD und Python sind enthalten; eine separate Installation ist nicht nötig. Das optionale Modell für Offline-Sprache wird bei Bedarf im Programm heruntergeladen. Die Quellarchive stehen separat auf der Release-Seite.
 
 ## Funktionen
 
@@ -63,7 +63,7 @@ Zwei Stufen, vier Räder, **6:1 Untersetzung** – ein offenes Getriebekonzept e
 
 ![KI-Übungsmodus: Formnaro führt die Modellierschritte für eine Platte mit Bohrung im eigenen Übungsfenster vor](bilder/formnaro-uebungsmodus.gif)
 
-Das GIF zeigt die Wiedergabe eines zuvor von DeepSeek erzeugten Plans, ohne Live-KI-Anfrage während der Aufnahme. Der begrenzte Übungsmodus ist in beiden oben verlinkten Windows-Paketen enthalten und arbeitet in einem getrennten Übungsfenster.
+Das GIF zeigt die Wiedergabe eines zuvor von DeepSeek erzeugten Plans, ohne Live-KI-Anfrage während der Aufnahme. Der Übungsmodus ist in der aktuellen Windows-ZIP enthalten und arbeitet in einem getrennten Übungsfenster.
 
 ## Anleitungen
 
@@ -78,11 +78,13 @@ Das GIF zeigt die Wiedergabe eines zuvor von DeepSeek erzeugten Plans, ohne Live
 <!-- formnaro-development-status:start -->
 ## Entwicklungsstand
 
-Der Windows-Download **0.122.0-r3** verkleinert die Portable-ZIP auf **671 MB** (entpackt etwa **1,78 GB**). Gegenüber 0.120.0-r4 ist der Download rund **65 % kleiner**. **42 gezielte Unit-Prüfungen und 363 UI-Prüfschritte über r2/r3** sind dokumentiert; ZIP-Inhalte, frische Extraktion und die drei Beispielmodelle wurden geprüft. Zum Prüfstatus: Eine unabhängige Prüfung auf einer frischen Windows-Installation und eine neue allgemeine Gesamtabnahme stehen aus.
+Die Programm-ZIP **0.125.0-r28** ist etwa **668 MB** groß. Passende Quellarchive stehen separat bereit. Die Korrektur räumt fehlgeschlagene Konstruktions-Zwischenvorschauen im eingebauten Python-/JSON-Dialog und bei externen Aufträgen auf. Die Korrekturen für Hintergrundberechnung, Abbrechen und Renderer-Wiederherstellung sind enthalten.
 
-Der zugehörige Quellstand liegt unter [v0.122.0-r3](https://github.com/andyy909/Formnaro-cad/tree/v0.122.0-r3); der Programmcode im Zweig `main` steht noch auf **0.120.0-r4**.
+**133 Quelltests, 29 Prüfungen der gepackten EXE und eine vollständige Vorschau mit 40 Befehlen** bestanden. STEP-/STL-Exporte wurden unabhängig gelesen. Die kompakte ZIP wurde vollständig zurückgelesen und aus einem frischen Umlautordner mit fremdem Arbeitsverzeichnis gestartet. Das sind gezielte Prüfungen auf dem vorhandenen Windows-Rechner; eine neue allgemeine Funktionsprüfung, frische Windows-VM-Abnahme und Messungen echter Anbieterqualität werden nicht behauptet.
 
-[Prüfbericht des Downloads](https://github.com/andyy909/Formnaro-cad/releases/download/v0.122.0-r3/Paket-Analyse.txt) · [Ausbau und offene Punkte](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md)
+Passende Anwendungsquellen: [Versions-Tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r28) oder [eingefrorenes Quellarchiv](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r28/Formnaro-Quellcode-v0.125.0-r28.zip).
+
+[Prüfbericht des Downloads](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r28/Paket-Pruefstand.json) · [Ausbau und offene Punkte](docs/ALLTAGSAUSBAU-UMSETZUNGSSTAND.md)
 <!-- formnaro-development-status:end -->
 
 <details>
@@ -91,7 +93,7 @@ Der zugehörige Quellstand liegt unter [v0.122.0-r3](https://github.com/andyy909
 Mit Node.js 22.16 oder neuer und npm:
 
 ```sh
-git clone --branch v0.122.0-r3 https://github.com/andyy909/Formnaro-cad.git
+git clone --branch v0.125.0-r28 https://github.com/andyy909/Formnaro-cad.git
 cd Formnaro-cad
 npm ci
 npm run build
