@@ -71,11 +71,11 @@ Three functions are shown in a separate practice window using Formnaro's control
 
 [Full-quality video with model and token labels (MP4, 1:52)](bilder/formnaro-uebungsmodus-zahnraeder.mp4)
 
-**Original prompt to Codex (GPT-6.1 Sol, xhigh), in German:**
+**Exercise brief written by Codex (GPT-6.1 Sol, xhigh), in German:**
 
-> Kannst du auch noch was mit Zahnrädern gemacht, was gut klappt?
+> Zeige im Übungsmodus drei echte Evolventenzahnräder mit 20, 40 und 20 Zähnen, Modul 1,5 mm und Breite 6 mm. Führe das automatische Einrasten durch sichtbares Ziehen vor, zeige anschließend die gekoppelte Bewegung bei Antrieb -90°, 0°, +90° und übernimm die letzte Stellung. Die beiden kleinen Räder laufen gleichsinnig, das mittlere gegenläufig mit halber Drehzahl. Zeige alles gut sichtbar.
 
-For this open-ended request, the example uses 20 / 40 / 20 teeth, a 1.5 mm module and a 6 mm width. Codex prepared the plan before playback; the practice window executes it through the actual controls without further model requests. The displayed **3,381,395 tokens including cached input** cover the entire gear task: planning, recording and verification.
+Codex prepared the plan before playback; the practice window executes it through the actual controls without further model requests. The displayed **3,381,395 tokens including cached input** cover the entire gear task: planning, recording and verification.
 
 Recorded with the locally tested development build **0.125.0-r35**. The program download linked above is unchanged.
 

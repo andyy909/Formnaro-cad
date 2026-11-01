@@ -71,11 +71,11 @@ Im eigenen Übungsfenster werden drei Funktionen mit den Bedienelementen von For
 
 [Video in voller Qualität mit Modell- und Tokenanzeige (MP4, 1:52)](bilder/formnaro-uebungsmodus-zahnraeder.mp4)
 
-**Verwendeter Originalprompt an Codex (GPT-6.1 Sol, xhigh):**
+**Von Codex formulierte Aufgabenbeschreibung (GPT-6.1 Sol, xhigh):**
 
-> Kannst du auch noch was mit Zahnrädern gemacht, was gut klappt?
+> Zeige im Übungsmodus drei echte Evolventenzahnräder mit 20, 40 und 20 Zähnen, Modul 1,5 mm und Breite 6 mm. Führe das automatische Einrasten durch sichtbares Ziehen vor, zeige anschließend die gekoppelte Bewegung bei Antrieb -90°, 0°, +90° und übernimm die letzte Stellung. Die beiden kleinen Räder laufen gleichsinnig, das mittlere gegenläufig mit halber Drehzahl. Zeige alles gut sichtbar.
 
-Für diese offene Aufgabe wurden 20 / 40 / 20 Zähne, Modul 1,5 mm und 6 mm Breite gewählt. Der vorab von Codex erstellte Plan wird im Übungsfenster über die echten Bedienelemente ausgeführt; die Wiedergabe benötigt keine weiteren Modellanfragen. Die eingeblendeten **3.381.395 Tokens inklusive Cache** beziehen sich auf den gesamten Zahnradauftrag mit Planung, Aufnahme und Prüfung.
+Der vorab von Codex erstellte Plan wird im Übungsfenster über die echten Bedienelemente ausgeführt; die Wiedergabe benötigt keine weiteren Modellanfragen. Die eingeblendeten **3.381.395 Tokens inklusive Cache** beziehen sich auf den gesamten Zahnradauftrag mit Planung, Aufnahme und Prüfung.
 
 Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der oben verlinkte Programmdownload bleibt unverändert.
 
