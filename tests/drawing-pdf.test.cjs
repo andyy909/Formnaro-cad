@@ -1,5 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const {drawingPdfInput,exactDrawingPdfPage,printDrawingPdf,installDrawingPdf}=require('../backend/drawing-pdf.cjs');
+function memoryProtocol(){let handler;return {protocol:{handle:(_scheme,fn)=>handler=fn,unhandle(){}},html:async url=>(await handler({url})).text()};}
 const input={svg:'<svg xmlns="http://www.w3.org/2000/svg"><text x="20" y="20">Maß Ø 6</text></svg>',widthMm:297,heightMm:210};
 function pdfFixture({width=841.91998,height=594.95996,resources='<< /ProcSet [/PDF /Text] >>',extra=''}={}){
  const content='q\n0 0 100 100 re S\nQ\n',objects=['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R] /Count 1 >>','<< /Type /Page /Parent 2 0 R /Resources '+resources+' /MediaBox [0 0 '+width+' '+height+'] /Contents 4 0 R '+extra+' >>','<< /Length '+Buffer.byteLength(content)+' >>\nstream\n'+content+'endstream'];let text='%PDF-1.4\n',offsets=[0];objects.forEach((body,i)=>{offsets.push(Buffer.byteLength(text,'latin1'));text+=(i+1)+' 0 obj\n'+body+'\nendobj\n';});const xref=Buffer.byteLength(text,'latin1');text+='xref\n0 5\n0000000000 65535 f \n'+offsets.slice(1).map(n=>String(n).padStart(10,'0')+' 00000 n \n').join('')+'trailer\n<< /Size 5 /Root 1 0 R /ID [<0123><4567>] >>\nstartxref\n'+xref+'\n%%EOF\n';return Buffer.from(text,'latin1');
@@ -12,8 +13,8 @@ test('PDF accepts only bounded local A4/A3 vector drawings and rejects executabl
 });
 test('PDF print page is ephemeral, offline, zero-margin and uses physical inches for Electron',async()=>{
  let options,html,printOptions,destroyed=false,cleared=false,request;
- class Window{constructor(o){options=o;this.webContents={setWindowOpenHandler(){},on(){},printToPDF:async o=>{printOptions=o;return pdfFixture();}};}async loadURL(url){html=decodeURIComponent(url.slice('data:text/html,'.length));}isDestroyed(){return destroyed;}destroy(){destroyed=true;}}
- const partition={setPermissionRequestHandler(){},webRequest:{onBeforeRequest:fn=>request=fn},clearStorageData:async()=>{cleared=true;}},session={fromPartition:()=>partition};
+ class Window{constructor(o){options=o;this.webContents={setWindowOpenHandler(){},on(){},printToPDF:async o=>{printOptions=o;return pdfFixture();}};}async loadURL(url){html=await partition.html(url);}isDestroyed(){return destroyed;}destroy(){destroyed=true;}}
+ const partition={...memoryProtocol(),setPermissionRequestHandler(){},webRequest:{onBeforeRequest:fn=>request=fn},clearStorageData:async()=>{cleared=true;}},session={fromPartition:()=>partition};
  const bytes=await printDrawingPdf(input,{BrowserWindow:Window,session});
  assert.match(Buffer.from(bytes).toString(),/^%PDF-1\.4/);assert.match(Buffer.from(bytes).toString(),/\/Prev \d+/);assert.equal(options.show,false);assert.equal(options.webPreferences.javascript,false);assert.equal(options.webPreferences.nodeIntegration,false);assert.equal(options.webPreferences.sandbox,true);
  assert.match(html,/@page\{size:297mm 210mm;margin:0\}/);assert.match(html,/default-src 'none'/);
@@ -28,7 +29,7 @@ test('physical PDF correction rejects unsupported/malformed or multi-page struct
 });
 test('closing the owning app aborts PDF printing and clears the ephemeral print window',async()=>{
  const {EventEmitter}=require('node:events'),owner=new EventEmitter();let destroyed=false,cleared=false;class Window{constructor(){this.webContents={setWindowOpenHandler(){},on(){},printToPDF:()=>new Promise(()=>{})};}async loadURL(){}isDestroyed(){return destroyed;}destroy(){destroyed=true;}}
- const partition={setPermissionRequestHandler(){},webRequest:{onBeforeRequest(){}},clearStorageData:async()=>{cleared=true;}},pending=printDrawingPdf(input,{BrowserWindow:Window,session:{fromPartition:()=>partition},owner});owner.emit('closed');await assert.rejects(pending,/abgebrochen/);assert.equal(destroyed,true);assert.equal(cleared,true);assert.equal(owner.listenerCount('closed'),0);
+ const partition={...memoryProtocol(),setPermissionRequestHandler(){},webRequest:{onBeforeRequest(){}},clearStorageData:async()=>{cleared=true;}},pending=printDrawingPdf(input,{BrowserWindow:Window,session:{fromPartition:()=>partition},owner});owner.emit('closed');await assert.rejects(pending,/abgebrochen/);assert.equal(destroyed,true);assert.equal(cleared,true);assert.equal(owner.listenerCount('closed'),0);
 });
 test('Only the owning renderer can invoke the PDF bridge',async()=>{
  let handler;const win={webContents:{}};installDrawingPdf(win,{ipcMain:{handle:(_name,fn)=>handler=fn}});

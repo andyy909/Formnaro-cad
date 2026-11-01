@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "title": "Zahnräder sichtbar einrasten und gekoppelt drehen",
+  "actions": [
+    {
+      "kind": "model",
+      "label": "Drei echte Zahnräder zunächst lose aufziehen",
+      "commands": [
+        {
+          "op": "create",
+          "type": "gear",
+          "as": "gear_a",
+          "params": {
+            "teeth": 20,
+            "module": 1.5,
+            "thickness": 6,
+            "bore": 5,
+            "backlash": 0.1
+          },
+          "pos": [
+            -37.5,
+            0,
+            3
+          ],
+          "rot": [
+            0,
+            0,
+            0
+          ],
+          "name": "Zahnrad A",
+          "color": "#ed9b35"
+        },
+        {
+          "op": "create",
+          "type": "gear",
+          "as": "gear_b",
+          "params": {
+            "teeth": 30,
+            "module": 1.5,
+            "thickness": 6,
+            "bore": 5,
+            "backlash": 0.1
+          },
+          "pos": [
+            55,
+            55,
+            3
+          ],
+          "rot": [
+            0,
+            0,
+            6
+          ],
+          "name": "Zahnrad B",
+          "color": "#3b9fb0"
+        },
+        {
+          "op": "create",
+          "type": "gear",
+          "as": "gear_c",
+          "params": {
+            "teeth": 20,
+            "module": 1.5,
+            "thickness": 6,
+            "bore": 5,
+            "backlash": 0.1
+          },
+          "pos": [
+            55,
+            -55,
+            3
+          ],
+          "rot": [
+            0,
+            0,
+            0
+          ],
+          "name": "Zahnrad C",
+          "color": "#9a78be"
+        }
+      ]
+    },
+    {
+      "kind": "gear-snap",
+      "moving": "gear_b",
+      "anchor": "gear_a",
+      "angle": 0
+    },
+    {
+      "kind": "gear-snap",
+      "moving": "gear_c",
+      "anchor": "gear_b",
+      "angle": 0
+    },
+    {
+      "kind": "model",
+      "label": "Gekoppelte Bewegung am Schieberegler zeigen",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "$gear_a",
+              "value": 15
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "model",
+      "label": "Gekoppelte Bewegung am Schieberegler zeigen",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "$gear_a",
+              "value": 30
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "model",
+      "label": "Gekoppelte Bewegung am Schieberegler zeigen",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "$gear_a",
+              "value": 45
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "model",
+      "label": "Gekoppelte Bewegung am Schieberegler zeigen",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "$gear_a",
+              "value": 60
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "model",
+      "label": "Gekoppelte Bewegung am Schieberegler zeigen",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "$gear_a",
+              "value": 30
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "model",
+      "label": "Gekoppelte Bewegung am Schieberegler zeigen",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "$gear_a",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

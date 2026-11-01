@@ -44,11 +44,11 @@ async function runPythonJob({job,exe,script,inputs,inspectOnly,signal,timeout,do
  // unrelated application variables never reach the native Python process.
  const env={};for(const k of ['SystemRoot','WINDIR','SystemDrive','ComSpec','ProgramData','ProgramFiles','ProgramFiles(x86)','LOCALAPPDATA','USERPROFILE','USERNAME','USERDOMAIN','OS','PROCESSOR_ARCHITECTURE','NUMBER_OF_PROCESSORS','PATHEXT'])if(process.env[k])env[k]=process.env[k];
  Object.assign(env,{PATH:path.dirname(exe)+';'+path.join(process.env.WINDIR,'System32'),TEMP:job,TMP:job,HOME:job,APPDATA:job,FREECAD_USER_HOME:job,FREECAD_USER_DATA:job,FREECAD_USER_TEMP:job,FORMNARO_FREECAD_JOB:job,PYTHONDONTWRITEBYTECODE:'1',QT_QPA_PLATFORM:'offscreen'});
- let worker=path.join(job,'worker.py');if(script.gui){exe=path.join(path.dirname(exe),'FreeCAD.exe');worker=path.join(job,'worker.FCMacro');await fs.writeFile(worker,"from pathlib import Path\nexec(compile((Path.cwd()/'worker.py').read_text(encoding='utf-8'),str(Path.cwd()/'worker.py'),'exec'),{'__file__':str(Path.cwd()/'worker.py'),'__name__':'__main__'})\nimport FreeCADGui\nfrom PySide import QtCore\nQtCore.QTimer.singleShot(0,FreeCADGui.getMainWindow().close)\n");}
+ let worker=path.join(job,'worker.py');if(script.gui){exe=path.join(path.dirname(exe),'FreeCAD.exe');worker=path.join(job,'worker.FCMacro');await fs.writeFile(worker,"from pathlib import Path\nimport FreeCADGui\nfrom PySide import QtCore\ntry:\n exec(compile((Path.cwd()/'worker.py').read_text(encoding='utf-8'),str(Path.cwd()/'worker.py'),'exec'),{'__file__':str(Path.cwd()/'worker.py'),'__name__':'__main__'})\nfinally:\n QtCore.QTimer.singleShot(0,FreeCADGui.getMainWindow().close)\n");}
  const containerName='formnaro.cad.'+require('node:crypto').randomUUID().replaceAll('-','');
  try{await execute(path.join(host,'container.exe'),[exe,job,worker,containerName],{cwd:job,env,signal,timeout});}
   catch(error){try{const f=path.join(job,'process.log'),stat=await fs.lstat(f);if(stat.isFile()&&!stat.isSymbolicLink()&&stat.size<=64000&&path.dirname(await fs.realpath(f))===await fs.realpath(job))error.message+='\n'+(await fs.readFile(f,'utf8')).slice(-12000);}catch{}throw error;}
- finally{await execute(path.join(host,'container.exe'),['--cleanup',containerName],{cwd:host,env,timeout:10000});}
- }finally{await fs.rm(host,{recursive:true,force:true});}
+ finally{await execute(path.join(host,'container.exe'),['--cleanup',containerName],{cwd:host,env,timeout:10000}).catch(()=>{});}
+ }finally{await fs.rm(host,{recursive:true,force:true,maxRetries:3,retryDelay:50}).catch(()=>{});}
 }
 module.exports={validateScript,validateModules,runPythonJob};

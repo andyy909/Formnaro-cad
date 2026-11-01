@@ -10,6 +10,12 @@ aktuelle Szene, Auswahl, Sperren und die tatsächlichen Werkzeugergebnisse sind
 maßgeblich. Persönliche Erfahrungen stehen getrennt im Anbieter-Kontext und
 ersetzen keine Prüfung eines neuen Modells.
 
+Für offene Modellieraufträge gilt bei jeder Modellstrenge die dauerhafte Regel
+`context.designFreedom` aus `ai/FORMNARO-MODELLIERFREIRAUM.json`. Sie regelt frei
+wählbare fehlende Maße, auch bei Türen/Fenstern, und die Trennung von Annahmen
+und verbindlichen Maßprüfungen. Sie wird automatisch mit dem Werkzeugkontext
+übermittelt und muss nicht durch einen Dateizugriff nachgeladen werden.
+
 - Bei Bedienfragen den aktuellen Bedienmodus und den freigegebenen Zielkatalog
   berücksichtigen. Wenn eine Beschreibung oder Voraussetzung fehlt, die lokale
   Hilfesuche benutzen und deren Antwort abwarten. Keine Menüpunkte, Positionen,

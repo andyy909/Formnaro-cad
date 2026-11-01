@@ -35,7 +35,7 @@ function localCorners(bounds){return Array.from({length:8},(_,n)=>[0,1,2].map(k=
 
 /** Three.js is only a view of worker-derived CAD buffers. Every precision
  * result comes from the worker; mesh raycasts are used for visual selection. */
-export function createCadRenderer({host,viewport,getProject,getScene,getSelection,select,canEdit=()=>true,onGesture,onResize,onPlanePick,onMeasurePick,onMagnetPick,onError=()=>{},getPreferences=()=>({handleSize:14,gridVisible:true,zoomSpeed:1}),onDimensions=()=>{},onViewUpdate=()=>{}}={}){
+export function createCadRenderer({host,viewport,getProject,getScene,getSelection,select,canEdit=()=>true,onGesture,onSnapGesture,onResize,onPlanePick,onMeasurePick,onMagnetPick,onError=()=>{},getPreferences=()=>({handleSize:14,gridVisible:true,zoomSpeed:1}),onDimensions=()=>{},onViewUpdate=()=>{}}={}){
   let darkTheme=false,sceneStyleKey=null;
   let scheduler;const invalidate=reason=>scheduler?.invalidate(reason);
   THREE.Object3D.DEFAULT_UP.set(0,0,1);
@@ -215,7 +215,7 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
   }
   function gestureMeshes(){const chosen=new Set(selection.filter(target=>!target.path.length).map(target=>target.rootId)),sourceKeys=new Set(selection.filter(target=>target.path.length).map(targetKey));return [...bodies.children.filter(mesh=>chosen.has(mesh.userData.rootId)&&mesh.visible),...sources.children.filter(mesh=>mesh.visible&&mesh.userData.sourceTarget&&sourceKeys.has(targetKey(mesh.userData.sourceTarget)))];}
   function startGesture({translation=mode==='translate'}={}){const bounds=selectionBounds();if(!bounds||pendingCommit||!canEdit())return false;gesture={targets:structuredClone(selection),revision:getScene()?.revision,pivot:pivot.matrixWorld.clone(),matrices:gestureMeshes().map(mesh=>[mesh,mesh.matrix.clone()]),center:point(bounds.center),bounds,planeMatrix:frame().toArray(),translation,delta:cadIdentity()};orbit.enabled=false;return true;}
-  function moveGesture(delta){if(!gesture)return;gesture.delta=delta.toArray();for(const [mesh,original]of gesture.matrices){mesh.matrix.copy(delta).multiply(original);mesh.matrixWorldNeedsUpdate=true;}if(gesture.translation){const {bounds,planeMatrix}=gesture;moveDimensions.update({bounds,planeMatrix,delta:gesture.delta.slice(12,15),gap:Math.max(2,pixelRadius(point(cadPoint(planeMatrix,[0,0,0])),22))});}clear(outlines);clear(handles);}
+  function moveGesture(delta){if(!gesture)return;gesture.delta=delta.toArray();const snapped=gesture.translation?onSnapGesture?.({targets:gesture.targets,delta:gesture.delta}):null;if(snapped)delta=new THREE.Matrix4().fromArray(snapped);for(const [mesh,original]of gesture.matrices){mesh.matrix.copy(delta).multiply(original);mesh.matrixWorldNeedsUpdate=true;}if(gesture.translation){const {bounds,planeMatrix}=gesture;moveDimensions.update({bounds,planeMatrix,delta:delta.toArray().slice(12,15),gap:Math.max(2,pixelRadius(point(cadPoint(planeMatrix,[0,0,0])),22))});}clear(outlines);clear(handles);}
   async function commitGesture(data,commit){
     pendingCommit=true;clear(outlines);clear(handles);gizmo.detach();invalidate('commit-start');
     try{await commit();}catch(error){
@@ -260,7 +260,7 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
     if(gizmo.axis)return;
     const id=hit?.object.userData.rootId,target=hit?.object.userData.sourceTarget??(id?{rootId:id,path:[]}:null);
     if(target){if(hit.object.userData.simplified){select(event.shiftKey?[...selection,target]:[target]);event.preventDefault();event.stopImmediatePropagation();return;}const existing=selection.some(v=>targetKey(v)===targetKey(target));select(event.shiftKey?existing?selection.filter(v=>targetKey(v)!==targetKey(target)):[...selection,target]:existing?selection:[target]);
-      const bounds=selectionBounds();if(bounds&&!sourceInfo(target)?.locked&&!event.shiftKey){const anchor=plane(event,point(bounds.center));if(anchor)marquee={move:true,x:event.clientX,y:event.clientY,anchor,bounds};}
+      const bounds=selectionBounds();if(bounds&&!sourceInfo(target)?.locked&&!event.shiftKey){const anchor=plane(event,point(bounds.center));if(anchor){marquee={move:true,x:event.clientX,y:event.clientY,anchor,bounds};event.stopImmediatePropagation();}}
     }else{marquee={move:false,x:event.clientX,y:event.clientY,append:event.shiftKey,base:structuredClone(selection)};if(!event.shiftKey)select([]);}
     renderer.domElement.setPointerCapture(event.pointerId);
   },true);

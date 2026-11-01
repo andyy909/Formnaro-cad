@@ -1,5 +1,7 @@
 import {PROGRAM_ASSISTANT_CONTRACT,PROGRAM_TARGETS,PROGRAM_TOOL_TABS,searchProgramHelp,validateAssistantAction,programQuestion} from './cad-program-help.js';
 import {createAssistantRecording} from './cad-assistant-recording.js';
+import {practiceDialogState} from './cad-practice-controls.js';
+import {lookupToolReference} from './cad-tool-reference.js';
 import './cad-program-assistant.css';
 const frame=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
 const aborted=()=>Object.assign(Error('Bedienhilfe abgebrochen.'),{name:'AbortError',code:'AI_ASSISTANT_ABORTED'});
@@ -24,7 +26,7 @@ export function createCadProgramAssistant({access,showPreview,clearPreview,cance
   return selector?[...document.querySelectorAll(selector)]:[];
  }
  function location(node){const d=node?.closest('details'),panel=node?.closest('[data-fusion-panel],[data-solid-panel]');return [getMode(),panel?.dataset.fusionPanel??panel?.dataset.solidPanel,d?.querySelector(':scope > summary')?.textContent?.trim()].filter(Boolean).join(' → ');}
- function state(){return {mode:getMode(),active:!!active,targets:PROGRAM_TARGETS.map(t=>{const nodes=candidates(t.id),node=nodes.find(visible)??nodes[0];return {id:t.id,present:!!node,visible:visible(node),disabled:!!node?.disabled,location:node?location(node):undefined,revealVia:t.key?PROGRAM_TOOL_TABS[getMode()]?.[t.key]:undefined};})};}
+ function state(){return {mode:getMode(),active:!!active,dialog:practiceDialogState(document),targets:PROGRAM_TARGETS.map(t=>{const nodes=candidates(t.id),node=nodes.find(visible)??nodes[0];return {id:t.id,present:!!node,visible:visible(node),disabled:!!node?.disabled,location:node?location(node):undefined,revealVia:t.key?PROGRAM_TOOL_TABS[getMode()]?.[t.key]:undefined};})};}
  function context(){return {...structuredClone(PROGRAM_ASSISTANT_CONTRACT),state:state()};}
  function check(signal){if(signal?.aborted)throw aborted();}
  async function wait(ms,signal){check(signal);await new Promise((resolve,reject)=>{const timer=setTimeout(done,ms);function done(){signal?.removeEventListener('abort',stop);resolve();}function stop(){clearTimeout(timer);signal?.removeEventListener('abort',stop);reject(aborted());}signal?.addEventListener('abort',stop,{once:true});});check(signal);while(paused){await new Promise(resolve=>{resume=resolve;signal?.addEventListener('abort',resolve,{once:true});});check(signal);}}
@@ -50,8 +52,8 @@ export function createCadProgramAssistant({access,showPreview,clearPreview,cance
  }
  async function execute(value,{isCurrent=()=>true,expectedProviderId}={}){
   value=validateAssistantAction(value);
-  if(value.kind==='help')return {kind:'help',documentation:searchProgramHelp(value.query),ui:state(),scope:'Local program documentation and registered UI only; no model or filesystem mutation.'};
-  if(value.kind==='practice'){if(!desktop?.startPractice)throw Error('Der Übungsmodus ist in dieser Ausgabe nicht verfügbar.');practiceActive=true;try{const result=await desktop.startPractice(value.plan);if(!isCurrent())throw aborted();if(!result?.ok)throw Object.assign(Error(result?.message||result?.reason||result?.error||'Die Übung wurde nicht abgeschlossen.'),{code:'PRACTICE_FAILED',feedback:{retryable:false}});return {kind:'practice',...result};}finally{practiceActive=false;}}
+  if(value.kind==='help')return {kind:'help',documentation:searchProgramHelp(value.query),toolReference:lookupToolReference(value.query.startsWith('tool:')?{tool:value.query}:{query:value.query},{state:state()}),ui:state(),scope:'Local program documentation and registered UI only; no model or filesystem mutation.'};
+  if(value.kind==='practice'){if(!desktop?.startPractice)throw Error('Der Übungsmodus ist in dieser Ausgabe nicht verfügbar.');practiceActive=true;try{const result=await desktop.startPractice(value.plan);if(!isCurrent())throw aborted();if(!result?.ok)throw Object.assign(Error(result?.message||result?.reason||result?.error||'Die Übung wurde nicht abgeschlossen.'),{code:'PRACTICE_FAILED',feedback:{retryable:false,practice:result}});return {kind:'practice',...result};}finally{practiceActive=false;}}
   if(value.kind==='note'){if(!desktop?.readAIContextNote||!desktop?.appendAIContextNote)throw Error('Kontextnotizen sind in dieser Ausgabe nicht verfügbar.');const previous=await desktop.readAIContextNote({providerId:expectedProviderId});if(!isCurrent())throw aborted();return desktop.appendAIContextNote({providerId:expectedProviderId,expectedRevision:previous.revision,text:value.text});}
   if(value.kind!=='guide')throw Error('Modellvorführungen über den Vorschauablauf ausführen.');
   const signal=start('guide'),revision=access.scene().revision,steps=[];

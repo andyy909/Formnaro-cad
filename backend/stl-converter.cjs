@@ -16,8 +16,15 @@ function validate(args){
  if(args.commands!==undefined&&(!Array.isArray(args.commands)||args.commands.length>20||Buffer.byteLength(JSON.stringify(args.commands))>JSON_LIMIT))throw Error('Ungültige Regionsbefehle.');
  return options;
 }
+function runtimeDirectory({packaged=false,resourcesPath=process.resourcesPath,root=path.resolve(__dirname,'..')}={}){
+ if(packaged){if(typeof resourcesPath!=='string')throw Error('Portable resources directory missing');return path.join(resourcesPath,'converter');}
+ const meta=JSON.parse(require('node:fs').readFileSync(path.join(root,'converter/provenance.json'),'utf8'));
+ if(!/^runtime-v010(?:-[a-z0-9]+)*$/.test(meta.runtimeDirectory))throw Error('Invalid converter runtime directory');
+ return path.join(root,'converter',meta.runtimeDirectory);
+}
 function createStlConverter({command,prefix=[],tempRoot=os.tmpdir(),timeoutMs=600000,onProgress=()=>{},spawnProcess=spawn}={}){
  let active=null;
+ const childEnvironment=()=>{const env={};for(const key of ['SystemRoot','SYSTEMROOT','WINDIR','ComSpec','COMSPEC','SystemDrive','PATH','PATHEXT','TEMP','TMP','USERPROFILE','APPDATA','LOCALAPPDATA','PROGRAMDATA','ProgramFiles','ProgramFiles(x86)','OS','PROCESSOR_ARCHITECTURE','NUMBER_OF_PROCESSORS'])if(process.env[key])env[key]=process.env[key];return {...env,PYTHONNOUSERSITE:'1',PYTHONDONTWRITEBYTECODE:'1',OPENBLAS_NUM_THREADS:'1',OMP_NUM_THREADS:'1',MKL_NUM_THREADS:'1',NUMBA_NUM_THREADS:'1'};};
  async function cancel(id){const job=active;if(!job||id!==undefined&&job.id!==id)return false;job.cancelled=true;job.child?.kill();await job.done;return true;}
  async function execute(args){
   const options=validate(args),action=args.action??'convert';
@@ -32,7 +39,7 @@ function createStlConverter({command,prefix=[],tempRoot=os.tmpdir(),timeoutMs=60
    await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({version:PROTOCOL,action,options,edits:args.edits??null,commands:args.commands??[]}),{flag:'wx'});aborted();
    let last='';poll=setInterval(async()=>{try{const value=await fs.readFile(path.join(directory,'progress.txt'),'utf8');if(value.length>512000)return;const message=value.trim().split(/\r?\n/).at(-1);if(message&&message!==last&&!job.cancelled){last=message;onProgress({id:job.id,message});}}catch{}},250);poll.unref();
    const exit=await new Promise((resolve,reject)=>{
-    const child=spawnProcess(command,[...prefix,directory],{windowsHide:true,shell:false,stdio:'ignore',cwd:path.dirname(command),env:{...process.env,OPENBLAS_NUM_THREADS:'1',OMP_NUM_THREADS:'1',MKL_NUM_THREADS:'1',NUMBA_NUM_THREADS:'1'}});job.child=child;
+    const child=spawnProcess(command,[...prefix,directory],{windowsHide:true,shell:false,stdio:'ignore',cwd:path.dirname(command),env:childEnvironment()});job.child=child;
     child.once('error',reject);child.once('close',code=>resolve(code));
     timer=setTimeout(()=>{job.timedOut=true;child.kill();},timeoutMs);timer.unref();
    });aborted();if(job.timedOut)throw Error('STL-Auftrag nach 10 Minuten beendet. Ein einfacheres Netz versuchen.');
@@ -67,7 +74,7 @@ function createStlConverter({command,prefix=[],tempRoot=os.tmpdir(),timeoutMs=60
    aborted();return {bytes,report:result.report,artifacts,deviation};
   }finally{
    clearInterval(poll);clearTimeout(timer);
-   try{if(directory)await fs.rm(directory,{recursive:true,force:true});}finally{if(active===job)active=null;done();}
+   try{if(directory)await fs.rm(directory,{recursive:true,force:true,maxRetries:3,retryDelay:50}).catch(()=>{});}finally{if(active===job)active=null;done();}
   }
  }
  return {convert:args=>execute({...args,action:'convert'}),analyse:args=>execute({...args,action:'analyse'}),cancel,state:()=>active?{id:active.id,pid:active.child?.pid,cancelled:active.cancelled}:null};
@@ -80,4 +87,4 @@ function installStlConverter(win,{directory,ipcMain=require('electron').ipcMain,
  const stop=()=>{void runner.cancel();};win.once('closed',stop);win.webContents.on('render-process-gone',stop);win.webContents.on('did-start-navigation',(_event,_url,inPlace,mainFrame)=>{if(mainFrame&&!inPlace)stop();});
  return runner;
 }
-module.exports={validate,createStlConverter,installStlConverter};
+module.exports={runtimeDirectory,validate,createStlConverter,installStlConverter};

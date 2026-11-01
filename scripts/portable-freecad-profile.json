@@ -1,0 +1,2673 @@
+{
+  "schema": 1,
+  "freecadVersion": "1.1.4",
+  "python": "3.11",
+  "omittedPythonPackages": [
+    "OCC",
+    "vtkmodules",
+    "ifcopenshell",
+    "pandas",
+    "scipy",
+    "sympy",
+    "mpmath",
+    "matplotlib",
+    "mpl_toolkits",
+    "debugpy",
+    "pip",
+    "clang",
+    "pygccxml",
+    "pybind11",
+    "pybind11_global",
+    "kiwisolver",
+    "contourpy"
+  ],
+  "extraOmittedWorkbenches": [
+    "Plot"
+  ],
+  "nativeExclusions": [
+    {
+      "file": "bin/Lib/site-packages/PySide6/Qt3DAnimation.cp311-win_amd64.pyd",
+      "sha256": "5f520a9c59c7393a65162a0f62561c7e3f7535950e3193f8c92a26b43335458a",
+      "bytes": 338944,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/Qt3DCore.cp311-win_amd64.pyd",
+      "sha256": "93fe6ccca2ddf7c3dd065d5ac964ed1aef84ff6d99f4a52a11d873ce5ddcf70f",
+      "bytes": 334336,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/Qt3DExtras.cp311-win_amd64.pyd",
+      "sha256": "278057ec74738d617f4ccfeb4c39d178fd1006aed2f079260170283b2ab42161",
+      "bytes": 586240,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/Qt3DInput.cp311-win_amd64.pyd",
+      "sha256": "7ec8bfb994b9206d965f8a409c131c86642f1896b0d68e3f9573a9dc09a002dd",
+      "bytes": 278528,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/Qt3DLogic.cp311-win_amd64.pyd",
+      "sha256": "f6afdb91b8e82c29eff99aad38a5f57f0bd4f686c7493b4c64dd2f0625dc75a7",
+      "bytes": 85504,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/Qt3DRender.cp311-win_amd64.pyd",
+      "sha256": "240b4b677f63ac15daee80b56ba7168a68561feb86c40f13138ae179059827ee",
+      "bytes": 1245184,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/QtCharts.cp311-win_amd64.pyd",
+      "sha256": "84b46e63233c3c0eafb8e70325f42a7d3368f9c66f7e9a7d8c1e0b4e750c8242",
+      "bytes": 865792,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/QtDataVisualization.cp311-win_amd64.pyd",
+      "sha256": "17a6b030163a5302a4d8dcaf90e7528ec8393ca10cf05980c18b396be7504b18",
+      "bytes": 685056,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/QtGraphs.cp311-win_amd64.pyd",
+      "sha256": "f5d7b267cca40c0eaed20461a356ea2b28ba845af1332993938d1a8151622350",
+      "bytes": 819712,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/QtGraphsWidgets.cp311-win_amd64.pyd",
+      "sha256": "f26e40abc940d567de98ed6ba2bcd39e616f6902b8f13c08ffb6c44204ea02ce",
+      "bytes": 160768,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/QtMultimedia.cp311-win_amd64.pyd",
+      "sha256": "477dcedfed1825c392542ec7ad49b89378594d65c6c08c9ffea36af22a2a96f8",
+      "bytes": 568832,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/QtMultimediaWidgets.cp311-win_amd64.pyd",
+      "sha256": "d00d8e0ac993ac8b72f6f8e95e083c74aee1d017873d5e872c98816c961e0489",
+      "bytes": 125952,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/QtQuick3D.cp311-win_amd64.pyd",
+      "sha256": "7a68068f189284ef14692fd72426e01131d6d01af34e6d8f2b28ad27736e168e",
+      "bytes": 168960,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/Lib/site-packages/PySide6/QtSpatialAudio.cp311-win_amd64.pyd",
+      "sha256": "41673d869f6c18b96330d6d1704cdcfe2429efdaec2f28e5b865c43050037d69",
+      "bytes": 139264,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    },
+    {
+      "file": "bin/OpenEXRUtil.dll",
+      "sha256": "a86d65ea2c8fb1f38dc13a3ee1634da6692092aa65b3fb06c9a999a3a2f5ed83",
+      "bytes": 170680,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/Qt6Core5Compat.dll",
+      "sha256": "68e4be4705b871804dcfef514b05d1b9c3cf27c7b9d60f3038f7ca6bf0103a69",
+      "bytes": 873656,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/Qt6DesignerComponents.dll",
+      "sha256": "765cbcaef68121f9f9083b2b70701be0f2b9beeff5f5c263e9e42869f8ab218e",
+      "bytes": 2506424,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/SDL2.dll",
+      "sha256": "1f12c6e052ff9a7566242fff21e6d7046dba29ad3acfd540d7a56769e544c7de",
+      "bytes": 306360,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/SDL3.dll",
+      "sha256": "f05b55dad07b8570544ba5bbf94252252c3e0f44e167307bb5aa12ae7a906123",
+      "bytes": 2439864,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/SvtAv1Enc.dll",
+      "sha256": "a1935abb99d49c76de06bf5f2f02febe6ae3df1fec744bfe2c9de17f34a82e74",
+      "bytes": 14632632,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/aec.dll",
+      "sha256": "1cbfd13c8eda1ecfeaaf2c0292872a88fa1f282396a862a8b90fc4e307be4e9a",
+      "bytes": 44728,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/aom.dll",
+      "sha256": "c69e13b80b6baff729df938288653cf562f6e0c5c937810ea6c49ae567d49e9a",
+      "bytes": 9887416,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/api-ms-win-core-console-l1-2-0.dll",
+      "sha256": "f891541673aa425e89d6b88f7f61528070dd85f66f790f3f2c72ebc4d1143aa6",
+      "bytes": 26296,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/api-ms-win-crt-multibyte-l1-1-0.dll",
+      "sha256": "4a88c392bbe96aaf2191318b82c7a7d488aab371240b3eed4665226a1ce7419b",
+      "bytes": 34488,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/avcodec-61.dll",
+      "sha256": "d7f8d2dc4bf30b2994289d408cac5864530b21fc5665e9e1852e97898be2484d",
+      "bytes": 17206456,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/avdevice-61.dll",
+      "sha256": "a9def35a7bac4962eda4b89668d6b0fa18ccd9f4f32886282dd082e028463733",
+      "bytes": 89784,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/avfilter-10.dll",
+      "sha256": "0ea094a020a404b0e980d14eca1715c5b7b1ea7adfaf7b545909203b6fb7127d",
+      "bytes": 4999352,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/avformat-61.dll",
+      "sha256": "983f4249af2bef97ad69f4cab38fccae8b2359669f824cd2841f8806877d6368",
+      "bytes": 2385592,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/avutil-59.dll",
+      "sha256": "be75eef678d152a1923d36d6c70cb26b9d407939d95483593dae74ff115f214d",
+      "bytes": 871096,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/blosc.dll",
+      "sha256": "2d8d37f9739a7a8c7c0a6d9043c6c49c3cd490a31ca64a960b53271fd2e0c673",
+      "bytes": 83640,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_atomic.dll",
+      "sha256": "ad9fd1fa5150dd4ca6ab3f22640da60cde8ab831a063507906d9468b271a4544",
+      "bytes": 31416,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_charconv.dll",
+      "sha256": "fd8cf6d969acb497cae4f899ab87b5e53dc684f25f8ef91db9216b619c06b241",
+      "bytes": 124088,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_chrono.dll",
+      "sha256": "452d6d63c1502474f54b1f69c06515b17b34b5c8278f31d8c073080d109a8ca2",
+      "bytes": 48824,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_cobalt.dll",
+      "sha256": "addbf1ca8477fbd7c689489357709e6ae1af755324d961754f3abff2c5429b61",
+      "bytes": 122552,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_container.dll",
+      "sha256": "2bb27cf4fc863842aaf3db7a4ba5b291850f8f3bcd1570f087d9c21d90830529",
+      "bytes": 68792,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_context.dll",
+      "sha256": "eb162eb936d30d094287c88012577811427990174b84b11a42f7a91c82a075bd",
+      "bytes": 26808,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_contract.dll",
+      "sha256": "a3041c48c4d88f761b815c8f3b9a0005443ca7662fe2966fcf2ed0eef78cb9c2",
+      "bytes": 91832,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_coroutine.dll",
+      "sha256": "6683e4ca13ef196e4415048da823c56d47b5a44019eccfef4b76feb1f3f3e9e5",
+      "bytes": 32440,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_date_time.dll",
+      "sha256": "f030e0bdbbd0d8d637752ecc2c7a2a87a283f8cfc1e7f601ae2630efb99add2a",
+      "bytes": 23736,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_fiber.dll",
+      "sha256": "e248e2db87684e0d532832329e50e2198428f34bb9855691cb58591f016929e7",
+      "bytes": 91320,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_graph.dll",
+      "sha256": "4a30e5a0fafdfa2b9cd883e5981724ae2f7b2b3c85bf5645357cdc9bba795aa3",
+      "bytes": 328888,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_iostreams.dll",
+      "sha256": "e3a3542f1aec68abf335df745dd9a4b29a2fd62dcc8bad2a89f955155419f6b7",
+      "bytes": 87224,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_json.dll",
+      "sha256": "405d3283cac62359f9dc8cedc925bc0c970e8cb12d5e02f560724f78303745a5",
+      "bytes": 324280,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_locale.dll",
+      "sha256": "0a9d5ce6068c46af1b1d49cbd044bfd3ab9681dc57b80299f2a2a0d623b4aa0b",
+      "bytes": 495800,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_log.dll",
+      "sha256": "82021a1a7ce6d62993109fdb8b84e682dc1f89808865dd3d60cd7da0a107120a",
+      "bytes": 626360,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_log_setup.dll",
+      "sha256": "a0258862faf903d2d7030cea52aa52ccc8f95927227f654a8807281784acfc2a",
+      "bytes": 741560,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_math_c99.dll",
+      "sha256": "ea8cba82c3f87b75743580be0133e9b3de6dd21b0f56e8b3004b8d6595a35677",
+      "bytes": 46264,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_math_c99f.dll",
+      "sha256": "4ab530845d09ca0d7e40429b620c1622b20a1488ff7434b9a6c68028629065fc",
+      "bytes": 46264,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_math_c99l.dll",
+      "sha256": "77e13538dbd5e78b1d76e1783310fd578f6b960a51511295f8fb7abce79744ad",
+      "bytes": 45240,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_math_tr1.dll",
+      "sha256": "ba9f5b12de9bcc571cf3846ced2b13f64a4b9c86b93ac3a86d7afb0a7d4b2c3d",
+      "bytes": 186552,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_math_tr1f.dll",
+      "sha256": "53c4d66ad0b7a40ca2a7c9da2161806a1b14964fc04a29ed10fa9f6044e89227",
+      "bytes": 189112,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_math_tr1l.dll",
+      "sha256": "a57ae9b8321fcd26d4111b7308030848122bb09471091478717f4962c07dba8f",
+      "bytes": 186552,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_nowide.dll",
+      "sha256": "7db8433b7445c733fa95ac7ade9d27de365968b2e0fb53d9f309b7ee8ecf8c6b",
+      "bytes": 57528,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_numpy311.dll",
+      "sha256": "ecc6a67b916983cc8fdf9fddcecabc8b2ef54bb75937eea5b58d830d6487db49",
+      "bytes": 65720,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_prg_exec_monitor.dll",
+      "sha256": "09aa2b45be99042945bbc91b6183021041342dd26cc3a2e44664b802bddc6614",
+      "bytes": 73400,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_process.dll",
+      "sha256": "b1b4401671aaf17fc92f847286e9a55ab0c1079e5903783c81a72e6a5186d926",
+      "bytes": 92856,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_random.dll",
+      "sha256": "5454c58b5dcd185d85a8eb2744d124c6b9b7ff85bbebeab01c6a2460e73be84b",
+      "bytes": 43704,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_regex.dll",
+      "sha256": "9b431aa36092ef6ad58c1dfe42b4bccbbe8d43a628712725397abea3359e3b5f",
+      "bytes": 254136,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_stacktrace_from_exception.dll",
+      "sha256": "ebd579aa58c71fcb00bc8c86b09cb8d8269f981f3388ceeb65d8bd8de42337da",
+      "bytes": 27832,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_stacktrace_noop.dll",
+      "sha256": "f3cdeedca11475b21aa1e3bebd9a1434c3c5b7dfae8b5741517763f5c80b6182",
+      "bytes": 24760,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_stacktrace_windbg.dll",
+      "sha256": "ebcf5b8ce3b6d81cd3ea755ed1971b70b4f6e91b7eaab8c05d02697d59b9bd65",
+      "bytes": 49848,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_stacktrace_windbg_cached.dll",
+      "sha256": "6946b4e4a675e016e412894585741885e27d0d27fb4a2081fdd8c9a4776adda3",
+      "bytes": 49848,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_system.dll",
+      "sha256": "5db24878f38501e701bf2cbc712318788e8c2607904fcf3957e5d3d2aaeee6b9",
+      "bytes": 23736,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_thread.dll",
+      "sha256": "32ca206391ca9a8d188fc173d416d480a8cafb6e2bee13204eb8dbb9eccaa266",
+      "bytes": 91832,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_timer.dll",
+      "sha256": "ce5350b4178e6228f8d24a45dec27bb04ec42215b937115bae786dd9d0d3b273",
+      "bytes": 46776,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_type_erasure.dll",
+      "sha256": "7ecc484769aba0affcce5cb863baf3717abb3ea84294be3df1eccaf9e70aa7bd",
+      "bytes": 51384,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_unit_test_framework.dll",
+      "sha256": "feaa50c0a41360bb835847071a5513c6add529b0c227ee1df5be76d3dabd18d4",
+      "bytes": 538296,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_url.dll",
+      "sha256": "675d57491a099bc8e10387abf44e1f81d0ce68848492c13996a0d366550895a8",
+      "bytes": 317112,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_wave.dll",
+      "sha256": "c515f1d913501b8f68e524a44b5b0278d5033466d2459e6090d8d68ad4e91e18",
+      "bytes": 865976,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/boost_wserialization.dll",
+      "sha256": "1e6f2d3f92968e444d06d5910ca67880a86625fb33d9b266eddfb0523a0a6e67",
+      "bytes": 170680,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/brotlicommon.dll",
+      "sha256": "d3deb70a759de52577fa8e19fb71e64ec6d53a943dcc513937babfe1fc9f7234",
+      "bytes": 151736,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/brotlidec.dll",
+      "sha256": "6e3e4c33c6051fe58adcab4dc3883fe794c947adb089a445c5f3bb67dea7aa7f",
+      "bytes": 66232,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/brotlienc.dll",
+      "sha256": "0995606d4a730b6fbfeb40393959f247ebe637d9618be97c4b7373ad3f942ffb",
+      "bytes": 692920,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/cairo-gobject.dll",
+      "sha256": "63f395e51f5d0e81cdf598b4b80f45bbb14f9d3910d226fefa502e3127499cb0",
+      "bytes": 41656,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/cairo-script-interpreter.dll",
+      "sha256": "0a351a15a9529f0ddb90fde21c0db13018350f317f657adc6544e25ebe8c3478",
+      "bytes": 149176,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/cairo.dll",
+      "sha256": "9fd5dbc5695106d118d1a2932f14b1eecb5525a64d7e89fdba1c0f2b36d0048f",
+      "bytes": 1038520,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/ccx.exe",
+      "sha256": "a7c351a332373e3075029b7986ea4c9e878789c5b4d2feaed1ef83703624fff5",
+      "bytes": 8329256,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/cdt.dll",
+      "sha256": "dc88823ddf97952de16ec083644f69c83c54764b0d5be41e7fa85123f545a3eb",
+      "bytes": 35000,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/cgraph.dll",
+      "sha256": "af094133a1b4caeb7e5b1937b64de1f44773e35c6ab93c9a3269fff4d28e2181",
+      "bytes": 119480,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/comerr64.dll",
+      "sha256": "53c40b82c5a3a18e20dfe80946030c1ec8d694599a92d77ea373c7cfaeb837b7",
+      "bytes": 29880,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/dav1d.dll",
+      "sha256": "e55e916e6b83afda7425d8c00622387a0210c6556bcda770366e008028339ae2",
+      "bytes": 1776824,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/dot.exe",
+      "sha256": "ff1ce5f13caf4ed7dddb7327b94781e751e4a7e693b4655287b6647d959c879a",
+      "bytes": 25784,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/expat.dll",
+      "sha256": "d5648d5f8ca4ff282389f79effed9d383e8ba144c499b9ce735c4abe4d1e2c8b",
+      "bytes": 278200,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/flann.dll",
+      "sha256": "033c0f842c2da137c329b10cb6337e6ac8cce1074e22e70bb2785da09f998931",
+      "bytes": 9668792,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/flann_cpp.dll",
+      "sha256": "5ce235554e67d0f46f862118bffe2bf1058111a49494548b373929cbb94a0c74",
+      "bytes": 26296,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/fmt.dll",
+      "sha256": "bce21d9118a8af5d98f3e04e9f42554454fbdc06d3defd2193bbf457d79ebe77",
+      "bytes": 134840,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/fontconfig-1.dll",
+      "sha256": "3b5cd4754dafcc653d74c98c0cf1990ab48af010573e64a9579a10fc1e8dae03",
+      "bytes": 300216,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/freeglut.dll",
+      "sha256": "54c2786a4f793d61e0a50b5d23ec42bf74af2d5c38cc25f1dc1c3309c156710e",
+      "bytes": 280760,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/freeimageplus.dll",
+      "sha256": "559ab1b9742ac206fcf6b755360c3a5ef9ce32b807dedb01bd0f19750d2fbcab",
+      "bytes": 64696,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/fribidi-0.dll",
+      "sha256": "e120ef36499df00b8eda0db9b3bc8c9a47349f7c3f08ff8225b12381878352f9",
+      "bytes": 134328,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gdk_pixbuf-2.0-0.dll",
+      "sha256": "bad31614df35024582eecec644326fe7ca062025893eb87fc053720f17748ea4",
+      "bytes": 174264,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/getopt.dll",
+      "sha256": "360fe9cbacfc29416999179870688178b117d7939a8bce959e710b40913a3a14",
+      "bytes": 35000,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gio-2.0-0.dll",
+      "sha256": "0a922f822ac453896410d9e9b83ac40694e8f84281f683cd2e8637092908874c",
+      "bytes": 1612472,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/girepository-2.0-0.dll",
+      "sha256": "475d225a6232e28141de05a3eebf951e90fcfa07127b62b0d2a4466b10fc59df",
+      "bytes": 150200,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gl2ps.dll",
+      "sha256": "27ea43eea205780d3babd9ee19fb1cbdd27f6f845fdfdcb1b44a822af7806502",
+      "bytes": 113336,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/glib-2.0-0.dll",
+      "sha256": "5d05142496ac0f16e5d38f82af0b5c060d9e8f8c70300f8947bbef0f726bdb44",
+      "bytes": 1355960,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/glut.dll",
+      "sha256": "d276f77b2663921c0f22cb3e2fa5691e4e481cbdad50495f0b69302dd0d53f35",
+      "bytes": 280760,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gmodule-2.0-0.dll",
+      "sha256": "7453721efe4aabda3820e7576eeb33224317085af3c8845a4cd689037814f331",
+      "bytes": 33464,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gmsh.dll",
+      "sha256": "1c65a9a1b941b506ac4bbe905984f95fbc3fd839eb34d6b5e8660ebdfb95317a",
+      "bytes": 33293496,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gmsh.exe",
+      "sha256": "7f583d16dc0d6a80ff25c4e979b43b20f6d5c99a027de55a33ca678c1258ff65",
+      "bytes": 84664,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gobject-2.0-0.dll",
+      "sha256": "033136fc431dbfcd5a3b5213b7fabf4db414f586ad93f7d3104710f66aa281c9",
+      "bytes": 330936,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/graphite2.dll",
+      "sha256": "8341ce1c47cf73948bea4fbcf8cfaa28b5c8e0495393427c91102f434379db64",
+      "bytes": 143544,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gssapi64.dll",
+      "sha256": "f2451f278dfb8754c7fc2a8d6975a8a045467663ed86dd5d3b93c24445057e66",
+      "bytes": 399544,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gthread-2.0-0.dll",
+      "sha256": "c6958ca2036b46a1721a42dc25db1052e9b1b0b450628932178d37aa8e288ad9",
+      "bytes": 24760,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gts.dll",
+      "sha256": "fffb9eb4d37549a13b05323a83428aabc0e201a2dd28bb25e4d902724812963f",
+      "bytes": 376504,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gvc.dll",
+      "sha256": "3b1f2c535bc3de0f0805cce1249d4ac1f4ce07fd29a7111c833f75e68d5a7524",
+      "bytes": 644280,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gvplugin_core.dll",
+      "sha256": "b9d542d4826b93bcf378ec9c589cc3d729ec3d74e2b62a8248048fa5d5326b8e",
+      "bytes": 125624,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gvplugin_dot_layout.dll",
+      "sha256": "9f64ae4f828b317d57370dcf091aab048194022474a221d434b96b73b03b7a94",
+      "bytes": 173752,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gvplugin_gd.dll",
+      "sha256": "ccbc77aac137dd11753caa83c61ee34d82e68c2d4c91f793bb1cd591957d58c1",
+      "bytes": 59064,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gvplugin_gdiplus.dll",
+      "sha256": "f523117d29d3ea7d6f5c5ff1b376514d1a1a14ede50591281ca63839fb77d24f",
+      "bytes": 45240,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gvplugin_kitty.dll",
+      "sha256": "83c0d56a39f55bf7c524bb971fb3b940e8010d96f50b3ce5598fdfb9256548a3",
+      "bytes": 27320,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gvplugin_neato_layout.dll",
+      "sha256": "dba293b4387fe65f7a397688b290915bb6f4642a9a467ed48048bb09e8d76d8b",
+      "bytes": 486072,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gvplugin_pango.dll",
+      "sha256": "b9a46d24304d146d7cd6b271efb7e6771fb0a1c6af709f5bd6db2a68d18b2e7f",
+      "bytes": 57016,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gvplugin_vt.dll",
+      "sha256": "555c2bebcb7842cc05578d8102bed01456472548d91cb4dc397ca53fa5e8a628",
+      "bytes": 34488,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gvplugin_webp.dll",
+      "sha256": "a9a8606b0ffa822504f1ef3f104834e3292af5fb907fe050d06f0b4474f87d2c",
+      "bytes": 29368,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/gvpr.dll",
+      "sha256": "baa40e0cc6a467251bccaeffbc51127eee3aebda3768976f07d3631f6220acf2",
+      "bytes": 313016,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/harfbuzz-cairo.dll",
+      "sha256": "3b9e9574f1c80b92e3eaea12d9b660e54874f4c5d30131de267f9b4ff18f8f07",
+      "bytes": 53432,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/harfbuzz-gobject.dll",
+      "sha256": "3ada0a89372320fd0fcd1b28f52a1d3e7520a33a755d79a98b1b5aa68bbe31da",
+      "bytes": 103096,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/harfbuzz-icu.dll",
+      "sha256": "177945bb0c2aca52acab078c32f135a3a9beb42cb947f8d4dcd194f13fedcbee",
+      "bytes": 27320,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/harfbuzz-subset.dll",
+      "sha256": "d1ecec3d3ec8317acc46c4f53709689d10bc5e3660fe1c4118fd85effe815ad9",
+      "bytes": 1217720,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/harfbuzz.dll",
+      "sha256": "9ccd3aa0a87b9b2b0247d770e9eb6db608d4d53428d497bad89086ec5915ca72",
+      "bytes": 1172664,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/hdf.dll",
+      "sha256": "313103f003fa754f8ec447b875f87a4ca70112d9a243160a33bbdf0276095997",
+      "bytes": 515768,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/hdf5.dll",
+      "sha256": "f5798168a7017e88449491726a3ba268e1f825342cc707595130738634162b5b",
+      "bytes": 3601080,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/hdf5_cpp.dll",
+      "sha256": "847b31eca02e2c9163268db39df8d9e61be3cb9fc166aed54e893e6e1a0eb61c",
+      "bytes": 315576,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/hdf5_hl.dll",
+      "sha256": "1afaa22304ef8a3d984c965a8b3660429e8328ac9dd2fce57f0f2329e3ec0f26",
+      "bytes": 131768,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/hdf5_hl_cpp.dll",
+      "sha256": "2fd291f87909a5219270d42454adce8554e72028dc2644c70807096db3728ed8",
+      "bytes": 29368,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/hdf5_tools.dll",
+      "sha256": "bf5fb96e93763fbec1cdb03425f66a2a333dc616e09a0ba194209d0ef57dee4a",
+      "bytes": 255160,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/hwloc-15.dll",
+      "sha256": "64c2413eef7146671fafbd8ea6d106b0f841cf61b5f0f0254c6f058657a28315",
+      "bytes": 285368,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/intl-8.dll",
+      "sha256": "f569fdd7eec46bb66f51aac83241c4d0213edfd487346dcdc1b09d48b8dd6dec",
+      "bytes": 236728,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/jasper.dll",
+      "sha256": "32568754051227b518bc431bf0b87e3e7e568630ee0241fb9cb00306fce4307c",
+      "bytes": 324792,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/jsoncpp.dll",
+      "sha256": "52c0452fac2ab08382d9e4ee6ac4d3b0af35dbeadba44fdc1111c014d848e728",
+      "bytes": 215224,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/k5sprt64.dll",
+      "sha256": "abf79b1658b7f7823cfbdc30b2a37b2a5aa5aa4405fe1a0db9347902d8d0e4e8",
+      "bytes": 72888,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/kfwlogon.dll",
+      "sha256": "eadebdc266bcf999086ecee114912a98d3c4c650eaa6ca2768bb71c19e7f5d8e",
+      "bytes": 46264,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/krb5_64.dll",
+      "sha256": "23d2931bb587efd677f129478da43cc0c540e57794f1827888975e42a61a5487",
+      "bytes": 1223864,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/krbcc64.dll",
+      "sha256": "8ca8d9566b53123b3e4400ec82c29d71be5de9d54d48c6a90ed9302b2e22d266",
+      "bytes": 125624,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/leashw64.dll",
+      "sha256": "d4950b5325e93759bf41e871be0286fe5a10d21ad66d90e3c6505a9ad19ec682",
+      "bytes": 165560,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libarpack.dll",
+      "sha256": "b3cd2d085789c731dabf95a2d992397ecf9d85e33a5f9925c3d62b4951779568",
+      "bytes": 509880,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libatomic-1.dll",
+      "sha256": "f67dc56ba7a4518ccbce7c172be83ebe956d2680ab4cbf48c8deb91164f9ce5a",
+      "bytes": 292032,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libclang-13.dll",
+      "sha256": "6f5d811b3d83beced030f9c99a9cb2d01868a4d1c718128d24705199e08531de",
+      "bytes": 119685304,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libcurl.dll",
+      "sha256": "bc85257b673f30ff5269642f1cc3b9480049acf5d360d442d57ad9b700c1262c",
+      "bytes": 722616,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libfltk.dll",
+      "sha256": "08adc46b9b59585eb12182dcfadc5445c92df0483d4cf61a4f96d827bb1e20dd",
+      "bytes": 1056440,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libgcc_s_seh-1.dll",
+      "sha256": "2ed472028a23f44ef3b4140cdcc006803d5c7f5dd959630d6a285058cd1c05e3",
+      "bytes": 1023440,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libgd.dll",
+      "sha256": "6b9573f7468cec6389899745eab32c8a157ead1f25ca6afeaea2011ce59a4b8a",
+      "bytes": 382136,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libgfortran-5.dll",
+      "sha256": "d2d29cd8c7cfbea6f3570afd33aa70da3003327ce17ac96fbf702b72039890d3",
+      "bytes": 13862544,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libgmp-10.dll",
+      "sha256": "0ee99f20539a74040965a4bbe15b76ca4a3e3bf206e1bcbe1a5e08eec9fc29c4",
+      "bytes": 1147128,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libgomp-1.dll",
+      "sha256": "55d595e5b571404660fac48cea9a0ddef36ba767c43b3894f3a62cfd93de137f",
+      "bytes": 1859624,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/liblapacke.dll",
+      "sha256": "a22d9329fb5d7fde85adc3b1b6681860de490c72722c7dff6e91349594b0b4c4",
+      "bytes": 267448,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libmp3lame.dll",
+      "sha256": "68bc9d9b81693478ffe51d0d6f637486304fb0e283cf8f2b0321d374d2893ce9",
+      "bytes": 543928,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libmpfr-6.dll",
+      "sha256": "257f1f6ddb47028482ae09b1dc59be2ee33c9782ba0f9ecc6b0b680bc529470c",
+      "bytes": 1644992,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libquadmath-0.dll",
+      "sha256": "145b3c6994eb2e27e8f73aabd7e224046afd20c4656cd4b040be7d17e18b096f",
+      "bytes": 1263488,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libssh2.dll",
+      "sha256": "ab22be77532a9365204ada2ba6ea83553f9ea582e330dc8b89e3446de14dfc20",
+      "bytes": 272056,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libstdc++-6.dll",
+      "sha256": "e62866badb770c26811c9804da172435f2f77cc83b349315f77a7c487f458aef",
+      "bytes": 27056784,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libtiff.dll",
+      "sha256": "4e0d287d45608e98ee3dd25871acaff5cad5c4a00e388cc73c12340daea08ec4",
+      "bytes": 511160,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libusb-1.0.dll",
+      "sha256": "c6e4eb2c421e6312c01c9c4350a6cd1a49283b77a2544836936f502944c1bbc8",
+      "bytes": 171704,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libwebpdecoder.dll",
+      "sha256": "5b79876ecb3748d3f4b5ec3f368016f7936e3f10c8d067d116e5a9d1120567d7",
+      "bytes": 186552,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libx264-164.dll",
+      "sha256": "c311ebdf7d627648c7f07ee36c60378fd5748babf8f479fdac8c9cfef67e35aa",
+      "bytes": 2261176,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libx265.dll",
+      "sha256": "7894b7fafbc63e3a64a8235d10dcf5cd663d7169239a99a559405ceec97f154d",
+      "bytes": 17004216,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/libzstd.dll",
+      "sha256": "b82ffc251104209606b6a4800105beee3bfe88ab3ba47756b4b0ae3db7b8f2cf",
+      "bytes": 672440,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/lz4.dll",
+      "sha256": "69e3c6bbf02061216c5c4e30a38fa52a59627b3f512610a09daf00aa0f1bc8b6",
+      "bytes": 141496,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/mfhdf.dll",
+      "sha256": "c4100677d2ea18fdf4fdf8fafaeaa925fea35044b61d42780c978b75f56eec3d",
+      "bytes": 153272,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-ICE-6.dll",
+      "sha256": "8d1c6bb07487b156e23cfdbfa04f79ba65b54b577e94667629dc4c24d930b5ba",
+      "bytes": 643352,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-SM-6.dll",
+      "sha256": "b85dc4254eea3a915d40e425200fcb3b59bf4928518c9ebab4f26513731f0af8",
+      "bytes": 277728,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-X11-6.dll",
+      "sha256": "7bcc09b91b057e3eeacbd882c37706cff536080a9d9c0690e54c1ebcfab451e0",
+      "bytes": 2059920,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-X11-xcb-1.dll",
+      "sha256": "65a6fca0b48f4d9e9d521a81717be00387dc481a3fca270b3e8e0c7e452305b1",
+      "bytes": 127592,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-Xau-6.dll",
+      "sha256": "00591fe72a3f96e01fd06d019287e301335e25014f04f2a625d2939d4a3bb976",
+      "bytes": 289504,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-Xdmcp-6.dll",
+      "sha256": "7551fcaf118394e098454768e7a9184ee0606b1acea9aecd20d433c001ac5579",
+      "bytes": 212736,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-Xext-6.dll",
+      "sha256": "c7fdfcae18a8ff459a5467b61217abd6bb444adf4a8f98cebf3741d0e2fd4ea4",
+      "bytes": 970736,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-Xfixes-3.dll",
+      "sha256": "0d0224383c0921465dc8b8344ca7e34c58213019ff5433b27b617ef0c23dacab",
+      "bytes": 362784,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-Xpm-4.dll",
+      "sha256": "b9d7b691328483ee45f94eff4e2e3a2ac1652a94a2005b44044a84ca6ef49779",
+      "bytes": 463960,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-Xrender-1.dll",
+      "sha256": "845af41ca547a0cfc2df260d21cf1f4c7c8f7406e9a7065300e3443ffce00439",
+      "bytes": 637600,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-Xt-6.dll",
+      "sha256": "c10f929fa64e3814de77842c221635dcddc3cfd0c7313239c93936faddfefe30",
+      "bytes": 2773336,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-1.dll",
+      "sha256": "9a9547e1e1264d9cee3a3a38208792576fb2be34ed888e8d7641ce6113b44a19",
+      "bytes": 842968,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-composite-0.dll",
+      "sha256": "d137fc0231b7db96e992053bd5779eb6480b588a52485efb0eb7d9eb7c10b71d",
+      "bytes": 147952,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-damage-0.dll",
+      "sha256": "0b3051d6ec41db44cdd67d7cab52d494454a23d7cfb237d0e0054607d5460ee9",
+      "bytes": 141000,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-dbe-0.dll",
+      "sha256": "6b0303a5f2855b6966d219fb4d4cd6bbbf87db21c079bb3e01237f1a7c47df92",
+      "bytes": 155392,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-dpms-0.dll",
+      "sha256": "556f212aa94762c371591d1b2901ff6f936d5d5f87e3ca326f4daea1c00155f9",
+      "bytes": 146208,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-dri2-0.dll",
+      "sha256": "071fd2129e077acf8b1e47e8c443e213a272a1b9169182c7faee835523c69ee3",
+      "bytes": 172048,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-glx-0.dll",
+      "sha256": "71bda774c8e54c1354676dd897387cc73266da0ef2f49861c8a5a859d9a38593",
+      "bytes": 459552,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-present-0.dll",
+      "sha256": "9311527d9f0a92d2c6764125154d733224948f758bb72749dd1cae4d633bec50",
+      "bytes": 153272,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-randr-0.dll",
+      "sha256": "4b09d38dcb28f694e0228b98801448599eec52128cad97df8b6a0f3a6823273f",
+      "bytes": 328816,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-record-0.dll",
+      "sha256": "f0634c2fc226a3cca1ca8962fafba80976248441c1fc0b346984f4e6e3ab910d",
+      "bytes": 168528,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-render-0.dll",
+      "sha256": "59e0c741e4a317a7b75c755456cd4be21a098af954bb811aa34f5a0e527fb217",
+      "bytes": 284072,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-res-0.dll",
+      "sha256": "3b8964455eb3b53a86df39f369d7749d35df99929f1f43627864c406df3b11d5",
+      "bytes": 162264,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-screensaver-0.dll",
+      "sha256": "11e2dac3ad0ab13ec689a753f18eb1466c618d17682f298110d966129c9e0f7a",
+      "bytes": 157600,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-shape-0.dll",
+      "sha256": "2d4ca61ac69cf1d9bfe70356355c07b489d2380d3ca689940444b01e7394848c",
+      "bytes": 155048,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-shm-0.dll",
+      "sha256": "8a9b77f86d364d42f7953f30abd55380924060135498cda9cb843fe6d5b6e31e",
+      "bytes": 151104,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-sync-1.dll",
+      "sha256": "b7ea738a725179a9e0fd71c5a864c561f0a5fb98703311548ccbb77c9d8536d8",
+      "bytes": 194728,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-xf86dri-0.dll",
+      "sha256": "f18a1939b9b48643dcc1eeb4346c6babc27807e4157a4152a65674877987c1ec",
+      "bytes": 165976,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-xfixes-0.dll",
+      "sha256": "e71303060f9d06ae235d32b51e0f347b3f9ff1fd12bdc776c1076b80efb92366",
+      "bytes": 210576,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-xinerama-0.dll",
+      "sha256": "39b17aa90aa467fc76a5836ce460a204f83a443b635b68f5bf66a2d91f732c2e",
+      "bytes": 146864,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-xinput-0.dll",
+      "sha256": "200bbfcf9afbe5863a5a7a2a842c5ab8b6caeb2a1f13bb2494dee0ac080cfa20",
+      "bytes": 634472,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-xkb-1.dll",
+      "sha256": "3eaafaea959af8990c1f56272eea0bdcfb8ec5df9a3d499d9528ac9ace1c05be",
+      "bytes": 523960,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-xtest-0.dll",
+      "sha256": "4c57ccd42aa8af086125d1b07312bc95300211f629cfe2e6e4eb03c1d09bd659",
+      "bytes": 139304,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-xv-0.dll",
+      "sha256": "82fa8d4e3cd6e2690f5a58205ce2efcfed1e937bae76d0c7e476659f9c6a332d",
+      "bytes": 209704,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/msys-xcb-xvmc-0.dll",
+      "sha256": "4d44ecd8634210b6707dde1a691a76e8a4c160d407fc09d745f5d300b16d86f5",
+      "bytes": 161240,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/netcdf.dll",
+      "sha256": "7f3afea9888cf107f2a833f2fcc785a3a688daa0311d3de7e58b9f73f51aef0a",
+      "bytes": 1207480,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/ogg.dll",
+      "sha256": "203dcbee53737775fafc8cd87b5dac6736a0399b46ab2be53d2638539d1e9c57",
+      "bytes": 44728,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/openh264-7.dll",
+      "sha256": "b069bf07c47b5562814539535ad505df1797f16a516c9a019060ae5308e34b68",
+      "bytes": 814776,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/opus.dll",
+      "sha256": "dfac73e7aca69815ebc69ff4b99a00584d07e7bf3b7a554ba757f64d9c710be8",
+      "bytes": 456888,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pango-1.0-0.dll",
+      "sha256": "aee77c866d575570317909049f50aae028deb5f6d187c48e42160491a36c327b",
+      "bytes": 386232,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pangocairo-1.0-0.dll",
+      "sha256": "40d6369216170178ed131d932f14072dc57c679df42a12ccd8b46c8a6ec2e15d",
+      "bytes": 68280,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pangoft2-1.0-0.dll",
+      "sha256": "1a201991baeed0541c7e6a85fe2cb6883d26387d1f977037c5a857ad1e58fac6",
+      "bytes": 95416,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pangowin32-1.0-0.dll",
+      "sha256": "7052d7f70688d32d5f863bbf7d2139612faf4ab099c2cea67f01b476b903b438",
+      "bytes": 72376,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pathplan.dll",
+      "sha256": "024095266ba13ca07d2aabe4b66fd8bf2986a147c6eb2845a815f717597aa68e",
+      "bytes": 55480,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_common.dll",
+      "sha256": "d9abeefcc0f31c4848b6cb151e8e335ccd2042744dac33024b60dbf9767f1277",
+      "bytes": 438968,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_features.dll",
+      "sha256": "4934b43d6c2b038d35f9556da365cab3de0939eabb610cb5ee551d641c00bb1a",
+      "bytes": 3355320,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_filters.dll",
+      "sha256": "0486cf111dccc05b923c462cfa4fbe5b428bf0a49d56099eb1c969c0ca02263a",
+      "bytes": 3864248,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_io.dll",
+      "sha256": "1bcf729a3a3e1e6ba92a6d14f107fad42fb153b3acd09b6a0cc048df3de01fb7",
+      "bytes": 995512,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_io_ply.dll",
+      "sha256": "a7108f538c08eb315689d108d491206813dde924fafbf25d084a6444d8bff429",
+      "bytes": 293048,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_kdtree.dll",
+      "sha256": "9a67fea07e8124ffa9b43d049985c8099c09c08b89e36df0049b9ba374972ceb",
+      "bytes": 699064,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_keypoints.dll",
+      "sha256": "529a6c99df0fb931f24e828d2a9d141a6da88350039d263d96eb3bdb3a82156d",
+      "bytes": 999608,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_ml.dll",
+      "sha256": "494c0881f5a0bf7446c1379bd956771979a5046330197729f4fd8f2c4a4b2170",
+      "bytes": 82104,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_octree.dll",
+      "sha256": "d55ebaef9afe786025823f6e854e1aa4ce64233c53a0b5edbc08bb91e76e6d42",
+      "bytes": 1290936,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_outofcore.dll",
+      "sha256": "27f3e8ee306200f8a3df6988741c31ac247ccb668942e4a473aecb1e7f9118f1",
+      "bytes": 109752,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_people.dll",
+      "sha256": "f8227dbbe5eabeb9fb337d02047e9566262fb94c9237f1474abf8763e3f2c8f1",
+      "bytes": 45752,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_recognition.dll",
+      "sha256": "38b956da95abfdb08fe12733f57c26930bb78b080795b13b5282a7e5033bc15e",
+      "bytes": 1460408,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_registration.dll",
+      "sha256": "d420b3e8202a211292dc95683c61c10ed786d74cd79242d0c892e6d3c60d3bc7",
+      "bytes": 1245880,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_sample_consensus.dll",
+      "sha256": "0300d99540c4f419b8a9222ac2859446619f8968faa2a3d77926c719562749fd",
+      "bytes": 1907896,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_search.dll",
+      "sha256": "39775d14b7434d35c3917293f9ddcf5a7c88825b7dd3ed3f7213b8d181dcf139",
+      "bytes": 1051320,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_segmentation.dll",
+      "sha256": "9938020232a73328a0c505756034789478f3fe0d6f3195c31f4a275566a42351",
+      "bytes": 3135160,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_stereo.dll",
+      "sha256": "879d37ab6f9f9070ba0739a89f97497c219764b5bd2481e17f1028557c28181b",
+      "bytes": 203448,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_surface.dll",
+      "sha256": "48cb93fe168ba33f66593d6e431b1b1e1e299cc9d2ad6ba8e46426dbd7b96cfa",
+      "bytes": 2926264,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_tracking.dll",
+      "sha256": "634388eeeea2b71b4b8c6300ed9b51657f0c5ca6bd4332b18d1d3312ab19665a",
+      "bytes": 2076856,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcl_visualization.dll",
+      "sha256": "9ba90635e3a532beb857aa3a4767df0541edd0520ddf579c5b220353b6cee683",
+      "bytes": 851640,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcre2-32.dll",
+      "sha256": "f8d0724d3cee2e1e1cc801b757adebf448f32830eb6d9a6cea006aa179a65f64",
+      "bytes": 564408,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcre2-8.dll",
+      "sha256": "865ae7387ad933eb453977da8a71718e10241cbf1fd17541f0d7eb40a884da3a",
+      "bytes": 623800,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pcre2-posix.dll",
+      "sha256": "0f66802fc323077482cd7d4a28661e1625fd079be8323e413898f36d9add59e3",
+      "bytes": 27320,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pixman-1-0.dll",
+      "sha256": "200d19e89df6d9f5e341d2a2fb7f12b4657c043169c30427a73457db59d6edb4",
+      "bytes": 614584,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/postproc-58.dll",
+      "sha256": "d49a8ca65e50869c519633635c97cf6ec3a3c42bb907e99c95969fa888800cd8",
+      "bytes": 85176,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/proj_9.dll",
+      "sha256": "1a0ec22d2a8ff549208afbea56a60706525ce4be00470c9495de88179ca77db9",
+      "bytes": 3447992,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/pythonw.exe",
+      "sha256": "8f744455956ed378773bff0303490030af44568b9da3808187dd0bca6e0cbaf9",
+      "bytes": 105656,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/qhull_r.dll",
+      "sha256": "819adfbdce002ad9e3c565b8cf24827e1367aebe6f33f6d6d09f0f3241bec3ef",
+      "bytes": 462008,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/raw_r.dll",
+      "sha256": "1c7e220c4ad5d141ae892183446c32b24bb5a0db5dd700fde59dbf9006be065c",
+      "bytes": 1119416,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/rsvg-2.0-vs17.dll",
+      "sha256": "e4e50c0c68a39955082a920d3f55f47381ca8b8d312a381e8a093b16f958c6a2",
+      "bytes": 6313656,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/snappy.dll",
+      "sha256": "ad5c2bbfb9efdb66fbe91b40b4fbbdf096d0e0c91f8ddca8bd1ad7929bb13afd",
+      "bytes": 95928,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/swresample-5.dll",
+      "sha256": "56394a6b2ee48b8d1767c8c396037a090a6a30f49cb4695ea38eabc94691a0d9",
+      "bytes": 132792,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/swscale-8.dll",
+      "sha256": "4b8644dc288d8bf24fe67f3cc21147b1a09f3f8467c743222b4361605dc5710a",
+      "bytes": 1088696,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/szip.dll",
+      "sha256": "3ada835e06768610ac4bcc19348aee5d653e6abb4d96eebf817d6b11b94353cb",
+      "bytes": 47288,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/tbbbind_2_5.dll",
+      "sha256": "187eb98fafa19dbdb3657e1080187b6a39a96768811f8b28a56eddb97fa4590d",
+      "bytes": 38072,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/tbbmalloc.dll",
+      "sha256": "c82e3343927eeda8cbe2672b2f72c942ba294d714be1b686006b33c79387445d",
+      "bytes": 127672,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/tbbmalloc_proxy.dll",
+      "sha256": "098bb10619444a3cf9065f3e3a44ca1433f7d4ea0bc21195489ae20a1c8b103b",
+      "bytes": 44728,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/theora.dll",
+      "sha256": "7f9126647570e185e1b042c78bb99d0e9f613dc44acc5cf0a5bd0119dcb287fa",
+      "bytes": 220344,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/theoradec.dll",
+      "sha256": "b8bb77f5688627e8565baccbed878d95d7b2f4be8ddeec1aff798b8f3ae94930",
+      "bytes": 78008,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/theoraenc.dll",
+      "sha256": "cb4c7c3d77cf4942bb0ad315f55cad18c3e62939d917411fc9ee79f5479cb7df",
+      "bytes": 186552,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/turbojpeg.dll",
+      "sha256": "15d748a72290ceffe41c1ce1c886f8d0d7fd7659e39ccf6dc83e90ceb936f1fd",
+      "bytes": 1021112,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/unflatten.exe",
+      "sha256": "73442a5524e82112db93d2bcba363f21228858a4fe91c4f8e40e0544ee832a88",
+      "bytes": 27320,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vcamp140.dll",
+      "sha256": "17203334fee217cd2a622ba8f32f6bef6503dfecee4fe66e63abb7e8e29a6990",
+      "bytes": 412344,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vccorlib140.dll",
+      "sha256": "acad380736a599001f0e01807229bbc7263804f0564f7455f738d9a97c61fa4f",
+      "bytes": 345784,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vorbis.dll",
+      "sha256": "9f430108a4f6fb44bc4d9d7682c3dc81b0237a8ce998a45e204e514303888c09",
+      "bytes": 754360,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vorbisenc.dll",
+      "sha256": "2e61282421413222cf1a302ac5ae0014791ee29dad8021969cf3f2f5e10c979c",
+      "bytes": 578744,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vorbisfile.dll",
+      "sha256": "e81b57615678abb9e258ec4d4926b6a26f375681928b3e3adcdbd0ec83b1038b",
+      "bytes": 50872,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkChartsCore-9.3.dll",
+      "sha256": "137a9ed4f2958ef9aad00fcbc9f340c7457acc8849019bdacf65fdf209227b5f",
+      "bytes": 1073336,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkCommonPython-9.3.dll",
+      "sha256": "725940ac5a62345fb35b973c8e9ba456bbe688c6cb6b93f835c9db3fc7e67810",
+      "bytes": 41144,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkDomainsChemistry-9.3.dll",
+      "sha256": "d9d8f507beabdabb8118427cb4f4bba217021023d3aaab2ff21e0f978c62e5fd",
+      "bytes": 228536,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkDomainsChemistryOpenGL2-9.3.dll",
+      "sha256": "003573598c41728e75dfa742d15a9972135531f5e8b2d245fc995c938fc0eafb",
+      "bytes": 55992,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersAMR-9.3.dll",
+      "sha256": "104bd5e5136a09cdea3fe5d7f91cd5712185a48f60c0e74dd2a2c1b8f6f59b7e",
+      "bytes": 153272,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersCellGrid-9.3.dll",
+      "sha256": "e4464832171999061dcf724cc4efef32d627bbb7c0277c7a1c918494d5eee5a1",
+      "bytes": 115384,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersExtraction-9.3.dll",
+      "sha256": "1824d60c5d4155458d374fd9787adb4b02f4330e9558e22c1020766a4d630739",
+      "bytes": 1469624,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersFlowPaths-9.3.dll",
+      "sha256": "a4ca82c07fd8744896be2062ac24edb13b846b16dd26a108bd6359065fff63a2",
+      "bytes": 1178808,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersGeneric-9.3.dll",
+      "sha256": "365af8c2b8e7baad6199b533fbaf4bdcd2c4a18b32d8445b5ccc0280d8629acb",
+      "bytes": 162488,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersGeometryPreview-9.3.dll",
+      "sha256": "037d56663defad071b3b625650bcb41d53a7958fb913334e4251e83cb98dea60",
+      "bytes": 231608,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersImaging-9.3.dll",
+      "sha256": "ab40de81e48ee100ee50fb54c58e08c135f7f549e3d36b74a17154e77d6dc5b6",
+      "bytes": 103608,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersModeling-9.3.dll",
+      "sha256": "f4f01fabef547d45e81c94d5d9a7124f6d1b003822285b54b860438ba1bb2dfd",
+      "bytes": 852152,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersParallel-9.3.dll",
+      "sha256": "3c8b88444d08e2558984eb1a8b56db8d8e2e2b269406e1dedc36a4e36f181742",
+      "bytes": 742584,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersParallelImaging-9.3.dll",
+      "sha256": "17221c3afc37c6ec2765d7419649898f7645e334567af2cd4764aa592cb4e646",
+      "bytes": 94904,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersPoints-9.3.dll",
+      "sha256": "c34b91b40e705f2e6757082e0ce8a04d4d21c2857da754a69c65dad1ef83c495",
+      "bytes": 2124984,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersProgrammable-9.3.dll",
+      "sha256": "99f3e573de35ea04c1281a302ea03a64b819dab3810f8b826ae85ba5dbc78ae9",
+      "bytes": 65720,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersPython-9.3.dll",
+      "sha256": "a649da897043a39a79d694f6f58e6fe40098792bb849668cc602cd5ee8e70d2b",
+      "bytes": 45752,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersReduction-9.3.dll",
+      "sha256": "a1f180ce353080b801b7f3593b13ffb6a98c367d503e0ac0388e645b923e62c2",
+      "bytes": 1156792,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersSMP-9.3.dll",
+      "sha256": "3b5b148cb4d6d47a10b07b875264fc2a385597b567b7f00cf2d8714eee35d23a",
+      "bytes": 162488,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersSelection-9.3.dll",
+      "sha256": "c4e37c70bd62cb45f7b050a4cc8b0824afbd9a7e063fab15b5dd6760d2d50141",
+      "bytes": 82104,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersStatistics-9.3.dll",
+      "sha256": "8be8864e2f538fc7b22c162dc03eb2027a85ba69ed83b8ad67a777210d1ba4b9",
+      "bytes": 881336,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersTensor-9.3.dll",
+      "sha256": "6efee9a8917ea04a174368e972ed5afe04443491fcee4d3b8f61981c07c8f199",
+      "bytes": 77496,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersTexture-9.3.dll",
+      "sha256": "a58b680bfaae8ef7180eee9ecfddd069d775a14999d63b51833124876d7ad286",
+      "bytes": 109752,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkFiltersTopology-9.3.dll",
+      "sha256": "ede00439189cfd0ce9fb75fceb54abef4fbc5ba7d7419b67fac4374d26ac1437",
+      "bytes": 53944,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkGUISupportQt-9.3.dll",
+      "sha256": "7dfd5c63281e589742c8d336aa9cb36f09af934d8f982461298d0493935a1df1",
+      "bytes": 402616,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkGeovisCore-9.3.dll",
+      "sha256": "a2f98d0ddfbce1dc2594d7cd81436438000b3fff747c560392c47583f827a09a",
+      "bytes": 64696,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOAMR-9.3.dll",
+      "sha256": "1c87663c54ae32c1422ff6ed40db77f60e1ea617b4febc94eb0c950c8353b37d",
+      "bytes": 385720,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOAsynchronous-9.3.dll",
+      "sha256": "5da61869b513f50106ed573207533bf1790edf5bf26fc138bdccee4fafec2d54",
+      "bytes": 67768,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOCGNSReader-9.3.dll",
+      "sha256": "19077e9dc992b907267d4cf1ee1fc224d9bfb5085096dcc765eb9dc25af0b628",
+      "bytes": 417976,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOCONVERGECFD-9.3.dll",
+      "sha256": "427148b5cb08d8575fe8691860c42273dabc6abad69e263d5dba38ef9d7fdbea",
+      "bytes": 132792,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOCellGrid-9.3.dll",
+      "sha256": "50c193bb996bbaf9743dc00b17a8ffd6d493fec179f8c56eaf5d5f468a29eaa8",
+      "bytes": 209592,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOCesium3DTiles-9.3.dll",
+      "sha256": "763ed18b7ed4f817714bcd17b1abb81b88e8b4c4120f283c6ba6660c707c2b02",
+      "bytes": 199864,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOChemistry-9.3.dll",
+      "sha256": "af19fff93dc097958a0878bcb2d3e6818143e989af44aa20dd27ce1a52f47878",
+      "bytes": 223928,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOCityGML-9.3.dll",
+      "sha256": "4c4142eb7434c4f8d23efff17e7c90e1f48960e7742c7c0e890b6cadbdd880e4",
+      "bytes": 124600,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOCore-9.3.dll",
+      "sha256": "be617a378087675cac5890d3e1a58b76d2eea35caf7acd5145c26288abcf8783",
+      "bytes": 442040,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOEnSight-9.3.dll",
+      "sha256": "f1f7bc62ded200aed9054685881c6dabe8fd70682fb6bb559a21bf2acf9c4d2d",
+      "bytes": 458424,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOExodus-9.3.dll",
+      "sha256": "b36eda4a005d633ff7c19ffa95e6e513154a9052f1c9977a3c33052fe5ec0f3c",
+      "bytes": 635064,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOExport-9.3.dll",
+      "sha256": "356b3ceb32d0d0d7c0ccf037509138ffbdbd637e23a6577d510de3006ef13d15",
+      "bytes": 599736,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOExportGL2PS-9.3.dll",
+      "sha256": "92462c149c50fd42ac33c124b118532b9483d08ec6e7dfd13758547e5c4a32a6",
+      "bytes": 70840,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOExportPDF-9.3.dll",
+      "sha256": "41625b0803a61fdc754db86fcefec63a251959a0185aba07b627d2f30b418cea",
+      "bytes": 117432,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOFLUENTCFF-9.3.dll",
+      "sha256": "c2008482b9708000d2f80e4f2462fb756e488f711da8cb42733754c8f058c137",
+      "bytes": 153784,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOGeometry-9.3.dll",
+      "sha256": "11eebe507480c944bb7c5be0c60fc97aafae754951b2a48ee00c8137c5ef7fe0",
+      "bytes": 1621688,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOHDF-9.3.dll",
+      "sha256": "ae7e8382cef019e9b566b33bb68b75a4da6112b03344c37c6e6158021409f98d",
+      "bytes": 250552,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOIOSS-9.3.dll",
+      "sha256": "fa936c9dd96100098687f2d5eceb4c9c41839f45eb4b55d2ddc9c142de5201c7",
+      "bytes": 755896,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOImport-9.3.dll",
+      "sha256": "09bf308a3d0ea99ab9b028d11963b475ec23018108492eb759d5298eda1df836",
+      "bytes": 329400,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOInfovis-9.3.dll",
+      "sha256": "18406db689af9c855620547ecc20b5fb61f937c1a4f799763d880b3ecf459366",
+      "bytes": 384696,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOLSDyna-9.3.dll",
+      "sha256": "6fbd120b1a0e920397745c5c23d9b77937a3f02e961f96fa0bd77778e6fddceb",
+      "bytes": 292024,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOLegacy-9.3.dll",
+      "sha256": "14a2bd3bd8ed91841b4ccc65a2a64831bd831dbf1d96414acd955c7d2149e234",
+      "bytes": 573112,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOMINC-9.3.dll",
+      "sha256": "e34cde3df6e78e0fbf38ae467749b42610bbdaf1cf2e695a3d594c9b667f77c1",
+      "bytes": 360120,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOMotionFX-9.3.dll",
+      "sha256": "2f6d71c05b7ca57a1b799c32c3b1e9a5fdc115d3cfabfca4197081fa6271d2f4",
+      "bytes": 196792,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOMovie-9.3.dll",
+      "sha256": "10f6fe9300213d6c106a0b9a5d9ce70bf77020781a5cdaab5b04a40238d285e3",
+      "bytes": 41656,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIONetCDF-9.3.dll",
+      "sha256": "da0f787749a4ff93e9fc2a5d71e27b2c18d1163469542f0f64fc184e9d764e21",
+      "bytes": 537784,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOOggTheora-9.3.dll",
+      "sha256": "c2695414ea5aef299735cd49e6ef9ca0fc3dbf4ab93b344053c4365534e84ed8",
+      "bytes": 59576,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOPLY-9.3.dll",
+      "sha256": "72bbede67d2e71f5972b968e95a3eaf996df6ec5214d71000ed92136ddbeba4f",
+      "bytes": 134328,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOParallel-9.3.dll",
+      "sha256": "f2503e10c89b42d56fe3e05d8812b517440fccee8e7df83876a4c7f277e0caee",
+      "bytes": 419000,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOParallelXML-9.3.dll",
+      "sha256": "9e215367edc0e3a43abca4975bda3e455359ca7111601716833686c974528c9a",
+      "bytes": 218296,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOSQL-9.3.dll",
+      "sha256": "8a321bae9670c3ca7f962ccb4322f0f79b579d9d91beed0e7bd74108fd73c07d",
+      "bytes": 284856,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOSegY-9.3.dll",
+      "sha256": "bebdd4f0a9054bbf3a001fa294bf366ef2dd5b75e7b9b50d2d26e80beb3e863a",
+      "bytes": 74424,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOTecplotTable-9.3.dll",
+      "sha256": "8817ec84414d14fdd50a928eb3491d12e8aa60948ea2bd1ce7cbd6df07fb5e72",
+      "bytes": 75448,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOVeraOut-9.3.dll",
+      "sha256": "671a9564813a80d12ad9e79ab36186d1eef18832fb2edf1560f033277cd4a316",
+      "bytes": 82104,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOVideo-9.3.dll",
+      "sha256": "e99b4b3dfae509ddfdc2ee933440f293cb5ddfc6d2827029c8a86da746fdaa41",
+      "bytes": 64184,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOXML-9.3.dll",
+      "sha256": "e2499ac15d2385bfc2c4e7f28aad9d0af1c056aed9b75809b912452f6600cc50",
+      "bytes": 830648,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOXMLParser-9.3.dll",
+      "sha256": "a0b1c01eaa7026bffba6f7917c675d050e13ddc218a3de6f43950c436ebcb9f4",
+      "bytes": 120504,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOXdmf2-9.3.dll",
+      "sha256": "84ef24472d5c72232a4d2d00375d73ab9abd9625339cb47b6dfeb5bf51b72cc3",
+      "bytes": 262840,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkIOXdmf3-9.3.dll",
+      "sha256": "51f4639277fd502fbc29ce88dab54292518d4b20da89ab673c7921ec33a050ee",
+      "bytes": 550584,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkImagingColor-9.3.dll",
+      "sha256": "5379ad174865fc4200468e0734f2cccb6a7fc0bdf99f835f474dfe92821ce019",
+      "bytes": 244920,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkImagingFourier-9.3.dll",
+      "sha256": "d8eacbccc35b1d95b236e205c998cd4ba74ec00cdf80cb98c44b306c40d804cc",
+      "bytes": 129720,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkImagingGeneral-9.3.dll",
+      "sha256": "24d963c0bfc3ba910e8ec830945608f6c44d354d5e3d4b14868ca8839e08f90f",
+      "bytes": 646328,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkImagingHybrid-9.3.dll",
+      "sha256": "23fc6c215174db1b726156e4a840f7778fd5cb2db84ee3e38c50d1371a686762",
+      "bytes": 543416,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkImagingMath-9.3.dll",
+      "sha256": "4e2b4b896c225cf9696f764b453186fd25a745012b1ad1dd774a2e463b94ea07",
+      "bytes": 218808,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkImagingMorphological-9.3.dll",
+      "sha256": "641fb859219ac533f2825c60b33e832fa66386b3f65c720020cc6acd408d8582",
+      "bytes": 360632,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkImagingStatistics-9.3.dll",
+      "sha256": "6a59923a4f2f887cb814cec5b544da76c5cd024f45f097f95ad87d61ae096603",
+      "bytes": 167096,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkImagingStencil-9.3.dll",
+      "sha256": "193b2ba3c31e8fbaa9a31a4f2d5c54630f0fd7b4712b343ac77e8a45f7601045",
+      "bytes": 166072,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkInfovisCore-9.3.dll",
+      "sha256": "0fd0ef56c9c90d63fd581786427c9dc7ecadb064d547689fe3918aed3033d1f2",
+      "bytes": 748728,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkInfovisLayout-9.3.dll",
+      "sha256": "2c48639ec71c04c832daf8c820ebae56e07cf1f58429566294c35a66347e56fe",
+      "bytes": 425144,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkInteractionImage-9.3.dll",
+      "sha256": "fce3c667fb3cd3e6142b0f676e65596e803899e1cc03099a8ba574b078007db7",
+      "bytes": 86200,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkInteractionWidgets-9.3.dll",
+      "sha256": "f00cc02f84247c752080ada62c4b916381fa0e138f10d3bc5ff5de17e7c43925",
+      "bytes": 2165944,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkParallelCore-9.3.dll",
+      "sha256": "fa9703a846d377b9bcf991ebf7485304d9a5f0798544fe78546736b38e00a291",
+      "bytes": 395448,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkParallelDIY-9.3.dll",
+      "sha256": "b838445706aad04537496906aa69ea9651192b319c5aa5b8647738f31cfcf3db",
+      "bytes": 817336,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkPythonContext2D-9.3.dll",
+      "sha256": "8fe495f2503167232f9160e83ce3f6e26562393741965c4ca5498708ba0f805f",
+      "bytes": 43192,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkPythonInterpreter-9.3.dll",
+      "sha256": "a3777ea21b60993b6522df9e0bd142871cf2ae7916be1d0f707bd72ad2000bd3",
+      "bytes": 79032,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingAnnotation-9.3.dll",
+      "sha256": "73c98e5f5dd2ee7924afb1eba1c30f8fb6f43ab44cecbeaac4e3fc0341ab5e2b",
+      "bytes": 797368,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingCellGrid-9.3.dll",
+      "sha256": "64041eec13b5cb15942027d7f331ecafb346721d7feece00c2f3f329edc3511c",
+      "bytes": 161464,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingContext2D-9.3.dll",
+      "sha256": "bd50216bc43c46a816b34cdd3144e092df4e8288962b5771e23867db42f13817",
+      "bytes": 245432,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingContextOpenGL2-9.3.dll",
+      "sha256": "91d74886bc97c10fb663503843cac2ebb9a78be43d303926f306a7835faa1612",
+      "bytes": 209592,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingFreeType-9.3.dll",
+      "sha256": "4b5b761bbb6a58d591086daca67fb6d6c4a5ff6c22150686914b41068cb04230",
+      "bytes": 664248,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingGL2PSOpenGL2-9.3.dll",
+      "sha256": "8167e5d962eedeadcc373415439a8ba62b2b8e21540e997d0487d168ce96d2c4",
+      "bytes": 81592,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingImage-9.3.dll",
+      "sha256": "e3f907960756965c75a183770bcffccbf50b25edb27bc2258f2a5c21e44e6e03",
+      "bytes": 344760,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingLICOpenGL2-9.3.dll",
+      "sha256": "2d463682b147554e98dfbb5ab7c3679b385d84130e5697551edd95f4c55d82b2",
+      "bytes": 388792,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingLOD-9.3.dll",
+      "sha256": "513f6b3cfa06b26dac0d9fc4d4ef34abbc23c6d52e532cd3b02d9f5dd0c14048",
+      "bytes": 63160,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingLabel-9.3.dll",
+      "sha256": "e221c866c2aaf6cc2c795684341ee8ec8af595b7e1424c57d46861f228324e5b",
+      "bytes": 469688,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingQt-9.3.dll",
+      "sha256": "66bfb89cc1322939cb10b1bb31fca85f663a9333d94d40e3822627deef61bcc6",
+      "bytes": 111288,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingSceneGraph-9.3.dll",
+      "sha256": "1c802e4c4a9a74c613a2ace73128c130a1cabae06fd5ccfa5c02494d23436711",
+      "bytes": 84664,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingVolume-9.3.dll",
+      "sha256": "7a67c8162f2c89a1b10aa7c6a678eee94d8649e9c37ea58810bfbeea39e7f156",
+      "bytes": 2212536,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingVolumeOpenGL2-9.3.dll",
+      "sha256": "45806306c0b8ab9d7d9ea922a3f6a4333497d66553e3b7eed2f0d87388b52c8c",
+      "bytes": 550584,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkRenderingVtkJS-9.3.dll",
+      "sha256": "e19c9992d8d4ba71007c8902ddb6f4de520e74b302055482e6fc2f8bf8056498",
+      "bytes": 130744,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkTestingRendering-9.3.dll",
+      "sha256": "c61fa43fab6411425d7bb30d7740aae92b4c13ccfc84b680d346a40399f1f365",
+      "bytes": 106680,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkViewsContext2D-9.3.dll",
+      "sha256": "b8bde65cf9fea27e6d0a0c77d7a0dc87397ffdb5f54579f48011ceba704803d5",
+      "bytes": 58552,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkViewsCore-9.3.dll",
+      "sha256": "2427882dc141865d1f1426cec756697e239499264d0cdb8121dbac6b6778bb46",
+      "bytes": 121016,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkViewsInfovis-9.3.dll",
+      "sha256": "a1e430b62b2ce48f0a50f235bd873e6d48d33479bb708946d6d97443979e83ce",
+      "bytes": 555192,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkWebCore-9.3.dll",
+      "sha256": "1e00b00ed36758dff4a7eb74d476ff9481ef78f21abdeb8e8f0e4693baa49152",
+      "bytes": 102072,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkWebGLExporter-9.3.dll",
+      "sha256": "4e0ab4794132f10ed0e5cedb2a22c2ac728e49b8b43baaedeced8e07f2f3ef92",
+      "bytes": 209080,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkWrappingPythonCore3.11-9.3.dll",
+      "sha256": "b4263981b5b4cc5e94b114ad7ce98664c46392c046ce4649006f51cb2bcd3f31",
+      "bytes": 220856,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkWrappingTools-9.3.dll",
+      "sha256": "c51512a686fd5e61f8781231a9584b446b5fbb591182803183d774bb458f9e40",
+      "bytes": 287928,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkcgns-9.3.dll",
+      "sha256": "7e5584c78babe0b0dca11ed48c9c7a1a173cc088e31caf376228171738d57a41",
+      "bytes": 610488,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkexodusII-9.3.dll",
+      "sha256": "f47021f4986002d61ebf57a41fa95fa79c8043f599d1fc0e609cefa7eb5cb58b",
+      "bytes": 364728,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkioss-9.3.dll",
+      "sha256": "9d17aff9db4d389eb4a9d2a6af2151e75999c9c94c96c360053fd9f90050e53e",
+      "bytes": 2171064,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtklibharu-9.3.dll",
+      "sha256": "dab99feb5c75c757b8974bbf1cd12fba8d35594b19fabc0e194c1b3e56fb0621",
+      "bytes": 752312,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkxdmf2-9.3.dll",
+      "sha256": "faeb1b3b94764ec4780f9e59b97f58d0ad8a4d0dc68413de31f0791f7f50469a",
+      "bytes": 393912,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkxdmf3-9.3.dll",
+      "sha256": "eed09dc15f9dbc5deb2b61efdda399b9ab12507e5a11d792ca0f863a710780fd",
+      "bytes": 1032376,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vtkxdmfcore-9.3.dll",
+      "sha256": "6db46eb70161b3e3bd5264953c2b7d2a8f30ce164107ccd1b774aa622d4f974c",
+      "bytes": 1225400,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/vulkan-1.dll",
+      "sha256": "550bae346b1d05a96c9cef237e8d60a2101c1105006eb6c475097f9392035056",
+      "bytes": 774328,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/xdot.dll",
+      "sha256": "794dd0411c241a24f6b81d5200641bfb150b5f5fd42b550e2dc5f9a873616639",
+      "bytes": 42168,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/xdr.dll",
+      "sha256": "4a0e0eb72f725c673f765210e155af1bec97378f44a55d6d2cf7013d67f143e0",
+      "bytes": 28856,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/xpprof64.dll",
+      "sha256": "f99db46615386ef5b26a1675de5c5828a088444658473550db8330dda9635171",
+      "bytes": 62136,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "bin/zip.dll",
+      "sha256": "05dbd14024b23d4ce3314382611dfebc09d1babda2b7e16f42520c0166cdbb22",
+      "bytes": 125624,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Concurrent.dll",
+      "sha256": "43fbf380688c4f333d70b06fb7eae49241157aa3cf4a8980393756741122dfba",
+      "bytes": 23552,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Core.dll",
+      "sha256": "14874ab5830a6f3befdf47601ecd005140079e7d324fa86e59436bd308e476f3",
+      "bytes": 5591552,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Core5Compat.dll",
+      "sha256": "fd34cc1de76490d8fea93b7fe9a14999ed4c981d8507adce17be33c3fa830495",
+      "bytes": 859648,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6DBus.dll",
+      "sha256": "6d13846ff20f65749b5ca08acae79aff17ff49b7ec61cc9a614c4ba37b39ca62",
+      "bytes": 736256,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Designer.dll",
+      "sha256": "7f9dc8d95bce080778a61ab474a8104fa1edd2b5b318ed29af1a17a3361e88b3",
+      "bytes": 5226496,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6DesignerComponents.dll",
+      "sha256": "cc75cad1a884ba715b317a7c2f1fabbcdaa1b88a8d066316a70c7530872e3901",
+      "bytes": 2492416,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Gui.dll",
+      "sha256": "71fbfcc6fee1e97d14e610802730b7082b2e7aaeb4cf70b0a1e7b8ce0e44cb0c",
+      "bytes": 8551936,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Help.dll",
+      "sha256": "aeb2d7527595ac9732b67aca35b8e06ddeb19afa27352744715e98be0e972b43",
+      "bytes": 592384,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6LabsAnimation.dll",
+      "sha256": "20fb6addc33eb3a9f5d2c5a12a242efb9e68f717abfa12655a1ce39176e1981b",
+      "bytes": 43008,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6LabsFolderListModel.dll",
+      "sha256": "0b18820cf947d3f37d54fe1b8a4d81de7ebfe78bc86e9826f267741a609736d2",
+      "bytes": 97280,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6LabsPlatform.dll",
+      "sha256": "a6c612fbf4d301c2ccc69f8b4e33f3140fe599dfef6c8d3c67c50ce2587446bc",
+      "bytes": 273408,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6LabsQmlModels.dll",
+      "sha256": "cf4082c337bf3ca0e71ecae9e95d0512e59c263f1c3e5f770ecf3d2efc9953e4",
+      "bytes": 159744,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6LabsSettings.dll",
+      "sha256": "b79a942eb77e2c1daf32f29baad802152f75f922cb7acc8a989c225b8351a8e2",
+      "bytes": 48640,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6LabsSharedImage.dll",
+      "sha256": "eb7862ee8ab2392e5f1621c50cd798c8a8ccb59db28d3ca5e61e31d7e3cde975",
+      "bytes": 44032,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6LabsWavefrontMesh.dll",
+      "sha256": "a67399dd428a217b57513cfbfe80a7246d7c61bc1bfba19941bddb5a5a80bca2",
+      "bytes": 47104,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Network.dll",
+      "sha256": "6533803843c69ed57862b8292651978cea6dbead9e9183a5102ab72f41011752",
+      "bytes": 1793024,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6OpenGL.dll",
+      "sha256": "f7660f37eea05c8fb1b11331ea1db14b5e64ce4c638b466c447553bdff0fb33b",
+      "bytes": 1983488,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6OpenGLWidgets.dll",
+      "sha256": "aa1faa0108a84a0b5e58f819370c8401989649d6a7e918130ebd7d3f810228aa",
+      "bytes": 52224,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6PrintSupport.dll",
+      "sha256": "87001716f69c56bcc7a51e6277d2679c0141ccfef4205294c34d57e9c8acbd79",
+      "bytes": 390656,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Qml.dll",
+      "sha256": "ab3e356af08a4abbf8ba0b1acf644c94ae024cabefc0c157cd084d1ea1fc4781",
+      "bytes": 5275648,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QmlCompiler.dll",
+      "sha256": "452f6bc7017225b9e90bce8628dad4bd88ad196c3ae13587ee1daa80547b19a3",
+      "bytes": 2351104,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QmlCore.dll",
+      "sha256": "fcab7db2fa7f01411854f90fb3caab8166f47a9e21e1a157976d69dee5f3179d",
+      "bytes": 120832,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QmlLocalStorage.dll",
+      "sha256": "068152f4348076bdd92f1a7395721250ef062f666cc8396e724328a53b6c8024",
+      "bytes": 49664,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QmlMeta.dll",
+      "sha256": "9c7b32e162245fbdcf7275f2975f8689e07b19552dae3815b952f65bc6126d86",
+      "bytes": 137216,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QmlModels.dll",
+      "sha256": "43fb2d43f9c6218218cd2c37803ec7d543b5eaf46d75ccfa8df6ab62c1aa77d8",
+      "bytes": 722944,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QmlNetwork.dll",
+      "sha256": "553b5188b58bdfbd0d8f558745005c59637343ce118b0ff7ed2df9fde629dc7b",
+      "bytes": 113664,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QmlWorkerScript.dll",
+      "sha256": "170f4f516d2aaa5de3d533966d8191c3939aff3515011d5318779662e1fb144e",
+      "bytes": 62976,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QmlXmlListModel.dll",
+      "sha256": "c780820183000fc6a964292b764e185c0f207dc1c22333e5d851bac7ce83e6c9",
+      "bytes": 120832,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Quick.dll",
+      "sha256": "2176a39eb36eb712c4873a699737201792a128aecbab9cddfed8fff58d8c674b",
+      "bytes": 6361600,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2.dll",
+      "sha256": "1ee02ab1273582948be6be891eaa2870ceb70a61506cc8de25673c9c63c70232",
+      "bytes": 86016,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2Basic.dll",
+      "sha256": "39a914fe2b0f46adef5220001d83ea3ac0abef2dfd88b6573189905723a7985c",
+      "bytes": 1312768,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2BasicStyleImpl.dll",
+      "sha256": "d093a16997d2607c623eb8d5d561a0cf644dcc6ffbb7768c9a35ae5a2c8bd569",
+      "bytes": 49664,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2FluentWinUI3StyleImpl.dll",
+      "sha256": "2d4b3f6598997af51952f0e8f9e3c51e4940a8b4cf6dcf149ed1c6c4d02162a6",
+      "bytes": 126464,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2Fusion.dll",
+      "sha256": "69bc159c63835f7a887880ba2f0831629c9b2482e967d8d8f82947f7e3ba3888",
+      "bytes": 1133056,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2FusionStyleImpl.dll",
+      "sha256": "7406ffb826fd8610d6f9857d1e58de47264071f5f84cbcd9cf471eebf92481da",
+      "bytes": 146944,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2Imagine.dll",
+      "sha256": "1a7f84c36d05279314c753898ee56aab1eb8d3355fa00c371496589f3f22fa21",
+      "bytes": 2464256,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2ImagineStyleImpl.dll",
+      "sha256": "71e01b6cfd763c51c7270929d32b4c91c1bc9ff827888abe10ef1495ee112453",
+      "bytes": 35328,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2Impl.dll",
+      "sha256": "449e3047dcdaaeffbdedbe5dad93a294b542eab22ea64d7733c1c78ee9f46b6a",
+      "bytes": 277504,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2Material.dll",
+      "sha256": "798b4fad549077e7e95c95b151857b5e7358676389636fa16115f174e7f5c2ed",
+      "bytes": 1312768,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2MaterialStyleImpl.dll",
+      "sha256": "1585ae05a7387c0f503942e6ee5c526246437d3e918f4c4aa075c821cbbc2483",
+      "bytes": 253952,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2Universal.dll",
+      "sha256": "828493062b09dc31eb8616a28b842dedf256d6814bbf2522d7d8f9c586257427",
+      "bytes": 1037824,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2UniversalStyleImpl.dll",
+      "sha256": "d8c5c5b6f5f9fc020ead57767e58c0f0755dd3493b418e46628009df40ca0ced",
+      "bytes": 94208,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickControls2WindowsStyleImpl.dll",
+      "sha256": "29e2c0535bef9446372614d74790333af830e95b1ef09e259600578c18e54a3a",
+      "bytes": 58368,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickDialogs2.dll",
+      "sha256": "84922ae1b357be9591502062fe23baaa259eb5d486074cb365f85f2466774fd5",
+      "bytes": 145408,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickDialogs2QuickImpl.dll",
+      "sha256": "d8ce1e365390938fc475ab54256f16b85317ba63c39f6c9ace66d023edd3e2ef",
+      "bytes": 1981440,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickDialogs2Utils.dll",
+      "sha256": "48d51cdfde55f6b416906620bf8c70f4a16c70743d8d3235338d7aacd4a0764a",
+      "bytes": 34816,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickEffects.dll",
+      "sha256": "1655453bfae7f8c388543167ddfa59d21a27d6366cfeaba39f2c08e2e36b0375",
+      "bytes": 388608,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickLayouts.dll",
+      "sha256": "a9b5a08e6d5f3ec80a36896672eec0839ba6ffad511a74e906c3b24f2ea8ab30",
+      "bytes": 199168,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickParticles.dll",
+      "sha256": "b3afdb6b624cb0c7b8eb72974f90f0964af62e87e72c18f27ae8ed640e580e31",
+      "bytes": 617984,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickShapes.dll",
+      "sha256": "ee779e05397ce6311a63868021155799a0f902a31a9ea2d8558a84831e583a2a",
+      "bytes": 318464,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickTemplates2.dll",
+      "sha256": "378d14c06b77fff5a0c6a2c1234676965c3009a61969b46196d7e84c78bf0645",
+      "bytes": 1880576,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickTest.dll",
+      "sha256": "2a3452596503718212f362f98291c26416206a0b0009517096b21cd94fb4ed63",
+      "bytes": 288768,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickVectorImage.dll",
+      "sha256": "79ed8fd882a15f70609812ea0237d0ebf1d84387af047f324c94438060a8b93d",
+      "bytes": 44032,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickVectorImageGenerator.dll",
+      "sha256": "a81a0e5a2d94d20fbcaf8f3141523b518fc372a1d4512b4fa567560a11484c97",
+      "bytes": 160256,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6QuickWidgets.dll",
+      "sha256": "f4318b06bacb82b4ddcbf0707de81d2b8856097cfad624124f1aeec1845839a6",
+      "bytes": 105984,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6ShaderTools.dll",
+      "sha256": "cc157ee0b89967dce4bebb2e0116fe04575499c34ccb6a92dfb5997426e0e93b",
+      "bytes": 4029440,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Sql.dll",
+      "sha256": "84c9d532c5975aafce3dab0cb4763f5b28d45b621ba5d265550e9e307d77fa75",
+      "bytes": 326656,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Svg.dll",
+      "sha256": "b828672e283f791c3f408b49db15e4192a0f4dea7c6affc0514ea77df1a36b9a",
+      "bytes": 523264,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6SvgWidgets.dll",
+      "sha256": "22440720fd3ec21fd6b10fcaf9af40eb14b3428f8feb671234880af8db3f436d",
+      "bytes": 46592,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Test.dll",
+      "sha256": "c22b3306cdf6e01261f88c5d639c30d9704f168143c95e868daabc1530542000",
+      "bytes": 388608,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6UiTools.dll",
+      "sha256": "c611eff38f59d54b2e69a970df586f2d939912261ccde86552f7b1b387f4c17e",
+      "bytes": 663040,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6WebChannel.dll",
+      "sha256": "2434bfe7021cd28e45e26df84d891d70201f85feac6a13b28a96f85184804bb6",
+      "bytes": 229376,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6WebChannelQuick.dll",
+      "sha256": "d5a47116776dc79e2b677c90ad092c64c1b7df06f69ee90468b295b90ec8d477",
+      "bytes": 50176,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6WebSockets.dll",
+      "sha256": "24df7ad79d6cb89c5c3125610b42113ce8c681aae85ca65409a556ead188da06",
+      "bytes": 205312,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Widgets.dll",
+      "sha256": "f9469eaa21fa36fc15ae3206a86ea0e3aa867abff703cafd171bf0794bc60a1f",
+      "bytes": 6514176,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/Qt6Xml.dll",
+      "sha256": "321e306ceae9fbf904704d90fb7121c12c93b4321d48198d27d0aafa1d550752",
+      "bytes": 141824,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/assistant.exe",
+      "sha256": "0966444528a555b357c647409a5d9e891730178de5bb03f484f118714009d320",
+      "bytes": 1732096,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/qdbus.exe",
+      "sha256": "7ca4466b2c0d7345792bc3fadf1603cf09e91cf1e4414fffbd78dae60e69c639",
+      "bytes": 77312,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/qml.exe",
+      "sha256": "7d68569e0eb3efa4313761786ce8ba156a2f400da350c1559ab119fdab0ca606",
+      "bytes": 95744,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/qmlscene.exe",
+      "sha256": "32244a9c42616aa18f80731cc60706eed93ef47ea617d8605d2cc163f9992013",
+      "bytes": 58880,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/bin/qsb.exe",
+      "sha256": "7a3a6ac6cbc69c699ee05957640d733a6f56e1291424c6b50ee793fd5a252420",
+      "bytes": 85504,
+      "reason": "no-import-delay-or-forwarder-path-from-retained-native-roots"
+    },
+    {
+      "file": "lib/qt6/plugins/sqldrivers/qsqlpsql.dll",
+      "sha256": "a23b106673a65ea896420a9e2a5b1d173a571218c0a3ba6ac1bb02fbdc8382d4",
+      "bytes": 89088,
+      "reason": "optional-binding-with-missing-framework-not-used-by-formnaro"
+    }
+  ],
+  "audit": {
+    "PEFiles": 1644,
+    "parseErrors": 0,
+    "delayImports": true,
+    "exportForwarders": true,
+    "closureRoots": 335,
+    "retainedClosure": 556,
+    "ambiguities": 0,
+    "dynamicRoots": "All retained Python extensions and Qt plugins, all OCCT TK DLLs, CRT/ICU, software OpenGL, core executables, uic/rcc. Runtime feature acceptance required."
+  }
+}

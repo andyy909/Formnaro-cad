@@ -1,0 +1,177 @@
+{
+  "label": "Häuschen mit Türgelenk",
+  "commands": [
+    {
+      "op": "create",
+      "type": "box",
+      "as": "outer",
+      "size": [
+        50,
+        50,
+        40
+      ],
+      "pos": [
+        0,
+        0,
+        20
+      ],
+      "name": "Hauswände"
+    },
+    {
+      "op": "create",
+      "type": "box",
+      "as": "inner",
+      "size": [
+        46,
+        46,
+        38
+      ],
+      "pos": [
+        0,
+        0,
+        21
+      ],
+      "solid": false
+    },
+    {
+      "op": "create",
+      "type": "roof",
+      "as": "roof",
+      "size": [
+        50,
+        50,
+        20
+      ],
+      "pos": [
+        0,
+        0,
+        50
+      ],
+      "name": "Dach"
+    },
+    {
+      "op": "create",
+      "type": "box",
+      "as": "left",
+      "size": [
+        8,
+        4,
+        8
+      ],
+      "pos": [
+        -12,
+        24,
+        22
+      ],
+      "solid": false
+    },
+    {
+      "op": "create",
+      "type": "box",
+      "as": "right",
+      "size": [
+        8,
+        4,
+        8
+      ],
+      "pos": [
+        12,
+        24,
+        22
+      ],
+      "solid": false
+    },
+    {
+      "op": "create",
+      "type": "box",
+      "as": "opening",
+      "size": [
+        10,
+        4,
+        25
+      ],
+      "pos": [
+        0,
+        24,
+        14.5
+      ],
+      "solid": false
+    },
+    {
+      "op": "group",
+      "targets": [
+        "$outer",
+        "$inner",
+        "$roof",
+        "$left",
+        "$right",
+        "$opening"
+      ],
+      "as": "house",
+      "name": "Häuschen mit zwei Fenstern"
+    },
+    {
+      "op": "create",
+      "type": "box",
+      "as": "door",
+      "size": [
+        9.4,
+        1.6,
+        24.4
+      ],
+      "pos": [
+        0,
+        24.5,
+        14.5
+      ],
+      "name": "Bewegliche Tür"
+    },
+    {
+      "op": "joint",
+      "action": "create",
+      "joint": {
+        "id": "doorHinge",
+        "kind": "revolute",
+        "parentId": "$house",
+        "childId": "$door",
+        "origin": [
+          -4.7,
+          24.5,
+          2.3
+        ],
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "limits": {
+          "min": 0,
+          "max": 90
+        }
+      }
+    }
+  ],
+  "checks": [
+    {
+      "kind": "size",
+      "target": "$house",
+      "space": "worldAxes",
+      "expected": [
+        50,
+        50,
+        null
+      ],
+      "tolerance": 0.1
+    },
+    {
+      "kind": "solids",
+      "target": "$house",
+      "expected": 1
+    },
+    {
+      "kind": "solids",
+      "target": "$door",
+      "expected": 1
+    }
+  ]
+}

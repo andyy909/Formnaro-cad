@@ -1,6 +1,11 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),http=require('node:http');
 const freecad=require('../backend/freecad.cjs'),{validateScript,runPythonJob}=require('../backend/freecad-python.cjs');
 const script=code=>({version:1,code});
+
+test('BUG-46 Python result must be a native shape and STEP readback volume must match',async()=>{
+ await assert.rejects(freecad.run({script:script("result={'not':'a shape'}")}),/native Part.Shape/);
+ await assert.rejects(freecad.run({script:script('result=Part.makeBox(2,3,4)\nPart.read=lambda filename:Part.makeBox(1,1,1)')}),/STEP readback volume/);
+});
 test('Native Python accepts complete programs and installed APIs without function filtering',()=>{
  const source=script('import FreeCAD,Part,os,ctypes\nclass Builder: pass\nresult=Part.makeBox(1,2,3)');assert.deepEqual(validateScript(source),source);
  for(const v of [{...source,filename:'secret'},{...source,modules:{'../worker.py':'pass'}},{...source,modules:{'formnaro_freecad.py':'pass'}},{...source,modules:{'Worker.py':'pass'}},{...source,modules:{'NUL.py':'pass'}},{...source,modules:{'a.py':'pass','A.py':'pass'}},{...source,parameters:{x:Infinity}},{...source,gui:'yes'}])assert.throws(()=>validateScript(v),{code:'FREECAD_PYTHON_INVALID'});

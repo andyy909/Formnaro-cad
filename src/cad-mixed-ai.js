@@ -9,6 +9,7 @@ import {flags} from './organization.js';
 import {AI_PROGRAM_TOOLS,validateProgramCommand,resolveProgramAliases} from './cad-ai-program.js';
 import {assertMeshProtectionChange} from './mesh-protection.js';
 import {runCommonModelTool} from './cad-ai-local-tools.js';
+import {applyCadJointRequest} from './cad-joints-data.js';
 
 const vector={type:'array',minItems:3,maxItems:3,items:{type:'number',minimum:-200000,maximum:200000}},size={...vector,items:{type:'number',minimum:.01,maximum:10000}},alias={type:'string',pattern:'^[A-Za-z][A-Za-z0-9_-]{0,63}$'},name={type:'string',minLength:1,maxLength:200},color={type:'string',pattern:'^#[0-9a-fA-F]{6}$'},target={oneOf:[{type:'string',minLength:1,maxLength:200},{type:'object',additionalProperties:false,required:['rootId','path'],properties:{rootId:{type:'string',minLength:1,maxLength:200},path:{type:'array',maxItems:0,items:{type:'string'}}}}]},params={type:'object',maxProperties:40,additionalProperties:{oneOf:[{type:'number'},{type:'string',maxLength:100}]}};
 export const MESH_AI_SHAPE_IDS=['box','cylinder','sphere','cone','pyramid','roof','wedge','hexagon','triangle','tube','torus','capsule','star','heart','gear','roundbox','halfSphere','thread','nut','countersink','shellbox','polygon'];
@@ -79,10 +80,11 @@ function meshOperation(command,aliases,project){
 }
 /** Both workers calculate transient candidates inside ONE shared transaction.
  * No intermediate Apply/Undo, renderer geometry, repair or conversion is used. */
-export async function runMixedCadAIBatch({project,baseline,commands,runNative,runMesh,query,runScript,runPython,convertModel,runFreeCAD,signal,progress,initialAliases={}}={}){
+export async function runMixedCadAIBatch({project,baseline,commands,runNative,runMesh,query,runScript,runPython,convertModel,runFreeCAD,signal,progress,onIntermediate,initialAliases={}}={}){
  if(!Array.isArray(commands)||!commands.length||commands.length>200)invalid('1–200 gemeinsame Befehle erforderlich.');
  commands.forEach((command,index)=>rejectStaleCadReferences(command,index>0));
- let current=cadProjectSnapshot(project),aliases=structuredClone(initialAliases),changes=[],warnings=[],reports=[];
+ let current=cadProjectSnapshot(project),aliases=structuredClone(initialAliases),changes=[],warnings=[],reports=[],jointReports=[],pythonSyntaxChecked=false;
+ const pythonSources=commands.flatMap((command,index)=>command?.op==='python'?[{index,code:validateProgramCommand(command).code}]:[]);
  // Revalidate a supplied draft against its real confirmed baseline before it
  // becomes the baseline of any subsequent native command segment.
  current=(await runNative({project:current,baseline,operation:undefined,signal})).project;
@@ -151,7 +153,7 @@ export async function runMixedCadAIBatch({project,baseline,commands,runNative,ru
    if(!verifiedToken&&!rawReferenceAllowed(id))rejectStaleCadReferences(command,true);
    return command;
   }
-  const value=await runner({code:c.code,name:c.name,modules:c.modules,signal,timeoutMs:300000,call:async(method,args)=>{
+  const value=await runner({code:c.code,name:c.name,modules:c.modules,...(c.op==='python'&&!pythonSyntaxChecked&&pythonSources.length>1?{syntaxSources:pythonSources}:{}),signal,timeoutMs:300000,call:async(method,args)=>{
    abort(signal);
    if(method==='model'){const snapshot=cadProjectSnapshot(current);return {...snapshot,objects:snapshot.nodes};}
    if(method==='query'){
@@ -178,23 +180,33 @@ export async function runMixedCadAIBatch({project,baseline,commands,runNative,ru
    if(method!=='run'||!args||['script','python'].includes(args.op))invalid('Ein Modellierwerkzeug wählen. Verschachtelte Skripte sind nicht nötig.');
    if(++count>2000)invalid('Zu viele Modelloperationen in einer Vorschau.');
    args=checkedScriptCommand(args);
-   if(args.op==='tool')return programTool(args);
-   const result=await runMixedCadAIBatch({project:current,baseline:current,commands:[args],initialAliases:aliases,runNative,runMesh,query,runScript,runFreeCAD,convertModel,signal});
+   if(args.op==='tool'){const result=await programTool(args);if(onIntermediate)await onIntermediate({project:cadProjectSnapshot(current),aliases:structuredClone(aliases),completed:count,total:2000});return result;}
+   const result=await runMixedCadAIBatch({project:current,baseline:current,commands:[args],initialAliases:aliases,runNative,runMesh,query,runScript,runFreeCAD,convertModel,signal,onIntermediate});
    const before=current;locks(before,result.project);assertMeshProtectionChange(before,result.project);current=result.project;
    // Native grouping remaps existing aliases to retained source addresses.
    // Keep that complete map between individual calls from the local worker.
    aliases=result.aliases;
    changes.push(...result.changes);warnings.push(...result.warnings);reports.push(...result.report.meshOperations);
    return {aliases:structuredClone(aliases),report:result.report};
-  }});abort(signal);reports.push({tool:c.op,name:c.name??'Lokale Modellberechnung',operations:count,result:value??null});
+  }});abort(signal);if(c.op==='python')pythonSyntaxChecked=true;reports.push({tool:c.op,name:c.name??'Lokale Modellberechnung',operations:count,result:value??null});
  }
  for(let index=0;index<commands.length;){
   abort(signal);const start=index,command=commands[index];
   try{
-   if(['tool','script','python'].includes(command?.op)){
+   if(command?.op==='joint'){
+    const {op,...request}=structuredClone(command);
+    if(request.action==='create'&&request.joint)for(const key of ['parentId','childId']){
+     const value=request.joint[key];if(typeof value!=='string'||!value.startsWith('$'))continue;
+     const target=aliases[value.slice(1)],id=typeof target==='string'?target:target?.path?.length===0?target.rootId:null;
+     if(typeof id!=='string'||!current.nodes.some(n=>n.id===id))throw Object.assign(Error('Gelenke benötigen vollständige vorhandene Körper; Ergebnisalias '+value+' ist kein Wurzelteil.'),{code:'JOINT_TARGET'});
+     request.joint[key]=id;
+    }
+    const before=cadProjectSnapshot(current),report=applyCadJointRequest(current,request);locks(before,current);
+    changes.push({op:'joint',action:request.action,affectedIds:report.affectedIds});jointReports.push(report);reports.push({commandIndex:index+1,tool:'joint',...report});index++;
+   }else if(['tool','script','python'].includes(command?.op)){
     if(command.op==='tool')await programTool(command);else await scriptCommand(command,start>0);index++;
    }else if(command?.op!=='mesh'){
-    const segment=[];while(index<commands.length&&!['mesh','tool','script','python'].includes(commands[index]?.op))segment.push(commands[index++]);
+    const segment=[];while(index<commands.length&&!['mesh','tool','script','python','joint'].includes(commands[index]?.op)){segment.push(commands[index++]);if(onIntermediate)break;}
     const before=current,result=await runNative({project:current,baseline:current,operation:{kind:'batch',commands:segment,initialAliases:aliases},signal}),synchronized=synchronizeMeshWorkplane(result.project,before);
     current=synchronized.project;aliases=result.aliases;changes.push(...(result.changes??[]));warnings.push(...(result.warnings??[]),...synchronized.warnings);
    }else{
@@ -210,12 +222,12 @@ export async function runMixedCadAIBatch({project,baseline,commands,runNative,ru
     }else storeAlias(aliases,command.as,['bodies','dissolve'].includes(command.tool)?ids:ids[0]);
     changes.push({op:'mesh',tool:command.tool,target:command.target??command.as??null,selectedIds:ids});reports.push({commandIndex:index+1,tool:command.tool,...result.report});index++;
    }
-   abort(signal);progress?.(index/commands.length*.9);
+   abort(signal);if(onIntermediate){await onIntermediate({project:cadProjectSnapshot(current),aliases:structuredClone(aliases),completed:index,total:commands.length});abort(signal);}progress?.(index/commands.length*.9);
   }catch(error){
    const localIndex=error.feedback?.commandIndex;error.code??='MESH_ERROR';let target=command?.target;if(typeof target==='string'&&target.startsWith('$'))target=aliases[target.slice(1)]??target;
-   error.feedback=aiFeedback(error,{...(localIndex?{commandIndex:start+localIndex}:['mesh','tool','script','python'].includes(command?.op)?{commandIndex:start+1,operation:command.op,target:error.feedback?.target??target}:{} )});throw error;
+   error.feedback=aiFeedback(error,{...(localIndex?{commandIndex:start+localIndex}:['mesh','tool','script','python','joint'].includes(command?.op)?{commandIndex:start+1,operation:command.op,target:error.feedback?.target??target}:{} )});throw error;
   }
  }
  abort(signal);current=(await runNative({project:current,baseline:current,operation:undefined,signal})).project;abort(signal);progress?.(1);
- return {project:cadProjectSnapshot(current),aliases,changes,warnings:[...new Set(warnings)],report:{meshOperations:reports}};
+ return {project:cadProjectSnapshot(current),aliases,changes,warnings:[...new Set(warnings)],report:{meshOperations:reports},...(jointReports.length?{jointReport:{affectedIds:[...new Set(jointReports.flatMap(r=>r.affectedIds))],placements:jointReports.flatMap(r=>r.placements).filter((p,i,all)=>all.findLastIndex(x=>x.rootId===p.rootId)===i),metadataOnly:jointReports.every(r=>r.metadataOnly),constructedIds:[],counts:{},actions:jointReports.length}}:{})};
 }

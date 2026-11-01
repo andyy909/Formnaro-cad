@@ -103,6 +103,8 @@ export function cadDrawingPreviewSummary(project){
 export async function exportCadDrawing(controller,args,{printDrawingPdf=value=>globalThis.offlinecadDesktop?.printDrawingPdf?.(value)}={}){
  if(!args||typeof args!=='object'||Array.isArray(args)||Object.keys(args).some(k=>!['format','sheetId'].includes(k))||!['drawing-svg','drawing-dxf','drawing-pdf'].includes(args.format)||typeof args.sheetId!=='string'||!args.sheetId||args.sheetId.length>200)fail('Zeichnungsexport benötigt Ausgabeformat und Blattkennung; ids und quality sind hier nicht zulässig.');
  const revision=controller.revision(),project=controller.readSnapshot(),sheet=project.drawings?.sheets.find(s=>s.id===args.sheetId);if(!sheet)fail('Blattkennung fehlt.');
+ const release=controller.holdRevision?.(revision);
+ try{
  const sourceIds=[...new Set(sheet.views.flatMap(view=>view.sourceIds))];controller.assertExportReady?.({ids:sourceIds,format:args.format,includeHidden:true});
  if(needsStepDrillExportProof(project,sourceIds))await controller.query('stepDrillIntegrity',{ids:sourceIds});
  const options={sourceSignatures:cadDrawingSourceSignatures(project)},extension=args.format.slice(8);let data,mime;
@@ -114,4 +116,5 @@ export async function exportCadDrawing(controller,args,{printDrawingPdf=value=>g
  }
  if(controller.revision()!==revision)fail('Projekt während des Zeichnungsexports geändert.','STALE_REVISION');
  return {mime,extension,data};
+ }finally{release?.();}
 }

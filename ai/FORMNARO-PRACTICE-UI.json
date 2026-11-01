@@ -1,0 +1,557 @@
+{
+  "version": 1,
+  "construction": "visible-ui",
+  "taskLocked": true,
+  "commands": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "type"
+      ],
+      "properties": {
+        "op": {
+          "const": "create"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "size": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "pos": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "rot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "solid": {
+          "type": "boolean"
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "params": {
+          "type": "object",
+          "description": "Native parameter keys and constraints are listed per shape in GET /v1/context."
+        },
+        "as": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "type": {
+          "enum": [
+            "box",
+            "cylinder",
+            "sphere",
+            "cone",
+            "pyramid",
+            "roof",
+            "wedge",
+            "hexagon",
+            "triangle",
+            "tube",
+            "torus",
+            "capsule",
+            "star",
+            "heart",
+            "gear",
+            "text",
+            "roundbox",
+            "halfSphere",
+            "thread",
+            "nut",
+            "countersink",
+            "shellbox",
+            "polygon"
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action",
+        "joint"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "create"
+        },
+        "joint": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "parentId",
+                "childId",
+                "origin"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "kind": {
+                  "const": "fixed"
+                },
+                "parentId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "childId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "origin": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                },
+                "axis": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "parentId",
+                "childId",
+                "origin"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "kind": {
+                  "const": "revolute"
+                },
+                "parentId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "childId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "origin": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                },
+                "axis": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                },
+                "limits": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "min",
+                    "max"
+                  ],
+                  "properties": {
+                    "min": {
+                      "type": "number"
+                    },
+                    "max": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "parentId",
+                "childId",
+                "origin"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "kind": {
+                  "const": "prismatic"
+                },
+                "parentId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "childId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "origin": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                },
+                "axis": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                },
+                "limits": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "min",
+                    "max"
+                  ],
+                  "properties": {
+                    "min": {
+                      "type": "number"
+                    },
+                    "max": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action",
+        "values"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "move"
+        },
+        "values": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "jointId",
+              "value"
+            ],
+            "properties": {
+              "jointId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action",
+        "jointId"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "remove"
+        },
+        "jointId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action",
+        "jointId",
+        "origin",
+        "axis"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "rebind"
+        },
+        "jointId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "origin": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": -100000,
+            "maximum": 100000
+          }
+        },
+        "axis": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": -100000,
+            "maximum": 100000
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action",
+        "jointId",
+        "limits"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "limits"
+        },
+        "jointId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "clear"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action",
+        "gear"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "gear-create"
+        },
+        "gear": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "jointA",
+            "jointB",
+            "teethA",
+            "teethB"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "jointA": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "jointB": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "teethA": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "teethB": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "kind": {
+              "enum": [
+                "external",
+                "internal"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action",
+        "gearId"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "gear-remove"
+        },
+        "gearId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    }
+  ]
+}

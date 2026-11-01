@@ -13,7 +13,8 @@ function drawingPdfInput(value){
   for(const tag of svg.matchAll(/<[A-Za-z][\w:.-]*\b([^<>]*)>/g)){
     const remaining=tag[1].replace(/\s+([A-Za-z_:][\w:.-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/g,(_whole,key,double,single)=>{
       const name=key.toLowerCase(),content=double??single;
-      if(/^on/.test(name)||/^(?:.*:)?(?:href|src)$/.test(name)||['style','fill','stroke','filter','clip-path','marker-start','marker-mid','marker-end'].includes(name)&&/url\s*\(|@import|expression\s*\(/i.test(content))throw Error('Die Zeichnung enthält externe oder ausführbare Inhalte.');
+      const paint=content.replace(/url\(\s*(["']?)#[A-Za-z_][\w:.-]*\1\s*\)/gi,'');
+      if(/^on/.test(name)||/^(?:.*:)?(?:href|src)$/.test(name)||['style','fill','stroke','filter','clip-path','marker-start','marker-mid','marker-end'].includes(name)&&/url\s*\(|@import|expression\s*\(/i.test(paint))throw Error('Die Zeichnung enthält externe oder ausführbare Inhalte.');
       return '';
     });
     if(!/^\s*\/?\s*$/.test(remaining))throw Error('Ungültige SVG-Zeichnungsattribute.');
@@ -67,23 +68,26 @@ function exactDrawingPdfPage(value,widthMm,heightMm){
  const trailerBody=text.slice(trailer.start,trailer.end),nextTrailer=replacePdfFields(trailerBody,pdfDictionary(trailerBody),{Size:String(size+2),Prev:String(previous)});tail+='trailer\n'+nextTrailer+'\nstartxref\n'+xref+'\n%%EOF\n';chunks.push(Buffer.from(tail,'latin1'));return new Uint8Array(Buffer.concat(chunks));
 }
 
-async function printDrawingPdf(value,{BrowserWindow,session,owner,timeoutMs=30000}={}){
-  const {svg,widthMm,heightMm}=drawingPdfInput(value),printSession=session.fromPartition('formnaro-drawing-'+randomUUID());
-  printSession.setPermissionRequestHandler((_contents,_permission,callback)=>callback(false));
-  printSession.webRequest.onBeforeRequest((details,callback)=>callback({cancel:!details.url.startsWith('data:text/html,')}));
-  const printWindow=new BrowserWindow({show:false,webPreferences:{session:printSession,sandbox:true,contextIsolation:true,nodeIntegration:false,javascript:false,webSecurity:true,images:false}});
-  printWindow.webContents.setWindowOpenHandler(()=>({action:'deny'}));
-  printWindow.webContents.on('will-navigate',event=>event.preventDefault());
+async function printDrawingPdf(value,{BrowserWindow,session,owner,timeoutMs=30000,signal}={}){
+  signal?.throwIfAborted();
+  const {svg,widthMm,heightMm}=drawingPdfInput(value),id=randomUUID(),printSession=session.fromPartition('formnaro-drawing-'+id),scheme='formnaro-drawing',url=scheme+'://print/'+id;
   const html=`<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'none'; connect-src 'none'; font-src 'none'; img-src 'none'"><style>@page{size:${widthMm}mm ${heightMm}mm;margin:0}html,body{margin:0;padding:0;width:${widthMm}mm;height:${heightMm}mm;overflow:hidden}svg{display:block;width:${widthMm}mm;height:${heightMm}mm}</style></head><body>${svg}</body></html>`;
-  let timer,rejectClosed;
-  const close=()=>rejectClosed?.(Error('PDF-Ausgabe abgebrochen.'));
-  owner?.once('closed',close);
+  let timer,rejectClosed,printWindow,registered=false;
+  const close=()=>rejectClosed?.(Error('PDF-Ausgabe abgebrochen.')),abort=()=>rejectClosed?.(Object.assign(Error('PDF-Ausgabe abgebrochen.'),{name:'AbortError',code:'ABORTED'}));
   try{
+    printSession.setPermissionRequestHandler((_contents,_permission,callback)=>callback(false));
+    printSession.protocol.handle(scheme,request=>request.url===url?new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}}):new Response('',{status:404}));registered=true;
+    printSession.webRequest.onBeforeRequest((details,callback)=>callback({cancel:details.url!==url}));
+    printWindow=new BrowserWindow({show:false,webPreferences:{session:printSession,sandbox:true,contextIsolation:true,nodeIntegration:false,javascript:false,webSecurity:true,images:false}});
+    printWindow.webContents.setWindowOpenHandler(()=>({action:'deny'}));
+    printWindow.webContents.on('will-navigate',event=>event.preventDefault());
+    const stopped=new Promise((_,reject)=>{rejectClosed=reject;timer=setTimeout(()=>reject(Error('PDF-Ausgabe hat das Zeitlimit überschritten.')),timeoutMs);});
+    owner?.once('closed',close);signal?.addEventListener('abort',abort,{once:true});
+    if(signal?.aborted)abort();if(owner?.isDestroyed?.())close();
     return await Promise.race([
-      (async()=>{await printWindow.loadURL('data:text/html,'+encodeURIComponent(html));const bytes=await printWindow.webContents.printToPDF({pageSize:{width:widthMm/25.4,height:heightMm/25.4},preferCSSPageSize:true,printBackground:true,displayHeaderFooter:false,margins:{top:0,bottom:0,left:0,right:0},scale:1});return exactDrawingPdfPage(bytes,widthMm,heightMm);})(),
-      new Promise((_,reject)=>{rejectClosed=reject;timer=setTimeout(()=>reject(Error('PDF-Ausgabe hat das Zeitlimit überschritten.')),timeoutMs);})
+      (async()=>{signal?.throwIfAborted();await printWindow.loadURL(url);signal?.throwIfAborted();const bytes=await printWindow.webContents.printToPDF({pageSize:{width:widthMm/25.4,height:heightMm/25.4},preferCSSPageSize:true,printBackground:true,displayHeaderFooter:false,margins:{top:0,bottom:0,left:0,right:0},scale:1});signal?.throwIfAborted();return exactDrawingPdfPage(bytes,widthMm,heightMm);})(),stopped
     ]);
-  }finally{clearTimeout(timer);owner?.removeListener('closed',close);if(!printWindow.isDestroyed())printWindow.destroy();printSession.webRequest.onBeforeRequest(null);await printSession.clearStorageData().catch(()=>{});}
+  }finally{clearTimeout(timer);owner?.removeListener('closed',close);signal?.removeEventListener('abort',abort);if(printWindow&&!printWindow.isDestroyed())printWindow.destroy();if(registered)printSession.protocol.unhandle(scheme);printSession.webRequest.onBeforeRequest(null);await printSession.clearStorageData().catch(()=>{});}
 }
 
 function installDrawingPdf(win,{ipcMain,BrowserWindow,session}=require('electron')){

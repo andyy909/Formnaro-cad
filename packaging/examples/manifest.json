@@ -1,0 +1,25 @@
+{
+  "examples": [
+    {
+      "file": "atlas-5.ocad",
+      "name": "ATLAS-5 \u00b7 Portalfr\u00e4se mit Schwenkrundtisch",
+      "bytes": 8354968,
+      "sha256": "23e4d6c2ba6afe24529c49011615d6a4d770a597e1c5a30002b56e341166d958",
+      "nodes": 144
+    },
+    {
+      "file": "schraeggetriebe-6zu1.ocad",
+      "name": "Schr\u00e4ggetriebe \u00b7 6:1",
+      "bytes": 13848914,
+      "sha256": "0f837d9125550c147ebf90109427cddab03e5bf60e95510ee4bff85c9850de00",
+      "nodes": 10
+    },
+    {
+      "file": "solid-schraubstock.ocad",
+      "name": "Pr\u00e4zisionsschraubstock",
+      "bytes": 1163377,
+      "sha256": "9067cc808728bd1e28302be370dba09d0483c27bcec0d0165081198b172c16b5",
+      "nodes": 2
+    }
+  ]
+}

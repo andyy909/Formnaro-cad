@@ -34,7 +34,7 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
   const hostRequests=new Map();let hostSequence=0;
   let generation=null,ready=null,service=null,kernel=null,router=null,precision=null,tail=Promise.resolve(),closed=false,fonts=[];
   function reply(request,payload){if(!closed&&generation===request.generation)postMessage({id:request.id,generation,revision:request.revision,heapBytes:kernel?.wasmMemory?.buffer?.byteLength??0,...payload});}
-  function hostRequest(message,request){return new Promise((resolve,reject)=>{const callId=++hostSequence;hostRequests.set(callId,{message,resolve,reject});reply(message,{type:'hostRequest',callId,request});});}
+  function hostRequest(message,request){if(closed||message.generation!==generation)return Promise.reject(Object.assign(Error('Native Worker-Rückfrage abgebrochen.'),{name:'AbortError',code:'ABORTED'}));return new Promise((resolve,reject)=>{const callId=++hostSequence;hostRequests.set(callId,{message,resolve,reject});try{reply(message,{type:'hostRequest',callId,request});}catch(error){hostRequests.delete(callId);reject(error);}});}
   async function compute(message){
     const importJob=message.request?.job==='command'&&message.request?.operation?.kind==='importStlHousing';
     // Successful worker retirement is requested by the controller after an
@@ -138,5 +138,5 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
     if(message.type!=='compute'||!ready||message.generation!==generation)return;
     tail=tail.then(()=>compute(message));
   }
-  return {receive,dispose:()=>{closed=true;service?.dispose();},state:()=>({generation,ready:!!service,closed})};
+  return {receive,dispose:()=>{closed=true;for(const pending of hostRequests.values())pending.reject(Object.assign(Error('Native Worker-Rückfrage abgebrochen.'),{name:'AbortError',code:'ABORTED'}));hostRequests.clear();service?.dispose();},state:()=>({generation,ready:!!service,closed})};
 }

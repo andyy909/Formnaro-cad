@@ -11,6 +11,44 @@ import {checkCadAIResultNative} from '../src/cad-ai-result-checks-native.js';
 import {aiPreviewErrorMarks,createAIErrorOverlay,AI_ERROR_COLOR} from '../src/cad-ai-preview-errors.js';
 const {generate}=createRequire(import.meta.url)('../backend/ai-provider.cjs');
 
+test('No supplied dimensions permits a completely self-dimensioned native design at strictness 100',async()=>{
+ const {cad,access,refresh}=fixture();try{
+  await refresh();const original=cad.serialize();let calls=0;
+  const result=await runCadAIRequest({input:{prompt:'Entwirf einen Körper ganz ohne Maßvorgaben. Wähle alle Maße selbst.',modelStrictness:100},access,visualReview:false,generate:async()=>{calls++;return {revision:cad.revision(),commands:[{op:'create',type:'box',as:'body',size:[70,45,40],pos:[0,0,20]}],checks:[],message:'Annahmen: 70x45 mm Grundfläche, Höhe 40 mm.'};}});
+  assert.equal(calls,1);assert.equal(result.correctionAttempts,0);assert.equal(result.proposal.verification.passed,undefined);assert.deepEqual(result.proposal.verification.checks,[]);assert.equal(result.proposal.verification.modellingPolicy.strictness,100);assert.equal(result.proposal.verification.modellingPolicy.accepted,true);assert.equal(cad.serialize(),original);
+  await access.apply({previewId:result.proposal.previewId,revision:result.proposal.revision});assert.deepEqual((await cad.describe()).objects[0].measures.editSize,[70,45,40]);cad.undo();assert.equal(cad.serialize(),original);
+ }finally{cad.dispose();}
+});
+
+test('An explicitly empty initial requirement set stays empty across visual corrections instead of acquiring invented dimensions',async()=>{
+ let calls=0,previews=0,captured;const seen=[],scene={revision:'r',selectionTargets:[]};
+ const result=await runCadAIRequest({input:{prompt:'Freier Entwurf ohne Maße',modelStrictness:100},access:{scene:()=>scene,context:()=>({}),discard(){},preview:async request=>{seen.push(request.checks);return {previewId:'p'+(++previews),revision:'r',verification:{passed:true,checks:[]}};},inspectPreview:async previewId=>(captured=previewId,{previewId,revision:'r',images:[],views:[],scope:'fixture'})},generate:async()=>{
+  calls++;if(calls===3)return {revision:'r',review:{previewId:captured,accepted:true,observations:'Freier Entwurf akzeptiert.'}};
+  return {revision:'r',commands:[],checks:calls===1?[]:[{kind:'size',target:'self-chosen-body',space:'edit',expected:[70,45,40]}]};
+ }});
+ assert.equal(calls,3);assert.deepEqual(seen,[[],[]]);assert.deepEqual(result.checks,[]);assert.equal(result.proposal.verification.modellingPolicy.accepted,true);
+});
+
+test('Real native preview allows any chosen height at every strictness while a 50x50 footprint remains measurable and strict',async()=>{
+ for(const strictness of [0,50,100]){
+  const {cad,access,refresh}=fixture();try{
+   await refresh();const original=cad.serialize(),checks=[{kind:'size',target:'$house',space:'edit',expected:[50,50,null]}];let calls=0;
+   const result=await runCadAIRequest({input:{prompt:'Häuschen mit Grundfläche 50x50 mm. Höhe frei wählen.',modelStrictness:strictness},access,visualReview:false,generate:async()=>{calls++;return {revision:cad.revision(),commands:[{op:'create',type:'box',as:'house',size:[50,50,35],pos:[0,0,17.5]}],checks,message:'Annahme: Höhe 35 mm.'};}});
+   assert.equal(calls,1);assert.equal(result.correctionAttempts,0);assert.equal(result.proposal.verification.passed,true);assert.equal(result.proposal.verification.modellingPolicy.accepted,true);assert.deepEqual(result.proposal.verification.checks[0].actual,[50,50,35]);assert.deepEqual(result.proposal.verification.checks[0].expected,[50,50,null]);assert.equal(cad.serialize(),original);
+   await access.apply({previewId:result.proposal.previewId,revision:result.proposal.revision});assert(Math.abs((await cad.describe()).objects[0].volume-87500)<1e-6);cad.undo();assert.equal(cad.serialize(),original);
+  }finally{cad.dispose();}
+ }
+});
+
+test('A correction cannot relabel a specified width as free, and invalid construction values stay invalid',async()=>{
+ const {cad,access,refresh}=fixture();try{
+  await refresh();const checks=[{kind:'size',target:'$house',space:'edit',expected:[50,50,null]}];let calls=0;
+  const result=await runCadAIRequest({input:{prompt:'Grundfläche 50x50 mm, Höhe frei.',modelStrictness:100},access,visualReview:false,maxCorrections:1,generate:async()=>{calls++;return {revision:cad.revision(),commands:[{op:'create',type:'box',as:'house',size:[49,50,35],pos:[0,0,17.5]}],checks:calls===1?checks:[{...checks[0],expected:[null,50,35]}]};}});
+  assert.equal(calls,2);assert.equal(result.proposal.verification.passed,false);assert.equal(result.proposal.verification.modellingPolicy.accepted,false);assert.deepEqual(result.proposal.verification.checks[0].expected,[50,50,null]);
+  access.discard(result.proposal.previewId);await assert.rejects(access.preview({revision:cad.revision(),commands:[{op:'create',type:'box',size:[50,50,null]}]}));assert.equal(cad.state().previews,0);assert.equal(cad.state().undo,0);
+ }finally{cad.dispose();}
+});
+
 function fixture(){
  let scene;
  const comparison=()=>{const w=new Worker(new URL('./fixtures/model-deviation-node-worker.mjs',import.meta.url)),a={postMessage:v=>w.postMessage(v),terminate:()=>w.terminate()};w.on('message',data=>a.onmessage?.({data}));w.on('error',e=>a.onerror?.(e));return a;};

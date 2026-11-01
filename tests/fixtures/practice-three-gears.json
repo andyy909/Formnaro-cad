@@ -1,0 +1,311 @@
+{
+  "version": 1,
+  "title": "Drei echte evolventische Zahnräder mit Kopplung",
+  "actions": [
+    {
+      "kind": "model",
+      "label": "Zahnräder, Drehgelenke und Übersetzungen gemeinsam bauen",
+      "commands": [
+        {
+          "op": "create",
+          "type": "box",
+          "as": "carrier",
+          "size": [
+            112,
+            52,
+            3
+          ],
+          "pos": [
+            0,
+            0,
+            -4
+          ],
+          "name": "Gemeinsamer Träger",
+          "color": "#54717d"
+        },
+        {
+          "op": "create",
+          "type": "gear",
+          "as": "a",
+          "params": {
+            "teeth": 20,
+            "module": 1.5,
+            "thickness": 6,
+            "bore": 5,
+            "backlash": 0.1
+          },
+          "pos": [
+            -37.5,
+            0,
+            3
+          ],
+          "rot": [
+            0,
+            0,
+            0
+          ],
+          "name": "Zahnrad A",
+          "color": "#ed9b35"
+        },
+        {
+          "op": "create",
+          "type": "gear",
+          "as": "b",
+          "params": {
+            "teeth": 30,
+            "module": 1.5,
+            "thickness": 6,
+            "bore": 5,
+            "backlash": 0.1
+          },
+          "pos": [
+            0,
+            0,
+            3
+          ],
+          "rot": [
+            0,
+            0,
+            6
+          ],
+          "name": "Zahnrad B",
+          "color": "#3b9fb0"
+        },
+        {
+          "op": "create",
+          "type": "gear",
+          "as": "c",
+          "params": {
+            "teeth": 20,
+            "module": 1.5,
+            "thickness": 6,
+            "bore": 5,
+            "backlash": 0.1
+          },
+          "pos": [
+            37.5,
+            0,
+            3
+          ],
+          "rot": [
+            0,
+            0,
+            0
+          ],
+          "name": "Zahnrad C",
+          "color": "#9a78be"
+        },
+        {
+          "op": "joint",
+          "action": "create",
+          "joint": {
+            "id": "gear-a",
+            "kind": "revolute",
+            "parentId": "$carrier",
+            "childId": "$a",
+            "origin": [
+              -37.5,
+              0,
+              3
+            ],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "limits": {
+              "min": -180,
+              "max": 180
+            }
+          }
+        },
+        {
+          "op": "joint",
+          "action": "create",
+          "joint": {
+            "id": "gear-b",
+            "kind": "revolute",
+            "parentId": "$carrier",
+            "childId": "$b",
+            "origin": [
+              0,
+              0,
+              3
+            ],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "limits": {
+              "min": -180,
+              "max": 180
+            }
+          }
+        },
+        {
+          "op": "joint",
+          "action": "create",
+          "joint": {
+            "id": "gear-c",
+            "kind": "revolute",
+            "parentId": "$carrier",
+            "childId": "$c",
+            "origin": [
+              37.5,
+              0,
+              3
+            ],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "limits": {
+              "min": -180,
+              "max": 180
+            }
+          }
+        },
+        {
+          "op": "joint",
+          "action": "gear-create",
+          "gear": {
+            "jointA": "gear-a",
+            "jointB": "gear-b",
+            "teethA": 20,
+            "teethB": 30
+          }
+        },
+        {
+          "op": "joint",
+          "action": "gear-create",
+          "gear": {
+            "jointA": "gear-b",
+            "jointB": "gear-c",
+            "teethA": 30,
+            "teethB": 20
+          }
+        }
+      ],
+      "checks": [
+        {
+          "kind": "solids",
+          "target": "$carrier",
+          "expected": 1
+        },
+        {
+          "kind": "solids",
+          "target": "$a",
+          "expected": 1
+        },
+        {
+          "kind": "solids",
+          "target": "$b",
+          "expected": 1
+        },
+        {
+          "kind": "solids",
+          "target": "$c",
+          "expected": 1
+        }
+      ]
+    },
+    {
+      "kind": "model",
+      "label": "Antrieb 15° – beide Folger drehen gekoppelt",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "gear-a",
+              "value": 15
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "model",
+      "label": "Antrieb 30° – beide Folger drehen gekoppelt",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "gear-a",
+              "value": 30
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "model",
+      "label": "Antrieb 45° – beide Folger drehen gekoppelt",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "gear-a",
+              "value": 45
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "model",
+      "label": "Antrieb 60° – beide Folger drehen gekoppelt",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "gear-a",
+              "value": 60
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "model",
+      "label": "Antrieb 30° – beide Folger drehen gekoppelt",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "gear-a",
+              "value": 30
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "model",
+      "label": "Antrieb 0° – beide Folger drehen gekoppelt",
+      "commands": [
+        {
+          "op": "joint",
+          "action": "move",
+          "values": [
+            {
+              "jointId": "gear-a",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -38,11 +38,19 @@ function intersections(a,b,eps){
  if(d>a.radius+b.radius+eps||d<Math.abs(a.radius-b.radius)-eps||d<eps)return [];
  const x=(a.radius**2-b.radius**2+d*d)/(2*d),h=Math.sqrt(Math.max(0,a.radius**2-x*x)),u=sub(b.center,a.center).map(v=>v/d),p=add(a.center,u.map(v=>v*x));return [add(p,[-u[1]*h,u[0]*h]),add(p,[u[1]*h,-u[0]*h])].filter(q=>inArc(q,a)&&inArc(q,b));
 }
+function circularRayCrossings(s,x,y){
+ const dy=y-s.center[1];if(Math.abs(dy)>=s.radius)return 0;
+ const cuts=[0,1],extent=Math.abs(s.sweep);
+ for(const angle of [Math.PI/2,3*Math.PI/2]){const distance=s.sweep>=0?mod(angle-s.startAngle):mod(s.startAngle-angle);if(distance>0&&distance<extent)cuts.push(distance/extent);}
+ cuts.sort((a,b)=>a-b);const dx=Math.sqrt(Math.max(0,s.radius*s.radius-dy*dy));let crossings=0;
+ for(let i=1;i<cuts.length;i++){const a=cuts[i-1],b=cuts[i],start=a===0?s.start:at(s,a),end=b===1?s.end:at(s,b);if((start[1]>y)===(end[1]>y))continue;const side=Math.cos(s.startAngle+s.sweep*(a+b)/2)>=0?1:-1;if(s.center[0]+side*dx>x)crossings++;}
+ return crossings;
+}
 function inside(point,segments){
- // Exact horizontal ray crossings of lines and circular arcs. Shared endpoints
- // are handled by a deterministic infinitesimal ray-height shift.
+ // Each circular span is monotone in Y and uses the same half-open endpoint
+ // rule as lines. Angular tolerances must not count both adjoining arcs.
  const y=point[1]+Math.max(1,Math.abs(point[1]))*1.731e-12;let count=0;
- for(const s of segments){if(isCadCurve(s)){count+=curveRayCrossings(s,[point[0],y]);continue;}if(s.type==='line'){if((s.start[1]>y)!==(s.end[1]>y)){const x=s.start[0]+(y-s.start[1])*(s.end[0]-s.start[0])/(s.end[1]-s.start[1]);if(x>point[0])count++;}}else{const dy=y-s.center[1];if(Math.abs(dy)>=s.radius)continue;const dx=Math.sqrt(s.radius*s.radius-dy*dy);for(const x of [s.center[0]-dx,s.center[0]+dx])if(x>point[0]&&inArc([x,y],s,1e-12))count++;}}
+ for(const s of segments){if(isCadCurve(s)){count+=curveRayCrossings(s,[point[0],y]);continue;}if(s.type==='line'){if((s.start[1]>y)!==(s.end[1]>y)){const x=s.start[0]+(y-s.start[1])*(s.end[0]-s.start[0])/(s.end[1]-s.start[1]);if(x>point[0])count++;}}else count+=circularRayCrossings(s,point[0],y);}
  return !!(count%2);
 }
 export function profileElementSamples(e,segments=64){if(isCadCurve(e))return curveSamples(e,segments);if(e.type==='line')return [e.start,e.end];const n=Math.max(2,Math.ceil(Math.abs(e.sweep)/TAU*segments));return Array.from({length:n+1},(_,i)=>at(e,i/n));}

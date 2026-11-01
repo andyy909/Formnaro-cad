@@ -96,7 +96,7 @@ export function validateCadSolid(oc,shape){
     for(const type of ['TopAbs_SHELL','TopAbs_FACE','TopAbs_WIRE','TopAbs_EDGE','TopAbs_VERTEX']){
       const all=uniqueEntities(oc,shape,type),covered=[];
       try{
-        for(const solid of solids)covered.push(...uniqueEntities(oc,solid,type));
+        for(const solid of solids)for(const entity of uniqueEntities(oc,solid,type))covered.push(entity);
         const buckets=new Map();for(const entity of covered){const key=oc.ReplicadShapeHasher.HashCode(entity,2147483647),bucket=buckets.get(key)||[];bucket.push(entity);buckets.set(key,bucket);}
         if(all.some(entity=>!buckets.get(oc.ReplicadShapeHasher.HashCode(entity,2147483647))?.some(candidate=>candidate.IsSame(entity))))throw Error('CAD-Ergebnis enthält offene oder unzugeordnete Geometrie außerhalb der Körper.');
       }finally{covered.forEach(entity=>entity.delete());all.forEach(entity=>entity.delete());}

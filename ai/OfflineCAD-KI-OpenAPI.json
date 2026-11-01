@@ -30,6 +30,1132 @@
     }
   },
   "paths": {
+    "/v1/ui": {
+      "post": {
+        "summary": "Registered Formnaro-only UI guidance and isolated practice jobs; check agentUI.available in the live context.",
+        "operationId": "ui",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "const": "state"
+                      }
+                    },
+                    "required": [
+                      "action"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "const": "help"
+                      },
+                      "query": {
+                        "type": "string",
+                        "maxLength": 500
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "query"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "const": "guide"
+                      },
+                      "revision": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "steps": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 12,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "enum": [
+                                "point",
+                                "click"
+                              ]
+                            },
+                            "target": {
+                              "enum": [
+                                "tool:edit-feature",
+                                "tool:properties",
+                                "tool:sketch-on-part",
+                                "tool:extrude",
+                                "tool:cut",
+                                "tool:round",
+                                "tool:chamfer",
+                                "tool:drill",
+                                "tool:cad-shell",
+                                "tool:cad-face-offset",
+                                "tool:cad-contour",
+                                "tool:duplicate",
+                                "tool:copy",
+                                "tool:paste",
+                                "tool:delete",
+                                "tool:hide",
+                                "tool:show-all",
+                                "tool:lock",
+                                "tool:isolate",
+                                "tool:end-isolation",
+                                "tool:group",
+                                "tool:ungroup",
+                                "tool:align",
+                                "tool:mirror",
+                                "tool:array",
+                                "tool:center",
+                                "tool:drop",
+                                "tool:lay-on-face",
+                                "tool:reference-place",
+                                "tool:measure",
+                                "tool:inspect",
+                                "tool:section",
+                                "tool:thickness",
+                                "tool:model-compare",
+                                "tool:sketch",
+                                "tool:edit-sketch",
+                                "tool:project-parameters",
+                                "tool:drawing",
+                                "tool:split",
+                                "tool:extract",
+                                "tool:cad-to-mesh",
+                                "tool:mesh-to-cad",
+                                "tool:mesh-tools",
+                                "tool:mesh-select",
+                                "tool:mesh-repair",
+                                "tool:mesh-reduce",
+                                "tool:mesh-sculpt",
+                                "tool:mesh-hollow",
+                                "tool:functions",
+                                "tool:stl-to-step",
+                                "tool:undo",
+                                "tool:redo",
+                                "tool:fit",
+                                "tool:view-iso",
+                                "tool:view-front",
+                                "tool:view-top",
+                                "tool:view-right",
+                                "tool:projection",
+                                "tool:workplane-set",
+                                "tool:workplane-top",
+                                "tool:reset-plane",
+                                "tool:mode-translate",
+                                "tool:mode-rotate",
+                                "tool:mode-scale",
+                                "tool:edges",
+                                "tool:general-fit",
+                                "tool:cad-loft",
+                                "tool:cad-sweep",
+                                "tool:sketch-templates",
+                                "tool:linked-contours",
+                                "tool:joints",
+                                "tool:cad-edit-modeling",
+                                "tool:mesh-inspector",
+                                "tool:mesh-close-hole",
+                                "tool:mesh-connectors",
+                                "tool:mesh-curved-reduce",
+                                "tool:mesh-large-reduce",
+                                "tool:mesh-remesh",
+                                "tool:mesh-smooth",
+                                "tool:mesh-erase-fill",
+                                "tool:mesh-make-solid",
+                                "tool:ruler",
+                                "tool:export",
+                                "tool:import",
+                                "tool:new",
+                                "tool:open",
+                                "tool:save",
+                                "tool:projects",
+                                "region:viewport",
+                                "region:library",
+                                "region:properties",
+                                "region:tree",
+                                "shape:box",
+                                "shape:cylinder",
+                                "shape:sphere",
+                                "shape:tube",
+                                "shape:cone",
+                                "shape:ring",
+                                "menu:edit",
+                                "menu:arrange",
+                                "menu:cad",
+                                "menu:mesh",
+                                "menu:convert",
+                                "menu:view-tools",
+                                "menu:extras",
+                                "mode:easy",
+                                "mode:normal",
+                                "mode:solid",
+                                "mode:fusion",
+                                "view:iso",
+                                "view:top",
+                                "view:front",
+                                "view:right"
+                              ]
+                            },
+                            "text": {
+                              "type": "string",
+                              "maxLength": 600
+                            }
+                          },
+                          "required": [
+                            "action",
+                            "target"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "revision",
+                      "steps"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "const": "practice"
+                      },
+                      "revision": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "plan": {
+                        "type": "object",
+                        "properties": {
+                          "version": {
+                            "const": 1
+                          },
+                          "title": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          },
+                          "actions": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 50,
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "const": "shape"
+                                    },
+                                    "type": {
+                                      "enum": [
+                                        "box",
+                                        "cylinder",
+                                        "sphere",
+                                        "cone",
+                                        "pyramid",
+                                        "roof",
+                                        "wedge",
+                                        "hexagon",
+                                        "triangle",
+                                        "tube",
+                                        "torus",
+                                        "capsule",
+                                        "star",
+                                        "heart",
+                                        "gear",
+                                        "text",
+                                        "roundbox",
+                                        "halfSphere",
+                                        "thread",
+                                        "nut",
+                                        "countersink",
+                                        "shellbox",
+                                        "polygon"
+                                      ]
+                                    },
+                                    "as": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_-]{0,40}$"
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "type",
+                                    "as"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "const": "set"
+                                    },
+                                    "field": {
+                                      "enum": [
+                                        "size-0",
+                                        "size-1",
+                                        "size-2",
+                                        "pos-0",
+                                        "pos-1",
+                                        "pos-2"
+                                      ]
+                                    },
+                                    "value": {
+                                      "type": "number",
+                                      "minimum": -10000,
+                                      "maximum": 10000
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "field",
+                                    "value"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "const": "role"
+                                    },
+                                    "value": {
+                                      "enum": [
+                                        "solid",
+                                        "hole"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "value"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "const": "select"
+                                    },
+                                    "targets": {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "maxItems": 8,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9_-]{0,40}$"
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "targets"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "const": "group"
+                                    },
+                                    "as": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_-]{0,40}$"
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "as"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "const": "ui"
+                                    },
+                                    "action": {
+                                      "enum": [
+                                        "click",
+                                        "point",
+                                        "set",
+                                        "choose",
+                                        "drag"
+                                      ]
+                                    },
+                                    "target": {
+                                      "type": "string",
+                                      "pattern": "^(ui:(id|label|tool|menu|view):|(menu|tool|view):)",
+                                      "maxLength": 240
+                                    },
+                                    "value": {
+                                      "type": "string",
+                                      "maxLength": 200
+                                    },
+                                    "text": {
+                                      "type": "string",
+                                      "maxLength": 600
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "action",
+                                    "target"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "const": "face"
+                                    },
+                                    "target": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_-]{0,40}$"
+                                    },
+                                    "side": {
+                                      "enum": [
+                                        "top",
+                                        "bottom",
+                                        "left",
+                                        "right",
+                                        "front",
+                                        "back"
+                                      ]
+                                    },
+                                    "text": {
+                                      "type": "string",
+                                      "maxLength": 600
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "target",
+                                    "side"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "const": "gear-snap"
+                                    },
+                                    "moving": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_-]{0,40}$"
+                                    },
+                                    "anchor": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_-]{0,40}$"
+                                    },
+                                    "angle": {
+                                      "type": "number",
+                                      "minimum": -360,
+                                      "maximum": 360
+                                    },
+                                    "text": {
+                                      "type": "string",
+                                      "maxLength": 600
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "moving",
+                                    "anchor",
+                                    "angle"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "kind": {
+                                      "const": "model"
+                                    },
+                                    "label": {
+                                      "type": "string",
+                                      "maxLength": 200
+                                    },
+                                    "commands": {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "maxItems": 200,
+                                      "items": {
+                                        "oneOf": [
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "type"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "create"
+                                              },
+                                              "name": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 200
+                                              },
+                                              "size": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "number",
+                                                  "exclusiveMinimum": 0
+                                                },
+                                                "minItems": 3,
+                                                "maxItems": 3
+                                              },
+                                              "pos": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "number"
+                                                },
+                                                "minItems": 3,
+                                                "maxItems": 3
+                                              },
+                                              "rot": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "number"
+                                                },
+                                                "minItems": 3,
+                                                "maxItems": 3
+                                              },
+                                              "solid": {
+                                                "type": "boolean"
+                                              },
+                                              "color": {
+                                                "type": "string",
+                                                "pattern": "^#[0-9a-fA-F]{6}$"
+                                              },
+                                              "params": {
+                                                "type": "object",
+                                                "description": "Native parameter keys and constraints are listed per shape in GET /v1/context."
+                                              },
+                                              "as": {
+                                                "type": "string",
+                                                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                                              },
+                                              "type": {
+                                                "enum": [
+                                                  "box",
+                                                  "cylinder",
+                                                  "sphere",
+                                                  "cone",
+                                                  "pyramid",
+                                                  "roof",
+                                                  "wedge",
+                                                  "hexagon",
+                                                  "triangle",
+                                                  "tube",
+                                                  "torus",
+                                                  "capsule",
+                                                  "star",
+                                                  "heart",
+                                                  "gear",
+                                                  "text",
+                                                  "roundbox",
+                                                  "halfSphere",
+                                                  "thread",
+                                                  "nut",
+                                                  "countersink",
+                                                  "shellbox",
+                                                  "polygon"
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action",
+                                              "joint"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "create"
+                                              },
+                                              "joint": {
+                                                "oneOf": [
+                                                  {
+                                                    "type": "object",
+                                                    "additionalProperties": false,
+                                                    "required": [
+                                                      "kind",
+                                                      "parentId",
+                                                      "childId",
+                                                      "origin"
+                                                    ],
+                                                    "properties": {
+                                                      "id": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "name": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "kind": {
+                                                        "const": "fixed"
+                                                      },
+                                                      "parentId": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "childId": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "origin": {
+                                                        "type": "array",
+                                                        "minItems": 3,
+                                                        "maxItems": 3,
+                                                        "items": {
+                                                          "type": "number",
+                                                          "minimum": -100000,
+                                                          "maximum": 100000
+                                                        }
+                                                      },
+                                                      "axis": {
+                                                        "type": "array",
+                                                        "minItems": 3,
+                                                        "maxItems": 3,
+                                                        "items": {
+                                                          "type": "number",
+                                                          "minimum": -100000,
+                                                          "maximum": 100000
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "additionalProperties": false,
+                                                    "required": [
+                                                      "kind",
+                                                      "parentId",
+                                                      "childId",
+                                                      "origin"
+                                                    ],
+                                                    "properties": {
+                                                      "id": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "name": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "kind": {
+                                                        "const": "revolute"
+                                                      },
+                                                      "parentId": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "childId": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "origin": {
+                                                        "type": "array",
+                                                        "minItems": 3,
+                                                        "maxItems": 3,
+                                                        "items": {
+                                                          "type": "number",
+                                                          "minimum": -100000,
+                                                          "maximum": 100000
+                                                        }
+                                                      },
+                                                      "axis": {
+                                                        "type": "array",
+                                                        "minItems": 3,
+                                                        "maxItems": 3,
+                                                        "items": {
+                                                          "type": "number",
+                                                          "minimum": -100000,
+                                                          "maximum": 100000
+                                                        }
+                                                      },
+                                                      "limits": {
+                                                        "type": "object",
+                                                        "additionalProperties": false,
+                                                        "required": [
+                                                          "min",
+                                                          "max"
+                                                        ],
+                                                        "properties": {
+                                                          "min": {
+                                                            "type": "number"
+                                                          },
+                                                          "max": {
+                                                            "type": "number"
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "additionalProperties": false,
+                                                    "required": [
+                                                      "kind",
+                                                      "parentId",
+                                                      "childId",
+                                                      "origin"
+                                                    ],
+                                                    "properties": {
+                                                      "id": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "name": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "kind": {
+                                                        "const": "prismatic"
+                                                      },
+                                                      "parentId": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "childId": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "origin": {
+                                                        "type": "array",
+                                                        "minItems": 3,
+                                                        "maxItems": 3,
+                                                        "items": {
+                                                          "type": "number",
+                                                          "minimum": -100000,
+                                                          "maximum": 100000
+                                                        }
+                                                      },
+                                                      "axis": {
+                                                        "type": "array",
+                                                        "minItems": 3,
+                                                        "maxItems": 3,
+                                                        "items": {
+                                                          "type": "number",
+                                                          "minimum": -100000,
+                                                          "maximum": 100000
+                                                        }
+                                                      },
+                                                      "limits": {
+                                                        "type": "object",
+                                                        "additionalProperties": false,
+                                                        "required": [
+                                                          "min",
+                                                          "max"
+                                                        ],
+                                                        "properties": {
+                                                          "min": {
+                                                            "type": "number"
+                                                          },
+                                                          "max": {
+                                                            "type": "number"
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action",
+                                              "values"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "move"
+                                              },
+                                              "values": {
+                                                "type": "array",
+                                                "maxItems": 256,
+                                                "items": {
+                                                  "type": "object",
+                                                  "additionalProperties": false,
+                                                  "required": [
+                                                    "jointId",
+                                                    "value"
+                                                  ],
+                                                  "properties": {
+                                                    "jointId": {
+                                                      "type": "string",
+                                                      "minLength": 1,
+                                                      "maxLength": 200
+                                                    },
+                                                    "value": {
+                                                      "type": "number"
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action",
+                                              "jointId"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "remove"
+                                              },
+                                              "jointId": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 200
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action",
+                                              "jointId",
+                                              "origin",
+                                              "axis"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "rebind"
+                                              },
+                                              "jointId": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 200
+                                              },
+                                              "origin": {
+                                                "type": "array",
+                                                "minItems": 3,
+                                                "maxItems": 3,
+                                                "items": {
+                                                  "type": "number",
+                                                  "minimum": -100000,
+                                                  "maximum": 100000
+                                                }
+                                              },
+                                              "axis": {
+                                                "type": "array",
+                                                "minItems": 3,
+                                                "maxItems": 3,
+                                                "items": {
+                                                  "type": "number",
+                                                  "minimum": -100000,
+                                                  "maximum": 100000
+                                                }
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action",
+                                              "jointId",
+                                              "limits"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "limits"
+                                              },
+                                              "jointId": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 200
+                                              },
+                                              "limits": {
+                                                "type": "object",
+                                                "additionalProperties": false,
+                                                "required": [
+                                                  "min",
+                                                  "max"
+                                                ],
+                                                "properties": {
+                                                  "min": {
+                                                    "type": "number"
+                                                  },
+                                                  "max": {
+                                                    "type": "number"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "clear"
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action",
+                                              "gear"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "gear-create"
+                                              },
+                                              "gear": {
+                                                "type": "object",
+                                                "additionalProperties": false,
+                                                "required": [
+                                                  "jointA",
+                                                  "jointB",
+                                                  "teethA",
+                                                  "teethB"
+                                                ],
+                                                "properties": {
+                                                  "id": {
+                                                    "type": "string",
+                                                    "minLength": 1,
+                                                    "maxLength": 200
+                                                  },
+                                                  "name": {
+                                                    "type": "string",
+                                                    "minLength": 1,
+                                                    "maxLength": 200
+                                                  },
+                                                  "jointA": {
+                                                    "type": "string",
+                                                    "minLength": 1,
+                                                    "maxLength": 200
+                                                  },
+                                                  "jointB": {
+                                                    "type": "string",
+                                                    "minLength": 1,
+                                                    "maxLength": 200
+                                                  },
+                                                  "teethA": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 10000
+                                                  },
+                                                  "teethB": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 10000
+                                                  },
+                                                  "kind": {
+                                                    "enum": [
+                                                      "external",
+                                                      "internal"
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action",
+                                              "gearId"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "gear-remove"
+                                              },
+                                              "gearId": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 200
+                                              }
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "checks": {
+                                      "type": "array",
+                                      "maxItems": 64,
+                                      "items": {
+                                        "type": "object"
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "kind",
+                                    "commands"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "version",
+                          "title",
+                          "actions"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "revision",
+                      "plan"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "const": "status"
+                      },
+                      "jobId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "jobId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "const": "cancel"
+                      },
+                      "jobId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      }
+                    },
+                    "required": [
+                      "action"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      }
+    },
     "/v1/assembly": {
       "post": {
         "summary": "Read or change the workspace-only assembly display load set; visibility and model/Undo stay independent.",
@@ -32706,9 +33832,19 @@
                               "minItems": 3,
                               "maxItems": 3,
                               "items": {
-                                "type": "number",
-                                "exclusiveMinimum": 0,
-                                "maximum": 10000
+                                "anyOf": [
+                                  {
+                                    "type": "number",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 10000
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "contains": {
+                                "type": "number"
                               }
                             },
                             "tolerance": {
@@ -32772,9 +33908,19 @@
                               "minItems": 3,
                               "maxItems": 3,
                               "items": {
-                                "type": "number",
-                                "minimum": -100000,
-                                "maximum": 100000
+                                "anyOf": [
+                                  {
+                                    "type": "number",
+                                    "minimum": -100000,
+                                    "maximum": 100000
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "contains": {
+                                "type": "number"
                               }
                             },
                             "tolerance": {
@@ -33231,6 +34377,149 @@
                     }
                   }
                 }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      }
+    },
+    "/v1/discard": {
+      "post": {
+        "summary": "Discard the named completed preview at its current revision without changing the model or Undo.",
+        "operationId": "discard",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "previewId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "previewId",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      }
+    },
+    "/v1/analysis": {
+      "post": {
+        "summary": "Read bounded native CAD, mesh and app measurements against the current revision.",
+        "operationId": "analysis",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "queries": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "engine": {
+                          "enum": [
+                            "cad",
+                            "mesh",
+                            "app"
+                          ]
+                        },
+                        "kind": {
+                          "type": "string"
+                        },
+                        "options": {
+                          "type": "object"
+                        },
+                        "report": {
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "engine",
+                        "kind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "reportBudget": {
+                    "type": "integer",
+                    "minimum": 1024,
+                    "maximum": 32000
+                  }
+                },
+                "required": [
+                  "revision",
+                  "queries"
+                ],
+                "additionalProperties": false
               }
             }
           }

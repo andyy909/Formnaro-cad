@@ -11,7 +11,7 @@ export function createSketchConstraintClient({workerFactory=()=>new Worker(new U
    const finish=(error,result)=>{if(job?.ticket!==ticket)return;clearTimeout(job.timer);worker.terminate();job=null;error?reject(error):resolve(result);};
    job={ticket,worker,reject,timer:setTimeout(()=>finish(Object.assign(Error('Skizzenberechnung hat die Zeitgrenze überschritten. Letzter gültiger Zustand bleibt erhalten.'),{code:'SKETCH_SOLVER_TIMEOUT'})),1500)};
    worker.onmessage=event=>{if(event.data?.ticket===ticket)finish(null,event.data.result);};worker.onerror=event=>finish(Error(event.message??'Skizzenberechnung fehlgeschlagen.'));
-   worker.postMessage({ticket,sketch:structuredClone(sketch),affected});
+   worker.postMessage({ticket,sketch,affected});
   });
  }
  return {solve,cancel,busy:()=>!!job};

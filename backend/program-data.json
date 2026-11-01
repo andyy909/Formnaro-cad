@@ -123,5 +123,9 @@
   "offlinecad-recovery-kind": {
     "file": "autosicherung-auswahl.txt",
     "limit": 64
+  },
+  "formnaro-model-checks-v1": {
+    "file": "modellpruefungen-ki.json",
+    "limit": 16384
   }
 }

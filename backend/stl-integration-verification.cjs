@@ -1,5 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 async function verify(win,app,{reportPath,converter,fixtures,prepareProject,normalFileInput=false,syntheticOnly=false,exercisePreview}){
+ fixtures=path.join(__dirname,'../converter/examples');
  const checks=[],errors=[],external=[],started=Date.now(),out=path.dirname(reportPath),pause=ms=>new Promise(r=>setTimeout(r,ms)),js=async code=>{const value=await win.webContents.executeJavaScript(code);await pause(0);return value;};
  const progressPath=reportPath+'.progress';
  const phase=message=>fs.writeFileSync(progressPath,JSON.stringify({phase:message,checks},null,2));
@@ -162,7 +163,7 @@ async function verify(win,app,{reportPath,converter,fixtures,prepareProject,norm
   check(errors.length===0,'No renderer errors during conversion/import/cancel/reload');
   if(manifest)check(JSON.stringify(sourceManifest)===JSON.stringify(manifest(path.resolve(__dirname,'..'))),'Production sources unchanged throughout acceptance');
   const rawFs=require('original-fs'),digest=file=>crypto.createHash('sha256').update(rawFs.readFileSync(file)).digest('hex');
-  return {ok:true,version:app.getVersion(),packaged:app.isPackaged,checks,errors,external,engine:'0.10.0',sourceManifest,seconds:(Date.now()-started)/1000,exeSha256:digest(app.getPath('exe')),asarSha256:app.isPackaged?digest(path.join(process.resourcesPath,'app.asar')):null,converterSha256:digest(path.join(fixtures,'../Formnaro-Konverter.exe'))};
+  return {ok:true,version:app.getVersion(),packaged:app.isPackaged,checks,errors,external,engine:'0.10.0',sourceManifest,seconds:(Date.now()-started)/1000,exeSha256:digest(app.getPath('exe')),asarSha256:app.isPackaged?digest(path.join(process.resourcesPath,'app.asar')):null,converterSha256:digest(path.join(require('./stl-converter.cjs').runtimeDirectory({packaged:app.isPackaged,resourcesPath:process.resourcesPath,root:path.resolve(__dirname,'..')}),'Formnaro-Konverter.exe'))};
  }catch(error){await converter.cancel();fs.writeFileSync(path.join(out,'failed.png'),(await win.webContents.capturePage()).toPNG());fs.writeFileSync(reportPath,JSON.stringify({ok:false,checks,error:error.message,errors},null,2));throw error;}
 }
 module.exports={verify};

@@ -116,7 +116,7 @@ test('sheet export arguments and asynchronous PDF are revision checked, with doc
   const sheet=createCadDrawingSheet({id:'sheet',sourceIds:['body']});cad.apply(await previewCadDrawingCommands(cad,{revision:cad.revision(),commands:[put(sheet),update('sheet')]}));
   for(const args of [{format:'drawing-svg'},{format:'drawing-dxf',sheetId:'sheet',ids:['body']},{format:'drawing-pdf',sheetId:'sheet',quality:{}},{format:'step',sheetId:'sheet'}])await assert.rejects(access.export(args));
   await assert.rejects(exportCadDrawing(cad,{format:'drawing-pdf',sheetId:'sheet'},{printDrawingPdf:async()=>new Uint8Array([1])}),/PDF/);
-  await assert.rejects(exportCadDrawing(cad,{format:'drawing-pdf',sheetId:'sheet'},{printDrawingPdf:async()=>{await cad.execute({kind:'batch',commands:[{op:'update',target:'body',set:{name:'Changed during PDF'}}]});return new TextEncoder().encode('%PDF-test');}}),{code:'STALE_REVISION'});
+  await assert.rejects(exportCadDrawing(cad,{format:'drawing-pdf',sheetId:'sheet'},{printDrawingPdf:async()=>{await cad.execute({kind:'batch',commands:[{op:'update',target:'body',set:{name:'Changed during PDF'}}]});return new TextEncoder().encode('%PDF-test');}}),{code:'BUSY'});assert.equal(cad.state().busy,false);
   const context=cadAIContext();assert.ok(context.supportedProjectVersions.includes(12));assert.ok(context.programTools.queries.cad.includes('drawingProjection'));assert.deepEqual(context.commandSchema.properties.commands.items.oneOf.filter(s=>s.properties.op.const==='drawing'),CAD_DRAWING_COMMAND_SCHEMAS);for(const format of ['drawing-svg','drawing-dxf','drawing-pdf'])assert.ok(context.exportSchema.properties.format.enum.includes(format));
  }finally{cad.dispose();}
 });

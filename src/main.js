@@ -249,7 +249,7 @@ function renderNodes(keepTransform=false){
   for(const id of [...selected])if(!nodes.some(n=>n.id===id&&!isHidden(n)))selected.delete(id);
   if(edits.isActive())clearSectionMeshes();applySection();scheduleSection();$('empty-hint').style.display=nodes.some(n=>!isHidden(n))?'none':'block';renderList();updateSelection(!keepTransform);
   // Retain geometries used by current nodes only, bounding GPU memory over edits.
-  const used=new Set([...meshGroup.children,...historyGhost.children].map(m=>m.geometry));for(const [key,geo]of geometryCache)if(!used.has(geo)){geo.dispose();geometryCache.delete(key);}
+  const used=new Set();for(const group of [meshGroup,historyGhost,edgePreviewGroup,magnetPreviewGroup,aiPreviewGroup])group.traverse(object=>{if(object.geometry)used.add(object.geometry);});for(const [key,geo]of geometryCache)if(!used.has(geo)){geo.dispose();geometryCache.delete(key);}
   pruneRenderData();
 }
 function bounds(list=selectedNodes()){return projectedBounds(list,geomFor);}
@@ -476,17 +476,17 @@ async function exportAsync(format,selectionOnly){
 let sectionPlane=null,sectionTimer=null,sectionGeneration=0,sectionKey=null,sectionPromise=Promise.resolve();
 const sectionGroup=new THREE.Group(),inspectionGroup=new THREE.Group();scene.add(sectionGroup,inspectionGroup);
 const sectionCalculations=createCalculations({viewport,toast:()=>{}});
-function clearSectionMeshes(){disposeChildren(sectionGroup);for(const mesh of meshGroup.children)mesh.visible=true;}
+function clearSectionMeshes({invalidate=true}={}){if(invalidate)sectionKey=null;disposeChildren(sectionGroup);for(const mesh of meshGroup.children)mesh.visible=true;}
 function applySection(){renderer.localClippingEnabled=true;for(const mesh of meshGroup.children)mesh.traverse(obj=>{if(obj.material)for(const m of Array.isArray(obj.material)?obj.material:[obj.material])m.clippingPlanes=sectionPlane?[sectionPlane]:[];});}
 function scheduleSection(){
  if(!sectionPlane){clearSectionMeshes();return;}if(edits.isActive())return;
  const project=confirmedSnapshot(),key=revisionOf(project)+JSON.stringify([...sectionPlane.normal.toArray(),sectionPlane.constant]);if(key===sectionKey)return;sectionKey=key;
- const generation=++sectionGeneration;clearTimeout(sectionTimer);sectionCalculations.cancel();clearSectionMeshes();
+ const generation=++sectionGeneration;clearTimeout(sectionTimer);sectionCalculations.cancel();clearSectionMeshes({invalidate:false});
  sectionTimer=setTimeout(()=>{
   const plane={normal:sectionPlane.normal.toArray(),offset:-sectionPlane.constant};
   sectionPromise=sectionCalculations.run({job:'section',nodes:clone(nodes.filter(n=>n.solid&&!isHidden(n))),plane,revision:key},'Schnittflächen',{silent:true}).then(results=>{
    if(generation!==sectionGeneration||!sectionPlane||key!==revisionOf(confirmedSnapshot())+JSON.stringify([...sectionPlane.normal.toArray(),sectionPlane.constant]))return;
-   clearSectionMeshes();for(const mesh of meshGroup.children)if(nodes.find(n=>n.id===mesh.userData.id)?.solid)mesh.visible=false;
+   clearSectionMeshes({invalidate:false});for(const mesh of meshGroup.children)if(nodes.find(n=>n.id===mesh.userData.id)?.solid)mesh.visible=false;
    for(const r of results){const n=nodes.find(n=>n.id===r.id);if(!n)continue;for(const p of r.parts||[{data:r.surface,color:n.color,opacity:n.opacity??1}]){const mesh=new THREE.Mesh(dataGeometry(p.data),new THREE.MeshStandardMaterial({color:p.color,roughness:.58,side:THREE.DoubleSide,transparent:p.opacity<1,opacity:p.opacity}));mesh.userData.id=n.id;sectionGroup.add(mesh);}
     const caps=new THREE.Mesh(dataGeometry(r.caps),new THREE.MeshStandardMaterial({color:'#ffb23e',roughness:.8,side:THREE.DoubleSide}));caps.userData.id=n.id;caps.userData.sectionCap=true;sectionGroup.add(caps);
    }

@@ -67,8 +67,8 @@ function mergeDrawingUpdateReports(before,after){
 
 /** The renderer and local automation share one confirmed CAD store and worker.
  * Commands, display buffers and gestures remain outside persisted model state. */
-export function createCadController({createWorker,createComparisonWorker,createMeshWorker=()=>new Worker(new URL('./mesh-engine-worker.js',import.meta.url),{type:'module'}),runScript=runCadAIScript,runPython=runCadPython,convertModel=runModelConversion,initial=createCadProject(),resolveGeometry=async project=>{if(hasGeometryRefs(project))throw Object.assign(Error('Geometriepaket zum Nachladen fehlt.'),{code:'GEOMETRY_NOT_LOADED'});return project;},getDisplayIds=()=>null,getFonts=()=>[],getProgramResources=()=>({}),onChange=()=>{},onBusy=()=>{},onProgress=()=>{},onError=()=>{},prepareCommit=async()=>{},reuseTranslations=false,canWrite=()=>true,displayQuality={deflection:.02,angleDegrees:8}}={}){
-  let store,closed=false,displaySequence=0,previewSequence=0,metadata=null,confirmedView=null,pendingDrawingProof=null,projectScope=globalThis.crypto.randomUUID();const previews=new Map(),candidateViews=new Map(),viewQueries=new Map(),replacementPreviews=new Set(),drawingProofs=new Map();
+export function createCadController({createWorker,createComparisonWorker,createMeshWorker=()=>new Worker(new URL('./mesh-engine-worker.js',import.meta.url),{type:'module'}),runScript=runCadAIScript,runPython=runCadPython,convertModel=runModelConversion,initial=createCadProject(),resolveGeometry=async project=>{if(hasGeometryRefs(project))throw Object.assign(Error('Geometriepaket zum Nachladen fehlt.'),{code:'GEOMETRY_NOT_LOADED'});return project;},getDisplayIds=()=>null,getFonts=()=>[],getProgramResources=()=>({}),onChange=()=>{},onBusy=()=>{},onProgress=()=>{},onBuildPreview,onBuildPreviewFailure=()=>{},onError=()=>{},prepareCommit=async()=>{},reuseTranslations=false,canWrite=()=>true,displayQuality={deflection:.02,angleDegrees:8}}={}){
+  let store,closed=false,displaySequence=0,previewSequence=0,livePreviewSequence=null,buildPreview=null,metadata=null,confirmedView=null,pendingDrawingProof=null,projectScope=globalThis.crypto.randomUUID();const previews=new Map(),candidateViews=new Map(),viewQueries=new Map(),replacementPreviews=new Set(),drawingProofs=new Map();
   const aiWorkspace=createAIWorkspace(),blockedConversions=new Map(),runningAnalyses=new Set();let workspaceRevision;
   const originalConvertModel=convertModel;convertModel=async args=>{const key=taskConversionKey(cadProjectRevision(args.project),args.target);if(args.action==='convert'&&blockedConversions.has(key))throw blockedConversions.get(key);try{return await originalConvertModel(args);}catch(error){if(error.feedback?.toolFailure?.scope==='converter-only')blockedConversions.set(key,error);throw error;}};
   function beginAITask(){if(runningAnalyses.size)throw Object.assign(Error("Eine lokale Berechnung läuft bereits."),{code:"BUSY"});aiWorkspace.clear();blockedConversions.clear();workspaceRevision=store.revision();return {revision:workspaceRevision};}
@@ -247,9 +247,9 @@ export function createCadController({createWorker,createComparisonWorker,createM
     const meshEdit=typeof context.operation?.type==='string'&&context.operation.type.startsWith('mesh-');
     const request={job:meshEdit?'edit':nativeOperation?'command':'rebuild',project:nativeInput,baseline:nativeBaseline,operation:nativeOperation,...(context.replaceProject&&!context.operation?{restoreUnresolvedSources:true}:{})};
     const associativeHostPlan=nativeOperation?.kind==='associativeUpdate'&&project.projectParameters?.version===2?planCadAssociativeFreeCAD(project,nativeOperation):null;
-    const mixedBatch=context.operation?.kind==='batch'&&context.operation.commands?.some(c=>['mesh','tool','script','python'].includes(c?.op));
+    const liveBuild=livePreviewSequence===ticket&&typeof onBuildPreview==='function',mixedBatch=context.operation?.kind==='batch'&&(liveBuild||context.operation.commands?.some(c=>['mesh','tool','script','python','joint'].includes(c?.op)));
     if(mixedBatch&&Object.keys(context.operation).some(key=>!['kind','commands'].includes(key)))throw Object.assign(Error('Unbekannte Felder im gemeinsamen Befehlsauftrag.'),{code:'INVALID_COMMAND'});
-    const result=mixedBatch?await runMixedCadAIBatch({project,baseline:context.baseline,commands:context.operation.commands,signal:context.signal,progress,
+    const result=mixedBatch?await runMixedCadAIBatch({project,baseline:context.baseline,commands:context.operation.commands,signal:context.signal,progress,onIntermediate:liveBuild?async value=>{if(ticket===previewSequence&&store.revision()===context.revision&&!context.signal?.aborted){buildPreview={...value,revision:context.revision,label:'KI-Zwischenstand',ticket};await onBuildPreview(buildPreview);}}:undefined,
       runNative:({project,baseline,operation,signal})=>{const plan=operation?.kind==='tool'&&operation.name==='previewRebindDrills'?planCadDrillRebind(project,operation.options):null;return worker.run({job:operation?'command':'rebuild',project,baseline,operation,...(context.replaceProject&&!operation?{restoreUnresolvedSources:true}:{})},{revision:cadProjectRevision(baseline),signal,...(plan?.freecadTargets.length?{host:createFreeCADParameterHost(project,plan.plan.data,{targets:plan.freecadTargets})}:{})});},
       runMesh:({project,operation,signal})=>meshWorker.run({job:'edit',project,operation},{revision:cadProjectRevision(project),signal}),
       runScript:async args=>{try{return await runIsolated('javascript',runScript,args);}catch(error){worker.cancel();meshWorker.cancel();throw error;}},convertModel,
@@ -280,6 +280,7 @@ export function createCadController({createWorker,createComparisonWorker,createM
     if(ticket===previewSequence)metadata={aliases:result.aliases??{},changes:result.changes??[],warnings:[...(result.warnings??[]),...(detached?['Die Netzbezugsfläche wurde geändert oder entfernt. Die Arbeitsebene bleibt an ihrer letzten gültigen Lage.']:[])],...(meshEdit?{selectedIds:result.selectedIds??[],report:result.report??null}:result.report?{report:result.report}:{})};
     if(ticket===previewSequence&&context.operation?.kind==='projectParameters'){metadata.parameterReport=result.report;metadata.preparedView=publicParameterView(view,result.report);}
     if(ticket===previewSequence&&result.drawingReport)metadata.drawingReport=result.drawingReport;
+    if(ticket===previewSequence&&result.jointReport)metadata.jointReport=result.jointReport;
     if(ticket===previewSequence&&freecadImport){metadata.selectedTargets=[freecadImport.target];metadata.report={...metadata.report,freecadImport:freecadImport.report};metadata.warnings.push(...freecadImport.warnings);}
     if(ticket===previewSequence&&['freecadReplacement','freecadBoundRerun'].includes(nativeOperation?.kind))metadata.selectedTargets=result.selectedTargets;
     if(ticket===previewSequence&&photoReconstruction)metadata.photoReconstructionReport=result.photoReconstructionReport;
@@ -297,10 +298,11 @@ export function createCadController({createWorker,createComparisonWorker,createM
   function assertPreviewStart(revision){alive();assertWritable();if(revision!==store.revision())throw Object.assign(Error('Das CAD-Modell wurde geändert. Vorschau neu berechnen.'),{code:'STALE_REVISION'});if(store.state().busy)throw Object.assign(Error('Eine CAD-Berechnung läuft bereits.'),{code:'BUSY'});}
   function previewAbort(signal,revision){assertPreviewStart(revision);const ticket=previewSequence+1,abort=()=>{if(previewSequence===ticket&&store.state().busy)cancel();};signal?.addEventListener('abort',abort,{once:true});return ()=>signal?.removeEventListener('abort',abort);}
   function changed(result,before){if(result.changed){projectScope=projectScopes.get(store.readSnapshot())??projectScope;const drawingsOnly=before&&geometryOwner(before)===geometryOwner(store.readSnapshot());confirmedView=candidateViews.get(store.readSnapshot())??null;onChange(store.snapshot(),store.state(),{drawingsOnly:!!drawingsOnly});}return result;}
-  async function preview(operation,{revision=store.revision(),project=store.snapshot(),label='CAD bearbeiten',replaceProject=false}={}){
-    assertPreviewStart(revision);onBusy(true);previewSequence++;metadata=null;pendingDrawingProof=null;
+  async function preview(operation,{revision=store.revision(),project=store.snapshot(),label='CAD bearbeiten',replaceProject=false,livePreview=false}={}){
+    assertPreviewStart(revision);onBusy(true);const ticket=++previewSequence;livePreviewSequence=livePreview?ticket:null;buildPreview=null;metadata=null;pendingDrawingProof=null;
     try{if(project.workplane?.reference?.kind==='mesh')validateMeshWorkplaneReference(project.workplane.reference);const synchronized=synchronizeMeshWorkplane(project,store.readSnapshot()),result={...await store.preview({revision,project:synchronized.project,operation,label,replaceProject}),...metadata};result.warnings=[...new Set([...(result.warnings??[]),...synchronized.warnings])];previews.set(result.previewId,result);if(((operation?.kind==='projectParameters'||operation?.kind==='linkedPattern'||operation?.kind==='associativeUpdate'||operation?.kind==='tool'&&operation.name==='previewRebindDrills')&&result.report?.requiresFreeCADAcceptance)||(operation?.kind==='batch'&&result.report?.meshOperations?.some(r=>r.requiresFreeCADAcceptance))||(operation?.kind==='featureEdits'&&result.report?.featureDependencies?.requiresAcceptance)||(['freecadDocumentEdit','freecadRerun'].includes(operation?.kind)&&result.report?.freecadDependencies?.requiresAcceptance))featureDependencyProofs.add(result.previewId);if(result.photoReconstructionReport)photoReconstructionProofs.set(result.previewId,{revision,passed:false});if(pendingDrawingProof){drawingProofs.set(result.previewId,pendingDrawingProof);while(drawingProofs.size>10)drawingProofs.delete(drawingProofs.keys().next().value);}if(replaceProject)replacementPreviews.add(result.previewId);while(previews.size>10){const first=previews.keys().next().value;previews.delete(first);replacementPreviews.delete(first);drawingProofs.delete(first);photoReconstructionProofs.delete(first);featureDependencyProofs.delete(first);}return result;}
-    finally{onBusy(store.state().busy);}
+    catch(error){if(buildPreview?.ticket===ticket){buildPreview=null;onBuildPreviewFailure({ticket});}throw error;}
+    finally{if(livePreviewSequence===ticket)livePreviewSequence=null;onBusy(store.state().busy);}
   }
   function apply(request){
     alive();assertWritable();const before=store.readSnapshot(),proposal=previews.get(request.previewId);
@@ -495,13 +497,13 @@ export function createCadController({createWorker,createComparisonWorker,createM
       return {project:cadProjectSnapshot(result.project),migration:true,warnings:result.warnings??[]};
     }finally{onBusy(store.state().busy);}
   }
-  async function meshQuery(name,options={}){
+  async function meshQuery(name,options={},{signal}={}){
     if(!['inspectSolid','analyzeEdges','toolsQuery'].includes(name))throw Error('Unbekannte Netzabfrage.');
     alive();const revision=store.revision(),project=name==='toolsQuery'&&options.kind==='partProperties'?await resolveGeometry(store.readSnapshot(),[options.id]):store.readSnapshot();
     if(store.revision()!==revision)throw Object.assign(Error('Projekt während des Nachladens geändert.'),{code:'STALE_REVISION'});
     const node=options.node??project.nodes.find(n=>n.id===(options.nodeId??options.id));
     const request=name==='toolsQuery'?{...options,job:name,node,project}:{job:name,node};
-    const result=await meshWorker.run(request,{revision,progress});
+    const result=await meshWorker.run(request,{revision,progress,signal});
     if(store.revision()!==revision)throw Object.assign(Error('Projekt während der Netzprüfung geändert. Werkzeug erneut öffnen.'),{code:'STALE_REVISION'});return result;
   }
   const inspectMeshSolid=node=>meshQuery('inspectSolid',{node});
@@ -549,15 +551,15 @@ export function createCadController({createWorker,createComparisonWorker,createM
         if(args.engine==='app')return queryProgramResources({project,kind:args.kind,options:o,getFonts,getResources:getProgramResources,signal});
         if(args.engine==='converter')return convertModel({project,action:'analyze',target:typeof o.target==='string'?{rootId:o.target,path:[]}:o.target,options:o.options,edits:o.edits,commands:o.commands,signal});
         const target=o.id??o.nodeId??o.target,id=typeof target==='string'?target:target?.path?.length===0?target.rootId:null;
-        return meshQuery(['inspectSolid','analyzeEdges'].includes(args.kind)?args.kind:'toolsQuery',{...o,id,...(['inspectSolid','analyzeEdges'].includes(args.kind)?{}:{kind:args.kind==='toolsQuery'?o.kind:args.kind})});
+        return meshQuery(['inspectSolid','analyzeEdges'].includes(args.kind)?args.kind:'toolsQuery',{...o,id,...(['inspectSolid','analyzeEdges'].includes(args.kind)?{}:{kind:args.kind==='toolsQuery'?o.kind:args.kind})},{signal});
        }});
       }
       else if(q.engine==='freecad')value=await freecadOperation(store.readSnapshot(),{...options,kind:'inspect'},signal);
-      else if(q.engine==='cad')value=await query(q.kind,options);
+      else if(q.engine==='cad')value=await query(q.kind,options,{signal});
       else if(q.engine==='app'&&q.kind==='modelComparison')value=await modelComparison(options,{signal});
       else if(q.engine==='app'&&q.kind==='jointCollision')value=await checkJointCollision(options,{revision,signal});
       else if(q.engine==='app')value=await queryProgramResources({project:store.readSnapshot(),kind:q.kind,options,getFonts,getResources:getProgramResources,signal});
-      else{const target=options.id??options.nodeId??options.target,id=typeof target==='string'?target:Array.isArray(target?.path)&&!target.path.length?target.rootId:null;if(typeof id!=='string')throw Error('Ein vollständiges Netzteil für die Messung wählen.');value=await meshQuery(q.kind==='inspectSolid'?'inspectSolid':'toolsQuery',{id,...(q.kind==='inspectSolid'?{}:{kind:q.kind,options:options.options})});}
+      else{const target=options.id??options.nodeId??options.target,id=typeof target==='string'?target:Array.isArray(target?.path)&&!target.path.length?target.rootId:null;if(typeof id!=='string')throw Error('Ein vollständiges Netzteil für die Messung wählen.');value=await meshQuery(q.kind==='inspectSolid'?'inspectSolid':'toolsQuery',{id,...(q.kind==='inspectSolid'?{}:{kind:q.kind,options:options.options})},{signal});}
       if(store.revision()!==revision)throw Object.assign(Error('Modell während der Messung geändert.'),{code:'STALE_REVISION'});
       const computation=['python','javascript'].includes(q.engine)||q.engine==='freecad'&&!!options.script,token=crypto.randomUUID(),artifacts={};
       let program;
@@ -569,14 +571,17 @@ export function createCadController({createWorker,createComparisonWorker,createM
     return compactAIAnalysisResult({revision,results});
     }finally{runningAnalyses.delete(localAbort);}
   }
+  function discard(previewId){previews.delete(previewId);replacementPreviews.delete(previewId);drawingProofs.delete(previewId);photoReconstructionProofs.delete(previewId);featureDependencyProofs.delete(previewId);return store.discard(previewId);}
   const transactions={snapshot:()=>store.snapshot(),materialize:(ids=null,options={})=>resolveGeometry(store.readSnapshot(),ids,options),
-    serialize:()=>store.serialize(),revision:()=>store.revision(),state:()=>store.state(),preview:request=>preview(undefined,request),apply,cancel:()=>store.cancel(),discard:id=>store.discard(id)};
+    serialize:()=>store.serialize(),revision:()=>store.revision(),state:()=>store.state(),preview:request=>preview(undefined,request),apply,cancel,discard};
   return {measureTransport:worker.measureTransport,transportState:worker.transportState,transactions,snapshot:()=>store.snapshot(),readSnapshot:()=>store.readSnapshot(),revision:()=>store.revision(),projectScope:()=>projectScope,state:()=>({...store.state(),busy:store.state().busy||!!meshWorker.state().running||revisionHolds.size>0||runningAnalyses.size>0,worker:worker.state(),meshWorker:meshWorker.state()}),
     preparePatternConsumerChoices:(operation,options={})=>{alive();assertPreviewStart(options.revision??store.revision());return patternChoices.prepare(operation,options);},queryPatternConsumerChoices:patternChoices.query,discardPatternConsumerChoices:patternChoices.discard,
     invalidateDisplayView:()=>{confirmedView=null;candidateViews.clear();viewQueries.clear();},preview,previewReferenceRebind,previewFreeCADDocument,previewFreeCADImport,previewFreeCADRerun,previewJoints,checkJointCollision,previewPhotos,previewFeatureReferences,previewPhotoReconstruction,previewDrawings,previewDrawingUpdate,previewDrawingEdits,previewProjectParameters,previewContourLinks,holdRevision,execute,apply,query,analyze,checkPreview,inspectFreeCADPreview,display,surfaceForComparison,modelComparison,describe,verify,exportModel,assertExportReady,open,readProject,inspectMeshSolid,meshQuery,
     undo:()=>{alive();assertWritable();const before=store.readSnapshot();return changed(store.undo(),before);},redo:()=>{alive();assertWritable();const before=store.readSnapshot();return changed(store.redo(),before);},
     cancel,
-    discard:previewId=>{previews.delete(previewId);replacementPreviews.delete(previewId);drawingProofs.delete(previewId);photoReconstructionProofs.delete(previewId);featureDependencyProofs.delete(previewId);return store.discard(previewId);},
+    discard,
+    hasBuildPreview:()=>!!buildPreview,
+    getBuildPreview:()=>buildPreview?structuredClone(buildPreview):null,
     getPreview:previewId=>{const result=previews.get(previewId);return result?structuredClone(result):undefined;},
     materialize:(ids=null,options={})=>resolveGeometry(store.readSnapshot(),ids,options),
     beginAITask,captureAITaskRuntime,restoreAITaskRuntime,restoreAITaskCandidate,materializeAITaskCandidate,serialize:()=>store.serialize(),

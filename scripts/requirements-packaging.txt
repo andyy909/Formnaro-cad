@@ -1,0 +1,2 @@
+# Developer-only PE audit tool. Never copied into a portable runtime.
+pefile==2024.8.26

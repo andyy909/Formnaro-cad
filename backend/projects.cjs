@@ -8,7 +8,10 @@ const projectId=file=>digest(process.platform==='win32'?file.toLowerCase():file)
 function projectDirectory(app,{verificationPath}={}){return verificationPath?path.join(path.dirname(verificationPath),'Projekte'):path.join(app.isPackaged?path.dirname(app.getPath('exe')):path.resolve(__dirname,'..'),'Projekte');}
 function createProjectFiles({directory,cacheDirectory=path.join(path.dirname(directory),'Daten','Vorschaubilder'),win,dialog,shell,write=writeAtomic,onPackRead=()=>{}}={}){
   directory=path.resolve(directory);cacheDirectory=path.resolve(cacheDirectory);const index=path.join(directory,'.letzte-projekte.json'),allowed=new Map(),opened=new Map(),packs=createFnpackStore({recoveryFile:path.join(path.dirname(cacheDirectory),'Paket-Autosicherung.fnpack'),onRead:onPackRead});let active=false;
-  async function recent(){
+  let recentQueue=Promise.resolve();
+  function recentAccess(fn){const result=recentQueue.then(fn);recentQueue=result.catch(()=>{});return result;}
+  const recent=()=>recentAccess(readRecent);
+  async function readRecent(){
     let bytes;try{if((await fs.stat(index)).size>65536)throw Error('Liste ist zu groß.');bytes=await fs.readFile(index);if(bytes.length>65536)throw Error('Liste ist zu groß.');}
     catch(e){if(e.code==='ENOENT')return [];throw Error('Die Liste der letzten Projekte konnte nicht gelesen werden.');}
     let value;try{value=JSON.parse(bytes.toString('utf8'));}catch{/* Retain damaged bytes before rebuilding the index. */}
@@ -22,7 +25,7 @@ function createProjectFiles({directory,cacheDirectory=path.join(path.dirname(dir
   async function readProject(file){
     const handle=await fs.open(file,'r');try{const stat=await handle.stat();if(!stat.isFile()||stat.size>MAX_BYTES)throw Error('Projektdatei ist größer als 50 MB oder keine Datei.');const bytes=await handle.readFile();if(bytes.length>MAX_BYTES)throw Error('Projektdatei ist größer als 50 MB.');return bytes;}finally{await handle.close();}
   }
-  async function remember(file){try{const items=(await recent()).filter(v=>projectId(v.path)!==projectId(file));items.unshift({path:file,usedAt:Date.now()});await write(index,Buffer.from(JSON.stringify({version:1,items:items.slice(0,MAX_RECENT)})));return null;}catch(e){return 'Projektdatei ist gespeichert/geöffnet; die Liste konnte nicht aktualisiert werden: '+e.message;}}
+  async function remember(file){return recentAccess(async()=>{try{const items=(await readRecent()).filter(v=>projectId(v.path)!==projectId(file));items.unshift({path:file,usedAt:Date.now()});await write(index,Buffer.from(JSON.stringify({version:1,items:items.slice(0,MAX_RECENT)})));return null;}catch(e){return 'Projektdatei ist gespeichert/geöffnet; die Liste konnte nicht aktualisiert werden: '+e.message;}});}
   function allow(file){file=path.resolve(file);const id=projectId(file);allowed.set(id,file);return id;}
   async function metadata(file,usedAt){const id=allow(file);let stat;try{stat=await fs.stat(file);}catch(e){if(e.code!=='ENOENT')throw e;}return {id,name:path.basename(file),path:file,exists:!!stat?.isFile(),modifiedAt:stat?.mtimeMs??null,previewStamp:stat?[stat.mtimeMs,stat.ctimeMs,stat.size].join('/'):null,...(usedAt===undefined?{}:{usedAt})};}
   async function list(){await fs.mkdir(directory,{recursive:true});const items=await recent(),last=await Promise.all(items.map(v=>metadata(v.path,v.usedAt)));const files=[];let count=0;const dir=await fs.opendir(directory);for await(const entry of dir){if(entry.isFile()&&projectExtension(entry.name)){if(++count>500)break;files.push(await metadata(path.join(directory,entry.name)));}}files.sort((a,b)=>b.modifiedAt-a.modifiedAt);return {directory,recent:last,files,truncated:count>500};}
@@ -74,7 +77,7 @@ function createProjectFiles({directory,cacheDirectory=path.join(path.dirname(dir
   async function thumbnail(args){
     const input=await previewInput(args),file=path.join(cacheDirectory,args.id+'.json');if(input.unloaded)return {token:input.token,unloaded:true};
     try{if((await fs.stat(file)).size>350200)throw Error();const cached=JSON.parse(await fs.readFile(file,'utf8'));if(cached.version===1&&cached.token===input.token)return {token:input.token,image:png(cached.image)};}catch{/* Missing/stale/corrupt previews regenerate without changing projects. */}
-    return {token:input.token,project:input.bytes.toString('utf8')};
+    return {token:input.token,...(input.bytes[0]===0x1f&&input.bytes[1]===0x8b?{bytes:new Uint8Array(input.bytes)}:{project:input.bytes.toString('utf8')})};
   }
   async function cacheThumbnail(args){
     const image=png(args?.image),input=await previewInput(args);
