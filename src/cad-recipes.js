@@ -216,7 +216,7 @@ export function cadRecipeVolume(oc,shape) {
   // the original surfaces with explicit B-spline spans, without triangulation.
   return cadVolume(oc,shape,{projection:'point'});
 }
-export function assertCadRecipeTolerance(oc,shape,constructionBudget){
+export function assertCadRecipeTolerance(oc,shape,constructionBudget,{enforce=true}={}){
   const s=scope();try{
     let maximum=0;
     for(const [type,cast] of [[oc.TopAbs_ShapeEnum.TopAbs_FACE,'Face'],[oc.TopAbs_ShapeEnum.TopAbs_EDGE,'Edge'],[oc.TopAbs_ShapeEnum.TopAbs_VERTEX,'Vertex']]){
@@ -224,7 +224,7 @@ export function assertCadRecipeTolerance(oc,shape,constructionBudget){
         const raw=explorer.Current(),item=oc.TopoDS[cast](raw);try{const tolerance=oc.BRep_Tool.Tolerance(item);if(!Number.isFinite(tolerance)||tolerance<0)throw Error('CAD-Topologie besitzt keine endliche Genauigkeitsgrenze.');maximum=Math.max(maximum,tolerance);}finally{item.delete();raw.delete();}explorer.Next();
       }
     }
-    if(maximum>constructionBudget/2*(1+1e-12))throw Error('Native CAD-Topologietoleranz überschreitet das reservierte Konstruktionsbudget.');
+    if(enforce&&maximum>constructionBudget/2*(1+1e-12))throw Object.assign(Error('Native CAD-Topologietoleranz '+maximum+' mm überschreitet die Grenze '+constructionBudget/2+' mm.'),{code:'CAD_TOPOLOGY_TOLERANCE',measuredTolerance:maximum,allowedTolerance:constructionBudget/2});
     return maximum;
   }finally{s.close();}
 }

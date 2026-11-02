@@ -48,3 +48,6 @@ Thumbs.db
 # Lokale Live-Diagnosehelfer ohne Auslieferungsfunktion
 /.formnaro-live-ui-temp.cjs
 /scripts/.formnaro-live-eval-temp.cjs
+
+# Additional local development exclusions
+freecad-runtime/

@@ -94,6 +94,221 @@
       "required": [
         "op",
         "action",
+        "drive"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "drive-create"
+        },
+        "drive": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "rotary",
+                "linear"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "kind": {
+                  "const": "screw"
+                },
+                "rotary": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "linear": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "lead": {
+                  "type": "number",
+                  "minimum": 0.000001,
+                  "maximum": 100000
+                },
+                "pitch": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "starts": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100
+                },
+                "direction": {
+                  "enum": [
+                    1,
+                    -1
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "table",
+                "swivel",
+                "extension",
+                "attachment"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "kind": {
+                  "const": "actuator"
+                },
+                "table": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "swivel": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "extension": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "attachment": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action",
+        "driveId"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "drive-remove"
+        },
+        "driveId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action",
+        "mainId",
+        "translate"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "rigid-move"
+        },
+        "mainId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "translate": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": -100000,
+            "maximum": 100000
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action",
+        "mainId",
+        "ids"
+      ],
+      "properties": {
+        "op": {
+          "const": "joint"
+        },
+        "action": {
+          "const": "rigid-assembly"
+        },
+        "mainId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "ids": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 257,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "action",
         "joint"
       ],
       "properties": {

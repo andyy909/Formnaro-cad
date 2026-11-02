@@ -15,3 +15,7 @@ test('Completed external preview is handed to its own display before returning a
 test('A cancelled native result is never displayed as a completed preview',async()=>{
  let finish,shown=0;const session=createCadAutomationSession({dispatch:()=>new Promise(r=>{finish=r;}),cancel:()=>{},completedPreview:()=>shown++});const pending=session.run('preview',{},20);session.cancel(20);finish({previewId:'late'});await assert.rejects(pending,{code:'ABORTED'});assert.equal(shown,0);
 });
+
+test('start progress runs inside the owning request before export dispatch',async()=>{
+ const calls=[];let session;session=createCadAutomationSession({onStart:(method,id)=>calls.push([method,id,session.currentRequestId()]),dispatch:async()=>{calls.push('dispatch');return {ok:true};},cancel:()=>{}});await session.run('export',{},41);assert.deepEqual(calls,[['export',41,41],'dispatch']);
+});

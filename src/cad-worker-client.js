@@ -7,7 +7,7 @@ function aborted(message='CAD-Berechnung abgebrochen.'){
 // no import of the mesh kernel. The worker factory is supplied by the host.
 export function createCadWorkerClient({createWorker,confirmed=()=>null,initialization=()=>({}),onError=()=>{}}={}){
   if(typeof createWorker!=='function')throw new TypeError('CAD-Worker-Factory fehlt.');
-  let worker=null,generation=0,sequence=0,disposed=false,recycleRequested=false,heapBytes=0;
+  let memory=null,retirements=0,proofs=[];let worker=null,generation=0,sequence=0,disposed=false,recycleRequested=false,heapBytes=0;
   const jobs=new Map(),displayDecoder=createCadDisplayDecoder();let measuring=false;const samples=[];let sentMessages=0,receivedMessages=0,sentJsonBytes=0,receivedJsonBytes=0,measurementErrors=0;const clock=()=>globalThis.performance?.now?.()??Date.now();
   function payloadBytes(value){if(!measuring)return null;try{return new TextEncoder().encode(JSON.stringify(value)).byteLength;}catch{measurementErrors++;return null;}}
   function send(instance,value){sentMessages++;const bytes=payloadBytes(value);if(bytes!==null)sentJsonBytes+=bytes;instance.postMessage(value);}
@@ -27,9 +27,10 @@ export function createCadWorkerClient({createWorker,confirmed=()=>null,initializ
       receivedMessages++;const received=payloadBytes(data);if(received!==null)receivedJsonBytes+=received;
       const job=jobs.get(data.id);if(!job||data.revision!==job.revision)return;
       if(Number.isSafeInteger(data.heapBytes)&&data.heapBytes>=0)heapBytes=data.heapBytes;
+      if(data.memory&&typeof data.memory==='object')memory=data.memory;if(Array.isArray(data.proofs))proofs=data.proofs;
       if(data.type==='hostRequest'){
         if(!Number.isSafeInteger(data.callId)||job.hostCalls.has(data.callId)||job.hostCalls.size>=500){stop(Object.assign(Error('Ungültige native Worker-Rückfrage.'),{code:'CAD_HOST_REQUEST'}));return;}
-        job.hostCalls.add(data.callId);Promise.resolve().then(()=>{if(!job.host)throw Object.assign(Error('FreeCAD-Abhängigkeit benötigt die Desktop-Parameteraktualisierung.'),{code:'CAD_HOST_UNAVAILABLE'});return job.host(data.request,{signal:job.hostAbort.signal});}).then(value=>{if(worker===instance&&jobs.get(data.id)===job)send(instance,{type:'hostReply',id:data.id,generation:currentGeneration,revision:job.revision,callId:data.callId,ok:true,value});},error=>{if(worker===instance&&jobs.get(data.id)===job)send(instance,{type:'hostReply',id:data.id,generation:currentGeneration,revision:job.revision,callId:data.callId,ok:false,message:error.message,code:error.code});});return;
+        job.hostCalls.add(data.callId);Promise.resolve().then(()=>{if(!job.host)throw Object.assign(Error('FreeCAD-Abhängigkeit benötigt die Desktop-Parameteraktualisierung.'),{code:'CAD_HOST_UNAVAILABLE'});return job.host(data.request,{signal:job.hostAbort.signal});}).then(value=>{if(worker===instance&&jobs.get(data.id)===job)send(instance,{type:'hostReply',id:data.id,generation:currentGeneration,revision:job.revision,callId:data.callId,ok:true,value});},error=>{if(worker===instance&&jobs.get(data.id)===job)send(instance,{type:'hostReply',id:data.id,generation:currentGeneration,revision:job.revision,callId:data.callId,ok:false,message:error.message,code:error.code,feedback:error.feedback});});return;
       }
       if(data.type==='progress'){job.progress?.(data.value);return;}
       if(!['result','error'].includes(data.type))return;
@@ -42,11 +43,11 @@ export function createCadWorkerClient({createWorker,confirmed=()=>null,initializ
       if(worker===instance)retireIfIdle();
     };
     instance.onerror=event=>{if(worker===instance){const error=new Error(event.message||'CAD-Worker abgestürzt.');try{onError(error,{source:'cad-worker-crash'});}catch{}stop(error);}};
-    try{send(instance,{type:'initialize',generation:currentGeneration,confirmed:confirmed(),resources:initialization()});}
+    try{send(instance,{type:'initialize',generation:currentGeneration,confirmed:confirmed(),resources:initialization(),proofs});}
     catch(error){stop(error);throw error;}
     return instance;
   }
-  function retireIfIdle(){if(worker&&recycleRequested&&!jobs.size){const instance=worker;generation++;worker=null;recycleRequested=false;heapBytes=0;displayDecoder.clear();instance.onmessage=null;instance.onerror=null;instance.terminate();}}
+  function retireIfIdle(){if(worker&&recycleRequested&&!jobs.size){const instance=worker;generation++;retirements++;worker=null;recycleRequested=false;heapBytes=0;displayDecoder.clear();instance.onmessage=null;instance.onerror=null;instance.terminate();}}
   function trim(){if(heapBytes<512*1024*1024)return false;recycleRequested=true;retireIfIdle();return true;}
   function run(request,{revision,signal,progress,host}={}){
     if(signal?.aborted)return Promise.reject(aborted());
@@ -62,7 +63,7 @@ export function createCadWorkerClient({createWorker,confirmed=()=>null,initializ
     });
   }
   return {run,trim,measureTransport:value=>{measuring=!!value;samples.length=0;sentMessages=receivedMessages=sentJsonBytes=receivedJsonBytes=measurementErrors=0;},transportState:()=>({enabled:measuring,sentMessages,receivedMessages,sentJsonUtf8Bytes:measuring?sentJsonBytes:null,receivedJsonUtf8Bytes:measuring?receivedJsonBytes:null,measurementErrors,samples:samples.map(v=>({...v})),payloadDefinition:'UTF-8 JSON representation of full messages; not Chromium structured-clone wire bytes. Measurement serialization overhead is included in observed request latency.'}),cancel:()=>stop(aborted()),dispose:()=>{disposed=true;stop(aborted());},
-    state:()=>({generation,running:jobs.size,loaded:!!worker,disposed,heapBytes,displayCache:displayDecoder.state()})};
+    state:()=>({generation,running:jobs.size,loaded:!!worker,disposed,heapBytes,memory,retirements,displayCache:displayDecoder.state()})};
 }
 
 // CAD and display caches have independent instances and budgets. Eviction calls
@@ -82,5 +83,5 @@ export function createCadCache({maxEntries=128,maxBytes=64*1024*1024,dispose=()=
     while(values.size>=maxEntries||bytes+cost>maxBytes)remove(values.keys().next().value);
     values.set(key,{value,bytes:cost});bytes+=cost;return true;
   }
-  return {get,find,set,delete:remove,clear:()=>{for(const key of [...values.keys()])remove(key);},state:()=>({entries:values.size,bytes,maxEntries,maxBytes})};
+  return {get,find,set,entries:()=>[...values].map(([key,entry])=>[key,entry.value]),delete:remove,clear:()=>{for(const key of [...values.keys()])remove(key);},state:()=>({entries:values.size,bytes,maxEntries,maxBytes})};
 }

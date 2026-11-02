@@ -1,3 +1,4 @@
+import {cadSizeAnchorPoint} from './cad-size-anchor.js';
 // Inspector measurements and edits use full matrices. Bounds come from freshly
 // validated native bodies; no renderer triangles participate in these helpers.
 import {Matrix4,Euler,Vector3,Quaternion} from 'three';
@@ -49,10 +50,10 @@ export function cadSetFormPosition(project,value,position){
   const node=context.node,current=cadPoint(node.transform,center(node)),desired=value.path.length?position:cadPoint(inverseCadMatrix(context.parentWorld),project.coordinateMode==='plane'?cadPoint(workplane(project),position):position),copy=structuredClone(node);
   for(let i=0;i<3;i++)copy.transform[12+i]+=desired[i]-current[i];return copy;
 }
-export function cadResizeForm(node,target,{proportions=false,axis=0}={}){
+export function cadResizeForm(node,target,{proportions=false,axis=0,anchor='legacy'}={}){
   const current=cadFormLocalDimensions(node),size=[...target];if(proportions){const factor=size[axis]/current[axis];for(let i=0;i<3;i++)size[i]=current[i]*factor;}
-  if(node.kind==='cad')return resizeCadAtCorner(node,size);
+  if(node.kind==='cad')return resizeCadAtCorner(node,size,{anchor});
   if(!['referenceMesh','mesh'].includes(node.kind)||size.length!==3||size.some((v,i)=>!Number.isFinite(v)||(current[i]===0?v!==0:v<.01||v>10000)))throw Error('Ungültige Netzgröße.');
-  const factors=size.map((v,i)=>current[i]===0?1:v/current[i]),anchor=cadInterfaceLocalBounds(node).min,scaling=new Matrix4().makeTranslation(...anchor).multiply(new Matrix4().makeScale(...factors)).multiply(new Matrix4().makeTranslation(...anchor.map(v=>-v))).toArray();return {...structuredClone(node),transform:multiplyCadMatrices(node.transform,scaling)};
+  const factors=size.map((v,i)=>current[i]===0?1:v/current[i]),fixedPoint=cadSizeAnchorPoint(cadInterfaceLocalBounds(node),anchor),scaling=new Matrix4().makeTranslation(...fixedPoint).multiply(new Matrix4().makeScale(...factors)).multiply(new Matrix4().makeTranslation(...fixedPoint.map(v=>-v))).toArray();return {...structuredClone(node),transform:multiplyCadMatrices(node.transform,scaling)};
 }
 export function cadAssignSource(project,value,replacement){const context=cadSelectionContext(project,value);if(context.locked)throw Error('Objekt, Quelle oder Container ist gesperrt.');Object.assign(context.node,replacement);return project;}

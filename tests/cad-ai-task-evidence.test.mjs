@@ -18,7 +18,7 @@ test('Actual Chat and Responses payloads each carry the full schema once, retain
 test('Converter rejection survives a successful measurement, invalid JSON and a later native failure',async()=>{
  let calls=0,previews=0;const inputs=[],scene=()=>({revision:'r',selectionTargets:[]}),checks=[{kind:'solids',target:'$part',expected:1}];
  const converter=Object.assign(Error('Repair deviation 3.01367 mm; reconstruct from measurements'),{code:'CAD_CONVERTER_REPAIR_REJECTED',feedback:{toolFailure:{scope:'converter-only'}}});
- const result=await runCadAIRequest({input:{},maxSteps:8,visualReview:false,access:{scene,context:()=>({}),analyze:async()=>({results:[{id:'scan',value:{radius:3}}]}),preview:async p=>{assert.deepEqual(p.checks,checks);if(++previews===1)throw converter;if(previews===2)throw Object.assign(Error('Mesh method missing'),{code:'FREECAD_PYTHON_FAILED'});return {previewId:'good'};}},generate:async args=>{
+ const result=await runCadAIRequest({input:{},maxSteps:8,maxCorrections:3,visualReview:false,access:{scene,context:()=>({}),analyze:async()=>({results:[{id:'scan',value:{radius:3}}]}),preview:async p=>{assert.deepEqual(p.checks,checks);if(++previews===1)throw converter;if(previews===2)throw Object.assign(Error('Mesh method missing'),{code:'FREECAD_PYTHON_FAILED'});return {previewId:'good'};}},generate:async args=>{
   inputs.push(structuredClone(args));calls++;
   if(calls===1)return {revision:'r',commands:[{op:'tool',engine:'converter',operation:{kind:'convert'}}],checks};
   if(calls===2)return {revision:'r',analysis:[{id:'scan',engine:'python',kind:'run',options:{code:'result=3'}}]};

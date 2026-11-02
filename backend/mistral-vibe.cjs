@@ -72,7 +72,7 @@ function createMistralVibe({directory,connectionFile,node=process.execPath,comma
  }
  function cancelLogin(){authGeneration++;signInURL=null;authClient?.close();authClient=null;status={...status,pending:false,message:'Anmeldung abgebrochen.'};return publicStatus();}
  async function logout(){if(activeAgent)throw Error('Laufenden Agentenauftrag zuerst abschließen.');cancelLogin();reset();accountGeneration++;account={status:'signed-out'};availableModels=[];modelsAt=0;const client=await connect();try{await client.call('_auth/signOut');status={...status,checked:true,connected:false,message:'Von Mistral abgemeldet.'};}finally{client.close();}return publicStatus();}
- function mcpServer(){if(!fs.existsSync(connectionFile))throw Error('Zuerst die lokale KI-Schnittstelle in den Einstellungen aktivieren.');return {name:'formnaro',command:node,args:[path.join(directory,'mcp.cjs'),connectionFile,path.join(__dirname,'../ai/FORMNARO-MODELLIERFREIRAUM.json')],env:[{name:'ELECTRON_RUN_AS_NODE',value:'1'}]};}
+ function mcpServer(){if(!fs.existsSync(connectionFile))throw Error('Zuerst die lokale KI-Schnittstelle in den Einstellungen aktivieren.');return {name:'formnaro',command:node,args:[path.join(directory,'mcp.cjs'),connectionFile,path.join(__dirname,'../ai/FORMNARO-MODELLIERFREIRAUM.json'),'--profile=compact'],env:[{name:'ELECTRON_RUN_AS_NODE',value:'1'}]};}
  async function newSession(client,model,direct){
   const auth=await client.call('_auth/status');if(!auth.authenticated)throw Error('Bitte zuerst mit Mistral anmelden.');
   const session=await client.call('session/new',{cwd:workspace,mcpServers:direct?[mcpServer()]:[]},{timeout:120000});

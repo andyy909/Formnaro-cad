@@ -1,3 +1,4 @@
+import {cadNativeMemory,CAD_MEMORY_POLICY} from './cad-native-memory.js';
 import {verifyStepDrillExports} from './cad-step-drill-verify.js';
 import {nativePartProperties} from './cad-part-properties-native.js';
 import {rerunBoundFreeCADNative} from './cad-freecad-rerun-bound-native.js';
@@ -30,10 +31,10 @@ import {cadFontInfo} from './cad-font-outline.js';
 
 // Transport-independent entry point; the browser and native test thread use
 // the same service. Responses carry both worker generation and model revision.
-export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nativeRecipeForInput,editRecipe=nativeRecipeEdit}={}){
+export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nativeRecipeForInput,editRecipe=nativeRecipeEdit,memoryPolicy=CAD_MEMORY_POLICY}={}){
   const hostRequests=new Map();let hostSequence=0;
   let generation=null,ready=null,service=null,kernel=null,router=null,precision=null,tail=Promise.resolve(),closed=false,fonts=[];
-  function reply(request,payload){if(!closed&&generation===request.generation)postMessage({id:request.id,generation,revision:request.revision,heapBytes:kernel?.wasmMemory?.buffer?.byteLength??0,...payload});}
+  function reply(request,payload){if(!closed&&generation===request.generation)postMessage({id:request.id,generation,revision:request.revision,heapBytes:kernel?.wasmMemory?.buffer?.byteLength??0,...(['result','error'].includes(payload.type)&&kernel?{memory:{...cadNativeMemory(kernel).state(),constructions:service?.constructionState().total??0}}:{}),...payload});}
   function hostRequest(message,request){if(closed||message.generation!==generation)return Promise.reject(Object.assign(Error('Native Worker-Rückfrage abgebrochen.'),{name:'AbortError',code:'ABORTED'}));return new Promise((resolve,reject)=>{const callId=++hostSequence;hostRequests.set(callId,{message,resolve,reject});try{reply(message,{type:'hostRequest',callId,request});}catch(error){hostRequests.delete(callId);reject(error);}});}
   async function compute(message){
     const importJob=message.request?.job==='command'&&message.request?.operation?.kind==='importStlHousing';
@@ -41,14 +42,14 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
     // empty model is committed, never while an empty preview is unconfirmed.
     const recycle=(failed=false)=>failed&&importJob&&(kernel?.wasmMemory?.buffer?.byteLength??0)>=512*1024*1024;
     try{
-      await ready;if(closed||generation!==message.generation)return;
+      await ready;if(closed||generation!==message.generation)return;cadNativeMemory(kernel).check('request-'+message.request?.job);if((kernel?.wasmMemory?.buffer?.byteLength??0)>=memoryPolicy.stopBytes)throw Object.assign(Error('CAD-Speicherbudget erreicht.'),{code:'CAD_MEMORY_BUDGET'});
       const request=message.request,readOnly=['display','query','exportMeshes','exportStep','exportModel'].includes(request.job),project=cadProjectSnapshot(request.project);
       // Read-only requests without a separate baseline have exactly one input.
       // Validate and hash it once; editing jobs still own independent copies.
       const baseline=readOnly&&request.baseline==null?project:cadProjectSnapshot(request.baseline??request.project),baselineRevision=cadProjectRevision(baseline);
       if(baselineRevision!==message.revision){const error=Error('CAD-Worker erhielt ein anderes Ausgangsmodell.');error.code='STALE_REVISION';throw error;}
       if(readOnly&&(baseline===project?baselineRevision:cadProjectRevision(project))!==message.revision){const error=Error('CAD-Abfragen und Export benötigen den bestätigten Modellstand.');error.code='UNCONFIRMED_PROJECT';throw error;}
-      const progress=value=>reply(message,{type:'progress',value});let result;
+      const progress=value=>reply(message,{type:'progress',value});progress({phase:request.job==='query'?'query-'+request.query?.kind:request.job});let result;
       if(['exportModel','exportMeshes','exportStep'].includes(request.job))await verifyStepDrillExports(service,project,{ids:request.options?.ids});
       if(request.job==='query'&&['svgProjection','drawingProjection'].includes(request.query?.kind))await verifyStepDrillExports(service,project,{ids:request.query.options?.ids});
       switch(request.job){
@@ -122,18 +123,18 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
         case 'importStep':project.nodes.push(service.stepNode(request.bytes,request.options));result={project:await service.rebuild(project,{progress,baseline})};if(request.display)result.display=service.display(result.project,request.quality);break;
         default:throw Error('Unbekannter CAD-Workerauftrag.');
       }
-      reply(message,{type:'result',result,recycleWorker:recycle()});
-    }catch(error){const fatal=error instanceof WebAssembly.RuntimeError;reply(message,{type:'error',recycleWorker:recycle(true),code:fatal?'CAD_KERNEL_FATAL':error.code||'CAD_ERROR',feedback:aiFeedback({code:fatal?'CAD_KERNEL_FATAL':error.code||'CAD_ERROR',message:error.message,feedback:error.feedback}),phase:error.cadPhase,stack:String(error.stack??'').slice(0,12000),message:fatal?'Die CAD-Berechnung musste beendet werden. Das bisherige Modell bleibt erhalten; bitte erneut versuchen.':error.message||'CAD-Workerauftrag fehlgeschlagen.'});}
+      cadNativeMemory(kernel).sample('request-complete');const retire=recycle()||(kernel?.wasmMemory?.buffer?.byteLength??0)>=memoryPolicy.retireBytes;reply(message,{type:'result',result,recycleWorker:retire,...(retire?{proofs:service.exportProofs()}:{})});
+    }catch(error){const fatal=error instanceof WebAssembly.RuntimeError,code=fatal?'CAD_KERNEL_FATAL':error.code||'CAD_ERROR',phase=error.cadPhase??message.request?.job,messageText=fatal?'Die CAD-Berechnung musste beendet werden. Diesen Auftrag beenden und den Fehlerbericht prüfen.':error.message||'CAD-Workerauftrag fehlgeschlagen.';reply(message,{type:'error',recycleWorker:recycle(true)||code==='CAD_MEMORY_BUDGET',...(code==='CAD_MEMORY_BUDGET'&&service?{proofs:service.exportProofs()}:{}),code,feedback:aiFeedback({code,message:messageText,feedback:error.feedback,measuredTolerance:error.measuredTolerance,allowedTolerance:error.allowedTolerance},{phase}),phase,stack:String(error.stack??'').slice(0,12000),message:messageText});}
   }
   function receive(message){
     if(closed)return;
-    if(message.type==='hostReply'){const pending=hostRequests.get(message.callId);if(!pending||message.id!==pending.message.id||message.generation!==generation||message.revision!==pending.message.revision)return;hostRequests.delete(message.callId);if(message.ok===true)pending.resolve(message.value);else pending.reject(Object.assign(Error(message.message??'Native Berechnung fehlgeschlagen.'),{code:message.code??'CAD_HOST_ERROR'}));return;}
+    if(message.type==='hostReply'){const pending=hostRequests.get(message.callId);if(!pending||message.id!==pending.message.id||message.generation!==generation||message.revision!==pending.message.revision)return;hostRequests.delete(message.callId);if(message.ok===true)pending.resolve(message.value);else pending.reject(Object.assign(Error(message.message??'Native Berechnung fehlgeschlagen.'),{code:message.code??'CAD_HOST_ERROR',feedback:message.feedback}));return;}
     if(message.type==='initialize'){
       if(ready)throw Error('CAD-Worker wurde bereits initialisiert.');generation=message.generation;
       // Confirmed input is validated before loading the kernel. No renderer
       // buffers, legacy project or incomplete preview initializes a worker.
       const confirmed=cadProjectSnapshot(message.confirmed);
-      ready=Promise.resolve().then(()=>{fonts=validateCadFontLibrary(message.resources?.fonts??[]);return createKernel();}).then(async oc=>{if(closed)throw Error('CAD-Worker wurde geschlossen.');kernel=oc;service=createCadService({oc,finish:createCadFinishNative({oc})});router=createCadCommandRouter({oc,service,makeRecipe:makeRecipe?((type,input)=>makeRecipe(oc,type,input,{fonts})):undefined,editRecipe:editRecipe?((node,patch)=>editRecipe(oc,node,patch,{fonts})):undefined});precision=createCadPrecisionNative({oc,service});await service.rebuild(confirmed,{catalogOnly:true});return service;});ready.catch(()=>{});return;
+      ready=Promise.resolve().then(()=>{fonts=validateCadFontLibrary(message.resources?.fonts??[]);return createKernel();}).then(async oc=>{if(closed)throw Error('CAD-Worker wurde geschlossen.');kernel=oc;service=createCadService({oc,finish:createCadFinishNative({oc})});service.restoreProofs(message.proofs??[]);router=createCadCommandRouter({oc,service,makeRecipe:makeRecipe?((type,input)=>makeRecipe(oc,type,input,{fonts})):undefined,editRecipe:editRecipe?((node,patch)=>editRecipe(oc,node,patch,{fonts})):undefined});precision=createCadPrecisionNative({oc,service});await service.rebuild(confirmed,{catalogOnly:true});return service;});ready.catch(()=>{});return;
     }
     if(message.type!=='compute'||!ready||message.generation!==generation)return;
     tail=tail.then(()=>compute(message));

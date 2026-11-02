@@ -16,3 +16,7 @@
 [data-theme=dark] #joint-panel .modal-actions{background:#212f3e}
 #joint-status,#joint-collision-result{overflow-wrap:anywhere}
 @media(max-width:720px){#joint-panel{grid-template-columns:minmax(0,1fr)}#joint-panel fieldset:first-of-type{grid-column:auto;grid-row:auto}}
+
+#joint-panel .joint-motion-track{display:grid;grid-template-columns:20px minmax(70px,1fr) 72px 72px;gap:6px;align-items:center}
+#joint-panel .joint-motion-track input[type=checkbox]{width:16px;height:16px;margin:0}
+#joint-panel .joint-motion-track input[type=number]{width:72px}

@@ -1,5 +1,5 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
-async function writeAtomic(target,bytes,{shouldCommit=()=>true,rename=fs.rename,platform=process.platform,wait=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
+async function writeAtomic(target,bytes,{shouldCommit=()=>true,createOnly=false,rename=fs.rename,platform=process.platform,wait=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
  const temporary=path.join(path.dirname(target),'.formnaro-'+crypto.randomUUID()+'.tmp');let file;
  try{
   file=await fs.open(temporary,'wx');await file.writeFile(bytes);await file.sync();await file.close();file=null;
@@ -8,7 +8,7 @@ async function writeAtomic(target,bytes,{shouldCommit=()=>true,rename=fs.rename,
   const delays=[10,20,40,80,160];
   for(let attempt=0;;attempt++){
    if(!await shouldCommit())throw Object.assign(Error('Dateiausgabe abgebrochen oder Zieldatei inzwischen geändert.'),{code:'ABORTED'});
-   try{await rename(temporary,target);break;}
+   try{if(createOnly)await fs.link(temporary,target);else await rename(temporary,target);break;}
    catch(error){if(platform!=='win32'||!['EPERM','EACCES','EBUSY'].includes(error.code)||attempt>=delays.length)throw error;await wait(delays[attempt]);}
   }
  }finally{await file?.close().catch(()=>{});await fs.rm(temporary,{force:true}).catch(()=>{});}

@@ -116,6 +116,14 @@ class SDKTests(unittest.TestCase):
                 self.assertEqual([p for p, _ in calls], ["/v1/scene", "/v1/preview"])
                 self.assertFalse(any(p.endswith("apply") for p, _ in calls))
                 self.assertTrue(client.apply(proposal)["applied"])
+                detailed = client.preview(m, revision=proposal["revision"], response_detail="full")
+                self.assertEqual(calls[-1][1]["responseDetail"], "full")
+                client.apply(detailed, response_detail="summary")
+                self.assertEqual(calls[-1][1]["responseDetail"], "summary")
+                with self.assertRaises(ValueError):
+                    client.preview(m, revision=proposal["revision"], response_detail="invalid")
+                with self.assertRaises(ValueError):
+                    client.apply(proposal, response_detail="invalid")
                 with self.assertRaises(FormnaroError) as caught:
                     client.preview(m, revision="stale")
                 self.assertEqual(caught.exception.code, "STALE_REVISION")

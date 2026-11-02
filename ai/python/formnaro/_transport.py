@@ -20,7 +20,7 @@ class Transport:
         self._opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect())
 
     def request(self, method, args=None):
-        if method not in ("context", "scene", "project", "preview", "apply", "export"):
+        if method not in ("context", "scene", "project", "preview", "apply", "export", "save", "status", "cancel", "preview_start", "preview_result", "command_info", "discard"):
             raise ValueError("Unknown Formnaro operation")
         try:
             descriptor = json.loads(self._connection.read_text(encoding="utf-8"))
@@ -35,10 +35,10 @@ class Transport:
         if url.scheme != "http" or url.hostname != "127.0.0.1" or not port or url.username or url.password or url.path or url.query or url.fragment or not isinstance(token, str) or not re.fullmatch(r"[0-9a-f]{64}", token):
             raise RuntimeError("Invalid Formnaro connection descriptor")
         body = None if args is None else json.dumps(args, ensure_ascii=False, allow_nan=False).encode("utf-8")
-        req = urllib.request.Request(descriptor["url"] + "/v1/" + method, data=body,
+        req = urllib.request.Request(descriptor["url"] + "/v1/" + {"preview_start": "preview/start", "preview_result": "preview/result"}.get(method, method), data=body,
             headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"})
         try:
-            with self._opener.open(req, timeout=180) as response:
+            with self._opener.open(req, timeout=650 if method in ("preview", "save", "export") else 60) as response:
                 raw = response.read(32*1024*1024+1)
         except urllib.error.HTTPError as error:
             payload = {}
@@ -50,8 +50,17 @@ class Transport:
             safe = json.loads(json.dumps(payload).replace(token, "[redacted]")) if isinstance(payload, dict) else {}
             raise FormnaroError(message, code=safe.get("code"), status=error.code, feedback=safe.get("feedback")) from None
         except (OSError, urllib.error.URLError):
+            if method == 'apply':
+                raise FormnaroError('Apply result unknown. Repeat the SAME previewId and original revision.', code='CAD_TRANSPORT_UNAVAILABLE', feedback={'phase': 'transport', 'applied': None, 'commitStatus': 'unknown', 'retryable': True, 'nextAction': 'repeat'}) from None
             raise RuntimeError("Formnaro local interface is unavailable") from None
         if len(raw) > 32*1024*1024:
             raise RuntimeError("Formnaro response exceeds 32 MB")
         # A misconfigured server must not echo authentication material.
-        return json.loads(raw.decode("utf-8").replace(token, "[redacted]"))
+        try:
+            value = json.loads(raw.decode("utf-8").replace(token, "[redacted]"))
+            if not isinstance(value, dict):
+                raise ValueError()
+            return value
+        except (ValueError, UnicodeError):
+            applying = method == 'apply'
+            raise FormnaroError('Invalid Formnaro response.' + (' Apply result unknown; repeat the SAME previewId and original revision.' if applying else ''), code='CAD_TRANSPORT_INVALID_RESPONSE', feedback={'phase': 'transport', 'applied': None if applying else False, 'commitStatus': 'unknown' if applying else 'not-requested', 'retryable': applying, 'nextAction': 'repeat' if applying else 'fix_prerequisite'}) from None

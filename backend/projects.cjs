@@ -27,7 +27,7 @@ function createProjectFiles({directory,cacheDirectory=path.join(path.dirname(dir
   }
   async function remember(file){return recentAccess(async()=>{try{const items=(await readRecent()).filter(v=>projectId(v.path)!==projectId(file));items.unshift({path:file,usedAt:Date.now()});await write(index,Buffer.from(JSON.stringify({version:1,items:items.slice(0,MAX_RECENT)})));return null;}catch(e){return 'Projektdatei ist gespeichert/geöffnet; die Liste konnte nicht aktualisiert werden: '+e.message;}});}
   function allow(file){file=path.resolve(file);const id=projectId(file);allowed.set(id,file);return id;}
-  async function metadata(file,usedAt){const id=allow(file);let stat;try{stat=await fs.stat(file);}catch(e){if(e.code!=='ENOENT')throw e;}return {id,name:path.basename(file),path:file,exists:!!stat?.isFile(),modifiedAt:stat?.mtimeMs??null,previewStamp:stat?[stat.mtimeMs,stat.ctimeMs,stat.size].join('/'):null,...(usedAt===undefined?{}:{usedAt})};}
+  async function metadata(file,usedAt){const id=allow(file);let stat;try{stat=await fs.stat(file);}catch(e){if(e.code!=='ENOENT')throw e;}return {id,name:path.basename(file),path:file,exists:!!stat?.isFile(),modifiedAt:stat?.mtimeMs??null,size:stat?.size??null,previewStamp:stat?[stat.mtimeMs,stat.ctimeMs,stat.size].join('/'):null,...(usedAt===undefined?{}:{usedAt})};}
   async function list(){await fs.mkdir(directory,{recursive:true});const items=await recent(),last=await Promise.all(items.map(v=>metadata(v.path,v.usedAt)));const files=[];let count=0;const dir=await fs.opendir(directory);for await(const entry of dir){if(entry.isFile()&&projectExtension(entry.name)){if(++count>500)break;files.push(await metadata(path.join(directory,entry.name)));}}files.sort((a,b)=>b.modifiedAt-a.modifiedAt);return {directory,recent:last,files,truncated:count>500};}
   async function open(args={}){
     if(active)throw Error('Eine Projektauswahl ist bereits geöffnet.');active=true;
@@ -39,6 +39,7 @@ function createProjectFiles({directory,cacheDirectory=path.join(path.dirname(dir
       const id=allow(file);opened.set(id,digest(bytes));const warning=await remember(file);return {opened:true,project:bytes.toString('utf8'),...(bytes[0]===0x1f&&bytes[1]===0x8b?{bytes:new Uint8Array(bytes)}:{}),file:await metadata(file),warning};
     }finally{active=false;}
   }
+  function directTarget(args){if(typeof args.automation!=='boolean'||!args.automation||/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(args.filename))throw Error('Ungültiger direkter Projektname.');return path.join(directory,args.filename);}
   async function save(args){
     if(args?.filename?.toLowerCase().endsWith('.fnpack'))return savePack(args);
     if(active)throw Error('Ein Projekt wird bereits gespeichert oder geöffnet.');active=true;
@@ -46,18 +47,20 @@ function createProjectFiles({directory,cacheDirectory=path.join(path.dirname(dir
       if(!args||typeof args.filename!=='string'||args.filename.length>220||/[<>:"/\\|?*\x00-\x1f]/.test(args.filename)||path.extname(args.filename).toLowerCase()!=='.ocad'||!(args.bytes instanceof Uint8Array)||args.bytes.length>MAX_BYTES)throw Error('Ungültige Projektdaten.');
       await fs.mkdir(directory,{recursive:true});let file,expected;
       if(args.id&&!args.saveAs){file=allowed.get(args.id);if(!file||typeof opened.get(args.id)!=='string')throw Error('Das Projekt muss vor dem Speichern geöffnet werden.');expected=opened.get(args.id);if(digest(await readProject(file))!==expected)throw Error('Die Projektdatei wurde außerhalb von Formnaro geändert. Bitte „Speichern unter …“ verwenden.');}
+      else if(args.automation){file=directTarget(args);expected='missing';}
       else{const previous=allowed.get(args.id),result=await dialog.showSaveDialog(win,{title:'Projekt speichern',defaultPath:previous??path.join(directory,args.filename),filters:[{name:'Formnaro-Projekt',extensions:['ocad']}]});if(result.canceled||!result.filePath)return {saved:false};file=path.resolve(result.filePath);if(path.extname(file).toLowerCase()!=='.ocad')file+='.ocad';}
       if(expected===undefined){try{expected=digest(await readProject(file));}catch(error){if(error.code==='ENOENT')expected='missing';else throw error;}}
       const shouldCommit=async()=>{try{return digest(await readProject(file))===expected;}catch(error){if(error.code==='ENOENT')return expected==='missing';throw error;}};
-      await write(file,args.bytes,{shouldCommit});const id=allow(file);opened.set(id,digest(args.bytes));const warning=await remember(file);return {saved:true,file:await metadata(file),warning};
+      await write(file,args.bytes,{shouldCommit:args.automation&&expected==='missing'?()=>true:shouldCommit,createOnly:args.automation===true&&expected==='missing'});const id=allow(file);opened.set(id,digest(args.bytes));const warning=await remember(file);return {saved:true,file:await metadata(file),warning};
     }finally{active=false;}
   }
   async function savePack(args){
     if(active)throw Error('Ein Projekt wird bereits gespeichert oder geöffnet.');active=true;
     try{if(typeof args.filename!=='string'||args.filename.length>220||/[<>:"/\\|?*\x00-\x1f]/.test(args.filename)||!args.project||!Array.isArray(args.blocks))throw Error('Ungültige Paketdaten.');await fs.mkdir(directory,{recursive:true});let file;
       if(args.id&&!args.saveAs){file=allowed.get(args.id);const previous=opened.get(args.id);if(!file||!previous?.fnpack||!await packs.unchanged(previous.fnpack,file))throw Error('Die Projektdatei wurde außerhalb von Formnaro geändert. Bitte „Speichern unter …“ verwenden.');}
+      else if(args.automation){file=directTarget(args);}
       else{const previous=allowed.get(args.id),suggested=previous?path.join(path.dirname(previous),path.parse(previous).name+'.fnpack'):path.join(directory,args.filename),result=await dialog.showSaveDialog(win,{title:'Geometriepaket speichern',defaultPath:suggested,filters:[{name:'Formnaro-Geometriepaket',extensions:['fnpack']}]});if(result.canceled||!result.filePath)return {saved:false};file=path.resolve(result.filePath);if(path.extname(file).toLowerCase()!=='.fnpack')file+='.fnpack';}
-      const result=await packs.save(file,args),id=allow(file);opened.set(id,{fnpack:result.fnpack.sourceId});const warning=await remember(file);return {saved:true,...result,file:await metadata(file),warning};
+      const previous=opened.get(args.id),directNew=args.automation===true&&(!args.id||args.saveAs),result=await packs.save(file,{...args,createOnly:directNew,...(args.id&&!args.saveAs?{shouldCommit:()=>packs.unchanged(previous.fnpack,file)}:{})}),id=allow(file);opened.set(id,{fnpack:result.fnpack.sourceId});const warning=await remember(file);return {saved:true,...result,file:await metadata(file),warning};
     }finally{active=false;}
   }
   async function folder(){await fs.mkdir(directory,{recursive:true});const error=await shell.openPath(directory);if(error)throw Error(error);return true;}
@@ -88,6 +91,6 @@ function createProjectFiles({directory,cacheDirectory=path.join(path.dirname(dir
 }
 function installProjects(win,{directory,ipcMain,dialog,shell,onPackRead}={}){
   if(!ipcMain||!dialog||!shell){const electron=require('electron');ipcMain||=electron.ipcMain;dialog||=electron.dialog;shell||=electron.shell;}
-  const store=createProjectFiles({directory,win,dialog,shell,onPackRead});win.on?.('closed',()=>{void store.close();});for(const name of ['list','open','save','folder','thumbnail','cacheThumbnail','readBlock','openPackRecovery','savePackRecovery'])ipcMain.handle('cad-project:'+name,async(event,args)=>{if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return {ok:false,error:'Invalid window.'};try{return {ok:true,value:await store[name](args)};}catch(e){return {ok:false,error:e.message};}});return store;
+  const store=createProjectFiles({directory,win,dialog,shell,onPackRead});win.on?.('closed',()=>{void store.close();});for(const name of ['list','open','save','folder','thumbnail','cacheThumbnail','readBlock','openPackRecovery','savePackRecovery'])ipcMain.handle('cad-project:'+name,async(event,args)=>{if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return {ok:false,error:'Invalid window.'};try{return {ok:true,value:await store[name](args)};}catch(e){return {ok:false,error:e.message,...(e.code?{code:e.code}:{})};}});return store;
 }
 module.exports={projectDirectory,createProjectFiles,installProjects};

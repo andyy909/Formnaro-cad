@@ -183,10 +183,10 @@
     {
       "id": "tool:group",
       "key": "group",
-      "label": "Gruppieren / vereinigen",
+      "label": "Geometrisch vereinigen",
       "requirement": "Mehrere passende entsperrte Teile auswählen.",
       "path": "Anordnen → Gruppieren",
-      "description": "Mehrere Materialteile vereinigen; als Bohrung markierte spätere Quellen werden abgezogen. Originalquellen bleiben in der Gruppe erhalten.",
+      "description": "Geometrische Vereinigung, keine starre Gelenkbaugruppe. Für gemeinsam bewegte Einzelteile Gelenke → Als starre Baugruppe verbinden verwenden. Mehrere Materialteile vereinigen; als Bohrung markierte spätere Quellen werden abgezogen. Originalquellen bleiben in der Gruppe erhalten.",
       "click": false
     },
     {

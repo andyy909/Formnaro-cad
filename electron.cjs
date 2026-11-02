@@ -109,10 +109,10 @@ app.whenReady().then(() => {
   if(maintenanceVerifyArg&&verifyPath)require('./backend/error-log.cjs').createErrorLog({directory:path.join(dataPath,'Fehlerprotokolle')}).append({source:'verification-fixture',message:'Synthetic early startup log'});
   const programStore=installProgramStorage(win,{directory:dataPath,legacyAIFile,cadOnly:cadOnlyForVersion(app.getVersion())});
   if(maintenanceVerifyArg&&verifyPath){const change=programStore.change;programStore.change=args=>{if(!maintenanceWriteFailed&&args.key.startsWith('offlinecad-autosave-')){maintenanceWriteFailed=true;throw Error('Synthetic initial autosave disk failure');}return change(args);};}
-  require('./backend/ai-tool-library.cjs').installToolLibrary(win,{directory:path.join(dataPath,'KI-Werkzeuge'),ipcMain:require('electron').ipcMain});
+  const toolLibrary=require('./backend/ai-tool-library.cjs').installToolLibrary(win,{directory:path.join(dataPath,'KI-Werkzeuge'),ipcMain:require('electron').ipcMain});
   require('./backend/error-log.cjs').installErrorLog(win,{directory:path.join(dataPath,'Fehlerprotokolle'),version:app.getVersion()});
   if(!verifyPath&&!practiceChild)require('./backend/renderer-recovery.cjs').installRendererRecovery(win);
-  require('./backend/desktop-ai.cjs').installDesktopAI(win,{settingsFile:path.join(dataPath,'ai-settings.json'),fallbackFile:fs.existsSync(path.join(dataPath,'profil.json'))?undefined:legacyAIFile});
+  require('./backend/desktop-ai.cjs').installDesktopAI(win,{settingsFile:path.join(dataPath,'ai-settings.json'),toolLibraryStatus:()=>toolLibrary.status(),fallbackFile:fs.existsSync(path.join(dataPath,'profil.json'))?undefined:legacyAIFile});
   const speechService=require('./backend/speech.cjs').installSpeech(win,{directory:app.isPackaged?path.join(process.resourcesPath,'speech'):path.join(__dirname,'speech-runtime'),settingsDirectory:dataPath,tempDirectory:verifyPath?path.join(path.dirname(verifyPath),'speech-temp'):path.join(app.getPath('temp'),'Formnaro-Speech')});
   let speechQuitting=false;app.on('before-quit',event=>{if(!speechService.hasActive())return;event.preventDefault();if(speechQuitting)return;speechQuitting=true;speechService.dispose().finally(()=>app.quit());});
   require('./backend/speech-permissions.cjs').installSpeechPermissions(win,{entry:path.join(__dirname,'dist','index.html')});

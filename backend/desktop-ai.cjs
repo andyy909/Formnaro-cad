@@ -3,7 +3,7 @@ const {generate:generateProvider,testConnection}=require('./ai-provider.cjs');co
 const {writeAtomicSync}=require('./program-storage.cjs');
 const {createAIProfiles}=require('./ai-profiles.cjs');
 const {modelCatalog}=require('./ai-models.cjs');
-function installDesktopAI(win,{settingsFile=path.join(app.getPath('userData'),'ai-settings.json'),fallbackFile}={}){const file=settingsFile;let bridge=null,bridgeQueue=Promise.resolve(),sequence=0,controller=null;const pending=new Map(),catalogs=new Map();let stored;
+function installDesktopAI(win,{settingsFile=path.join(app.getPath('userData'),'ai-settings.json'),fallbackFile,toolLibraryStatus}={}){const file=settingsFile;let bridge=null,bridgeQueue=Promise.resolve(),sequence=0,controller=null;const pending=new Map(),catalogs=new Map();let stored;
  try{stored=JSON.parse(fs.readFileSync(fs.existsSync(file)?file:fallbackFile||file,'utf8'));}catch{/* Missing/corrupt settings never reveal credentials. */}
  const profiles=createAIProfiles({stored,canEncrypt:()=>safeStorage.isEncryptionAvailable(),encrypt:key=>safeStorage.encryptString(key).toString('base64'),decrypt:encrypted=>safeStorage.decryptString(Buffer.from(encrypted,'base64')),persist:value=>{fs.mkdirSync(path.dirname(file),{recursive:true});if(fs.existsSync(file))writeAtomicSync(file+'.vorher',fs.readFileSync(file));writeAtomicSync(file,JSON.stringify(value));}});
  const chatgpt=require('./chatgpt-auth.cjs').createChatGPTAuth({directory:path.join(app.getPath('userData'),'chatgpt'),canEncrypt:()=>safeStorage.isEncryptionAvailable(),encrypt:value=>safeStorage.encryptString(value).toString('base64'),decrypt:value=>safeStorage.decryptString(Buffer.from(value,'base64')),openExternal:url=>require('electron').shell.openExternal(url)});
@@ -27,24 +27,34 @@ function installDesktopAI(win,{settingsFile=path.join(app.getPath('userData'),'a
   finally{usageLedger.record({usage,config,provider:providerId(config),taskId:args.usageTaskId??args.requestId,args:{...args,assistantKind:reply?.assistant?.kind}});}
  }
  const publicSettings=()=>{const auth=chatgpt.publicStatus(),vibe=mistral.publicStatus(),base=profiles.publicSettings();return {...base,chatgpt:auth,mistral:mistral.publicStatus(),agent:{busy:controller?.kind==='agent'},hasKey:base.authMode==='mistral-vibe'?mistral.publicStatus().connected:base.authMode==='chatgpt'?auth.connected:base.hasKey,providers:base.providers.map(p=>p.id==='chatgpt'?{...p,hasKey:auth.connected,hasSavedKey:auth.accounts.length>0,credentialState:auth.connected?'signed-in':auth.accounts.length?'signed-out':'missing'}:p.id==='mistral-vibe'?{...p,hasKey:vibe.connected,hasSavedKey:vibe.connected,credentialState:vibe.connected?'signed-in':vibe.checked?'missing':'unchecked'}:p),modelingContext:modeling().status(),outputBudget:profiles.active().config.maxOutputTokens??(new URL(profiles.active().config.baseUrl).hostname==='api.deepseek.com'?131072:12000),bridge:{enabled:!!bridge,url:bridge?.descriptor.url||null,connectionFile:bridge?.descriptorPath||path.join(app.getPath('userData'),'ai-bridge.json')}};};
- function rpc(method,args,{signal}={}){
+ function rpc(method,args,{signal,onProgress}={}){
   if(win.isDestroyed()||win.webContents.isCrashed?.())return Promise.reject(Object.assign(Error('CAD-Oberfläche ist nicht verfügbar. Bitte im Programm wiederherstellen.'),{code:'CAD_RENDERER_UNAVAILABLE',status:503}));
   signal?.throwIfAborted();const id=++sequence;
   return new Promise((resolve,reject)=>{
    let settled=false,abortReason=null;const cleanup=()=>{pending.delete(id);clearTimeout(item.timer);signal?.removeEventListener('abort',abort);};
    const settle=(fn,value)=>{if(settled)return;settled=true;cleanup();fn(value);};
-   const item={resolve:value=>settle(abortReason?reject:resolve,abortReason??value),reject:error=>settle(reject,abortReason??error),timer:null};
-   const stop=reason=>{if(settled||abortReason)return;abortReason=reason;if(method==='preview'){win.webContents.send('cad-ai:cancel-request',{id});clearTimeout(item.timer);item.timer=setTimeout(()=>item.reject(reason),5000);}else item.reject(reason);};
+   const item={method,args,onProgress,committed:null,resolve:value=>settle(abortReason?reject:resolve,abortReason??value),reject:error=>settle(reject,abortReason??error),timer:null};
+   const stop=reason=>{if(settled||abortReason)return;if(method==='apply'){if(item.committed){item.resolve({...item.committed,applied:true,refresh:{status:'failed',nextAction:'repeat',retryable:true,error:{code:reason.code,message:'Modell übernommen; Aktualisierungsantwort ausgeblieben.',phase:'refresh'}},warnings:['Modell übernommen. Denselben Übernahmeauftrag zur Aktualisierung wiederholen.']});return;}reason.feedback={code:reason.code,message:'Übernahmeergebnis unbekannt. Ausschließlich dieselbe Vorschaukennung und ursprüngliche Revision wiederholen.',phase:'transport',applied:null,commitStatus:'unknown',retryable:true,nextAction:'repeat'};reason.message=reason.feedback.message;item.reject(reason);return;}abortReason=reason;if(['preview','analysis','export'].includes(method)){win.webContents.send('cad-ai:cancel-request',{id});clearTimeout(item.timer);item.timer=setTimeout(()=>item.reject(Object.assign(reason,{cancelConfirmed:false})),5000);}else item.reject(reason);};
    const abort=()=>stop(Object.assign(Error('CAD client disconnected.'),{name:'AbortError',code:'ABORTED'}));
-   item.timer=setTimeout(()=>stop(Object.assign(Error('CAD operation timed out.'),{code:'CAD_OPERATION_TIMEOUT'})),method==='preview'||method==='export'?600000:45000);
+   item.timer=setTimeout(()=>stop(Object.assign(Error('CAD operation timed out.'),{code:'CAD_OPERATION_TIMEOUT'})),['preview','analysis','export','save'].includes(method)?600000:45000);
    pending.set(id,item);signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted){abort();return;}
    try{win.webContents.send('cad-ai:request',{id,method,args});}catch(error){item.reject(error);}
   });
  }
 
+ ipcMain.on('cad-ai:model-state',(event,value)=>{if(win.isDestroyed()||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return;bridge?.observeState(value);});
+ ipcMain.on('cad-ai:progress',(event,value)=>{
+  if(win.isDestroyed()||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return;
+  const item=pending.get(value?.id);if(item)item.onProgress?.(value);
+ });
+ ipcMain.on('cad-ai:committed',(event,value)=>{
+  if(win.isDestroyed()||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return;
+  const item=pending.get(value?.id);if(!item||item.method!=='apply'||value.previewId!==item.args?.previewId||value.requestRevision!==item.args?.revision||typeof value.revision!=='string'||!/^[0-9a-f]{16}$/.test(value.revision)||typeof value.changed!=='boolean'||typeof value.alreadyApplied!=='boolean')return;
+  item.committed={revision:value.revision,previewId:value.previewId,changed:value.changed,alreadyApplied:value.alreadyApplied};item.onProgress?.({phase:'refresh',committed:true,revision:value.revision});
+ });
  ipcMain.on('cad-ai:reply',(event,result)=>{if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)return;const item=pending.get(result?.id);if(!item)return;pending.delete(result.id);clearTimeout(item.timer);if(result.error){const error=Error(result.error);if(typeof result.errorCode==='string'&&/^[A-Z][A-Z0-9_]{0,79}$/.test(result.errorCode))error.code=result.errorCode;if(result.feedback)error.feedback=result.feedback;item.reject(error);}else item.resolve(result.value);});
  const handle=(name,fn)=>ipcMain.handle(name,async(event,args)=>{try{if(win.isDestroyed?.()||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('Invalid window.');return {ok:true,value:await fn(args)};}catch(e){return {ok:false,error:profiles.redact(e.name==='AbortError'?'AI request cancelled or timed out.':String(e.message)),...(e.aiUsage?{aiUsage:e.aiUsage}:{}),...(e.aiRetryable?{aiRetryable:true}:{}),...(e.code?{code:e.code}:{}),...(e.feedback?{feedback:e.feedback}:{})};}});
- async function syncBridge(){bridgeQueue=bridgeQueue.catch(()=>{}).then(async()=>{const {config}=profiles.active();if(config.bridgeEnabled&&!bridge)bridge=await startBridge({rpc:async(method,args,options)=>{const value=await rpc(method,args,options);return method==='context'?{...value,...(value.agentUI?{agentUI:{...value.agentUI,layoutContext:fs.readFileSync(path.join(__dirname,'../ai/FORMNARO-UI-KONTEXT.md'),'utf8')}}:{}),modelingExperience:{referenceOnly:true,text:modeling().context()}}:value;},directory:app.getPath('userData')});else if(!config.bridgeEnabled&&bridge){await bridge.close();bridge=null;}});return bridgeQueue;}
+ async function syncBridge(){bridgeQueue=bridgeQueue.catch(()=>{}).then(async()=>{const {config}=profiles.active();if(config.bridgeEnabled&&!bridge)bridge=await startBridge({rpc:async(method,args,options)=>{const value=await rpc(method,args,options);return method==='context'?{...value,...(value.agentUI&&value.profile!=='compact'?{agentUI:{...value.agentUI,layoutContext:fs.readFileSync(path.join(__dirname,'../ai/FORMNARO-UI-KONTEXT.md'),'utf8')}}:{}),modelingExperience:{referenceOnly:true,text:modeling().context()}}:value;},directory:app.getPath('userData')});else if(!config.bridgeEnabled&&bridge){await bridge.close();bridge=null;}});return bridgeQueue;}
  const requireIdle=()=>{if(controller)throw Error('Die laufende KI-Anfrage zuerst abschließen oder abbrechen.');};
  handle('cad-ai:get',()=>publicSettings());
  let taskStore;handle('cad-ai-tasks:request',args=>{taskStore??=require('./ai-tasks.cjs').createAITaskStore({directory:path.join(path.dirname(file),'KI-Auftraege')});return taskStore.request(args,providerId(profiles.active().config));});
@@ -61,7 +71,7 @@ function installDesktopAI(win,{settingsFile=path.join(app.getPath('userData'),'a
  handle('cad-ai:note-read',args=>{noteArgs(args);return modeling().readNote();});
  handle('cad-ai:note-append',args=>modeling().appendNote(noteArgs(args,true)));
  const freecad=require('./freecad.cjs');let freecadController=null;
- handle('cad-freecad:status',()=>freecad.status());
+ handle('cad-freecad:status',()=>({...freecad.status(),toolLibrary:toolLibraryStatus?toolLibraryStatus():require('./ai-tool-library.cjs').createToolLibrary(path.join(path.dirname(file),'KI-Werkzeuge')).status()}));
  handle('cad-freecad:run',async args=>{if(freecadController)throw Object.assign(Error('FreeCAD berechnet bereits einen Entwurf.'),{code:'FREECAD_BUSY'});if(typeof args?.requestId!=='string'||!/^[-a-zA-Z0-9]{1,80}$/.test(args.requestId))throw Error('Ungültige FreeCAD-Anfrage.');const active=new AbortController();active.requestId=args.requestId;freecadController=active;try{return await freecad.run(args,{signal:active.signal});}finally{if(freecadController===active)freecadController=null;}});
  handle('cad-freecad:cancel',args=>{if(freecadController?.requestId!==args?.requestId)return false;freecadController.abort();return true;});
  win.on('closed',()=>freecadController?.abort());

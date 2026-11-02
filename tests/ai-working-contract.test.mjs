@@ -11,7 +11,7 @@ test('Trusted rules accompany all three attempts in both protocols, with and wit
   const access={scene:()=>({revision:'current',selectionTargets:[]}),context:()=>({units:'mm'}),preview:async()=>{throw Object.assign(Error('retry fixture'),{code:'INVALID_COMMAND',feedback:{commandIndex:1,target:'part',retryable:true}});}};
   await assert.rejects(run({access,input:{prompt:'Make a supported change',chat,history:[{role:'assistant',text:'Older suggestion'}]},generate:args=>generate({protocol,baseUrl:'https://api.deepseek.com',model:'deepseek-flash'},'synthetic-fixture',args)}),/retry fixture/);
   assert.equal(bodies.length,3);
-  for(const body of bodies){const system=body.instructions??body.messages[0].content;assert.match(system,/Formnaro-working-rules\/1/);assert.match(system,/worldAxisSize/);assert.match(system,/one-based commandIndex/);assert.match(system,/Never auto-Apply/);assert.match(system,/NETZ:|CAD:/);}
+  for(const body of bodies){const system=body.instructions??body.messages[0].content;assert.match(system,/Formnaro-working-rules\/2/);assert.match(system,/worldAxisSize/);assert.match(system,/one-based commandIndex/);assert.match(system,/Never auto-Apply/);assert.match(system,/NETZ:|CAD:/);}
   for(const body of bodies.slice(1)){const payload=JSON.stringify(body);assert.match(payload,/retryable/);assert.match(payload,/rejectedBatch/);}
  }}finally{global.fetch=original;}
 });

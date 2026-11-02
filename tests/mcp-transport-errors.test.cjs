@@ -1,0 +1,12 @@
+const test=require('node:test'),assert=require('node:assert/strict'),http=require('node:http'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{spawn}=require('node:child_process');
+test('standalone MCP adapter returns a structured transport failure and retains origin feedback',async()=>{
+ const folder=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-mcp-transport-')),token='a'.repeat(64);let mode='invalid';
+ const server=http.createServer((_req,res)=>{res.writeHead(mode==='invalid'?200:400,{'Content-Type':'application/json'});res.end(mode==='invalid'?'not JSON':JSON.stringify({error:'Fix tool path',code:'AI_TOOL_LIBRARY_PATH',feedback:{code:'AI_TOOL_LIBRARY_PATH',phase:'archive',retryable:false,nextAction:'fix_prerequisite',applied:false}}));});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const file=path.join(folder,'bridge.json');fs.writeFileSync(file,JSON.stringify({url:'http://127.0.0.1:'+server.address().port,token}));
+ const child=spawn(process.execPath,[path.resolve('backend/mistral-mcp.cjs'),file],{stdio:['pipe','pipe','pipe'],windowsHide:true});let buffer='',sequence=0;const pending=new Map();child.stdout.on('data',data=>{buffer+=data;const rows=buffer.split('\n');buffer=rows.pop();for(const row of rows){const reply=JSON.parse(row);pending.get(reply.id)?.(reply.result);pending.delete(reply.id);}});
+ const request=(method,params)=>new Promise(resolve=>{const id=++sequence;pending.set(id,resolve);child.stdin.write(JSON.stringify({jsonrpc:'2.0',id,method,params})+'\n');});
+ try{
+  await request('initialize',{});let reply=await request('tools/call',{name:'offlinecad_apply',arguments:{previewId:'p',revision:'r'}}),failure=JSON.parse(reply.content[0].text);assert.equal(reply.isError,true);assert.equal(failure.code,'CAD_TRANSPORT_INVALID_RESPONSE');assert.equal(failure.feedback.commitStatus,'unknown');assert.equal(failure.feedback.applied,null);assert.equal(failure.feedback.nextAction,'repeat');
+  mode='origin';reply=await request('tools/call',{name:'offlinecad_preview',arguments:{revision:'r',commands:[]}});failure=JSON.parse(reply.content[0].text);assert.equal(failure.code,'AI_TOOL_LIBRARY_PATH');assert.equal(failure.feedback.nextAction,'fix_prerequisite');assert.equal(failure.feedback.phase,'archive');assert.ok(!reply.content[0].text.includes(token));
+ }finally{child.stdin.end();await new Promise(resolve=>child.once('exit',resolve));await new Promise(resolve=>server.close(resolve));}
+});

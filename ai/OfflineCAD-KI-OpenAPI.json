@@ -30,10 +30,534 @@
     }
   },
   "paths": {
+    "/v1/command_info": {
+      "get": {
+        "summary": "Read compact command index.",
+        "operationId": "get_v1_command_info",
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      },
+      "post": {
+        "summary": "Read actual fields, limits and example for command/type/action/tool.",
+        "operationId": "post_v1_command_info",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "command": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "action": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "tool": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      }
+    },
+    "/v1/context": {
+      "post": {
+        "summary": "Select full or compact command profile without changing validation.",
+        "operationId": "post_v1_context",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "profile": {
+                    "enum": [
+                      "full",
+                      "compact"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      },
+      "get": {
+        "summary": "Complete shared CAD/mesh command, coordinate and source contract. Read first.",
+        "operationId": "get_v1_context",
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      }
+    },
+    "/v1/scene": {
+      "post": {
+        "summary": "Read requested root IDs or exact source targets; omit unrequested sources.",
+        "operationId": "post_v1_scene",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "rootsOnly": {
+                    "const": true
+                  },
+                  "ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 500,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 200
+                    }
+                  },
+                  "targets": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 500,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      },
+      "get": {
+        "summary": "Current confirmed revision, object kinds, available commands, source paths, measurements and locks without mesh arrays.",
+        "operationId": "get_v1_scene",
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      }
+    },
+    "/v1/save": {
+      "post": {
+        "summary": "Save the confirmed revision through the application and return a compact receipt. A new filename never overwrites an existing file.",
+        "operationId": "post_v1_save",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "revision": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{16}$"
+                  },
+                  "filename": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 220,
+                    "pattern": "^[^<>:\"/\\\\|?*\\u0000-\\u001f]+\\.(ocad|fnpack)$"
+                  },
+                  "format": {
+                    "enum": [
+                      "ocad",
+                      "fnpack"
+                    ]
+                  }
+                },
+                "required": [
+                  "revision"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      }
+    },
+    "/v1/status": {
+      "get": {
+        "summary": "Read current calculations and ready previews immediately; unknown remaining duration is null.",
+        "operationId": "get_v1_status",
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      },
+      "post": {
+        "summary": "Read one jobId without entering the calculation queue.",
+        "operationId": "post_v1_status",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "jobId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      }
+    },
+    "/v1/cancel": {
+      "post": {
+        "summary": "Cancel exactly the named preview, analysis or export job; wait for cancelled confirmation.",
+        "operationId": "post_v1_cancel",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "jobId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "jobId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      }
+    },
+    "/v1/preview/start": {
+      "post": {
+        "summary": "Start an asynchronous preview and return jobId immediately.",
+        "operationId": "post_v1_preview_start",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/paths/~1v1~1preview/post/requestBody/content/application~1json/schema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      }
+    },
+    "/v1/preview/result": {
+      "post": {
+        "summary": "Retrieve a preview result or its current state by jobId.",
+        "operationId": "post_v1_preview_result",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "jobId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "jobId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command, geometry or parameters"
+          },
+          "401": {
+            "description": "Missing/invalid bearer token"
+          },
+          "409": {
+            "description": "STALE_REVISION — read scene and preview again"
+          }
+        }
+      }
+    },
     "/v1/ui": {
       "post": {
         "summary": "Registered Formnaro-only UI guidance and isolated practice jobs; check agentUI.available in the live context.",
-        "operationId": "ui",
+        "operationId": "post_v1_ui",
         "requestBody": {
           "required": true,
           "content": {
@@ -589,6 +1113,221 @@
                                                   "shellbox",
                                                   "polygon"
                                                 ]
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action",
+                                              "drive"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "drive-create"
+                                              },
+                                              "drive": {
+                                                "oneOf": [
+                                                  {
+                                                    "type": "object",
+                                                    "additionalProperties": false,
+                                                    "required": [
+                                                      "kind",
+                                                      "rotary",
+                                                      "linear"
+                                                    ],
+                                                    "properties": {
+                                                      "id": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "name": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "kind": {
+                                                        "const": "screw"
+                                                      },
+                                                      "rotary": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "linear": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "lead": {
+                                                        "type": "number",
+                                                        "minimum": 0.000001,
+                                                        "maximum": 100000
+                                                      },
+                                                      "pitch": {
+                                                        "type": "number",
+                                                        "exclusiveMinimum": 0
+                                                      },
+                                                      "starts": {
+                                                        "type": "integer",
+                                                        "minimum": 1,
+                                                        "maximum": 100
+                                                      },
+                                                      "direction": {
+                                                        "enum": [
+                                                          1,
+                                                          -1
+                                                        ]
+                                                      }
+                                                    }
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "additionalProperties": false,
+                                                    "required": [
+                                                      "kind",
+                                                      "table",
+                                                      "swivel",
+                                                      "extension",
+                                                      "attachment"
+                                                    ],
+                                                    "properties": {
+                                                      "id": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "name": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "kind": {
+                                                        "const": "actuator"
+                                                      },
+                                                      "table": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "swivel": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "extension": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      },
+                                                      "attachment": {
+                                                        "type": "array",
+                                                        "minItems": 3,
+                                                        "maxItems": 3,
+                                                        "items": {
+                                                          "type": "number",
+                                                          "minimum": -100000,
+                                                          "maximum": 100000
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action",
+                                              "driveId"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "drive-remove"
+                                              },
+                                              "driveId": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 200
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action",
+                                              "mainId",
+                                              "translate"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "rigid-move"
+                                              },
+                                              "mainId": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 200
+                                              },
+                                              "translate": {
+                                                "type": "array",
+                                                "minItems": 3,
+                                                "maxItems": 3,
+                                                "items": {
+                                                  "type": "number",
+                                                  "minimum": -100000,
+                                                  "maximum": 100000
+                                                }
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                              "op",
+                                              "action",
+                                              "mainId",
+                                              "ids"
+                                            ],
+                                            "properties": {
+                                              "op": {
+                                                "const": "joint"
+                                              },
+                                              "action": {
+                                                "const": "rigid-assembly"
+                                              },
+                                              "mainId": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "maxLength": 200
+                                              },
+                                              "ids": {
+                                                "type": "array",
+                                                "minItems": 2,
+                                                "maxItems": 257,
+                                                "uniqueItems": true,
+                                                "items": {
+                                                  "type": "string",
+                                                  "minLength": 1,
+                                                  "maxLength": 200
+                                                }
                                               }
                                             }
                                           },
@@ -1159,7 +1898,7 @@
     "/v1/assembly": {
       "post": {
         "summary": "Read or change the workspace-only assembly display load set; visibility and model/Undo stay independent.",
-        "operationId": "assembly",
+        "operationId": "post_v1_assembly",
         "requestBody": {
           "required": true,
           "content": {
@@ -1296,64 +2035,10 @@
         }
       }
     },
-    "/v1/context": {
-      "get": {
-        "summary": "Complete shared CAD/mesh command, coordinate and source contract. Read first.",
-        "operationId": "context",
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid command, geometry or parameters"
-          },
-          "401": {
-            "description": "Missing/invalid bearer token"
-          },
-          "409": {
-            "description": "STALE_REVISION — read scene and preview again"
-          }
-        }
-      }
-    },
-    "/v1/scene": {
-      "get": {
-        "summary": "Current confirmed revision, object kinds, available commands, source paths, measurements and locks without mesh arrays.",
-        "operationId": "scene",
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid command, geometry or parameters"
-          },
-          "401": {
-            "description": "Missing/invalid bearer token"
-          },
-          "409": {
-            "description": "STALE_REVISION — read scene and preview again"
-          }
-        }
-      }
-    },
     "/v1/project": {
       "get": {
         "summary": "Full editable project including contour links/stable measured roles in format14, project parameters/variants in format13, technical drawings, native modeling sources, native BReps and separate raw meshes; compatible older formats remain readable.",
-        "operationId": "project",
+        "operationId": "get_v1_project",
         "responses": {
           "200": {
             "description": "Successful JSON response",
@@ -1380,7 +2065,7 @@
     "/v1/screenshot": {
       "get": {
         "summary": "Current shared canvas image as PNG base64.",
-        "operationId": "screenshot",
+        "operationId": "get_v1_screenshot",
         "responses": {
           "200": {
             "description": "Successful JSON response",
@@ -1407,7 +2092,7 @@
     "/v1/preview": {
       "post": {
         "summary": "Compute and validate one complete mixed CAD/mesh command batch against the confirmed revision without committing.",
-        "operationId": "preview",
+        "operationId": "post_v1_preview",
         "requestBody": {
           "required": true,
           "content": {
@@ -1667,6 +2352,11 @@
                               "type": "object",
                               "additionalProperties": false,
                               "minProperties": 1,
+                              "dependentRequired": {
+                                "sizeAnchor": [
+                                  "size"
+                                ]
+                              },
                               "properties": {
                                 "name": {
                                   "type": "string",
@@ -1730,6 +2420,37 @@
                                   "type": "string",
                                   "minLength": 1,
                                   "maxLength": 80
+                                },
+                                "sizeAnchor": {
+                                  "oneOf": [
+                                    {
+                                      "enum": [
+                                        "legacy",
+                                        "center"
+                                      ]
+                                    },
+                                    {
+                                      "type": "object",
+                                      "additionalProperties": false,
+                                      "required": [
+                                        "corner"
+                                      ],
+                                      "properties": {
+                                        "corner": {
+                                          "type": "array",
+                                          "minItems": 3,
+                                          "maxItems": 3,
+                                          "items": {
+                                            "enum": [
+                                              -1,
+                                              1
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "description": "legacy keeps the local minimum corner; center keeps the local bounds center; corner [-1|1,-1|1,-1|1] fixes an explicit local min/max corner. Positions are transformed through the full parent placement."
                                 },
                                 "suppressed": {
                                   "type": "boolean"
@@ -25692,6 +26413,221 @@
                           "required": [
                             "op",
                             "action",
+                            "drive"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "joint"
+                            },
+                            "action": {
+                              "const": "drive-create"
+                            },
+                            "drive": {
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "kind",
+                                    "rotary",
+                                    "linear"
+                                  ],
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "name": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "kind": {
+                                      "const": "screw"
+                                    },
+                                    "rotary": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "linear": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "lead": {
+                                      "type": "number",
+                                      "minimum": 0.000001,
+                                      "maximum": 100000
+                                    },
+                                    "pitch": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0
+                                    },
+                                    "starts": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 100
+                                    },
+                                    "direction": {
+                                      "enum": [
+                                        1,
+                                        -1
+                                      ]
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "kind",
+                                    "table",
+                                    "swivel",
+                                    "extension",
+                                    "attachment"
+                                  ],
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "name": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "kind": {
+                                      "const": "actuator"
+                                    },
+                                    "table": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "swivel": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "extension": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "attachment": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number",
+                                        "minimum": -100000,
+                                        "maximum": 100000
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "action",
+                            "driveId"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "joint"
+                            },
+                            "action": {
+                              "const": "drive-remove"
+                            },
+                            "driveId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "action",
+                            "mainId",
+                            "translate"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "joint"
+                            },
+                            "action": {
+                              "const": "rigid-move"
+                            },
+                            "mainId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            },
+                            "translate": {
+                              "type": "array",
+                              "minItems": 3,
+                              "maxItems": 3,
+                              "items": {
+                                "type": "number",
+                                "minimum": -100000,
+                                "maximum": 100000
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "action",
+                            "mainId",
+                            "ids"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "joint"
+                            },
+                            "action": {
+                              "const": "rigid-assembly"
+                            },
+                            "mainId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            },
+                            "ids": {
+                              "type": "array",
+                              "minItems": 2,
+                              "maxItems": 257,
+                              "uniqueItems": true,
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "action",
                             "joint"
                           ],
                           "properties": {
@@ -32842,7 +33778,7 @@
                                 "faceIndex": {
                                   "type": "integer",
                                   "minimum": 1,
-                                  "maximum": 8000
+                                  "maximum": 20000
                                 }
                               },
                               "anyOf": [
@@ -32933,7 +33869,7 @@
                                     "faceIndex": {
                                       "type": "integer",
                                       "minimum": 1,
-                                      "maximum": 8000
+                                      "maximum": 20000
                                     }
                                   },
                                   "anyOf": [
@@ -33063,7 +33999,7 @@
                                 "faceIndex": {
                                   "type": "integer",
                                   "minimum": 1,
-                                  "maximum": 8000
+                                  "maximum": 20000
                                 }
                               },
                               "anyOf": [
@@ -33141,7 +34077,7 @@
                                 "faceIndex": {
                                   "type": "integer",
                                   "minimum": 1,
-                                  "maximum": 8000
+                                  "maximum": 20000
                                 }
                               },
                               "anyOf": [
@@ -33550,7 +34486,7 @@
                                 "faceIndex": {
                                   "type": "integer",
                                   "minimum": 1,
-                                  "maximum": 8000
+                                  "maximum": 20000
                                 }
                               },
                               "anyOf": [
@@ -33611,7 +34547,7 @@
                                 "faceIndex": {
                                   "type": "integer",
                                   "minimum": 1,
-                                  "maximum": 8000
+                                  "maximum": 20000
                                 }
                               },
                               "anyOf": [
@@ -33690,6 +34626,103 @@
                               "type": "integer",
                               "minimum": 1,
                               "maximum": 63
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "action",
+                            "reportId"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "inspection"
+                            },
+                            "action": {
+                              "const": "record"
+                            },
+                            "reportId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 500
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "action",
+                            "limitation"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "inspection"
+                            },
+                            "action": {
+                              "const": "limitation"
+                            },
+                            "limitation": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "kind",
+                                "rootIds",
+                                "note"
+                              ],
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 500
+                                },
+                                "kind": {
+                                  "enum": [
+                                    "simplified-geometry",
+                                    "missing-coupling",
+                                    "other"
+                                  ]
+                                },
+                                "rootIds": {
+                                  "type": "array",
+                                  "maxItems": 500,
+                                  "uniqueItems": true,
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "note": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 500
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "action",
+                            "id"
+                          ],
+                          "properties": {
+                            "op": {
+                              "const": "inspection"
+                            },
+                            "action": {
+                              "const": "remove"
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 500
                             }
                           }
                         }
@@ -34375,6 +35408,19 @@
                         }
                       ]
                     }
+                  },
+                  "intermediateDisplay": {
+                    "enum": [
+                      "inherit",
+                      "final"
+                    ]
+                  },
+                  "responseDetail": {
+                    "enum": [
+                      "summary",
+                      "full"
+                    ],
+                    "default": "full"
                   }
                 }
               }
@@ -34407,7 +35453,7 @@
     "/v1/discard": {
       "post": {
         "summary": "Discard the named completed preview at its current revision without changing the model or Undo.",
-        "operationId": "discard",
+        "operationId": "post_v1_discard",
         "requestBody": {
           "required": true,
           "content": {
@@ -34461,7 +35507,7 @@
     "/v1/analysis": {
       "post": {
         "summary": "Read bounded native CAD, mesh and app measurements against the current revision.",
-        "operationId": "analysis",
+        "operationId": "post_v1_analysis",
         "requestBody": {
           "required": true,
           "content": {
@@ -34550,7 +35596,7 @@
     "/v1/apply": {
       "post": {
         "summary": "Commit a checked preview against its revision as one undo step; stale previews fail atomically.",
-        "operationId": "apply",
+        "operationId": "post_v1_apply",
         "requestBody": {
           "required": true,
           "content": {
@@ -34563,6 +35609,13 @@
                   "revision"
                 ],
                 "properties": {
+                  "responseDetail": {
+                    "enum": [
+                      "summary",
+                      "full"
+                    ],
+                    "default": "full"
+                  },
                   "previewId": {
                     "type": "string",
                     "minLength": 1
@@ -34602,7 +35655,7 @@
     "/v1/export": {
       "post": {
         "summary": "Export confirmed visible production objects, optionally restricted to root IDs; STEP requires CAD targets and mesh exports retain their geometry domain.",
-        "operationId": "export",
+        "operationId": "post_v1_export",
         "requestBody": {
           "required": true,
           "content": {

@@ -42,5 +42,24 @@ class FeedbackTest(unittest.TestCase):
         error = api.CADAPIError(400, {'error': 'legacy'}, 'fixture-token')
         self.assertEqual(error.payload, {'error': 'legacy', 'status': 400})
 
+    def test_non_json_transport_reply_is_structured_and_apply_remains_unknown(self):
+        with tempfile.TemporaryDirectory() as folder:
+            connection = Path(folder) / 'ai-bridge.json'
+            connection.write_text(json.dumps({'url': 'http://127.0.0.1:12345', 'token': 'a' * 64}))
+            client = api.Client(connection)
+            with patch.object(client.opener, 'open', return_value=io.BytesIO(b'upstream failed')):
+                with self.assertRaises(api.CADAPIError) as caught:
+                    client.request('apply', {'previewId': 'p', 'revision': 'r'})
+            self.assertEqual(caught.exception.payload['code'], 'CAD_TRANSPORT_INVALID_RESPONSE')
+            self.assertIsNone(caught.exception.payload['feedback']['applied'])
+            self.assertEqual(caught.exception.payload['feedback']['commitStatus'], 'unknown')
+            self.assertNotIn('upstream', json.dumps(caught.exception.payload))
+
+    def test_new_action_and_phase_survive_the_python_adapter(self):
+        payload = {'error': 'bad', 'code': 'AI_TOOL_LIBRARY_PATH', 'feedback': {
+            'code': 'AI_TOOL_LIBRARY_PATH', 'nextAction': 'fix_prerequisite',
+            'phase': 'archive', 'retryable': False, 'applied': False, 'measuredTolerance': 0.0000647, 'allowedTolerance': 0.00005}}
+        self.assertEqual(api.CADAPIError(400, payload, 'token').payload['feedback'], payload['feedback'])
+
 if __name__ == '__main__':
     unittest.main()

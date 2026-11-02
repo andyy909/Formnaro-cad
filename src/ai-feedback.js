@@ -7,6 +7,12 @@ export function feedbackTarget(value){
 export function aiFeedback(error,context={}){
  const source=error?.feedback??{},code=text(error?.code??source.code??'MODEL_VALIDATION',80),message=text(source.message??error?.message)??'Model validation failed.';
  const out={code,message,retryable:source.retryable!==false&&error?.name!=='AbortError'&&!/LOCK|READ.?ONLY|REEXTRACT_REQUIRED|STALE|CANCEL|ABORT|BUSY|TIMEOUT|FATAL|FORBIDDEN|UNAUTHORIZED|^FREECAD_UNAVAILABLE$/.test(code),applied:false};
+ for(const key of ['measuredTolerance','allowedTolerance']){const value=error?.[key]??source[key];if(Number.isFinite(value)&&value>=0)out[key]=value;}
+ if(code==='CAD_MEMORY_BUDGET')out.retryable=false;
+ const prerequisite=/UNAVAILABLE|RUNTIME_INVALID|TOOL_LIBRARY_PATH|CAD_HOST_UNAVAILABLE/.test(code);
+ if(prerequisite)out.retryable=false;
+ out.nextAction=prerequisite?'fix_prerequisite':out.retryable?'change_input':'stop';
+ const phase=context.phase??source.phase??error?.cadPhase;if(typeof phase==='string')out.phase=text(phase,80);
  if(source.toolFailure?.scope==='converter-only')out.toolFailure={scope:'converter-only',retrySameTool:false,alternatives:['python-analysis','javascript-analysis','native-cad-reconstruction','freecad-reconstruction']};
  if(source.geometryCheck){
   if(JSON.stringify(source.geometryCheck).length<=40000)out.geometryCheck=structuredClone(source.geometryCheck);

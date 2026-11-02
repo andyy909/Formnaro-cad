@@ -9,7 +9,11 @@ fs.mkdirSync(dataRoot,{recursive:true});app.setPath('userData',path.join(dataRoo
 let win,closing=false,closePending=false,io=Promise.resolve(),libraryStartupError=null;
 const limits={project:32*1024*1024,stl:256*1024*1024};
 const safeName=name=>(String(name||'Mini-Projekt').replace(/[<>:"/\\|?*\x00-\x1f]/g,'-').replace(/[. ]+$/,'').slice(0,90)||'Mini-Projekt');
-function atomic(file,data){const temp=file+'.tmp';fs.writeFileSync(temp,data);fs.renameSync(temp,file);}
+function atomic(file,data){
+ const temp=path.join(path.dirname(file),'.formnaro-'+require('node:crypto').randomUUID()+'.tmp');let fd,created=false;
+ try{fd=fs.openSync(temp,'wx',0o600);created=true;fs.writeFileSync(fd,data);fs.fsyncSync(fd);fs.closeSync(fd);fd=undefined;fs.renameSync(temp,file);}
+ finally{if(fd!==undefined)fs.closeSync(fd);if(created)fs.rmSync(temp,{force:true});}
+}
 function ordered(fn){const next=io.then(fn);io=next.catch(()=>{});return next;}
 function trusted(event){return event.sender===win?.webContents&&event.senderFrame===win.webContents.mainFrame;}
 function handler(channel,fn){ipcMain.handle(channel,async(event,payload)=>{if(!trusted(event))return {ok:false,error:'Unbekanntes Fenster.'};try{return await fn(payload);}catch(e){return {ok:false,error:e.message};}});}

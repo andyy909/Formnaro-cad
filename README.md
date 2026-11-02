@@ -12,8 +12,8 @@
 
 | Download | Version | Size | Contents |
 | --- | --- | --- | --- |
-| **[Download the application](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r35/Formnaro-v0.125.0-r35-Windows.zip)** | **0.125.0-r35** | approx. **667 MB** | Portable application, required runtimes, licences and start instructions. |
-| [Separate source archives](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r35) | **0.125.0-r35** | **111 / 98 / 78 MB** | Formnaro, FreeCAD and CAD-kernel sources; optional downloads for development. |
+| **[Download the application](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** | **0.125.0-r36** | approx. **667 MB** | Portable application, required runtimes, licences and start instructions. |
+| [Separate source archives](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) | **0.125.0-r36** | see release | Formnaro, FreeCAD and CAD-kernel sources; optional downloads for development. |
 
 For everyday use, download only the application ZIP. Source archives are always separate release assets. [Packaging policy](docs/PORTABLE-PAKETE.md).
 
@@ -77,7 +77,7 @@ Three functions are shown in a separate practice window using Formnaro's control
 
 Codex prepared the plan before playback; the practice window executes it through the actual controls without further model requests. The displayed **3,381,395 tokens including cached input** cover the entire gear task: planning, recording and verification.
 
-Recorded with the locally tested development build **0.125.0-r35**. The program download linked above now provides this build.
+Recorded with the locally tested development build **0.125.0-r35**. The current program download above provides 0.125.0-r36.
 
 ## Documentation
 
@@ -94,13 +94,13 @@ The linked guides are currently mainly in German.
 <!-- formnaro-development-status:start -->
 ## Development status
 
-The **0.125.0-r35** portable application includes on-demand AI tool information, improved practice lessons, centring/alignment controls and separate task conversations. Matching source archives are separate downloads.
+The **0.125.0-r36** portable application extends native modelling, error and memory handling, revision-bound saves, focused command information, screw and tilt couplings, and stored inspection records. Original sources and a single Undo step are retained.
 
-The frozen r35 build passed **79 targeted source tests, four practice lessons, two normal modelling tests and four screenshot routes**. The packaged EXE was checked with isolated profiles and normal close/exit. The new download ZIP was fully read with CRC/SHA-256 checks and tested after fresh Unicode extraction from a foreign working directory. These are targeted checks, without a new all-features regression or clean-Windows-VM acceptance.
+The complete local function catalogue was processed: **2906 Node tests and 71 desktop groups**, plus **20 Python tests and eight native CNC regression cases**. Initial failures and their follow-up verification are documented in the report. A fresh DeepSeek Harness run checked error correction, explicit Apply and stale inspection records. The packaged EXE was checked with an isolated profile, native FreeCAD, saves and normal process exit; the ZIP was also tested after fresh Unicode extraction from a foreign working directory.
 
-Known limits include CAD-kernel failures with some long screw threads; automatic screw/tilt coupling and broader practical tool coverage remain open.
+Motion and clearance results cover the sampled poses and pairs only. They do not establish continuous contact, load capacity or manufacturing approval. A fresh Windows VM was not tested. New inspection records use project format 32; older projects remain readable.
 
-Matching sources: [versioned tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r35) · [source ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r35/Formnaro-Quellcode-v0.125.0-r35.zip) · [verification report](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r35/Paket-Pruefstand.json)
+Matching sources: [versioned tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r36) · [source ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-Quellcode-v0.125.0-r36.zip) · [verification report](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Paket-Pruefstand.json) · [acceptance scope](docs/GESAMTPLAN-RELEASE-ABNAHME.md)
 [Current published build](docs/AKTUELLER-STAND.md)
 
 <!-- formnaro-development-status:end -->
@@ -111,7 +111,7 @@ Matching sources: [versioned tag](https://github.com/andyy909/Formnaro-cad/tree/
 With Node.js 22.16 or later and npm:
 
 ```sh
-git clone --branch v0.125.0-r35 https://github.com/andyy909/Formnaro-cad.git
+git clone --branch v0.125.0-r36 https://github.com/andyy909/Formnaro-cad.git
 cd Formnaro-cad
 npm ci
 npm run build

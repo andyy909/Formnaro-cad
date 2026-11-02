@@ -356,33 +356,80 @@ class Client:
         from ._transport import Transport
         self._transport = Transport(connection)
 
-    def context(self):
-        return self._transport.request("context")
+    def context(self, *, profile=None):
+        if profile is not None and profile not in ("full", "compact"):
+            raise ValueError("Choose full or compact context")
+        return self._transport.request("context", {"profile": profile} if profile else None)
 
-    def scene(self):
-        return self._transport.request("scene")
+    def command_info(self, command=None, *, type=None, action=None, tool=None):
+        fields = {"command": command, "type": type, "action": action, "tool": tool}
+        return self._transport.request("command_info", {key: value for key, value in fields.items() if value is not None})
+
+    def scene(self, *, ids=None, targets=None, roots_only=False):
+        fields = {}
+        if ids is not None:
+            fields["ids"] = ids
+        if targets is not None:
+            fields["targets"] = targets
+        if roots_only:
+            fields["rootsOnly"] = True
+        return self._transport.request("scene", fields or None)
 
     def project(self):
         return self._transport.request("project")
 
-    def preview(self, model_or_commands, *, revision=None, label="Python-Modell", checks=None):
+    def preview(self, model_or_commands, *, revision=None, label="Python-Modell", checks=None, intermediate_display=None, response_detail=None, asynchronous=False):
         commands = model_or_commands.commands if isinstance(model_or_commands, Model) else model_or_commands
         if not isinstance(commands, list) or not 1 <= len(commands) <= 200:
             raise ValueError("External preview needs 1–200 commands; use a Python command for larger calculated workflows")
         request = {"revision": revision or self.scene()["revision"], "label": label, "commands": commands}
         if checks is not None:
             request["checks"] = checks
-        return self._transport.request("preview", request)
+        if response_detail is not None:
+            if response_detail not in ("summary", "full"):
+                raise ValueError("response_detail must be summary or full")
+            request["responseDetail"] = response_detail
+        if intermediate_display is not None:
+            request["intermediateDisplay"] = intermediate_display
+        return self._transport.request("preview_start" if asynchronous else "preview", request)
+
+    def status(self, job_id=None):
+        return self._transport.request("status", {} if job_id is None else {"jobId": job_id})
+
+    def cancel(self, job_id):
+        return self._transport.request("cancel", {"jobId": job_id})
+
+    def preview_start(self, model_or_commands, **options):
+        return self.preview(model_or_commands, asynchronous=True, **options)
+
+    def preview_result(self, job_id):
+        return self._transport.request("preview_result", {"jobId": job_id})
+
+    def save(self, *, revision=None, filename=None, format=None):
+        request = {"revision": revision or self.scene()["revision"]}
+        if filename is not None:
+            request["filename"] = filename
+        if format is not None:
+            request["format"] = format
+        return self._transport.request("save", request)
 
     def preview_python(self, code, *, revision=None, label="Python-Modell", checks=None):
         if not self.context().get("programTools", {}).get("python"):
             raise RuntimeError("Python inside the application requires Formnaro 0.90 or newer")
         return self.preview([{"op": "python", "code": code}], revision=revision, label=label, checks=checks)
 
-    def apply(self, proposal, *, accept_feature_dependencies=False):
+    def discard(self, proposal):
+        request = {k: proposal[k] for k in ("previewId", "revision")}
+        return self._transport.request("discard", request)
+
+    def apply(self, proposal, *, accept_feature_dependencies=False, response_detail=None):
         if not isinstance(accept_feature_dependencies, bool):
             raise ValueError("accept_feature_dependencies must be a boolean")
         request = {k: proposal[k] for k in ("previewId", "revision")}
+        if response_detail is not None:
+            if response_detail not in ("summary", "full"):
+                raise ValueError("response_detail must be summary or full")
+            request["responseDetail"] = response_detail
         if accept_feature_dependencies:
             request["acceptFeatureDependencies"] = True
         return self._transport.request("apply", request)

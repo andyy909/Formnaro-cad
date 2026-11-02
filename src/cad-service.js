@@ -1,3 +1,4 @@
+import {cadNativeMemory} from './cad-native-memory.js';
 import {buildAssociativeStepDrill} from './cad-step-drill.js';
 import {partFaceColors,splitPartSurfaceMesh,hasCurrentPartSurfaceGroups} from './cad-part-properties.js';
 import {hasGeometryRefs,isGeometryRef,sameDeferredGeometry} from './cad-geometry-ref.js';
@@ -5,6 +6,7 @@ import {cadStepMeshParts} from './cad-step-appearance.js';
 import {meshColorsEnabled} from './mesh-appearance.js';
 import {createCadDisplayEncoder} from './cad-display-cache.js';
 import {cadDisplayStretch,cadDisplayIsometry} from './cad-display-scale.js';
+import {cadConstructionStretch} from './cad-construction-scale.js';
 import {createCadAnnotationValidator} from './cad-annotations-native.js';
 import {buildCadRecipe,constructionTolerance,cadRecipeMinimumFeature,CAD_CONSTRUCTION_TOLERANCE} from './cad-recipes.js';
 import {cadBoolean,cadCutMany,cadFuseMany,cadBounds,validateCadSolid,writeCadBrep,readCadBrep,transformCad,cadDisplayMesh,cadExportMesh} from './cad-native-kernel.js';
@@ -40,16 +42,9 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
   function bodyRecord(shape){const checked=validateCadSolid(oc,shape);return {shape,brep:writeCadBrep(oc,shape),stats:{bounds:{min:checked.bounds.min,max:checked.bounds.max},volume:checked.volume,solids:checked.solids}};}
   function placed(node){const local=readCadBrep(oc,node.brep.data);try{return affineCadSketchCircle(oc,node,cadBounds(oc,local))??transformCad(oc,local,node.transform);}finally{local.delete();}}
   function snapshotNode(node,record){return {...node,brep:{format:'OpenCascade-BRep',data:record.brep,triangulation:false},stats:structuredClone(record.stats)};}
-  // Induced matrix norm sqrt(||A||1 ||A||infinity) bounds the amplification
-  // of any local curve error, including ancestor shear and reflection.
-  function stretch(matrix){
-    const columns=[0,1,2].map(i=>[Math.abs(matrix[i*4]),Math.abs(matrix[i*4+1]),Math.abs(matrix[i*4+2])]);
-    const one=Math.max(...columns.map(c=>c.reduce((a,b)=>a+b,0))),infinity=Math.max(...[0,1,2].map(i=>columns.reduce((sum,c)=>sum+c[i],0)));
-    return Math.sqrt(one)*Math.sqrt(infinity);
-  }
   function tolerance(recipe,world){
     if(!['heart','gear','thread','nut'].includes(recipe?.type))return undefined;
-    const amplification=stretch(world),inverseAmplification=stretch(inverseCadMatrix(world));
+    const amplification=cadConstructionStretch(world),inverseAmplification=cadConstructionStretch(inverseCadMatrix(world));
     if(!Number.isFinite(amplification)||amplification<=0||!Number.isFinite(inverseAmplification)||inverseAmplification<=0)throw Error('CAD-Transformation hat keine nachweisbare Genauigkeitsgrenze.');
     // For every local feature vector v: |A v| >= |v| / ||A^-1||.
     // Use a conservative lower bound even with anisotropic scale or shear,
@@ -60,7 +55,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
   }
   function nodeTolerance(node,world){const required=tolerance(node.recipe,world);if(node.constructionBudget===undefined)return required;if(node.source!=='native'||required===undefined||!Number.isFinite(node.constructionBudget)||node.constructionBudget<2e-7||node.constructionBudget>CAD_CONSTRUCTION_TOLERANCE)throw Error('Ungültiges gespeichertes CAD-Konstruktionsbudget.');return Math.min(required,node.constructionBudget);}
   function construct(node,world,signal){
-    alive(signal);let shape;
+    alive(signal);cadNativeMemory(oc).check('construct-'+node.recipe?.type);let shape;
     const count=(constructions.get(node.id)??0)+1;constructions.delete(node.id);constructions.set(node.id,count);while(constructions.size>5000)constructions.delete(constructions.keys().next().value);onConstruct?.({id:node.id,source:node.source,type:node.recipe?.type});
     try{
       if(node.source==='native')shape=buildCadRecipe(oc,node.recipe,{affineTransform:(s,m)=>transformCad(oc,s,m),constructionBudget:nodeTolerance(node,world)});
@@ -110,10 +105,10 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
       // axes by a few ulps and must not alter their saved source bytes.
       if(node.source==='step')record.brep=node.brep.data;
       return record;
-    }catch(error){shape?.delete();throw error;}
+    }catch(error){shape?.delete();error.message+=' ['+node.name+']';throw error;}
   }
   function sourceKey(node,budget){
-    if(node.source==='native')return JSON.stringify(['native',node.recipe,budget]);
+    if(node.source==='native')return JSON.stringify(['native',oc.formnaroRuntimeVersion??'unversioned','screw-sections-8-v3',node.recipe,budget],(_key,value)=>value&&typeof value==='object'&&!Array.isArray(value)?Object.fromEntries(Object.keys(value).sort().map(key=>[key,value[key]])):value);
     if(node.source==='step')return JSON.stringify(['step',node.brep.data]);
     return JSON.stringify([node.source,node.operation,node.partition,node.extraction,node.modeling,node.finish,node.drill,node.children.map(child=>[node.finish?child.id:null,child.brep.data,child.transform,child.solid,!!child.suppressed,...(node.source==='modeling'?[child.recipe]:[])])]);
   }
@@ -166,7 +161,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
   }
   function inspect(node,world=node.transform){
     if(isGeometryRef(node.brep))throw Object.assign(Error('Geometrie für native Prüfung zuerst laden.'),{code:'GEOMETRY_NOT_LOADED'});
-    alive();world=validateAffineMatrix(world);
+    alive();cadNativeMemory(oc).check('inspection');world=validateAffineMatrix(world);
     // Translation preserves native topology, volume and exact extrema. Cache
     // only proofs from actual BRep reads, keyed by its full bytes and linear
     // map; caller-supplied stats never establish a geometry proof.
@@ -243,7 +238,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     return rebindCadWorkplaneNative(oc,draft,{baseline:before});
   }
   function display(project,quality={deflection:.02,angleDegrees:8},{colored=false,knownMeshes,ids}={}){
-    alive();const draft=cadProjectSnapshot(project),result=[];
+    alive();cadNativeMemory(oc).check('display');const draft=cadProjectSnapshot(project),result=[];
     if(knownMeshes!==undefined&&(!Array.isArray(knownMeshes)||knownMeshes.length>128||knownMeshes.some(t=>typeof t!=='string'||!/^cad-mesh-[1-9]\d{0,15}$/.test(t))))throw Error('Ungültige CAD-Anzeigeverweise.');
     if(ids!==undefined&&(!Array.isArray(ids)||ids.length>500||new Set(ids).size!==ids.length||ids.some(id=>typeof id!=='string'||!draft.nodes.some(n=>n.id===id))))throw Error('Ungültige Teilauswahl für die Darstellung.');
     const known=knownMeshes===undefined?null:new Set(knownMeshes),included=ids===undefined?null:new Set(ids);
@@ -342,5 +337,5 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     }
     return {data:encodeCadMeshes(parts,format,{roundingBudget:quality.deflection/2}),extension:format==='obj'?'zip':format,mime:{stl:'model/stl',obj:'application/zip','3mf':'model/3mf',gltf:'model/gltf+json',glb:'model/gltf-binary'}[format]};
   }
-  return {kernel:oc,nativeNode,stepNode,stepAssembly,stlHousingNode,rebuild,rebuildSubset,display,inspect,worldShape,productionNodes,exportMeshes,exportStep,exportModel,validateReferenceBounds:node=>{alive();referenceBounds(node);return true;},constructionState:()=>({total:[...constructions.values()].reduce((a,b)=>a+b,0),counts:Object.fromEntries(constructions)}),resetConstructionState:()=>constructions.clear(),cacheState:()=>cache.state(),sourceProofState:()=>sourceProofs.state(),displayCacheState:()=>displayCache.state(),inspectionCacheState:()=>inspectionCache.state(),colorRegionCacheState:()=>colorRegionCache.state(),exportMeshCacheState:()=>exportMeshCache.state(),dispose:()=>{disposed=true;annotationValidator.dispose();cache.clear();sourceProofs.clear();displayCache.clear();inspectionCache.clear();colorRegionCache.clear();exportMeshCache.clear();}};
+  return {kernel:oc,exportProofs:()=>structuredClone(sourceProofs.entries()),restoreProofs:records=>{if(!Array.isArray(records)||records.length>5000||JSON.stringify(records).length>4*1024*1024)throw Error('Ungültiger interner Geometrienachweis.');for(const [key,proof] of records){if(typeof key!=='string'||typeof proof?.brepDigest!=='string'||!proof.stats)throw Error('Ungültiger interner Geometrienachweis.');sourceProofs.set(key,structuredClone(proof),utf8.encode(key+JSON.stringify(proof)).length);}},nativeNode,stepNode,stepAssembly,stlHousingNode,rebuild,rebuildSubset,display,inspect,worldShape,productionNodes,exportMeshes,exportStep,exportModel,validateReferenceBounds:node=>{alive();referenceBounds(node);return true;},constructionState:()=>({total:[...constructions.values()].reduce((a,b)=>a+b,0),counts:Object.fromEntries(constructions)}),resetConstructionState:()=>constructions.clear(),releaseCaches:()=>{cache.clear();displayCache.clear();inspectionCache.clear();colorRegionCache.clear();exportMeshCache.clear();cadNativeMemory(oc).sample('caches-released');},memorySample:phase=>cadNativeMemory(oc).sample(phase),memoryState:()=>cadNativeMemory(oc).state(),cacheState:()=>cache.state(),sourceProofState:()=>sourceProofs.state(),displayCacheState:()=>displayCache.state(),inspectionCacheState:()=>inspectionCache.state(),colorRegionCacheState:()=>colorRegionCache.state(),exportMeshCacheState:()=>exportMeshCache.state(),dispose:()=>{disposed=true;annotationValidator.dispose();cache.clear();sourceProofs.clear();displayCache.clear();inspectionCache.clear();colorRegionCache.clear();exportMeshCache.clear();}};
 }

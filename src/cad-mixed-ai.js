@@ -80,7 +80,7 @@ function meshOperation(command,aliases,project){
 }
 /** Both workers calculate transient candidates inside ONE shared transaction.
  * No intermediate Apply/Undo, renderer geometry, repair or conversion is used. */
-export async function runMixedCadAIBatch({project,baseline,commands,runNative,runMesh,query,runScript,runPython,convertModel,runFreeCAD,signal,progress,onIntermediate,initialAliases={}}={}){
+export async function runMixedCadAIBatch({project,baseline,commands,runNative,runMesh,query,runScript,runPython,convertModel,runFreeCAD,signal,progress,onStep,onIntermediate,initialAliases={}}={}){
  if(!Array.isArray(commands)||!commands.length||commands.length>200)invalid('1–200 gemeinsame Befehle erforderlich.');
  commands.forEach((command,index)=>rejectStaleCadReferences(command,index>0));
  let current=cadProjectSnapshot(project),aliases=structuredClone(initialAliases),changes=[],warnings=[],reports=[],jointReports=[],pythonSyntaxChecked=false;
@@ -191,7 +191,7 @@ export async function runMixedCadAIBatch({project,baseline,commands,runNative,ru
   }});abort(signal);if(c.op==='python')pythonSyntaxChecked=true;reports.push({tool:c.op,name:c.name??'Lokale Modellberechnung',operations:count,result:value??null});
  }
  for(let index=0;index<commands.length;){
-  abort(signal);const start=index,command=commands[index];
+  abort(signal);const start=index,command=commands[index];onStep?.({phase:'command',commandIndex:index+1,operation:command?.op});
   try{
    if(command?.op==='joint'){
     const {op,...request}=structuredClone(command);
@@ -201,6 +201,7 @@ export async function runMixedCadAIBatch({project,baseline,commands,runNative,ru
      if(typeof id!=='string'||!current.nodes.some(n=>n.id===id))throw Object.assign(Error('Gelenke benötigen vollständige vorhandene Körper; Ergebnisalias '+value+' ist kein Wurzelteil.'),{code:'JOINT_TARGET'});
      request.joint[key]=id;
     }
+    if(['rigid-assembly','rigid-move'].includes(request.action)){const resolve=value=>{if(typeof value!=='string'||!value.startsWith('$'))return value;const target=aliases[value.slice(1)],id=typeof target==='string'?target:target?.path?.length===0?target.rootId:null;if(!id)throw Object.assign(Error('Starre Baugruppe benötigt Wurzelteile.'),{code:'JOINT_TARGET'});return id;};request.mainId=resolve(request.mainId);if(Array.isArray(request.ids))request.ids=request.ids.map(resolve);}
     const before=cadProjectSnapshot(current),report=applyCadJointRequest(current,request);locks(before,current);
     changes.push({op:'joint',action:request.action,affectedIds:report.affectedIds});jointReports.push(report);reports.push({commandIndex:index+1,tool:'joint',...report});index++;
    }else if(['tool','script','python'].includes(command?.op)){

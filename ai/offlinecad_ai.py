@@ -25,7 +25,7 @@ class CADAPIError(ValueError):
             self.payload['code'] = code
         feedback = data.get('feedback')
         if isinstance(feedback, dict):
-            allowed = ('code', 'message', 'commandIndex', 'operation', 'target', 'field', 'value', 'range', 'retryable', 'applied')
+            allowed = ('code', 'message', 'commandIndex', 'operation', 'target', 'field', 'value', 'range', 'retryable', 'applied', 'nextAction', 'phase', 'commitStatus', 'revision', 'measuredTolerance', 'allowedTolerance')
             bounded = {k: feedback[k] for k in allowed if k in feedback}
             encoded = json.dumps(bounded, ensure_ascii=False, allow_nan=False)
             if len(encoded) <= 16000:
@@ -39,7 +39,10 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 class Client:
-    def __init__(self, connection):
+    def __init__(self, connection, profile='full'):
+        if profile not in ('full', 'compact'):
+            raise ValueError('MCP profile must be full or compact.')
+        self.profile = profile
         self.connection = Path(connection)
         self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
 
@@ -54,14 +57,14 @@ class Client:
                 or url.username or url.password or url.path or url.query or url.fragment
                 or not isinstance(token, str) or len(token) != 64):
             raise ValueError('Invalid Formnaro connection file.')
-        if method not in ('context', 'scene', 'project', 'screenshot', 'preview', 'analysis', 'discard', 'apply', 'export', 'assembly', 'ui'):
+        if method not in ('context', 'scene', 'project', 'screenshot', 'preview', 'analysis', 'discard', 'apply', 'export', 'assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info'):
             raise ValueError('Unknown CAD operation.')
         body = json.dumps(args, ensure_ascii=False).encode('utf-8') if args is not None else None
-        req = urllib.request.Request(descriptor['url'] + '/v1/' + method, data=body,
+        req = urllib.request.Request(descriptor['url'] + '/v1/' + {'preview_start': 'preview/start', 'preview_result': 'preview/result'}.get(method, method), data=body,
                                      headers={'Authorization': 'Bearer ' + token,
                                               'Content-Type': 'application/json'})
         try:
-            with self.opener.open(req, timeout=650 if method in ('preview', 'export') else 60) as response:
+            with self.opener.open(req, timeout=650 if method in ('preview', 'analysis', 'export', 'save') else 60) as response:
                 raw = response.read(MAX_BYTES + 1)
         except urllib.error.HTTPError as e:
             try:
@@ -72,12 +75,31 @@ class Client:
                 data = {}
             raise CADAPIError(e.code, data, token) from None
         except TimeoutError:
+            if method == 'apply':
+                raise self.transport_error(method, 'CAD_TRANSPORT_TIMEOUT') from None
             raise ValueError('Formnaro did not finish before the client time limit. The local computation is cancelled when this connection closes. Do not terminate Formnaro processes or start a different version; inspect the existing program and retry only after it is idle.') from None
         except (urllib.error.URLError, OSError):
+            if method == 'apply':
+                raise self.transport_error(method, 'CAD_TRANSPORT_UNAVAILABLE') from None
             raise ValueError('Cannot reach Formnaro. Check that the program and local interface are running.') from None
         if len(raw) > MAX_BYTES:
             raise ValueError('CAD response exceeds 32 MB; use the compact scene or export fewer parts.')
-        return json.loads(raw)
+        try:
+            value = json.loads(raw)
+            if not isinstance(value, dict):
+                raise ValueError()
+            return value
+        except (ValueError, UnicodeError):
+            raise self.transport_error(method, 'CAD_TRANSPORT_INVALID_RESPONSE') from None
+
+    @staticmethod
+    def transport_error(method, code):
+        applying = method == 'apply'
+        message = ('Apply result unknown. Repeat the SAME previewId and original revision; do not create a new proposal.' if applying else 'Invalid or interrupted Formnaro response. Check the local interface before continuing.')
+        feedback = {'code': code, 'message': message, 'phase': 'transport', 'retryable': applying, 'nextAction': 'repeat' if applying else 'fix_prerequisite', 'applied': None if applying else False}
+        if applying:
+            feedback['commitStatus'] = 'unknown'
+        return CADAPIError(0, {'error': message, 'code': code, 'feedback': feedback}, '\x00')
 
 
 def ui_request(client, arguments):
@@ -97,6 +119,10 @@ def ui_request(client, arguments):
 
 def apply_arguments(value):
     result = {key: value[key] for key in ('previewId', 'revision')}
+    if 'responseDetail' in value:
+        if value['responseDetail'] not in ('summary', 'full'):
+            raise ValueError('responseDetail must be summary or full.')
+        result['responseDetail'] = value['responseDetail']
     if 'acceptFeatureDependencies' in value:
         if not isinstance(value['acceptFeatureDependencies'], bool):
             raise ValueError('acceptFeatureDependencies must be a boolean.')
@@ -109,7 +135,7 @@ def object_schema(properties=None, required=()):
 
 
 def tool_definitions(client):
-    context = client.request('context')
+    context = client.request('context', {'profile': 'compact'}) if getattr(client, 'profile', 'full') == 'compact' else client.request('context')
     empty = object_schema()
     tools = []
     for name, description in (
@@ -117,7 +143,7 @@ def tool_definitions(client):
         ('scene', 'Read current revision, selection, nested source paths, dimensions, locks and bounded project parameter/binding catalogs and contour link freshness summaries. No mesh arrays.'),
         ('project', 'Read full project including native source history, BReps and separate mesh references. Prefer scene for ordinary modelling.'),
         ('screenshot', 'Read the current CAD canvas as a PNG image.')):
-        tools.append({'name': 'offlinecad_' + name, 'description': description, 'inputSchema': empty,
+        tools.append({'name': 'offlinecad_' + name, 'description': description, 'inputSchema': context.get('contextProfileSchema', empty) if name == 'context' else {**context.get('sceneScopeSchema', empty), 'minProperties': 0} if name == 'scene' else empty,
                       'annotations': {'readOnlyHint': True, 'openWorldHint': False}})
     tools += [
         {'name': 'offlinecad_preview', 'description': 'Validate an atomic command batch without changing the live project. One homogeneous contour create/update/rebind/unlink command supports collected ids; parameter put/selectVariant/remove batches use a final explicit update for geometry; returns previewId, bounded parameters and actual parameterReport. Read context/scene first.',
@@ -129,6 +155,8 @@ def tool_definitions(client):
          'inputSchema': context.get('exportSchema') or object_schema({'format': {'type': 'string', 'enum': ['stl', 'obj']}, 'ids': {'type': 'array', 'items': {'type': 'string'}}}, ('format',)),
          'annotations': {'readOnlyHint': True, 'openWorldHint': False}}
     ]
+    if context.get('commandReference'):
+        tools.append({'name': 'offlinecad_command_info', 'description': 'Read small command index or exact fields, units, limits and example for command/type/action/tool.', 'inputSchema': context.get('commandInfoSchema', context['commandReference']['schema']), 'annotations': {'readOnlyHint': True, 'openWorldHint': False}})
     if context.get('analysisSchema'):
         tools.append({'name': 'offlinecad_analyze', 'description': 'Read bounded native CAD, mesh and app measurements, including joint collisions at explicit poses. Does not change the confirmed model.', 'inputSchema': context['analysisSchema'], 'annotations': {'readOnlyHint': True, 'openWorldHint': False}})
     if context.get('discardSchema'):
@@ -143,6 +171,14 @@ def tool_definitions(client):
         tools.append({'name': 'offlinecad_python', 'description': 'Preview real local Python modelling. Read context and scene first. from formnaro import model, frame; use box/cylinder/polygon/profile/union/cut/loft and await model.query. Native sources remain editable. result is a JSON-compatible summary. Runs locally without host files, network or provider keys. Inspect the proposal, then offlinecad_apply; this tool never applies changes.',
                       'inputSchema': object_schema({'revision': {'type': 'string'}, 'code': {'type': 'string', 'minLength': 1, 'maxLength': 100000}, 'label': {'type': 'string', 'maxLength': 200}}, ('revision', 'code')),
                       'annotations': {'readOnlyHint': True, 'openWorldHint': False}})
+    for name, key, description, readonly in (
+        ('save', 'saveSchema', 'Save the confirmed revision through Formnaro. filename optionally creates a new file in the project folder; existing names are not overwritten. Returns a small receipt.', False),
+        ('status', 'statusSchema', 'Read queued/running work and ready previews without waiting for CAD. Unknown remaining time is null.', True),
+        ('cancel', 'cancelSchema', 'Cancel exactly the identified calculation. Wait for cancelled; cancelling is not confirmation.', False),
+        ('preview_start', 'requestSchema', 'Start an asynchronous preview. Returns a jobId; inspect status and retrieve preview_result before Apply.', True),
+        ('preview_result', 'previewResultSchema', 'Read the completed preview or current job state. Never applies changes.', True)):
+        if context.get(key) and (name != 'preview_start' or context.get('automationJobs')):
+            tools.append({'name': 'offlinecad_' + name, 'description': description, 'inputSchema': context[key], 'annotations': {'readOnlyHint': readonly, 'destructiveHint': False, 'openWorldHint': False}})
     return tools
 
 
@@ -208,15 +244,20 @@ def mcp(client):
             elif method == 'tools/call':
                 try:
                     name = params.get('name', '')
-                    if name not in ['offlinecad_' + n for n in ('context', 'scene', 'project', 'screenshot', 'preview', 'analyze', 'discard', 'apply', 'export', 'assembly', 'python', 'ui', 'tool_info')]:
+                    if name not in ['offlinecad_' + n for n in ('context', 'scene', 'project', 'screenshot', 'preview', 'analyze', 'discard', 'apply', 'export', 'assembly', 'python', 'ui', 'tool_info', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info')]:
                         raise ValueError('Unknown CAD tool.')
                     op = name.removeprefix('offlinecad_')
                     arguments = params.get('arguments', {})
                     if not isinstance(arguments, dict):
                         raise ValueError('Tool arguments must be an object.')
-                    if op in ('context', 'scene', 'project', 'screenshot') and arguments:
+                    if op in ('project', 'screenshot') and arguments:
                         raise ValueError('This read tool takes no arguments.')
-                    if op == 'tool_info':
+                    if getattr(client, 'profile', 'full') == 'compact' and op in ('preview', 'preview_start', 'apply'):
+                        arguments = {'responseDetail': 'summary', **arguments}
+                    if op in ('context', 'scene'):
+                        body = arguments or ({'profile': 'compact'} if op == 'context' else {'rootsOnly': True}) if getattr(client, 'profile', 'full') == 'compact' else arguments or None
+                        value = client.request(op, body)
+                    elif op == 'tool_info':
                         if len(arguments) != 1 or not set(arguments) <= {'tool', 'query'}:
                             raise ValueError('Exactly one tool or query is required.')
                         text = next(iter(arguments.values()))
@@ -237,7 +278,7 @@ def mcp(client):
                             raise ValueError('Python preview needs revision and code.')
                         value = client.request('preview', {'revision': arguments['revision'], 'label': arguments.get('label', 'Python-Modellierung'), 'commands': [{'op': 'python', 'code': arguments['code']}]})
                     else:
-                        value = client.request(op, apply_arguments(arguments) if op == 'apply' else arguments if op in ('preview', 'discard', 'export', 'assembly') else None)
+                        value = client.request(op, apply_arguments(arguments) if op == 'apply' else arguments if op in ('preview', 'discard', 'export', 'assembly', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info') else None)
                     content = [{'type': 'image', 'data': value['dataBase64'], 'mimeType': 'image/png'}] if op == 'screenshot' else [{'type': 'text', 'text': json.dumps(value, ensure_ascii=False)}]
                     result = {'content': content, 'isError': False}
                 except (ValueError, OSError) as e:
@@ -248,7 +289,7 @@ def mcp(client):
                 uri = params.get('uri')
                 if uri not in [r['uri'] for r in resources]:
                     raise ValueError('Unknown resource URI.')
-                result = {'contents': [{'uri': uri, 'mimeType': 'application/json', 'text': json.dumps(client.request(uri.split('://')[1]), ensure_ascii=False)}]}
+                result = {'contents': [{'uri': uri, 'mimeType': 'application/json', 'text': json.dumps(client.request(uri.split('://')[1], {'profile': 'compact'} if uri.endswith('context') else {'rootsOnly': True}) if getattr(client, 'profile', 'full') == 'compact' else client.request(uri.split('://')[1]), ensure_ascii=False)}]}
             else:
                 emit({'jsonrpc': '2.0', 'id': request_id, 'error': {'code': -32601, 'message': 'Method not found.'}})
                 continue
@@ -266,24 +307,27 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     default = Path(os.environ.get('APPDATA', str(Path.home()))) / 'offlinecad' / 'ai-bridge.json'
     parser.add_argument('--connection', default=str(default), help='Connection file path shown in Formnaro AI settings')
+    parser.add_argument('--profile', choices=['full', 'compact'], default='full', help='Legacy full or new compact discovery profile; validation stays identical')
     parser.add_argument('--mcp', action='store_true', help='Run an MCP stdio server')
-    parser.add_argument('command', nargs='?', choices=['context', 'scene', 'project', 'screenshot', 'preview', 'analysis', 'discard', 'apply', 'export', 'assembly', 'ui'])
+    parser.add_argument('command', nargs='?', choices=['context', 'scene', 'project', 'screenshot', 'preview', 'analysis', 'discard', 'apply', 'export', 'assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info'])
     parser.add_argument('input', nargs='?', help='JSON request file for preview/apply, or stl/obj for export')
     parser.add_argument('--out', help='Save JSON or decoded screenshot/export bytes to this file')
     args = parser.parse_args()
-    client = Client(args.connection)
+    client = Client(args.connection, profile=args.profile)
     try:
         if args.mcp:
             mcp(client)
             return
         if not args.command:
             parser.error('Specify a command or --mcp.')
-        if args.command in ('preview', 'analysis', 'discard', 'apply', 'assembly', 'ui'):
-            if not args.input and args.command not in ('assembly', 'ui'):
+        if args.command in ('preview', 'analysis', 'discard', 'apply', 'assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result'):
+            if not args.input and args.command not in ('assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info'):
                 parser.error('preview/analysis/discard/apply requires a JSON file.')
-            request = json.loads(Path(args.input).read_text(encoding='utf-8-sig')) if args.input else {'action': 'state'}
+            request = json.loads(Path(args.input).read_text(encoding='utf-8-sig')) if args.input else ({} if args.command == 'status' else {'action': 'state'})
             if args.command == 'apply':
                 request = apply_arguments(request)
+        elif args.command in ('context', 'scene', 'command_info'):
+            request = json.loads(Path(args.input).read_text(encoding='utf-8-sig')) if args.input else ({'profile': 'compact'} if args.command == 'context' and args.profile == 'compact' else {'rootsOnly': True} if args.command == 'scene' and args.profile == 'compact' else {} if args.command == 'command_info' else None)
         else:
             request = {'format': args.input or 'stl'} if args.command == 'export' else None
         value = ui_request(client, request) if args.command == 'ui' else client.request(args.command, request)

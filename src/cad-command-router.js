@@ -1,3 +1,4 @@
+import {CAD_PRECISE_TOOL_SCHEMAS} from './cad-precise-tools.js';
 import {rejectStaleCadReferences} from './cad-ai-reference-guard.js';
 import {rebindCadDrillsCoordinated} from './cad-drill-rebind-coordinated.js';
 import {updateCadLinkedPatternWithConsumers} from './cad-pattern-consumers-native.js';
@@ -8,7 +9,7 @@ import {planCadPatternContours} from './cad-linked-pattern-contour-data.js';
 import {updateCadPatternContours,mergeCadContourBuildReports} from './cad-linked-pattern-contours-native.js';
 import {hasGeometryRefs,isGeometryRef} from './cad-geometry-ref.js';
 import {validateCadLinkedPattern,materializeCadLinkedPattern,stampCadLinkedPattern,cadLinkedPatternProblems,assertCadLinkedPatternCopyReady} from './cad-linked-pattern-data.js';
-import {remapCadJoints,validateCadJoints} from './cad-joints-data.js';
+import {remapCadJoints,validateCadJoints,mergeCadJoints} from './cad-joints-data.js';
 import {prepareConstrainedSketch} from './sketch-constraints-solver.js';
 import {prepareSketchAttachment,checkSketchAttachment,attachmentNativeCommands} from './sketch-attachment.js';
 import {meshToCadNative} from './cad-mesh-to-cad-native.js';
@@ -129,10 +130,10 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe=(node,p
     const seeds=operation.initialAliases??{};if(!seeds||Object.getPrototypeOf(seeds)!==Object.prototype||Object.keys(seeds).length>400)fail('INVALID_ALIAS','Ungültige interne Befehlsaliase.');
     const validAliasValue=(value,depth=0)=>depth<3&&(typeof value==='string'&&value.length>0&&value.length<=200||Array.isArray(value)&&value.length<=500&&value.every(v=>validAliasValue(v,depth+1))||value&&Object.getPrototypeOf(value)===Object.prototype&&Object.keys(value).every(k=>['rootId','path'].includes(k))&&typeof value.rootId==='string'&&Array.isArray(value.path)&&value.path.length<=12&&value.path.every(v=>typeof v==='string'));
     for(const [key,value]of Object.entries(seeds))if(!/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(key)||!validAliasValue(value))fail('INVALID_ALIAS','Ungültige interne Befehlsaliase.');
-    let project=cadProjectSnapshot(input),rebuildBaseline=cadProjectSnapshot(baseline??input);const aliases=structuredClone(seeds);let dirtyGeometry=false;const jointOriginal=input.joints?structuredClone(input.joints):undefined,jointCopies=new Map();
+    let project=cadProjectSnapshot(input),rebuildBaseline=cadProjectSnapshot(baseline??input);const aliases=structuredClone(seeds),changeDetails=[];let dirtyGeometry=false;const jointOriginal=input.joints?structuredClone(input.joints):undefined,jointCopies=new Map();
     async function verified(){if(dirtyGeometry){try{project=await service.rebuild(project,{baseline:rebuildBaseline});}catch(error){error.code??='CAD_ERROR';error.cadBatchFailure=true;error.feedback=aiFeedback(error);throw error;}rebuildBaseline=cadProjectSnapshot(project);dirtyGeometry=false;}return project;}
     for(let index=0;index<operation.commands.length;index++){
-      const command=operation.commands[index];try{rejectStaleCadReferences(command,index>0);if(!command||typeof command.op!=='string')fail('INVALID_COMMAND','Befehlsname fehlt.');
+      const command=operation.commands[index];progress?.({phase:'command',commandIndex:index+1,operation:command?.op,memory:service.memorySample?.('command-'+(index+1)+'-begin')});try{rejectStaleCadReferences(command,index>0);if(!command||typeof command.op!=='string')fail('INVALID_COMMAND','Befehlsname fehlt.');
       switch(command.op){
         case 'modeling':{
           fields(command,['op','target','operation','as']);await verified();const context=address(project,command.target,aliases);editable(context);
@@ -217,17 +218,17 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe=(node,p
           alias(command,createdAddress,aliases);dirtyGeometry=true;break;
         }
         case 'update':{
-          fields(command,['op','target','set']);fields(command.set,['name','size','pos','rot','mirror','solid','color','opacity','notes','segments','sides','params','text','font','suppressed','hidden','operation']);const context=address(project,command.target,aliases);editable(context);const node=context.node,set=command.set;
-          if(node.kind!=='cad'&&Object.keys(set).some(key=>!['name','size','pos','rot','mirror','color','opacity','notes','hidden'].includes(key)))fail('MESH_TOOL_REQUIRED','Netzrollen und gespeicherte Formparameter mit dem ausdrücklichen Netz-Werkzeug bearbeiten.');
+          fields(command,['op','target','set']);fields(command.set,['name','size','sizeAnchor','pos','rot','mirror','solid','color','opacity','notes','segments','sides','params','text','font','suppressed','hidden','operation']);const context=address(project,command.target,aliases);editable(context);const node=context.node,set=command.set,oldBounds=cadInterfaceLocalBounds(node),oldCenter=cadPoint(context.world,oldBounds.min.map((v,k)=>(v+oldBounds.max[k])/2));if(set.sizeAnchor!==undefined&&set.size===undefined)fail('INVALID_SIZE_ANCHOR','Größenanker nur zusammen mit set.size verwenden.');
+          if(node.kind!=='cad'&&Object.keys(set).some(key=>!['name','size','sizeAnchor','pos','rot','mirror','color','opacity','notes','hidden'].includes(key)))fail('MESH_TOOL_REQUIRED','Netzrollen und gespeicherte Formparameter mit dem ausdrücklichen Netz-Werkzeug bearbeiten.');
           if(set.params!==undefined||set.text!==undefined||set.font!==undefined||set.sides!==undefined||set.segments!==undefined&&node.recipe?.type==='polygon'){if(typeof editRecipe!=='function'||node.source!=='native')fail('INVALID_COMMAND','Nur native CAD-Quellen besitzen Formparameter.');const patch={};for(const key of ['params','text','font','sides'])if(set[key]!==undefined)patch[key]=set[key];if(set.segments!==undefined&&node.recipe.type==='polygon')patch.sides=set.segments;const recipe=await editRecipe(node,patch),replacement=service.nativeNode(recipe,{id:node.id,name:node.name});Object.assign(node,cadPreserveFormBounds(node,replacement));dirtyGeometry=true;}
-          if(set.size!==undefined)node.transform=(node.kind==='cad'?resizeCadAtCorner(node,vector(set.size)):cadResizeForm(node,vector(set.size))).transform;
+          if(set.size!==undefined)node.transform=(node.kind==='cad'?resizeCadAtCorner(node,vector(set.size),{anchor:set.sizeAnchor??'legacy'}):cadResizeForm(node,vector(set.size),{anchor:set.sizeAnchor??'legacy'})).transform;
           if(set.pos!==undefined)setCenter(node,vector(set.pos));
           if(set.rot!==undefined)absoluteOrientation(node,vector(set.rot));
           if(set.mirror!==undefined)absoluteMirror(node,set.mirror);
           if(['size','pos','rot','mirror'].some(key=>Object.hasOwn(set,key)))dirtyGeometry=true;
           for(const key of ['name','solid','color','opacity','suppressed','hidden','operation'])if(Object.hasOwn(set,key))node[key]=structuredClone(set[key]);
           if(Object.hasOwn(set,'notes')){if(typeof set.notes!=='string'||set.notes.length>10000)fail('INVALID_COMMAND','Notizen dürfen höchstens 10000 Zeichen enthalten.');node.metadata={...node.metadata,notes:set.notes};}
-          if(set.suppressed!==undefined&&!context.parent)fail('INVALID_COMMAND','Nur Gruppenquellen können unterdrückt werden.');if(set.solid!==undefined||set.suppressed!==undefined||set.operation!==undefined)dirtyGeometry=true;break;
+          if(set.suppressed!==undefined&&!context.parent)fail('INVALID_COMMAND','Nur Gruppenquellen können unterdrückt werden.');if(set.solid!==undefined||set.suppressed!==undefined||set.operation!==undefined)dirtyGeometry=true;if(set.size){const bounds=cadInterfaceLocalBounds(node),after=cadPoint(multiplyCadMatrices(context.parentWorld,node.transform),bounds.min.map((v,k)=>(v+bounds.max[k])/2));changeDetails[index]={sizeAnchor:structuredClone(set.sizeAnchor??'legacy'),positionBefore:oldCenter,positionAfter:after,positionDelta:after.map((v,k)=>v-oldCenter[k]),coordinateSystem:'world'};}break;
         }
         case 'transform':{
           fields(command,['op','target','translate','position','rotate','scale','space']);const context=address(project,command.target,aliases);editable(context);
@@ -273,7 +274,7 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe=(node,p
           const store=createCadTransactions({initial:project,build:(p,c)=>service.rebuild(p,{baseline:c.baseline})}),tools=createCadToolsNative({oc,service,transactions:store}),proposal=await tools.previewReferencePlacement({id:context.node.id,sourceReference:command.sourceReference,targetId:target?.node.id,targetReference:command.targetReference,offset:command.offset,revision:store.revision()});project=proposal.project;dirtyGeometry=true;break;
         }
         case 'drill':{
-          fields(command,['op','target','reference','kind','through','termination','stopReference','associative','diameter','depth','headDiameter','headDepth','angle','gap','offset','as']);if(command.associative!==undefined&&typeof command.associative!=='boolean')fail('INVALID_COMMAND','Mitwachsende Bohrung benötigt einen booleschen Wert.');await verified();const context=address(project,command.target,aliases);editable(context);if(context.target.path.length)fail('INVALID_COMMAND','Bohrungsassistent benötigt ein fertiges Teil.');const resultId=globalThis.crypto.randomUUID(),store=createCadTransactions({initial:project,build:(p,c)=>service.rebuild(p,{baseline:c.baseline})}),tools=createCadToolsNative({oc,service,transactions:store}),proposal=await tools.previewDrill({...command,id:context.node.id,resultId,revision:store.revision()});project=proposal.project;alias(command,resultId,aliases);dirtyGeometry=true;break;
+          fields(command,['op','target','reference','kind','through','termination','stopReference','associative','diameter','depth','headDiameter','headDepth','angle','gap','offset','as']);if(command.associative!==undefined&&typeof command.associative!=='boolean')fail('INVALID_COMMAND','Mitwachsende Bohrung benötigt einen booleschen Wert.');await verified();const context=address(project,command.target,aliases);editable(context);if(context.target.path.length)fail('INVALID_COMMAND','Bohrungsassistent benötigt ein fertiges Teil.');const {op:_op,target:_target,as:_as,...drillOptions}=command;const resultId=globalThis.crypto.randomUUID(),store=createCadTransactions({initial:project,build:(p,c)=>service.rebuild(p,{baseline:c.baseline})}),tools=createCadToolsNative({oc,service,transactions:store}),proposal=await tools.previewDrill({...drillOptions,id:context.node.id,resultId,revision:store.revision()});project=proposal.project;alias(command,resultId,aliases);dirtyGeometry=true;break;
         }
         case 'editDrill':
         case 'detachDrillPattern':{
@@ -307,10 +308,10 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe=(node,p
         default:fail('INVALID_COMMAND','Unbekannter CAD-Befehl: '+command.op);
       }
       }catch(error){error.code??='CAD_ERROR';let target=command?.target;if(typeof target==='string'&&target.startsWith('$')&&aliases[target.slice(1)]!==undefined)target=aliases[target.slice(1)];if(typeof target==='string'&&!target.startsWith('$'))target={rootId:target,path:[]};error.feedback=aiFeedback(error,error.cadBatchFailure?{}:{commandIndex:index+1,operation:command?.op,target:error.feedback?.target??target});throw error;}
-      progress?.((index+1)/operation.commands.length*.8);
+      progress?.({phase:'command-complete',commandIndex:index+1,operation:command.op,memory:service.memorySample?.('command-'+(index+1)+'-end')});progress?.((index+1)/operation.commands.length*.8);
     }
-    if(jointOriginal&&jointCopies.size){const count=Math.max(...[...jointCopies.values()].map(v=>v.length));for(let i=0;i<count;i++){const mapping=new Map([...jointCopies].flatMap(([id,list])=>list[i]?[[id,list[i]]]:[])),copied=remapCadJoints(jointOriginal,mapping);if(copied.joints.length)project.joints=validateCadJoints({version:1,bases:[...new Set([...(project.joints?.bases??[]),...copied.bases])],joints:[...(project.joints?.joints??[]),...copied.joints]});}}
-    try{return {project:await service.rebuild(project,{baseline:rebuildBaseline,progress:value=>progress?.(.8+value*.2)}),aliases,changes:operation.commands.map(c=>({op:c.op,target:c.target??c.as??null})),warnings:[]};}catch(error){error.code??='CAD_ERROR';error.feedback=aiFeedback(error);throw error;}
+    if(jointOriginal&&jointCopies.size){const count=Math.max(...[...jointCopies.values()].map(v=>v.length));for(let i=0;i<count;i++){const mapping=new Map([...jointCopies].flatMap(([id,list])=>list[i]?[[id,list[i]]]:[])),copied=remapCadJoints(jointOriginal,mapping);if(copied.joints.length)project.joints=mergeCadJoints(project.joints,copied);}}
+    try{return {project:await service.rebuild(project,{baseline:rebuildBaseline,progress:value=>progress?.(.8+value*.2)}),aliases,changes:operation.commands.map((c,i)=>({op:c.op,target:c.target??c.as??null,...changeDetails[i]})),warnings:[]};}catch(error){error.code??='CAD_ERROR';error.feedback=aiFeedback(error);throw error;}
   }
   async function run(input,operation,{baseline=input,progress,signal,freecadRun,collectConsumerChoices=false}={}){
     const project=cadProjectSnapshot(input);if(!operation||typeof operation.kind!=='string')fail('INVALID_COMMAND','CAD-Auftrag fehlt.');
@@ -410,9 +411,9 @@ export function createCadCommandRouter({oc,service,makeRecipe,editRecipe=(node,p
       case 'tool':{
         fields(operation,['kind','name','options']);const store=createCadTransactions({initial:project,build:(p,context)=>service.rebuild(p,{baseline:context.baseline})}),tools=createCadToolsNative({oc,service,transactions:store});
         if(!['previewAlign','previewAnchor','previewWorkplane','previewPlace','previewLayOnFace','previewSplit','previewExtract','previewReferencePlacement','previewDrill','previewConvertDrill','previewRebindDrills','previewEditDrill','previewDetachDrillPattern','previewGroup','previewEditSource','previewSuppressSource','previewDissolve'].includes(operation.name))fail('INVALID_COMMAND','Unbekanntes natives CAD-Werkzeug.');
-        const drillOptions={previewRebindDrills:['id','bindings','parameterData','variantId','contourBindings','referenceBindings','sourceReplacement','consumerBindings'],previewConvertDrill:['id','path','bindingRemap','confirmed','reference','kind','through','termination','stopReference','diameter','depth','headDiameter','headDepth','angle','gap','offset'],previewDrill:['id','reference','kind','through','termination','stopReference','diameter','depth','headDiameter','headDepth','angle','gap','offset','associative','resultId'],previewEditDrill:['id','path','patch','positionReference','stopReference'],previewDetachDrillPattern:['id','path','index']}[operation.name];if(drillOptions)fields(operation.options,drillOptions);
+        const drillOptions=CAD_PRECISE_TOOL_SCHEMAS[operation.name]?Object.keys(CAD_PRECISE_TOOL_SCHEMAS[operation.name].properties):{previewRebindDrills:['id','bindings','parameterData','variantId','contourBindings','referenceBindings','sourceReplacement','consumerBindings'],previewConvertDrill:['id','path','bindingRemap','confirmed','reference','kind','through','termination','stopReference','diameter','depth','headDiameter','headDepth','angle','gap','offset'],previewDrill:['id','scope','sourcePath','reference','kind','through','termination','stopReference','diameter','depth','headDiameter','headDepth','angle','gap','offset','associative','resultId'],previewEditDrill:['id','path','patch','positionReference','stopReference'],previewDetachDrillPattern:['id','path','index']}[operation.name];if(drillOptions)fields(operation.options,drillOptions);
         if(operation.name==='previewRebindDrills')return rebindCadDrillsCoordinated(project,operation.options,{oc,service,editRecipe,signal,freecadRun,collectConsumerChoices});
-        const result=await tools[operation.name]({...operation.options,revision:store.revision()});return {project:result.project,...(operation.name==='previewConvertDrill'?{warnings:result.warnings??[],report:result.report??{}}:{})};
+        const result=await tools[operation.name]({...operation.options,revision:store.revision()});return {project:result.project,...(result.report?{report:result.report}:{}),...(result.warnings?{warnings:result.warnings}:{})};
       }
       case 'sketchAttachment':{
         const prepared=prepareSketchAttachment(project,operation);if(prepared.engine!=='cad')throw Error('Für ein Netzteil das Netz-Anbauwerkzeug verwenden.');

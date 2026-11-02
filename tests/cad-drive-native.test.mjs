@@ -1,0 +1,21 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {Worker} from 'node:worker_threads';import {Matrix4} from 'three';
+import {createCadController} from '../src/cad-controller.js';
+import {createCadAutomationAccess} from '../src/cad-automation-access.js';
+import {encodeFnpackProject,createFnpackResolver} from '../src/cad-fnpack-data.js';
+import {createRequire} from 'node:module';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';
+const {writeFnpack,openFnpack}=createRequire(import.meta.url)('../backend/fnpack.cjs');
+const factory=posts=>()=>{const worker=new Worker(new URL('./fixtures/cad-node-worker.mjs',import.meta.url)),adapter={postMessage:value=>{posts.push(value);worker.postMessage(value);},terminate:()=>worker.terminate()};worker.on('message',data=>adapter.onmessage?.({data}));worker.on('error',error=>adapter.onerror?.(error));return adapter;};
+test('native sampled range finds only intermediate collisions through a screw, keeps revision/undo, roundtrips actual format31 FNPACK',async()=>{
+ const posts=[],cad=createCadController({createWorker:factory(posts)}),directory=await fs.mkdtemp(path.join(os.tmpdir(),'formnaro-drive-'));
+ try{
+  for(const [id,x]of [['a',0],['b',20],['rotary',50]])await cad.execute({kind:'create',recipe:{type:'box',size:[2,2,2]},options:{id,transform:new Matrix4().makeTranslation(x,0,0).toArray()}});
+  for(const joint of [{id:'slide',kind:'prismatic',parentId:'a',childId:'b',origin:[20,0,0],axis:[1,0,0],limits:{min:-30,max:30}},{id:'turn',kind:'revolute',parentId:'a',childId:'rotary',origin:[50,0,0],axis:[1,0,0],limits:{min:-3600,max:3600}}])cad.apply(await cad.previewJoints({action:'create',joint}));
+  cad.apply(await cad.previewJoints({action:'drive-create',drive:{id:'screw',kind:'screw',rotary:'turn',linear:'slide',lead:4}}));
+  const copied=await cad.preview({kind:'batch',commands:['a','b','rotary'].map(target=>({op:'duplicate',target,translate:[0,20,0]}))});assert.equal(copied.project.joints.drives.length,2);assert.equal(copied.project.joints.version,3);cad.discard(copied.previewId);
+  const before=cad.serialize(),revision=cad.revision(),depth=cad.state().undo,result=await cad.checkMotionRange({jointId:'turn',from:-2160,to:0,step:90,pairs:[{leftId:'a',rightId:'b'}]});
+  assert.equal(result.complete,true);assert.equal(result.checkedSamples,25);assert.ok(result.collisions.some(hit=>hit.driver.value===-1800&&Math.abs(hit.volume-8)<1e-6));assert.ok(result.collisions.every(hit=>hit.driver.value!==-2160&&hit.driver.value!==0));assert.equal(result.fullMotionGuarantee,false);assert.equal(cad.revision(),revision);assert.equal(cad.serialize(),before);assert.equal(cad.state().undo,depth);assert.equal(cad.state().previews,0);
+  const encoded=encodeFnpackProject(cad.snapshot()),file=path.join(directory,'drive.fnpack');await writeFnpack(file,{project:encoded.project,blocks:encoded.blocks});const opened=await openFnpack(file);try{assert.equal(opened.index.project.version,31);assert.equal(opened.index.project.joints.drives[0].lead,4);const resolver=createFnpackResolver({readBlock:opened.read});const restored=await resolver.hydrate(opened.index.project);assert.equal(restored.joints.drives[0].lead,4);assert.ok(restored.nodes.every(n=>n.brep.data.length>20));}finally{await opened.close();}
+  const access=createCadAutomationAccess({controller:cad,getScene:()=>({revision:cad.revision(),objects:[]})});const transport=await access.dispatch('analysis',{revision,queries:[{id:'range',engine:'app',kind:'motionRange',options:{jointId:'turn',from:-2160,to:0,step:90,pairs:[{leftId:'a',rightId:'b'}]}}]});assert.equal(transport.results[0].value.checkedSamples,25);assert.equal(transport.results[0].value.methods[0].method,'native-brep');assert.equal(cad.serialize(),before);assert.equal(cad.state().busy,false);
+  const p=await access.preview({revision,commands:[{op:'joint',action:'move',values:[{jointId:'turn',value:360}]}]});const jobs=posts.length;const receipt=await access.apply({previewId:p.previewId,revision,responseDetail:'summary'});assert.equal(receipt.summary.joints.find(j=>j.jointId==='slide').after,4);assert.equal(receipt.scene,undefined);assert.equal(posts.length,jobs);cad.undo();assert.equal(cad.serialize(),before);
+ }finally{cad.dispose();await fs.rm(directory,{recursive:true,force:true});}
+});

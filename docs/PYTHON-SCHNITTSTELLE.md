@@ -114,6 +114,11 @@ Laufzeit rechnen. `Client.export("step")` liefert Dateibytes. Der Client liest
 den lokalen Zugriffstoken intern; Verbindungsdatei und Token nicht ausgeben,
 in Modelle übernehmen oder weitergeben. Es wird kein Cloud-Schlüssel benötigt.
 
+`Client.discard(vorschlag)` verwirft eine fertige, noch nicht übernommene
+Vorschau. Vorschaukennung und Revision stammen aus derselben Vorschauantwort.
+Danach kann das Skript eine neue Vorschau anfordern. Das bestätigte Modell
+und der Undo-Verlauf bleiben beim Verwerfen erhalten.
+
 Der MCP-Adapter `scripts/offlinecad_ai.py` bietet bei einer entsprechend neuen
 Anwendung zusätzlich `offlinecad_python({revision, code, label?})`. Dieses
 Werkzeug berechnet ausschließlich eine Vorschau. Die Übernahme erfolgt

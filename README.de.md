@@ -12,8 +12,8 @@
 
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
-| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r35/Formnaro-v0.125.0-r35-Windows.zip)** | **0.125.0-r35** | ca. **667 MB** | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
-| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r35) | **0.125.0-r35** | **111 / 98 / 78 MB** | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
+| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** | **0.125.0-r36** | ca. **667 MB** | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
+| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) | **0.125.0-r36** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
 
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
@@ -77,7 +77,7 @@ Im eigenen Übungsfenster werden drei Funktionen mit den Bedienelementen von For
 
 Der vorab von Codex erstellte Plan wird im Übungsfenster über die echten Bedienelemente ausgeführt; die Wiedergabe benötigt keine weiteren Modellanfragen. Die eingeblendeten **3.381.395 Tokens inklusive Cache** beziehen sich auf den gesamten Zahnradauftrag mit Planung, Aufnahme und Prüfung.
 
-Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der oben verlinkte Programmdownload enthält jetzt diesen Stand.
+Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der aktuelle Programmdownload oben enthält 0.125.0-r36.
 
 ## Anleitungen
 
@@ -92,13 +92,13 @@ Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der oben
 <!-- formnaro-development-status:start -->
 ## Entwicklungsstand
 
-Die portable Ausgabe **0.125.0-r35** enthält KI-Werkzeugauskunft auf Abruf, verbesserte Übungsabläufe, Zentrieren/Ausrichten und getrennte auftragsbezogene Gespräche. Passende Quellarchive stehen separat bereit.
+Die portable Ausgabe **0.125.0-r36** erweitert native Modellierung, Fehler- und Speicherbehandlung, revisionsgebundenes Speichern, gezielte Werkzeugauskunft, Schraub- und Kippkopplungen sowie gespeicherte Prüfstände. Bestehende Quellen und ein gemeinsamer Undo-Schritt bleiben erhalten.
 
-Der eingefrorene r35-Build bestand **79 gezielte Quelltests, vier Übungslektionen, zwei normale Modelliertests und vier Screenshot-Wege**. Die gepackte EXE wurde mit isolierten Profilen und regulärem Schließen/Prozessende geprüft. Die neue Download-ZIP wurde vollständig mit CRC/SHA-256 gelesen und nach frischem Entpacken in einen Umlautordner aus einem fremden Arbeitsverzeichnis getestet. Das sind gezielte Prüfungen, keine neue Gesamtfunktions- oder frische Windows-VM-Abnahme.
+Der vollständige lokale Funktionskatalog wurde abgearbeitet: **2906 Node-Tests und 71 Desktop-Prüfgruppen**, ergänzt durch **20 Python-Tests und acht native CNC-Regressionsfälle**. Befunde aus dem ersten Lauf und ihre Nachprüfungen sind im Prüfbericht ausgewiesen. Ein neuer DeepSeek-Harness-Durchlauf prüfte Fehlerkorrektur, explizites Apply und das Erkennen eines veralteten Prüfstands. Die gepackte EXE wurde mit isoliertem Profil, nativem FreeCAD, Speichern und regulärem Prozessende geprüft; das ZIP zusätzlich nach frischem Entpacken in einen Umlautordner aus einem fremden Arbeitsverzeichnis.
 
-Bekannte Grenzen: CAD-Kernfehler bei manchen langen Gewinden; automatische Schraub-/Kippkopplung und breitere praktische Werkzeugabdeckung bleiben offen.
+Bewegungs- und Abstandsprüfungen gelten für die tatsächlich berechneten Stellungen und Paare. Sie sind keine durchgehende Kontakt-, Last- oder Fertigungsfreigabe. Eine frische Windows-VM-Abnahme ist nicht enthalten. Neue Prüfstände verwenden Projektformat 32; ältere Projekte bleiben lesbar.
 
-Passende Quellen: [Versions-Tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r35) · [Quellcode-ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r35/Formnaro-Quellcode-v0.125.0-r35.zip) · [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r35/Paket-Pruefstand.json)
+Passende Quellen: [Versions-Tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r36) · [Quellcode-ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-Quellcode-v0.125.0-r36.zip) · [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Paket-Pruefstand.json) · [Abnahmeumfang](docs/GESAMTPLAN-RELEASE-ABNAHME.md)
 [Aktueller veröffentlichter Stand](docs/AKTUELLER-STAND.md)
 
 <!-- formnaro-development-status:end -->
@@ -109,7 +109,7 @@ Passende Quellen: [Versions-Tag](https://github.com/andyy909/Formnaro-cad/tree/v
 Mit Node.js 22.16 oder neuer und npm:
 
 ```sh
-git clone --branch v0.125.0-r35 https://github.com/andyy909/Formnaro-cad.git
+git clone --branch v0.125.0-r36 https://github.com/andyy909/Formnaro-cad.git
 cd Formnaro-cad
 npm ci
 npm run build

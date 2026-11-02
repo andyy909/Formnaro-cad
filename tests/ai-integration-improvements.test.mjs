@@ -17,8 +17,8 @@ function expandProviderDictionary(root){
  const {providerDefinitions,providerEncoding,...contract}=root;return expand(contract);
 }
 
-test('Provider dictionary reconstructs every command, parameter and note without data loss',()=>{
- const c=cadAIContext(),p=providerContext(c);assert.deepEqual(p.requestSchema,{$ref:'#/commandSchema'});assert.deepEqual(expandProviderDictionary(p),c);assert.deepEqual(c.requestSchema,c.commandSchema);assert(JSON.stringify(c).length-JSON.stringify(p).length>100000);assert(!c.sketchContract.includes('No persistent'));assert.match(c.sketchContract,/Version3/);
+test('Provider dictionary reconstructs distinct command and request schemas without data loss',()=>{
+ const c=cadAIContext(),p=providerContext(c);assert.deepEqual(expandProviderDictionary(p),c);assert.deepEqual(c.requestSchema.properties.commands,c.commandSchema.properties.commands);assert.deepEqual(c.requestSchema.properties.responseDetail.enum,['summary','full']);assert(JSON.stringify(c).length-JSON.stringify(p).length>100000);assert(!c.sketchContract.includes('No persistent'));assert.match(c.sketchContract,/Version3/);
  const damaged=structuredClone(p);delete damaged.providerDefinitions[Object.keys(damaged.providerDefinitions)[0]];assert.throws(()=>expandProviderDictionary(damaged),/Missing provider reference/);
  const different={commandSchema:{a:1},requestSchema:{b:2}};assert.equal(providerContext(different),different);
 });
@@ -76,10 +76,10 @@ test('Actual UI analysis adapter delivers both bounded reports without a repair 
  assert.equal(delivered,2);assert.equal(budgets[0],14000);assert(budgets[1]<7000);assert.deepEqual(states,[true,false,true,false]);
 });
 
-test('Both provider protocols carry one schema, preview images and bound review identity',async()=>{
+test('Both provider protocols retain request options, preview images and bound review identity',async()=>{
  const {generate}=createRequire(import.meta.url)('../backend/ai-provider.cjs'),original=globalThis.fetch;
  try{for(const protocol of ['responses','chat']){
-  globalThis.fetch=async(url,options)=>{const b=JSON.parse(options.body),system=b.instructions??b.messages[0].content;assert(system.includes('"$ref":"#/commandSchema"'));const content=protocol==='responses'?b.input.at(-1).content:b.messages.at(-1).content;assert(content.some(c=>c.type==='input_image'||c.type==='image_url'));const answer={revision:'r',review:{previewId:'p',accepted:true,observations:'checked'}};return new Response(JSON.stringify(protocol==='responses'?{output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(answer)}]}]}:{choices:[{message:{content:JSON.stringify(answer)}}]}));};
+  globalThis.fetch=async(url,options)=>{const b=JSON.parse(options.body),system=b.instructions??b.messages[0].content;assert(system.includes('"requestSchema":'));assert(system.includes('"responseDetail":'));assert(system.includes('"intermediateDisplay":'));const content=protocol==='responses'?b.input.at(-1).content:b.messages.at(-1).content;assert(content.some(c=>c.type==='input_image'||c.type==='image_url'));const answer={revision:'r',review:{previewId:'p',accepted:true,observations:'checked'}};return new Response(JSON.stringify(protocol==='responses'?{output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(answer)}]}]}:{choices:[{message:{content:JSON.stringify(answer)}}]}));};
   const r=await generate({protocol,baseUrl:'http://127.0.0.1/v1',model:'fixture'},'',{prompt:'make',scene:scene(),context:cadAIContext(),images:[image],visualFeedback:{previewId:'p',revision:'r'}},new AbortController().signal);assert.equal(r.review.previewId,'p');assert.equal(r.review.accepted,true);
  }}finally{globalThis.fetch=original;}
 });

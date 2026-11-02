@@ -8,3 +8,5 @@ export function createCadQualitySettings(storage){
   let current=structuredClone(CAD_QUALITY_DEFAULTS);const saved=storage.getItem(CAD_QUALITY_KEY);if(saved)current=validateCadQuality(JSON.parse(saved));
   return {get:()=>structuredClone(current),set:value=>{const checked=validateCadQuality(value);if(JSON.stringify(checked)!==JSON.stringify(current))storage.setItem(CAD_QUALITY_KEY,JSON.stringify(checked));current=checked;return structuredClone(current);}};
 }
+
+export function cadDisplayPreset(value,mode){if(!['full','simplified'].includes(mode))throw Error('Unbekannte Anzeigedetailstufe.');const checked=validateCadQuality(value);checked.display=mode==='full'?{...CAD_QUALITY_DEFAULTS.display}:{deflection:.25,angleDegrees:20};return checked;}

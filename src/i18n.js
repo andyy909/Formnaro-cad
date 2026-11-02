@@ -462,6 +462,8 @@ Einfügen|Paste
 Einfügen (Strg+V)|Paste (Ctrl+V)
 Kopieren|Copy
 Kopieren (Strg+C)|Copy (Ctrl+C)
+Geometrisch vereinigen|Boolean union
+Geometrisch vereinigen (Strg+G)|Boolean union (Ctrl+G)
 Gruppieren|Group
 Auflösen|Ungroup
 Ausrichten|Align

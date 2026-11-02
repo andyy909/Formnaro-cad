@@ -1,3 +1,4 @@
+import {cadSizeAnchorPoint} from './cad-size-anchor.js';
 import {Matrix4,Vector3} from 'three';
 import {validateAffineMatrix} from './cad-project.js';
 
@@ -46,7 +47,7 @@ export function dissolveCadGroup(group){
 // Size fields describe distances along the object's own axes. Postmultiply
 // instead of decomposing a sheared world matrix. The opposite local corner and
 // local bottom remain fixed in space, including mirrors and nested shear.
-export function resizeCadAtCorner(node,target,{corner=[1,1,1],keepBottom=true}={}){
+export function resizeCadAtCorner(node,target,{corner=[1,1,1],keepBottom=true,anchor:chosenAnchor}={}){
   if(!['cad','mesh','referenceMesh'].includes(node.kind))throw Error('Ein CAD- oder Netzteil für Eckmaße auswählen.');
   validateAffineMatrix(node.transform);
   if(!Array.isArray(target)||target.length!==3||target.some(v=>!Number.isFinite(v)||v<.01||v>10000))throw Object.assign(Error('CAD-Maße müssen zwischen 0,01 und 10000 mm liegen.'),{feedback:{field:'set.size',value:target,range:{min:.01,max:10000}}});
@@ -55,7 +56,7 @@ export function resizeCadAtCorner(node,target,{corner=[1,1,1],keepBottom=true}={
   if(dimensions.some(v=>!Number.isFinite(v)||v<=0))throw Error('Ungültige CAD-Grenzen.');
   const current=dimensions.map((v,i)=>v*Math.hypot(matrix[4*i],matrix[4*i+1],matrix[4*i+2]));
   const factors=target.map((v,i)=>v/current[i]);
-  const anchor=min.map((v,i)=>i===2&&keepBottom?v:corner[i]===1?v:max[i]);
+  const anchor=chosenAnchor===undefined?min.map((v,i)=>i===2&&keepBottom?v:corner[i]===1?v:max[i]):cadSizeAnchorPoint(bounds,chosenAnchor);
   const scaling=new Matrix4().makeTranslation(...anchor).multiply(new Matrix4().makeScale(...factors)).multiply(new Matrix4().makeTranslation(...anchor.map(v=>-v))).toArray();
   const copy=structuredClone(node);copy.transform=multiplyCadMatrices(node.transform,scaling);return copy;
 }

@@ -5,13 +5,16 @@ async function invoke(name,value){try{practiceWindowOnly(name);const response=aw
 function invokeSync(name,value){practiceWindowOnly(name);const response=ipcRenderer.sendSync(name,value);if(!response?.ok)throw Error(response?.error||'Portable Daten konnten nicht geladen werden.');return response.value;}
 function automationFailure(id,error){const errorCode=typeof error.code==='string'&&/^[A-Z][A-Z0-9_]{0,79}$/.test(error.code)?error.code:undefined;ipcRenderer.send('cad-ai:reply',{id,error:String(error.message),...(error.feedback?{feedback:error.feedback}:{}),...(errorCode?{errorCode}:{})});}
 contextBridge.exposeInMainWorld('offlinecadDesktop',{
+ automationState:value=>ipcRenderer.send('cad-ai:model-state',value),
+ automationProgress:value=>ipcRenderer.send('cad-ai:progress',value),
+ automationCommitted:value=>ipcRenderer.send('cad-ai:committed',value),
  ...(process.argv.includes('--formnaro-practice')?{
   onPracticePlan:callback=>{const fn=(_event,value)=>callback(value);ipcRenderer.on('cad-practice:plan',fn);return ()=>ipcRenderer.removeListener('cad-practice:plan',fn);},
   onPracticeBlur:callback=>{const fn=(_event,value)=>callback(value);ipcRenderer.on('cad-practice:blur',fn);return ()=>ipcRenderer.removeListener('cad-practice:blur',fn);},
   onPracticeCancel:callback=>{const fn=()=>callback();ipcRenderer.on('cad-practice:cancel',fn);return ()=>ipcRenderer.removeListener('cad-practice:cancel',fn);},
   practiceClose:()=>invoke('cad-practice:close'),practiceParent:()=>invoke('cad-practice:parent'),practiceReady:()=>invoke('cad-practice:ready'),practiceAbort:()=>invoke('cad-practice:abort'),practiceStatus:value=>invoke('cad-practice:status',value),submitPracticeResult:value=>invoke('cad-practice:result',value),practiceInput:value=>invoke('cad-practice:input',value)
  }:{startPractice:value=>invoke('cad-practice:start',value),cancelPractice:()=>invoke('cad-practice:cancel')}),
- aiToolLibrary:value=>invoke('cad-ai-tools:request',value),
+ aiToolLibrary:value=>invoke('cad-ai-tools:request',value),aiToolLibraryReply:value=>invokeReply('cad-ai-tools:request',value),
  aiTasksReply:value=>ipcRenderer.invoke('cad-ai-tasks:request',value),
  readAIContextNote:value=>invoke('cad-ai:note-read',value),appendAIContextNote:value=>invoke('cad-ai:note-append',value),
  ...(process.argv.includes('--formnaro-error-log')?{recordError:value=>invoke('cad-log:write',value),openErrorLogFolder:()=>invoke('cad-log:folder'),getErrorLogStatus:()=>invoke('cad-log:status')}:{}),
@@ -24,7 +27,7 @@ contextBridge.exposeInMainWorld('offlinecadDesktop',{
  readGeometryBlock:value=>invoke('cad-project:readBlock',value),openPackRecovery:()=>invoke('cad-project:openPackRecovery'),savePackRecovery:value=>invoke('cad-project:savePackRecovery',value),
  printDrawingPdf:value=>invoke('cad-drawing:pdf',value),
  ...(process.argv.includes('--formnaro-stl-converter')?{convertStl:value=>invoke('cad-stl:convert',value),analyseStl:value=>invoke('cad-stl:analyse',value),cancelStl:value=>invoke('cad-stl:cancel',value),onStlProgress:callback=>{const listener=(_event,value)=>callback(value);ipcRenderer.on('cad-stl:progress',listener);return ()=>ipcRenderer.removeListener('cad-stl:progress',listener);}}:{}),
- listProjects:()=>invoke('cad-project:list'),openProject:value=>invoke('cad-project:open',value),saveProject:value=>invoke('cad-project:save',value),openProjectsFolder:()=>invoke('cad-project:folder'),projectThumbnail:value=>invoke('cad-project:thumbnail',value),cacheProjectThumbnail:value=>invoke('cad-project:cacheThumbnail',value),
+ listProjects:()=>invoke('cad-project:list'),openProject:value=>invoke('cad-project:open',value),saveProject:value=>invoke('cad-project:save',value),saveProjectReply:value=>invokeReply('cad-project:save',value),openProjectsFolder:()=>invoke('cad-project:folder'),projectThumbnail:value=>invoke('cad-project:thumbnail',value),cacheProjectThumbnail:value=>invoke('cad-project:cacheThumbnail',value),
  getLayouts:()=>invoke('cad-layout:get'),changeLayouts:value=>invoke('cad-layout:change',value),openLayoutsFolder:()=>invoke('cad-layout:folder'),
  getAISubscriptionUsage:value=>invoke('cad-ai:subscription-usage',value),openAISubscriptionUsage:()=>invoke('cad-ai:subscription-open'),
  startChatGPTLogin:value=>invoke('cad-ai:chatgpt-start',value),getChatGPTStatus:()=>invoke('cad-ai:chatgpt-status'),cancelChatGPTLogin:()=>invoke('cad-ai:chatgpt-cancel'),logoutChatGPT:()=>invoke('cad-ai:chatgpt-logout'),acknowledgeChatGPT:()=>invoke('cad-ai:chatgpt-welcome'),openChatGPTUsage:()=>invoke('cad-ai:chatgpt-usage'),

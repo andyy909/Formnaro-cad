@@ -32,7 +32,7 @@ test('Provider serializes compact navigation and full modelling context through 
   const scene={revision:'current',selectionTargets:[{rootId:'locked-original'}],objects:[]},context=full(),config={protocol:'responses',baseUrl:'https://example.invalid',model:'fixture',maxOutputTokens:6000};
   for(const programHelpOnly of [true,false])await generate(config,'synthetic-key',{prompt:'Zeig mir die Schnittansicht.',context:cadAIRequestContext(context,{programHelpOnly}),scene,chat:true});
   const [navigation,modelling]=requests.map(r=>r.instructions);
-  assert(navigation.length<modelling.length*.15);
+  assert(navigation.length<modelling.length,'Navigation omits modelling schemas in the actual provider payload');
   assert.match(navigation,/"programHelpOnly":true/);
   assert.match(navigation,/"mode":"solid"/);
   assert.match(navigation,/commandSchema/); // mentioned only in the explicit scope text

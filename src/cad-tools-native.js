@@ -1,3 +1,4 @@
+import {validateCadPreciseTool} from './cad-precise-tools.js';
 import {findAssociativeStepDrillSource,describeStepDrill} from './cad-step-drill.js';
 import {identifyCadCylinderFaceAnchor,remapCadCylinderFaceAnchor} from './cad-cylinder-face-anchor.js';
 import {projectObjectGeometryDigest} from './project-objects.js';
@@ -83,6 +84,7 @@ export function createCadToolsNative({oc,service,transactions}={}){
     const first=hits[0];if(hits.slice(1).some(hit=>Math.abs(hit.t-first.t)<=HIT_TOLERANCE&&(hit.objectId!==first.objectId||hit.faceIndex!==first.faceIndex)))fail('AMBIGUOUS_CAD_HIT','CAD-Strahl trifft mehrere Flächen; eindeutigen Punkt wählen.');
     return {...first,...(withGeometryDigest?{geometryDigest:projectObjectGeometryDigest(nodes.find(node=>node.id===first.objectId))}:{}),revision:cadProjectRevision(p),ray:structuredClone(ray)};
   }
+  async function submitReport(p,revision,label,report){return {...await submit(p,revision,label),report};}
   function submit(p,revision,label,validateResult){return transactions.preview({project:cadProjectSnapshot(p),revision,label,validateResult});}
   function clearReference(p,ids){if(ids.includes(p.workplane.reference?.objectId))p.workplane.reference=null;}
   function remapReference(p,newId,matrix,path){
@@ -105,10 +107,10 @@ export function createCadToolsNative({oc,service,transactions}={}){
     const p=baseline(revision),nodes=selected(p,ids),target=root(p,targetId);if(nodes.some(n=>n.id===targetId)||![0,1,2].includes(axis)||!['min','center','max'].includes(mode)||!['min','center','max'].includes(targetMode))fail('INVALID_CAD_ALIGNMENT','Ungültige CAD-Ausrichtung.');
     const targetBounds=frameBounds(p,target,frame),coordinate=targetBounds[targetMode][axis];
     for(const node of nodes){const current=frameBounds(p,node,frame),offset=[0,0,0];offset[axis]=coordinate-current[mode][axis];move(p,node,translation(direction(frame,offset)));}
-    return submit(p,revision,'CAD ausrichten');
+    return submitReport(p,revision,'CAD ausrichten',{tool:'previewAlign',targets:ids,reference:{rootId:targetId},coordinateSystem:'explicit-frame',frame,axis,mode,targetMode,targetCoordinate:coordinate});
   }
   function previewAnchor({id,localPoint,targetPoint,revision}={}){
-    const p=baseline(revision),node=root(p,id),current=cadPoint(node.transform,vector(localPoint,'CAD-Anker')),target=vector(targetPoint,'CAD-Zielpunkt');move(p,node,translation(target.map((v,k)=>v-current[k])));return submit(p,revision,'CAD-Anker setzen');
+    const p=baseline(revision),node=root(p,id),current=cadPoint(node.transform,vector(localPoint,'CAD-Anker')),target=vector(targetPoint,'CAD-Zielpunkt');move(p,node,translation(target.map((v,k)=>v-current[k])));return submitReport(p,revision,'CAD-Anker setzen',{tool:'previewAnchor',target:{rootId:id,path:[]},coordinateSystem:'world',sourcePoint:current,targetPoint:target,positionDelta:target.map((v,k)=>v-current[k])});
   }
   function referencePoints({nodeId,maxPoints=20000}={}){const p=project(),node=root(p,nodeId);if(containerState(p,node,'hidden'))fail('HIDDEN_CAD_REFERENCE','Ein sichtbares CAD-Teil für den Bezug wählen.');if(!Number.isSafeInteger(maxPoints)||maxPoints<1||maxPoints>20000)fail('INVALID_CAD_REFERENCE','Ungültige Bezugspunktgrenze.');return {...cadReferencePointsNative(oc,node,{maxPoints}),revision:cadProjectRevision(p)};}
   function reference(p,id,value){const node=root(p,id);if(containerState(p,node,'hidden'))fail('HIDDEN_CAD_REFERENCE','Ein sichtbares CAD-Teil für den Bezug wählen.');return resolveCadReferenceNative(oc,node,value);}
@@ -119,7 +121,7 @@ export function createCadToolsNative({oc,service,transactions}={}){
   function previewReferencePlacement({id,sourceReference,targetId,targetReference:targetValue,offset=[0,0,0],revision}={}){
     const p=baseline(revision),node=root(p,id);editable(p,node);if(id===targetId)fail('INVALID_CAD_REFERENCE','Zielbezug an einem anderen Teil oder auf der Arbeitsebene wählen.');
     const from=reference(p,id,sourceReference),to=targetReference(p,targetId,targetValue),normalValue=to.normal??new Vector3(0,0,1).applyQuaternion(new Quaternion(...p.workplane.orientation)).toArray(),frame=cadReferenceFrame(to.point,normalValue),target=cadPoint(frame,vector(offset,'Bezugsversatz'));
-    move(p,node,translation(target.map((v,k)=>v-from.point[k])));return submit(p,revision,'CAD an Bezugspunkt platzieren');
+    move(p,node,translation(target.map((v,k)=>v-from.point[k])));return submitReport(p,revision,'CAD an Bezugspunkt platzieren',{tool:'previewReferencePlacement',target:{rootId:id,path:[]},reference:{rootId:targetId??null,point:to.point,normal:normalValue},coordinateSystem:'reference-frame',frame,sourcePoint:from.point,targetPoint:target,offset});
   }
   function drillStopReference(p,id,box,worldBox,sourceBounds,value){
     if(!value)fail('INVALID_CAD_DRILL','Für Bis Fläche zuerst die Zielfläche ausdrücklich wählen.');
@@ -136,11 +138,15 @@ export function createCadToolsNative({oc,service,transactions}={}){
     const inverse=inverseCadMatrix(world),found=describeStepDrill(oc,source,cadPoint(inverse,picked.point),normal(inverse,picked.normal));
     if(found.sourceSignature!==entry.sourceSignature||found.faceKey!==entry.exitFaceKey||found.exitFaceKey!==entry.faceKey)fail('CAD_DRILL_REFERENCE_CHANGED','Zielfläche muss die gegenüberliegende bestätigte STEP-Fläche sein.');
   }
-  async function previewDrill({id,reference:referenceValue,kind='plain',through=true,termination,stopReference,diameter=4,depth=10,headDiameter=8,headDepth=3,angle=90,gap=0,offset=[0,0,0],associative=false,resultId=globalThis.crypto.randomUUID(),revision}={}){
-    const p=baseline(revision),node=root(p,id);editable(p,node);if(!node.solid||!['plain','countersink','counterbore'].includes(kind)||typeof through!=='boolean'||typeof associative!=='boolean')fail('INVALID_CAD_DRILL','Ein positives fertiges CAD-Teil und eine passende Bohrung wählen.');
+  async function previewDrill({id,scope='root',sourcePath=[],reference:referenceValue,kind='plain',through=true,termination,stopReference,diameter=4,depth=10,headDiameter=8,headDepth=3,angle=90,gap=0,offset=[0,0,0],associative=false,resultId=globalThis.crypto.randomUUID(),revision}={}){
+    const p=baseline(revision);if(!['root','source'].includes(scope)||!Array.isArray(sourcePath)||sourcePath.length>12||sourcePath.some(v=>typeof v!=='string')||scope==='root'&&sourcePath.length||scope==='source'&&!sourcePath.length)fail('INVALID_CAD_DRILL_SCOPE','Gesamten Wurzelkörper oder einen ausdrücklichen Unterquellenpfad wählen.');const context=scope==='source'?cadSelectionContext(p,{rootId:id,path:sourcePath}):null;
+    if(context&&(context.locked||context.hidden||context.sourceGeometryReadonly||context.chain.slice(0,-1).some(n=>n.drill||n.finish||n.partition||n.extraction||n.modeling)))fail('INVALID_CAD_DRILL_SCOPE','Diese Quelle ist gesperrt oder besitzt nachgelagerte Bearbeitungsbezüge.');
+    if(context&&(associative||p.workplane.reference||p.projectParameters||p.drawings?.sheets?.length||p.joints?.joints?.length||p.contourLinks?.links?.length||p.linkedPatterns?.patterns?.length||p.featureReferences?.items?.length))fail('CAD_DRILL_DEPENDENCIES_UNSUPPORTED','Unterquellenbohrung mit gespeicherten Abhängigkeiten oder mitwachsender Bohrung erst nach ausdrücklicher Bezugszuordnung unterstützen.');
+    const node=context?{...structuredClone(context.node),transform:context.world}:root(p,id);editable(p,root(p,id));editable(p,node);if(!node.solid||!['plain','countersink','counterbore'].includes(kind)||typeof through!=='boolean'||typeof associative!=='boolean')fail('INVALID_CAD_DRILL','Ein positives fertiges CAD-Teil und eine passende Bohrung wählen.');
     if(termination!==undefined&&termination!=='plane'||termination==='plane'&&!associative||stopReference!==undefined&&termination!=='plane')fail('INVALID_CAD_DRILL','Bis Fläche benötigt eine mitwachsende Bohrung und einen eindeutigen Zielbezug.');
     if(![diameter,depth,headDiameter,headDepth,angle,gap].every(Number.isFinite)||diameter<.1||diameter>1000||depth<.1||depth>10000||gap<0||gap>5||angle<30||angle>150||headDepth<=0||headDepth>10000)fail('INVALID_CAD_DRILL','Ungültige Bohrungsmaße oder Spielwerte.');
-    const picked=reference(p,id,referenceValue);if(!picked.normal)fail('INVALID_CAD_DRILL','Eine native Flächennormale für die Bohrrichtung wählen.');
+    const picked=context?resolveCadReferenceNative(oc,node,referenceValue):reference(p,id,referenceValue);if(!picked.normal)fail('INVALID_CAD_DRILL','Eine native Flächennormale für die Bohrrichtung wählen.');
+    const report={tool:'previewDrill',target:{rootId:id,path:[...sourcePath]},targetName:node.name,scope,affectsWholeRoot:!context,coordinateSystem:'world',reference:{point:picked.point,normal:picked.normal},recommendedChecks:['cad/bore','cad/minimumDistance']};
     const entry=cadPoint(cadReferenceFrame(picked.point,picked.normal),vector(offset,'Bohrungsversatz')),frame=cadReferenceFrame(entry,picked.normal),bounds=frameBounds(p,node,frame),margin=Math.max(oc.Precision.Confusion()*16,Math.hypot(...bounds.size)*1e-9),length=through?-bounds.min[2]+margin:depth,bore=diameter+gap*2,head=headDiameter+gap*2;
     if(associative){
       editableDrillSource(p,node);
@@ -158,7 +164,7 @@ export function createCadToolsNative({oc,service,transactions}={}){
       const index=p.nodes.indexOf(node);p.nodes[index]=group;if(p.workplane.reference?.objectId===id)remapReference(p,resultId,node.transform,[node.id,...p.workplane.reference.topology.origin.path]);
       if(p.projectParameters)p.projectParameters=reparentCadProjectParameterReferences(p,[{from:{rootId:id,path:[]},to:{rootId:resultId,path:[id]}}]);
       const candidate=await service.rebuild(p,{baseline:transactions.snapshot()});if(service.inspect(node).volume-candidate.nodes[index].stats.volume<=Math.max(service.inspect(node).volume*1e-12,1e-8))fail('NO_CAD_DRILL_MATERIAL','Die gewählte Bohrung entfernt an dieser Stelle kein Material.');
-      return submit(candidate,revision,'Mitwachsende CAD-Bohrung erstellen');
+      return submitReport(candidate,revision,'Mitwachsende CAD-Bohrung erstellen',{...report,frame,entry,through,termination:termination??(through?'through':'depth'),sourceId:node.id});
     }
     if(length<.1||length>10000||bore>1000||kind!=='plain'&&(head<=bore||head>1000))fail('INVALID_CAD_DRILL','Bohrungslänge oder Kopfmaß passt nicht zum gewählten Körper.');
     const tools=[],create=(recipe,name,localDepth)=>{const transform=multiplyCadMatrices(frame,translation([0,0,-localDepth/2])),tool=service.nativeNode(recipe,{id:globalThis.crypto.randomUUID(),name,solid:false,transform,color:'#89929e',layerId:node.layerId,folderId:node.folderId});tools.push(tool);};
@@ -173,11 +179,12 @@ export function createCadToolsNative({oc,service,transactions}={}){
     }
     const before=service.inspect(node).volume,group={id:resultId,kind:'cad',source:'group',name:node.name,solid:true,operation:'union',transform:cadIdentity(),children:[structuredClone(node),...tools],brep:structuredClone(node.brep),stats:structuredClone(node.stats),layerId:node.layerId,folderId:node.folderId};
     for(const key of ['color','opacity','multicolor','metadata'])if(node[key]!==undefined)group[key]=structuredClone(node[key]);
-    const index=p.nodes.indexOf(node);p.nodes[index]=group;
-    if(p.workplane.reference?.objectId===id)remapReference(p,resultId,node.transform,[node.id,...p.workplane.reference.topology.origin.path]);
-    const candidate=await service.rebuild(p,{baseline:transactions.snapshot()}),after=candidate.nodes[index].stats.volume;
+    let index=p.nodes.indexOf(node);
+    if(context){group.transform=[...context.node.transform];group.children[0].transform=cadIdentity();for(const cutter of group.children.slice(1))cutter.transform=multiplyCadMatrices(inverseCadMatrix(context.world),cutter.transform);const parent=context.chain.at(-2),position=parent.children.findIndex(n=>n.id===context.node.id);parent.children[position]=group;}else p.nodes[index]=group;
+    if(!context&&p.workplane.reference?.objectId===id)remapReference(p,resultId,node.transform,[node.id,...p.workplane.reference.topology.origin.path]);
+    const candidate=await service.rebuild(p,{baseline:transactions.snapshot()}),after=context?(()=>{const fresh=cadSelectionContext(candidate,{rootId:id,path:[...sourcePath.slice(0,-1),resultId]});return service.inspect(fresh.node,fresh.world).volume;})():service.inspect(candidate.nodes[index]).volume;
     if(before-after<=Math.max(before*1e-12,1e-8))fail('NO_CAD_DRILL_MATERIAL','Die gewählte Bohrung entfernt an dieser Stelle kein Material.');
-    return submit(candidate,revision,'Native CAD-Bohrung erstellen');
+    return submitReport(candidate,revision,'Native CAD-Bohrung erstellen',{...report,frame,entry,through,termination:through?'through':'depth',resultTarget:{rootId:context?id:resultId,path:context?[...sourcePath.slice(0,-1),resultId]:[]}});
   }
   async function previewConvertDrill({id,path=[],bindingRemap=[],confirmed=false,revision,...options}={}){
     const p=baseline(revision);root(p,id);if(!Array.isArray(path)||path.length>12||path.some(part=>typeof part!=='string'||!part))fail('INVALID_CAD_DRILL_CONVERSION','Einen gültigen vollständigen Bohrgruppenpfad wählen.');const context=cadSelectionContext(p,{rootId:id,path}),legacy=context.node;
@@ -259,7 +266,7 @@ export function createCadToolsNative({oc,service,transactions}={}){
     let anchor;
     if(localPoint!==undefined)anchor=vector(localPoint,'CAD-Anker');else{const local=readCadBrep(oc,node.brep.data);try{const b=cadBounds(oc,local);anchor=[b.center[0],b.center[1],b.min[2]];}finally{local.delete();}}
     let delta=cadIdentity();if(alignNormal){const q=new Quaternion().setFromUnitVectors(new Vector3(...normal(node.transform,[0,0,1])),new Vector3(...hit.normal));delta=new Matrix4().makeRotationFromQuaternion(q).toArray();}
-    const rotated=multiplyCadMatrices(delta,node.transform),position=cadPoint(rotated,anchor);delta=multiplyCadMatrices(translation(hit.point.map((v,k)=>v-position[k])),delta);move(p,node,delta);return submit(p,revision,'CAD auf Fläche platzieren');
+    const rotated=multiplyCadMatrices(delta,node.transform),position=cadPoint(rotated,anchor);delta=multiplyCadMatrices(translation(hit.point.map((v,k)=>v-position[k])),delta);move(p,node,delta);return submitReport(p,revision,'CAD auf Fläche platzieren',{tool:'previewPlace',target:{rootId:id,path:[]},reference:{rootId:hit.objectId,point:hit.point,normal:hit.normal},coordinateSystem:'world',alignNormal,localPoint:anchor,placementDelta:delta});
   }
   function previewLayOnFace({id,ray,visibleIds,ground=false,revision}={}){
     const p=baseline(revision),node=root(p,id);editable(p,node);if(!node.solid||typeof ground!=='boolean')fail('INVALID_CAD_SUPPORT','Ein fertiges positives CAD-Teil auswählen.');
@@ -327,5 +334,6 @@ export function createCadToolsNative({oc,service,transactions}={}){
     if(reference?.objectId===id){const path=reference.topology.origin.path,source=group.children.find(child=>child.id===path[0]);if(source)remapReference(p,source.id,inverseCadMatrix(source.transform),path.slice(1));else clearReference(p,[id]);}
     p.nodes.splice(index,1,...children);if(p.projectParameters)p.projectParameters=reparentCadProjectParameterReferences(p,children.map(child=>({from:{rootId:id,path:[child.id]},to:{rootId:child.id,path:[]}})));if(contourBefore)p.contourLinks=reparentCadContourLinks(p,children.map(child=>({from:{rootId:id,path:[child.id]},to:{rootId:child.id,path:[]}})),{previousProject:contourBefore});return submit(p,revision,'CAD-Gruppe auflösen');
   }
-  return {bounds,minimumDistance,rayPick,referencePoints,previewReferencePlacement,previewDrill,previewConvertDrill,previewRebindDrills,previewEditDrill,previewDetachDrillPattern,previewAlign,previewAnchor,previewWorkplane,previewPlace,previewLayOnFace,previewSplit,previewExtract,previewGroup,previewEditSource,previewSuppressSource,previewDissolve};
+  const checked=(name,fn)=>options=>{const {revision,...input}=options??{};for(const key of Object.keys(input))if(input[key]===undefined)delete input[key];validateCadPreciseTool(name,input);return fn({...input,revision});};
+  return {bounds,minimumDistance,rayPick,referencePoints,previewReferencePlacement:checked('previewReferencePlacement',previewReferencePlacement),previewDrill:checked('previewDrill',previewDrill),previewConvertDrill,previewRebindDrills,previewEditDrill,previewDetachDrillPattern,previewAlign:checked('previewAlign',previewAlign),previewAnchor:checked('previewAnchor',previewAnchor),previewWorkplane,previewPlace:checked('previewPlace',previewPlace),previewLayOnFace,previewSplit,previewExtract,previewGroup,previewEditSource,previewSuppressSource,previewDissolve};
 }

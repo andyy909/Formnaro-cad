@@ -1,3 +1,4 @@
+import {inspectionStatus} from './cad-inspection-state.js';
 import {cadJointsSummary} from './cad-joints-automation.js';
 import {SKETCH_TEMPLATES,createSketchTemplate} from './sketch-templates.js';
 import {queryTechnicalMesh} from './mesh-technical-service.js';
@@ -33,6 +34,7 @@ export async function runModelConversion({project,target,action,options={},edits
 export async function queryProgramResources({project,kind,options={},getFonts=()=>[],getResources=()=>({}),signal}={}){
  if(signal?.aborted)throw Object.assign(Error('Lokale Datenabfrage abgebrochen.'),{name:'AbortError',code:'ABORTED'});
  if(kind==='projectParameters')return cadProjectParametersSummary(project,options);
+ if(kind==='inspection'){if(Object.keys(options).length)throw Error('Prüfstatus benötigt keine Optionen.');return inspectionStatus(project);}
  if(kind==='joints')return cadJointsSummary(project,options);
  if(kind==='contourLinks')return cadContourLinksSummary(project,options);
  if(kind==='projectParameterCatalog')return cadProjectParameterCatalogSummary(project,options);

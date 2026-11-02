@@ -1,26 +1,12 @@
-# Current published build / Aktueller veröffentlichter Stand
+# Aktueller veröffentlichter Stand
 
-The current portable development prerelease is **Formnaro 0.125.0-r35**.
+[Formnaro 0.125.0-r36](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36)
 
-- [Release and separate source archives](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r35)
-- [Frozen build source tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r35)
-- [Verification report](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r35/Paket-Pruefstand.json)
+Die portable Ausgabe **0.125.0-r36** erweitert native Modellierung, Fehler- und Speicherbehandlung, revisionsgebundenes Speichern, gezielte Werkzeugauskunft, Schraub- und Kippkopplungen sowie gespeicherte Prüfstände. Bestehende Quellen und ein gemeinsamer Undo-Schritt bleiben erhalten.
 
-The main branch includes the tested r35 application sources and retains the
-existing native build inputs, legacy entrypoints, licence files and development
-setup. Text line endings follow the repository conventions. The source ZIP
-preserves the original frozen build bytes. Source archives are separate from
-the portable Windows application.
+Der vollständige lokale Funktionskatalog wurde abgearbeitet: **2906 Node-Tests und 71 Desktop-Prüfgruppen**, ergänzt durch **20 Python-Tests und acht native CNC-Regressionsfälle**. Befunde aus dem ersten Lauf und ihre Nachprüfungen sind im Prüfbericht ausgewiesen. Ein neuer DeepSeek-Harness-Durchlauf prüfte Fehlerkorrektur, explizites Apply und das Erkennen eines veralteten Prüfstands. Die gepackte EXE wurde mit isoliertem Profil, nativem FreeCAD, Speichern und regulärem Prozessende geprüft; das ZIP zusätzlich nach frischem Entpacken in einen Umlautordner aus einem fremden Arbeitsverzeichnis.
 
-Validation: 79 targeted source tests, four practice lessons, two normal model
-tests, four screenshot routes; fresh package CRC/SHA-256 readback and Unicode
-extraction/startup with isolated data and normal exit. This is not a new full
-regression or clean-Windows-VM acceptance.
+Bewegungs- und Abstandsprüfungen gelten für die tatsächlich berechneten Stellungen und Paare. Sie sind keine durchgehende Kontakt-, Last- oder Fertigungsfreigabe. Eine frische Windows-VM-Abnahme ist nicht enthalten. Neue Prüfstände verwenden Projektformat 32; ältere Projekte bleiben lesbar.
 
-Known limits include native kernel failures for some long screw threads;
-automatic screw/tilt coupling and broader practical tool coverage remain open.
-
-Deutsch: Beide GitHub-Hauptzweige enthalten den geprüften Anwendungsstand r35.
-Vorhandene Buildquellen, Lizenzen und ältere Programmeinstiege bleiben erhalten.
-Die Download-ZIP enthält keine persönlichen Modelle, Profile oder Zugangsdaten.
-Unfertige lokale Arbeitsänderungen gehören nicht zu dieser Veröffentlichung.
+Passende Quellen: [Versions-Tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r36) · [Quellcode-ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-Quellcode-v0.125.0-r36.zip) · [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Paket-Pruefstand.json) · [Abnahmeumfang](GESAMTPLAN-RELEASE-ABNAHME.md)
+[Aktueller veröffentlichter Stand](AKTUELLER-STAND.md)

@@ -1,3 +1,4 @@
+import {CAD_SIZE_ANCHOR_SCHEMA} from './cad-size-anchor.js';
 const string={type:'string'},name={type:'string',minLength:1,maxLength:200},alias={type:'string',pattern:'^[A-Za-z][A-Za-z0-9_-]{0,63}$'},vec={type:'array',items:{type:'number'},minItems:3,maxItems:3},positive={...vec,items:{type:'number',exclusiveMinimum:0}},bool={type:'boolean'};
 const choice=values=>({type:'string',enum:values});
 export const TARGET_SCHEMA={oneOf:[{type:'string',minLength:1},{type:'object',additionalProperties:false,required:['rootId','path'],properties:{rootId:string,path:{type:'array',items:string,maxItems:12}}}]};
@@ -19,7 +20,7 @@ export const CAD_MODELING_COMMAND_SCHEMAS=[
 ];
 const definitions={
  create:[['type'],{...editable,as:alias,type:string,parent:TARGET_SCHEMA,space}],
- update:[['target','set'],{target:TARGET_SCHEMA,set:{type:'object',additionalProperties:false,minProperties:1,properties:{...editable,suppressed:bool,hidden:bool,operation}}}],
+ update:[['target','set'],{target:TARGET_SCHEMA,set:{type:'object',additionalProperties:false,minProperties:1,dependentRequired:{sizeAnchor:['size']},properties:{...editable,sizeAnchor:CAD_SIZE_ANCHOR_SCHEMA,suppressed:bool,hidden:bool,operation}}}],
  transform:[['target'],{target:TARGET_SCHEMA,translate:vec,position:vec,rotate:vec,scale:positive,space}],
  duplicate:[['target'],{target:TARGET_SCHEMA,as:alias,translate:vec,space}],
  delete:[['target'],{target:TARGET_SCHEMA}],

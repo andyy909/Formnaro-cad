@@ -7,6 +7,33 @@ const project=()=>({nodes:[body('body'),body('other')],layers:[{id:'default',loc
 function definition(){return {...createCadProjectParameters(),parameters:[{id:'width-id',name:'width',value:20},{id:'derived-id',name:'derived',value:'width * 2'}],bindings:[{id:'width-binding',parameterId:'width-id',target:target(),field:'size.0'}]};}
 function fresh(){const p=project(),data=stampCadProjectParameters(p,definition());p.projectParameters=data;return {p,data};}
 
+test('confirming one rebuilt binding preserves another pending value and its previous receipt',()=>{
+ const p=project(),data=definition();
+ data.parameters.push({id:'other-width',name:'otherWidth',value:20});
+ data.bindings.push({id:'other-binding',parameterId:'other-width',target:target('other'),field:'size.0'});
+ p.projectParameters=stampCadProjectParameters(p,data);
+ const previous=structuredClone(p.projectParameters),pending=structuredClone(previous);
+ pending.parameters.find(value=>value.id==='width-id').value=24;
+ pending.parameters.find(value=>value.id==='other-width').value=30;
+ p.nodes[0].recipe.size[0]=24;p.nodes[0].stats.bounds.min[0]=-12;p.nodes[0].stats.bounds.max[0]=12;
+ const confirmed=stampCadProjectParameters(p,pending,{bindingIds:['width-binding']});
+ assert.equal(confirmed.applied.effectSignature,previous.applied.effectSignature);
+ assert.notEqual(confirmed.applied.inputs.find(input=>input.bindingId==='width-binding').signature,previous.applied.inputs.find(input=>input.bindingId==='width-binding').signature);
+ assert.deepEqual(confirmed.applied.inputs.find(input=>input.bindingId==='other-binding'),previous.applied.inputs.find(input=>input.bindingId==='other-binding'));
+ const problems=cadProjectParameterProblems({...p,projectParameters:confirmed});
+ assert.equal(problems.length,1);assert.equal(problems[0].bindingId,'other-binding');
+ assert.deepEqual(p.projectParameters,previous);
+ assert.throws(()=>stampCadProjectParameters(p,pending),{code:'PARAMETER_RESULT_MISMATCH'});
+});
+
+test('bounded confirmation rejects unknown or duplicate bindings and unapplied states of its own target',()=>{
+ const {p,data}=fresh();
+ for(const bindingIds of [['foreign'],['width-binding','width-binding'],null])assert.throws(()=>stampCadProjectParameters(p,data,{bindingIds}));
+ const pending=structuredClone(data);pending.variants=[{id:'hidden',name:'Hidden',values:[],states:[{target:target(),hidden:true}]}];pending.activeVariantId='hidden';
+ assert.throws(()=>stampCadProjectParameters(p,pending,{bindingIds:['width-binding']}),{code:'PARAMETER_RESULT_MISMATCH'});
+ assert.equal(p.nodes[0].hidden,undefined);assert.deepEqual(p.projectParameters,data);
+});
+
 test('strict bounded parameter schema rejects unknown fields, duplicate identities/names, target-field conflicts and missing references',()=>{
  const data=definition(),copy=validateCadProjectParameters(data);assert.deepEqual(copy,data);copy.parameters[0].name='other';assert.equal(data.parameters[0].name,'width');
  for(const mutate of [d=>d.version=2,d=>d.kernelHandles=[],d=>d.parameters[0].extra=1,d=>d.parameters[1].name='width',d=>d.parameters[1].id='width-id',d=>d.bindings[0].parameterId='missing',d=>d.bindings.push({...d.bindings[0],id:'duplicate'}),d=>d.bindings[0].field='constructor.prototype',d=>d.activeVariantId='missing']){const bad=structuredClone(data);mutate(bad);assert.throws(()=>validateCadProjectParameters(bad));}

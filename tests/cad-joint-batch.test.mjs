@@ -92,18 +92,18 @@ test('native house fixture produces one hollow house/roof body, a separate door 
  }finally{cad.dispose();}
 });
 
-test('live native construction exposes each real intermediate project without committing it, and can be switched off',async()=>{
+test('live native construction coalesces real intermediate frames without committing, and can be switched off',async()=>{
  const steps=[],{cad}=fixture(undefined,async value=>{assert.equal(cad.snapshot().nodes.length,0);assert.equal(cad.state().undo,0);assert.equal(cad.state().previews,0);const display=await cad.display(value.project);assert(display.meshes.length>0);steps.push({step:value.completed,roots:value.project.nodes.length});}),access=createCadAutomationAccess({controller:cad});try{
-  const design=JSON.parse(readFileSync(new URL('./fixtures/cad-house-joint.json',import.meta.url))),p=await access.preview({...design,revision:cad.revision()});assert.deepEqual(steps.map(s=>s.step),[1,2,3,4,5,6,7,8,9]);assert.equal(steps[0].roots,1);assert.equal(steps[6].roots,1);access.discard(p.previewId);
-  const off=createCadAutomationAccess({controller:cad,getLivePreviewEnabled:()=>false,getModelChecksEnabled:()=>false});const unchecked=await off.preview({...design,checks:[{kind:'solids',target:'$missing',expected:99}],revision:cad.revision()});assert.equal(steps.length,9);assert.equal(unchecked.verification.skipped,true);assert.equal(off.context().modelCheckPolicy.enabled,false);access.discard(unchecked.previewId);
+  const design=JSON.parse(readFileSync(new URL('./fixtures/cad-house-joint.json',import.meta.url))),p=await access.preview({...design,revision:cad.revision()});assert.equal(steps[0].step,1);assert.equal(steps.at(-1).step,9);assert.ok(steps.length>=2&&steps.every((value,i)=>!i||value.step>steps[i-1].step));assert.equal(steps[0].roots,1);const shown=steps.length;access.discard(p.previewId);
+  const off=createCadAutomationAccess({controller:cad,getLivePreviewEnabled:()=>false,getModelChecksEnabled:()=>false});const unchecked=await off.preview({...design,checks:[{kind:'solids',target:'$missing',expected:99}],revision:cad.revision()});assert.equal(steps.length,shown);assert.equal(unchecked.verification.skipped,true);assert.equal(off.context().modelCheckPolicy.enabled,false);access.discard(unchecked.previewId);
  }finally{cad.dispose();}
 });
 
 test('an interrupted real build can restore and apply its captured partial state with one Undo',async()=>{
- let captured;const {cad}=fixture(undefined,async value=>{if(value.completed===2){captured=cad.getBuildPreview();throw Object.assign(Error('User stopped'),{name:'AbortError',code:'ABORTED'});}});let scene;const access=createCadAutomationAccess({controller:cad,getScene:()=>scene,refresh:async()=>{scene=await cad.describe();}});try{
+ let captured;const {cad}=fixture(undefined,async value=>{if(value.completed===1){captured=cad.getBuildPreview();throw Object.assign(Error('User stopped'),{name:'AbortError',code:'ABORTED'});}});let scene;const access=createCadAutomationAccess({controller:cad,getScene:()=>scene,refresh:async()=>{scene=await cad.describe();}});try{
   scene=await cad.describe();const before=cad.serialize(),design=JSON.parse(readFileSync(new URL('./fixtures/cad-house-joint.json',import.meta.url)));
-  await assert.rejects(access.preview({...design,revision:cad.revision()}),e=>e.name==='AbortError');assert.equal(cad.serialize(),before);assert.equal(captured.project.nodes.length,2);
-  const p=await access.restoreCandidate({project:captured.project,proposal:{aliases:captured.aliases},result:{label:'So übernehmen'}},{checks:[],revision:captured.revision});await access.apply({previewId:p.previewId,revision:p.revision,acceptFeatureDependencies:true});assert.equal(cad.snapshot().nodes.length,2);assert.equal(cad.state().undo,1);cad.undo();assert.equal(cad.serialize(),before);
+  await assert.rejects(access.preview({...design,revision:cad.revision()}),e=>e.name==='AbortError');assert.equal(cad.serialize(),before);assert.equal(captured.project.nodes.length,1);
+  const p=await access.restoreCandidate({project:captured.project,proposal:{aliases:captured.aliases},result:{label:'So übernehmen'}},{checks:[],revision:captured.revision});await access.apply({previewId:p.previewId,revision:p.revision,acceptFeatureDependencies:true});assert.equal(cad.snapshot().nodes.length,1);assert.equal(cad.state().undo,1);cad.undo();assert.equal(cad.serialize(),before);
  }finally{cad.dispose();}
 });
 

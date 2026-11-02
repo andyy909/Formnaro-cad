@@ -1,3 +1,6 @@
+import {editInspection,inspectionStatus,inspectionBasis} from './cad-inspection-state.js';
+import {checkCadMotionRange} from './cad-motion-range.js';
+import {createCadPreviewPublisher} from './cad-preview-publisher.js';
 import {cadContourProfileBindingChangeIds} from './cad-contour-profile-bindings.js';
 import {hasCurrentPartSurfaceGroups} from './cad-part-properties.js';
 import {taskConversionKey,validateAITaskRuntime} from './cad-ai-task-runtime.js';
@@ -19,7 +22,7 @@ import {photoTrianglesForIds} from './cad-photo-preview.js';
 import {validateCadLoadSet} from './cad-assembly-display.js';
 import {hasGeometryRefs,sameDeferredGeometry} from './cad-geometry-ref.js';
 import {withFnpackGeometry} from './cad-fnpack-controller.js';
-import {applyCadJointRequest} from './cad-joints-data.js';
+import {applyCadJointRequest,compileCadJointMotion} from './cad-joints-data.js';
 import {createModelComparisonService,compactModelComparison} from './model-deviation-service.js';
 import {meshColorsEnabled} from './mesh-appearance.js';
 import {flags} from './organization.js';
@@ -67,8 +70,8 @@ function mergeDrawingUpdateReports(before,after){
 
 /** The renderer and local automation share one confirmed CAD store and worker.
  * Commands, display buffers and gestures remain outside persisted model state. */
-export function createCadController({createWorker,createComparisonWorker,createMeshWorker=()=>new Worker(new URL('./mesh-engine-worker.js',import.meta.url),{type:'module'}),runScript=runCadAIScript,runPython=runCadPython,convertModel=runModelConversion,initial=createCadProject(),resolveGeometry=async project=>{if(hasGeometryRefs(project))throw Object.assign(Error('Geometriepaket zum Nachladen fehlt.'),{code:'GEOMETRY_NOT_LOADED'});return project;},getDisplayIds=()=>null,getFonts=()=>[],getProgramResources=()=>({}),onChange=()=>{},onBusy=()=>{},onProgress=()=>{},onBuildPreview,onBuildPreviewFailure=()=>{},onError=()=>{},prepareCommit=async()=>{},reuseTranslations=false,canWrite=()=>true,displayQuality={deflection:.02,angleDegrees:8}}={}){
-  let store,closed=false,displaySequence=0,previewSequence=0,livePreviewSequence=null,buildPreview=null,metadata=null,confirmedView=null,pendingDrawingProof=null,projectScope=globalThis.crypto.randomUUID();const previews=new Map(),candidateViews=new Map(),viewQueries=new Map(),replacementPreviews=new Set(),drawingProofs=new Map();
+export function createCadController({createWorker,createComparisonWorker,createMeshWorker=()=>new Worker(new URL('./mesh-engine-worker.js',import.meta.url),{type:'module'}),runScript=runCadAIScript,runPython=runCadPython,convertModel=runModelConversion,initial=createCadProject(),resolveGeometry=async project=>{if(hasGeometryRefs(project))throw Object.assign(Error('Geometriepaket zum Nachladen fehlt.'),{code:'GEOMETRY_NOT_LOADED'});return project;},getDisplayIds=()=>null,getFonts=()=>[],getProgramResources=()=>({}),onChange=()=>{},onBusy=()=>{},onProgress=()=>{},onOperationProgress=()=>{},onBuildPreview,onBuildPreviewFailure=()=>{},onError=()=>{},prepareCommit=async()=>{},reuseTranslations=false,canWrite=()=>true,displayQuality={deflection:.02,angleDegrees:8}}={}){
+  let store,closed=false,displaySequence=0,previewSequence=0,livePreviewSequence=null,endOnlySequence=null,buildPreview=null,metadata=null,confirmedView=null,pendingDrawingProof=null,projectScope=globalThis.crypto.randomUUID();const previews=new Map(),candidateViews=new Map(),viewQueries=new Map(),replacementPreviews=new Set(),drawingProofs=new Map();
   const aiWorkspace=createAIWorkspace(),blockedConversions=new Map(),runningAnalyses=new Set();let workspaceRevision;
   const originalConvertModel=convertModel;convertModel=async args=>{const key=taskConversionKey(cadProjectRevision(args.project),args.target);if(args.action==='convert'&&blockedConversions.has(key))throw blockedConversions.get(key);try{return await originalConvertModel(args);}catch(error){if(error.feedback?.toolFailure?.scope==='converter-only')blockedConversions.set(key,error);throw error;}};
   function beginAITask(){if(runningAnalyses.size)throw Object.assign(Error("Eine lokale Berechnung läuft bereits."),{code:"BUSY"});aiWorkspace.clear();blockedConversions.clear();workspaceRevision=store.revision();return {revision:workspaceRevision};}
@@ -95,6 +98,7 @@ export function createCadController({createWorker,createComparisonWorker,createM
     }
     if(kind==='tools'){
       if(typeof globalThis.offlinecadDesktop?.aiToolLibrary!=='function')throw Object.assign(Error('Die dauerhafte Werkzeugbibliothek benötigt Formnaro Desktop.'),{code:'AI_TOOL_LIBRARY_UNAVAILABLE'});
+      if(globalThis.offlinecadDesktop.aiToolLibraryReply){const reply=await globalThis.offlinecadDesktop.aiToolLibraryReply(options);if(!reply?.ok)throw Object.assign(Error(reply?.error??'Werkzeugbibliothek nicht verfügbar.'),{code:reply?.code??'AI_TOOL_LIBRARY_UNAVAILABLE',feedback:reply?.feedback});return reply.value;}
       return globalThis.offlinecadDesktop.aiToolLibrary(options);
     }
     throw Error('Unbekanntes Arbeitswerkzeug.');
@@ -141,7 +145,7 @@ export function createCadController({createWorker,createComparisonWorker,createM
   // The mesh worker initializes its kernel only. Each edit/query supplies its
   // own inputs; a second confirmed-project clone is never consumed there.
   const meshWorker=withFnpackGeometry(createCadWorkerClient({createWorker:createMeshWorker,onError}),{resolveProject:resolveGeometry,getProject:()=>store?.readSnapshot()??initial,getDisplayIds});
-  const progress=value=>onProgress(value);
+  const progress=value=>{if(typeof value==='number'){onProgress(value);onOperationProgress({progress:value});}else onOperationProgress(value);};
   store=createCadTransactions({initial,abort:()=>{worker.cancel();meshWorker.cancel();},build:async(project,context)=>{
     const ticket=previewSequence;
     const qualityKey=JSON.stringify(displayQuality),confirmed=store.readSnapshot();
@@ -189,6 +193,10 @@ export function createCadController({createWorker,createComparisonWorker,createM
       nativeInput=cadProjectSnapshot({...project,photos:upsertPhotoSet(project.photos,photoReconstruction.analysis.plan)});nativeOperation={kind:'batch',commands:photoReconstruction.commands};
     }
     if(context.replaceProject&&hasGeometryRefs(project)){const candidate=cadProjectReadView(project);await prepareCommit(candidate,{signal:context.signal,revision:context.revision,quality:{...displayQuality}});metadata={aliases:{},changes:[],warnings:[]};return candidate;}
+    if(context.operation?.kind==='inspection'){
+      if(Object.keys(context.operation).some(k=>!['kind','request'].includes(k))||cadProjectRevision(project)!==store.revision())throw Object.assign(Error('Prüfstände benötigen den bestätigten Modellstand.'),{code:'UNCONFIRMED_PROJECT'});
+      const report=editInspection(project,context.operation.request,id=>inspectionReports.get(id)),candidate=cadProjectReadView(project),revision=cadProjectRevision(candidate);geometryOwners.set(candidate,geometryOwner(confirmed));if(confirmedView?.project===confirmed){const old=confirmedView.view;rememberView(candidate,{...old,revision,scene:{...old.scene,revision,projectVersion:candidate.version}},qualityKey);}metadata={aliases:{},changes:[{op:'inspection',action:context.operation.request.action}],warnings:[],report};return candidate;
+    }
     if(context.operation?.kind==='joints'){
       if(Object.keys(context.operation).some(key=>!['kind','request'].includes(key))||cadProjectRevision(project)!==store.revision())throw Object.assign(Error('Gelenkänderungen benötigen den unveränderten bestätigten Modellstand.'),{code:'UNCONFIRMED_PROJECT'});
       const report=applyCadJointRequest(project,context.operation.request),changedRoots=project.nodes.filter(n=>hasGeometryRefs(n)&&JSON.stringify(n)!==JSON.stringify(confirmed.nodes.find(old=>old.id===n.id))).map(n=>n.id),resolved=changedRoots.length?await resolveGeometry(project,changedRoots,{signal:context.signal}):project,candidate=cadProjectReadView(resolved),nextRevision=cadProjectRevision(candidate);
@@ -249,9 +257,13 @@ export function createCadController({createWorker,createComparisonWorker,createM
     const associativeHostPlan=nativeOperation?.kind==='associativeUpdate'&&project.projectParameters?.version===2?planCadAssociativeFreeCAD(project,nativeOperation):null;
     const liveBuild=livePreviewSequence===ticket&&typeof onBuildPreview==='function',mixedBatch=context.operation?.kind==='batch'&&(liveBuild||context.operation.commands?.some(c=>['mesh','tool','script','python','joint'].includes(c?.op)));
     if(mixedBatch&&Object.keys(context.operation).some(key=>!['kind','commands'].includes(key)))throw Object.assign(Error('Unbekannte Felder im gemeinsamen Befehlsauftrag.'),{code:'INVALID_COMMAND'});
-    const result=mixedBatch?await runMixedCadAIBatch({project,baseline:context.baseline,commands:context.operation.commands,signal:context.signal,progress,onIntermediate:liveBuild?async value=>{if(ticket===previewSequence&&store.revision()===context.revision&&!context.signal?.aborted){buildPreview={...value,revision:context.revision,label:'KI-Zwischenstand',ticket};await onBuildPreview(buildPreview);}}:undefined,
-      runNative:({project,baseline,operation,signal})=>{const plan=operation?.kind==='tool'&&operation.name==='previewRebindDrills'?planCadDrillRebind(project,operation.options):null;return worker.run({job:operation?'command':'rebuild',project,baseline,operation,...(context.replaceProject&&!operation?{restoreUnresolvedSources:true}:{})},{revision:cadProjectRevision(baseline),signal,...(plan?.freecadTargets.length?{host:createFreeCADParameterHost(project,plan.plan.data,{targets:plan.freecadTargets})}:{})});},
-      runMesh:({project,operation,signal})=>meshWorker.run({job:'edit',project,operation},{revision:cadProjectRevision(project),signal}),
+    let currentStep=null;const mixedStep=value=>{currentStep=value;progress(value);},mixedNativeProgress=value=>{
+      if(value&&typeof value==='object'&&value.commandIndex&&currentStep){const nested=['tool','script','python','joint'].includes(currentStep.operation);progress({...value,commandIndex:nested?currentStep.commandIndex:currentStep.commandIndex-1+value.commandIndex,...(nested?{operation:currentStep.operation}:{})});}else progress(value);
+    };
+    const publisher=liveBuild&&endOnlySequence!==ticket?createCadPreviewPublisher(async value=>{if(ticket===previewSequence&&store.revision()===context.revision&&!context.signal?.aborted){buildPreview={...value,revision:context.revision,label:'KI-Zwischenstand',ticket};await onBuildPreview(buildPreview);}}):null;
+    let result,completed=false;try{result=mixedBatch?await runMixedCadAIBatch({project,baseline:context.baseline,commands:context.operation.commands,signal:context.signal,progress,onStep:mixedStep,onIntermediate:liveBuild?value=>publisher?.push(value):undefined,
+      runNative:({project,baseline,operation,signal})=>{const plan=operation?.kind==='tool'&&operation.name==='previewRebindDrills'?planCadDrillRebind(project,operation.options):null;return worker.run({job:operation?'command':'rebuild',project,baseline,operation,...(context.replaceProject&&!operation?{restoreUnresolvedSources:true}:{})},{revision:cadProjectRevision(baseline),signal,progress:mixedNativeProgress,...(plan?.freecadTargets.length?{host:createFreeCADParameterHost(project,plan.plan.data,{targets:plan.freecadTargets})}:{})});},
+      runMesh:({project,operation,signal})=>meshWorker.run({job:'edit',project,operation},{revision:cadProjectRevision(project),signal,progress}),
       runScript:async args=>{try{return await runIsolated('javascript',runScript,args);}catch(error){worker.cancel();meshWorker.cancel();throw error;}},convertModel,
       runFreeCAD:({project,operation,signal})=>freecadOperation(project,operation,signal),
       runPython:async args=>{try{return await runIsolated('python',runPython,args);}catch(error){worker.cancel();meshWorker.cancel();throw error;}},
@@ -272,9 +284,10 @@ export function createCadController({createWorker,createComparisonWorker,createM
        return kind==='inspectSolid'?result.then(proof=>({...proof,closed:proof.ok===true})):result;
       }
     }):await (meshEdit?meshWorker:worker).run(request,{revision:nativeRevision,signal:context.signal,progress,...((associativeHostPlan?.freecadTargets.length)||(patternConsumerPlan?.freecadTargets.length)||(drillPlan?.freecadTargets.length)||(featurePlan&&project.projectParameters?.version===2)||(context.operation?.kind==='projectParameters'&&context.operation.data?.version===2)||(['freecadDocumentEdit','freecadRerun'].includes(context.operation?.kind)&&project.projectParameters?.version===2)?{host:associativeHostPlan?createFreeCADParameterHost(project,associativeHostPlan.data,{variantId:associativeHostPlan.variantId,targets:associativeHostPlan.freecadTargets}):patternConsumerPlan?createFreeCADParameterHost(project,patternConsumerPlan.parameterData,{variantId:context.operation.variantId,...(context.operation.kind==='linkedPattern'?{targets:patternConsumerPlan.freecadTargets}:{})}):drillPlan?createFreeCADParameterHost(project,drillPlan.plan.data,{targets:drillPlan.freecadTargets}):featurePlan?createFreeCADParameterHost(project,featurePlan.plan.data,{targets:featurePlan.freecadTargets,programParameters:featurePlan.programParameters}):boundRerun?createFreeCADParameterHost(project,boundRerun.coordinated.data,{targets:boundRerun.coordinated.freecadTargets,programParameters:[{target:boundRerun.context.target,parameters:boundRerun.parameters}]}):context.operation.kind==='projectParameters'?createFreeCADParameterHost(project,context.operation.data,{variantId:context.operation.variantId}):createFreeCADDependencyHost(project,[nativeOperation.target])}:{})});
+    completed=true;}finally{await publisher?.finish(!completed||context.signal?.aborted);}
     if(photoReconstruction){result.project=structuredClone(result.project);result.photoReconstructionReport=finishPhotoSetReconstruction(result.project,result.aliases,photoReconstruction);}
     result.project=cadProjectReadView(result.project);const resultRevision=cadProjectRevision(result.project),preparedQuality={...displayQuality};
-    const view=await prepareCommit(result.project,{signal:context.signal,revision:context.revision,quality:preparedQuality});
+    progress({phase:'prepare-preview'});const view=await prepareCommit(result.project,{signal:context.signal,revision:context.revision,quality:preparedQuality});
     if(reuseTranslations&&view&&view.revision===resultRevision&&view.scene?.revision===resultRevision&&JSON.stringify(preparedQuality)===JSON.stringify(displayQuality))rememberView(result.project,view,JSON.stringify(preparedQuality));
     const detached=project.workplane.reference?.kind==='mesh'&&!result.project.workplane.reference;
     if(ticket===previewSequence)metadata={aliases:result.aliases??{},changes:result.changes??[],warnings:[...(result.warnings??[]),...(detached?['Die Netzbezugsfläche wurde geändert oder entfernt. Die Arbeitsebene bleibt an ihrer letzten gültigen Lage.']:[])],...(meshEdit?{selectedIds:result.selectedIds??[],report:result.report??null}:result.report?{report:result.report}:{})};
@@ -295,11 +308,11 @@ export function createCadController({createWorker,createComparisonWorker,createM
   projectScopes.set(store.readSnapshot(),projectScope);
   const comparisonService=createModelComparisonService(createComparisonWorker?{createWorker:createComparisonWorker}:{});
   const alive=()=>{if(closed)throw Error('CAD-Anwendung wurde geschlossen.');};
-  function assertPreviewStart(revision){alive();assertWritable();if(revision!==store.revision())throw Object.assign(Error('Das CAD-Modell wurde geändert. Vorschau neu berechnen.'),{code:'STALE_REVISION'});if(store.state().busy)throw Object.assign(Error('Eine CAD-Berechnung läuft bereits.'),{code:'BUSY'});}
+  function assertPreviewStart(revision,analysisOwner){alive();assertWritable();if(revision!==store.revision())throw Object.assign(Error('Das CAD-Modell wurde geändert. Vorschau neu berechnen.'),{code:'STALE_REVISION'});if(store.state().busy||runningAnalyses.size&&!(runningAnalyses.size===1&&runningAnalyses.has(analysisOwner)))throw Object.assign(Error('Eine CAD-Berechnung läuft bereits.'),{code:'BUSY'});}
   function previewAbort(signal,revision){assertPreviewStart(revision);const ticket=previewSequence+1,abort=()=>{if(previewSequence===ticket&&store.state().busy)cancel();};signal?.addEventListener('abort',abort,{once:true});return ()=>signal?.removeEventListener('abort',abort);}
   function changed(result,before){if(result.changed){projectScope=projectScopes.get(store.readSnapshot())??projectScope;const drawingsOnly=before&&geometryOwner(before)===geometryOwner(store.readSnapshot());confirmedView=candidateViews.get(store.readSnapshot())??null;onChange(store.snapshot(),store.state(),{drawingsOnly:!!drawingsOnly});}return result;}
-  async function preview(operation,{revision=store.revision(),project=store.snapshot(),label='CAD bearbeiten',replaceProject=false,livePreview=false}={}){
-    assertPreviewStart(revision);onBusy(true);const ticket=++previewSequence;livePreviewSequence=livePreview?ticket:null;buildPreview=null;metadata=null;pendingDrawingProof=null;
+  async function preview(operation,{revision=store.revision(),project=store.snapshot(),label='CAD bearbeiten',replaceProject=false,livePreview=false,intermediateDisplay='inherit'}={}){
+    assertPreviewStart(revision);onBusy(true);const ticket=++previewSequence;livePreviewSequence=livePreview?ticket:null;endOnlySequence=intermediateDisplay==='final'?ticket:null;buildPreview=null;metadata=null;pendingDrawingProof=null;
     try{if(project.workplane?.reference?.kind==='mesh')validateMeshWorkplaneReference(project.workplane.reference);const synchronized=synchronizeMeshWorkplane(project,store.readSnapshot()),result={...await store.preview({revision,project:synchronized.project,operation,label,replaceProject}),...metadata};result.warnings=[...new Set([...(result.warnings??[]),...synchronized.warnings])];previews.set(result.previewId,result);if(((operation?.kind==='projectParameters'||operation?.kind==='linkedPattern'||operation?.kind==='associativeUpdate'||operation?.kind==='tool'&&operation.name==='previewRebindDrills')&&result.report?.requiresFreeCADAcceptance)||(operation?.kind==='batch'&&result.report?.meshOperations?.some(r=>r.requiresFreeCADAcceptance))||(operation?.kind==='featureEdits'&&result.report?.featureDependencies?.requiresAcceptance)||(['freecadDocumentEdit','freecadRerun'].includes(operation?.kind)&&result.report?.freecadDependencies?.requiresAcceptance))featureDependencyProofs.add(result.previewId);if(result.photoReconstructionReport)photoReconstructionProofs.set(result.previewId,{revision,passed:false});if(pendingDrawingProof){drawingProofs.set(result.previewId,pendingDrawingProof);while(drawingProofs.size>10)drawingProofs.delete(drawingProofs.keys().next().value);}if(replaceProject)replacementPreviews.add(result.previewId);while(previews.size>10){const first=previews.keys().next().value;previews.delete(first);replacementPreviews.delete(first);drawingProofs.delete(first);photoReconstructionProofs.delete(first);featureDependencyProofs.delete(first);}return result;}
     catch(error){if(buildPreview?.ticket===ticket){buildPreview=null;onBuildPreviewFailure({ticket});}throw error;}
     finally{if(livePreviewSequence===ticket)livePreviewSequence=null;onBusy(store.state().busy);}
@@ -309,9 +322,9 @@ export function createCadController({createWorker,createComparisonWorker,createM
     if(featureDependencyProofs.has(request.previewId)&&request.acceptFeatureDependencies!==true)throw Object.assign(Error('Notwendige Parameter-, Quellen- und Konturfolgeänderungen ausdrücklich mit übernehmen.'),{code:'AI_FEATURE_DEPENDENCY_ACCEPTANCE_REQUIRED'});
     if(photoReconstructionProofs.has(request.previewId)&&!photoReconstructionProofs.get(request.previewId).passed)throw Object.assign(Error('Fotorekonstruktion erst nach erfolgreicher nativer Maß- und vollständiger Ansichtsprüfung übernehmen.'),{code:'PHOTO_RECONSTRUCTION_UNCHECKED'});
     const result=store.apply(request),replaced=replacementPreviews.delete(request.previewId)&&!result.alreadyApplied;photoReconstructionProofs.delete(request.previewId);featureDependencyProofs.delete(request.previewId);
-    if(replaced)projectScope=globalThis.crypto.randomUUID();projectScopes.set(store.readSnapshot(),projectScope);changed(result,before);previews.delete(request.previewId);if(result.changed||replaced)drawingProofs.clear();else drawingProofs.delete(request.previewId);
-    if(result.changed&&store.readSnapshot().nodes.length===0)worker.trim();
-    return {...result,aliases:proposal?.aliases??{},warnings:proposal?.warnings??[],...(proposal?.contourReport?{contourReport:proposal.contourReport}:{}),...(proposal?.drawingReport?{drawingReport:proposal.drawingReport}:{}),...(proposal?.selectedTargets?{selectedTargets:proposal.selectedTargets}:{})};
+    if(replaced)projectScope=globalThis.crypto.randomUUID();projectScopes.set(store.readSnapshot(),projectScope);previews.delete(request.previewId);if(result.changed||replaced)drawingProofs.clear();else drawingProofs.delete(request.previewId);
+    let updateError;try{changed(result,before);if(result.changed&&store.readSnapshot().nodes.length===0)worker.trim();}catch(error){updateError=aiFeedback(error,{phase:'post-commit'});}
+    return {...result,...(updateError?{refresh:{status:'failed',error:updateError}}:{}),aliases:proposal?.aliases??{},warnings:proposal?.warnings??[],...(proposal?.contourReport?{contourReport:proposal.contourReport}:{}),...(proposal?.drawingReport?{drawingReport:proposal.drawingReport}:{}),...(proposal?.selectedTargets?{selectedTargets:proposal.selectedTargets}:{})};
   }
   async function restoreAITaskCandidate(value,{revision=store.revision(),label='Gespeicherten KI-Entwurf prüfen',aliases={}}={}){
     assertPreviewStart(revision);const saved=validateTaskCandidate(value,aliases),before=store.snapshot();let proposal;
@@ -388,19 +401,31 @@ export function createCadController({createWorker,createComparisonWorker,createM
   }
   function cancel(){for(const abort of runningAnalyses)abort.abort();const running=!!worker.state().running||!!meshWorker.state().running||comparisonService.active()>0,active=store.cancel();patternChoices.cancel();comparisonService.cancel();if(worker.state().running)worker.cancel();if(meshWorker.state().running)meshWorker.cancel();if(active||running)displaySequence++;onBusy(false);return active||running;}
   async function execute(operation,options){const result=await preview(operation,options);return apply({previewId:result.previewId,revision:result.revision});}
-  async function checkJointCollision(request,{revision=store.revision(),signal}={}){
-    assertPreviewStart(revision);if(!request||Object.keys(request).some(k=>!['leftId','rightId','values'].includes(k))||typeof request.leftId!=='string'||typeof request.rightId!=='string'||request.leftId===request.rightId)throw Error('Genau zwei verschiedene Teile für eine diskrete Kollisionsprüfung wählen.');
+  const inspectionReports=new Map();
+  function rememberInspection(kind,report){const id='inspection-'+crypto.randomUUID(),record={id,kind,checkedRevision:store.revision(),basisKey:inspectionBasis(store.readSnapshot()),report:structuredClone(report)};inspectionReports.set(id,record);while(inspectionReports.size>50)inspectionReports.delete(inspectionReports.keys().next().value);return {...report,reportId:id};}
+  async function previewInspection(request,options={}){return preview({kind:'inspection',request},options);}
+  async function motionQuery(revision,signal,owner,run){
+    assertPreviewStart(revision,owner);const owned=!runningAnalyses.has(owner),abort=owned?new AbortController():owner;
+    if(owned){runningAnalyses.add(abort);onBusy(true);}const activeSignal=signal?AbortSignal.any([signal,abort.signal]):abort.signal;
+    try{if(activeSignal.aborted)throw Object.assign(Error('Messauftrag abgebrochen.'),{name:'AbortError',code:'ABORTED'});return await run(activeSignal,abort);}finally{if(owned){runningAnalyses.delete(abort);onBusy(store.state().busy||runningAnalyses.size>0);}}
+  }
+  async function checkJointCollision(request,{revision=store.revision(),signal,analysisOwner,record=true}={}){
+    return motionQuery(revision,signal,analysisOwner,async signal=>{
+    if(!request||Object.keys(request).some(k=>!['leftId','rightId','values','minimumDistance','allowContact','tolerance'].includes(k))||typeof request.leftId!=='string'||typeof request.rightId!=='string'||request.leftId===request.rightId)throw Error('Genau zwei verschiedene Teile für eine diskrete Kollisionsprüfung wählen.');
+    const minimumDistance=request.minimumDistance??0,allowContact=request.allowContact??false,tolerance=request.tolerance??0.000001;if(!Number.isFinite(minimumDistance)||minimumDistance<0||minimumDistance>100000||typeof allowContact!=='boolean'||!Number.isFinite(tolerance)||tolerance<0.0000001||tolerance>0.01)throw Error('Mindestabstand, ausdrückliche Kontaktfreigabe und Toleranz prüfen.');
     const base=store.readSnapshot(),selected=[request.leftId,request.rightId].map(id=>base.nodes.find(n=>n.id===id));if(selected.some(n=>!n||!['cad','mesh'].includes(n.kind)||flags(n,base).hidden||n.suppressed||(n.kind==='cad'?!n.solid:n.meshRole==='hole')))throw Error('Zwei sichtbare fertige Materialkörper wählen.');
-    const proposal=await previewJoints({action:'move',values:request.values??[]},{revision,signal,label:'Diskrete Gelenk-Kollisionsprüfung'});try{
-      const project=proposal.project;let result,method;
+    const motion=compileCadJointMotion(base),pose=motion.preview(request.values??[]),placements=new Map(pose.placements.map(p=>[p.rootId,p.transform])),project={...base,joints:motion.data(),nodes:base.nodes.map(n=>placements.has(n.id)?{...n,transform:placements.get(n.id)}:n)};
+      let result,method;
       if(selected.every(n=>n.kind==='cad')){result=await worker.run({job:'query',project,query:{kind:'collision',options:{leftId:request.leftId,rightId:request.rightId}}},{revision:cadProjectRevision(project),signal});method='native-brep';}
       else{const pieces=[];for(const original of selected){let node=project.nodes.find(n=>n.id===original.id);if(node.kind==='cad'){const surface=await worker.run({job:'query',project,query:{kind:'jointCollisionSurface',options:{id:node.id}}},{revision:cadProjectRevision(project),signal});node={...surface.node,id:original.id};}pieces.push({id:original.id,kind:'mesh',name:original.name,meshRole:'solid',mesh:node.mesh,transform:node.transform,color:node.color??'#8294aa',hidden:false,locked:false,layerId:'default',folderId:null});}
         const input=createCadProject({nodes:pieces});result=await meshWorker.run({job:'toolsQuery',kind:'jointCollision',project:input,ids:[request.leftId,request.rightId],options:{}},{revision:cadProjectRevision(input),signal});method=selected.some(n=>n.kind==='cad')?'cad-mesh-approximation':'mesh-kernel';}
-      if(store.revision()!==revision||!previews.has(proposal.previewId)||signal?.aborted)throw Object.assign(Error('Stellung während der Kollisionsprüfung geändert.'),{code:signal?.aborted?'ABORTED':'STALE_REVISION'});
-      const scope='Nur diese Stellung und ein Volumenschnitt wurden geprüft. Berührung ohne Volumen und der gesamte Bewegungsweg sind damit nicht nachgewiesen.';return {method,intersects:result.intersects,volume:result.volume,...(result.triangles?{triangles:result.triangles}:{}),...(method==='cad-mesh-approximation'?{deflectionTargetMm:.01}:{}),testedPoseOnly:true,fullMotionGuarantee:false,message:(result.intersects?'Volumenschnitt: '+Number(result.volume.toPrecision(7))+' mm³. ':'Kein positiver Volumenschnitt in dieser Stellung. ')+(method==='cad-mesh-approximation'?'CAD/Netz-Näherung mit Vernetzungsziel 0,01 mm; keine garantierte Maximalabweichung. ':method==='mesh-kernel'?'Prüfung der vorhandenen Netze im Netzkern. ':'Native BRep-Prüfung. ')+scope};
-    }finally{discardJointCollision(proposal.previewId);}
+      let distance;if(selected.every(n=>n.kind==='cad'))distance=await worker.run({job:'query',project,query:{kind:'minimumDistance',options:{fromId:request.leftId,toId:request.rightId}}},{revision:cadProjectRevision(project),signal});
+      if(store.revision()!==revision||signal?.aborted)throw Object.assign(Error('Stellung während der Kollisionsprüfung geändert.'),{code:signal?.aborted?'ABORTED':'STALE_REVISION'});
+      const contact=distance?distance.distance<=tolerance:null,classification=result.intersects?'interference':!distance?'distance-unavailable':contact?'contact':distance.distance+tolerance<minimumDistance?'clearance-violation':minimumDistance>0?'clearance-ok':'separated',passed=result.intersects?false:!distance?null:contact?allowContact&&minimumDistance===0:distance.distance+tolerance>=minimumDistance;
+      const scope='Nur die ausdrücklich gewählte Stellung/Paarung; keine kontinuierliche Bewegungs- oder Fertigungsfreigabe.';const report={revision,leftId:request.leftId,rightId:request.rightId,values:pose.values,minimumDistance,allowContact,tolerance,classification,passed,contact,...(distance?{distance:distance.distance,points:{from:distance.from,to:distance.to}}:{distanceUnavailable:'Abstandsmessung ist für dieses CAD/Netz-Paar nicht verfügbar.'}),method,intersects:result.intersects,volume:result.volume,...(result.triangles?{triangles:result.triangles}:{}),...(method==='cad-mesh-approximation'?{deflectionTargetMm:.01}:{}),testedPoseOnly:true,fullMotionGuarantee:false,message:(result.intersects?'Volumenschnitt: '+Number(result.volume.toPrecision(7))+' mm³. ':'Kein positiver Volumenschnitt in dieser Stellung. ')+(method==='cad-mesh-approximation'?'CAD/Netz-Näherung mit Vernetzungsziel 0,01 mm; keine garantierte Maximalabweichung. ':method==='mesh-kernel'?'Prüfung der vorhandenen Netze im Netzkern. ':'Native BRep-Prüfung. ')+scope};return record?rememberInspection('jointPose',report):report;
+    });
   }
-  function discardJointCollision(id){previews.delete(id);store.discard(id);}
+  async function checkMotionRange(request,{revision=store.revision(),signal,analysisOwner}={}){return motionQuery(revision,signal,analysisOwner,async(signal,owner)=>rememberInspection('motionRange',await checkCadMotionRange({request,project:store.readSnapshot(),revision,currentRevision:()=>store.revision(),checkPose:(request,options)=>checkJointCollision(request,{...options,analysisOwner:owner,record:false}),signal})));}
   async function query(kind,options={}, {signal}={}){
     alive();const revision=store.revision(),project=kind==='partProperties'?await resolveGeometry(store.readSnapshot(),[options.id]):store.readSnapshot();
     if(store.revision()!==revision)throw Object.assign(Error('Projekt während des Nachladens geändert.'),{code:'STALE_REVISION'});
@@ -528,7 +553,7 @@ export function createCadController({createWorker,createComparisonWorker,createM
     if(runningAnalyses.size)throw Object.assign(Error("Eine lokale Berechnung läuft bereits."),{code:"BUSY"});
     if(workspaceRevision!==store.revision())beginAITask();
     if(!Number.isInteger(reportBudget)||reportBudget<2000||reportBudget>14000)throw Object.assign(Error('Messbericht: verbleibendes Rückmeldebudget zu klein. Vorhandene Seiten verwenden.'),{code:'AI_ANALYSIS_INVALID'});
-    const revision=store.revision(),results=[],validated=validateAIAnalysis(requests),localAbort=new AbortController();signal=signal?AbortSignal.any([signal,localAbort.signal]):localAbort.signal;runningAnalyses.add(localAbort);
+    const revision=store.revision(),results=[],validated=validateAIAnalysis(requests),localAbort=new AbortController();signal=signal?AbortSignal.any([signal,localAbort.signal]):localAbort.signal;runningAnalyses.add(localAbort);onBusy(true);
     try{
     for(const q of validated){
       if(signal.aborted)throw Object.assign(Error('Lokale Berechnung abgebrochen.'),{code:'ABORTED'});
@@ -547,7 +572,7 @@ export function createCadController({createWorker,createComparisonWorker,createM
         if(args.engine==='freecad')return freecadOperation(project,{...o,kind:'inspect'},signal);
         if(args.engine==='cad')return query(args.kind,o,{signal});
         if(args.engine==='app'&&args.kind==='modelComparison')return modelComparison(o,{signal,project});
-        if(args.engine==='app'&&args.kind==='jointCollision')throw Error('Gelenkkollision separat als Messauftrag ausführen.');
+        if(args.engine==='app'&&['jointCollision','motionRange'].includes(args.kind))throw Error('Gelenkkollision separat als Messauftrag ausführen.');
         if(args.engine==='app')return queryProgramResources({project,kind:args.kind,options:o,getFonts,getResources:getProgramResources,signal});
         if(args.engine==='converter')return convertModel({project,action:'analyze',target:typeof o.target==='string'?{rootId:o.target,path:[]}:o.target,options:o.options,edits:o.edits,commands:o.commands,signal});
         const target=o.id??o.nodeId??o.target,id=typeof target==='string'?target:target?.path?.length===0?target.rootId:null;
@@ -557,7 +582,8 @@ export function createCadController({createWorker,createComparisonWorker,createM
       else if(q.engine==='freecad')value=await freecadOperation(store.readSnapshot(),{...options,kind:'inspect'},signal);
       else if(q.engine==='cad')value=await query(q.kind,options,{signal});
       else if(q.engine==='app'&&q.kind==='modelComparison')value=await modelComparison(options,{signal});
-      else if(q.engine==='app'&&q.kind==='jointCollision')value=await checkJointCollision(options,{revision,signal});
+      else if(q.engine==='app'&&q.kind==='jointCollision')value=await checkJointCollision(options,{revision,signal,analysisOwner:localAbort});
+      else if(q.engine==='app'&&q.kind==='motionRange')value=await checkMotionRange(options,{revision,signal,analysisOwner:localAbort});
       else if(q.engine==='app')value=await queryProgramResources({project:store.readSnapshot(),kind:q.kind,options,getFonts,getResources:getProgramResources,signal});
       else{const target=options.id??options.nodeId??options.target,id=typeof target==='string'?target:Array.isArray(target?.path)&&!target.path.length?target.rootId:null;if(typeof id!=='string')throw Error('Ein vollständiges Netzteil für die Messung wählen.');value=await meshQuery(q.kind==='inspectSolid'?'inspectSolid':'toolsQuery',{id,...(q.kind==='inspectSolid'?{}:{kind:q.kind,options:options.options})},{signal});}
       if(store.revision()!==revision)throw Object.assign(Error('Modell während der Messung geändert.'),{code:'STALE_REVISION'});
@@ -569,14 +595,14 @@ export function createCadController({createWorker,createComparisonWorker,createM
       results.push({id:q.id,engine:q.engine,kind:q.kind,...(program?{program}:{}),value:reported});
     }
     return compactAIAnalysisResult({revision,results});
-    }finally{runningAnalyses.delete(localAbort);}
+    }finally{runningAnalyses.delete(localAbort);onBusy(store.state().busy);}
   }
   function discard(previewId){previews.delete(previewId);replacementPreviews.delete(previewId);drawingProofs.delete(previewId);photoReconstructionProofs.delete(previewId);featureDependencyProofs.delete(previewId);return store.discard(previewId);}
   const transactions={snapshot:()=>store.snapshot(),materialize:(ids=null,options={})=>resolveGeometry(store.readSnapshot(),ids,options),
     serialize:()=>store.serialize(),revision:()=>store.revision(),state:()=>store.state(),preview:request=>preview(undefined,request),apply,cancel,discard};
   return {measureTransport:worker.measureTransport,transportState:worker.transportState,transactions,snapshot:()=>store.snapshot(),readSnapshot:()=>store.readSnapshot(),revision:()=>store.revision(),projectScope:()=>projectScope,state:()=>({...store.state(),busy:store.state().busy||!!meshWorker.state().running||revisionHolds.size>0||runningAnalyses.size>0,worker:worker.state(),meshWorker:meshWorker.state()}),
     preparePatternConsumerChoices:(operation,options={})=>{alive();assertPreviewStart(options.revision??store.revision());return patternChoices.prepare(operation,options);},queryPatternConsumerChoices:patternChoices.query,discardPatternConsumerChoices:patternChoices.discard,
-    invalidateDisplayView:()=>{confirmedView=null;candidateViews.clear();viewQueries.clear();},preview,previewReferenceRebind,previewFreeCADDocument,previewFreeCADImport,previewFreeCADRerun,previewJoints,checkJointCollision,previewPhotos,previewFeatureReferences,previewPhotoReconstruction,previewDrawings,previewDrawingUpdate,previewDrawingEdits,previewProjectParameters,previewContourLinks,holdRevision,execute,apply,query,analyze,checkPreview,inspectFreeCADPreview,display,surfaceForComparison,modelComparison,describe,verify,exportModel,assertExportReady,open,readProject,inspectMeshSolid,meshQuery,
+    invalidateDisplayView:()=>{confirmedView=null;candidateViews.clear();viewQueries.clear();},preview,previewReferenceRebind,previewFreeCADDocument,previewFreeCADImport,previewFreeCADRerun,previewInspection,inspectionStatus:()=>inspectionStatus(store.readSnapshot()),previewJoints,checkJointCollision,checkMotionRange,previewPhotos,previewFeatureReferences,previewPhotoReconstruction,previewDrawings,previewDrawingUpdate,previewDrawingEdits,previewProjectParameters,previewContourLinks,holdRevision,execute,apply,query,analyze,checkPreview,inspectFreeCADPreview,display,surfaceForComparison,modelComparison,describe,verify,exportModel,assertExportReady,open,readProject,inspectMeshSolid,meshQuery,
     undo:()=>{alive();assertWritable();const before=store.readSnapshot();return changed(store.undo(),before);},redo:()=>{alive();assertWritable();const before=store.readSnapshot();return changed(store.redo(),before);},
     cancel,
     discard,

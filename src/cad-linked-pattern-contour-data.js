@@ -71,7 +71,7 @@ export function planCadParameterPatternContours(project,{patterns,statePatterns=
   const {selected}=contourClosure(project,pattern);if(project.contourLinks.links.some(link=>selected.has(link.id)&&roots.has(link.target.rootId))){const extra=unchangedPlan(pattern);plans.push(extra);for(const rootId of extra.targetRootIds)roots.add(rootId);added=true;}
  }}
  const statePlans=statePatterns.filter(pattern=>!plans.some(changed=>changed.patternId===pattern.id)).map(unchangedPlan),ids=new Set(plans.flatMap(plan=>plan.linkIds)),targetBindings=[...new Map(plans.flatMap(plan=>plan.targetBindings??[]).map(binding=>[binding.id,binding])).values()];
- const targetKeys=new Set(plans.flatMap(plan=>plan.targetAddresses??[]).map(address)),targetStates=plan.changedStates.filter(state=>targetKeys.has(address(state.target))&&state.geometryChanged),deferredParameterStates=targetStates.map(state=>state.target);
+ const targetKeys=new Set([...plans,...statePlans].flatMap(plan=>plan.targetAddresses??[]).map(address)),targetStates=plan.changedStates.filter(state=>targetKeys.has(address(state.target))),deferredParameterStates=targetStates.map(state=>state.target);
  return {byPattern:plans,linkIds:ids.size?buildCadDependencyGraph(project).order.filter(node=>node.kind==='contour'&&ids.has(node.linkId)).map(node=>node.linkId):[],targetRootIds:[...new Set([...plans,...statePlans].flatMap(plan=>plan.targetRootIds))],requiredRootIds:[...new Set([...plans,...statePlans].flatMap(plan=>plan.requiredRootIds??[]))],targetBindings,targetStates,deferredParameterStates,...(targetBindings.length||targetStates.length?{parameterData:plan.data,parameterPhaseData:withoutCadContourTargetStates(withoutCadContourHeightBindings(plan.data,targetBindings),deferredParameterStates)}:{})};
 }
 

@@ -15,7 +15,7 @@ function refs(value,result=new Map(),depth=0){
  return result;
 }
 function validateIndex(index,fileSize){
- need(index&&Object.keys(index).sort().join(',')==='blocks,format,project,version'&&index.format==='FormnaroPackage'&&index.version===1&&index.project?.format==='OfflineCAD'&&[17,18,19,20,21,22,23,24,25,26,27,28,29,30].includes(index.project.version)&&Array.isArray(index.project.nodes)&&index.project.nodes.length<=500&&Array.isArray(index.blocks)&&index.blocks.length<=20000,'Ungültiger Paketindex.');
+ need(index&&Object.keys(index).sort().join(',')==='blocks,format,project,version'&&index.format==='FormnaroPackage'&&index.version===1&&index.project?.format==='OfflineCAD'&&[17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32].includes(index.project.version)&&Array.isArray(index.project.nodes)&&index.project.nodes.length<=500&&Array.isArray(index.blocks)&&index.blocks.length<=20000,'Ungültiger Paketindex.');
  const referenced=refs(index.project),seen=new Set();let end=0;
  for(const b of index.blocks){need(b&&Object.keys(b).sort().join(',')==='bytes,kind,offset,sha256'&&/^[a-f0-9]{64}$/.test(b.sha256)&&!seen.has(b.sha256)&&Number.isSafeInteger(b.offset)&&b.offset===end&&Number.isSafeInteger(b.bytes)&&b.bytes>0,'Ungültiger oder überlappender Geometrieblock.');const ref=referenced.get(b.sha256);need(ref&&ref.kind===b.kind&&ref.bytes===b.bytes,'Geometrieblock stimmt nicht mit Katalog überein.');seen.add(b.sha256);end+=b.bytes;need(Number.isSafeInteger(end)&&end<=MAX_PACK,'Paket ist zu groß.');}
  need(referenced.size===seen.size,'Geometrieblock fehlt im Index.');if(fileSize!==undefined)need(end===fileSize,'Paketgröße stimmt nicht mit Index überein.');return index;
@@ -35,7 +35,7 @@ async function openFnpack(file,{onRead=()=>{}}={}){
   return {index:structuredClone(index),identity:{bytes:stat.size,indexSha256:sha(raw)},read,copy,sourcePath:()=>sourcePath,retarget:file=>{alive();sourcePath=path.resolve(file);},close:async()=>{closed=true;await Promise.allSettled([...pending]);}};
  }catch(error){await handle.close().catch(()=>{});throw error;}
 }
-async function writeFnpack(file,{project,blocks=[],source,signal,rename=fs.rename}={}){
+async function writeFnpack(file,{project,blocks=[],source,signal,createOnly=false,shouldCommit=()=>true,rename=fs.rename}={}){
  const needed=refs(project),payloads=new Map();for(const block of blocks){need(block&&block.bytes instanceof Uint8Array&&needed.has(block.sha256)&&!payloads.has(block.sha256),'Ungültige neue Geometrieblöcke.');const bytes=Buffer.from(block.bytes);need(sha(bytes)===block.sha256&&bytes.length===needed.get(block.sha256).bytes,'Neue Geometrieblock-Prüfsumme stimmt nicht.');payloads.set(block.sha256,bytes);}
  const sourceBlocks=new Map((source?.index.blocks??[]).map(b=>[b.sha256,b]));let offset=0;const table=[];for(const [hash,ref]of needed){need(payloads.has(hash)||sourceBlocks.get(hash)?.kind===ref.kind&&sourceBlocks.get(hash)?.bytes===ref.bytes,'Erforderlicher ungeladener Geometrieblock fehlt.');table.push({sha256:hash,kind:ref.kind,bytes:ref.bytes,offset});offset+=ref.bytes;}
  const index=validateIndex({format:'FormnaroPackage',version:1,project,blocks:table}),raw=Buffer.from(JSON.stringify(index));need(raw.length<=MAX_INDEX&&HEADER+raw.length+offset<=MAX_PACK,'Paket oder Index ist zu groß.');const header=Buffer.alloc(HEADER);MAGIC.copy(header);header.writeUInt32LE(1,8);header.writeUInt32LE(raw.length,12);Buffer.from(sha(raw),'hex').copy(header,16);
@@ -44,7 +44,7 @@ async function writeFnpack(file,{project,blocks=[],source,signal,rename=fs.renam
   target=await fs.open(temporary,'wx');await target.writeFile(header);await target.writeFile(raw);
   for(const block of table){if(signal?.aborted)throw new DOMException('Paketausgabe abgebrochen.','AbortError');if(payloads.has(block.sha256))await target.writeFile(payloads.get(block.sha256));else await source.copy(block.sha256,target,{signal});}
   await target.sync();await target.close();target=null;
-  const delays=[10,20,40,80,160];for(let attempt=0;;attempt++){if(signal?.aborted)throw new DOMException('Paketausgabe abgebrochen.','AbortError');try{await rename(temporary,file);break;}catch(error){if(process.platform!=='win32'||!['EPERM','EACCES','EBUSY'].includes(error.code)||attempt>=delays.length)throw error;await new Promise(r=>setTimeout(r,delays[attempt]));}}
+  const delays=[10,20,40,80,160];for(let attempt=0;;attempt++){if(signal?.aborted)throw new DOMException('Paketausgabe abgebrochen.','AbortError');if(!await shouldCommit())throw Object.assign(Error('Paket-Zieldatei inzwischen geändert.'),{code:'ABORTED'});try{if(createOnly)await fs.link(temporary,file);else await rename(temporary,file);break;}catch(error){if(process.platform!=='win32'||!['EPERM','EACCES','EBUSY'].includes(error.code)||attempt>=delays.length)throw error;await new Promise(r=>setTimeout(r,delays[attempt]));}}
   return {bytes:HEADER+raw.length+offset,indexSha256:sha(raw),geometryBlocks:table.length};
  }finally{await target?.close().catch(()=>{});await fs.rm(temporary,{force:true}).catch(()=>{});}
 }

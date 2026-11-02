@@ -1,17 +1,3 @@
-Formnaro 0.125.0-r35 – aktueller veröffentlichter Entwicklungsstand, 01.11.2026
-
-Download und getrennte Quellarchive:
-https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r35
-
-Neu seit r28: Werkzeugauskunft auf Abruf für KI-Modellieren und Übungsmodus,
-verbesserte Zentrieren-/Ausrichten-/Rasterabläufe, getrennte Übungsgespräche
-und kontextabhängiger Modellierfreiraum. Details: docs/AKTUELLER-STAND.md.
-79 gezielte Quelltests sowie die dokumentierten Modell-/Übungs-/Bildprüfungen
-bestanden; die neue ZIP wurde vollständig gelesen und frisch entpackt gestartet.
-Das ist eine Entwicklungsvorabversion, keine neue vollständige Windows-Abnahme.
-Bekannte Grenzen bei langen Gewinden und automatischer Schraub-/Kippkopplung
-bleiben im Prüfbericht dokumentiert. Frühere Änderungshinweise folgen unten.
-
 Formnaro 0.122.0 – Kleinere portable CAD-Laufzeit, 31.10.2026
 
 FreeCAD-Kern und Python-Brücke bleiben eingebettet. Zusätzliche Python-OCC-

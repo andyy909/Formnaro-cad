@@ -6,7 +6,9 @@
         "C:/PATH/TO/offlinecad_ai.py",
         "--connection",
         "C:/PATH/TO/ai-bridge.json",
-        "--mcp"
+        "--mcp",
+        "--profile",
+        "compact"
       ]
     }
   }
