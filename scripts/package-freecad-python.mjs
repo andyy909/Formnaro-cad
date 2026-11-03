@@ -58,10 +58,11 @@ if(current){
  const cadRoot=path.join(root,'freecad-runtime/runtime');await execute('freecad-import-audit',path.join(cadRoot,'bin/python.exe'),['-B',path.join(root,'scripts/audit-freecad-imports.py'),'--root',source,'--output',proof+'/freecad-imports.json'],root);await cadRuntime.verifyRuntime(cadRoot);
  integratedCAD=temp+'/integrated-cad';fs.cpSync(cadRoot,integratedCAD,{recursive:true});
  await cadRuntime.verifyRuntime(integratedCAD);fs.mkdirSync(source+'/freecad-runtime');fs.symlinkSync(integratedCAD,source+'/freecad-runtime/runtime','junction');
- copySpeechEngine(root+'/speech-runtime',source+'/speech-runtime',{crtDirectory:path.join(integratedCAD,'bin')});
 }
 fs.symlinkSync(path.join(root,'node_modules'),source+'/node_modules','junction');
 for(const row of inventory(source))assert.equal(hash(path.join(root,row.file)),row.sha256,'Source changed during snapshot copy: '+row.file);
+// The generated speech runtime has its own integrity checks and joins the frozen build inputs below.
+if(current)copySpeechEngine(root+'/speech-runtime',source+'/speech-runtime',{crtDirectory:path.join(integratedCAD,'bin')});
 const converterFrozen=temp+'/converter-frozen';fs.cpSync(converterRuntime(root),converterFrozen,{recursive:true});for(const n of ['README.md','provenance.json'])fs.copyFileSync(root+'/converter/'+n,converterFrozen+'/'+n);
 fs.symlinkSync(converterFrozen,path.join(source,'converter',path.basename(converterRuntime(root))),'junction');
 const meta=JSON.parse(fs.readFileSync(source+'/package.json'));meta.version=version;fs.writeFileSync(source+'/package.json',JSON.stringify(meta,null,2));fs.writeFileSync(source+'/src/version.js',"export const FORMNARO_VERSION="+JSON.stringify(version)+";\nexport const FORMNARO_BUILD_LABEL="+JSON.stringify(process.env.FORMNARO_RELEASE_LABEL??'Vollständige FreeCAD-Python-Werkzeuge')+";\n");
