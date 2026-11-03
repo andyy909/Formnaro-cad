@@ -1,25 +1,32 @@
 <p align="center">
-  <img src="bilder/formnaro-logo.png" alt="Formnaro" width="200">
+  <img src="bilder/formnaro-logo.png" alt="" width="180">
 </p>
 
-# Formnaro
+<h1 align="center">Formnaro</h1>
 
-**English** | [Deutsch](README.de.md)
+<p align="center"><strong>A local 3D workshop for Windows</strong></p>
+<p align="center">Design CAD parts, repair meshes, build assemblies and prepare technical drawings for model making and 3D printing.</p>
 
-**CAD and mesh editing for model making and 3D printing.** Design parts, edit 3D models and create technical drawings. Formnaro runs locally on Windows; regular modelling works offline.
+<p align="center">
+  <a href="#download">Download</a> ·
+  <a href="docs/USER-GUIDE.md">User guide</a> ·
+  <a href="beispiele/README.md">Example models</a> ·
+  <a href="docs/BUILD.md">Build from source</a> ·
+  <a href="README.de.md">Deutsch</a>
+</p>
 
-**Windows 64-bit · portable — application and separate sources:**
+## Download
 
-| Download | Version | Size | Contents |
-| --- | --- | --- | --- |
-| **[Download the application](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** | **0.125.0-r36** | approx. **667 MB** | Portable application, required runtimes, licences and start instructions. |
-| [Separate source archives](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) | **0.125.0-r36** | see release | Formnaro, FreeCAD and CAD-kernel sources; optional downloads for development. |
+Formnaro is portable on Windows x64. The modelling workspace works offline.
 
-**Nightly build.** [0.126.0 Nightly r1](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r1) is available for Windows x64 with targeted verification. Its GitHub source archives point to the public r36 reference commit.
+| Build | Best for | Download |
+| --- | --- | --- |
+| **0.125.0-r36** · verified preview | The most thoroughly checked public package | **[Windows ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** · [Checks and matching sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) |
+| **0.126.0 Nightly r1** · test build | Trying the new chat and modelling controls | [Nightly release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r1) |
 
-For everyday use, download only the application ZIP. Source archives are always separate release assets. [Packaging policy](docs/PORTABLE-PAKETE.md).
+Extract the whole application ZIP into its own folder and start **Formnaro.exe**. FreeCAD and Python are bundled. Source archives are separate downloads. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
-[Documentation](#documentation) · [Release notes](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
+## A look inside Formnaro
 
 | **Easy Tinker** · bearing bracket (dark mode) | **Normal** · precision vise (dark mode) |
 | :---: | :---: |
@@ -35,7 +42,7 @@ For everyday use, download only the application ZIP. Source archives are always 
 2. Keep all subfolders together and double-click **“Formnaro starten”** (“Start Formnaro”).
 3. Create a new project or open an existing model.
 
-The portable ZIP contains the application, required runtimes, licences and start instructions. FreeCAD and Python are included; no separate installation is needed. The optional offline speech model can be downloaded from within the application when needed. Source archives are separate downloads on the release page.
+See the [user guide](docs/USER-GUIDE.md) for project files, workspace modes and portable updates. Speech options depend on the build. See the [speech guide](docs/SPRACHEINGABE.md) for the current source branch.
 
 ## Features
 
