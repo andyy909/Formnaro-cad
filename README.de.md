@@ -15,7 +15,7 @@
 | **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** | **0.125.0-r36** | ca. **667 MB** | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
 | [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) | **0.125.0-r36** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
 
-**Nightly-Ausgabe.** [0.126.0 Nightly r1](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r1) steht für Windows x64 mit gezielten Prüfungen bereit. Die automatisch erzeugten GitHub-Quellarchive zeigen auf den öffentlichen r36-Referenzcommit.
+**Nightly-Ausgabe.** [0.126.0 Nightly r2](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r2) kann Format-32-Autosicherungen wiederherstellen und ersetzt r1 als empfohlene Nightly. [Windows-x64-ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.126.0-r2/Formnaro-v0.126.0-r2-Nightly-Windows-x64.zip). Die automatisch erzeugten GitHub-Quellarchive zeigen auf den öffentlichen r36-Referenzcommit.
 
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
