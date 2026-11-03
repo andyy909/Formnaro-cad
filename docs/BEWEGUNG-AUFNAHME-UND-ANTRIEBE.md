@@ -1,100 +1,63 @@
-# Änderungsberichte, Bewegungsaufnahme und Antriebskopplungen
+# Change reports, motion recording and drive couplings
 
-Gesamtplan Punkte 21–25, privater Entwicklungsstand vom 02.11.2026. Anforderungen:
-[Punkte 21–25](GESAMTPLAN-RELEASE-ABNAHME.md). Kein Installations- oder Releasewechsel.
+## Change reports
 
-Mit `responseDetail:"summary"` liefern lokale Vorschau-/Übernahmeaufrufe eine
-Zusammenfassung: betroffene Wurzelkörper, geänderte numerische Maße und
-Platzierungen, Gelenkwerte, Kopplungsänderungen, tatsächliche Prüfberichte,
-Warnungen, Revision und nächste Aktionen. `responseDetail:"full"` fordert die
-weiterhin verfügbaren ausführlichen Antworten an. Alte Aufrufe ohne diese
-Angabe bleiben ausführlich; kompakte MCP-Adapter fordern die Zusammenfassung
-ausdrücklich an. Die internen UI-Aufrufe
-erhalten zur Kompatibilität ihre ausführlichen Ergebnisse. Keine Kurzfassung
-darf fehlgeschlagene Prüfungen oder einen Fehler nach bestätigter Übernahme
-in einen Erfolg umdeuten. Die neue Revision bezeichnet den bestätigten Stand;
-eine Vorschau nennt ihren unveränderten Ausgangsstand und ihre Kennung.
+Local preview and apply requests accept `responseDetail:"summary"` to return
+affected roots, numerical dimensions and placements, joint and coupling
+changes, check results, warnings, revision and next actions.
+`responseDetail:"full"` requests detailed output. Calls without the option
+retain detailed output, and compact MCP adapters request summaries explicitly.
+A preview reports its base revision and preview ID. Apply reports the
+confirmed revision and preserves any check or post-commit errors in the reply.
+The Python SDK accepts `response_detail="summary"|"full"`.
 
-Der Gelenkdialog ergänzt Schraubtrieb- und ebene Spindelantriebkopplungen,
-mehrere wählbare Wiedergabegrößen, PNG-/GIF-Aufnahme und Bereichsprüfung.
-Wiedergabe verwendet ausschließlich den kompilierten Gelenkbaum und die
-vorhandene Anzeigegeometrie. Sie läuft ohne Modellübernahme, native
-Konstruktion oder Messung pro Bild; auch gekoppelte Werte und Beschriftungen
-stammen aus diesem Bewegungsstand. Ende, Abbruch und Aufnahmefehler stellen
-die Ausgangsanzeige wieder her. GIFs sind auf 160 Bilder mit 480 × 360 Pixeln
-in der Oberfläche beschränkt, mit fester RGB332-Farbpalette. Unvollständige
-Aufnahmen tragen dies im Namen und im JSON-Beleg; dieser enthält auch die
-Gelenkwerte je aufgenommenem Bild. PNG erfasst die aktuelle Vorschau.
+## Play and record motion
 
-`joint/drive-create` mit `drive.kind:"screw"` verbindet `rotary` und `linear`.
-`lead` ist der Vorschub in mm/Umdrehung; alternativ `pitch` und `starts` für
-Steigung und Gangzahl, `direction` ist +1 oder −1. Die aktuelle Stellung wird
-als Nullbezug gespeichert. Bewegung ist von beiden Seiten möglich und mit
-bestehenden Zahnradkopplungen kombinierbar. Alle abhängigen Grenzen und
-Sperren gelten; widersprüchliche Antriebe werden atomar zurückgewiesen.
+The joint dialog can play motion at selected sizes and capture PNG or GIF.
+Playback uses the compiled joint tree and current display geometry, without
+applying the model or rebuilding native bodies per frame. Completion,
+cancellation and recording errors restore the original display. GIF recording
+is limited to 160 frames at 480 × 360 pixels with a fixed RGB332 palette.
+Incomplete recordings are labelled in the file name and JSON receipt, which
+also records joint values for captured frames. PNG captures the current preview.
 
-`drive.kind:"actuator"` nennt `table`, `swivel`, `extension` und den
-Tischanschluss `attachment` in Welt-mm. Tisch- und Schwenkgelenk benötigen
-denselben starren Elternkörper mit parallelen Drehachsen. Der Auszug hängt
-direkt am Schwenkkörper. Sein Gelenkbezug muss am Tischanschluss liegen,
-die Auszugsachse auf der Verbindungslinie. Die Kopplung erhält den Körperbaum
-und berechnet Tischwinkel, Schwenkwinkel und Auszug gemeinsam. Rückwärts
-wird die nächste Lösung zur bisherigen Stellung innerhalb der Tischgrenzen
-gewählt; gleich nahe Lösungen und unerreichbare Anschlüsse werden gemeldet.
-Ein Schwenkwinkel allein ist kein eindeutiger Antrieb. Je über Kopplungen
-zusammenhängendem Antrieb wird zunächst eine nichtlineare Beziehung unterstützt.
-Dies ist kein universeller räumlicher Gelenklöser.
+## Screw and planar actuator drives
 
-Neue Antriebe verwenden Gelenkdaten Version 3 und Projekt-/Bibliotheksformat
-31. Alte Projekte bleiben lesbar, Herabstufung mit neuen Beziehungen wird
-abgewiesen. OCAD, FNPACK und vollständige interne Kopien erhalten die
-Beziehungen; Teilkopien lösen nicht vollständig enthaltene Kopplungen.
-`joint/drive-remove` nennt `driveId`. Die Befehlsauskunft liefert die tatsächlichen
-Schemata; `app/joints` ergänzt die gespeicherten Antriebe. Python-SDK-Aufrufe
-unterstützen optional `response_detail="summary"|"full"`.
+- **Screw drive** uses `joint/drive-create` with `drive.kind:"screw"`,
+  `rotary` and `linear`. Set lead in millimetres per turn, or give pitch
+  and number of starts, and set direction to +1 or −1. The current position
+  is the reference. Either end can drive the relation, including in
+  combination with existing gear couplings.
+- **Planar actuator** uses `drive.kind:"actuator"`, `table`, `swivel`,
+  `extension` and the table `attachment` point in world millimetres.
+  The table and swivel share a rigid parent and parallel axes. The
+  extension hangs directly from the swivel. Its joint reference is at
+  the table attachment, and its axis follows the line between the
+  connections. The solver updates table angle, swivel angle and extension
+  together. Inverse operation chooses the nearest feasible table position
+  and reports ties or unreachable attachments. A swivel angle alone
+  does not identify a drive position. A connected drive group supports
+  one nonlinear relation.
 
-`app/motionRange` ist ein eigener lesender Analyseauftrag. Optionen:
-`jointId`, `from`, `to`, optional `step` (Standard 1° bzw. 1 mm), `pairs`
-mit expliziten `leftId`/`rightId` und optional `timeLimitMs` (Standard 30 s,
-höchstens 300 s). Höchstens 16 Paare und 501 Stellungen werden geprüft;
-Start und Ende sind eingeschlossen, falls das Budget sie erreicht. Gekoppelte
-Stellungen entstehen über denselben Bewegungslöser. Positive Volumenschnitte
-nennen Paar, Antriebswert und Messmethode. Abbruch, Zeit-/Mengenbegrenzung
-melden den ungeprüften Rest und etwaige teilweise geprüfte Paarmenge.
-Die Prüfung gilt ausdrücklich nur für berechnete Stichproben; keine
-kontinuierliche Kontakt-/Kollisions- oder Fertigungsfreigabe. Mindestabstand
-und gespeicherte Prüfstände folgen in Punkten 26–27.
+All dependent limits and locks apply. Conflicting drives are rejected
+atomically. Remove a drive with `joint/drive-remove` and its `driveId`.
+Read the live tool schemas for exact commands and `app/joints` for saved
+drives. These drives use joint data version 3 and project or library format
+31. OCAD, FNPACK and complete internal copies preserve the relationships.
+Partial copies drop couplings whose full participants are absent.
 
-Die gesonderte FreeCAD-Nachabnahme aus Punkt 10 bleibt wegen der früheren
-Defender-Quarantäne offen. Hier werden weder Schutz noch Laufzeitstarter geändert.
+## Sample a range of motion
 
-## Gezielter Nachweis
+`app/motionRange` is read-only. Provide `jointId`, `from`, `to`, optionally
+`step` (default 1° or 1 mm), and explicit `leftId` and `rightId` pairs.
+`timeLimitMs` defaults to 30 seconds and can be set up to 300 seconds.
+The request covers up to 16 pairs and 501 positions, including the endpoints
+if the budget reaches them. The same motion solver computes coupled poses.
+Positive volume intersections report the pair, drive value and measurement
+method. Limits and cancellation identify any untested remainder.
 
-Die Standardsuite besteht mit 125 Tests. Der zusammenhängende gezielte Lauf
-prüft die neuen Antriebe zusammen mit bestehenden Gelenken, Zahnradkopplungen,
-nativen Messungen, FNPACK, Ergebnisprüfungen, Übernahmebelegen und kompaktem MCP.
-Zusätzliche Regressionen decken X/Y/Z und Tisch einzeln und gemeinsam,
-Grenzenauswahl inverser Lösungen, Aufnahmeabbruch während der Bilderfassung,
-native Deadline und Material-/Unterquellenänderungen ab. Python-SDK prüft den
-expliziten Antwortumfang über seinen tatsächlichen HTTP-Transport.
-
-Eine isolierte aktuelle Desktopinstanz bestätigt sechs Prüfblöcke: beide
-Kopplungen über sichtbare Bedienelemente, ein beschriftetes GIF mit 31 Bildern,
-Stoppen und Schließen während der Wiedergabe, Zusammenfassung/Übernahme/Undo
-und eine native Bereichsanalyse mit 25 Stellungen. Im Aufnahmeabschnitt wurde
-kein nativer Berechnungs-/Messauftrag gesendet; Revision und Undo blieben gleich.
-GIF und abgetastetes Desktopvideo wurden vollständig dekodiert und Bilder
-visuell geprüft. Die neue Aufnahme zeigt eine tatsächlich geneigte Tischplatte;
-keine zusätzliche Cloud-Inferenz. Normales Fensterende und Exit 0 bestätigt.
-
-Im Review gefundene Probleme wurden korrigiert und regressionsgeprüft:
-Analyse- und Unteraufträge besitzen denselben privaten Auftragseigentümer,
-Kollisionsstellungen benötigen keine Controller-Vorschau, die inverse Auswahl
-berücksichtigt alle gekoppelten Grenzen, Messmethode/Näherungsgrenzen bleiben
-auch bei freien Bereichen erhalten und GIF-Beschriftungen priorisieren die
-ausgewählten Antriebe. Erfolgreich erfasste Bilder zählen vor einer folgenden
-Abbruchprüfung; ein echter Deadline-Abbruch erreicht laufende Messungen.
-Beide Prüfachsen hatten nach gezielter Nachprüfung keine offenen konkreten Befunde.
-
-Die Belege sind gezielte Quell-/Desktopnachweise und ersetzen Punkt 28 mit
-vollständigem CNC-Ablauf, echten Providerzugängen und Gesamtabnahme nicht.
+The report describes sampled positions and pairs. Continuous clearance,
+contact forces and manufacturing approval require other evidence. See
+[saved inspection records and release verification](GESAMTPLAN-RELEASE-ABNAHME.md).
+The [original development record](https://github.com/andyy909/Formnaro-cad/blob/v0.125.0-r36/docs/BEWEGUNG-AUFNAHME-UND-ANTRIEBE.md)
+contains the earlier targeted checks.

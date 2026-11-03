@@ -1,27 +1,39 @@
-# Spracheingabe im KI-Chat
+# Speech input in the AI chat
 
-Ab Version 0.119 kann zusätzlich **Online · Deepgram** gewählt werden. Unter
-**Online-Sprache einrichten** wird ein eigener Deepgram-API-Schlüssel auf diesem
-PC verschlüsselt gespeichert. Der Schlüssel von DeepSeek ist dafür nicht
-geeignet. Beim Aufnehmen und Stoppen übermittelt Formnaro die Sprachaufnahme an
-Deepgram Nova-3; dort können nutzungsabhängige Kosten entstehen. Es handelt sich
-um die Verarbeitung einer abgeschlossenen Aufnahme, nicht um ein Live-Streaming.
-Der erkannte Text wird in den Entwurf eingefügt und erst durch **Senden** an den
-gewählten KI-Anbieter übermittelt. Ohne Deepgram-Schlüssel bleibt die vorhandene
-lokale Erkennung auswählbar. Abbrechen beendet eine laufende Online-Anfrage.
+Choose a speech mode, start recording and stop when finished. Formnaro adds
+the recognised text to your draft. Check dimensions, names and units before
+sending. Each recording is limited to three minutes. Cancelling leaves the
+previous draft intact. A transcription that would make the draft too long
+remains separately editable. Closing the chat ends active recording.
 
-Die tatsächliche Geschwindigkeit der Online-Erkennung hängt von Verbindung und
-Anbieter ab und wurde ohne Deepgram-Zugang nicht mit einem echten Konto gemessen.
-Die lokale Erkennung ist weiterhin wie unten beschrieben verfügbar.
+## Local Whisper
 
-In Formnaro 0.97 ist neben dem Nachrichtenfeld **Sprechen** verfügbar. Sprache wählen, Aufnahme starten, sprechen und **Stoppen** drücken. Whisper fügt den erkannten Text an die vorhandene Nachricht an. Maße, Namen und Einheiten prüfen und danach selbst **Senden** drücken. Eine Aufnahme ist auf drei Minuten begrenzt.
+The portable package includes the recognition engine. Use **Download speech
+model** to install the optional 574 MB model once in the portable data folder.
+After that, transcription runs on the local CPU without an account, API key
+or internet connection. Sending the draft to an AI provider is a separate
+action.
 
-**Aufnahme verwerfen** beendet Aufnahme oder Erkennung. Eine bestehende Nachricht bleibt erhalten. Ist die Nachricht zu lang, bleibt der erkannte Text separat bearbeitbar, statt abgeschnitten zu werden. Das Einklappen des Chats beendet eine laufende Aufnahme.
+The app holds the recording in memory and uses a temporary WAV for Whisper.
+It removes temporary audio and text after completion, failure or cancellation.
+A crash or power loss can leave files in the Windows temporary
+`Formnaro-Speech` directory. If the microphone is unavailable, check Windows
+microphone permissions.
 
-Bei Auswahl **Lokal · Whisper** läuft die Erkennung auf der CPU des PCs, ohne Cloudkonto und ohne API-Schlüssel. Die portable Ausgabe enthält das Sprachmodell bereits. Bei dieser Auswahl wird keine Aufnahme hochgeladen und keine KI-Anfrage automatisch gesendet. Erst beim normalen Senden gelten die bestehenden Einstellungen des gewählten KI-Anbieters für den Nachrichtentext und Modellkontext.
+The engine and model are verified by SHA-256. The [runtime manifest](../speech-runtime/manifest.json)
+identifies the bundled whisper.cpp build and optional model. Runtime license
+notices are included under `resources/speech`.
 
-Audio wird während der Aufnahme im Speicher gehalten und für Whisper vorübergehend als WAV gespeichert. Nach Erfolg, Fehler oder Abbruch werden WAV und vorübergehende Textdatei entfernt. Nach einem harten Prozessabbruch oder Stromausfall können Dateien im Windows-Tempordner `Formnaro-Speech` zurückbleiben. Es gibt kein Aufnahme- oder Transkriptarchiv. Erkannte Texte können Fehler enthalten; insbesondere Maße immer prüfen. Bei fehlendem Zugriff die Windows-Mikrofonberechtigung prüfen.
+## Online Deepgram
 
-Verwendet werden [whisper.cpp](https://github.com/ggml-org/whisper.cpp) b5454 (Commit d1be6fd) und das mehrsprachige Modell [Whisper large-v3-turbo, Q5_0](https://huggingface.co/ggerganov/whisper.cpp). Modell und CPU-Laufzeit werden anhand von SHA-256 geprüft. MIT-Lizenzen liegen unter `resources/speech`.
+Configure a dedicated Deepgram API key for online speech. Formnaro stores it
+encrypted on the local PC. On stop, the app sends the completed recording to
+Deepgram Nova-3 for transcription. Usage charges may apply. Cancel stops an
+active request. The resulting text remains in the draft until you send it.
 
-Entwicklung: `node scripts/setup-speech-runtime.mjs` lädt ausschließlich die im Manifest festgelegten Dateien und prüft ihre Hashes. `npm run test:speech` prüft Audioformat, Prozessgrenzen und Bereinigung. `npm run package:speech` erstellt eine getrennte portable Ausgabe und prüft dort den echten Recorder/Whisper-Ablauf mit einem synthetischen deutschen Audioeingang. Das ersetzt keinen Test mit dem jeweiligen physischen Mikrofon.
+## Developer verification
+
+Run `node scripts/setup-speech-runtime.mjs` to prepare the pinned engine
+and `npm run test:speech` to check the audio format, process limits and cleanup.
+The portable release checks use a synthetic speech fixture. Use a physical
+microphone to evaluate the audio capture on a particular system.

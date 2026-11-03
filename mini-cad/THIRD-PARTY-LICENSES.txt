@@ -1,4 +1,4 @@
-Formnaro Mini CAD 0.2.0 – Drittanbieterhinweise
+Formnaro Mini CAD – Drittanbieterhinweise
 Eigener Anwendungscode und übernommene Formnaro-Module: LICENSE.txt.
 
 Produktive Fremdbestandteile:

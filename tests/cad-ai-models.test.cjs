@@ -18,8 +18,11 @@ test('Failed persistence rolls back profile/model/key changes; unknown destinati
  const s=store({config:ds,encryptedKey:Buffer.from('encrypted:dummy-deepseek').toString('base64')},{persist:()=>{throw Error('disk full');}});assert.throws(()=>s.api.selectModel('deepseek-flash'),/disk full/);assert.equal(s.api.active().config.model,'deepseek-v4-pro');assert.equal(s.api.active().key,'dummy-deepseek');assert.throws(()=>s.api.selectProvider('https://evil.example'),/Unbekannter/);
  const normal=store();normal.api.save({config:ds,key:'dummy-deepseek'});normal.api.save({config:{...ds,baseUrl:'https://other.example/v1',model:'custom'},key:''});assert.equal(normal.api.active().key,'');
 });
-test('Model catalog includes all current DeepSeek variants and compatible aliases; GPT discovery excludes incompatible endpoints',()=>{
- const deepseek=modelCatalog(ds,[{id:'deepseek-new',name:'New DeepSeek',input_modalities:['text','image']}]);assert.deepEqual(deepseek.map(m=>m.id),['deepseek-flash','deepseek-v4-pro','deepseek-v4-flash','deepseek-v4-flash-vision-exp','deepseek-new']);assert.equal(deepseek.find(m=>m.id==='deepseek-v4-pro').vision,false);
+test('Model catalog hides retired DeepSeek aliases except the configured alias and excludes incompatible GPT endpoints',()=>{
+ const details=[{id:'deepseek-new',name:'New DeepSeek',input_modalities:['text','image']},{id:'deepseek-v4-flash'},{id:'deepseek-v4-flash-vision-exp'}];
+ const deepseek=modelCatalog(ds,details);assert.deepEqual(deepseek.map(m=>m.id),['deepseek-flash','deepseek-v4-pro','deepseek-new']);assert.equal(deepseek.find(m=>m.id==='deepseek-v4-pro').vision,false);
+ const legacy=modelCatalog({...ds,model:'deepseek-v4-flash-vision-exp'},details);
+ const selected=legacy.find(m=>m.id==='deepseek-v4-flash-vision-exp');assert.equal(selected.current,true);assert.equal(selected.vision,true);assert.match(selected.name,/Legacy alias/);assert.ok(!legacy.some(m=>m.id==='deepseek-v4-flash'));
  const gpt=modelCatalog({baseUrl:'https://api.openai.com/v1',model:''},[{id:'gpt-test'},{id:'gpt-test-mini',input_modalities:['text','image']},{id:'gpt-image-2'},{id:'gpt-realtime'},{id:'text-embedding-3-large'},{id:'gpt-audio'},{id:'ft:gpt-test:custom'}]);assert.deepEqual(gpt.map(m=>m.id),['gpt-test','gpt-test-mini','ft:gpt-test:custom']);assert.equal(gpt[0].vision,null);assert.equal(gpt[1].vision,true);
 });
 test('Known text-only DeepSeek rejects current or historical images before contacting the provider',async()=>{

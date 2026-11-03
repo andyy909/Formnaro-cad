@@ -113,7 +113,7 @@ app.whenReady().then(() => {
   require('./backend/error-log.cjs').installErrorLog(win,{directory:path.join(dataPath,'Fehlerprotokolle'),version:app.getVersion()});
   if(!verifyPath&&!practiceChild)require('./backend/renderer-recovery.cjs').installRendererRecovery(win);
   require('./backend/desktop-ai.cjs').installDesktopAI(win,{settingsFile:path.join(dataPath,'ai-settings.json'),toolLibraryStatus:()=>toolLibrary.status(),fallbackFile:fs.existsSync(path.join(dataPath,'profil.json'))?undefined:legacyAIFile});
-  const speechService=require('./backend/speech.cjs').installSpeech(win,{directory:app.isPackaged?path.join(process.resourcesPath,'speech'):path.join(__dirname,'speech-runtime'),settingsDirectory:dataPath,tempDirectory:verifyPath?path.join(path.dirname(verifyPath),'speech-temp'):path.join(app.getPath('temp'),'Formnaro-Speech')});
+  const speechService=require('./backend/speech.cjs').installSpeech(win,{directory:app.isPackaged?path.join(process.resourcesPath,'speech'):path.join(__dirname,'speech-runtime'),settingsDirectory:dataPath,modelDirectory:path.join(dataPath,'Sprachmodelle'),tempDirectory:verifyPath?path.join(path.dirname(verifyPath),'speech-temp'):path.join(app.getPath('temp'),'Formnaro-Speech')});
   let speechQuitting=false;app.on('before-quit',event=>{if(!speechService.hasActive())return;event.preventDefault();if(speechQuitting)return;speechQuitting=true;speechService.dispose().finally(()=>app.quit());});
   require('./backend/speech-permissions.cjs').installSpeechPermissions(win,{entry:path.join(__dirname,'dist','index.html')});
   require('./backend/windows-dictation.cjs').installWindowsDictation(win,{entry:path.join(__dirname,'dist','index.html')});

@@ -1,22 +1,26 @@
-# Lokales Paketformat .fnpack, Version 1
+# Local .fnpack container format, version 1
 
-Das Dateiformat ist unabhängig vom ursprünglichen STEP-Eingabepfad und benötigt keine externe Bibliothek. Alle Zahlen im festen Kopf verwenden Little Endian.
+The container is independent of the original STEP path and needs no external library. All integers in the fixed header use little-endian byte order.
 
-| Bereich | Inhalt |
+| Byte range | Contents |
 | --- | --- |
-| Byte 0–7 | ASCII-Magic `FNPACK\r\n` |
-| Byte 8–11 | Formatversion, uint32, aktuell 1 |
-| Byte 12–15 | Länge des UTF-8-Index, uint32, höchstens 16 MiB |
-| Byte 16–47 | SHA-256 der exakten Indexbytes |
-| Byte 48–63 | Reserviert, ausschließlich Nullbytes |
-| Ab Byte 64 | Index, anschließend unmittelbar die Geometrieblöcke |
+| 0–7 | ASCII magic `FNPACK\r\n` |
+| 8–11 | Container version, uint32, currently 1 |
+| 12–15 | UTF-8 index length, uint32, at most 16 MiB |
+| 16–47 | SHA-256 of the exact index bytes |
+| 48–63 | Reserved, all zero bytes |
+| From 64 | Index followed immediately by geometry blocks |
 
-Der Index enthält ausschließlich `format: "FormnaroPackage"`, `version: 1`, `project` und `blocks`. Das Projekt verwendet Version 17. Gespeicherte BRep- und Netzpuffer werden durch strenge `Formnaro-GeometryRef`-Datensätze ersetzt. Ein Verweis enthält Blockart, SHA-256 und Bytezahl; Netzverweise ergänzen Kataloggrenzen, Punkt-/Dreieckszahlen und eine ausdrücklich ungeprüfte Darstellungsklasse. Native Körper behalten ihre bisherigen lokalen Statistik- und Quellenmetadaten.
+The index contains exactly `format: "FormnaroPackage"`, `version: 1`, `project` and `blocks`. Formnaro 0.125.0-r36 accepts embedded project versions 17 through 32. The writer selects at least version 17 based on the model's features. [Project validation](../src/cad-project.js), [Package serialization](../src/cad-fnpack-data.js)
 
-Jeder Blockeintrag enthält `sha256`, `kind`, `bytes` und `offset`. Der Offset ist relativ zum Beginn der Geometrieblöcke. Blöcke folgen ohne Lücken und Überlappungen, Hashes sind eindeutig, und die Dateilänge muss exakt zum letzten Block passen. Jeder referenzierte Block muss aufgeführt sein; unreferenzierte Blöcke sind nicht erlaubt. Der gesamte Container ist auf 2 GiB begrenzt.
+Stored BRep and mesh buffers are represented by strict `Formnaro-GeometryRef` records. A reference contains the block kind, SHA-256 and byte count. Mesh references include catalogue bounds, vertex and triangle counts, and an explicitly unverified display class. Native bodies retain their local statistics and source metadata.
 
-BRep-Blöcke enthalten den exakten UTF-8-BRep-Text ohne Änderung seiner Topologie. Netzblöcke enthalten UTF-8-JSON mit originalen `verts` und `triangles`. Hashes prüfen tatsächliche Bytes, keine ungefähre geometrische Ähnlichkeit. Instanzen mit verschiedenen Kennungen oder affinen Matrizen können denselben Block verwenden.
+Each block record contains `sha256`, `kind`, `bytes` and `offset`. The offset is relative to the start of the geometry blocks. Blocks are contiguous and non-overlapping, hashes are unique, and the file ends exactly at the last block. Each block must be referenced and each reference must resolve. The container limit is 2 GiB.
 
-`geometryIdentity` bewahrt die bisherigen Korrespondenzsignaturen und Metadatenschlüssel für unveränderte ausgelassene Quellen. Diese Angaben sind Kataloginformationen und kein nativer Geometriebeweis. Nach dem Hydratisieren werden Geometriesignaturen aus den tatsächlichen Bytes berechnet. Geänderte Platzierungen und Quellen erhalten die entsprechenden neuen Signaturen. Ein Katalogobjekt wird in Szenenantworten ausdrücklich mit `geometryLoaded: false` und `geometryEvidence: "package-catalogue-only"` gekennzeichnet.
+BRep blocks contain the exact UTF-8 BRep text and preserve its topology. Mesh blocks contain UTF-8 JSON with the original `verts` and `triangles`. Hashes cover the exact bytes. Instances with different IDs or affine transforms can share a block.
 
-Die native Dateiseite liest Kopf und Index beim Öffnen sowie einzelne erforderliche Blöcke über begrenzte Bereichszugriffe. Speichern kopiert ungeladene Blöcke stückweise mit erneuter Prüfsummenprüfung. Private Dateizugriffskennungen und Zwischenspeicher gehören zur laufenden Sitzung und werden niemals Bestandteil des Paketformats.
+The `geometryIdentity` property preserves correspondence signatures and metadata keys for unchanged unloaded sources. These fields describe the catalogue. After hydration, Formnaro computes geometry signatures from the actual bytes. Changed placements and sources receive updated signatures. Scene responses identify catalogue-only geometry with `geometryLoaded: false` and `geometryEvidence: "package-catalogue-only"`.
+
+The native file service reads the header and index when opening the package and loads required blocks with bounded range reads. Saving copies unloaded blocks in chunks and checks their hashes again. File access handles and caches remain local to the session.
+
+[User workflow](FNPACK.md) · [Native file validation](../backend/fnpack.cjs)

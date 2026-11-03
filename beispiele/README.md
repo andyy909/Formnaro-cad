@@ -1,17 +1,18 @@
-# Beispielprojekte für Formnaro
+# Formnaro example projects
 
-Die drei Dateien sind vollständig bearbeitbare Demonstrationsmodelle, erstellt mit Formnaro 0.114.0-r7.
+Download an `.ocad` file, choose **Open** in Formnaro and select the downloaded file. Use **Save As** to create your own copy. In the model tree, expand a part to inspect its native geometry and editable construction sources.
 
-1. Die gewünschte `.ocad`-Datei herunterladen.
-2. In Formnaro **Öffnen** wählen und die Datei auswählen.
-3. Im Modellbaum Teile auswählen oder Quellen aufklappen. Die native Geometrie und die ursprünglichen Formparameter sind enthalten.
-
-| Projekt | Gezeigte Funktionen |
+| Project | What it shows |
 | --- | --- |
-| [Elektronikgehäuse](elektronikgehaeuse.ocad) | Gehäusewand, Ausschnitte, Lüftungsschlitze, Schraubdome und getrennte Teile in Explosionsdarstellung |
-| [Lagerhalter](lagerhalter.ocad) | Vereinte CAD-Körper, Langlöcher, Lagerbohrung, Ringe und separate Welle |
-| [Getriebestudie](getriebestudie.ocad) | Parametrische Zahnräder mit 24 und 42 Zähnen sowie zwei unabhängige Drehgelenke |
+| [Electronics enclosure](elektronikgehaeuse.ocad) | Enclosure walls, openings, vents, screw bosses and an exploded view |
+| [Bearing bracket](lagerhalter.ocad) | Combined CAD solids, slots, a bearing bore, rings and a separate shaft |
+| [Gear study](getriebestudie.ocad) | Parametric 24- and 42-tooth gears with two independent revolute joints |
+| [ATLAS-5](../packaging/examples/atlas-5.ocad) | Five-axis gantry mill with a coupled A-axis drive |
+| [6:1 helical gearbox](../packaging/examples/schraeggetriebe-6zu1.ocad) | Four helical gears and coupled shafts |
+| [Precision vise](../packaging/examples/solid-schraubstock.ocad) | Solid-mode modelling example |
 
-Für die Gelenke der Getriebestudie im Solid-Modus **Baugruppe → Gelenke** öffnen. Beide Winkel lassen sich einzeln über Zahlenfelder oder Regler ändern. „Bewegung zurücksetzen“ stellt die Ausgangslage wieder her; „Bewegung übernehmen“ speichert die Stellung mit einem Rückgängig-Schritt. Eine automatische Zahnradkopplung ist derzeit nicht enthalten.
+The enclosure, bracket and gear study were made with Formnaro 0.114.0-r7. To move the gear study, open **Assembly → Joints** in Solid mode. Adjust each joint independently using its value field or slider. You can reset the motion or apply the final position in one Undo step. For an example with a saved gear coupling, use the 6:1 helical gearbox.
 
-Die Beispiele veranschaulichen Modellierfunktionen; sie sind keine freigegebenen Fertigungsunterlagen.
+The examples demonstrate modelling features. They are supplied for exploration and editing.
+
+[English README](../README.md) · [Deutsche Übersicht](../README.de.md)

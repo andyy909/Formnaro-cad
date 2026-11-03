@@ -78,3 +78,24 @@ test('Optional model absence is actionable; online speech works before downloadi
  await service.downloadModel();assert.equal((await service.status()).available,true);assert.equal((await service.transcribe({requestId:'local-after',bytes:audio()})).text,'Portable offline works');
  await service.dispose();
 });
+
+test('Portable model settings preserve a verified bundled model from an older runtime',async t=>{
+ const paths=await fixture(t);
+ const bundled=path.join(paths.directory,'ggml-small-q5_1.bin');
+ const modelDirectory=path.join(paths.directory,'portable-models');
+ const service=speech.createSpeechService({...paths,modelDirectory,spawnProcess(_exe,args){
+  assert.equal(args[args.indexOf('-m')+1],bundled);
+  const child=new EventEmitter();
+  child.kill=()=>child.emit('close',1);
+  setImmediate(async()=>{
+   await fs.writeFile(args[args.indexOf('-of')+1]+'.txt','Bundled model');
+   child.emit('close',0);
+  });
+  return child;
+ }});
+ const status=await service.status();
+ assert.equal(status.available,true);
+ assert.equal(status.downloadRequired,false);
+ assert.equal((await service.transcribe({requestId:'legacy',bytes:audio()})).text,'Bundled model');
+ await assert.rejects(fs.stat(modelDirectory),{code:'ENOENT'});
+});
