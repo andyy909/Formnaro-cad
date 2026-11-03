@@ -1,32 +1,36 @@
-Immer zuerst die aktuelle lokale Kontextdatei `work/kontext.txt` lesen, sofern
-sie vorhanden ist, und alles Wichtige ergänzen. Sie enthält die lokale
-Entwicklungshistorie und bleibt außerhalb von Git. In einem neuen Checkout
-`docs/PROJEKTKONTEXT.md` als technischen Projektkontext lesen und wichtige
-allgemeine Änderungen dort ergänzen. Persönliche Modelle, Profile und
-Zugangsdaten gehören nicht in den gemeinsamen Projektkontext.
+# Formnaro repository instructions
 
-Programmname: Formnaro (zuvor Tinkoff/OfflineCAD). Die folgenden technischen
-Bezeichnungen und Profilpfade bleiben zur Kompatibilität erhalten.
+Read `work/kontext.txt` first when it exists. Record significant local work
+there. Keep that development history outside Git. In a fresh checkout, read
+[the project context](docs/PROJEKTKONTEXT.md) and add significant general
+changes there. Keep personal models, profiles and credentials out of shared
+documentation.
 
-Für direkte Modellieraufträge in der laufenden Formnaro-Anwendung ist der
-lokale MCP-Server `offlinecad` eingerichtet. Zuerst `offlinecad_context` und
-`offlinecad_scene` lesen. Änderungen mit `offlinecad_preview` gegen die aktuelle
-Revision berechnen und prüfen; dann mit `offlinecad_apply` übernehmen, sofern
-der Nutzer die betreffende Modelländerung beauftragt hat. Bestehende Quellen,
-Parameter, Sperren und unbeteiligte Teile erhalten. Keine Teständerungen im
-Nutzerprojekt übernehmen, wenn lediglich eine Verbindung geprüft werden soll.
+Use Formnaro as the product name. Retain the existing OfflineCAD identifiers
+and profile paths for compatibility.
 
-Falls die MCP-Werkzeuge in einer laufenden Codex-Sitzung noch nicht geladen sind,
-ist dieselbe direkte Steuerung über `scripts/offlinecad_ai.py` verfügbar:
-`python scripts/offlinecad_ai.py --connection "<Profilpfad>/ai-bridge.json" <command>`.
-Unter Windows ist der Standardprofilpfad `%APPDATA%/offlinecad`; maßgeblich ist
-der in Formnaro angezeigte Verbindungsdateipfad. Python 3.10 oder neuer verwenden.
-Der Client liest den lokalen Zugriffstoken intern. Verbindungsdatei und Token
-nicht ausgeben, in Prompts aufnehmen oder in Auslieferungen kopieren. Formnaro
-muss geöffnet und die lokale KI-Schnittstelle aktiviert sein. Es wird kein
-zusätzlicher Cloud-API-Schlüssel für diese Verbindung benötigt.
+## Direct modelling in Formnaro
 
-Beim Modellieren die gemeinsame Regel `context.designFreedom` aus
-`ai/FORMNARO-MODELLIERFREIRAUM.json` beachten. Sie gilt für fehlende Maße und
-Entwurfsdetails, auch bei Türen/Fenstern, unabhängig von der Modellstrenge.
-Die lokale MCP-Anbindung übermittelt sie beim Verbindungsaufbau und im Kontext.
+1. Read `offlinecad_context` and `offlinecad_scene` through the local MCP server.
+2. Compute and inspect an `offlinecad_preview` against the current revision.
+3. Apply the preview with `offlinecad_apply` when the user requested the model
+   change. Preserve sources, parameters, locks and unrelated parts. Connection
+   checks are read-only.
+
+If the MCP tools are unavailable, run the equivalent command with Python 3.10+
+while Formnaro is open and the local AI interface is enabled.
+
+```text
+python scripts/offlinecad_ai.py --connection "<profile path>/ai-bridge.json" <command>
+```
+
+Use the connection path displayed in Formnaro. The default Windows profile
+directory is `%APPDATA%/offlinecad`. The client reads the local access token
+internally, so no cloud API key is required. Keep the connection file and token
+out of output, prompts and packages.
+
+Apply `context.designFreedom` from
+[`ai/FORMNARO-MODELLIERFREIRAUM.json`](ai/FORMNARO-MODELLIERFREIRAUM.json)
+when dimensions or design details are unspecified, including for doors and
+windows at every modelling strictness level. The bridge provides this rule
+during connection and in its context.

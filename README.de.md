@@ -15,6 +15,8 @@
 | **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** | **0.125.0-r36** | ca. **667 MB** | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
 | [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) | **0.125.0-r36** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
 
+**Nightly-Ausgabe.** [0.126.0 Nightly r1](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r1) steht für Windows x64 mit gezielten Prüfungen bereit. Die automatisch erzeugten GitHub-Quellarchive zeigen auf den öffentlichen r36-Referenzcommit.
+
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
 [Anleitungen](#anleitungen) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
@@ -77,17 +79,17 @@ Im eigenen Übungsfenster werden drei Funktionen mit den Bedienelementen von For
 
 Der vorab von Codex erstellte Plan wird im Übungsfenster über die echten Bedienelemente ausgeführt; die Wiedergabe benötigt keine weiteren Modellanfragen. Die eingeblendeten **3.381.395 Tokens inklusive Cache** beziehen sich auf den gesamten Zahnradauftrag mit Planung, Aufnahme und Prüfung.
 
-Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der aktuelle Programmdownload oben enthält 0.125.0-r36.
+Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der oben verlinkte geprüfte Download enthält 0.125.0-r36.
 
 ## Anleitungen
 
 | Thema | Weiterlesen |
 | --- | --- |
-| Bedienung | [Grundlagen](LIES-MICH.txt) · [Solid](docs/SOLID-MODUS.md) · [Fusion](docs/FUSION-MODUS.md) |
+| Bedienung | [Kurzstart](LIES-MICH.txt) · [Handbuch (EN)](docs/USER-GUIDE.md) · [Beispiele](beispiele/README.md) · [Solid](docs/SOLID-MODUS.md) · [Fusion](docs/FUSION-MODUS.md) |
 | Konstruktion | [Parameter und Varianten](docs/PROJEKTPARAMETER.md) · [Kurven, Loft und Sweep](docs/CAD-KURVEN.md) |
 | Zeichnungen und Baugruppen | [Technische Zeichnungen](docs/TECHNISCHE-ZEICHNUNGEN.md) · [Teile, Material und Stücklisten](docs/TEILE-MATERIAL-BAUGRUPPEN.md) |
 | KI-Unterstützung | [KI-Aufträge](docs/KI-AUFTRAEGE.md) · [Foto-Assistent](docs/FOTO-ASSISTENT.md) · [Programm-Assistent](docs/PROGRAMM-ASSISTENT.md) |
-| Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/PROJEKTKONTEXT.md) |
+| Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
 ## Entwicklungsstand
@@ -109,7 +111,7 @@ Passende Quellen: [Versions-Tag](https://github.com/andyy909/Formnaro-cad/tree/v
 Mit Node.js 22.16 oder neuer und npm:
 
 ```sh
-git clone --branch v0.125.0-r36 https://github.com/andyy909/Formnaro-cad.git
+git clone https://github.com/andyy909/Formnaro-cad.git
 cd Formnaro-cad
 npm ci
 npm run build

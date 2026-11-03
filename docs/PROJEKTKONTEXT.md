@@ -1,4 +1,8 @@
-# Technischer Projektkontext
+# Formnaro project history
+
+> Dated development history. For the current code layout and public release, see the [architecture overview](ARCHITECTURE.md) and [current release](AKTUELLER-STAND.md).
+
+3 November 2026 repository refresh. The active user, developer and build guides are now in English. Current source verifies the pinned Windows dictation helper during normal builds. The local Python MCP adapter supports revision 2026-07-28 over stdio alongside legacy handshakes. Public release verification still refers to the existing r36 package.
 
 Erweiterung 31.10.2026: Zahnradkopplungen erlauben zwei parallele Drehgelenke auf demselben starren Elternkörper auch dann, wenn dieser selbst im Gelenkbaum verschoben oder gedreht wird. Winkelübersetzung und Phase bleiben relativ zum Träger; unterschiedliche Elternkörper und Planetengetriebe bleiben ausgeschlossen. Vorhandenes Gelenkformat 2 / Projektformat 26 bleibt unverändert. Gezielte Regressionen prüfen beide Antriebsrichtungen, Trägertranslation/-rotation, Gegenachsen, Sperren, Grenzen, unveränderte BReps und Undo/Redo. Windows-Abnahme steht im lokalen Ausgabenachweis.
 

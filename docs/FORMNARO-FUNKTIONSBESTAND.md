@@ -1,5 +1,7 @@
 # Zu erhaltender Funktionsbestand
 
+> Historischer Migrationsnachweis. Die nachstehend genannten Einstiege dokumentieren den damaligen Quellstand. Die aktuelle Hauptanwendung startet den [CAD-Renderer](../src/cad-main.js) über [index.html](../index.html). [Architektur](ARCHITECTURE.md)
+
 Stand: CAD 0.23.0, Netz 0.21.0, lokaler Konverter 0.10.0 / Protokoll 2.
 Diese Liste ist die Übernahmeliste für Paket 1 des Gesamtplans. Eine Funktion
 gilt erst nach einer Prüfung im gemeinsamen Programm als übernommen. Vorhandene

@@ -1,4 +1,4 @@
-Formnaro Mini Mesh 0.4.1 - Drittanbieterhinweise
+Formnaro Mini Mesh - Drittanbieterhinweise
 Eigener Anwendungscode und kopierte Formnaro-Netzmodule: LICENSE.txt.
 
 Produktive Fremdbestandteile:

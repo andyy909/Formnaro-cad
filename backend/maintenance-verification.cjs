@@ -42,5 +42,6 @@ exports.verifyMaintenance=async(win,{directory,dataPath,startupWriteFailed})=>{
  finally{win.webContents.removeListener('will-navigate',observe);}
  check(attempted&&win.webContents.getURL()===original&&await run('window.__cadReady===true&&!window.__cadError'),'Real renderer navigation to a different local document is blocked and the editor remains usable');
  const speech=await run('window.offlinecadDesktop.getSpeechStatus()');check(speech.local&&(speech.available||speech.downloadRequired&&!speech.downloading),'Real main-frame IPC supports installed speech or the explicitly downloadable optional model');
+ check(await run("typeof window.offlinecadDesktop.downloadSpeechModel==='function'&&typeof window.offlinecadDesktop.cancelSpeechModelDownload==='function'"),'The preload exposes both explicit speech model download controls');
  return {ok:true,checks,cloudRequests:0,screenshots:[path.join(directory,'maintenance-dark.png'),path.join(directory,'maintenance-system-light.png')]};
 };

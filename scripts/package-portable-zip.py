@@ -67,18 +67,19 @@ for example in example_manifest['examples']:
                  'bytes': file.stat().st_size, 'sha256': example['sha256']})
 readme = (
     f'Formnaro {args.version}-{args.revision} – Portable Windows x64\n\n'
-    'ZIP vollständig in einen beschreibbaren Ordner entpacken.\n'
-    'Danach „Formnaro starten“ öffnen. FreeCAD, Python und die Anwendungs-\n'
-    'laufzeit sind enthalten; keine zusätzliche Installation erforderlich.\n\n'
-    'Das optionale Sprachmodell ist nicht enthalten. Im KI-Chat unter\n'
-    '„Bilder, Bezüge & Sprache“ auf „Sprachmodell herunterladen“ klicken.\n'
-    'Einmaliger Internetdownload: 574 MB. Danach funktioniert Sprache offline.\n'
-    'Das Modell bleibt in Programmdateien/Daten/Sprachmodelle.\n\n'
-    'Beispiele unter Projekte/Beispiele: ATLAS-5-Fräse, großes 6:1-\n'
-    'Schräggetriebe und Schraubstock. Die Vorlagen am besten als Kopie speichern.\n\n'
-    'Eigene Daten und Projekte gehören in die portablen Daten-/Projektordner.\n'
-    'Die zugehörigen FreeCAD-Quellen werden separat neben dem Windows-Paket\n'
-    'angeboten; zum Ausführen sind sie nicht erforderlich.\n'
+    'Extract the complete ZIP to a folder you can write to. Open the\n'
+    '“Formnaro starten” shortcut or run Programmdateien/Formnaro.exe.\n'
+    'The package includes FreeCAD, Python and the application runtime.\n\n'
+    'For optional offline speech recognition, open “Images, references &\n'
+    'speech” in the AI chat and select “Download speech model”. The one-time\n'
+    'download is 574 MB. The model stays in Programmdateien/Daten/Sprachmodelle.\n\n'
+    'The ATLAS-5 mill, 6:1 bevel gearbox and vise are in Projekte/Beispiele.\n'
+    'Save a copy to edit an example. Keep your projects and settings in the\n'
+    'portable project and data folders.\n\n'
+    'The user guide is at Programmdateien/docs/USER-GUIDE.md.\n'
+    'The corresponding FreeCAD source is offered separately with this release.\n\n'
+    'Kurzstart: ZIP vollständig entpacken und „Formnaro starten“ öffnen.\n'
+    'Das optionale Sprachmodell wird bei Bedarf im KI-Chat heruntergeladen.\n'
 ).encode('utf-8')
 output.mkdir(parents=True, exist_ok=True)
 with zipfile.ZipFile(archive, 'x', compression=zipfile.ZIP_DEFLATED, compresslevel=6, allowZip64=True) as zipped:

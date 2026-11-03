@@ -15,6 +15,8 @@
 | **[Download the application](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** | **0.125.0-r36** | approx. **667 MB** | Portable application, required runtimes, licences and start instructions. |
 | [Separate source archives](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) | **0.125.0-r36** | see release | Formnaro, FreeCAD and CAD-kernel sources; optional downloads for development. |
 
+**Nightly build.** [0.126.0 Nightly r1](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r1) is available for Windows x64 with targeted verification. Its GitHub source archives point to the public r36 reference commit.
+
 For everyday use, download only the application ZIP. Source archives are always separate release assets. [Packaging policy](docs/PORTABLE-PAKETE.md).
 
 [Documentation](#documentation) · [Release notes](https://github.com/andyy909/Formnaro-cad/releases) · [Feedback](https://github.com/andyy909/Formnaro-cad/issues)
@@ -71,25 +73,25 @@ Three functions are shown in a separate practice window using Formnaro's control
 
 [Full-quality video with model and token labels (MP4, 1:52)](bilder/formnaro-uebungsmodus-zahnraeder.mp4)
 
-**Exercise brief written by Codex (GPT-6.1 Sol, xhigh), in German:**
+**Exercise brief written by Codex (GPT-6.1 Sol, xhigh), translated from German**
 
-> Zeige im Übungsmodus drei echte Evolventenzahnräder mit 20, 40 und 20 Zähnen, Modul 1,5 mm und Breite 6 mm. Führe das automatische Einrasten durch sichtbares Ziehen vor, zeige anschließend die gekoppelte Bewegung bei Antrieb -90°, 0°, +90° und übernimm die letzte Stellung. Die beiden kleinen Räder laufen gleichsinnig, das mittlere gegenläufig mit halber Drehzahl. Zeige alles gut sichtbar.
+> In practice mode, show three involute gears with 20, 40 and 20 teeth, a module of 1.5 mm and a width of 6 mm. Demonstrate automatic snapping by visibly dragging the gears. Then show the coupled motion with the driver at −90°, 0° and +90°, and apply the final position. The two small gears turn in the same direction. The middle gear turns in the opposite direction at half their speed. Keep the action clearly visible.
 
 Codex prepared the plan before playback; the practice window executes it through the actual controls without further model requests. The displayed **3,381,395 tokens including cached input** cover the entire gear task: planning, recording and verification.
 
-Recorded with the locally tested development build **0.125.0-r35**. The current program download above provides 0.125.0-r36.
+Recorded with the locally tested development build **0.125.0-r35**. The verified preview download above provides 0.125.0-r36.
 
 ## Documentation
 
-The linked guides are currently mainly in German.
+Some detailed reference material is available in German.
 
 | Topic | Read more |
 | --- | --- |
-| Getting around | [Basics](LIES-MICH.txt) · [Solid](docs/SOLID-MODUS.md) · [Fusion](docs/FUSION-MODUS.md) |
+| Getting around | [User guide](docs/USER-GUIDE.md) · [Examples](beispiele/README.md) · [Solid](docs/SOLID-MODUS.md) · [Fusion](docs/FUSION-MODUS.md) |
 | Modelling | [Parameters and variants](docs/PROJEKTPARAMETER.md) · [Curves, lofts and sweeps](docs/CAD-KURVEN.md) |
 | Drawings and assemblies | [Technical drawings](docs/TECHNISCHE-ZEICHNUNGEN.md) · [Parts, materials and bills of materials](docs/TEILE-MATERIAL-BAUGRUPPEN.md) |
-| AI assistance | [AI tasks](docs/KI-AUFTRAEGE.md) · [Photo assistant](docs/FOTO-ASSISTENT.md) · [Application assistant](docs/PROGRAMM-ASSISTENT.md) |
-| Development | [Build instructions](docs/BUILD.md) · [Architecture](docs/PROJEKTKONTEXT.md) |
+| AI assistance | [AI guide](docs/AI-GUIDE.md) · [AI tasks](docs/KI-AUFTRAEGE.md) · [Photo assistant](docs/FOTO-ASSISTENT.md) · [Application assistant](docs/PROGRAMM-ASSISTENT.md) |
+| Development | [Build instructions](docs/BUILD.md) · [Architecture](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
 ## Development status
@@ -101,7 +103,7 @@ The complete local function catalogue was processed: **2906 Node tests and 71 de
 Motion and clearance results cover the sampled poses and pairs only. They do not establish continuous contact, load capacity or manufacturing approval. A fresh Windows VM was not tested. New inspection records use project format 32; older projects remain readable.
 
 Matching sources: [versioned tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r36) · [source ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-Quellcode-v0.125.0-r36.zip) · [verification report](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Paket-Pruefstand.json) · [acceptance scope](docs/GESAMTPLAN-RELEASE-ABNAHME.md)
-[Current published build](docs/AKTUELLER-STAND.md)
+[Public downloads and verification](docs/AKTUELLER-STAND.md)
 
 <!-- formnaro-development-status:end -->
 
@@ -111,7 +113,7 @@ Matching sources: [versioned tag](https://github.com/andyy909/Formnaro-cad/tree/
 With Node.js 22.16 or later and npm:
 
 ```sh
-git clone --branch v0.125.0-r36 https://github.com/andyy909/Formnaro-cad.git
+git clone https://github.com/andyy909/Formnaro-cad.git
 cd Formnaro-cad
 npm ci
 npm run build

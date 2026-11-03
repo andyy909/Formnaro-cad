@@ -50,10 +50,10 @@ export function copyPortableCAD(from,to){
  fs.writeFileSync(path.join(to,'manifest.json'),JSON.stringify(manifest,null,2));
  return {files:files.length,removedFiles:removed.length,savedBytes:removed.reduce((a,r)=>a+r.size,0),removed};
 }
-export function copyPortableApp(source,stage){
- const docs=new Set(['Formnaro-CAD-Handbuch-DE.txt']);
+export function copyPortableApp(source,stage,{current=false}={}){
+ const docs=current?['USER-GUIDE.md']:['Formnaro-CAD-Handbuch-DE.txt'];
  for(const n of ['backend','ai','licenses','dist','electron.cjs','preload.cjs','package.json','LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.cpSync(path.join(source,n),path.join(stage,n),{recursive:true,filter:file=>n!=='backend'||!(/verification|fixture|^all-functions|^\./.test(path.basename(file))||file.endsWith('.cs'))});
- for(const n of docs){const input=path.join(source,'docs',n);if(fs.existsSync(input)){fs.mkdirSync(path.join(stage,'docs'),{recursive:true});fs.copyFileSync(input,path.join(stage,'docs',n));}}
+ for(const n of docs){const input=path.join(source,'docs',n);if(current||fs.existsSync(input)){fs.mkdirSync(path.join(stage,'docs'),{recursive:true});fs.copyFileSync(input,path.join(stage,'docs',n));}}
  // The public bridge client and acceptance/build scripts stay in the source repository.
 }
 export const speechRuntimeDLLs=['msvcp140.dll','vcruntime140.dll','vcruntime140_1.dll','vcomp140.dll'];
@@ -92,6 +92,7 @@ export function converterRuntime(root){
  const provenance=JSON.parse(fs.readFileSync(path.join(root,'converter/provenance.json'),'utf8'));
  if(!/^runtime-v010(?:-[a-z0-9]+)*$/.test(provenance.runtimeDirectory))throw Error('Invalid converter runtime directory');
  const directory=path.join(root,'converter',provenance.runtimeDirectory),exe=path.join(directory,'Formnaro-Konverter.exe');
+ if(!fs.existsSync(exe))throw Error('Converter runtime is missing. Prepare '+provenance.runtimeDirectory+' as described in docs/BUILD.md.');
  if(createHash('sha256').update(fs.readFileSync(exe)).digest('hex')!==provenance.headlessExeSha256)throw Error('Converter executable differs from its provenance');
  return directory;
 }

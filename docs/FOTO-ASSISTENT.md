@@ -1,158 +1,97 @@
-# Foto-Assistent
+# Photo assistant
 
-Im KI-Chat ein PNG-, JPEG- oder WebP-Foto anhängen und am Bild **Foto vermessen**
-wählen. Ab 0.107 sind frontale und schräge Fotos ebener technischer Teile möglich.
-Referenz und gemessene Merkmale müssen in derselben Ebene liegen. Bei schrägen
-Fotos unter **Aufnahme** das bekannte Rechteck wählen. Vier echte Rechteckecken
-im Uhrzeigersinn ab oben links sowie die bekannte Breite und Höhe angeben.
-Eine einzelne Referenzstrecke reicht bei Perspektive nicht. Die Entzerrung gilt
-innerhalb dieses Rechtecks; Objektivverzeichnung und Höhenversatz bleiben offen.
-Eine allgemeine Mehrbildrekonstruktion ist noch nicht enthalten.
+Attach a PNG, JPEG or WebP image to an AI chat and open the photo measurement
+tool. You can also use Project Photos from any workspace without opening a
+chat. Measurement runs locally. Sending the reference through chat uses the
+configured provider and its normal attachment rules.
 
-1. Zwei Endpunkte einer bekannten Referenzstrecke setzen und ihre Länge in mm
-   eingeben. Herkunft und Unsicherheit der Referenz angeben. Pixelraster und Zoom
-   helfen bei der Punktwahl. X/Y können auch als Originalpixel eingegeben werden.
-2. Einen Maßnamen eingeben, **Bildmaß: 2 Punkte** wählen und die Messstellen
-   anklicken. Die Maßliste zeigt den Wert und eine geschätzte Bildunsicherheit.
-   Zusätzliche Nutzermaße oder ausdrücklich begründete Annahmen separat ergänzen.
-3. Optional die Außenkontur der Reihe nach markieren und **Kontur schließen**
-   wählen. Sichtbare Öffnungen als eigene geschlossene Konturen im Inneren setzen.
-   Die Kontur kann keine verdeckte Rückseite oder Bohrungstiefe beschreiben.
-4. Zum Korrigieren **Punkte verschieben** wählen, die Punktgruppe auswählen und
-   ihre Punkte ziehen. Ein geändertes Referenzmaß berechnet die Bildmaße neu.
-5. **Messungen für die KI verwenden** wählen und den Modellierauftrag senden.
-   Nicht sichtbare Funktionsmaße wie Materialdicke im Auftrag ergänzen.
+## Calibrate and measure
 
-Abbrechen oder Esc verwirft ungespeicherte Bildmarkierungen. Im geöffneten Dialog
-wird keine Geometrie verändert. Die Messungen gehören zum betreffenden Bildanhang
-und werden mit der nächsten Nachricht gesendet. Nach erfolgreichem Senden werden
-die Anhänge wie bisher aus dem Eingabebereich entfernt. Der Bilddialog ersetzt
-keine technische Zeichnung. **Im Projekt speichern** am bearbeiteten Bildanhang
-speichert das aufrechte Original einschließlich Prüfsumme, Herkunft, Markierungen,
-Maßen und Ebenenkalibrierung. **Projektfotos** öffnet diese Referenzen nach erneutem
-Laden, auch in einem neuen Chat. Der direkte Knopf **Projektfotos** ist in allen
-Bedienmodi verfügbar; **Foto hinzufügen** öffnet den Messdialog ohne Chat. Dort
-bearbeiten, erneut anhängen oder entfernen.
-Jede bestätigte Projektfotoänderung hat einen Rückgängig-Schritt; Anhängen und
-Abbrechen ändern das Projekt nicht. Höchstens vier Originale, je 5 MiB und zusammen
-8 MiB kodierte Bilddaten. Zu große Bilder werden abgewiesen.
+1. For a front-on photo, pick the endpoints of a known reference length and
+   enter its length in millimetres, provenance and uncertainty.
+2. For an oblique photo of a planar part, pick the four corners of a known
+   rectangle clockwise from the upper left and enter its width and height.
+   Measure features in that same plane and inside the calibrated rectangle.
+   Lens distortion and differences in depth can still affect results.
+3. Name each measurement and pick its two points. The grid, zoom and original
+   pixel coordinates help you place points. The list reports measurements
+   and estimated image uncertainty. Add supplied dimensions and assumptions
+   separately.
+4. Optionally trace and close the outer contour and each visible opening.
+   Local edge suggestions can propose a connected edge and convex hull.
+   Review and confirm any suggestion before using it. Add recesses and openings
+   manually. Use the point editor to make corrections. Changing the reference
+   recalculates measurements.
+5. Attach the measurement to the modelling request. Supply any required
+   hidden dimensions, such as thickness or bore depth, separately.
 
-**Entzerrung ansehen** zeigt die verknüpfte Referenzebene; der Zeiger nennt die
-zugehörigen Originalpixel. Alle Markierungen bleiben im Originalkoordinatensystem.
-**Kantenvorschlag suchen** ermittelt lokal eine zusammenhängende Kante und ihre
-konvexe Hülle. Vorschläge lassen sich in der Punktgruppe verschieben und erst
-nach ausdrücklicher Bestätigung verwenden. Einbuchtungen und Öffnungen manuell
-ergänzen. Ein unbestätigter Vorschlag blockiert die Verwendung der Messungen.
+The rectified view maps its pointer back to original pixels. The marks
+are stored in original coordinates. Cancelling or pressing Esc discards
+unsaved marks. Saving a project photo preserves the upright original, its
+checksum, provenance, annotations and calibration. A confirmed project
+photo change has one Undo step. Up to four originals can be saved, with
+limits of 5 MiB per original and 8 MiB of encoded image data in total.
 
-## Was die KI erhält
+The AI receives the photo, grid, view, calibration, measured points,
+estimated uncertainty, assumptions, contours and open questions. Image
+and reference are bound by SHA-256 and upright decoded size. Local
+`photo/measure` and `photo/grid` operate on current chat photo references
+without file or network access. Optional grids may be omitted to respect
+attachment limits.
 
-Originalfoto, beschriftetes Raster, festgelegte Ansicht, Referenzmaß samt Herkunft,
-Bildmaße mit Originalpunkten und geschätzter Unsicherheit, ausdrückliche Annahmen,
-Konturen und offene Fragen. Bilddaten und Referenz werden durch SHA-256 und die
-aufrechte dekodierte Originalgröße gebunden. Die KI kann lokal weitere Strecken
-aus zwei Punkten messen oder beschriftete Ausschnitte anfordern. Diese Werkzeuge
-haben keinen Zugriff auf fremde Dateien oder das Netzwerk.
+## Compare a candidate to a photo
 
-Vorhandene Grenzen für Bildanzahl und Übertragungsgröße bleiben erhalten.
-Originale und Chatverlauf werden durch zusätzliche Rasterbilder nicht verdrängt;
-ein aus Platzgründen ausgelassenes Zusatzbild wird der KI ausdrücklich genannt.
-Beim Senden gelten die normalen Hinweise des KI-Chats zur Übertragung an den
-eingerichteten Anbieter. Das lokale Vermessen selbst erzeugt keine Anbieteranfrage.
+A confirmed contour can be compared to changed visible material parts in
+an uncommitted preview. The comparison aligns contour bounds without
+changing the calibrated scale. Red marks missing model areas, blue marks
+excess areas and green marks overlap. Outer dimensions and visible
+openings are reported separately. The correction workflow preserves the
+fixed reference and native requirements across attempts.
 
-## Fotovergleich
+The raster comparison checks a projected display mesh. Verify exact
+dimensions, solid validity, hidden features, fit and critical bores with
+native checks. The image estimate does not change their tolerances.
+Export a JSON report with values and provenance if you need to retain it
+without image bytes. Apply is required to change the model.
 
-Eine bestätigte Fotokontur ermöglicht einen rechnerischen Vergleich mit den neuen
-oder geänderten sichtbaren Materialteilen der noch nicht übernommenen Vorschau.
-Unveränderte Referenzteile und abziehende Quellen werden nicht mitverglichen.
-Das Vergleichsbild zeigt Rot für im Modell fehlende Bereiche, Blau für überschüssige
-Bereiche und Grün für Überlappung. Außenmaße und sichtbare Öffnungen werden separat
-berichtet. Die beiden Konturen werden zur Prüfung ihrer Form an den Mittelpunkten
-ihrer Begrenzungen ausgerichtet; der kalibrierte Maßstab bleibt erhalten.
+## Reconstruct from three registered views
 
-Die KI erhält die Messbefunde zur Korrektur. Fotoreferenz und die ursprünglichen
-nativen Sollprüfungen bleiben während aller Korrekturen fest. Ein späterer
-schlechterer Entwurf verdrängt keinen besser geprüften Kandidaten. Bei erschöpftem
-Limit bleibt eine verfügbare Vorschau mit ihren Fehlern beziehungsweise Warnungen
-zur manuellen Beurteilung erhalten. **Fotovergleich** öffnet den Bericht in einem
-eigenen Fenster; **Messbericht speichern** exportiert Werte, Herkunft, Annahmen
-und Referenzpunkte als JSON, ohne Bilddaten. Erst **Übernehmen** verändert das Modell;
-ein Undo setzt den gesamten bestätigten Auftrag zurück.
+In Project Photos, link calibrated front (X/Z), right (Y/Z) and top (X/Y)
+views. Correct their contours and openings first. For oblique photos,
+the same planar calibration limits apply.
 
-Das ist eine orthografische Rasterprüfung des Anzeigenetzes, kein Beweis für
-CAD-Maßhaltigkeit, verdeckte Geometrie, Wandstärke, Bohrungstiefe oder Passung.
-Punktunsicherheit, Referenzrundung, Rasterauflösung und perspektivische Abweichungen
-begrenzen die Aussage. Kleine Öffnungen können unauflösbar sein. Native CAD-Maße,
-Körpergültigkeit und funktionswichtige Bohrungen brauchen eigene Sollprüfungen.
-Die Bildunsicherheit lockert diese Sollprüfungen nicht.
+1. In each original, mark the same physical origin. The first axis points
+   right and the second points up. Use the suggested lower-left point only
+   when it denotes the same physical reference in all three views.
+2. Confirm shared width X, depth Y and height Z, their provenance, native
+   tolerance and separate world placement. Explicitly describe concealed
+   geometry and confirm whether visible openings cut through the full depth.
+3. If needed, add native functional checks for free cylindrical corridors or
+   actual cylindrical bores. Specify their endpoints in common local XYZ
+   millimetres. A through check extends past the outer faces. A clear
+   corridor alone establishes clearance, while a bore check also requires
+   the cylindrical wall.
+4. Compute a new CAD variant. Formnaro intersects three editable sketch
+   profiles and binds nine sketch variables to three shared parameters.
+   Existing parts, parameters and locks are preserved.
+5. Inspect the three comparisons and native findings before applying. The
+   comparisons use the common origin, so a shifted candidate can fail even
+   with correct overall dimensions. Apply is available after the required
+   checks pass and records one Undo step.
 
-## Herkunft und Technik
+View sets can be stored separately from a CAD variant and reopened later.
+Missing originals or changed annotations require explicit rebinding. You
+can recheck a committed variant and export the three image and native
+reports as JSON. Projects with photos require format 19, and view sets
+or reconstruction provenance require format 20. OCAD, FNPACK and recovery
+preserve the data. Part templates may include provenance and bindings
+without whole project images.
 
-Anregung: [mfranzon/print3d](https://github.com/mfranzon/print3d), geprüfter Stand
-`292ce13366155915ed7be4b4eec5a7ea570e3eb9`, insbesondere Raster, belegte Maße und
-Silhouetten-Rückkopplung. Die Formnaro-Implementierung ist eigenständig und nutzt
-die vorhandene CAD-/Chat-/Vorschaupipeline. Keine Blender-, Bambu-Studio- oder
-neue Cloud-Abhängigkeit und keine Übernahme fremder Beispielbilder.
+This workflow constrains the supplied projections. Unseen internal geometry
+requires explicit information and checks. Curved outlines use confirmed
+polylines with at most 128 contour points per view. Image quality, calibration
+and reference agreement determine the usefulness of the results.
 
-Module `cad-photo-data/images/ui/task/preview`; interne Analysewerkzeuge
-`photo/measure` und `photo/grid` sind nur mit aktuellen Chat-Fotoreferenzen nutzbar.
-Projekte mit gespeicherten Fotos verwenden Format 19; Altprojekte bleiben lesbar
-und ohne diese Daten in ihrem bisherigen Format. `.ocad`, `.fnpack` und Autosave
-bewahren die Originaldaten; Teilvorlagen übernehmen keine ganzen Projektfotos.
-`test:photo` prüft Maße, Datenbindungsvorgaben,
-Konturen, Rasterkennwerte und Materialauswahl. Die isolierte Desktop-Abnahme
-prüft tatsächliche Bildbedienung, beide Anbieterprotokolle mit simulierten Antworten,
-Messrunde, Fehlentwurf, Korrektur, Vorschau, Apply und Undo ohne Cloud-Inferenz.
-
-## Technische Rekonstruktion aus drei Ansichten · ab 0.108
-
-Unter **Projektfotos > Technische Ansichten verbinden** einen Ansichtssatz anlegen.
-Drei gespeicherte Originale als Vorderansicht (X/Z), rechte Seitenansicht (Y/Z)
-und Draufsicht (X/Y) zuordnen. Jedes Foto vorher kalibrieren und seine Außenkontur
-sowie sichtbare Öffnungen korrigieren. Für schräge Aufnahmen gilt weiterhin nur
-die kalibrierte Ebene; beliebige perspektivische Körperaufnahmen sind ungeeignet.
-
-1. In jedem Original den Bezug auf denselben gemeinsamen Nullpunkt setzen. Im Bild
-   zeigt die erste Achse nach rechts, die zweite nach oben. Keine Ansicht spiegeln.
-   Der vorgeschlagene linke untere Umrisspunkt passt nur, wenn er tatsächlich in
-   allen Ansichten denselben räumlichen Bezug bezeichnet.
-2. Gemeinsame Breite X, Tiefe Y, Höhe Z, Herkunft und native Maßtoleranz bestätigen.
-   Die vorgeschlagenen Fotozahlen bleiben zunächst Annahmen. Gemeinsame Weltlage
-   getrennt angeben. Verdeckte Innengeometrie ausdrücklich beschreiben. Öffnungen
-   werden nur nach ausdrücklicher Bestätigung durch die gesamte jeweilige Tiefe
-   ausgeschnitten. Ohne diese Angaben bleibt die Berechnung gesperrt.
-3. Optional native Funktionsprüfungen ergänzen: freie zylindrische Korridore oder
-   echte zylindrische Bohrungen einschließlich Materialrand. Start-/Endpunkte in
-   gemeinsamen lokalen XYZ-mm angeben. Für einen Durchgang die Achse über die
-   Außenflächen hinaus führen. Ein freier Korridor belegt keine zylindrische Wand;
-   eine rechteckige Öffnung kann die Bohrungsprüfung nicht bestehen.
-4. **Neue CAD-Variante berechnen** erstellt eine Vorschau aus drei editierbaren
-   Skizzenprofilen mit nativer Schnittmenge. Drei neue Projektparameter binden
-   neun Skizzenvariablen. Bestehende Teile, Parameter und Sperren bleiben erhalten.
-5. Alle drei Ansichten separat öffnen und die native Maß-/Körper-/Funktionsprüfung
-   lesen. Der Mehransichtenvergleich verwendet die gemeinsamen Nullpunkte ohne
-   unabhängiges Zentrieren. Auch eine verschobene Variante mit richtigen Außenmaßen
-   fällt dadurch auf. Erst die vollständig bestandene Prüfung erlaubt Übernehmen.
-   Verwerfen verändert das Modell nicht; Übernehmen ist ein Rückgängig-Schritt.
-
-**3D-Vorschau ansehen** verkleinert den Dialog und bietet Kameras für Vorn, Rechts,
-Oben und Isometrisch. **Vorhandene Variante prüfen** misst das aktuelle bestätigte
-Modell erneut, ohne es zu verändern. Geänderte gemeinsame Parameter zuerst nativ
-aktualisieren. **Prüfbericht speichern** exportiert die erfassten nativen Befunde,
-drei Bildberichte, Herkunft und Annahmen als JSON ohne Bildbytes.
-
-Ansichtssätze sind unabhängig von ihrer CAD-Variante speicherbar. Fehlende Originale
-oder geänderte Markierungen werden diagnostiziert. Referenzen im ersten Schritt
-bewusst neu bestätigen. Das Entfernen eines Satzes erhält Bilder und Geometrie;
-Rückgängig stellt ihn wieder her. Ganze Sätze und Originale überleben .ocad,
-.fnpack und Autosave. Projektdaten mit Sätzen oder CAD-Rekonstruktionsherkunft
-verwenden Format 20; reine Projektfotos behalten Format 19. Alte Programmversionen
-können die neuen Formate nicht öffnen. Teilvorlagen enthalten Herkunft und
-Parameterbindungen, aber keine vollständigen Projektbilder.
-
-Die Schnittmenge bestätigt die angegebenen Projektionen, nicht die unbekannte
-Innenkonstruktion. Gekrümmte Konturen sind in dieser Stufe bestätigte Polygonzüge;
-maximal 128 Konturpunkte je Ansicht. Zu geringe Bildauflösung, falsche
-Ansichtszuteilung, abweichende Nullpunkte, fehlende Maße und widersprüchliche Maße
-bleiben sichtbar. Die ausgewiesene Bildunsicherheit ist eine Näherung und verändert
-keine native Toleranz. Fertigungspassung und weitere unsichtbare Merkmale müssen
-mit eigenen Funktionsprüfungen belegt werden.
+The grid and silhouette feedback were inspired by [mfranzon/print3d](https://github.com/mfranzon/print3d)
+at commit `292ce13366155915ed7be4b4eec5a7ea570e3eb9`. Formnaro uses its own
+photo, CAD and chat implementation.

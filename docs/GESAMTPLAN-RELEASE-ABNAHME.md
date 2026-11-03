@@ -1,12 +1,14 @@
-# Formnaro 0.125.0-r36 – lokale Release-Abnahme
+# Formnaro 0.125.0-r36 release verification
 
-Die portable Ausgabe **0.125.0-r36** erweitert native Modellierung, Fehler- und Speicherbehandlung, revisionsgebundenes Speichern, gezielte Werkzeugauskunft, Schraub- und Kippkopplungen sowie gespeicherte Prüfstände. Bestehende Quellen und ein gemeinsamer Undo-Schritt bleiben erhalten.
+The portable release adds native modelling improvements, improved error and memory handling, revision-bound saves, tool information, screw and tilt couplings, and saved inspection records. The modelling workflow retains original sources and a single Undo step for the applied change.
 
-Der vollständige lokale Funktionskatalog wurde abgearbeitet: **2906 Node-Tests und 71 Desktop-Prüfgruppen**, ergänzt durch **20 Python-Tests und acht native CNC-Regressionsfälle**. Befunde aus dem ersten Lauf und ihre Nachprüfungen sind im Prüfbericht ausgewiesen. Ein neuer DeepSeek-Harness-Durchlauf prüfte Fehlerkorrektur, explizites Apply und das Erkennen eines veralteten Prüfstands. Die gepackte EXE wurde mit isoliertem Profil, nativem FreeCAD, Speichern und regulärem Prozessende geprüft; das ZIP zusätzlich nach frischem Entpacken in einen Umlautordner aus einem fremden Arbeitsverzeichnis.
+The published verification records **2,906 Node tests and 71 desktop check groups**, supplemented by **20 Python tests and eight native CNC regression cases**. The package report lists the initial findings and follow-up checks. A separate DeepSeek harness run exercised error correction, explicit Apply, and detection of a stale inspection record. Packaged executable checks covered an isolated profile, native FreeCAD, saving, and regular process exit. The ZIP was also tested after fresh extraction into a directory with accented characters and launched from a different working directory.
 
-Bewegungs- und Abstandsprüfungen gelten für die tatsächlich berechneten Stellungen und Paare. Sie sind keine durchgehende Kontakt-, Last- oder Fertigungsfreigabe. Eine frische Windows-VM-Abnahme ist nicht enthalten. Neue Prüfstände verwenden Projektformat 32; ältere Projekte bleiben lesbar.
+Motion and clearance results cover the sampled positions and pairs. Continuous contact, load, manufacturing validation and testing in a fresh Windows VM were outside the scope. Saved inspection records require project format 32, and older projects remain readable.
 
-Passende Quellen: [Versions-Tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r36) · [Quellcode-ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-Quellcode-v0.125.0-r36.zip) · [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Paket-Pruefstand.json) · [Abnahmeumfang](GESAMTPLAN-RELEASE-ABNAHME.md)
-[Aktueller veröffentlichter Stand](AKTUELLER-STAND.md)
+The published package report identifies the executable and ASAR by SHA-256. Native sources are available in separate archives. The release excludes private models, profiles, credentials and provider conversation logs.
 
-Die veröffentlichte Paketprüfung bindet EXE und ASAR mit SHA-256. Native Quellen stehen in separaten Archiven. Private Modelle, Profile, Zugangsdaten und Provider-Gesprächsprotokolle sind nicht Bestandteil des Pakets oder der öffentlichen Quellen.
+- [Versioned source tree](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r36)
+- [Application source ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-Quellcode-v0.125.0-r36.zip)
+- [Package verification report](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Paket-Pruefstand.json)
+- [Current public release](AKTUELLER-STAND.md)

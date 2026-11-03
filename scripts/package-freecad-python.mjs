@@ -47,7 +47,10 @@ const protectedFiles=[...protectedCanonical.values()];
 
 for(const n of ['packaging','src','public','backend','tests','ai','docs','licenses','python-runtime','cad-kernel-build/runtime','index.html','vite.config.js','electron.cjs','preload.cjs','package.json','package-lock.json','LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])if(fs.existsSync(n))fs.cpSync(n,source+'/'+n,{recursive:true,filter:p=>!/^__pycache__$|\.py[co]$/.test(path.basename(p))});
 fs.cpSync(root+'/converter',source+'/converter',{recursive:true,filter:file=>!path.relative(root+'/converter',file).split(path.sep).some(n=>n==='.venv'||n==='__pycache__'||n.startsWith('runtime-')||n.endsWith('.egg-info'))});
-if(current)fs.cpSync('scripts',source+'/scripts',{recursive:true});else{
+if(current){
+ fs.cpSync('scripts',source+'/scripts',{recursive:true});
+ for(const n of ['.node-version','cad-kernel-build/verify-runtime.mjs'])fs.copyFileSync(n,source+'/'+n);
+}else{
 fs.mkdirSync(source+'/scripts');for(const n of ['package-portable-zip.py','audit-freecad-imports.py','portable-freecad-profile.json','portable-runtime-policy.mjs','verify-portable.mjs','speech-fixture.mjs','offlinecad_ai.py','generate-ai-docs.mjs','stl-integration-manifest.mjs','windows-signing.mjs','windows-signing-integrity.mjs','feature-release-config.mjs','freecad-document-release-config.mjs','package-freecad-document.mjs','verify-freecad-document-candidate.mjs','ai-task-release-config.mjs','package-ai-tasks.mjs','verify-ai-task-restart.mjs','verify-ai-task-release.mjs','package-freecad-python.mjs',...(process.env.FORMNARO_RELEASE_SURFACES==='1'?['surfaces-release-config.mjs','package-surfaces.mjs','verify-surfaces-release.mjs']:[]),...(process.env.FORMNARO_RELEASE_ADVANCED_MODELING==='1'?['advanced-modeling-release-config.mjs','package-advanced-modeling.mjs','verify-advanced-modeling-release.mjs']:[]),...(process.env.FORMNARO_RELEASE_PERSPECTIVE==='1'?['expansion-baseline.mjs']:[])])fs.copyFileSync('scripts/'+n,source+'/scripts/'+n);}
 let integratedCAD;
 if(current){
@@ -55,6 +58,7 @@ if(current){
  const cadRoot=path.join(root,'freecad-runtime/runtime');await execute('freecad-import-audit',path.join(cadRoot,'bin/python.exe'),['-B',path.join(root,'scripts/audit-freecad-imports.py'),'--root',source,'--output',proof+'/freecad-imports.json'],root);await cadRuntime.verifyRuntime(cadRoot);
  integratedCAD=temp+'/integrated-cad';fs.cpSync(cadRoot,integratedCAD,{recursive:true});
  await cadRuntime.verifyRuntime(integratedCAD);fs.mkdirSync(source+'/freecad-runtime');fs.symlinkSync(integratedCAD,source+'/freecad-runtime/runtime','junction');
+ copySpeechEngine(root+'/speech-runtime',source+'/speech-runtime',{crtDirectory:path.join(integratedCAD,'bin')});
 }
 fs.symlinkSync(path.join(root,'node_modules'),source+'/node_modules','junction');
 for(const row of inventory(source))assert.equal(hash(path.join(root,row.file)),row.sha256,'Source changed during snapshot copy: '+row.file);
@@ -84,7 +88,7 @@ await execute('ai-docs',process.execPath,['scripts/generate-ai-docs.mjs']);
 sourceFiles=inventory(source);fs.writeFileSync(proof+'/source-freeze.json',JSON.stringify(sourceFiles,null,2));
 await execute('build',process.execPath,[root+'/node_modules/vite/bin/vite.js','build','--base','./']);
 if(process.env.FORMNARO_RELEASE_TEST_ONLY==='1'){const report=proof+'/source-maintenance/result.json';fs.mkdirSync(path.dirname(report),{recursive:true});await execute('source-maintenance',process.execPath,[root+'/node_modules/electron/cli.js',source,'--verify-maintenance='+path.resolve(report)]);const r=JSON.parse(fs.readFileSync(report));assert(r.ok&&r.isolatedProfile&&!r.errors.length&&!r.external.length);fs.writeFileSync(proof+'/source-acceptance.json',JSON.stringify({ok:true,version,report,checks:r.checks.length,sourceFiles:inventory(source)},null,2));console.log('Current source release checks passed: '+proof);process.exit(0);}
-copyPortableApp(source,stage);
+copyPortableApp(source,stage,{current});
 let portableCAD;
 if(integratedCAD){portableCAD=temp+'/portable-cad';const trimmed=copyPortableCAD(integratedCAD,portableCAD);writeCADSourceAsset(integratedCAD,out);fs.writeFileSync(proof+'/portable-cad.json',JSON.stringify(trimmed,null,2));fs.writeFileSync(stage+'/backend/freecad-runtime-pin.json',JSON.stringify({sha256:hash(portableCAD+'/manifest.json')}));}
 const license=stage+'/licenses/cad-kernel';fs.mkdirSync(license,{recursive:true});fs.cpSync('cad-kernel-build/runtime/licenses',license+'/licenses',{recursive:true});for(const n of ['README.md','integrity.json','upstream-lock.json','system-license-lock.json','build-inputs.json','formnaro_cad.provenance.json','formnaro_cad.build-manifest.json'])fs.copyFileSync('cad-kernel-build/runtime/'+n,license+'/'+n);
@@ -151,7 +155,7 @@ if(process.env.FORMNARO_RELEASE_FREECAD_DOCUMENT==='1')fs.writeFileSync(out+'/St
 if(process.env.FORMNARO_RELEASE_AI_TASKS==='1')fs.writeFileSync(out+'/Starten.txt','Formnaro '+version+' – Gespeicherte KI-Aufträge\r\nFormnaro-win32-x64/Formnaro.exe starten. Im KI-Chat unter Modell & Einstellungen die Auftragsvorgaben und gespeicherten Aufträge öffnen. Fortsetzen verwendet die gespeicherten Vorgaben und das verbleibende Budget; Entwurf wiederherstellen prüft den letzten besser geprüften Entwurf erneut. Änderungen vor Übernahme prüfen. Anleitung docs/KI-AUFTRAEGE.md. Eigene Datenordner und ältere Versionen behalten.\r\n');
 if(process.env.FORMNARO_RELEASE_ADVANCED_MODELING==='1')fs.writeFileSync(out+'/Starten.txt','Formnaro '+version+' – Kurven und erweiterte CAD-Merkmale\r\nFormnaro-win32-x64/Formnaro.exe starten. Bézier/B-Spline im Skizzendialog; Loft, Sweep, Entformungsschräge, Merkmalentfernung, Rotation und Helix unter CAD-Werkzeuge. Neue FreeCAD-Merkmale benötigen eine lokale FreeCAD-Installation. Anleitung docs/CAD-KURVEN.md. Originale und ältere Ausgaben bleiben erhalten.\r\n');
 if(process.env.FORMNARO_RELEASE_SURFACES==='1')fs.writeFileSync(out+'/Starten.txt','Formnaro '+version+' – Flächen und Prägungen\r\nFormnaro-win32-x64/Formnaro.exe starten. CAD-Werkzeuge: Randkurvenfläche, Flächenübergang, Flächen vernähen und Prägung / Vertiefung. Anschlussdiagnose und Körpergültigkeit getrennt prüfen. Lokale FreeCAD-Installation weiterhin erforderlich; integrierte Laufzeit folgt separat mit Paket 6a. Anleitung docs/CAD-FLAECHEN.md. Originale und ältere Ausgaben bleiben erhalten.\r\n');
-if(current)fs.writeFileSync(out+'/Starten.txt','Formnaro '+version+' – integrierte CAD-Laufzeit\r\nFormnaro-win32-x64/Formnaro.exe starten. FreeCAD und Python werden mitgeliefert. Freigabestatus und saubere Windows-Abnahme im separaten Abnahmebericht prüfen.\r\n');
+if(current)fs.writeFileSync(out+'/Starten.txt','Formnaro '+version+' – Windows x64\r\nRun Formnaro-win32-x64/Formnaro.exe. FreeCAD and Python are included. See Formnaro-win32-x64/docs/USER-GUIDE.md for instructions and Abnahme.json for the package check results.\r\n');
 if(candidateOnly)fs.copyFileSync(runtime+'/NICHT-FREIGEGEBEN.txt',out+'/NICHT-FREIGEGEBEN.txt');
 console.log(JSON.stringify({ok:true,candidateOnly,releaseReady:false,runtime,results,protectedFiles:protectedFiles.length}));
 

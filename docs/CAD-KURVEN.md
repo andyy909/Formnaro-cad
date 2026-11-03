@@ -1,68 +1,60 @@
-# Kurven und erweiterte CAD-Merkmale
+# Curves and advanced CAD features
 
-## Bézier und B-Spline
+## Bézier and B-spline curves
 
-Im Skizzendialog unter „Konturen mit Öffnungen“ die Zeichenform auswählen.
-Bézierkurven entstehen mit vier Klicks: Start, zwei Kontrollpunkte und Ende.
-B-Splines benötigen vier bis sechzehn Kontrollpunkte und den Knopf
-„B-Spline fertigstellen“. „Linienzug schließen“ ergänzt die Abschlusskante.
-Offene Entwürfe müssen vor der Körpervorschau geschlossen sein.
+In the sketch editor, select a curve tool under contours with openings. A
+Bézier curve uses four clicks for its start, two control points and end. A
+B-spline takes four to sixteen control points. Finish the spline, then use
+the close-polyline command if a closing edge is needed. Close open contours
+before previewing a body.
 
-Koordinaten und Formeln bleiben im Elementeditor bearbeitbar. Bei B-Splines
-lassen sich zusätzliche Kontrollpunkte ergänzen und wieder entfernen.
-Ein durch eine Bedingung verwendeter Kontrollpunkt kann erst nach dem Lösen
-dieser Bedingung entfernt werden. Vorhandene Skizzenbedingungen bleiben erhalten.
-Die B-Splines sind geklemmte, gleichmäßig geknotete kubische Kurven ohne Gewichte.
-Native CAD-Kanten bleiben analytische Kurven; die Anzeige ist eine Annäherung.
+Coordinates and formulas remain editable in the element editor. You can
+insert or remove B-spline control points. Release any constraint that uses
+a point before removing it. Other sketch constraints stay in place. The
+B-splines are clamped, uniformly knotted cubic curves without weights.
+The CAD model retains analytic edges and displays an approximation.
 
-## Loft und Sweep
+## Loft and sweep
 
-Für einen Loft zwei bis acht native Skizzen auswählen. Im Werkzeugdialog die
-Reihenfolge ausdrücklich festlegen. Die Profile müssen entlang der Verbindung
-fortschreiten. Automatische Zuordnung und erhaltene Profilanfänge stehen als
-Orientierungswahl zur Verfügung. Innenöffnungen werden hier nicht unterstützt.
+For a loft, select two to eight native sketches and set their order. Profiles
+must advance along the connection. You can use automatic orientation or
+preserve the start of each profile. Loft profiles must have no inner openings.
 
-Für einen Sweep eine native Querschnittsskizze auswählen. Zusammengesetzte Pfade
-bestehen aus bis zu 32 Linien, Dreipunktbögen, Bézier- oder B-Spline-Segmenten.
-Die Koordinaten gelten relativ zum Profilrahmen: Start im Ursprung, anfängliche
-Tangente +Z. Übergänge müssen tangential zusammenpassen. Krümmungs- und
-Abstandsprüfungen weisen zu enge oder zurücklaufende Pfade zurück; unklare
-Fälle werden nicht übernommen. Die Prüfung gibt keine allgemeine Garantie für
-beliebige Kurven. Abschließend wird der native Körper geprüft.
+For a sweep, select a native cross-section sketch. A composite path can contain
+up to 32 lines, three-point arcs, Bézier or B-spline segments. Coordinates are
+relative to the profile frame. The path starts at the origin with an initial
+tangent along +Z. Segment tangents must agree where they meet. Curvature and
+clearance checks reject overly tight, reversing and ambiguous paths. The final
+native body is checked separately.
 
-„CAD-Bearbeitung ändern“ öffnet gespeicherte Lofts und Sweeps erneut. Quellprofile
-bleiben erhalten. „Modell ansehen“ verkleinert den Dialog für die Vorschau.
+Reopen a saved loft or sweep through the CAD edit command. Its source profiles
+stay available. Use the model-view control to minimize the preview dialog.
 
-## FreeCAD-Werkzeuge
+## FreeCAD tools
 
-Ab 0.114.0 enthält die Desktop-Ausgabe die passende FreeCAD-/Python-Laufzeit.
-Eine separate Installation ist nicht nötig. Formnaro prüft
-die tatsächlichen Objekttypen beziehungsweise die native Defeaturing-Funktion.
-Eine fehlende Funktion wird im Dialog gemeldet.
+The portable desktop distribution bundles FreeCAD and Python. Formnaro checks
+the object type or native defeaturing function and reports unavailable features.
 
-- **Entformungsschräge:** Ein CAD-Teil auswählen, Zielflächen und eine andere
-  ebene Neutralfläche anklicken, Winkel und Richtung einstellen. Das Ergebnis
-  enthält einen echten PartDesign-Draft mit statisch übernommener Basis.
-- **Merkmale entfernen:** Geeignete Flächen eines CAD-Teils auswählen. FreeCAD
-  versucht, Nachbarflächen zu verlängern. Das Ergebnis ist ausdrücklich statisch;
-  das archivierte Programm kann erneut ausgeführt werden. Nicht jede Fläche
-  lässt sich auf diese Weise entfernen.
-- **Rotation:** Eine ebene Profilfläche eines CAD-Teils auswählen. Achsenpunkt,
-  Achsenrichtung und Winkel ausdrücklich einstellen. Die übernommene Profilfläche
-  ist statisch; der daraus erzeugte Rotationswinkel ist ein natives Merkmal.
-- **Helix:** Radius, Steigung, Höhe, Drahtquerschnitt, Achse und Drehsinn
-  einstellen. Eine native Helix treibt ein verknüpftes Kreisprofil und einen
-  nativen Sweep. Radius muss größer als Drahtradius, Steigung größer als
-  Drahtdurchmesser sein. Höchstens 200 Windungen, ohne konischen Winkel.
+- **Draft** uses selected faces and a separate planar neutral face. Set the
+  angle and direction. The result contains a native PartDesign Draft with a
+  static base.
+- **Remove features** attempts to extend neighbouring faces to remove the
+  selected faces. The result is static. You can rerun the archived program.
+- **Revolve** uses a planar profile face, an explicit axis point and direction,
+  and an angle. The imported profile is static. The revolve angle remains
+  editable as a native feature.
+- **Helix** creates a native helix, a linked circular profile and a native sweep.
+  Set the radius, pitch, height, wire cross-section, axis and handedness.
+  The helix radius must exceed the wire radius and the pitch must exceed the
+  wire diameter. The tool supports up to 200 turns with zero taper.
 
-Die neuen Konstruktionen werden als eigene Teile angelegt. Das Original kann
-bei Übernahme ausdrücklich ausgeblendet werden. Seine Geometrie und Quelle
-bleiben erhalten. Alte FreeCAD-Konstruktionshistorie wird durch eine STEP-Basis
-nicht auf die neue Konstruktion übertragen. Neue native Parameter lassen sich
-anschließend über „FreeCAD-Merkmale“ bearbeiten. Helfermodule werden mit dem
-FCStd archiviert, sodass das Helixprofil beim erneuten Öffnen wieder berechenbar ist.
+These operations create separate parts. Apply can hide the original while
+retaining its geometry and source. A STEP base transfers shape without the
+old FreeCAD construction history. Edit the resulting native parameters with
+FreeCAD Features. The FCStd archive includes the helper modules needed to
+recompute the helix profile.
 
-Vorschau, Übernahme und Abbruch sind getrennt. Eine Übernahme einschließlich
-gewählter Sichtbarkeit besitzt einen Undo-Schritt. Neue Kurvenskizzen und
-erweiterte Loft-/Sweep-Rezepte benötigen Projektformat 24; ältere Projekte
-behalten ihr bisher erforderliches Format.
+Preview, Apply and Cancel are separate. Applying the result and its optional
+visibility change creates one Undo step. Curve sketches and advanced loft or
+sweep recipes require project format 24 or later, depending on the other
+features used.

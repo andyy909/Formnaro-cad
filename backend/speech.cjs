@@ -1,5 +1,5 @@
 const fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),{createHash}=require('node:crypto'),{spawn}=require('node:child_process');
-const {createReadStream}=require('node:fs');
+const {createReadStream,existsSync}=require('node:fs');
 const MAX_SECONDS=180,MAX_BYTES=44+16000*2*MAX_SECONDS;
 const MODELS={'small-q5_1':{file:'ggml-small-q5_1.bin',label:'Whisper small'},'large-v3-turbo-q5_0':{file:'ggml-large-v3-turbo-q5_0.bin',label:'Whisper large-v3-turbo'}};
 function validateAudio(value){
@@ -18,27 +18,28 @@ function createSpeechService({directory,tempDirectory=os.tmpdir(),spawnProcess=s
   if(!verified)verified=(async()=>{
    const manifest=JSON.parse(await fs.readFile(path.join(directory,'manifest.json'),'utf8'));
    if(manifest.engine!=='whisper.cpp'||!Object.hasOwn(MODELS,manifest.model)||!Array.isArray(manifest.files)||!manifest.files.length)throw Error('Ungültiges Sprachpaket.');
+   const model=MODELS[manifest.model];
+   const useModelStore=!!modelStore&&path.basename(modelStore.target)===model.file&&!existsSync(path.join(directory,model.file));
    for(const item of manifest.files){
     if(!/^[a-zA-Z0-9_.-]+$/.test(item.name)||! /^[a-f0-9]{64}$/.test(item.sha256))throw Error('Ungültiges Sprachpaket.');
-    if(modelStore&&item.name.endsWith('.bin'))continue;
+    if(useModelStore&&item.name===model.file)continue;
     const digest=createHash('sha256');
     for await(const bytes of createReadStream(path.join(directory,item.name),{highWaterMark:1024*1024}))digest.update(bytes);
     if(digest.digest('hex')!==item.sha256)throw Error('Das lokale Sprachpaket ist beschädigt.');
    }
-   const model=MODELS[manifest.model];if(modelStore&&path.basename(modelStore.target)!==model.file)throw Error('Sprachmodell passt nicht zur Sprachlaufzeit.');
    if(!manifest.files.some(f=>f.name==='whisper-cli.exe')||!manifest.files.some(f=>f.name===model.file))throw Error('Das lokale Sprachpaket ist unvollständig.');
-   return {available:true,engine:model.label,modelFile:model.file,local:true,maxSeconds:MAX_SECONDS,languages:['de','en','auto']};
+   return {useModelStore,status:{available:true,engine:model.label,modelFile:model.file,local:true,maxSeconds:MAX_SECONDS,languages:['de','en','auto']}};
   })().catch(e=>{verified=null;throw e;});
   return verified;
  }
  async function status(){
   const progress=modelStore?.progress()??{};
-  try{const runtime=await checkRuntime();
-   if(modelStore&&!await modelStore.installed())return {...runtime,...progress,available:false,downloadRequired:true,error:'Für lokale Spracheingabe bitte das Sprachmodell herunterladen (574 MB).'};
+  try{const {useModelStore,status:runtime}=await checkRuntime();
+   if(useModelStore&&!await modelStore.installed())return {...runtime,...progress,available:false,downloadRequired:true,error:'Für lokale Spracheingabe bitte das Sprachmodell herunterladen (574 MB).'};
    return {...runtime,...progress,downloadRequired:false};
   }catch{return {...progress,available:false,local:true,maxSeconds:MAX_SECONDS,error:'Die Sprachlaufzeit fehlt oder ist beschädigt. Bitte Formnaro vollständig neu entpacken.'};}
  }
- async function downloadModel(){if(!modelStore)throw Error('Sprachmodell-Download ist in dieser Ausgabe nicht verfügbar.');const token=epoch;await checkRuntime();if(token!==epoch)throw Error('Download abgebrochen.');return modelStore.download();}
+ async function downloadModel(){const token=epoch;const {useModelStore}=await checkRuntime();if(!useModelStore)throw Error('Sprachmodell-Download ist in dieser Ausgabe nicht verfügbar.');if(token!==epoch)throw Error('Download abgebrochen.');return modelStore.download();}
 
  function cancel(requestId){if(active&&active.id===requestId){active.controller.abort();active.child?.kill();return true;}return false;}
  async function transcribe(args){
@@ -55,7 +56,8 @@ function createSpeechService({directory,tempDirectory=os.tmpdir(),spawnProcess=s
    const runtime=await status();if(!runtime.available)throw Error(runtime.error);abort();await fs.mkdir(tempDirectory,{recursive:true});
    temp=await fs.mkdtemp(path.join(tempDirectory,'formnaro-speech-'));const input=path.join(temp,'input.wav'),output=path.join(temp,'transcript');
    await fs.writeFile(input,audio.bytes);abort();
-   const argv=['-m',modelStore?.target??path.join(directory,runtime.modelFile),'-f',input,'-l',args.language??'de','-t',String(Math.max(1,Math.min(8,os.availableParallelism?.()??4))),'-ng','-otxt','-of',output,'-nt','-np','-sns'];
+   const {useModelStore}=await checkRuntime();
+   const argv=['-m',useModelStore?modelStore.target:path.join(directory,runtime.modelFile),'-f',input,'-l',args.language??'de','-t',String(Math.max(1,Math.min(8,os.availableParallelism?.()??4))),'-ng','-otxt','-of',output,'-nt','-np','-sns'];
    await new Promise((resolve,reject)=>{
     let timedOut=false,settled=false;const child=spawnProcess(path.join(directory,'whisper-cli.exe'),argv,{cwd:directory,windowsHide:true,shell:false,stdio:['ignore','ignore','ignore']});job.child=child;
     const timer=setTimeout(()=>{timedOut=true;child.kill();},timeoutMs);
