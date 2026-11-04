@@ -32,10 +32,10 @@ function createSpeechService({directory,tempDirectory=os.tmpdir(),spawnProcess=s
   })().catch(e=>{verified=null;throw e;});
   return verified;
  }
- async function status(){
+ async function status({verifyModel=false}={}){
   const progress=modelStore?.progress()??{};
   try{const {useModelStore,status:runtime}=await checkRuntime();
-   if(useModelStore&&!await modelStore.installed())return {...runtime,...progress,available:false,downloadRequired:true,error:'Für lokale Spracheingabe bitte das Sprachmodell herunterladen (574 MB).'};
+   if(useModelStore&&!await modelStore.installed({allowCached:!verifyModel}))return {...runtime,...progress,available:false,downloadRequired:true,error:'Für lokale Spracheingabe bitte das Sprachmodell herunterladen (574 MB).'};
    return {...runtime,...progress,downloadRequired:false};
   }catch{return {...progress,available:false,local:true,maxSeconds:MAX_SECONDS,error:'Die Sprachlaufzeit fehlt oder ist beschädigt. Bitte Formnaro vollständig neu entpacken.'};}
  }
@@ -53,7 +53,7 @@ function createSpeechService({directory,tempDirectory=os.tmpdir(),spawnProcess=s
     const timeout=setTimeout(()=>job.controller.abort(),Math.min(timeoutMs,60000));
     try{const result=await online.transcribe({bytes:audio.bytes,language:args.language??'de',signal:job.controller.signal});abort();return {...result,seconds:audio.seconds};}finally{clearTimeout(timeout);}
    }
-   const runtime=await status();if(!runtime.available)throw Error(runtime.error);abort();await fs.mkdir(tempDirectory,{recursive:true});
+   const runtime=await status({verifyModel:true});if(!runtime.available)throw Error(runtime.error);abort();await fs.mkdir(tempDirectory,{recursive:true});
    temp=await fs.mkdtemp(path.join(tempDirectory,'formnaro-speech-'));const input=path.join(temp,'input.wav'),output=path.join(temp,'transcript');
    await fs.writeFile(input,audio.bytes);abort();
    const {useModelStore}=await checkRuntime();
