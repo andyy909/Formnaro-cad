@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Formnaro ist eine lokale 3D-CAD-Werkstatt für Windows. Entdecke Beispiele und lade die aktuelle Vorabversion herunter.">
+  <meta name="description" content="Formnaro ist eine lokale 3D-CAD-Werkstatt für Windows: mit Übungsmodus, STL-zu-STEP-Konverter und beweglichen Baugruppen.">
   <title>Formnaro | 3D-CAD für Windows</title>
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <header class="wrap top">
     <a class="brand" href="./"><img src="logo.png" alt="" width="38" height="38">Formnaro</a>
     <nav aria-label="Sprache und Projekt">
+      <a href="ki/">KI-Anbindung</a>
       <a href="en/" lang="en" hreflang="en">English</a>
       <a href="https://github.com/andyy909/Formnaro-cad">GitHub ↗</a>
     </nav>
@@ -22,7 +23,11 @@
         <h1 id="title">3D-CAD für<br>deine Werkstatt.</h1>
         <p class="intro">Konstruiere Bauteile für Modellbau und 3D-Druck, repariere importierte Netze und setze Baugruppen in Bewegung. Formnaro läuft lokal unter Windows.</p>
         <a class="download" href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r2">Windows-Download ↗</a>
-        <p><a href="#profil">Was Formnaro auszeichnet ↓</a></p>
+        <nav class="hero-links" aria-label="Auf der Seite">
+          <a href="#uebung">Übungsmodus ↓</a>
+          <a href="#konverter">STL-Konverter ↓</a>
+          <a href="#bewegung">ATLAS-5 in Bewegung ↓</a>
+        </nav>
         <p class="version">0.126.0 Nightly r2 · Vorabversion · Windows x64</p>
       </div>
       <img class="hero-art" src="cad-hero-lagerbaugruppe.webp" width="2400" height="1060" alt="In Formnaro erstellte Explosionsansicht einer Lagerbaugruppe">
@@ -32,25 +37,93 @@
       <div class="features">
         <article><h3>Vier Wege zur Konstruktion</h3><p>Setze mit Easy Tinker Grundformen zusammen oder arbeite in Normal, Solid und Fusion mit detaillierteren Werkzeugen und Konstruktionsschritten.</p></article>
         <article><h3>Baugruppen in Bewegung</h3><p>Verbinde Teile mit Gelenken und Kopplungen. Beim 6:1-Beispielgetriebe bewegst du die Antriebswelle und die übrigen Räder folgen der Kopplung.</p></article>
-        <article><h3>Lokal arbeiten, KI bei Bedarf</h3><p>Die normale Modellierung funktioniert offline. Optional kannst du KI für Modellieraufträge, Referenzbilder und Bedienfragen einsetzen. Für Cloud-Anfragen brauchst du Internet und einen Anbieterzugang.</p></article>
+        <article><h3>Lokal arbeiten, KI bei Bedarf</h3><p>Die normale Modellierung funktioniert offline. Optional kannst du KI für Modellieraufträge, Referenzbilder und Bedienfragen einsetzen.</p><a class="feature-link" href="ki/">KI-Zugänge und Modelle ansehen →</a></article>
       </div>
+    </section>
+    <section class="start spotlight" aria-labelledby="bewegung">
+      <div class="spotlight-copy">
+        <p class="eyebrow">Beispielprojekt · Mechanik</p>
+        <h2 id="bewegung">ATLAS-5 in Bewegung</h2>
+        <p>Bei der fünfachsigen Portalfräse zeigt sich, was Gelenke und Kopplungen bringen: Der Werkzeugkopf verfährt, der Rundtisch dreht sich, und beim Schwenken der Wiege läuft das Ritzel im Verhältnis 48:20 mit.</p>
+        <ul class="facts" aria-label="Die Portalfräse in Zahlen">
+          <li><strong>144</strong> Bauteile</li><li><strong>78</strong> Gelenke</li><li><strong>5</strong> Achsen</li>
+        </ul>
+        <p class="fine">Die Aufnahme zeigt die Gelenkbewegung in Formnaro. Am Beispielmodell kannst du die Achsen selbst verstellen.</p>
+        <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad">Bearbeitbares Beispiel laden ↗</a>
+      </div>
+      <figure class="clip clip-atlas">
+        <video controls playsinline preload="none" poster="atlas-5-motion.webp" width="800" height="624" aria-label="ATLAS-5: Bewegung der fünf Achsen und des gekoppelten Ritzels">
+          <source src="atlas-5-motion.mp4" type="video/mp4">
+          <a href="atlas-5-motion.mp4">ATLAS-5-Video öffnen</a>
+        </video>
+        <figcaption>Querfahrt, Tischvorschub, Werkzeugzustellung, Schwenkwiege und Rundtisch.</figcaption>
+      </figure>
+    </section>
+    <section class="start spotlight" aria-labelledby="uebung">
+      <div class="spotlight-copy">
+        <p class="eyebrow">Übungsmodus · Schritt für Schritt</p>
+        <h2 id="uebung">Sieh, wie ein Modell entsteht.</h2>
+        <p>Gib der KI eine Aufgabe, zum Beispiel drei Zahnräder zu bauen und zu koppeln. Im getrennten Übungsfenster zeigt dir ein sichtbarer Mauszeiger Schritt für Schritt, wo du in Formnaro klickst, welche Werkzeuge und Dialoge du öffnest und welche Werte du eingibst.</p>
+        <p>Die Vorführung nutzt dieselben Bedienelemente wie beim eigenen Konstruieren. Du kannst anhalten, dir einen Schritt genauer ansehen und ihn anschließend selbst nachmachen.</p>
+        <p class="callout"><strong>Ausblick aus der Entwicklung:</strong> Wir haben auch Übungen auf einer Kopie eines vorhandenen Projekts erprobt. Du entscheidest am Ende, ob du das Ergebnis übernimmst. Bis dahin bleibt dein Projekt unverändert.</p>
+      </div>
+      <figure class="clip">
+        <video controls playsinline preload="none" poster="practice-gears.webp" width="1200" height="676" aria-label="Übungsvideo: Drei Zahnräder erstellen, einrasten und gekoppelt bewegen">
+          <source src="practice-gears.mp4" type="video/mp4">
+          <a href="practice-gears.mp4">Zahnradübung als Video öffnen</a>
+        </video>
+        <figcaption>Eine echte Bedienfolge aus einem zuvor erstellten Plan: Zahnräder bauen, einrasten lassen und gemeinsam bewegen. Aufnahme aus einem Entwicklungsstand.</figcaption>
+      </figure>
+    </section>
+    <section class="start converter" aria-labelledby="konverter">
+      <p class="eyebrow">STL to CAD · STL → STEP</p>
+      <h2 id="konverter">Ein STL-Modell weiterkonstruieren.</h2>
+      <p>Du hast einen Halter als STL und willst eine weitere Bohrung setzen? Eine STL beschreibt die Oberfläche mit Dreiecken. Der lokale Konverter versucht, daraus wieder CAD-Flächen wie Ebenen und Zylinder aufzubauen. So kannst du geeignete Modelle als Volumenkörper weiterbearbeiten.</p>
+      <ol class="converter-steps">
+        <li><span class="step-no" aria-hidden="true">01</span><h3>Flächen erkennen</h3><p>Die Vorschau färbt zusammengehörige Dreiecke ein. Bei Bedarf kannst du Flächenbereiche teilen, zusammenführen oder schützen.</p></li>
+        <li><span class="step-no" aria-hidden="true">02</span><h3>Ergebnis vergleichen</h3><p>Lege Original und Ergebnis übereinander und prüfe die angezeigten Abweichungen in Millimetern. Der Konverter prüft die erzeugte STEP auch durch erneutes Einlesen.</p></li>
+        <li><span class="step-no" aria-hidden="true">03</span><h3>Als CAD weiterarbeiten</h3><p>Speichere das Ergebnis als STEP oder übernimm es nach der Vorschau direkt in dein Formnaro-Projekt. Die Konvertierung läuft lokal.</p></li>
+      </ol>
+      <p class="fine">Die ursprünglichen Skizzen und Konstruktionsschritte stecken nicht in der STL. Offene oder beschädigte Netze müssen gegebenenfalls zuerst repariert werden.</p>
+      <a href="https://github.com/andyy909/Formnaro-cad/blob/main/docs/GEMEINSAMER-KONVERTER.md">Konverter-Anleitung auf GitHub ↗</a>
     </section>
     <section class="start" aria-labelledby="beispiele">
       <h2 id="beispiele">Vier Modi in der Praxis</h2>
+      <p>Aufgenommen mit einer Entwicklungsversion von Formnaro. Klicke auf ein Bild, um die Werkzeugleiste in voller Größe zu sehen.</p>
       <div class="gallery">
-        <figure><a href="formnaro-easy-lagerhalter-dark.png"><img loading="lazy" src="formnaro-easy-lagerhalter-dark.png" alt="Lagerhalter und Formenpalette im Easy-Tinker-Modus"></a><figcaption><strong>Easy Tinker</strong> · Lagerhalter</figcaption></figure>
-        <figure><a href="formnaro-normal-schraubstock-dark.png"><img loading="lazy" src="formnaro-normal-schraubstock-dark.png" alt="Präzisionsschraubstock im Normal-Modus"></a><figcaption><strong>Normal</strong> · Präzisionsschraubstock</figcaption></figure>
-        <figure><a href="atlas-5.png"><img loading="lazy" src="atlas-5.png" alt="ATLAS-5-Portalfräse im Solid-Modus"></a><figcaption><strong>Solid</strong> · Fünfachsige Portalfräse ATLAS-5</figcaption></figure>
-        <figure><a href="formnaro-fusion-getriebe.png"><img loading="lazy" src="formnaro-fusion-getriebe.png" alt="Zweistufiges Schräggetriebe mit Konstruktionsschritten im Fusion-Modus"></a><figcaption><strong>Fusion</strong> · Zweistufiges Schräggetriebe</figcaption></figure>
+        <figure>
+          <a class="gallery-image" href="gallery-easy.webp"><img loading="lazy" src="gallery-easy.webp" width="1538" height="817" alt="Lagerhalter und Formenpalette in Easy Tinker im dunklen Design"></a>
+          <figcaption><strong>Easy Tinker</strong> · Lagerhalter<span class="gallery-theme">Dunkel</span>
+            <a class="gallery-model" href="modelle/lagerhalter.ocad" download aria-label="Beispielmodell (.ocad) · Lagerhalter">Beispielmodell (.ocad) ↗</a>
+          </figcaption>
+        </figure>
+        <figure>
+          <a class="gallery-image" href="gallery-normal.webp"><img loading="lazy" src="gallery-normal.webp" width="1538" height="817" alt="Präzisionsschraubstock und Werkzeugleiste im dunklen Normal-Modus"></a>
+          <figcaption><strong>Normal</strong> · Präzisionsschraubstock<span class="gallery-theme">Dunkel</span>
+            <a class="gallery-model" href="modelle/solid-schraubstock.ocad" download aria-label="Beispielmodell (.ocad) · Präzisionsschraubstock">Beispielmodell (.ocad) ↗</a>
+          </figcaption>
+        </figure>
+        <figure>
+          <a class="gallery-image" href="gallery-solid.webp"><img loading="lazy" src="gallery-solid.webp" width="1538" height="817" alt="ATLAS-5 und die neue Solid-Werkzeugleiste im hellen Design"></a>
+          <figcaption><strong>Solid</strong> · ATLAS-5-Portalfräse<span class="gallery-theme">Hell</span>
+            <a class="gallery-model" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad" aria-label="Beispielmodell (.ocad) · ATLAS-5-Portalfräse">Beispielmodell (.ocad) ↗</a>
+          </figcaption>
+        </figure>
+        <figure>
+          <a class="gallery-image" href="gallery-fusion.webp"><img loading="lazy" src="gallery-fusion.webp" width="1538" height="817" alt="Schräggetriebe und die neue Fusion-Werkzeugleiste im hellen Design"></a>
+          <figcaption><strong>Fusion</strong> · Schräggetriebe 6:1<span class="gallery-theme">Hell</span>
+            <a class="gallery-model" href="modelle/schraeggetriebe-6zu1.ocad" download aria-label="Beispielmodell (.ocad) · Schräggetriebe 6:1">Beispielmodell (.ocad) ↗</a>
+          </figcaption>
+        </figure>
       </div>
     </section>
     <section class="start" aria-labelledby="funktionen">
       <h2 id="funktionen">Werkzeuge für dein Projekt</h2>
       <ul class="tools">
-        <li><strong>Konstruieren</strong><span>Skizzen, Bohrungen, Rundungen, Loft und Sweep. Maße über Parameter und Formeln steuern.</span></li>
-        <li><strong>Netze bearbeiten</strong><span>Importierte Modelle prüfen, reparieren und gezielt verändern.</span></li>
-        <li><strong>Zeichnungen und Stücklisten</strong><span>Ansichten, Schnitte und Bemaßungen ausgeben. Baugruppen mit Material, Masse und Explosionsansichten dokumentieren.</span></li>
-        <li><strong>Modelle austauschen</strong><span>STEP, STL, OBJ, 3MF und GLB/glTF für die Weiterarbeit mit anderen Werkzeugen.</span></li>
+        <li><strong>Konstruieren</strong><span>Zeichne bemaßte Skizzen und extrudiere sie zu Körpern oder Ausschnitten. Setze Bohrungen, Rundungen, Fasen und Muster. Mit Loft verbindest du verschiedene Profile, mit Sweep führst du ein Profil entlang eines Pfads. Maße lassen sich über Parameter und Formeln steuern.</span></li>
+        <li><strong>Netze bearbeiten</strong><span>Finde offene Kanten in importierten Netzen und schließe geeignete Löcher. Wähle einzelne Dreiecke oder ganze Flächenbereiche aus, reduziere die Dreieckszahl oder glätte ausgewählte Stellen. Du kannst Bereiche vor Änderungen schützen und das Ergebnis mit dem Original vergleichen.</span></li>
+        <li><strong>Zeichnungen und Stücklisten</strong><span>Erstelle Ansichten, Schnitte und Bemaßungen und gib Zeichnungen als PDF, SVG oder DXF aus. Halte Material und Masse in der CSV-Stückliste fest und zeige den Aufbau einer Baugruppe in einer Explosionsansicht.</span></li>
+        <li><strong>Modelle austauschen</strong><span>Nutze STEP für den Austausch von CAD-Körpern, STL und 3MF für den 3D-Druck sowie OBJ und GLB/glTF für die Weiterarbeit mit Netzmodellen und 3D-Ansichten.</span></li>
       </ul>
     </section>
     <section class="start" aria-labelledby="start">

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Connect AI to Formnaro through browser sign-in, a provider API, or local MCP for external agents.">
+  <title>AI connections and model selection | Formnaro</title>
+  <link rel="alternate" hreflang="de" href="../../ki/">
+  <link rel="stylesheet" href="../../style.css?v=8">
+</head>
+<body>
+  <header class="wrap top">
+    <a class="brand" href="../"><img src="../../logo.png" alt="" width="38" height="38">Formnaro</a>
+    <nav aria-label="Language and project">
+      <a href="../">Home</a>
+      <a href="../../ki/" lang="de" hreflang="de">Deutsch</a>
+      <a href="https://github.com/andyy909/Formnaro-cad">GitHub ↗</a>
+    </nav>
+  </header>
+  <main class="wrap">
+    <section class="hero ai-hero" aria-labelledby="title">
+      <div>
+        <p class="eyebrow">Formnaro · AI and CAD</p>
+        <h1 id="title">Connect your AI to Formnaro</h1>
+        <p class="intro">Get help designing a part, analyzing a reference photo, or learning a modeling step. Sign in with an existing account, set up a provider API, or connect your own agent through MCP.</p>
+        <nav class="hero-links" aria-label="On this page">
+          <a href="#access">Connection options ↓</a>
+          <a href="#models">Model examples ↓</a>
+          <a href="#workflow">How it works ↓</a>
+        </nav>
+      </div>
+      <figure class="ai-menu">
+        <a class="gallery-image" href="../../ai-model-menu.webp"><img src="../../ai-model-menu.webp" width="960" height="781" alt="Formnaro model picker with Text, CAD, and Photo CAD filters, model search, image support, and reasoning effort"></a>
+        <figcaption>Model picker in development build 0.127.0-r9 with an example catalog. The menu shows image support and known API rates. Selected models also show results from Formnaro practice runs.</figcaption>
+      </figure>
+    </section>
+    <section class="start" aria-labelledby="access">
+      <h2 id="access">Three ways to connect</h2>
+      <div class="features">
+        <article>
+          <h3>Sign in through your browser</h3>
+          <p>Choose the ChatGPT connection in <strong>Settings → AI / API</strong> and sign in with your existing account. Mistral Vibe also offers browser sign-in once Vibe is installed. Account sign-in and provider APIs are separate connections.</p>
+        </article>
+        <article>
+          <h3>Use a provider API</h3>
+          <p>Add an API key for OpenAI, Mistral, DeepSeek, Claude, Gemini, Grok, Groq, Qwen, Kimi, GLM, or MiniMax. You can also enter a compatible endpoint, for example to use a model running locally.</p>
+        </article>
+        <article>
+          <h3>Connect Codex or another agent via MCP</h3>
+          <p>Sign in to Codex as usual and add the local Formnaro MCP adapter. Other clients that support local MCP, such as OpenCode, can use Formnaro tools the same way. The agent uses its own model and provider connection.</p>
+        </article>
+      </div>
+      <p><a href="https://github.com/andyy909/Formnaro-cad/blob/main/ai/LIES-MICH-KI.txt">Set up the local interface (German) ↗</a></p>
+    </section>
+    <section class="start" aria-labelledby="models">
+      <h2 id="models">Which models can I choose?</h2>
+      <p>Your choices depend on the connection you set up and what your account can access. The model picker shown above lets you search by provider or model and switch between Text, CAD, and Photo CAD. For reference photos, choose a model that accepts images.</p>
+      <ul class="tools">
+        <li><strong>GPT‑6 Astra and GPT‑6.1 Sol</strong><span>OpenAI models with text and image input. Astra is designed for demanding tasks, while Sol balances capability and cost. <a href="https://developers.openai.com/api/docs/models">OpenAI model catalog ↗</a></span></li>
+        <li><strong>Mistral Large 4</strong><span>Accepts images for tasks involving reference photos and supports tool calls. Available through the Mistral API or Vibe, depending on your access. <a href="https://docs.mistral.ai/models/mistral-large-4">Model details from Mistral ↗</a></span></li>
+        <li><strong>DeepSeek V4 Pro</strong><span>A text model for CAD tasks described with dimensions, components, and steps. <a href="https://api-docs.deepseek.com/">DeepSeek models ↗</a></span></li>
+        <li><strong>DeepSeek V4.1 Flash</strong><span>An option that accepts images for reference photos and text for CAD tasks. <a href="https://api-docs.deepseek.com/">DeepSeek models ↗</a></span></li>
+      </ul>
+    </section>
+    <section class="start" aria-labelledby="workflow">
+      <h2 id="workflow">From request to CAD preview</h2>
+      <p>Ask for a plate with a centered hole, for example. The Formnaro chat creates a preview you can inspect and apply. An agent with the local interface enabled can read the scene, calculate previews, check dimensions, and apply the requested changes.</p>
+      <p>Formnaro runs the CAD calculations locally. When you use a cloud model, your message and the context needed for the task go to the selected provider.</p>
+      <a href="../#uebung">See practice mode in action ↗</a>
+    </section>
+  </main>
+  <footer class="wrap foot"><a href="../">Back to Formnaro home</a><a href="https://github.com/andyy909/Formnaro-cad/releases">All releases ↗</a></footer>
+</body>
+</html>

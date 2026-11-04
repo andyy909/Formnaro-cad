@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Formnaro is a local 3D CAD workshop for Windows. Explore examples and download the current preview.">
+  <meta name="description" content="Formnaro is a local 3D CAD workshop for Windows, with practice mode, STL-to-STEP conversion, and moving assemblies.">
   <title>Formnaro | 3D CAD for Windows</title>
-  <link rel="stylesheet" href="../style.css?v=5">
+  <link rel="stylesheet" href="../style.css?v=8">
 </head>
 <body>
   <header class="wrap top">
-    <a class="brand" href=".././"><img src="../logo.png" alt="" width="38" height="38">Formnaro</a>
+    <a class="brand" href="../"><img src="../logo.png" alt="" width="38" height="38">Formnaro</a>
     <nav aria-label="Language and project">
+      <a href="ai/">AI connections</a>
       <a href="../" lang="de" hreflang="de">Deutsch</a>
       <a href="https://github.com/andyy909/Formnaro-cad">GitHub ↗</a>
     </nav>
@@ -22,7 +23,11 @@
         <h1 id="title">3D CAD for<br>your workshop.</h1>
         <p class="intro">Design parts for model making and 3D printing, repair imported meshes, and set assemblies in motion. Formnaro runs locally on Windows.</p>
         <a class="download" href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r2">Windows download ↗</a>
-        <p><a href="#profil">What sets Formnaro apart ↓</a></p>
+        <nav class="hero-links" aria-label="On this page">
+          <a href="#uebung">Practice mode ↓</a>
+          <a href="#konverter">STL converter ↓</a>
+          <a href="#bewegung">ATLAS-5 in motion ↓</a>
+        </nav>
         <p class="version">0.126.0 Nightly r2 · Preview release · Windows x64</p>
       </div>
       <img class="hero-art" src="../cad-hero-lagerbaugruppe.webp" width="2400" height="1060" alt="Exploded view of a bearing assembly created in Formnaro">
@@ -32,25 +37,93 @@
       <div class="features">
         <article><h3>Four ways to design</h3><p>Combine basic shapes in Easy Tinker or use more detailed tools and modeling steps in Normal, Solid, and Fusion.</p></article>
         <article><h3>Assemblies in motion</h3><p>Connect parts with joints and couplings. In the 6:1 gearbox example, moving the input shaft drives the other gears through their couplings.</p></article>
-        <article><h3>Local modeling with optional AI</h3><p>Model offline and optionally use AI for modeling tasks, reference images, and help with the interface. Cloud requests require internet access and a provider account.</p></article>
+        <article><h3>Local modeling with optional AI</h3><p>Model offline and optionally use AI for modeling tasks, reference images, and help with the interface.</p><a class="feature-link" href="ai/">Explore AI connections and models →</a></article>
       </div>
+    </section>
+    <section class="start spotlight" aria-labelledby="bewegung">
+      <div class="spotlight-copy">
+        <p class="eyebrow">Sample project · Mechanisms</p>
+        <h2 id="bewegung">ATLAS-5 in motion</h2>
+        <p>This five-axis gantry mill shows what joints and couplings can do. The tool head travels, the rotary table turns, and the pinion follows the tilting cradle through a 48:20 gear coupling.</p>
+        <ul class="facts" aria-label="The mill in numbers">
+          <li><strong>144</strong> parts</li><li><strong>78</strong> joints</li><li><strong>5</strong> axes</li>
+        </ul>
+        <p class="fine">The clip shows the joints moving in Formnaro. Open the sample project to move the axes yourself.</p>
+        <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad">Download the editable sample ↗</a>
+      </div>
+      <figure class="clip clip-atlas">
+        <video controls playsinline preload="none" poster="../atlas-5-motion.webp" width="800" height="624" aria-label="ATLAS-5: motion of the five axes and coupled pinion">
+          <source src="../atlas-5-motion.mp4" type="video/mp4">
+          <a href="../atlas-5-motion.mp4">Open the ATLAS-5 video</a>
+        </video>
+        <figcaption>Cross travel, table feed, tool feed, tilting cradle, and rotary table.</figcaption>
+      </figure>
+    </section>
+    <section class="start spotlight" aria-labelledby="uebung">
+      <div class="spotlight-copy">
+        <p class="eyebrow">Practice mode · Step by step</p>
+        <h2 id="uebung">Watch how it’s done.</h2>
+        <p>Give the AI a task, such as building and coupling three gears. In a separate practice window, a visible mouse pointer shows you where to click in Formnaro, which tools and dialogs to open, and which values to enter, step by step.</p>
+        <p>The demonstration uses the same controls you use when modeling. Pause to take a closer look at any step, then try it yourself.</p>
+        <p class="callout"><strong>Development preview:</strong> We’ve also tested running an exercise on a copy of an existing project. You decide whether to accept the result at the end. Until then, your project stays as it was.</p>
+      </div>
+      <figure class="clip">
+        <video controls playsinline preload="none" poster="../practice-gears.webp" width="1200" height="676" aria-label="Practice video: create, snap together, and drive three coupled gears">
+          <source src="../practice-gears.mp4" type="video/mp4">
+          <a href="../practice-gears.mp4">Open the gear exercise video</a>
+        </video>
+        <figcaption>A real sequence replayed from an existing plan: build three gears, snap them into place, and drive them together. Recorded in a development build.</figcaption>
+      </figure>
+    </section>
+    <section class="start converter" aria-labelledby="konverter">
+      <p class="eyebrow">STL to CAD · STL → STEP</p>
+      <h2 id="konverter">Keep designing from an STL.</h2>
+      <p>Have a bracket as an STL and need to add another hole? An STL describes the surface with triangles. The local converter tries to reconstruct CAD surfaces such as planes and cylinders, so you can edit suitable models as solids.</p>
+      <ol class="converter-steps">
+        <li><span class="step-no" aria-hidden="true">01</span><h3>Recognize surfaces</h3><p>The preview groups triangles by color. You can split, merge, or protect surface regions as needed.</p></li>
+        <li><span class="step-no" aria-hidden="true">02</span><h3>Compare the result</h3><p>Overlay the original and the result to inspect the displayed deviations in millimeters. The converter also checks the resulting STEP by reading it back.</p></li>
+        <li><span class="step-no" aria-hidden="true">03</span><h3>Continue in CAD</h3><p>Save the result as STEP or preview it before bringing it into your Formnaro project. Conversion runs locally.</p></li>
+      </ol>
+      <p class="fine">The STL does not contain the original sketches or feature history. Open or damaged meshes may need repair first.</p>
+      <a href="https://github.com/andyy909/Formnaro-cad/blob/main/docs/GEMEINSAMER-KONVERTER.md">Converter guide on GitHub (German) ↗</a>
     </section>
     <section class="start" aria-labelledby="beispiele">
       <h2 id="beispiele">Four modes in practice</h2>
+      <p>Captured in a Formnaro development build. Click an image to see its toolbar at full size.</p>
       <div class="gallery">
-        <figure><a href="../formnaro-easy-lagerhalter-dark.png"><img loading="lazy" src="../formnaro-easy-lagerhalter-dark.png" alt="Bearing bracket and shape palette in Easy Tinker mode"></a><figcaption><strong>Easy Tinker</strong> · Bearing bracket</figcaption></figure>
-        <figure><a href="../formnaro-normal-schraubstock-dark.png"><img loading="lazy" src="../formnaro-normal-schraubstock-dark.png" alt="Precision vise in Normal mode"></a><figcaption><strong>Normal</strong> · Precision vise</figcaption></figure>
-        <figure><a href="../atlas-5.png"><img loading="lazy" src="../atlas-5.png" alt="ATLAS-5 gantry mill in Solid mode"></a><figcaption><strong>Solid</strong> · ATLAS-5 five-axis gantry mill</figcaption></figure>
-        <figure><a href="../formnaro-fusion-getriebe.png"><img loading="lazy" src="../formnaro-fusion-getriebe.png" alt="Two-stage helical gearbox with modeling steps in Fusion mode"></a><figcaption><strong>Fusion</strong> · Two-stage helical gearbox</figcaption></figure>
+        <figure>
+          <a class="gallery-image" href="../gallery-easy.webp"><img loading="lazy" src="../gallery-easy.webp" width="1538" height="817" alt="Bearing bracket and shape palette in Easy Tinker with the dark theme"></a>
+          <figcaption><strong>Easy Tinker</strong> · Bearing bracket<span class="gallery-theme">Dark</span>
+            <a class="gallery-model" href="../modelle/lagerhalter.ocad" download aria-label="Sample model (.ocad) · Bearing bracket">Sample model (.ocad) ↗</a>
+          </figcaption>
+        </figure>
+        <figure>
+          <a class="gallery-image" href="../gallery-normal.webp"><img loading="lazy" src="../gallery-normal.webp" width="1538" height="817" alt="Precision vise and tools in Normal mode with the dark theme"></a>
+          <figcaption><strong>Normal</strong> · Precision vise<span class="gallery-theme">Dark</span>
+            <a class="gallery-model" href="../modelle/solid-schraubstock.ocad" download aria-label="Sample model (.ocad) · Precision vise">Sample model (.ocad) ↗</a>
+          </figcaption>
+        </figure>
+        <figure>
+          <a class="gallery-image" href="../gallery-solid.webp"><img loading="lazy" src="../gallery-solid.webp" width="1538" height="817" alt="ATLAS-5 and the new Solid toolbar with the light theme"></a>
+          <figcaption><strong>Solid</strong> · ATLAS-5 gantry mill<span class="gallery-theme">Light</span>
+            <a class="gallery-model" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad" aria-label="Sample model (.ocad) · ATLAS-5 gantry mill">Sample model (.ocad) ↗</a>
+          </figcaption>
+        </figure>
+        <figure>
+          <a class="gallery-image" href="../gallery-fusion.webp"><img loading="lazy" src="../gallery-fusion.webp" width="1538" height="817" alt="Helical gearbox and the new Fusion toolbar with the light theme"></a>
+          <figcaption><strong>Fusion</strong> · 6:1 helical gearbox<span class="gallery-theme">Light</span>
+            <a class="gallery-model" href="../modelle/schraeggetriebe-6zu1.ocad" download aria-label="Sample model (.ocad) · 6:1 helical gearbox">Sample model (.ocad) ↗</a>
+          </figcaption>
+        </figure>
       </div>
     </section>
     <section class="start" aria-labelledby="funktionen">
       <h2 id="funktionen">Tools for your project</h2>
       <ul class="tools">
-        <li><strong>Design parts</strong><span>Create sketches, holes, fillets, lofts, and sweeps. Control dimensions with parameters and formulas.</span></li>
-        <li><strong>Edit meshes</strong><span>Inspect, repair, and modify imported meshes.</span></li>
-        <li><strong>Drawings and bills of materials</strong><span>Create views, sections, and dimensions. Document assemblies with materials, mass, and exploded views.</span></li>
-        <li><strong>Exchange models</strong><span>Use STEP, STL, OBJ, 3MF, and GLB/glTF to work with other tools.</span></li>
+        <li><strong>Design parts</strong><span>Draw dimensioned sketches and extrude them into solids or cutouts. Add holes, fillets, chamfers, and patterns. Loft between profiles or sweep a profile along a path. Control dimensions with parameters and formulas.</span></li>
+        <li><strong>Edit meshes</strong><span>Find open edges in imported meshes and close suitable holes. Select individual triangles or entire surface regions, reduce the triangle count, or smooth selected areas. Protect regions from changes and compare the result with the original.</span></li>
+        <li><strong>Drawings and bills of materials</strong><span>Create views, sections, and dimensions, then export drawings as PDF, SVG, or DXF. Record material and mass in a CSV bill of materials and show how an assembly fits together in an exploded view.</span></li>
+        <li><strong>Exchange models</strong><span>Use STEP to exchange CAD solids, STL and 3MF for 3D printing, and OBJ and GLB/glTF to continue working with meshes and 3D views.</span></li>
       </ul>
     </section>
     <section class="start" aria-labelledby="start">
