@@ -11,9 +11,9 @@ The portable Windows preview **0.125.0-r36** adds native modelling improvements,
 
 ## Nightly
 
-[Formnaro 0.126.0 Nightly r2](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r2) is the recommended Nightly. It restores support for Format 32 project files and autosaves. Its targeted checks covered recovery after editing and restarting, OCAD and FNPACK round trips, STEP and STL exchange, and the updated AI chat controls. Full release acceptance and a soak test are pending.
+[Formnaro 0.127.0 Nightly r9](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r9) adds a compact AI chat, a separate settings window, selected-part context for large projects, and practice on a project copy. The Windows package passed targeted checks for adoption, Undo and Redo. The verified preview above remains available.
 
-- [Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.126.0-r2/Formnaro-v0.126.0-r2-Nightly-Windows-x64.zip)
-- [Release notes and SHA-256 checksum](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r2)
+- [Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r9/Formnaro-v0.127.0-r9-Nightly-Windows-x64.zip)
+- [Release notes and SHA-256 checksum](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r9)
 
-The GitHub tag points to the public r36 reference commit. GitHub's generated source archives therefore contain the r36 reference sources. The matching CAD runtime source assets are available from the r36 release.
+The tag points to the public repository reference commit. The Windows ZIP is the Nightly application. Sources for the bundled CAD runtimes are linked in the [r36 release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36).

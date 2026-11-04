@@ -22,7 +22,7 @@ Formnaro is portable on Windows x64. The modelling workspace works offline.
 | Build | Best for | Download |
 | --- | --- | --- |
 | **0.125.0-r36** · verified preview | The most thoroughly checked public package | **[Windows ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** · [Checks and matching sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) |
-| **0.126.0 Nightly r2** · test build | Trying the new chat and modelling controls with Format 32 recovery restored | **[Windows ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.126.0-r2/Formnaro-v0.126.0-r2-Nightly-Windows-x64.zip)** · [Nightly release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r2) |
+| **0.127.0 Nightly r9** · test build | Trying the compact AI chat, selected-part context, and practice mode on a project copy | **[Windows ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r9/Formnaro-v0.127.0-r9-Nightly-Windows-x64.zip)** · [Nightly release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r9) |
 
 Extract the whole application ZIP into its own folder and start **Formnaro.exe**. FreeCAD and Python are bundled. Source archives are separate downloads. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
