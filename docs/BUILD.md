@@ -36,11 +36,15 @@ Perform these steps from the repository root after `npm ci`:
    separately in the application when a user requests it.
 3. Prepare the converter folder named by
    [converter/provenance.json](../converter/provenance.json) under `converter/`.
-   The current folder is `runtime-v010-security`. Use the matching complete
+   The current folder is `runtime-v010-minimal`. Use the matching complete
    build runtime with the pinned executable, its dependencies and licenses.
    See the [converter build notes](../converter/README.md) and its
    [dependency lock](../converter/uv.lock) for rebuilding. A fresh converter
    build may produce different bytes and requires new provenance and verification.
+   The minimal freeze uses `converter/headless-vtk/vtk.py` and omits optional
+   viewer and JIT backends. Use `scripts/prepare-minimal-converter.py` to verify
+   a new freeze against the original security-build binaries and preserve their
+   license notices.
 4. Install a local German Windows system voice for the synthetic speech test.
 
 ## Run the release checks and create a package

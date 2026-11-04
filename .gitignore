@@ -8,6 +8,7 @@ converter/runtime-v010-build/
 converter/runtime-v010-pyinstaller/
 converter/runtime-v010-security-build/
 converter/runtime-v010-security/
+converter/runtime-v010-minimal/
 converter/.venv/
 converter/*.egg-info/
 release*/

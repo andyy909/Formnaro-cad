@@ -146,8 +146,8 @@
   },
   "bridgeProtocol": 2,
   "bridgeSourceSha256": "0ac0284c50976980a31685b477bd31d5d46a36734742401ff5ff14242b73c70b",
-  "headlessExeSha256": "98c54301f00cfda714cd771b27019ea2398177ed3803ad86fb01d08eb2a67c2f",
-  "runtimeDirectory": "runtime-v010-security",
+  "headlessExeSha256": "7ab28f0d75f61a9e0f80111f5f5f2c8543fae7ac4f3193d25cdb9b754d7719ea",
+  "runtimeDirectory": "runtime-v010-minimal",
   "runtimeSecurity": {
     "previousBuild": {
       "headlessExeSha256": "0a82abeca93a30f5ddbdf3698dd094326bf247aba87b25e958a033fc922fd464",
@@ -173,5 +173,27 @@
       }
     ],
     "scope": "Dependency rebuild; engine Python modules and bridge unchanged. Only dependency configuration pins changed. Separate runtime and dependency metadata/licenses retained."
+  },
+  "portableMinimal": {
+    "previous": {
+      "runtimeDirectory": "runtime-v010-security",
+      "headlessExeSha256": "98c54301f00cfda714cd771b27019ea2398177ed3803ad86fb01d08eb2a67c2f"
+    },
+    "engineSourcesUnchanged": true,
+    "dependencyBinariesIdenticalToBaseline": true,
+    "python": "3.13.3",
+    "pyinstaller": "6.22.3",
+    "versions": {
+      "cadquery": "2.8.0",
+      "cadquery-ocp": "7.9.3.1.1",
+      "vtk": "9.6.2",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "pillow": "13.0.0",
+      "setuptools": "84.2.1"
+    },
+    "headlessVtkBridgeSHA256": "ca65392a4481b8d3fef220f6c8e349a2c71bae2d6d549a0a732675583cefcb90",
+    "freezeSpecSHA256": "9d483391f3e2ed078fc9b6a297782ccf69e67d002599863fd30fe80acb8f4f59",
+    "scope": "Fixed headless converter protocol only. General VTK umbrella replaced by retained real core types; direct CadQuery VTK imports use normal dependency hooks. No general viewer/VR/JIT API. Engine algorithms unchanged."
   }
 }
