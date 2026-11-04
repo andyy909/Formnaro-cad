@@ -3,10 +3,11 @@ const MODEL=Object.freeze({file:'ggml-large-v3-turbo-q5_0.bin',bytes:574041195,s
 function createModelStore({directory,model=MODEL,fetchImpl=globalThis.fetch,timeoutMs=30*60*1000}={}){
  let job=null,lastError=null,verified=null;
  const target=path.join(directory,model.file);
- async function installed(){
+ async function installed({allowCached=false}={}){
   try{
    const stat=await fs.lstat(target);if(!stat.isFile()||stat.isSymbolicLink()||stat.size!==model.bytes)return false;
-   const key=stat.size+':'+stat.mtimeMs+':'+stat.ctimeMs;if(verified===key)return true;
+   const key=stat.size+':'+stat.mtimeMs+':'+stat.ctimeMs;if(allowCached&&verified===key)return true;
+   verified=null;
    const hash=createHash('sha256');for await(const chunk of createReadStream(target))hash.update(chunk);
    if(hash.digest('hex')!==model.sha256)return false;verified=key;return true;
   }catch{return false;}
