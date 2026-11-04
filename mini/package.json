@@ -7,7 +7,7 @@
   "main": "electron.cjs",
   "author": "Andreas Klisch",
   "license": "MIT",
-  "description": "Eigenst\u00e4ndiger lokaler Netz-Modellierer f\u00fcr den 3D-Druck",
+  "description": "Eigenständiger lokaler Netz-Modellierer für den 3D-Druck",
   "scripts": {
     "build": "vite build --config vite.config.js",
     "start": "electron .",
@@ -18,13 +18,18 @@
     "test:touch": "node --test tests/touch-navigation.test.mjs",
     "test:android": "node scripts/android-smoke.mjs"
   },
-  "dependencies": {},
   "devDependencies": {
-    "fflate": "0.8.3",
-    "three": "0.186.1",
-    "manifold-3d": "3.5.4",
-    "vite": "8.3.4",
+    "@electron/packager": "20.3.0",
     "electron": "44.9.3",
-    "@electron/packager": "20.3.0"
+    "fflate": "0.8.3",
+    "manifold-3d": "3.5.4",
+    "three": "0.186.1",
+    "vite": "8.3.4"
+  },
+  "overrides": {
+    "@electron/asar": {
+      "glob": "14.0.2",
+      "minimatch": "11.0.1"
+    }
   }
 }

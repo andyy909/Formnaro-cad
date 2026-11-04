@@ -7,7 +7,7 @@
   "main": "electron.cjs",
   "author": "Andreas Klisch",
   "license": "MIT",
-  "description": "Eigenst\u00e4ndiger kompakter nativer CAD-Modellierer mit STEP und optionaler KI",
+  "description": "Eigenständiger kompakter nativer CAD-Modellierer mit STEP und optionaler KI",
   "scripts": {
     "build": "vite build --config vite.config.js",
     "start": "electron .",
@@ -15,7 +15,6 @@
     "test:desktop": "node tests/desktop.cjs",
     "package": "node scripts/package.mjs"
   },
-  "dependencies": {},
   "devDependencies": {
     "@electron/packager": "20.3.0",
     "electron": "44.9.3",
@@ -23,5 +22,11 @@
     "opentype.js": "2.0.0",
     "three": "0.186.1",
     "vite": "8.3.4"
+  },
+  "overrides": {
+    "@electron/asar": {
+      "glob": "14.0.2",
+      "minimatch": "11.0.1"
+    }
   }
 }
