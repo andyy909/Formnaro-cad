@@ -22,7 +22,7 @@ if(!resume){
 }else runtime=path.join(out,meta.productName+'-win32-x64');
 const exe=path.join(runtime,meta.productName+'.exe'),asar=path.join(runtime,'resources/app.asar');
 function files(folder,prefix=''){return fs.readdirSync(folder,{withFileTypes:true}).flatMap(e=>{if(e.isSymbolicLink())throw Error('Verknüpfung ausgeschlossen.');const relative=prefix+e.name;return e.isDirectory()?files(path.join(folder,e.name),relative+'/'):[{file:relative,sha256:hash(path.join(folder,e.name)),bytes:fs.statSync(path.join(folder,e.name)).size}];}).sort((a,b)=>a.file.localeCompare(b.file));}
-function packageMetadata(bytes){const value=JSON.parse(bytes);for(const key of ['private','scripts','devDependencies'])delete value[key];return JSON.stringify(value);}
+function packageMetadata(bytes){const value=JSON.parse(bytes);for(const key of ['private','scripts','devDependencies','overrides'])delete value[key];return JSON.stringify(value);}
 const staged=files(stage);for(const item of staged){const bytes=extractFile(asar,item.file.split('/').join(path.sep));if(item.file==='package.json'){if(packageMetadata(bytes)!==packageMetadata(fs.readFileSync(path.join(root,item.file))))throw Error('Paketmetadaten weichen ab.');}else if(sha(bytes)!==item.sha256||item.sha256!==hash(path.join(root,item.file)))throw Error('ASAR-Abweichung: '+item.file);}
 const wasm=listPackage(asar).filter(n=>n.endsWith('.wasm'));if(wasm.length!==1||sha(extractFile(asar,wasm[0].replace(/^[/\\]/,'')))!==hash(path.join(root,'cad-kernel-build/runtime/formnaro_cad.wasm')))throw Error('Genau ein unveränderter CAD-Kern erwartet.');
 for(const name of ['LICENSE.txt','README.md','NETZIMPORT.md','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.copyFileSync(path.join(root,name),path.join(runtime,name));
