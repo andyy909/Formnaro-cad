@@ -7,23 +7,28 @@ export const MIXED_AUTOSAVE_KEY='offlinecad-autosave-v8';
 // the exact bytes of both generations for deliberate external recovery.
 export function createCadRecovery(storage){
   let blocked=false,read=false,lastChecked;
-  const values=()=>[MIXED_AUTOSAVE_KEY,CAD_AUTOSAVE_KEY,CAD_LEGACY_AUTOSAVE_KEY].map(key=>{storage.checkReadable?.(key);return storage.getItem(key);});
+  const keys=[MIXED_AUTOSAVE_KEY,CAD_AUTOSAVE_KEY,CAD_LEGACY_AUTOSAVE_KEY];
+  const readItems=read=>keys.map(key=>{storage.checkReadable?.(key);return read.call(storage,key);});
+  const values=()=>readItems(storage.getItem);
+  const identities=storage.itemRevision?()=>readItems(storage.itemRevision).map(value=>value==='missing'?null:value):values;
   const equal=(a,b)=>a&&b&&a.every((v,i)=>v===b[i]);
   function candidate(){const all=values(),index=all.findIndex(v=>v!==null);if(index<0)return null;const project=parseCadProject(all[index]);if(index===2&&project.version!==5)throw Error('Alte CAD-Autosicherung muss Format 5 verwenden.');return project;}
-  async function load(verify){try{const before=values(),project=candidate(),result=project===null?null:cadProjectSnapshot(await verify(project));if(!equal(values(),before))throw Error('CAD-Autosicherung wurde während der Prüfung geändert.');read=true;lastChecked=before;return result;}catch(error){blocked=true;read=true;throw error;}}
+  async function load(verify){try{const before=identities(),project=candidate(),result=project===null?null:cadProjectSnapshot(await verify(project));if(!equal(identities(),before))throw Error('CAD-Autosicherung wurde während der Prüfung geändert.');read=true;lastChecked=before;return result;}catch(error){blocked=true;read=true;throw error;}}
   function write(encoded,{version}={}){
-    if(blocked)return false;const current=values();
+    if(blocked)return false;const current=identities();
     // Cached identity avoids reparsing the unchanged large recovery file.
     // A new or replaced value must be checked again, including beforeunload.
     if(!read||!equal(current,lastChecked)){try{candidate();read=true;lastChecked=current;}catch{blocked=true;return false;}}
     // The caller supplies the confirmed transaction serializer's output.
     // Do not copy/reparse a large unchanged model for workspace-only saves.
-    if(typeof encoded!=='string'||!encoded)throw Error('Bestätigte CAD-Serialisierung erforderlich.');
+    if((typeof encoded!=='string'||!encoded)&&!(storage.setRecoveryItem&&encoded instanceof Uint8Array&&encoded.length&&version!==undefined))throw Error('Bestätigte CAD-Serialisierung erforderlich.');
     version??=parseCadProject(encoded).version;
     // Once this app owns a mixed autosave, even a subsequent empty CAD scene
     // stays in the new namespace. Previous CAD7/CAD5 recovery bytes survive.
     const key=version>=8||current[0]!==null?MIXED_AUTOSAVE_KEY:CAD_AUTOSAVE_KEY;
-    storage.setItem(key,encoded);lastChecked=values();return true;
+    const complete=()=>{lastChecked=identities();return true;};
+    if(storage.setRecoveryItem)return storage.setRecoveryItem(key,encoded).then(complete);
+    storage.setItem(key,encoded);return complete();
   }
   return {load,write,blocked:()=>blocked};
 }

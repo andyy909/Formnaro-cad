@@ -3,3 +3,32 @@ const {validateConfig,generate,testConnection}=require('../backend/ai-provider.c
 test('Provider URL validation permits explicit HTTPS and local HTTP, rejects embedded credentials',()=>{assert.equal(validateConfig({baseUrl:'http://127.0.0.1:1234/v1/'}).baseUrl,'http://127.0.0.1:1234/v1');for(const baseUrl of ['http://remote.example/v1','file:///private','https://user:pass@example.com/v1','https://example.com/v1?key=secret'])assert.throws(()=>validateConfig({baseUrl}));});
 test('Responses/chat adapters send context+scene and parse validated JSON batches; no key escapes in errors',async()=>{let protocol='responses',failure=false;const calls=[],server=http.createServer(async(req,res)=>{const chunks=[];for await(const c of req)chunks.push(c);const body=chunks.length?JSON.parse(Buffer.concat(chunks)):null;calls.push({url:req.url,body,authorization:req.headers.authorization});res.setHeader('Content-Type','application/json');if(req.url==='/v1/models')return res.end(JSON.stringify({data:[{id:'local-test'}]}));if(failure){res.statusCode=401;return res.end(JSON.stringify({error:{message:'Invalid test-only-token'}}));}if(protocol==='responses'&&body?.text?.format?.type==='json_object'&&!/json/i.test(body.input||'')){res.statusCode=400;return res.end(JSON.stringify({error:{message:'Response input messages must contain the word JSON for json_object.'}}));}const reply=JSON.stringify({revision:'abc',label:'Plate',commands:[{op:'create',type:'box'}]});res.end(JSON.stringify(protocol==='responses'?{output:[{type:'message',content:[{type:'output_text',text:reply}]}]}:{choices:[{message:{content:reply}}]}));});await new Promise(r=>server.listen(0,'127.0.0.1',r));try{const config={baseUrl:'http://127.0.0.1:'+server.address().port+'/v1',model:'local-test'},args={prompt:'Create a part',context:{instructions:'JSON contract'},scene:{revision:'abc',objects:[]}};assert.equal((await generate(config,'test-only-token',args)).commands[0].type,'box');assert.equal(calls[0].body.store,false);assert.equal(calls[0].body.text.format.type,'json_object');assert.ok(calls[0].body.instructions.includes('JSON contract'));protocol='chat';await generate({...config,protocol},'test-only-token',args);assert.equal(calls[1].body.response_format.type,'json_object');assert.equal((await testConnection(config,'')).models[0],'local-test');failure=true;await assert.rejects(generate(config,'test-only-token',args),e=>e.message.includes('[redacted]')&&!e.message.includes('test-only-token'));}finally{server.closeAllConnections();await new Promise(r=>server.close(r));}});
 test('Local bridge requires token, disallows browser origins and returns conflict for stale edits',async()=>{const dir=fs.mkdtempSync(path.join(os.tmpdir(),'cad-ai-test-')),bridge=await startBridge({directory:dir,rpc:async(method,args)=>{if(args.revision==='bad')throw Error('STALE_REVISION');return {method,args};}});try{const url=bridge.descriptor.url,headers={Authorization:'Bearer '+bridge.descriptor.token};assert.equal((await fetch(url+'/v1/context')).status,401);assert.equal((await fetch(url+'/v1/context',{headers:{...headers,Origin:'https://example.com'}})).status,403);const good=await fetch(url+'/v1/context',{headers});assert.equal((await good.json()).method,'context');const conflict=await fetch(url+'/v1/preview',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({revision:'bad'})});assert.equal(conflict.status,409);assert.equal((await fetch(url+'/unknown',{headers})).status,404);assert.ok(fs.existsSync(bridge.descriptorPath));}finally{await bridge.close();assert.equal(fs.existsSync(bridge.descriptorPath),false);fs.rmdirSync(dir);}});
+
+test('HTTP 429 retries a rejected request twice, quota does not retry',async t=>{
+ let calls=0,quota=false;
+ const server=http.createServer((_req,res)=>{
+  calls++;
+  res.setHeader('Content-Type','application/json');
+  res.setHeader('Retry-After','0');
+  if(quota||calls<3){res.statusCode=429;return res.end(JSON.stringify({error:{code:quota?'insufficient_quota':'rate_limit_exceeded'}}));}
+  res.end(JSON.stringify({data:[{id:'local-test'}]}));
+ });
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ t.after(()=>{server.closeAllConnections();return new Promise(r=>server.close(r));});
+ const config={baseUrl:'http://127.0.0.1:'+server.address().port+'/v1',model:'local-test'};
+ assert.deepEqual((await testConnection(config,'')).models,['local-test']);
+ assert.equal(calls,3);
+ quota=true;
+ await assert.rejects(testConnection(config,''),{code:'AI_PROVIDER_QUOTA'});
+ assert.equal(calls,4);
+});
+
+test('invalid provider output gets two corrections and no executable result',async()=>{
+ const {withToolReference}=require('../backend/ai-tool-reference.cjs');
+ let calls=0;
+ await assert.rejects(withToolReference({envelope:{system:'',user:'',context:{toolReference:{}}},complete:async()=>{
+  calls++;
+  return {text:'{"commands":[',data:{}};
+ }}),{code:'AI_OUTPUT_INVALID',aiRetryable:false});
+ assert.equal(calls,3);
+});

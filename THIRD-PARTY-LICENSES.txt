@@ -3382,10 +3382,6 @@ Unveränderte Runtime-Dateien, Lizenzen und Herkunft: licenses/python.
 Vollständiger Pyodide-Quellstand im Formnaro-Quellarchiv: python-runtime/pyodide-314.0.7-source.tar.gz.
 https://github.com/pyodide/pyodide/tree/314.0.7
 
-Whisper.cpp b5454 / d1be6fd and Whisper large-v3-turbo Q5_0: MIT.
-https://github.com/ggml-org/whisper.cpp
-https://huggingface.co/ggerganov/whisper.cpp
-License texts in resources/speech/LICENSE-whisper.txt and LICENSE-model.txt.
 
 
 Offline scientific Python libraries: NumPy, SciPy, Shapely/GEOS, Trimesh, Matplotlib, SymPy, NetworkX and dependencies. Exact versions, pinned distribution SHA256 and complete bundled notices: licenses/analysis-python/README.txt and python-runtime/packages/manifest.json. Runtime package installation and host access are not exposed to AI scripts.

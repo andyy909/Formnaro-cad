@@ -1,5 +1,8 @@
 const {ipcMain}=require('electron');
-const {validatePracticePlan}=require('./practice-runner.cjs');
+const {PRACTICE_CONTINUATION_LIMIT,validatePracticePlan,sketchPoint,practiceAliasState}=require('./practice-runner.cjs');
+const {validatePracticeProjectCopy,validatePracticeResultProject}=require('./practice-project-copy.cjs');
+const {validatePracticeFiles}=require('./practice-files.cjs');
+const {validatePracticeQuality}=require('./practice-quality.cjs');
 const fixed={
  ...Object.fromEntries(require('../ai/OfflineCAD-KI-Kontext.json').shapes.map(s=>['shape:'+s.type,'.shape-tile[data-type=\"'+s.type+'\"]:not([data-plugin])'])),
  'shape:box':'.shape-tile[data-type="box"]:not([data-plugin])','shape:cylinder':'.shape-tile[data-type="cylinder"]:not([data-plugin])',
@@ -8,18 +11,27 @@ const fixed={
 };
 const allowedFields=new Set(['size-0','size-1','size-2','pos-0','pos-1','pos-2']);
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
-function installPracticeChild(win,{ipc=ipcMain,channel=process}={}){
+function installPracticeChild(win,{ipc=ipcMain,channel=process,audit=false}={}){
  if(typeof channel.send!=='function')throw Error('Übungsfenster benötigt die private Elternverbindung.');
- let nonce=null,ready=false,plan=null,cancelled=false,finished=false,inFlight=false,paused=false,generation=0,pauseVersion=0;const waiting=new Set();
+ let nonce=null,ready=false,plan=null,projectCopy,files,recovery,quality,waitingForPlan=null,retries=0,delivered=false,cancelled=false,finished=false,inFlight=false,paused=false,generation=0,pauseVersion=0;const waiting=new Set();
  const wake=()=>{for(const resolve of waiting)resolve();waiting.clear();};
  async function checkpoint(){while(paused&&!cancelled&&!finished)await new Promise(resolve=>waiting.add(resolve));if(cancelled||finished||win.isDestroyed())throw Error('Übung abgebrochen.');}
  const trusted=e=>e.sender===win.webContents&&e.senderFrame===win.webContents.mainFrame&&!win.isDestroyed();
  const reply=(fn)=>async(e,args)=>{try{if(!trusted(e))throw Error('Ungültiges Übungsfenster.');return {ok:true,value:await fn(args)};}catch(error){return {ok:false,error:String(error.message)};}};
  function focusPause(){if(!nonce||!ready||finished||cancelled||win.isDestroyed())return;paused=true;generation++;pauseVersion++;channel.send?.({type:'status',nonce,paused:true});win.webContents.send('cad-practice:blur',{generation});}
- function deliver(){if(plan&&ready&&!finished){win.webContents.send('cad-practice:plan',plan);if(typeof win.isFocused==='function'&&!win.isFocused())focusPause();}}
+ function deliver(){if(plan&&ready&&!finished&&!delivered){delivered=true;win.webContents.send('cad-practice:plan',plan,projectCopy,files,{recover:!!recovery,vision:recovery==='image',quality});if(typeof win.isFocused==='function'&&!win.isFocused())focusPause();}}
  channel.on('message',msg=>{
   if(!msg||typeof msg!=='object')return;
-  if(msg.type==='plan'&&!nonce&&/^[a-f0-9]{48}$/.test(msg.nonce??'')){try{plan=validatePracticePlan(msg.plan);nonce=msg.nonce;deliver();}catch{channel.exitCode=1;win.close();}}
+  if(msg.type==='plan'&&!nonce&&/^[a-f0-9]{48}$/.test(msg.nonce??'')){try{projectCopy=validatePracticeProjectCopy(msg.projectCopy);files=validatePracticeFiles(msg.files);quality=validatePracticeQuality(msg.quality);recovery=['text','image'].includes(msg.recovery)?msg.recovery:undefined;plan=validatePracticePlan(msg.plan,projectCopy?.selection.length);nonce=msg.nonce;deliver();}catch{channel.exitCode=1;win.close();}}
+  else if(msg.type==='continue'&&msg.nonce===nonce&&waitingForPlan&&!finished&&!cancelled){
+   try{
+    const accept=msg.accept===true;
+    if(accept&&!waitingForPlan.review)throw Error('Ungültige Bestätigung einer Übungsprüfung.');
+    if(!accept)plan=validatePracticePlan(msg.plan,0,waitingForPlan.state);
+    waitingForPlan=null;retries++;
+    win.webContents.send('cad-practice:plan',accept?null:plan,undefined,undefined,{continuing:true,recover:retries<PRACTICE_CONTINUATION_LIMIT,vision:recovery==='image',accept});
+   }catch{win.close();}
+  }
   else if(msg.type==='cancel'&&msg.nonce===nonce&&!finished){cancelled=true;wake();win.webContents.send('cad-practice:cancel');}
  });
  channel.on('disconnect',()=>{cancelled=true;wake();if(!win.isDestroyed())win.webContents.send('cad-practice:cancel');});
@@ -27,41 +39,99 @@ function installPracticeChild(win,{ipc=ipcMain,channel=process}={}){
  ipc.handle('cad-practice:ready',reply(()=>{ready=true;deliver();return true;}));
  function parent(){focusPause();try{channel.send({type:'focus-parent',nonce});}catch{}return true;}
  ipc.handle('cad-practice:parent',reply(()=>parent()));
- ipc.handle('cad-practice:close',reply(()=>{cancelled=true;wake();if(!finished&&nonce){finished=true;try{channel.send({type:'result',nonce,value:{ok:false,reason:'Übung wurde beendet.',steps:[]}});}catch{}}parent();setTimeout(()=>{if(!win.isDestroyed())win.close();},0);return true;}));
- win.on?.('close',()=>{cancelled=true;wake();if(!finished&&nonce){finished=true;try{channel.send({type:'result',nonce,value:{ok:false,reason:'Übungsfenster wurde geschlossen.',steps:[]}});}catch{}}try{channel.send({type:'focus-parent',nonce});}catch{}});
+ ipc.handle('cad-practice:close',reply(()=>{cancelled=true;wake();if(!finished&&nonce){finished=true;try{channel.send({type:'result',nonce,round:retries,value:{ok:false,reason:'Übung wurde beendet.',steps:[]}});}catch{}}parent();setTimeout(()=>{if(!win.isDestroyed())win.close();},0);return true;}));
+ win.on?.('close',()=>{cancelled=true;wake();if(!finished&&nonce){finished=true;try{channel.send({type:'result',nonce,round:retries,value:{ok:false,reason:'Übungsfenster wurde geschlossen.',steps:[]}});}catch{}}try{channel.send({type:'focus-parent',nonce});}catch{}});
  ipc.handle('cad-practice:abort',reply(()=>{cancelled=true;wake();return true;}));
  ipc.handle('cad-practice:status',reply(value=>{if(!nonce||finished||!value||typeof value.paused!=='boolean'||Object.keys(value).some(k=>!['paused','generation'].includes(k)))throw Error('Ungültiger Übungsstatus.');if(!value.paused&&value.generation!==generation)throw Error('Der Fokus hat sich erneut geändert. Bitte Weiter erneut wählen.');if(!value.paused&&typeof win.isFocused==='function'&&!win.isFocused())throw Error('Übungsfenster muss zum Fortsetzen aktiv sein.');if(value.paused&&!paused)pauseVersion++;paused=value.paused;if(!paused)wake();channel.send?.({type:'status',nonce,paused});return {generation};}));
- ipc.handle('cad-practice:result',reply(value=>{
-  if(finished||!nonce||!value||typeof value.ok!=='boolean'||JSON.stringify(value).length>30000||Object.keys(value).some(k=>!['ok','steps','report','reason'].includes(k)))throw Error('Ungültiger Übungsbericht.');finished=true;channel.send?.({type:'result',nonce,value});return true;
+ ipc.handle('cad-practice:result',reply(async input=>{
+  const wrapped=input&&Object.hasOwn(input,'value');
+  let value=wrapped?input.value:input;
+  if(Array.isArray(value?.steps)&&value.steps.some(step=>Array.isArray(step?.motionStates))&&JSON.stringify(value).length>30000){
+   // Additional readings must not turn a previously admissible exercise into an oversized reply.
+   value={...value,steps:value.steps.map(step=>{
+    if(!Array.isArray(step?.motionStates))return step;
+    const {motionStates,...compact}=step;
+    return compact;
+   })};
+  }
+  if(finished||cancelled||waitingForPlan||!nonce||!value||typeof value.ok!=='boolean'||JSON.stringify(value).length>30000||Object.keys(value).some(k=>!['ok','steps','report','reason'].includes(k)))throw Error('Ungültiger Übungsbericht.');
+  const resultProject=wrapped&&projectCopy&&value.ok?validatePracticeResultProject(input.project):undefined;
+  if(wrapped&&!resultProject)throw Error('Ergebnisprojekt gehört zu keiner erfolgreichen Projektübung.');
+  const review=quality?.mode==='report'&&value.ok&&value.report?.review===true;
+  const auditRevision=value.report?.quality?.revision;
+  let auditProject;
+  if(audit&&projectCopy&&!resultProject&&(review||value.report?.quality?.blocked===true)&&/^[0-9a-f]{16}$/.test(auditRevision??'')){
+   try{
+    const snapshot=await win.webContents.executeJavaScript('window.__formnaroPracticeAuditSnapshot?.('+JSON.stringify(auditRevision)+')');
+    if(snapshot?.format==='OfflineCAD'&&Buffer.byteLength(JSON.stringify(snapshot))<=16*1024*1024)auditProject=snapshot;
+   }catch{/* A private audit must not alter the exercise outcome. */}
+   if(cancelled||finished)return false;
+  }
+  if(!wrapped&&recovery&&retries<PRACTICE_CONTINUATION_LIMIT&&(review||!value.ok&&value.report?.failedAction)){
+   waitingForPlan={state:practiceAliasState(value.report.state),review};
+   let image;
+   if(recovery==='image'){
+    try{
+     const revision=()=>win.webContents.executeJavaScript('window.__formnaroPracticeFeedbackRevision?.()');
+     if(value.report.checkpoint==='photo-review'&&await revision()===value.report.revision){
+      const detail=await win.webContents.executeJavaScript('window.__formnaroPracticePhotoDetail?.()');
+      if(typeof detail?.image==='string'&&detail.image.length<=2*1024*1024&&await revision()===value.report.revision){
+       image=detail.image;
+       value.report.photoDetail={...detail.mapping,marks:detail.marks};
+      }
+     }else if(value.report.checkpoint!=='photo-review'&&await revision()===value.report.revision){
+      let frame=await win.webContents.capturePage();
+      if(frame.getSize().width>1280)frame=frame.resize({width:1280});
+      const encoded=frame.toJPEG(78).toString('base64');
+      if(encoded.length<=2*1024*1024&&await revision()===value.report.revision)image=encoded;
+     }
+    }catch{}
+   }
+   if(!cancelled&&!finished)channel.send({type:'result',nonce,round:retries,value,waiting:true,...(image?{image}:{}),...(auditProject?{auditProject}:{})});
+   return true;
+  }
+  finished=true;
+  channel.send({type:'result',nonce,round:retries,value,...(resultProject?{project:resultProject}:{}),...(auditProject?{auditProject}:{})});
+  if(projectCopy?.sketchDraft)setTimeout(()=>{if(!win.isDestroyed())win.close();},0);
+  return true;
  }));
  ipc.handle('cad-practice:input',reply(async input=>{
-  if(!plan||!ready||finished||cancelled||inFlight)throw Error('Übung nicht aktiv.');
-  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!['target','action','value','rootId','append','tempo','anchorId','side'].includes(k)))throw Error('Ungültige Übungseingabe.');
-  const {target,action,value,rootId,append,tempo=1,anchorId,side}=input;if(!Number.isFinite(tempo)||tempo<1/3||tempo>10)throw Error('Ungültiges Übungstempo.');const gearDrag=target==='gear-mesh',faceClick=target==='cad-face';const generic=typeof target==='string'&&/^ui:(id|label|tool|menu|view):[^\r\n\x00]{1,220}$/.test(target);if(!['click','set','choose','drag','locate'].includes(action)||!(generic||target==='tree'||gearDrag||faceClick||Object.hasOwn(fixed,target)))throw Error('Unbekanntes Übungsziel.');
+  if(!plan||!ready||finished||cancelled||waitingForPlan||inFlight)throw Error('Übung nicht aktiv.');
+  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!['target','action','value','rootId','append','tempo','anchorId','side','point','to','add'].includes(k)))throw Error('Ungültige Übungseingabe.');
+  const {target,action,value,rootId,append,tempo=1,anchorId,side,point,to:sketchTo,add}=input;if(!Number.isFinite(tempo)||tempo<1/3||tempo>10)throw Error('Ungültiges Übungstempo.');const gearDrag=target==='gear-mesh',faceClick=target==='cad-face',sketch=target==='sketch-board';const generic=typeof target==='string'&&/^ui:(id|label|tool|menu|view):[^\r\n\x00]{1,220}$/.test(target);if(!['click','set','choose','drag','locate'].includes(action)||!(generic||target==='tree'||gearDrag||faceClick||sketch||Object.hasOwn(fixed,target)))throw Error('Unbekanntes Übungsziel.');
   if((target==='tree'||gearDrag||faceClick)&&(typeof rootId!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(rootId)))throw Error('Ungültiger Objektbezug.');
+  if(sketch?(!sketchPoint(point)||sketchTo!==undefined&&!sketchPoint(sketchTo)||action!==(sketchTo?'drag':'click')||add!==undefined&&typeof add!=='boolean'):point!==undefined||sketchTo!==undefined||add!==undefined)throw Error('Ungültige Skizzengeste.');
   if(faceClick&&(action!=='click'||!['top','bottom','left','right','front','back'].includes(side))||!faceClick&&side!==undefined)throw Error('Ungültiger Flächenauftrag.');
   if(gearDrag&&(action!=='drag'||typeof anchorId!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(anchorId)||typeof value!=='string'||!Number.isFinite(Number(value))||Math.abs(Number(value))>360)||!gearDrag&&anchorId!==undefined)throw Error('Ungültiger Zahnradbezug.');
   if(target!=='tree'&&!gearDrag&&!faceClick&&rootId!==undefined||append!==undefined&&typeof append!=='boolean'||append&&target!=='tree')throw Error('Ungültiger Eingabeparameter.');
   if(!generic&&action==='set'&&(!allowedFields.has(target)||typeof value!=='string'||value.length>20||!/^[-]?(?:\d+)(?:\.\d{1,6})?$/.test(value)||!Number.isFinite(Number(value))||Math.abs(Number(value))>10000||target.startsWith('size-')&&Number(value)<=0))throw Error('Ungültiger Zahlenwert.');
   if(generic&&['set','choose'].includes(action)&&(typeof value!=='string'||value.length>200||/[\r\n\x00]/.test(value)))throw Error('Ungültige Formnaro-Feldeingabe.');
   if(!['set','choose','drag'].includes(action)&&value!==undefined)throw Error('Wert ohne Maßeingabe.');
-  if(action==='drag'&&!(generic&&typeof value==='string'&&Number.isFinite(Number(value))||target?.startsWith('shape:')&&value===undefined||gearDrag))throw Error('Ungültiges Ziehziel.');
+  if(action==='drag'&&!(generic&&typeof value==='string'&&Number.isFinite(Number(value))||target?.startsWith('shape:')&&value===undefined||gearDrag||sketch))throw Error('Ungültiges Ziehziel.');
   inFlight=true;try{
    const selector=target==='tree'?null:fixed[target];
-   const genericSpec=JSON.stringify({target,action,value});const gearSpec=JSON.stringify({rootId,anchorId,value});const faceSpec=JSON.stringify({rootId,side});const script=faceClick?'window.__formnaroPracticeFace('+faceSpec+')':gearDrag?'window.__formnaroPracticeGearDrag('+gearSpec+')':generic?'window.__formnaroPracticeControl("locate",'+genericSpec+')':`(()=>{const selector=${JSON.stringify(selector)},id=${JSON.stringify(rootId??null)};const row=selector?null:[...document.querySelectorAll('#object-list [data-root-id]')].find(n=>n.dataset.rootId===id&&n.dataset.path==='[]');const node=selector?document.querySelector(selector):row?.querySelector(':scope > .object-label');if(!node||node.disabled||!node.getClientRects().length||getComputedStyle(node).visibility==='hidden')throw Error('Übungsziel nicht sichtbar oder deaktiviert.');node.scrollIntoView({block:'nearest',inline:'nearest'});const r=node.getBoundingClientRect();return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),width:r.width,height:r.height};})()`;
+   const genericSpec=JSON.stringify({target,action,value});const gearSpec=JSON.stringify({rootId,anchorId,value});const faceSpec=JSON.stringify({rootId,side});const sketchScript='window.__formnaroPracticeSketch('+JSON.stringify({point,to:sketchTo})+')';const script=sketch?sketchScript:faceClick?'window.__formnaroPracticeFace('+faceSpec+')':gearDrag?'window.__formnaroPracticeGearDrag('+gearSpec+')':generic?'window.__formnaroPracticeControl("locate",'+genericSpec+')':`(()=>{const selector=${JSON.stringify(selector)},id=${JSON.stringify(rootId??null)};const row=selector?null:[...document.querySelectorAll('#object-list [data-root-id]')].find(n=>n.dataset.rootId===id&&n.dataset.path==='[]');const node=selector?document.querySelector(selector):row?.querySelector(':scope > .object-label');if(!node||node.disabled||!node.getClientRects().length||getComputedStyle(node).visibility==='hidden')throw Error('Übungsziel nicht sichtbar oder deaktiviert.');node.scrollIntoView({block:'nearest',inline:'nearest'});const r=node.getBoundingClientRect();return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),width:r.width,height:r.height};})()`;
    await checkpoint();const box=await win.webContents.executeJavaScript(script);const bounds=win.getContentBounds();if(!box||box.width<=0||box.height<=0||box.x<0||box.y<0||box.x>=bounds.width||box.y>=bounds.height)throw Error('Übungsziel liegt außerhalb des Fensters.');if(action==='locate')return box;
-   await checkpoint();const modifiers=append?['shift']:[];
+   await checkpoint();const modifiers=append||add?['shift']:[];
    win.webContents.sendInputEvent({type:'mouseMove',x:box.x,y:box.y,modifiers});await pause(180);await checkpoint();
-   const hitScript=faceClick?'(async()=>{const p=await window.__formnaroPracticeFace('+faceSpec+');return {ok:p.revision==='+JSON.stringify(box.revision)+'&&p.faceIndex==='+JSON.stringify(box.faceIndex)+'&&p.x==='+box.x+'&&p.y==='+box.y+'&&!!document.elementFromPoint('+box.x+','+box.y+')?.closest("canvas")};})()':gearDrag?`({ok:!!document.elementFromPoint(${box.x},${box.y})?.closest('#canvas-host')})`:generic?'window.__formnaroPracticeControl("hit",'+genericSpec+','+JSON.stringify({x:box.x,y:box.y})+')':`(()=>{const selector=${JSON.stringify(selector)},id=${JSON.stringify(rootId??null)};const row=selector?null:[...document.querySelectorAll('#object-list [data-root-id]')].find(n=>n.dataset.rootId===id&&n.dataset.path==='[]');const node=selector?document.querySelector(selector):row?.querySelector(':scope > .object-label');const hit=document.elementFromPoint(${box.x},${box.y});return {ok:!!node&&!node.disabled&&!!hit&&(node===hit||node.contains(hit))&&(!!selector||!hit.closest('button')),hit:hit?hit.tagName+'#'+String(hit.id||'').slice(0,80):'none'};})()`;
+   const hitScript=sketch?'(()=>{const p='+sketchScript+';return {ok:p.x==='+box.x+'&&p.y==='+box.y+'&&JSON.stringify(p.to??null)==='+JSON.stringify(JSON.stringify(box.to??null))+'};})()':faceClick?`(async()=>{
+    const p=await window.__formnaroPracticeFace(${faceSpec});
+    const element=document.elementFromPoint(${box.x},${box.y});
+    const marker=p.markerId??null;
+    return {ok:p.revision===${JSON.stringify(box.revision)}&&p.faceIndex===${JSON.stringify(box.faceIndex)}&&
+     p.x===${box.x}&&p.y===${box.y}&&marker===${JSON.stringify(box.markerId??null)}&&
+     (marker?element?.closest('.cad-reference-marker')?.dataset.pointId===marker:!!element?.closest('canvas')),
+     hit:element?.className?.toString()};
+   })()`:gearDrag?`({ok:!!document.elementFromPoint(${box.x},${box.y})?.closest('#canvas-host')})`:generic?'window.__formnaroPracticeControl("hit",'+genericSpec+','+JSON.stringify({x:box.x,y:box.y})+')':`(()=>{const selector=${JSON.stringify(selector)},id=${JSON.stringify(rootId??null)};const row=selector?null:[...document.querySelectorAll('#object-list [data-root-id]')].find(n=>n.dataset.rootId===id&&n.dataset.path==='[]');const node=selector?document.querySelector(selector):row?.querySelector(':scope > .object-label');const hit=document.elementFromPoint(${box.x},${box.y});return {ok:!!node&&!node.disabled&&!!hit&&(node===hit||node.contains(hit))&&(!!selector||!hit.closest('button')),hit:hit?hit.tagName+'#'+String(hit.id||'').slice(0,80):'none'};})()`;
    let hit;while(true){await checkpoint();hit=await win.webContents.executeJavaScript(hitScript);if(paused)continue;const currentBounds=win.getContentBounds();if(box.x>=currentBounds.width||box.y>=currentBounds.height)throw Error('Übungsziel liegt außerhalb des Fensters.');if(!(hit===true||hit?.ok))throw Error('Das Übungsziel '+target+' wird verdeckt oder hat sich bewegt (Treffer: '+String(hit?.hit??'unbekannt')+').');break;}
    if(action==='drag'){
     let from={x:box.x,y:box.y},to;
-    if(gearDrag)to=box.to;else if(generic){const range=box.range;if(!range||!(range.max>range.min))throw Error('Ungültiger Schiebereglerbereich.');const valueAt=v=>box.x-box.width/2+8+(Math.min(range.max,Math.max(range.min,v))-range.min)/(range.max-range.min)*(box.width-16);from.x=Math.round(valueAt(range.value));to={x:Math.round(valueAt(Number(value))),y:box.y};}
+    if(gearDrag||sketch)to=box.to;else if(generic){const range=box.range;if(!range||!(range.max>range.min))throw Error('Ungültiger Schiebereglerbereich.');const valueAt=v=>box.x-box.width/2+8+(Math.min(range.max,Math.max(range.min,v))-range.min)/(range.max-range.min)*(box.width-16);from.x=Math.round(valueAt(range.value));to={x:Math.round(valueAt(Number(value))),y:box.y};}
     else to=await win.webContents.executeJavaScript('(()=>{const c=document.querySelector("#canvas-host canvas");if(!c)throw Error("Arbeitsfläche fehlt");const r=c.getBoundingClientRect();return {x:Math.round(r.left+r.width*.6),y:Math.round(r.top+r.height*.4)};})()');
     if(!to||to.x<0||to.y<0||to.x>=bounds.width||to.y>=bounds.height)throw Error('Ziehziel außerhalb von Formnaro.');let released=false;
-    try{win.webContents.sendInputEvent({type:'mouseMove',...from});win.webContents.sendInputEvent({type:'mouseDown',...from,button:'left',clickCount:1});await pause(150);
-     for(let i=1;i<=18;i++){await checkpoint();win.webContents.sendInputEvent({type:'mouseMove',x:Math.round(from.x+(to.x-from.x)*i/18),y:Math.round(from.y+(to.y-from.y)*i/18),modifiers:['leftButtonDown']});await pause(60*tempo);}
-     await checkpoint();win.webContents.sendInputEvent({type:'mouseUp',...to,button:'left',clickCount:1});released=true;await pause(220);
+    try{win.webContents.sendInputEvent({type:'mouseMove',...from});win.webContents.sendInputEvent({type:'mouseDown',...from,button:'left',clickCount:1,modifiers});await pause(150);
+     for(let i=1;i<=18;i++){await checkpoint();win.webContents.sendInputEvent({type:'mouseMove',x:Math.round(from.x+(to.x-from.x)*i/18),y:Math.round(from.y+(to.y-from.y)*i/18),modifiers:['leftButtonDown',...modifiers]});await pause(60*tempo);}
+     await checkpoint();win.webContents.sendInputEvent({type:'mouseUp',...to,button:'left',clickCount:1,modifiers});released=true;await pause(220);
     }finally{if(!released&&!win.isDestroyed()){win.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});win.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});win.webContents.sendInputEvent({type:'mouseUp',...from,button:'left',clickCount:1});}}
     return box;
    }

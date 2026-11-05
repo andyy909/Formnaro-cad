@@ -26,8 +26,9 @@ function requirements(value){
  for(const target of value.protectedTargets)need(plain(target)&&Object.keys(target).sort().join(',')==='path,rootId'&&typeof target.rootId==='string'&&target.rootId.length>0&&target.rootId.length<=200&&Array.isArray(target.path)&&target.path.length<=12&&target.path.every(x=>typeof x==='string'&&x.length>0&&x.length<=200),'Ungültiger geschützter Teil.');return copy(value);
 }
 function inputData(value){
- need(plain(value)&&Object.keys(value).every(k=>['prompt','images','history','chat','photoReferences','featureReferences','usageTaskId','modelStrictness','modelChecks','modelCheckConfig','conversationId'].includes(k)),'Nur Auftragsinhalt speichern; Zugangsdaten und Anbieterkonfiguration bleiben getrennt.');
+ need(plain(value)&&Object.keys(value).every(k=>['prompt','images','history','chat','photoReferences','featureReferences','usageTaskId','modelStrictness','modelChecks','modelCheckConfig','conversationId','sceneScope'].includes(k)),'Nur Auftragsinhalt speichern; Zugangsdaten und Anbieterkonfiguration bleiben getrennt.');
  need(value.conversationId===undefined||typeof value.conversationId==='string'&&/^[-a-zA-Z0-9]{1,80}$/.test(value.conversationId),'Ungültige Gesprächskennung.');
+ need(value.sceneScope===undefined||['selection','project'].includes(value.sceneScope),'Ungültiger Szenenumfang.');
  if(value.modelCheckConfig!==undefined)require('./model-check-config.cjs').validateModelCheckConfig(value.modelCheckConfig);
  need(value.modelChecks===undefined||typeof value.modelChecks==='boolean','Ungültiger Modellprüfmodus.');
  need(value.modelStrictness===undefined||Number.isInteger(value.modelStrictness)&&value.modelStrictness>=0&&value.modelStrictness<=100,'KI-Modellstrenge: 0 bis 100.');

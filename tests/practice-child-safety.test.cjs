@@ -1,16 +1,45 @@
 const test=require('node:test'),assert=require('node:assert/strict'),{EventEmitter}=require('node:events');
 const {installPracticeChild}=require('../backend/practice-child.cjs');
-function harness(results,{initialFocus=true}={}){
+function harness(results,{initialFocus=true,audit=false,projectCopy,quality,recovery}={}){
  const handlers=new Map(),channel=new EventEmitter(),sent=[],input=[],mainFrame={};channel.send=v=>sent.push(v);
  const contents={mainFrame,send:()=>{},sendInputEvent:v=>input.push(v),executeJavaScript:async()=>results.shift()};
  let focused=initialFocus;const win=Object.assign(new EventEmitter(),{webContents:contents,isDestroyed:()=>false,isFocused:()=>focused,getContentBounds:()=>({width:500,height:500}),close:()=>{}});
- installPracticeChild(win,{ipc:{handle:(n,f)=>handlers.set(n,f)},channel});const event={sender:contents,senderFrame:mainFrame};
- channel.emit('message',{type:'plan',nonce:'a'.repeat(48),plan:{version:1,title:'Test',actions:[{kind:'shape',type:'box',as:'block'}]}});
+ installPracticeChild(win,{ipc:{handle:(n,f)=>handlers.set(n,f)},channel,audit});const event={sender:contents,senderFrame:mainFrame};
+ channel.emit('message',{type:'plan',nonce:'a'.repeat(48),plan:{version:1,title:'Test',actions:[{kind:'shape',type:'box',as:'block'}]},projectCopy,quality,recovery});
  return {handlers,event,input,win,sent,setFocused:value=>focused=value};
 }
+test('only a private audit child emits the blocked snapshot and it remains separate from the result project',async()=>{
+ const project={format:'OfflineCAD',nodes:[]},revision='b'.repeat(16),projectCopy={project,revision,selection:[]};
+ const quality={mode:'enforce',criteria:[]};
+ const value={ok:false,steps:[],reason:'Fixed discrepancy',report:{revision,failedAction:{kind:'quality'},
+  state:{known:[],selectable:[],selected:[]},quality:{mode:'enforce',revision,blocked:true,items:[]}}};
+ for(const audit of [false,true]){
+  const reads=[project],h=harness(reads,{audit,projectCopy,quality,recovery:'text'});
+  const reply=await h.handlers.get('cad-practice:result')(h.event,value);
+  assert.equal(reply.ok,true);
+  const result=h.sent.find(message=>message.type==='result');
+  assert.equal(result.waiting,true);
+  assert.equal(result.project,undefined);
+  assert.deepEqual(result.auditProject,audit?project:undefined);
+  assert.equal(reads.length,audit?0:1);
+ }
+});
 test('covered target never receives a native mouseDown',async()=>{
  const h=harness([{x:20,y:20,width:20,height:20},false]);await h.handlers.get('cad-practice:ready')(h.event);
  const r=await h.handlers.get('cad-practice:input')(h.event,{target:'shape:box',action:'click'});assert.equal(r.ok,false);assert.match(r.error,/verdeckt/);assert.deepEqual(h.input.map(v=>v.type),['mouseMove']);
+});
+test('large supplemental motion traces do not invalidate an otherwise admissible result',async()=>{
+ const step={kind:'model',jointValues:[{id:'rotary',value:360}],motionStates:Array.from({length:1000},()=>({
+  jointValues:[{id:'rotary',value:90}],persisted:false,revision:'a'.repeat(16)
+ }))};
+ for(const motionStates of [step.motionStates.slice(0,2),step.motionStates]){
+  const h=harness([]);
+  const reply=await h.handlers.get('cad-practice:result')(h.event,{ok:true,steps:[{...step,motionStates}]});
+  assert.equal(reply.ok,true);
+  const [returned]=h.sent.find(message=>message.type==='result').value.steps;
+  assert.deepEqual(returned.jointValues,step.jointValues);
+  assert.deepEqual(returned.motionStates,motionStates.length===2?motionStates:undefined);
+ }
 });
 test('lost focus stops before typing and unknown DOM targets are rejected',async()=>{
  const h=harness([{x:20,y:20,width:20,height:20},true,false]);await h.handlers.get('cad-practice:ready')(h.event);

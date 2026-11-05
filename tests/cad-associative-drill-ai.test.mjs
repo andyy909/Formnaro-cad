@@ -6,10 +6,55 @@ import {readFileSync} from 'node:fs';
 import {createCadController} from '../src/cad-controller.js';
 import {createCadAutomationAccess} from '../src/cad-automation-access.js';
 import {cadAIContext} from '../src/cad-ai-context.js';
+import {cadCommandReference} from '../src/cad-command-reference.js';
 function factory(file='./fixtures/cad-node-worker.mjs'){return ()=>{const worker=new Worker(new URL(file,import.meta.url)),adapter={onmessage:null,onerror:null,postMessage:message=>worker.postMessage(message),terminate:()=>worker.terminate()};worker.on('message',message=>adapter.onmessage?.({data:message}));worker.on('error',error=>adapter.onerror?.(error));return adapter;};}
 const ref=(x,y,z=30,direction=[0,0,-1])=>({ray:{origin:[x,y,z],direction}});
 async function setup(t){const cad=createCadController({createWorker:factory(),createMeshWorker:factory('./fixtures/mesh-engine-node-worker.mjs'),runScript:async({code,call})=>vm.runInNewContext('(async()=>{'+code+'})()',{api:{model:()=>call('model'),query:q=>call('query',structuredClone(q)),run:c=>call('run',structuredClone(c))}},{timeout:1000})});t.after(()=>cad.dispose());await cad.execute({kind:'create',recipe:{type:'box',size:[40,20,4]},options:{id:'body'}});let scene=await cad.describe();const access=createCadAutomationAccess({controller:cad,getScene:()=>scene,refresh:async()=>{scene=await cad.describe();}});return {cad,access};}
 const line={version:1,kind:'line',count:3,step:[8,0],skip:[]};
+test('the published group subtraction example constructs a bored solid in one preview',async t=>{
+ const {cad,access}=await setup(t),before=cad.serialize();
+ const {subtractionExample}=cadCommandReference(cadAIContext(),{command:'group'});
+ const draft=await access.preview({revision:cad.revision(),commands:subtractionExample.commands});
+ const result=access.getPreview(draft.previewId).nodes.find(node=>node.id===draft.aliases.body);
+ assert.equal(result.stats.solids,1);
+ assert.ok(Math.abs(result.stats.volume-(3600-24*Math.PI))<1e-4);
+ assert.equal(cad.serialize(),before);
+});
+test('the normal chat starts with roots and can read an exact source on demand',async t=>{
+ const {cad,access}=await setup(t);
+ const {subtractionExample}=cadCommandReference(cadAIContext(),{command:'group'});
+ const draft=await access.preview({revision:cad.revision(),commands:subtractionExample.commands});
+ await access.apply(draft);
+ const initial=await access.sceneForAI();
+ assert.ok(initial.objects.every(object=>object.target.path.length===0));
+ assert.equal(initial.scope.unrequestedSourcesOmitted,true);
+ const full=await cad.describe();
+ const source=full.objects.find(object=>object.target.path.length>0);
+ assert.ok(source);
+ const report=await access.analyze([{id:'specific',engine:'app',kind:'sceneScope',options:{targets:[source.target]}}]);
+ const result=report.results[0].value;
+ assert.equal(result.revision,initial.revision);
+ assert.deepEqual(result.objects.map(object=>object.target),[source.target]);
+});
+test('explicit preview measurements find a misplaced bore without committing the draft',async t=>{
+ const {cad}=await setup(t),before=cad.serialize(),revision=cad.revision(),undo=cad.state().undo;
+ let scene=await cad.describe();
+ const access=createCadAutomationAccess({controller:cad,getScene:()=>scene,refresh:async()=>{scene=await cad.describe();},getModelChecksEnabled:()=>false});
+ const commands=x=>[{op:'drill',target:'body',reference:ref(x,0),diameter:4,as:'bore'}];
+ const checks=[{kind:'bore',target:'$bore',from:[-10,0,2],to:[-10,0,-2],diameter:4}];
+ const misplaced=await access.preview({revision,commands:commands(10)});
+ const bad=await access.dispatch('analysis',{revision,previewId:misplaced.previewId,checks});
+ assert.equal(bad.verification.passed,false);
+ await access.dispatch('discard',{revision,previewId:misplaced.previewId});
+ await assert.rejects(access.dispatch('analysis',{revision,previewId:misplaced.previewId,checks}),{code:'PREVIEW_MISSING'});
+ const corrected=await access.preview({revision,commands:commands(-10)});
+ const good=await access.dispatch('analysis',{revision,previewId:corrected.previewId,checks});
+ assert.equal(good.previewId,corrected.previewId);
+ assert.equal(good.applied,false);
+ assert.equal(good.verification.passed,true);
+ assert.equal(cad.serialize(),before);
+ assert.equal(cad.state().undo,undo);
+});
 test('KI erstellt und bearbeitet Bohrungsmuster in einer Vorschau und löst Position atomar',async t=>{
  const {cad,access}=await setup(t),before=cad.serialize();
  const proposal=await access.preview({revision:cad.revision(),commands:[{op:'drill',target:'body',reference:ref(-10,0),associative:true,diameter:4,as:'bore'},{op:'editDrill',target:'$bore',patch:{pattern:line}}]});

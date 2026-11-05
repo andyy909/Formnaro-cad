@@ -1,4 +1,4 @@
-import {profileMidpoints} from '../src/sketch-profile.js';
+import {profileMidpoints,profileGaps,closeProfileGap} from '../src/sketch-profile.js';
 import {sketchSnap} from '../src/sketch-interaction.js';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {cadSketchExpression,defaultCadSketch,resolveCadSketch} from '../src/cad-sketch.js';
@@ -14,6 +14,38 @@ import {createMeshEngineAdapter} from '../src/mesh-engine-adapter.js';
 const oc=await load({print:()=>{},printErr:()=>{}}),resolve=s=>resolveSketchProfile(s,cadSketchExpression),near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} vs ${b}`);
 function plate(){let s=defaultCadSketch();s.dimensions.width='60';s.dimensions.depth='40';s.dimensions.height='3';return profileFromLegacy(s,resolveCadSketch(s));}
 test('Rich plate retains analytic circles, slot arcs, formulas and native volume',()=>{let s=plate();for(const x of [-25,25])for(const y of [-15,15])s=appendProfileLoop(s,[{id:crypto.randomUUID(),type:'circle',center:[x,y],diameter:'4.2'}]);s=appendProfileLoop(s,profilePrimitive('slot',[-10,-3],[10,3]));const r=resolve(s),expected=60*40-4*Math.PI*2.1**2-(14*6+Math.PI*3**2);near(r.area,expected);assert.deepEqual(r.size,[60,40,3]);assert.equal(r.native.holes.length,5);assert.equal(r.sketch.elements.filter(e=>e.type==='arc').length,4);const shape=buildCadContours(oc,{contours:[r.native],height:3});try{near(cadRecipeVolume(oc,shape),expected*3);assert.deepEqual(cadRecipeBounds(oc,shape).size,[60,40,3]);}finally{shape.delete();}});
+test('One internal profile gap can be repaired without replacing its neighbours or formulas',()=>{
+ const sketch=plate(),removed=sketch.elements.splice(1,1)[0];
+ sketch.loops[0].elements.splice(1,1);
+ const original=structuredClone(sketch.elements);
+ assert.throws(()=>resolve(sketch),/offen/);
+ const {elements}=resolveSketchProfile(sketch,cadSketchExpression,{geometryOnly:true});
+ assert.deepEqual(profileGaps(sketch.loops,elements).map(gap=>[gap.from,gap.to]),[[[30,-20],[30,20]]]);
+ const id=closeProfileGap(sketch,elements);
+ assert.deepEqual(sketch.elements.slice(0,-1),original);
+ assert.deepEqual({...sketch.elements.at(-1),id:removed.id},removed);
+ assert.equal(sketch.loops[0].elements[1],id);
+ assert.deepEqual(resolve(sketch).size,[60,40,3]);
+});
+test('A single arc closes with a chord and retains its curved edge',()=>{
+ const arc={id:'arc',type:'arc',start:[0,0],through:[5,5],end:[10,0]};
+ const sketch=appendProfileLoop(plate(),[arc],'outer');
+ const {elements}=resolveSketchProfile(sketch,cadSketchExpression,{geometryOnly:true});
+ assert.ok(closeProfileGap(sketch,elements));
+ assert.deepEqual(sketch.elements[0],arc);
+ near(resolve(sketch).area,Math.PI*25/2);
+});
+test('Ambiguous profile gaps leave the source sketch intact',()=>{
+ const sketch=plate();
+ sketch.elements=sketch.elements.filter((_,i)=>i%2===0);
+ sketch.loops[0].elements=sketch.elements.map(element=>element.id);
+ const original=structuredClone(sketch);
+ const {elements}=resolveSketchProfile(sketch,cadSketchExpression,{geometryOnly:true});
+ assert.equal(profileGaps(sketch.loops,elements).length,2);
+ assert.throws(()=>closeProfileGap(sketch,elements),/Mehrere Konturlücken/);
+ assert.deepEqual(sketch,original);
+});
+
 test('Outer rounded rectangles retain native radius arcs and circles can be outer contours',()=>{let s=plate();s=appendProfileLoop(s,profilePrimitive('roundrect',[-20,-10],[20,10],{radius:2}),'outer');const r=resolve(s);near(r.area,40*20-(4-Math.PI)*4);const circle=defaultCadSketch('circle'),c=resolve(profileFromLegacy(circle,resolveCadSketch(circle)));near(c.area,Math.PI*15**2);});
 test('Crossings, touching holes, outside holes, repeated IDs and open contours reject before modelling',()=>{const s=plate(),circle=(x,y,d)=>({id:crypto.randomUUID(),type:'circle',center:[x,y],diameter:d});assert.throws(()=>resolve(appendProfileLoop(s,[circle(30,0,4)])),/berühren|überschneiden/);assert.throws(()=>resolve(appendProfileLoop(s,[circle(50,0,4)])),/innerhalb/);assert.throws(()=>resolve(appendProfileLoop(appendProfileLoop(s,[circle(0,0,10)]),[circle(0,0,4)])),/verschachteln/);const open=structuredClone(s);open.elements[0].end=['0','0'];assert.throws(()=>resolve(open),/offen/);const duplicate=structuredClone(s);duplicate.elements[0].id=duplicate.elements[1].id;assert.throws(()=>resolve(duplicate),/kennung/i);});
 test('Material geometry ignores construction lines and named formulas stay symbolic',()=>{const s=plate();s.elements.push({id:'guide',type:'line',start:[0,0],end:[100,100],construction:true});const r=resolve(s);assert.deepEqual(r.size,[60,40,3]);assert.equal(r.sketch.elements[0].start[0],'-(60)/2');const symbolic=profileFromLegacy(defaultCadSketch(),resolveCadSketch(defaultCadSketch()));assert.equal(resolve(symbolic).size[0],40);symbolic.variables[0].value='50';assert.equal(resolve(symbolic).size[0],50);});

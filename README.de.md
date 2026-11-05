@@ -15,7 +15,9 @@
 | **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** | **0.125.0-r36** | ca. **667 MB** | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
 | [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) | **0.125.0-r36** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
 
-**Nightly-Ausgabe.** [0.127.0 Nightly r9](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r9) bringt den kompakten KI-Chat, den Szenenkontext für ausgewählte Teile und Übungen auf einer Projektkopie. [Windows-x64-ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r9/Formnaro-v0.127.0-r9-Nightly-Windows-x64.zip).
+**Nightly-Ausgabe.** [0.127.0 Nightly r10](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10) ergänzt die lokale STL-Prüfung um gezielte KI-Flächenkorrekturen und eine geprüfte Symmetrierekonstruktion. KI-Chat und Übungen auf einer Projektkopie sind ebenfalls enthalten. [Windows-x64-ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r10/Formnaro-v0.127.0-r10-Nightly-Windows-x64.zip).
+
+[Passende r10-Quellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r10/Formnaro-Quellcode-v0.127.0-r10.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
 
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
@@ -32,7 +34,7 @@ Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer
 ## Schnell starten
 
 1. Windows-ZIP herunterladen und vollständig in einen eigenen Ordner entpacken.
-2. Alle Unterordner zusammenlassen und **„Formnaro starten“** doppelklicken.
+2. Alle Unterordner zusammenlassen und **Formnaro.exe** doppelklicken.
 3. Ein neues Projekt anlegen oder ein vorhandenes Modell öffnen.
 
 Die Portable-ZIP enthält das Programm, benötigte Laufzeiten, Lizenzen und Startanleitungen. FreeCAD und Python sind enthalten; eine separate Installation ist nicht nötig. Das optionale Modell für Offline-Sprache wird bei Bedarf im Programm heruntergeladen. Die Quellarchive stehen separat auf der Release-Seite.

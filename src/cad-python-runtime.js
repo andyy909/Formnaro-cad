@@ -87,7 +87,7 @@ del _formnaro_analysis_source
    const json=py.runPython("json.dumps(globals().get('result', None), ensure_ascii=False, allow_nan=False)");
    if(json.length>900000)throw Error('Python-Ergebnis ist zu groß. Eine Messzusammenfassung zurückgeben.');
    postMessage({type:'done',value:{value:JSON.parse(json),stdout:output,stderr:errors,pythonVersion:py.runPython('sys.version.split()[0]')}});
-  }catch(error){postMessage({type:'failed',error:{message:String(error.message??error).slice(0,6000),code:String(error.code??'AI_PYTHON')}});}
+  }catch(error){postMessage({type:'failed',error:{message:String(error.message??error).slice(0,6000),code:String(error.code??'AI_PYTHON'),sandboxOutput:{stdout:output.slice(0,4000),stderr:errors.slice(0,4000)}}});}
   finally{for(const url of urls)URL.revokeObjectURL(url);}
  };
 }

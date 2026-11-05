@@ -22,7 +22,7 @@ Formnaro is portable on Windows x64. The modelling workspace works offline.
 | Build | Best for | Download |
 | --- | --- | --- |
 | **0.125.0-r36** · verified preview | The most thoroughly checked public package | **[Windows ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** · [Checks and matching sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) |
-| **0.127.0 Nightly r9** · test build | Trying the compact AI chat, selected-part context, and practice mode on a project copy | **[Windows ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r9/Formnaro-v0.127.0-r9-Nightly-Windows-x64.zip)** · [Nightly release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r9) |
+| **0.127.0 Nightly r10** · test build | Local-first STL conversion, targeted AI corrections, symmetry reconstruction, and project-copy practice | **[Windows ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r10/Formnaro-v0.127.0-r10-Nightly-Windows-x64.zip)** · [Nightly release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10) |
 
 Extract the whole application ZIP into its own folder and start **Formnaro.exe**. FreeCAD and Python are bundled. Source archives are separate downloads. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
@@ -36,10 +36,12 @@ Extract the whole application ZIP into its own folder and start **Formnaro.exe**
 
 *Actual application screenshots: Easy Tinker and Normal in dark mode from 0.117.0-r8; Solid with ATLAS-5 in light mode from 0.120.0-r4; Fusion in light mode from 0.119.0-r2. Click an image to enlarge it.*
 
+[Matching r10 sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r10/Formnaro-Quellcode-v0.127.0-r10.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
+
 ## Quick start
 
 1. Download the Windows ZIP and extract it completely into its own folder.
-2. Keep all subfolders together and double-click **“Formnaro starten”** (“Start Formnaro”).
+2. Keep all subfolders together and double-click **Formnaro.exe**.
 3. Create a new project or open an existing model.
 
 See the [user guide](docs/USER-GUIDE.md) for project files, workspace modes and portable updates. Speech options depend on the build. See the [speech guide](docs/SPRACHEINGABE.md) for the current source branch.

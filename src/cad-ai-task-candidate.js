@@ -3,12 +3,14 @@ import {hasGeometryRefs} from './cad-geometry-ref.js';
 import {cadGeometryDigest} from './cad-geometry-digest.js';
 const invalid=message=>{throw Object.assign(Error(message),{code:'AI_TASK_CANDIDATE_INVALID',feedback:{retryable:false}});};
 const canonical=v=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
+const candidateNode=n=>Object.fromEntries(Object.entries(n).filter(([key])=>!(n.kind==='cad'&&key==='stats')).map(([key,v])=>[key,key==='children'?v.map(candidateNode):v]));
+export const taskCandidateNodeKey=node=>JSON.stringify(canonical(candidateNode(node)));
 // A fresh native rebuild may refresh cached statistics. Every BRep byte,
 // source recipe, triangle, placement and persisted non-statistical field must
 // still match the archived candidate. This never authorizes a public report.
 export function taskCandidateModelKey(value){
- const project=cadProjectSnapshot(value),node=n=>Object.fromEntries(Object.entries(n).filter(([key])=>!(n.kind==='cad'&&key==='stats')).map(([key,v])=>[key,key==='children'?v.map(node):v]));
- return cadGeometryDigest(JSON.stringify(canonical({...project,nodes:project.nodes.map(node)})));
+ const project=cadProjectSnapshot(value);
+ return cadGeometryDigest(JSON.stringify(canonical({...project,nodes:project.nodes.map(candidateNode)})));
 }
 export function validateTaskCandidate(value,aliases={}){
  const project=cadProjectSnapshot(value);

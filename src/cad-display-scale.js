@@ -20,3 +20,16 @@ export function cadDisplayIsometry(matrix){
   const columns=[0,1,2].map(i=>matrix.slice(i*4,i*4+3)),dot=(a,b)=>a.reduce((n,v,i)=>n+v*b[i],0);
   return columns.every((a,i)=>columns.every((b,j)=>Math.abs(dot(a,b)-(i===j?1:0))<=1e-12));
 }
+
+// A geometric tier is always at least as fine as the requested deflection.
+// An already cached neighboring tier is admissible only within the 10% budget.
+const DISPLAY_TIER_RATIO=1.08;
+export function cadDisplayDeflectionLevels(requested){
+  if(!Number.isFinite(requested)||requested<=0)throw Error('Ungültige CAD-Anzeigegenauigkeit.');
+  let exponent=Math.floor(Math.log(requested)/Math.log(DISPLAY_TIER_RATIO));
+  let tier=DISPLAY_TIER_RATIO**exponent;
+  if(tier>requested)tier=DISPLAY_TIER_RATIO**--exponent;
+  if(tier<requested/1.1||tier<=0)return [requested];
+  const finer=DISPLAY_TIER_RATIO**(exponent-1);
+  return finer>0&&finer>=requested/1.1?[tier,finer]:[tier];
+}

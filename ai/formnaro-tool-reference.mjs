@@ -15,6 +15,25 @@ const purposes={
 };
 const field=(id,label,type='input',extra={})=>({target:'ui:id:'+id,label,type,...extra});
 const recipes={
+ drawing:{
+  controls:[field('drawing-sheet','Zeichnungsblatt','select'),field('drawing-name','Blattname'),field('drawing-title-block','Titelblock öffnen','summary'),field('drawing-title','Titel'),
+   field('drawing-scale','Maßstab','select'),field('drawing-update','Blatt aktualisieren','button'),
+   field('drawing-auto-mode','Automatische Bemaßung','select',{options:[{value:'basic',label:'Grundbemaßung'},{value:'detailed',label:'Detaillierte Bemaßung'}]}),
+   field('drawing-auto','Automatisch bemaßen','button'),field('drawing-apply','Blatt übernehmen','button')],
+  steps:['Vollständige sichtbare CAD-Teile auswählen. Technisches Zeichnungsblatt öffnen. Ein neues Blatt startet mit Vorder-, Drauf- und Seitenansicht.','Für den Titel zuerst ui:id:drawing-title-block anklicken und anschließend ui:id:drawing-title setzen. Der Blattname ist ein eigenes Feld.','„Blatt aktualisieren“ berechnet die Ansichten. Danach optional „Automatisch bemaßen“ ausführen. „Blatt übernehmen“ speichert das bearbeitbare Blatt im aktuellen Projekt und schließt den Dialog. Im Übungsfenster endet damit die Blattbearbeitung.','Nach einer Änderung des CAD-Körpers das gespeicherte Blatt erneut öffnen und aktualisieren. Eindeutige Maßbezüge werden aktualisiert. Verlorene Bezüge als offen melden.']
+ },
+ sketch:{
+  controls:[
+   field('sketch-kind','Kontur','select',{options:[{value:'rectangle',label:'Rechteck'},{value:'circle',label:'Kreis'},{value:'polygon',label:'Geschlossene Kontur'},{value:'profile',label:'Konturen mit Öffnungen'}]}),
+   field('sketch-profile-enable','Konturen mit Öffnungen …','button'),
+   field('sketch-profile-role','Konturrolle','select',{options:[{value:'outer',label:'Außenkontur ersetzen'},{value:'hole',label:'Innenöffnung hinzufügen'}]}),
+   field('sketch-profile-shape','Zeichenform','select',{options:[{value:'line',label:'Linienzug'},{value:'circle',label:'Kreis'},{value:'rectangle',label:'Rechteck'}]}),
+   field('sketch-profile-close','Linienzug schließen','button'),
+   {target:'ui:label:Extrusionshöhe',label:'Extrusionshöhe',type:'input',unit:'mm'},
+   field('sketch-preview','Vorschau berechnen','button'),field('sketch-apply','Extrudieren und hinzufügen','button')
+  ],
+  steps:['Skizze öffnen. Für getrennte Außen- und Innenkonturen „Konturen mit Öffnungen“ wählen.','Im Übungsmodus Skizzenpunkte per sketch-gesture als [u,v] in mm anklicken. Für Kreise von der Mitte bis zum Rand ziehen. Einen Linienzug über „Linienzug schließen“ schließen. Eine offene Kontur während des Zeichnens ist normal.','Höhe im sichtbaren Feld setzen, Vorschau berechnen, Ergebnis prüfen und erst dann extrudieren.']
+ },
  properties:{controls:[field('size-anchor','Größenanker','select',{options:[{value:'legacy',label:'Bisherige Ecke'},{value:'center',label:'Mittelpunkt festhalten'}]})],steps:['Ein bearbeitbares Teil oder eine ausdrücklich gewählte Quelle auswählen.','Größenanker wählen: bisherige Ecke, Mittelpunkt oder eine lokale min/max-Ecke.','Maße entlang der Formachsen eingeben; die gemeinsame affine Größenfunktion erhält den gewählten Anker.'],commandDetails:{command:'update'}},
  drill:{steps:['Den fertigen Wurzelkörper ausdrücklich auswählen.','Eintrittsfläche und native Normale wählen. Bohrweg, Tiefe und gesamtes Ziel beachten.','Vorschau nennt Weltbezug und betroffenen Körper; native Bohrungs-/Abstandsmessung ausdrücklich anfordern.'],commandDetails:{command:'tool',tool:'previewDrill'}},
  joints:{steps:['Wurzelteile auswählen und Gelenke öffnen.','Hauptkörper ausdrücklich wählen und Als starre Baugruppe verbinden ausführen.','Die Körper bleiben einzeln erhalten; widersprüchliche Gelenke werden zurückgewiesen.'],commandDetails:{command:'joint',action:'rigid-assembly'}},
@@ -27,10 +46,13 @@ const recipes={
 };
 const normal=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function toolReferenceIndex(){return PROGRAM_TOOLS.map(({id,label})=>({id,label}));}
-export function lookupToolReference(request,{state,practice=false}={}){
+export function lookupToolReference(request,{state,practice=false,practicePanel}={}){
  if(!request||typeof request!=='object'||Array.isArray(request)||Object.keys(request).length!==1||!['tool','query'].includes(Object.keys(request)[0]))throw Error('Werkzeugauskunft: genau tool oder query angeben.');
  if(typeof (request.tool??request.query)!=='string'||(request.tool??request.query).length>300||/[\x00-\x1f]/.test(request.tool??request.query))throw Error('Werkzeugauskunft: kurzer Werkzeugname oder Suchtext erforderlich.');
- const describe=t=>{const detailed=!t.description.startsWith('Vorhandenes Formnaro-Werkzeug.'),recipe=recipes[t.key],current=!practice&&state?.targets?.find(s=>s.id===t.id);return {id:t.id,label:t.label,purpose:detailed?t.description:purposes[t.key]??'Für dieses registrierte Werkzeug liegt noch keine vertiefte Beschreibung vor.',documentationLevel:detailed||purposes[t.key]?'documented':'catalogue-only',prerequisites:t.requirement,location:t.path,practiceTarget:'ui:'+t.id,...(recipe?Object.fromEntries(Object.entries(structuredClone(recipe)).filter(([k])=>!practice||k!=='modelExample')):{steps:['Die angegebene Werkzeuggruppe öffnen und das benannte Werkzeug wählen.','Die aktuell sichtbaren Felder und Optionen aus dem lokalen UI-Zustand lesen; fehlende Parameter nicht erfinden.']}),...(current?{availability:structuredClone(current),mode:state.mode,revealVia:PROGRAM_TOOL_TABS[state.mode]?.[t.key]}:{}),...(!practice&&state?.dialog?{activePanel:structuredClone(state.dialog)}:{}),scope:practice?'Isolated practice only; no parent selection, fields or project state included.':'Reference information only; no action executed.'};};
+ const describe=t=>{const detailed=!t.description.startsWith('Vorhandenes Formnaro-Werkzeug.'),recipe=recipes[t.key],current=!practice&&state?.targets?.find(s=>s.id===t.id);return {id:t.id,label:t.label,purpose:detailed?t.description:purposes[t.key]??'Für dieses registrierte Werkzeug liegt noch keine vertiefte Beschreibung vor.',documentationLevel:detailed||purposes[t.key]?'documented':'catalogue-only',prerequisites:t.requirement,location:t.path,practiceTarget:'ui:'+t.id,...(recipe?Object.fromEntries(Object.entries(structuredClone(recipe)).filter(([k])=>!practice||k!=='modelExample')):{steps:['Die angegebene Werkzeuggruppe öffnen und das benannte Werkzeug wählen.','Die aktuell sichtbaren Felder und Optionen aus dem lokalen UI-Zustand lesen; fehlende Parameter nicht erfinden.']}),...(current?{availability:structuredClone(current),mode:state.mode,revealVia:PROGRAM_TOOL_TABS[state.mode]?.[t.key],
+ runtimeStatus:current.disabled?'disabled':current.visible?'visible':current.present?'hidden':'absent'}:{}),
+ ...(practice&&practicePanel?{practicePanel:structuredClone(practicePanel)}:{}),
+ ...(!practice&&state?.selection?{selection:structuredClone(state.selection)}:{}),...(!practice&&state?.dialog?{activePanel:structuredClone(state.dialog)}:{}),scope:practice?'Isolated practice only; no parent selection, fields or project state included.':'Reference information only; no action executed.'};};
  if(request.tool!==undefined){const key=request.tool.replace(/^ui:/,'').replace(/^tool:/,''),tool=PROGRAM_TOOLS.find(t=>t.key===key||normal(t.label)===normal(request.tool));if(!tool)return {ok:false,error:'Unbekanntes registriertes Werkzeug: '+request.tool,suggestions:lookupToolReference({query:request.tool},{practice}).matches};return {ok:true,tool:describe(tool)};}
  const words=normal(request.query).split(/[^a-z0-9-]+/).filter(Boolean);const matches=PROGRAM_TOOLS.map(t=>({t,score:words.reduce((n,w)=>n+(normal(t.id+' '+t.label).includes(w)?5:normal(t.description+' '+t.path+' '+(purposes[t.key]??'')).includes(w)?1:0),0)})).filter(r=>!words.length||r.score>0).sort((a,b)=>b.score-a.score).map(r=>r.t);
  return {ok:true,total:matches.length,truncated:matches.length>12,matches:matches.slice(0,12).map(describe)};

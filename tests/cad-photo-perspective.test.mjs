@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {photoPlane,projectPhotoPoint,measurePerspectivePhoto} from '../src/cad-photo-perspective.js';
 import {validatePhotoReference,measurePhoto,photoEvidence} from '../src/cad-photo-data.js';
 import {rectifyPhotoPixels} from '../src/cad-photo-rectify.js';
-import {suggestPhotoContour} from '../src/cad-photo-contours.js';
+import {compactPhotoContour,suggestPhotoContour,suggestPhotoSilhouette} from '../src/cad-photo-contours.js';
 import {perspectiveReference,pixelPlate} from './expansion-fixtures.mjs';
 const close=(a,b,e=1e-7)=>assert(Math.abs(a-b)<e,a+' != '+b);
 test('A projective rectangle maps corners and interior points in both directions',()=>{
@@ -34,4 +34,36 @@ test('Identity rectification preserves pixels; tilted rectification is bounded a
 test('Local edge proposal is unconfirmed and leaves inputs intact; low-contrast evidence fails',()=>{
  const input=pixelPlate(160,120),before=Buffer.from(input.data),suggestion=suggestPhotoContour(input);assert.equal(suggestion.confirmed,false);assert(suggestion.points.length>=4);assert(suggestion.points.length<=256);assert.deepEqual(Buffer.from(input.data),before);assert(suggestion.warnings[0].includes('Öffnungen'));
  const blank={...input,data:new Uint8ClampedArray(input.data.length).fill(255)};assert.throws(()=>suggestPhotoContour(blank),/Keine zusammenhängende/);assert.throws(()=>suggestPhotoContour({...input,width:1e9}));assert.throws(()=>suggestPhotoContour(input,{threshold:0}));
+});
+test('The dense edge candidate from a skewed photo retains its four corners after compaction',()=>{
+ const original=[[39,34],[50,34],[73,36],[253,52],[264,53],[265,54],[265,60],[264,67],[248,167],
+  [246,179],[245,180],[233,180],[208,178],[60,166],[58,164],[57,158],[39,41]];
+ const before=structuredClone(original);
+ const result=compactPhotoContour(original,2);
+ const expected=[[40,35],[265,55],[245,180],[60,165]];
+ assert.equal(result.length,4);
+ assert(expected.every(([x,y])=>result.some(([a,b])=>Math.hypot(a-x,b-y)<=3)));
+ assert.deepEqual(original,before);
+});
+test('A bounded two-colour silhouette preserves a recess and its separate inner contour',()=>{
+ const width=60,height=50,data=new Uint8ClampedArray(width*height*4).fill(255);
+ const paint=(x,y,shade)=>data.set([shade,shade,shade,255],(y*width+x)*4);
+ for(let y=10;y<40;y++)for(let x=10;x<50;x++){
+  if((y<20&&x>=30)||(y>=25&&y<30&&x>=15&&x<20))continue;
+  paint(x,y,119);
+ }
+ const pixels={width,height,data},before=Uint8ClampedArray.from(data);
+ assert.deepEqual(suggestPhotoSilhouette(pixels),{
+  outline:[[10,10],[30,10],[30,20],[50,20],[50,40],[10,40]],
+  openings:[[[15,25],[15,30],[20,30],[20,25]]]
+ });
+ assert.deepEqual(data,before);
+ paint(10,10,120);
+ assert.equal(suggestPhotoSilhouette(pixels),null,'A textured third colour falls back to the ordinary suggestion');
+ paint(10,10,119);
+ paint(0,10,119);
+ assert.equal(suggestPhotoSilhouette(pixels),null,'A contour touching the image boundary is ambiguous');
+ paint(0,10,255);
+ paint(7,7,119);
+ assert.equal(suggestPhotoSilhouette(pixels),null,'Separate components are not silently dropped');
 });

@@ -18,8 +18,9 @@ export function createCadTransactions({initial,build,abort=()=>{},now=()=>Date.n
   let cachedOwner,cachedRead,cachedText,cachedWorkspaceSerializer;
   function confirmedCache(){if(cachedOwner!==confirmed){cachedOwner=confirmed;cachedRead=undefined;cachedText=undefined;cachedWorkspaceSerializer=undefined;}}
   function readSnapshot(){confirmedCache();return cachedRead??=confirmed;}
-  function serialize(){confirmedCache();return cachedText??=serializeCadProject(confirmed);}
-  function serializeWorkspace(workspace){confirmedCache();cachedWorkspaceSerializer??=createCadWorkspaceSerializer(confirmed);return cachedWorkspaceSerializer(workspace);}
+  function workspaceSerializer(){return cachedWorkspaceSerializer??=createCadWorkspaceSerializer(confirmed);}
+  function serialize(){confirmedCache();return cachedText??=(Object.hasOwn(confirmed,'workspace')?serializeCadProject(confirmed):workspaceSerializer()());}
+  function serializeWorkspace(workspace){confirmedCache();return workspace===undefined&&!Object.hasOwn(confirmed,'workspace')?serialize():workspaceSerializer()(workspace);}
   const checkRevision=expected=>{if(expected!==revision)throw failure('STALE_REVISION','Das CAD-Modell wurde geändert. Vorschau neu berechnen.');};
   function prune(){const cutoff=now()-previewLifetime;for(const [id,p] of previews)if(p.created<cutoff)previews.delete(id);}
   function cancel(){if(!active)return false;const pending=active;active=null;generation++;pending.controller.abort();abort();return true;}

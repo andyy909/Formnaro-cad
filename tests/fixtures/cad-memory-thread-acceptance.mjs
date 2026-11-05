@@ -7,7 +7,7 @@ import {buildCadThread,screwSections,screwSurfaceDefinition} from '../../src/cad
 import {validateCadSolid,writeCadBrep,readCadBrep} from '../../src/cad-native-kernel.js';
 import {assertCadRecipeTolerance} from '../../src/cad-recipes.js';
 import {exportCadStep,importCadStep} from '../../src/cad-step-io.js';
-import {cadNativeMemory} from '../../src/cad-native-memory.js';
+import {cadNativeMemory,CAD_MEMORY_POLICY} from '../../src/cad-native-memory.js';
 import {cadDisplayPreset,CAD_QUALITY_DEFAULTS} from '../../src/cad-quality.js';
 const params=(patch={})=>({kind:'external',profile:'trapezoid',diameter:12,pitch:4,length:80,hand:'right',starts:1,phase:0,clearance:0,leadIn:0,head:'none',...patch});
 export async function memoryRecovery(){
@@ -20,7 +20,54 @@ export async function memoryRecovery(){
 export async function recoveryAfterCommit(){
  let requestBudget=false,workers=0;const factory=()=>{workers++;const w=new Worker(new URL('./cad-node-worker.mjs',import.meta.url),{workerData:{memoryPolicy:{retireBytes:1024**3,stopBytes:2*1024**3}}}),adapter={postMessage:v=>{if(requestBudget&&v.type==='compute'){requestBudget=false;w.postMessage({type:'test-memory-limit'});}w.postMessage(v);},terminate:()=>w.terminate()};w.on('message',v=>adapter.onmessage?.({data:v}));w.on('error',e=>adapter.onerror?.(e));return adapter;};
  const controller=createCadController({createWorker:factory}),access=createCadAutomationAccess({controller,getModelChecksEnabled:()=>false});try{
- const initial=controller.revision(),first=await access.preview({revision:initial,commands:[{op:'create',type:'thread',size:[12,12,12],params:params({length:12}),as:'thread'}],checks:[]});await access.apply({revision:first.revision,previewId:first.previewId});const committed=controller.serialize(),revision=controller.revision();const second=await access.preview({revision,commands:[{op:'create',type:'box',size:[2,2,2]}],checks:[]});requestBudget=true;await assert.rejects(controller.describe(),{code:'CAD_MEMORY_BUDGET'});assert.equal(controller.serialize(),committed);assert.equal(controller.state().undo,1);await controller.describe();assert.equal(controller.state().worker.memory.constructions,0);assert.equal(controller.serialize(),committed);assert.ok(controller.getPreview(second.previewId));await access.apply({revision,previewId:second.previewId});assert.equal(controller.state().undo,2);controller.undo();assert.equal(controller.revision(),revision);controller.undo();assert.equal(controller.revision(),initial);return {status:'completed',workers,confirmedGeometryRetained:true,pendingPreviewRetained:true,restoredConstructionCount:0,undoPreserved:true};
+ const initial=controller.revision(),first=await access.preview({revision:initial,commands:[{op:'create',type:'thread',size:[12,12,12],params:params({length:12}),as:'thread'}],checks:[]});await access.apply({revision:first.revision,previewId:first.previewId});const committed=controller.serialize(),revision=controller.revision();const second=await access.preview({revision,commands:[{op:'create',type:'box',size:[2,2,2]}],checks:[]});controller.invalidateDisplayView();requestBudget=true;await assert.rejects(controller.describe(),{code:'CAD_MEMORY_BUDGET'});assert.equal(controller.serialize(),committed);assert.equal(controller.state().undo,1);await controller.describe();assert.equal(controller.state().worker.memory.constructions,0);assert.equal(controller.serialize(),committed);assert.ok(controller.getPreview(second.previewId));await access.apply({revision,previewId:second.previewId});assert.equal(controller.state().undo,2);controller.undo();assert.equal(controller.revision(),revision);controller.undo();assert.equal(controller.revision(),initial);return {status:'completed',workers,confirmedGeometryRetained:true,pendingPreviewRetained:true,restoredConstructionCount:0,undoPreserved:true};
+ }finally{controller.dispose();}
+}
+export async function jointedMemoryRecovery(initial){
+ let injectBudget=false,abortOnProgress=false,workers=0,peakWasmReservedBytes=0;
+ const factory=()=>{
+  workers++;
+  const native=new Worker(new URL('./cad-node-worker.mjs',import.meta.url),{workerData:{memoryPolicy:CAD_MEMORY_POLICY}});
+  const adapter={postMessage(value){if(injectBudget&&value.type==='compute'){injectBudget=false;native.postMessage({type:'test-memory-limit'});}native.postMessage(value);},terminate:()=>native.terminate()};
+  native.on('message',data=>{
+   peakWasmReservedBytes=Math.max(peakWasmReservedBytes,data.memory?.wasmReservedBytes??data.heapBytes??0);
+   adapter.onmessage?.({data});
+  });native.on('error',error=>adapter.onerror?.(error));return adapter;
+ };
+ const controller=createCadController({initial,createWorker:factory,onOperationProgress(event){
+  if(abortOnProgress&&event.phase==='command'){abortOnProgress=false;controller.cancel();}
+ }});
+ try{
+  const joint=controller.readSnapshot().joints.joints[0],move=value=>controller.previewJoints({action:'move',values:[{jointId:joint.id,value}]});
+  const value=joint.value+(joint.value<joint.limits.max-2?1:-1);
+  controller.apply(await move(value));
+  const confirmed=controller.serialize(),depth=controller.state().undo;
+  const memory=()=>{
+   const worker=controller.state().worker;
+   return {workers,generation:worker.generation,retirements:worker.retirements,wasmReservedBytes:worker.heapBytes,peakWasmReservedBytes,processRssBytes:process.memoryUsage().rss};
+  };
+  const before=memory(),rows=[];
+  async function continueWork(action){
+   assert.equal(controller.serialize(),confirmed);
+   assert.equal(controller.state().undo,depth);
+   const scene=await controller.describe();
+   assert.equal(scene.objects.filter(object=>!object.target.path.length).length,initial.nodes.length);
+   controller.apply(await move(joint.value));
+   assert.notEqual(controller.serialize(),confirmed);
+   controller.undo();
+   assert.equal(controller.serialize(),confirmed);
+   assert.equal(controller.state().undo,depth);
+   rows.push({action,...memory()});
+  }
+  controller.invalidateDisplayView();injectBudget=true;
+  await assert.rejects(controller.describe(),{code:'CAD_MEMORY_BUDGET'});
+  await continueWork('memory-budget');
+  abortOnProgress=true;
+  await assert.rejects(controller.preview({kind:'create',recipe:{type:'thread',size:[12,12,248],params:params({length:248})},options:{id:'long-thread-abort'}}),{code:'ABORTED'});
+  assert.equal(abortOnProgress,false);
+  await continueWork('long-thread-abort');
+  assert.ok(rows[0].workers>before.workers&&rows[1].workers>rows[0].workers);
+  return {status:'completed',policy:CAD_MEMORY_POLICY,roots:initial.nodes.length,joints:initial.joints.joints.length,confirmedBytes:Buffer.byteLength(confirmed),before,rows};
  }finally{controller.dispose();}
 }
 export async function threadAcceptance(name,oc,service){

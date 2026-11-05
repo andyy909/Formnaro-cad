@@ -3,6 +3,15 @@ import {cadFormLocalDimensions} from './cad-interface-state.js';
 import {CAD_SHAPES} from './cad-shapes.js';
 // Task-locked practice construction uses real native UI input only.
 // No generic geometry/API fallback is available.
+export function practiceScrewEvidence(drives,values,selected){
+ const byId=new Map(values.map(row=>[row.id,row.value])),ids=new Set(selected);
+ return (drives??[]).filter(c=>c.kind==='screw'&&(ids.has(c.rotary)||ids.has(c.linear))).map(c=>{
+  const angle=byId.get(c.rotary),actual=byId.get(c.linear),expected=angle*c.lead*c.direction/360+c.phase;
+  const tolerance=1e-6,available=Number.isFinite(expected)&&Number.isFinite(actual);
+  return {id:c.id,kind:'screw',angle,expected,actual,tolerance,status:!available?'unavailable':Math.abs(actual-expected)<=tolerance?'passed':'failed'};
+ });
+}
+
 export function createPracticeModelUI({controller,access,input,waitFor,checkpoint,settled,document,aliases=new Map()}){
  const joints=new Map(),gears=new Map(),project=()=>controller.readSnapshot(),q=id=>document.getElementById(id);
  const ui=async(action,target,value,text)=>{await checkpoint();await input({target:'ui:id:'+target,action,...(value===undefined?{}:{value:String(value)})},text);await settled();};
@@ -22,7 +31,7 @@ export function createPracticeModelUI({controller,access,input,waitFor,checkpoin
  async function details(id,toggle,text){if(!q(id).open)await click(toggle,text);}
  async function coordinates(name,values){for(let k=0;k<3;k++)await set('joint-'+name+'-'+k,values[k],(name==='origin'?'Drehpunkt ':'Achsenrichtung ')+['X','Y','Z'][k]+' einstellen.');}
  async function commit(button,text){const revision=controller.revision();await click(button,text);await waitFor(()=>controller.revision()!==revision,'Gelenkeinstellung übernehmen');}
- async function joint(command,{holdMotion=false,motionTargets=[]}={}){
+ async function joint(command,{holdMotion,motionTargets,motionStates,motionCouplings}){
   const {op,...r}=resolve(command);await open();
   if(r.action==='create'){
    const j=r.joint,parent=root(j.parentId),child=root(j.childId);if(!parent||!child)throw Error('Für Gelenke vollständige Körper wählen.');
@@ -42,7 +51,7 @@ export function createPracticeModelUI({controller,access,input,waitFor,checkpoin
     const field='joint-value-'+v.jointId,slider=q('joint-slider-'+v.jointId);
     const joint=project().joints?.joints.find(j=>j.id===v.jointId);
     if(!joint||!slider||!q(field)||!Number.isFinite(v.expected)||joint.limits&&(v.expected<joint.limits.min||v.expected>joint.limits.max))throw Error('Ungültiges Bewegungsziel: '+v.jointId);
-    await ui('drag',slider.id??('joint-slider-'+v.jointId),v.expected,'Den Antriebsregler ziehen. Die gekoppelten Räder laufen mit.');
+    await ui('drag',slider.id??('joint-slider-'+v.jointId),v.expected,'Den Antriebsregler ziehen. Die gekoppelten Teile bewegen sich mit.');
     // Native range controls quantize mouse positions to pixels. A visible
     // number-field correction is necessary before accepting an exact angle.
     if(!matches(Number(q(field)?.value),v.expected))await set(field,v.expected,'Den genauen Zielwert '+v.expected+' im Zahlenfeld einstellen.');
@@ -53,6 +62,10 @@ export function createPracticeModelUI({controller,access,input,waitFor,checkpoin
    if(!holdMotion&&!q('joint-apply').disabled)await commit('joint-apply','Die gezeigte Endstellung einmal übernehmen.');
    if(!holdMotion)for(const v of previewValues)if(!matches(project().joints?.joints.find(j=>j.id===v.id)?.value,v.value))throw Error('Gespeicherte Kopplungsstellung weicht von der Vorschau ab: '+v.id);
    for(const v of targets){const actual=holdMotion?Number(q('joint-value-'+v.jointId)?.value):project().joints?.joints.find(j=>j.id===v.jointId)?.value;if(!matches(actual,v.expected))throw Error('Gespeicherter Bewegungswert stimmt nicht mit dem Ziel überein: '+v.jointId);motionTargets.push({...v,preview:previewValues.find(j=>j.id===v.jointId)?.value,actual,persisted:!holdMotion});}
+   const couplings=practiceScrewEvidence(project().joints?.drives,previewValues,targets.map(v=>v.jointId));
+   if(couplings.length)motionCouplings.push({revision:controller.revision(),persisted:!holdMotion,checks:couplings});
+   if(couplings.some(c=>c.status!=='passed'))throw Error('Der gemessene Vorschub stimmt nicht mit der bestehenden Schraubkopplung überein.');
+   motionStates?.push({jointValues:previewValues,persisted:!holdMotion,revision:controller.revision()});
   }else if(r.action==='gear-remove'){
    await details('joint-gears','joint-gears-toggle','Zahnradkopplungen öffnen.');await commit('joint-gear-remove-'+gearId(r.gearId),'Die gewählte Kopplung lösen.');
   }else if(['limits','rebind','remove'].includes(r.action)){
@@ -81,9 +94,17 @@ export function createPracticeModelUI({controller,access,input,waitFor,checkpoin
  async function run(action,{holdMotion=false}={}){
   if(!Array.isArray(action.commands)||!action.commands.length||action.commands.some(c=>!isPracticeUICommand(c)))throw Error('Übungsauftrag: kein direkter Modell- oder Skriptzugriff. Nur sichtbar bediente Grundformen und Gelenke sind freigegeben.');
   if(action.commands.some(c=>c.op==='create')&&(!project().workplane.origin.every(v=>v===0)||!project().workplane.orientation.every((v,k)=>v===(k===3?1:0))))throw Error('Grundformen hier über die sichtbaren Bedienelemente auf der aktuellen Arbeitsebene einsetzen.');
-  const motionTargets=[];for(const command of action.commands){await checkpoint();if(command.op==='joint')await joint(command,{holdMotion,motionTargets});else await create(command);}if(!holdMotion)await close();
+  const motionTargets=[],motionCouplings=[];
+  const motionStates=action.commands.filter(command=>command.op==='joint'&&command.action==='move').length>1?[]:null;
+  for(const [index,command] of action.commands.entries()){
+   await checkpoint();
+   const next=action.commands[index+1],hold=next?next.op==='joint'&&next.action==='move':holdMotion;
+   if(command.op==='joint')await joint(command,{holdMotion:hold,motionTargets,motionStates,motionCouplings});
+   else await create(command);
+  }
+  if(!holdMotion)await close();
   let verification={version:1,checks:[]};if(action.checks?.length){const p=await controller.preview(undefined);try{verification=await controller.checkPreview(p.previewId,resolve(action.checks),{collectFailures:true});}finally{controller.discard(p.previewId);}}
-  return {verification,motionTargets,jointValues:(project().joints?.joints??[]).map(j=>({id:j.id,value:Number(q('joint-value-'+j.id)?.value??j.value)})),visibleJointControls:true};
+  return {verification,motionTargets,...(motionCouplings.length?{motionCouplings}:{}),...(motionStates?{motionStates}:{}),jointValues:(project().joints?.joints??[]).map(j=>({id:j.id,value:Number(q('joint-value-'+j.id)?.value??j.value)})),visibleJointControls:true};
  }
  return {run,rootAlias:name=>root(aliases.get(name)),aliasState:()=>[...aliases].slice(0,32).map(([alias,target])=>({alias,target:structuredClone(target),kind:project().nodes.find(n=>n.id===root(target))?.kind??null})),reset(){aliases.clear();joints.clear();gears.clear();}};
 }

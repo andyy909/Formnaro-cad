@@ -24,3 +24,7 @@ Modelling and file operations work offline. **Settings → AI / API** controls t
 ## Move or update a portable installation
 
 Back up your project files and any portable `Daten`, `Layouts` and `Projekte` folders before switching installations. Extract the new release into its own folder and check that it opens your projects. You may have to re-enter Windows-protected credentials when moving to another computer.
+
+## STL conversion in Nightly r10
+
+Choose Import → reconstruct as CAD for a checked local STEP candidate. Optional AI refinement examines measured or selected regions. The converter also offers symmetry reconstruction from an overlapping side. Review the CAD preview and apply it with one Undo step. See the [converter guide](STL-TO-CAD.md) for steps, precision and size limits.

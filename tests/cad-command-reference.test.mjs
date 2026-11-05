@@ -1,5 +1,22 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {cadAIContext} from '../src/cad-ai-context.js';import {cadCommandReference,compactCadContext,selectCadScene} from '../src/cad-command-reference.js';import {CAD_PRECISE_TOOL_SCHEMAS,validateCadPreciseTool} from '../src/cad-precise-tools.js';
 const context=cadAIContext();
+test('scoped scene exposes relevant joints without reading native reference catalogs',async()=>{
+ const {createCadAutomationAccess}=await import('../src/cad-automation-access.js');
+ const make=(id,parentId,childId,kind,value)=>({id,name:id,parentId,childId,kind,value});
+ const project={joints:{
+  joints:[make('rotary','base','spindle','revolute',360),make('linear','base','slide','prismatic',4),make('other','frame','cover','revolute',0)],
+  drives:[{id:'screw',kind:'screw',rotary:'rotary',linear:'linear',lead:4}],
+ }};
+ const objects=['base','spindle','slide','frame','cover'].map(id=>({id,kind:'cad',target:{rootId:id,path:[]}}));
+ const controller={revision:()=> 'r',readSnapshot:()=>project,query:()=>assert.fail('Scoped reads must not query geometry')};
+ const access=createCadAutomationAccess({controller,getScene:()=>({revision:'r',objects})});
+ const result=await access.dispatch('scene',{ids:['base']});
+ assert.deepEqual(result.objects.map(object=>object.id),['base']);
+ assert.deepEqual(result.joints.joints.map(joint=>[joint.id,joint.value]),[['rotary',360],['linear',4]]);
+ assert.deepEqual(result.joints.drives.map(drive=>drive.id),['screw']);
+ assert.equal(result.revision,'r');
+ assert.equal(result.scope.automaticReferenceCatalogOmitted,true);
+});
 test('compact profile retains policy and actual server request fields while shrinking the catalogue',()=>{const full=JSON.stringify(context),small=compactCadContext(context);assert.ok(JSON.stringify(small).length<full.length/10);assert.deepEqual(small.designFreedom,context.designFreedom);assert.deepEqual(small.saveSchema,context.saveSchema);assert.deepEqual(small.requestSchema.properties.revision,context.requestSchema.properties.revision);assert.deepEqual(small.requestSchema.properties.checks,context.requestSchema.properties.checks);assert.equal(JSON.stringify(context),full);});
 test('command details use current schemas, shape parameter limits and selected joint action examples',()=>{const index=cadCommandReference(context);assert.ok(index.commands.some(c=>c.command==='save'));const thread=cadCommandReference(context,{command:'create',type:'thread'});assert.ok(thread.shape.parameters.some(p=>p.key==='pitch'&&p.min>0));assert.equal(thread.example.commands[0].type,'thread');const update=cadCommandReference(context,{command:'update'});assert.ok(update.schemas[0].properties.set.properties.sizeAnchor);assert.equal(thread.schemas[0].properties.sizeAnchor,undefined);for(const action of ['rigid-assembly','rigid-move','move','clear','limits']){const detail=cadCommandReference(context,{command:'joint',action});assert.equal(detail.example.commands[0].action,action);assert.equal(detail.schemas[0].properties.action.const,action);}const save=cadCommandReference(context,{command:'save'});assert.deepEqual(save.requestSchema,context.saveSchema);});
 test('native tool examples validate against the same precise schemas used by execution',()=>{for(const tool of Object.keys(CAD_PRECISE_TOOL_SCHEMAS)){const info=cadCommandReference(context,{command:'tool',tool});assert.deepEqual(info.optionsSchema,CAD_PRECISE_TOOL_SCHEMAS[tool]);validateCadPreciseTool(tool,info.example.commands[0].operation.options);if(tool==='previewDrill'){const legacy=structuredClone(info.example.commands[0].operation.options);legacy.reference.ray.near=0;validateCadPreciseTool(tool,legacy);}}assert.throws(()=>validateCadPreciseTool('previewDrill',{id:'p',reference:null}),{code:'INVALID_CAD_TOOL_OPTIONS'});assert.throws(()=>validateCadPreciseTool('previewAlign',{ids:['p'],targetId:'q',axis:4}),{code:'INVALID_CAD_TOOL_OPTIONS'});});

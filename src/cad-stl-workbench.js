@@ -3,6 +3,7 @@ import {formatAIUsage} from './cad-ai-usage.js';
 import {mountConverterAI} from './cad-converter-ai-ui.js';
 import {conversionControls,readConversionControls,conversionSummary,createLocalStlConversion,createLocalStlAnalysis} from './cad-stl-converter.js';
 import {createStlPreview} from './cad-stl-preview.js';
+import {createStlSymmetryTask} from './cad-stl-symmetry-task.js';
 const TYPES={AUTO:'Automatisch',PLANE:'Ebene',CYLINDER:'Zylinder',CONE:'Kegel',GRAPH:'Freiform',REVOLUTION:'Drehfläche',REST:'Facetten'};
 export function openStlWorkbench(selected,{modal,safe,toast,download,ready,setBusy,setTask,importConverted,converterImport,fitPreview=()=>{},mountAISettings,waitFor=Promise.resolve(),boundSource=null,workflowSettings,intent='file',assistance='without',initialOptions={}}){
  if(!['without','with','manual'].includes(assistance)||!['file','import'].includes(intent))throw Error('Ungültiger Konverterablauf.');
@@ -12,27 +13,60 @@ export function openStlWorkbench(selected,{modal,safe,toast,download,ready,setBu
  host=$('stl-workbench');const dialog=$('modal'),status=$('converter-status');
  const defaults=workflowSettings?.get(),settings={unit:defaults?.import.unit??1,tolerance:defaults?.conversion.tolerance??.15,mode:defaults?.conversion.mode??'auto',fallback:defaults?.conversion.fallback??true,repair:boundSource?(defaults?.conversion.meshRepair??false):(defaults?.conversion.repair??true),...initialOptions};
  for(const [key,id]of [['unit','converter-unit'],['tolerance','converter-tolerance'],['mode','converter-mode']])$(id).value=String(settings[key]);$('converter-repair').checked=settings.repair;$('converter-fallback').checked=settings.fallback;
- const assistanceLabel=document.createElement('label');assistanceLabel.className='dialog-label';assistanceLabel.innerHTML='<span>Umwandlung</span><select id="converter-assistance"><option value="without">Ohne KI · lokal umwandeln</option><option value="with">Mit KI · automatisch rekonstruieren</option><option value="manual">KI-Flächenkorrektur manuell</option></select>';
+ const assistanceLabel=document.createElement('label');assistanceLabel.className='dialog-label';assistanceLabel.innerHTML='<span>Umwandlung</span><select id="converter-assistance"><option value="without">Ohne KI · lokal umwandeln</option><option value="with">Lokal zuerst · KI für markierte Flächen</option><option value="manual">KI-Flächenkorrektur manuell</option></select>';
  host.querySelector('.stl-settings').prepend(assistanceLabel);$('converter-assistance').value=assistance;
  const assistanceInfo=document.createElement('p');assistanceInfo.id='converter-assistance-info';assistanceInfo.className='small-note';assistanceLabel.after(assistanceInfo);
+ const symmetryPanel=document.createElement('details');symmetryPanel.id='stl-symmetry';
+ symmetryPanel.innerHTML=`<summary>Symmetrie · eine Seite rekonstruieren</summary>
+ <p class="small-note">Wähle eine bekannte Spiegelebene. Formnaro prüft beide Seiten am Original und übernimmt die Vorschau nur bei bestandener Naht- und STEP-Prüfung.</p>
+ <div class="stl-edit-actions">
+ <label>Ebene <select id="stl-symmetry-axis"><option value="0">X konstant</option><option value="1">Y konstant</option><option value="2">Z konstant</option></select></label>
+ <label>Lage (mm) <input id="stl-symmetry-plane" type="number" step="any" placeholder="Modellmitte"></label>
+ <label>Vorlage <select id="stl-symmetry-side"><option value="1">Positive Seite</option><option value="-1">Negative Seite</option></select></label>
+ <label>Überlappung (mm) <input id="stl-symmetry-overlap" type="number" min="0" step="any" placeholder="Automatisch"></label>
+ <button id="stl-symmetry-run">Symmetrie prüfen und rekonstruieren</button>
+ </div>`;
+ host.querySelector('.stl-settings').after(symmetryPanel);
  if(intent==='import')document.getElementById('modal-title').textContent='STL als CAD importieren';
  if(boundSource){document.getElementById('modal-title').textContent='Netz → CAD-Kopie';$('converter-unit').value='1';$('converter-unit').closest('label').hidden=true;const note=document.createElement('p');note.className='small-note';note.textContent='Ausgewähltes Netz in Millimetern, einschließlich Skalierung und Scherung. Die Quelle bleibt erhalten. Konvertierung und Reparatur betreffen nur die neue CAD-Kopie. Nach Projektänderungen das Netz erneut auswählen.';host.querySelector('.stl-settings').after(note);const isolate=document.createElement('label');isolate.className='check-line';isolate.innerHTML='<input id="converter-isolate-copy" type="checkbox" checked> Nach Übernahme nur die CAD-Kopie anzeigen';const hint=document.createElement('p');hint.className='small-note';hint.textContent='„Isolation beenden“ zeigt wieder alle Teile. Für den Export allein der Kopie „Ausgewählte Teile“ wählen.';$('converter-project-info').after(isolate,hint);}if(projectOnly){const saveButton=document.createElement('button');saveButton.id='converter-save-step';saveButton.textContent='Konverter-STEP speichern';saveButton.disabled=true;host.querySelector('.stl-output-actions').prepend(saveButton);const note=document.createElement('p');note.className='small-note';note.textContent='Konverterdateien beziehen sich auf den Konvertereingang. Für die CAD-Kopie in ihrer Szenenposition und mit späteren Änderungen den gemeinsamen Export verwenden.';host.querySelector('.stl-output-actions').after(note);}dialog.classList.add('stl-workbench-modal');$('converter-name').textContent=selected.name;
  const filename=suffix=>selected.name.replace(/\.stl$/i,suffix),alive=()=>!disposed&&host.isConnected;
  let downloads=Promise.resolve();const downloadOne=(...args)=>{const next=downloads.then(()=>alive()?download(...args):{saved:false});downloads=next.catch(()=>{});return next;};
  const options=()=>({...readConversionControls('converter'),unit:boundSource?1:Number($('converter-unit').value),repair:$('converter-repair').checked});
  const filtered=()=>{const query=$('stl-filter').value.trim().toLowerCase();return (analysis?.regions??[]).filter(r=>[r.edit_id,TYPES[r.type],r.radius_mm??'',r.reason??''].join(' ').toLowerCase().includes(query));};
- let preview;
+ let preview,sourceWorker;
  function selection(){preview.setSelection(selectedRegions,selectedFaces);table();}
  preview=createStlPreview($('stl-preview'),{onPick:(face,multiple,kind)=>{const label=analysis.state.labels[face];if(kind==='Dreiecke'){if(!multiple)selectedFaces.clear();selectedFaces.has(face)?selectedFaces.delete(face):selectedFaces.add(face);if(!selectedRegions.has(label))selectedRegions=new Set([label]);}else{if(!multiple)selectedRegions.clear();selectedRegions.has(label)?selectedRegions.delete(label):selectedRegions.add(label);}const index=filtered().findIndex(r=>r.edit_id===label);if(index>=0)page=Math.floor(index/100);selection();},onRectangle:(faces,multiple)=>{if(!multiple)selectedFaces.clear();faces.forEach(f=>selectedFaces.add(f));selection();}});
+ function stopSourcePreview(){sourceWorker?.terminate();sourceWorker=null;}
+ function loadOriginal(){
+  if(sourceWorker||analysis||!alive()||preview.hasOriginal())return;
+  const worker=new Worker(new URL('./mesh-import-worker.js',import.meta.url),{type:'module'});sourceWorker=worker;
+  worker.onmessage=({data})=>{
+   if(sourceWorker!==worker)return;
+   stopSourcePreview();
+   if(data.type==='result'&&!analysis&&alive())preview.setOriginal(data.result);
+   controls();
+  };
+  worker.onerror=()=>{if(sourceWorker===worker)stopSourcePreview();};
+  const unit=options().unit;
+  void selected.arrayBuffer().then(buffer=>{
+   if(sourceWorker===worker)worker.postMessage({preview:true,buffer,options:{unit}},[buffer]);
+  }).catch(()=>{if(sourceWorker===worker)stopSourcePreview();});
+ }
  function controls(){
   if(!alive())return;
-  aiPanel?.blocked(assistance==='without'||autoBusy||busy||!!projectPreview||sourceStale||sourceApplied);const aiRoot=host.querySelector('#converter-ai');if(aiRoot)aiRoot.hidden=assistance==='without';assistanceInfo.textContent=assistance==='without'?'Umwandlung und Reparatur bleiben lokal. Es wird keine KI-Anfrage gesendet.':assistance==='with'?'Die KI wählt Einstellungen und Flächen selbst, konvertiert lokal und öffnet die CAD-Vorschau. Übernehmen oder Verwerfen entscheidest du. Gemessene Modell- und Flächenzusammenfassungen gehen an die gemeinsame Formnaro-API; Dreiecksdaten bleiben lokal. Einheit und Abweichungsbudget bleiben verbindlich.':'Erweitert: Flächenkorrektur anfordern, prüfen und ausdrücklich bestätigen.';const locked=busy||autoBusy||aiBusy||sourceStale;const start=$('converter-auto-start');if(start){start.hidden=assistance!=='with';start.disabled=locked||!analysis||sourceApplied||!!projectPreview;}const manual=host.querySelector('#converter-ai');if(manual){for(const node of manual.querySelectorAll('label,#converter-ai-send'))node.hidden=assistance==='with';}
-  for(const node of host.querySelectorAll('.stl-settings input,.stl-settings select,.stl-edit-actions button,.stl-edit-actions select'))if(!node.closest('#converter-ai'))node.disabled=locked||!!projectPreview||sourceApplied;
+  symmetryPanel.hidden=!!projectPreview;
+  aiPanel?.blocked(assistance==='without'||autoBusy||busy||!!projectPreview||sourceStale||sourceApplied);const aiRoot=host.querySelector('#converter-ai');if(aiRoot)aiRoot.hidden=assistance==='without';assistanceInfo.textContent=assistance==='without'?'Umwandlung und Reparatur bleiben lokal. Es wird keine KI-Anfrage gesendet.':assistance==='with'?'Formnaro erstellt zuerst ein lokal geprüftes Ergebnis. Markierte Flächen und direkte Nachbarn können anschließend mit höchstens zwei KI-Anfragen geprüft werden. Einheit und Abweichungsbudget bleiben verbindlich.':'Erweitert: Flächenkorrektur anfordern, prüfen und ausdrücklich bestätigen.';const locked=busy||autoBusy||aiBusy||sourceStale;const start=$('converter-auto-start');if(start){start.hidden=assistance!=='with';start.disabled=locked||sourceApplied||!!projectPreview||!!result?.report.symmetry||(!!result&&!selectedRegions.size);start.textContent=result?'KI für markierte Flächen prüfen':'Lokale Prüfung starten';}const manual=host.querySelector('#converter-ai');if(manual){for(const node of manual.querySelectorAll('label,#converter-ai-send'))node.hidden=assistance==='with';}
+  for(const node of host.querySelectorAll('.stl-settings input,.stl-settings select,.stl-edit-actions input,.stl-edit-actions button,.stl-edit-actions select'))if(!node.closest('#converter-ai'))node.disabled=locked||!!projectPreview||sourceApplied;
+  const analysisButton=$('converter-auto-analyse');if(analysisButton){analysisButton.hidden=assistance!=='with';analysisButton.disabled=locked||!!analysis||!!projectPreview||sourceApplied;}
   const editable=!!analysis&&!locked&&!projectPreview&&!sourceApplied&&$('converter-mode').value==='auto';
   for(const id of ['stl-set-type','stl-split','stl-merge','stl-protect','stl-unprotect'])$(id).disabled=!editable;
   $('stl-undo').disabled=locked||sourceApplied||!undo.length;$('stl-redo').disabled=locked||sourceApplied||!redo.length;$('stl-save-edits').disabled=locked||!analysis;$('stl-load-edits').disabled=locked||sourceApplied;
-  $('converter-run').disabled=locked||sourceApplied||!!(projectOnly&&result)||assistance!=='without'&&!aiReviewed;if(boundSource)$('converter-unit').disabled=true;if(projectOnly)$('converter-save-step').disabled=locked||!result;$('converter-cancel').disabled=!locked||applying;
-  $('converter-import').disabled=locked||sourceApplied||!!projectPreview||!result||(!converterImport&&!importConverted);$('converter-apply').hidden=!projectPreview;$('converter-apply').disabled=locked||!projectPreview;$('converter-discard').hidden=!projectPreview;$('converter-discard').disabled=locked;for(const option of [...$('stl-view').options].slice(2))option.disabled=!result;$('converter-report').disabled=locked||!result;
+  $('converter-run').disabled=locked||sourceApplied||!!(projectOnly&&result)||assistance==='manual'&&!aiReviewed;if(boundSource)$('converter-unit').disabled=true;if(projectOnly)$('converter-save-step').disabled=locked||!result;$('converter-cancel').disabled=!locked||applying;
+  $('converter-import').disabled=locked||sourceApplied||!!projectPreview||!result||(!converterImport&&!importConverted);$('converter-apply').hidden=!projectPreview;$('converter-apply').disabled=locked||!projectPreview;$('converter-discard').hidden=!projectPreview;$('converter-discard').disabled=locked;for(const option of $('stl-view').options){
+   const requiresSource=['Original','Überlagerung','Flächenarten'].includes(option.value);
+   const requiresResult=['Ergebnis','Überlagerung','Abweichung'].includes(option.value);
+   option.disabled=requiresSource&&!preview.hasOriginal()||requiresResult&&!result||option.value==='Abweichung'&&!result?.deviation;
+  }$('converter-report').disabled=locked||!result;
   for(const [id,key] of [['stl-repaired-3mf','repaired_3mf'],['stl-repaired-stl','repaired_stl'],['stl-preview-save','preview']])$(id).disabled=locked||!result?.artifacts?.[key];
   $('stl-prev').disabled=locked||page<=0;$('stl-next').disabled=locked||page>=Math.ceil(filtered().length/100)-1;
  }
@@ -52,7 +86,7 @@ export function openStlWorkbench(selected,{modal,safe,toast,download,ready,setBu
   try{const value=await nativeTask.run(selected,options(),{edits:state,commands});if(ticket!==sequence||!alive())return;
    if(history&&prior&&JSON.stringify(prior)!==JSON.stringify(value.state)){undo.push(structuredClone(prior));if(undo.length>50)undo.shift();redo=[];}
    analysis=value;++analysisRevision;selectedRegions=new Set([...selectedRegions].filter(id=>value.state.labels.includes(id)));selectedFaces.clear();preview.setAnalysis(value);preview.setSelection(selectedRegions,selectedFaces);table();status.textContent=value.modified?'Korrektur gespeichert. Native CAD- und STEP-Prüfung folgt beim Konvertieren.':'Flächenvorschläge bereit. Bereiche und Dreiecke am Modell oder in der Liste wählen.';
-  }catch(error){if(ticket===sequence&&alive())status.textContent=error.message;}finally{finish(ticket);}
+  }catch(error){if(ticket===sequence&&alive()){status.textContent=error.message;loadOriginal();}}finally{finish(ticket);}
  }
  function selectedLabels(){if(!selectedRegions.size)throw Error('Zuerst einen oder mehrere Bereiche auswählen.');return [...selectedRegions];}
  async function edit(command){invalidateResult();await analyse({state:analysis.state,commands:[command],history:true});}
@@ -64,8 +98,38 @@ export function openStlWorkbench(selected,{modal,safe,toast,download,ready,setBu
  $('stl-redo').onclick=()=>safe(async()=>{if(!redo.length)return;const current=structuredClone(analysis.state),next=redo.at(-1);invalidateResult();await analyse({state:next});if(JSON.stringify(analysis.state)===JSON.stringify(next)){redo.pop();undo.push(current);controls();}});
  $('stl-save-edits').onclick=()=>safe(()=>downloadOne(JSON.stringify(analysis.state,null,2),filename('.regionen.json'),'application/json'));
  $('stl-load-edits').onclick=()=>$('stl-edit-file').click();$('stl-edit-file').onchange=()=>safe(async()=>{const file=$('stl-edit-file').files[0];$('stl-edit-file').value='';if(!file)return;if(file.size>5*1024*1024)throw Error('Regionskorrektur ist größer als 5 MB.');const state=JSON.parse(await file.text());invalidateResult();await analyse({state,history:true});});
+ function scaleNote(report,settings){
+  if(!report.input_bounds_mm)return '';
+  const [min,max]=report.input_bounds_mm,size=max.map((v,i)=>v-min[i]);
+  const dimensions=size.map(value=>value.toLocaleString('de-DE',{maximumSignificantDigits:5})).join(' × ');
+  const warning=Math.max(...size)<=settings.tolerance*5?' Einheit prüfen: Das Modell ist im Verhältnis zum Abweichungsbudget sehr klein.':'';
+  return ' Eingangsmaße '+dimensions+' mm.'+warning;
+ }
+ function showResult(value,settings){
+  result=value;$('converter-result').textContent=conversionSummary(value.report)+scaleNote(value.report,settings);
+  if(value.report.symmetry)$('converter-result').textContent+=' Naht: '+value.report.deviation.seam_sampled_max_mm.toFixed(6)+' mm · Ebene '+value.report.symmetry.axis+' = '+value.report.symmetry.plane_mm+' mm.';
+  if(value.artifacts?.preview)preview.setResult(value.artifacts.preview,value.deviation,settings.tolerance);
+  $('stl-view').value='Ergebnis';preview.setMode('Ergebnis');
+  $('converter-run').textContent=projectOnly?'Konvertierung fertig':'STEP speichern';controls();
+ }
  const save=async()=>{const saved=await downloadOne(result.bytes,filename('.step'),'model/step');if(!alive())return;status.textContent=saved?.saved?'STEP-Datei gespeichert.':'Speichern abgebrochen. Du kannst erneut speichern.';if(saved?.saved)toast('STEP-Datei gespeichert.');};
- $('converter-run').onclick=()=>safe(async()=>{if(sourceApplied||assistance!=='without'&&!aiReviewed)throw Error('Zuerst die KI-Antwort prüfen oder Ohne KI wählen.');const requested=++sequence;await stopping;if(requested!==sequence||!alive()||sourceStale)return;ready();if(result)return save();const settings=options();if(analysis?.modified){if(settings.mode!=='auto')throw Error('Regionskorrekturen benötigen Automatisch erkennen.');settings.region_edits=analysis.state;}const nativeTask=createLocalStlConversion({onProgress:message=>{if(alive())status.textContent=message;}}),ticket=begin(nativeTask);status.textContent='STL wird als CAD-Körper rekonstruiert …';try{const value=await nativeTask.run(selected,settings);if(ticket!==sequence||!alive())return;result=value;$('converter-result').textContent=conversionSummary(value.report);$('converter-run').textContent=projectOnly?'Konvertierung fertig':'STEP erneut speichern';if(value.artifacts.preview)preview.setResult(value.artifacts.preview,value.deviation,settings.tolerance);$('stl-view').value='Ergebnis';preview.setMode('Ergebnis');if(projectOnly)status.textContent='CAD-Ergebnis bereit. Original und Ergebnis vergleichen, dann CAD-Übernahme prüfen.';else await save();}catch(error){if(ticket===sequence&&alive())status.textContent=error.message;}finally{finish(ticket);}});
+ $('converter-run').onclick=()=>safe(async()=>{if(sourceApplied||assistance==='manual'&&!aiReviewed)throw Error('Zuerst die KI-Antwort prüfen oder Ohne KI wählen.');const requested=++sequence;await stopping;if(requested!==sequence||!alive()||sourceStale)return;ready();if(result)return save();const settings=options();if(analysis?.modified){if(settings.mode!=='auto')throw Error('Regionskorrekturen benötigen Automatisch erkennen.');settings.region_edits=analysis.state;}const nativeTask=createLocalStlConversion({onProgress:message=>{if(alive())status.textContent=message;}}),ticket=begin(nativeTask);status.textContent='STL wird als CAD-Körper rekonstruiert …';try{const value=await nativeTask.run(selected,settings);if(ticket!==sequence||!alive())return;showResult(value,settings);if(projectOnly)status.textContent='CAD-Ergebnis bereit. Original und Ergebnis vergleichen, dann CAD-Übernahme prüfen.';else await save();}catch(error){if(ticket===sequence&&alive())status.textContent=error.message;}finally{finish(ticket);}});
+ $('stl-symmetry-run').onclick=()=>safe(async()=>{
+  if(busy||autoBusy||aiBusy||projectPreview||sourceApplied||sourceStale)return;
+  const number=id=>$(id).value===''?null:$(id).valueAsNumber;
+  const symmetry={axis:Number($('stl-symmetry-axis').value),plane:number('stl-symmetry-plane'),
+    side:Number($('stl-symmetry-side').value),overlap:number('stl-symmetry-overlap')};
+  const requested=++sequence;await stopping;if(requested!==sequence||!alive()||sourceStale)return;ready();
+  const settings=options(),nativeTask=createStlSymmetryTask(message=>{if(alive())status.textContent=message;}),ticket=begin(nativeTask);
+  try{
+   const value=await nativeTask.run(selected,settings,symmetry);
+   if(ticket!==sequence||!alive()||sourceStale)return;
+   showResult(value,settings);
+   if(projectOnly&&converterImport)await prepareProjectPreview(true);
+   else status.textContent='Symmetrischer CAD-Körper geprüft. Ergebnis vergleichen oder STEP speichern.';
+  }catch(error){if(ticket===sequence&&alive())status.textContent=error.message;}
+  finally{finish(ticket);}
+ });
  function projectView(enabled){dialog.classList.toggle('stl-project-preview',enabled);if(!alive()||!dialog.open)return;dialog.close();if(enabled)dialog.show();else dialog.showModal();}
  function discardPreview(){if(!projectPreview)return;converterImport?.discard();projectPreview=null;$('converter-project-info').hidden=true;projectView(false);controls();}
  async function prepareProjectPreview(automatic=false){if(!automatic)ready();const sourceResult=result,ticket=begin(null);try{
@@ -80,41 +144,53 @@ export function openStlWorkbench(selected,{modal,safe,toast,download,ready,setBu
  for(const [id,key,suffix,mime] of [['stl-repaired-3mf','repaired_3mf','.repariert.3mf','model/3mf'],['stl-repaired-stl','repaired_stl','.repariert.stl','model/stl'],['stl-preview-save','preview','.vorschau.stl','model/stl']])$(id).onclick=()=>safe(()=>downloadOne(result.artifacts[key],filename(suffix),mime));
  $('converter-cancel').onclick=cancel;$('stl-close').onclick=()=>dialog.close();$('stl-view').onchange=()=>{preview.setMode($('stl-view').value);$('stl-legend').textContent=$('stl-view').value==='Abweichung'?`Blau → Rot: 0 → ${result?.report.options.tolerance??options().tolerance} mm. Abstand der dargestellten Ergebnis-Dreiecksmitten zur Originaloberfläche; diese Ansicht ersetzt die beidseitige STEP-Prüfung nicht.`:'Blau: Ebenen · Orange: Zylinder · Grün: Kegel · Rosa: Freiform · Türkis: Drehflächen · Violett: Facetten. Erkennungsvorschläge.';};$('stl-pick').onchange=()=>preview.setPickMode($('stl-pick').value);$('stl-fit').onclick=preview.fit;$('stl-clear').onclick=()=>{selectedRegions.clear();selectedFaces.clear();selection();};
  $('stl-filter').oninput=()=>{page=0;table();};$('stl-prev').onclick=()=>{page--;table();};$('stl-next').onclick=()=>{page++;table();};
- for(const input of host.querySelectorAll('.stl-settings input,.stl-settings select'))input.addEventListener('change',()=>{if(input.id==='converter-assistance')return;cancel();invalidateResult();if(input.id==='converter-tolerance'||input.id==='converter-unit'){analysis=null;undo=[];redo=[];selectedRegions.clear();selectedFaces.clear();preview.clearSource();table();void analyse();}else controls();});
+ for(const input of host.querySelectorAll('.stl-settings input,.stl-settings select'))input.addEventListener('change',()=>{if(input.id==='converter-assistance')return;cancel();invalidateResult();if(input.id==='converter-tolerance'||input.id==='converter-unit'){analysis=null;undo=[];redo=[];selectedRegions.clear();selectedFaces.clear();stopSourcePreview();preview.clearSource();table();if(assistance==='with')loadOriginal();else void analyse();}else controls();});
  const keyboard=event=>{if(event.key==='Escape'&&projectPreview){event.preventDefault();event.stopPropagation();cancel();return;}if(!(event.ctrlKey||event.metaKey)||busy||autoBusy)return;if(event.key.toLowerCase()==='z'){event.preventDefault();event.stopPropagation();$(event.shiftKey?'stl-redo':'stl-undo').click();}else if(event.key.toLowerCase()==='y'){event.preventDefault();event.stopPropagation();$('stl-redo').click();}};dialog.addEventListener('keydown',keyboard,true);
- function dispose(){if(disposed)return stopping;cancel();if(autoBusy){setBusy(false);setTask(null);}aiPanel?.dispose();disposed=true;preview.dispose();if(!dialog.querySelector('#stl-workbench')||dialog.querySelector('#stl-workbench')===host)dialog.classList.remove('stl-workbench-modal','stl-project-preview');dialog.removeEventListener('keydown',keyboard,true);dialog.removeEventListener('close',closed);observer.disconnect();return stopping;}
+ function dispose(){if(disposed)return stopping;cancel();if(autoBusy){setBusy(false);setTask(null);}aiPanel?.dispose();disposed=true;stopSourcePreview();preview.dispose();if(!dialog.querySelector('#stl-workbench')||dialog.querySelector('#stl-workbench')===host)dialog.classList.remove('stl-workbench-modal','stl-project-preview');dialog.removeEventListener('keydown',keyboard,true);dialog.removeEventListener('close',closed);observer.disconnect();return stopping;}
  // A queued close event from the previous content may arrive after this dialog
  // has already reopened. It belongs to that old workbench, not the new one.
  function closed(){if(!dialog.open)dispose();}
  dialog.addEventListener('close',closed);const observer=new MutationObserver(()=>{if(!host.isConnected)dispose();});observer.observe($('modal-body'),{childList:true});
- $('converter-assistance').onchange=()=>{cancel();assistance=$('converter-assistance').value;invalidateResult();const panel=host.querySelector('#converter-ai');panel.open=assistance!=='without';controls();if(assistance==='with')void startAutomatic();};
+ $('converter-assistance').onchange=()=>{cancel();assistance=$('converter-assistance').value;invalidateResult();const panel=host.querySelector('#converter-ai');panel.open=assistance!=='without';controls();if(assistance==='with')void startAutomatic();else if(!analysis)void analyse();};
  aiPanel=mountConverterAI({host,onReview:value=>{aiReviewed=value;controls();},mountSettings:mountAISettings,snapshot:()=>analysis?{revision:aiSession+':'+analysisRevision,analysis,options:options(),selection:[...selectedRegions]}:null,prepare:commands=>{const source=analysis,settings=options(),nativeTask=createLocalStlAnalysis();return {cancel:()=>{stopping=Promise.resolve(nativeTask.cancel()).catch(()=>{});return stopping;},run:async()=>{await stopping;return nativeTask.run(selected,settings,{edits:source.state,commands});}};},show:candidate=>{$('stl-view').value='Flächenarten';preview.setMode('Flächenarten');preview.setAnalysis(candidate);preview.setPickMode('Drehen');},clear:()=>{if(analysis&&alive()){preview.setAnalysis(analysis);preview.setPickMode($('stl-pick').value);preview.setSelection(selectedRegions,selectedFaces);}},commit:candidate=>{const prior=structuredClone(analysis.state);invalidateResult();if(JSON.stringify(prior)!==JSON.stringify(candidate.state)){undo.push(prior);if(undo.length>50)undo.shift();redo=[];}analysis=candidate;++analysisRevision;selectedRegions=new Set([...selectedRegions].filter(id=>candidate.state.labels.includes(id)));selectedFaces.clear();preview.setAnalysis(analysis);selection();},onBusy:(value,computing)=>{aiBusy=value;setBusy(busy||computing);controls();}});
 
  const autoButton=document.createElement('button');autoButton.id='converter-auto-start';autoButton.className='primary';autoButton.textContent='KI-Rekonstruktion starten';host.querySelector('#converter-ai').querySelector('.stl-edit-actions').prepend(autoButton);
+ const analyseButton=document.createElement('button');analyseButton.id='converter-auto-analyse';analyseButton.textContent='Flächen zum Markieren analysieren';
+ autoButton.after(analyseButton);analyseButton.onclick=()=>void analyse();
  const autoUsage=document.createElement('p');autoUsage.id='converter-auto-usage';autoUsage.className='small-note';assistanceInfo.after(autoUsage);
- const autoSnapshot=()=>alive()&&!sourceStale&&!sourceApplied?{revision:aiSession+':'+analysisRevision,analysis,options:options()}:null;
+ const autoSnapshot=()=>alive()&&!sourceStale&&!sourceApplied?{revision:aiSession+':'+analysisRevision,analysis,options:options(),selection:[...selectedRegions]}:null;
  autopilot=createConverterAutopilot({desktop:window.offlinecadDesktop,snapshot:autoSnapshot,
   analyse:(settings,state,commands)=>{const native=createLocalStlAnalysis();return {cancel:()=>{stopping=Promise.resolve(native.cancel()).catch(()=>{});return stopping;},run:()=>native.run(selected,settings,{edits:state,commands})};},
   convert:settings=>{const native=createLocalStlConversion({onProgress:message=>{if(alive())status.textContent=message;}});return {cancel:()=>{stopping=Promise.resolve(native.cancel()).catch(()=>{});return stopping;},run:()=>native.run(selected,settings)};},
+  onBaseline:(value,settings)=>{if(alive()&&!autoCancelled)showResult(value,settings);},
   onProgress:message=>{if(alive())status.textContent=message;},onUsage:usage=>{autoUsages.push(usage);if(alive())autoUsage.textContent=formatAIUsage(autoUsages);}});
  let autoUsages=[];
  async function startAutomatic(){
-  if(autoBusy||busy||!analysis||!alive()||sourceStale||sourceApplied||assistance!=='with')return;
-  invalidateResult();try{ready();}catch(error){status.textContent=error.message;return;}autoBusy=true;autoCancelled=false;autoUsages=[];autoUsage.textContent='';setBusy(true);setTask({cancel,dispose:()=>{}});controls();
+  if(autoBusy||busy||aiBusy||!alive()||sourceStale||sourceApplied||projectPreview||assistance!=='with')return;
+  try{ready();}catch(error){status.textContent=error.message;return;}
+  autoBusy=true;autoCancelled=false;autoUsages=[];autoUsage.textContent='';setBusy(true);setTask({cancel,dispose:()=>{}});controls();
   try{
-   await stopping;if(autoCancelled||!autoBusy||!alive()||sourceStale||assistance!=='with')return;
-   const value=await autopilot.run();if(autoCancelled||!alive()||sourceStale||assistance!=='with')return;
-   const prior=analysis.state;if(value.options.tolerance!==options().tolerance){undo=[];redo=[];}else if(JSON.stringify(prior)!==JSON.stringify(value.analysis.state)){undo.push(structuredClone(prior));if(undo.length>50)undo.shift();redo=[];}
-   analysis=value.analysis;++analysisRevision;selectedRegions.clear();selectedFaces.clear();
-   for(const [key,id]of [['tolerance','converter-tolerance'],['mode','converter-mode']])$(id).value=String(value.options[key]);$('converter-repair').checked=value.options.repair;$('converter-fallback').checked=value.options.fallback;
-   result=value.result;aiReviewed=true;preview.setAnalysis(analysis);preview.setSelection(selectedRegions,selectedFaces);table();$('converter-result').textContent=conversionSummary(result.report);
-   if(result.artifacts?.preview)preview.setResult(result.artifacts.preview,result.deviation,value.options.tolerance);$('stl-view').value='Ergebnis';preview.setMode('Ergebnis');
-   if(projectOnly&&converterImport)await prepareProjectPreview(true);else status.textContent='KI-Rekonstruktion fertig. Ergebnis vergleichen und STEP speichern oder CAD-Übernahme prüfen.';
-   $('converter-run').textContent=projectOnly?'Konvertierung fertig':'STEP speichern';
-  }catch(error){if(alive())status.textContent=error.message;}
-  finally{autoBusy=false;if(alive()){setBusy(false);setTask(null);autoButton.textContent='KI-Rekonstruktion erneut starten';controls();}}
+   await stopping;if(autoCancelled||!alive()||sourceStale||assistance!=='with')return;
+   const value=await autopilot.run({baseline:result});
+   await stopping;if(autoCancelled||!alive()||sourceStale||assistance!=='with')return;
+   if(value.analysis&&value.analysis!==analysis){
+    const prior=analysis?.state;
+    if(prior&&JSON.stringify(prior)!==JSON.stringify(value.analysis.state)){undo.push(structuredClone(prior));if(undo.length>50)undo.shift();redo=[];}
+    analysis=value.analysis;++analysisRevision;
+    selectedRegions=new Set([...selectedRegions].filter(id=>analysis.state.labels.includes(id)));selectedFaces.clear();
+    preview.setAnalysis(analysis);preview.setSelection(selectedRegions,selectedFaces);table();
+   }
+   showResult(value.result,value.options);
+   const message=value.outcome==='improved'?'KI-Korrektur lokal geprüft.':
+     value.outcome==='retained'?'Geprüftes lokales Ergebnis bleibt erhalten.':'Lokale STEP-Prüfung bestanden.';
+   autoUsage.textContent=[message,value.detail,formatAIUsage(autoUsages)].filter(Boolean).join(' ');
+   if(projectOnly&&converterImport)await prepareProjectPreview(true);else status.textContent=message+' Ergebnis vergleichen oder STEP speichern.';
+  }catch(error){
+   if(alive())status.textContent=autoCancelled&&result?'KI-Korrektur abgebrochen. Die lokale Vorschau bleibt erhalten.':
+     error.message+(analysis||autoCancelled?'':' Für eine gezielte Korrektur Flächen analysieren und markieren.');
+  }finally{autoBusy=false;if(alive()){setBusy(false);setTask(null);controls();}}
  }
  autoButton.onclick=()=>void startAutomatic();
  if(projectOnly)$('converter-run').textContent='Lokal in CAD umwandeln';host.querySelector('#converter-ai').open=assistance==='with';
- controls();void analyse().then(()=>{if(assistance==='with'&&analysis)void startAutomatic();});return {cancel,dispose,revisionChanged:()=>{if(autoBusy){cancel();++analysisRevision;}aiPanel?.invalidate();if(boundSource&&!applying&&!boundSource.current()){cancel();sourceStale=true;invalidateResult();status.textContent='Quellnetz oder Projekt geändert. Werkzeug schließen und das Netz erneut auswählen.';controls();return;}if(projectPreview&&!applying){discardPreview();status.textContent='Projekt geändert. Die CAD-Übernahme erneut prüfen.';}},state:()=>({busy:busy||autoBusy,automatic:autopilot?.state(),disposed,intent,assistance,aiReviewed,sourceStale,sourceApplied,boundSource:boundSource?{...boundSource.source}:null,projectPreview:projectPreview?{...projectPreview}:null,ai:aiPanel?.state(),hasResult:!!result,regions:analysis?.regions.length??0,undo:undo.length,redo:redo.length})};
+ controls();if(assistance==='with'){loadOriginal();void startAutomatic();}else void analyse();return {cancel,dispose,revisionChanged:()=>{if(autoBusy){cancel();++analysisRevision;}aiPanel?.invalidate();if(boundSource&&!applying&&!boundSource.current()){cancel();sourceStale=true;invalidateResult();status.textContent='Quellnetz oder Projekt geändert. Werkzeug schließen und das Netz erneut auswählen.';controls();return;}if(projectPreview&&!applying){discardPreview();status.textContent='Projekt geändert. Die CAD-Übernahme erneut prüfen.';}},state:()=>({busy:busy||autoBusy,automatic:autopilot?.state(),disposed,intent,assistance,aiReviewed,sourceStale,sourceApplied,boundSource:boundSource?{...boundSource.source}:null,projectPreview:projectPreview?{...projectPreview}:null,ai:aiPanel?.state(),hasResult:!!result,regions:analysis?.regions.length??0,undo:undo.length,redo:redo.length})};
 }

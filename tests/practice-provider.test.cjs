@@ -29,3 +29,30 @@ test('normal model and converter requests retain their own contexts even with di
   assert.match(body.instructions,/CONVERTER_SCHEMA_MARKER/);assert.doesNotMatch(body.instructions,/Allowed actions, in order/);
  }finally{globalThis.fetch=old;}
 });
+
+test('the Mistral practice envelope accepts a remaining plan using only the actual child aliases',async()=>{
+ const state={known:['work','consumed'],selectable:['work'],selected:['work']};
+ const next={revision:'r1',assistant:{kind:'practice',plan:{version:1,title:'Fortsetzen',actions:[
+  {kind:'select',targets:['work']},{kind:'set',field:'size-0',value:44}
+ ]}}};
+ const args={prompt:'Übung fortsetzen',chat:true,context:{practiceOnly:true,practiceState:state},scene:{revision:'r1'}};
+ const config={authMode:'mistral-vibe',baseUrl:'https://api.mistral.ai/v1',model:'fixture',protocol:'chat'};
+ let calls=0;
+ const result=await generate(config,'',args,undefined,{mistralComplete:async envelope=>{
+  calls++;
+  assert.match(envelope.system,/same child window after an application report/);
+  assert.match(envelope.system,/"selectable":\["work"\]/);
+  return {text:JSON.stringify(next),usage:{input_tokens:1,output_tokens:1}};
+ }});
+ assert.equal(calls,1);
+ assert.deepEqual(result.assistant,next.assistant);
+});
+
+test('a misplaced practice explanation is rejected with its correct JSON location',async()=>{
+ const config={authMode:'mistral-vibe',baseUrl:'https://api.mistral.ai/v1',model:'fixture',protocol:'chat'};
+ const misplaced={...practice,assistant:{...practice.assistant,message:practice.message}};
+ delete misplaced.message;
+ const args={prompt:'Übung fortsetzen',chat:true,context:{practiceOnly:true},scene:{revision:'r1'}};
+ await assert.rejects(generate(config,'',args,undefined,{mistralComplete:async()=>({text:JSON.stringify(misplaced)})}),
+  {code:'AI_OUTPUT_INVALID',message:/Put message at the top level, next to assistant/});
+});

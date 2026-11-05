@@ -1,8 +1,48 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';import {createHash} from 'node:crypto';
 import {openFnpack,writeFnpack,geometryReferences,HEADER} from '../backend/fnpack.cjs';
+import {createFnpackStore} from '../backend/fnpack-store.cjs';
 const sha=data=>createHash('sha256').update(data).digest('hex'),payload=Buffer.from('DBRep_DrawableShape\nexact original source\n'),hash=sha(payload),ref={format:'Formnaro-GeometryRef',kind:'brep',sha256:hash,bytes:payload.length};
 const project=()=>({format:'OfflineCAD',version:17,nodes:[{id:'one',brep:ref,transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]},{id:'two',brep:ref,transform:[1,0,0,0,0,1,0,0,0,0,1,0,50,0,0,1]}]});
 async function fixture(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'formnaro-fnpack-'));t.after(async()=>{assert.equal(path.dirname(dir),os.tmpdir());assert.ok(path.basename(dir).startsWith('formnaro-fnpack-'));await fs.rm(dir,{recursive:true,force:true});});return dir;}
+
+test('worker recovery serializes saves and copies unopened blocks to a standalone package',async t=>{
+ const dir=await fixture(t),source=path.join(dir,'source.fnpack'),recoveryFile=path.join(dir,'recovery.fnpack');
+ await writeFnpack(source,{project:project(),blocks:[{sha256:hash,bytes:payload}]});
+ const store=createFnpackStore({recoveryFile});
+ try{
+  const {fnpack}=await store.open(source);
+  const first=project(),second=project();
+  first.nodes[1].transform[12]=73;second.nodes[1].transform[12]=94;
+  await Promise.all([first,second].map(project=>store.saveRecovery({project,blocks:[],sourceIds:[fnpack.sourceId]})));
+  await fs.unlink(source);
+  const saved=await openFnpack(recoveryFile);
+  try{
+   assert.deepEqual(saved.index.project,second);
+   assert.deepEqual(await saved.read(hash),payload);
+  }finally{await saved.close();}
+ }finally{await store.close();}
+});
+
+test('FNPACK autosave preserves a previous generation and rejects invalid or external replacements',async t=>{
+ const dir=await fixture(t),recoveryFile=path.join(dir,'recovery.fnpack'),previous=recoveryFile+'.vorher';
+ const store=createFnpackStore({recoveryFile});
+ const valid=project(),blocks=[{sha256:hash,bytes:payload}];
+ try{
+  await store.saveRecovery({project:valid,blocks});
+  const first=await fs.readFile(recoveryFile);
+  valid.nodes[1].transform[12]=91;
+  await store.saveRecovery({project:valid,blocks});
+  assert.deepEqual(await fs.readFile(previous),first);
+  const second=await fs.readFile(recoveryFile);
+  await assert.rejects(store.saveRecovery({project:valid,blocks:[{sha256:hash,bytes:Buffer.alloc(payload.length)}]}),/Prüfsumme/);
+  assert.deepEqual(await fs.readFile(recoveryFile),second);
+  assert.deepEqual(await fs.readFile(previous),first);
+  await fs.writeFile(recoveryFile,'externally modified');
+  await assert.rejects(store.saveRecovery({project:valid,blocks}),/inzwischen geändert/);
+  assert.equal(await fs.readFile(recoveryFile,'utf8'),'externally modified');
+  assert.deepEqual(await fs.readFile(previous),first);
+ }finally{await store.close();}
+});
 
 test('mixed arrays cannot hide missing, invalid or conflicting geometry blocks from the backend',async t=>{
  const dir=await fixture(t),file=path.join(dir,'mixed.fnpack');

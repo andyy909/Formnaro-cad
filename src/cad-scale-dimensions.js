@@ -39,12 +39,20 @@ export function createScaleDimensions({viewport,projectPoint,getPreferences}) {
       }else{
         path.setAttribute('d','');x=Math.max(...corners.map(p=>p.x))-rect.left+76;y=center.y-rect.top+axis*44;
       }
-      x=Math.max(74,Math.min(rect.width-74,x));y=Math.max(110,Math.min(rect.height-96,y));
-      // Labels remain separate even for edge-on views and small objects.
-      for(let attempt=0;attempt<6&&occupied.some(p=>Math.abs(x-p.x)<142&&Math.abs(y-p.y)<42);attempt++)y=y+44<=rect.height-60?y+44:y-88;
-      occupied.push({x,y});label.style.left=x+'px';label.style.top=y+'px';
       label.dataset.value=String(sizes[axis]);
       label.textContent=`${'XYZ'[axis]} · ${names[axis]} ${sizes[axis].toLocaleString(english?'en-US':'de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})} mm`;
+      const halfWidth=label.offsetWidth/2,halfHeight=label.offsetHeight/2;
+      const minY=Math.max(110,halfHeight+4),maxY=Math.max(minY,rect.height-96);
+      x=Math.max(halfWidth+4,Math.min(rect.width-halfWidth-4,x));
+      y=Math.max(minY,Math.min(maxY,y));
+      const overlap=position=>occupied.some(p=>Math.abs(x-p.x)<halfWidth+p.halfWidth+4&&Math.abs(position-p.y)<halfHeight+p.halfHeight+4);
+      if(overlap(y)){
+        const candidates=[minY,maxY,...occupied.flatMap(p=>[p.y-p.halfHeight-halfHeight-5,p.y+p.halfHeight+halfHeight+5])];
+        const available=candidates.filter(candidate=>candidate>=minY&&candidate<=maxY&&!overlap(candidate));
+        if(available.length)y=available.reduce((closest,candidate)=>Math.abs(candidate-y)<Math.abs(closest-y)?candidate:closest);
+      }
+      occupied.push({x,y,halfWidth,halfHeight});
+      label.style.left=x+'px';label.style.top=y+'px';
     });
   }
   return {update,draw,hide(){state=null;lastDraw=null;overlay.hidden=true;},dispose(){overlay.remove();}};

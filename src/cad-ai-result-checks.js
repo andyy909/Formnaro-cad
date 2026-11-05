@@ -11,7 +11,7 @@ const vector={type:'array',minItems:3,maxItems:3,items:{type:'number',minimum:-1
 const positive={type:'number',exclusiveMinimum:0,maximum:10000};
 const partialVector=items=>({...vector,items:{anyOf:[items,{type:'null'}]},contains:{type:'number'}});
 const definitions={
- bore:{required:['from','to','diameter'],properties:{from:vector,to:vector,diameter:positive,minWall:positive}},
+ bore:{required:['from','to','diameter'],properties:{from:vector,to:vector,diameter:positive,minWall:positive,minBottom:positive}},
  size:{required:['space','expected'],properties:{space:{enum:['edit','worldAxes']},expected:partialVector(positive)}},
  bounds:{required:['edge','expected'],properties:{edge:{enum:['min','max','center','size']},expected:partialVector(vector.items)}},
  volume:{required:['expected'],properties:{expected:{type:'number',exclusiveMinimum:0,maximum:1e12}}},
@@ -46,6 +46,7 @@ export function validateAIResultChecks(value=[]){
   if(check.kind==='bounds'&&!['min','max','center','size'].includes(check.edge))invalid('min, max, center oder size wählen.');
   if(['volume','distance'].includes(check.kind)&&(!Number.isFinite(check.expected)||check.expected<(check.kind==='volume'?Number.MIN_VALUE:0)||check.expected>(check.kind==='volume'?1e12:200000)))invalid('endlichen Sollwert im Arbeitsbereich angeben.');
   if(check.kind==='solids'&&(!Number.isSafeInteger(check.expected)||check.expected<1||check.expected>500))invalid('1 bis 500 native Materialkörper angeben.');
+  if(check.kind==='bore'&&check.minBottom!==undefined&&(!Number.isFinite(check.minBottom)||check.minBottom<=2*(check.tolerance??.01)||check.minBottom>10000))invalid('Bohrung: minBottom muss groesser als die doppelte Toleranz und hoechstens 10000 mm sein.');
   if(check.kind==='bore'&&(!Number.isFinite(check.minWall??.1)||(check.minWall??.1)<=2*(check.tolerance??.01)||(check.minWall??.1)>10000))invalid('Bohrung: minWall muss groesser als die doppelte Toleranz und hoechstens 10000 mm sein.');
   if(['clearance','bore'].includes(check.kind)){
    if(!vec(check.from)||!vec(check.to)||!Number.isFinite(check.diameter)||check.diameter<=0||check.diameter>10000)invalid('Weltpunkte und positiven freien Durchmesser angeben.');
@@ -68,7 +69,7 @@ export function resolveAIResultTarget(scene,value,aliases={}){
  return object;
 }
 export function aiCheckFailure(check,index,actual){
- const expected=check.kind==='clearance'?0:check.kind==='bore'?{diameter:check.diameter,from:check.from,to:check.to,minWall:check.minWall??.1}:check.expected;
+ const expected=check.kind==='clearance'?0:check.kind==='bore'?{diameter:check.diameter,from:check.from,to:check.to,minWall:check.minWall??.1,...(check.minBottom===undefined?{}:{minBottom:check.minBottom})}:check.expected;
  if(check.kind==='surfaceDeviation')return Object.assign(Error(`Ergebnisprüfung ${index} (surfaceDeviation) fehlgeschlagen: maximale Stichprobenabweichung ${actual.sampledMaximum} mm über ${expected} mm. Die größten gemessenen Abweichungen stehen in actual.directions[].worst. Keine globale Fehlergarantie.`),{code:'AI_RESULT_MISMATCH',feedback:{checkIndex:index,checkKind:check.kind,target:check.target,expected,actual,retryable:true}});
  const message=check.kind==='radialClearance'?`Ergebnisprüfung ${index} (radialClearance) konnte das Mindestspiel ${check.expected} mm nicht bestätigen: konservative Untergrenze ${actual.minimumGapLowerBound} mm, Schnitt-Untergrenze ${actual.sampledMinimumGapLowerBound} mm.`:check.kind==='clearance'?`Ergebnisprüfung ${index} (clearance) fehlgeschlagen: Korridor Ø ${check.diameter} mm enthält noch ${actual} mm³ Material.`:`Ergebnisprüfung ${index} (${check.kind}) fehlgeschlagen: Soll ${JSON.stringify(expected)}, Ist ${JSON.stringify(actual)}.`;
  return Object.assign(Error(message),{code:'AI_RESULT_MISMATCH',feedback:{checkIndex:index,checkKind:check.kind,target:check.target,expected,actual,tolerance:check.kind==='solids'?0:check.tolerance??.01,retryable:true}});

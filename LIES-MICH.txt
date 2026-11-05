@@ -10,7 +10,8 @@ The portable package includes the required runtimes. Modelling works offline.
 Offline dictation may need a one-time language model download. Cloud AI is
 optional and uses the provider you select in Settings.
 
-See docs/USER-GUIDE.md for the user guide.
+Nightly r10 adds local-first STL conversion and symmetry reconstruction.
+See docs/STL-TO-CAD.md for conversion and docs/USER-GUIDE.md for general use.
 Public downloads and release notes:
 https://github.com/andyy909/Formnaro-cad/releases
 
@@ -23,3 +24,5 @@ eigene Kopie anlegen. Die Modellierung funktioniert offline.
 
 Die frühere Versionschronik steht im Repository unter
 docs/archive/LIES-MICH-HISTORISCH.txt.
+
+STL-Konverter und Symmetrie werden in docs/GEMEINSAMER-KONVERTER.md erklärt.

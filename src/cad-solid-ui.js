@@ -1,5 +1,6 @@
 import './cad-solid.css';
 import {createSolidSettings,solidLabel,solidShortcut,SOLID_TABS} from './cad-solid-state.js';
+import {createSolidCommandIcon} from './cad-solid-icons.js';
 
 const $=id=>document.getElementById(id);
 const tabCommands={
@@ -9,12 +10,11 @@ const tabCommands={
   assembly:[['group','ungroup','bundle'],['align','reference-place','lay-on-face'],['joints','array','mirror'],['assembly-only','assembly-load','assembly-all']],
   mesh:[['mesh-tools','mesh-select','mesh-inspector'],['mesh-repair','mesh-close-hole','mesh-reduce','mesh-curved-reduce'],['mesh-sculpt','mesh-hollow','mesh-features'],['cad-to-mesh','mesh-to-cad','stl-to-step']]
 };
-const symbols={extrude:'▰',cut:'⊟',round:'◜',chamfer:'◩',drill:'⊙',sketch:'✎','sketch-on-part':'▱','cad-contour':'▧','cad-shell':'⊔','cad-loft':'⌁','cad-sweep':'⤳',array:'▦',mirror:'◀│▶',measure:'↔',ruler:'⌐',section:'◨',inspect:'✓',drawing:'▤',joints:'⚙','project-parameters':'ƒx'};
 
 // Dock the real tree, inspector and operation panels. They keep their IDs,
 // listeners, focus, selection and controller transactions. Leaving Solid
 // restores each node to its original parent using a placeholder.
-export function createCadSolidUI({storage,controls,toolbar,header,tools,safe,t=x=>x,getLanguage=()=> 'de',view,executeCommand=()=>{},openSettings=()=>{},isIdle=()=>true}){
+export function createCadSolidUI({storage,controls,toolbar,header,tools,safe,t=x=>x,getLanguage=()=> 'de',view,executeCommand=()=>{},openSettings=()=>{},openAbout=()=>{},isIdle=()=>true}){
   const settings=createSolidSettings(storage),moved=[],captions=new Map(),extraControls=new Map();
   let mounted=false,ribbon=null,manager=null,taskPane=null,menubar=null,popup=null,observer=null,managerTab='model',activeTab=settings.get().defaultTab,solidChatOpen=false,chatState=null;
   const label=key=>solidLabel(key,getLanguage()),word=(de,en)=>getLanguage()==='en'?en:de;
@@ -33,9 +33,9 @@ export function createCadSolidUI({storage,controls,toolbar,header,tools,safe,t=x
   function decorate(node,key){
     if(!captions.has(node)){
       const fragment=document.createDocumentFragment();fragment.append(...node.childNodes);captions.set(node,{fragment,title:node.getAttribute('title'),aria:node.getAttribute('aria-label')});
-      const icon=make('span',symbols[key]??'◇','solid-command-icon');icon.setAttribute('aria-hidden','true');
+      const icon=createSolidCommandIcon(key);if(icon)node.append(icon);
       const text=label(key),caption=make('span',text===key?(node.title?.replace(/\s*\([^)]*\)/g,'')||fragment.textContent.trim()):text,'solid-command-caption');
-      node.append(icon,caption);node.classList.add('solid-command');node.title=caption.textContent;node.setAttribute('aria-label',caption.textContent);
+      node.append(caption);node.classList.add('solid-command');node.title=caption.textContent;node.setAttribute('aria-label',caption.textContent);
     }
   }
   function selectTab(key,{focus=false}={}){
@@ -63,7 +63,7 @@ export function createCadSolidUI({storage,controls,toolbar,header,tools,safe,t=x
   function shortcutBar(){
     closePopup();popup=make('div',undefined,'solid-popup');popup.id='solid-shortcuts';popup.setAttribute('role','dialog');popup.setAttribute('aria-label',word('Schnellwerkzeuge','Shortcut bar'));
     for(const [key,de,en]of [['extrude','Extrudierter Aufsatz','Extruded boss'],['cut','Linearer Schnitt','Extruded cut'],['round','Verrundung','Fillet'],['measure','Messen','Measure']]){
-      const b=button(word(de,en),()=>{closePopup();if(['extrude','cut'].includes(key))return executeCommand(key);const node=controls.get(key)||extraControls.get(key);if(node&&!node.disabled)node.click();else if(!node){const original=document.querySelector(`[data-action="${key}"]`);if(original&&!original.disabled)original.click();}});popup.append(b);
+      const b=button(word(de,en),()=>{closePopup();if(['extrude','cut'].includes(key))return executeCommand(key);const node=controls.get(key)||extraControls.get(key);if(node&&!node.disabled)node.click();else if(!node){const original=document.querySelector(`[data-action="${key}"]`);if(original&&!original.disabled)original.click();}});b.prepend(createSolidCommandIcon(key));popup.append(b);
     }
     $('viewport').append(popup);popup.querySelector('button').focus();
   }
@@ -87,7 +87,7 @@ export function createCadSolidUI({storage,controls,toolbar,header,tools,safe,t=x
     const assigned=new Set([...Object.values(tabCommands).flat(2),'new','open','save','save-as','projects','import','export','ai','photo-project-open','ai-feature-open','freecad-document-open','settings','help','undo','redo','copy','paste','duplicate','delete','projection','fit','coordinates','magnet','view-iso','view-top','view-front','view-right','mode-translate','mode-scale','mode-rotate']);
     const remaining=[...controls].filter(([key,node])=>!assigned.has(key)&&node.matches('button')).map(([key,node])=>[node.title||node.textContent.trim(),act(key)]);
     menu('extras',[[label('evaluate'),tab('evaluate')],[label('project-parameters'),act('project-parameters')],[label('options'),()=>{openSettings();$('settings-tab-solid')?.click();}],[t('Einstellungen'),openSettings],[word('KI-Werkstatt','AI workshop'),act('ai')],[t('Projektfotos'),act('photo-project-open')],[t('KI-Merkmalsbezüge'),act('ai-feature-open')],[t('FreeCAD-Merkmale'),act('freecad-document-open')],...remaining]);
-    menu('help',[[word('Solid-Einstieg','Getting started with Solid'),()=>selectManager('model')],[t('Hilfe'),act('help')]]);
+    menu('help',[[word('Solid-Einstieg','Getting started with Solid'),()=>selectManager('model')],[t('Hilfe'),act('help')],[word('Über Formnaro','About Formnaro'),openAbout]]);
     const modeNote=make('span',word('TEILE KONSTRUIEREN','PART DESIGN'),'solid-mode-note');menubar.append(modeNote);
     const quick=make('div',undefined,'solid-quick-tools');tools.append(quick);
     for(const key of ['undo','redo','copy','paste','delete'])if(controls.has(key))quick.append(controls.get(key));

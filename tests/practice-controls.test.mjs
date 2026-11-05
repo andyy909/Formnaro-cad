@@ -13,6 +13,8 @@ test('new internal tools require no per-tool allowlist; external/password target
  const tool={id:'brand-new-tool',dataset:{action:'future-tool'},tagName:'BUTTON',getClientRects:()=>[{}],closest:()=>null,hasAttribute:()=>false};
  const document={getElementById:()=>tool,querySelectorAll:()=>[tool]};assert.equal(practiceControl(document,'ui:tool:future-tool'),tool);
  tool.id='provider-login';assert.throws(()=>practiceControl(document,'ui:tool:future-tool'),/heraus/);tool.id='ordinary';tool.type='password';assert.throws(()=>practiceControl(document,'ui:id:ordinary'),/heraus/);
+ tool.type='button';tool.hasAttribute=name=>name==='data-drawing-export';
+ assert.throws(()=>practiceControl(document,'ui:id:ordinary'),/heraus/,'Drawing export must not open a file dialog in practice');
 });
 
 test('automatic gear demonstration is semantic and cannot request coordinates or external targets',()=>{
@@ -38,4 +40,13 @@ test('dialog feedback contains current modelling fields and excludes hidden and 
  const dialog={id:'modal',getClientRects:()=>[{}],querySelector:()=>null,querySelectorAll:()=>fields};const document={querySelectorAll:()=>[dialog]};
  const state=practiceDialogState(document);assert.equal(state.controls.length,1);assert.equal(state.controls[0].value,'3');assert.equal(state.controls[0].target,'ui:id:shell-thickness');assert(!JSON.stringify(state).includes('private'));
  dialog.querySelector=()=>({});assert.equal(practiceDialogState(document),null);
+});
+
+test('a closed title block names the real next control',t=>{
+ const old=globalThis.getComputedStyle;
+ globalThis.getComputedStyle=()=>({visibility:'visible'});
+ t.after(()=>globalThis.getComputedStyle=old);
+ const block={id:'drawing-title-block',getClientRects:()=>[{}],closest:()=>null};
+ const doc={getElementById:id=>id===block.id?block:null};
+ assert.throws(()=>practiceControl(doc,'ui:id:drawing-title'),/Titelblock geschlossen.*ui:id:drawing-title-block/);
 });

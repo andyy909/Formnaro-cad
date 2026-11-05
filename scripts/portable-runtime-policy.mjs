@@ -50,36 +50,12 @@ export function copyPortableCAD(from,to){
  fs.writeFileSync(path.join(to,'manifest.json'),JSON.stringify(manifest,null,2));
  return {files:files.length,removedFiles:removed.length,savedBytes:removed.reduce((a,r)=>a+r.size,0),removed};
 }
-export function copyPortableApp(source,stage,{current=false}={}){
- const docs=current?['USER-GUIDE.md']:['Formnaro-CAD-Handbuch-DE.txt'];
+export function copyPortableApp(source,stage){
+ const docs=new Set(['Formnaro-CAD-Handbuch-DE.txt']);
  for(const n of ['backend','ai','licenses','dist','electron.cjs','preload.cjs','package.json','LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.cpSync(path.join(source,n),path.join(stage,n),{recursive:true,filter:file=>n!=='backend'||!(/verification|fixture|^all-functions|^\./.test(path.basename(file))||file.endsWith('.cs'))});
- for(const n of docs){const input=path.join(source,'docs',n);if(current||fs.existsSync(input)){fs.mkdirSync(path.join(stage,'docs'),{recursive:true});fs.copyFileSync(input,path.join(stage,'docs',n));}}
+ for(const n of docs){const input=path.join(source,'docs',n);if(fs.existsSync(input)){fs.mkdirSync(path.join(stage,'docs'),{recursive:true});fs.copyFileSync(input,path.join(stage,'docs',n));}}
  // The public bridge client and acceptance/build scripts stay in the source repository.
 }
-export const speechRuntimeDLLs=['msvcp140.dll','vcruntime140.dll','vcruntime140_1.dll','vcomp140.dll'];
-export function copySpeechEngine(from,to,{crtDirectory}={}){
- if(fs.existsSync(to))throw Error('Speech output must be a new directory');
- if(!crtDirectory)throw Error('Speech packaging requires the verified CAD Microsoft runtime directory');
- const cad=JSON.parse(fs.readFileSync(path.join(crtDirectory,'../manifest.json')));
- const runtimeFiles=speechRuntimeDLLs.map(name=>{
-  const row=cad.files.find(row=>row.file.toLowerCase()==='bin/'+name);
-  if(!row)throw Error('CAD Microsoft runtime missing from manifest: '+name);
-  const bytes=fs.readFileSync(path.join(crtDirectory,name));
-  if(bytes.length!==row.size||createHash('sha256').update(bytes).digest('hex')!==row.sha256)throw Error('CAD Microsoft runtime damaged: '+name);
-  return {name,bytes,sha256:row.sha256};
- });
- const manifest=JSON.parse(fs.readFileSync(path.join(from,'manifest.json')));fs.mkdirSync(to,{recursive:true});
- for(const item of manifest.files.filter(row=>!row.name.endsWith('.bin'))){
-  if(!/^[a-zA-Z0-9_.-]+$/.test(item.name))throw Error('Invalid speech engine path');
-  const bytes=fs.readFileSync(path.join(from,item.name));if(createHash('sha256').update(bytes).digest('hex')!==item.sha256)throw Error('Speech engine damaged: '+item.name);fs.writeFileSync(path.join(to,item.name),bytes);
- }
- for(const item of runtimeFiles){fs.writeFileSync(path.join(to,item.name),item.bytes);manifest.files=manifest.files.filter(row=>row.name.toLowerCase()!==item.name);manifest.files.push({name:item.name,sha256:item.sha256});}
- manifest.microsoftRuntime={source:'Unmodified DLLs from the bundled FreeCAD runtime; its manifest pins every file.',files:speechRuntimeDLLs,notices:'../freecad/SOURCE-NOTICE.txt; ../freecad/doc/ThirdPartyLibraries.html; ../freecad/share/doc'};
- fs.writeFileSync(path.join(to,'manifest.json'),JSON.stringify(manifest,null,2));
- fs.writeFileSync(path.join(to,'MICROSOFT-RUNTIME-NOTICE.txt'),'Microsoft Visual C++ / OpenMP runtime\nThe four app-local DLLs are unchanged copies of the Microsoft runtime bundled with FreeCAD.\nTheir original file hashes are recorded in this manifest and ../freecad/manifest.json.\nThe accompanying upstream notices and package/build versions remain in ../freecad.\n');
- for(const n of ['LICENSE-whisper.txt','LICENSE-model.txt'])fs.copyFileSync(path.join(from,n),path.join(to,n));
-}
-
 export function writeCADSourceAsset(from,directory){
  const manifest=JSON.parse(fs.readFileSync(path.join(from,'manifest.json'))),entries={};
  if(!manifest.files.some(row=>row.file.startsWith('sources/')&&row.file.endsWith('.tar.gz')))throw Error('A complete FreeCAD source input is required to create the corresponding source archive');
@@ -92,7 +68,6 @@ export function converterRuntime(root){
  const provenance=JSON.parse(fs.readFileSync(path.join(root,'converter/provenance.json'),'utf8'));
  if(!/^runtime-v010(?:-[a-z0-9]+)*$/.test(provenance.runtimeDirectory))throw Error('Invalid converter runtime directory');
  const directory=path.join(root,'converter',provenance.runtimeDirectory),exe=path.join(directory,'Formnaro-Konverter.exe');
- if(!fs.existsSync(exe))throw Error('Converter runtime is missing. Prepare '+provenance.runtimeDirectory+' as described in docs/BUILD.md.');
  if(createHash('sha256').update(fs.readFileSync(exe)).digest('hex')!==provenance.headlessExeSha256)throw Error('Converter executable differs from its provenance');
  return directory;
 }

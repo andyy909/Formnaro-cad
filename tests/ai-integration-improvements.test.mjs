@@ -8,6 +8,7 @@ import {Matrix4,Vector3} from 'three';
 import {cadAIContext} from '../src/cad-ai-context.js';
 import {runCadAIRequest} from '../src/cad-ai-request.js';
 import {createCadController} from '../src/cad-controller.js';
+import {createCadAutomationAccess} from '../src/cad-automation-access.js';
 import {validateAIResultChecks,aiProposalWarning} from '../src/cad-ai-result-checks.js';
 import {visualReviewInput} from '../src/cad-ai-visual-review.js';
 const {providerContext}=createRequire(import.meta.url)('../backend/ai-provider-context.cjs');
@@ -112,4 +113,131 @@ test('A hollow cylindrical body distinguishes the inner bore from its coaxial ou
   const p=await cad.preview({kind:'batch',commands:[{op:'create',type:'cylinder',as:'outside',size:[20,20,10],pos:[0,0,5]},{op:'create',type:'cylinder',as:'inside',size:[6,6,14],pos:[0,0,5],solid:false},{op:'group',targets:['$outside','$inside'],as:'tube'}]});
   const r=await cad.checkPreview(p.previewId,[{kind:'bore',target:'$tube',from:[0,0,0],to:[0,0,10],diameter:6,minWall:1}]);assert.equal(r.checks[0].actual.diameter,6);assert.equal(r.checks[0].actual.surroundingMaterial,true);
  }finally{cad.dispose();}
+});
+
+test('Normal chat fits and sees the viewport, then sees and revises a draft before Apply',async()=>{
+ let fits=0,previews=0,calls=0;const discarded=[];
+ const commands=[{op:'create',type:'box'}],revised=[{op:'create',type:'cylinder'}];
+ const access={scene,context:()=>({}),fitView:()=>{fits++;},
+  screenshot:async()=>({mimeType:'image/png',dataBase64:image.dataUrl.split(',')[1]}),
+  preview:async()=>({previewId:'draft'+ ++previews,revision:'r'}),
+  inspectPreview:async id=>({previewId:id,revision:'r',views:['iso'],images:[image]}),
+  discard:id=>discarded.push(id)};
+ const result=await runCadAIRequest({input:{modelChecks:false},access,generate:async args=>{
+  assert.deepEqual(args.context.viewContract.actions,['fit','screenshot','candidate']);
+  switch(++calls){
+   case 1:return {revision:'r',view:'fit'};
+   case 2:assert.equal(args.context.viewFeedback.action,'fit');return {revision:'r',view:'screenshot'};
+   case 3:assert.equal(args.images[0].dataUrl,image.dataUrl);return {revision:'r',commands,view:'candidate'};
+   case 4:assert.deepEqual(args.context.viewFeedback.commands,commands);assert.equal(args.images[0].dataUrl,image.dataUrl);return {revision:'r',commands:revised};
+   default:assert.fail('Unexpected extra provider call');
+  }
+ }});
+ assert.equal(fits,2);assert.equal(result.proposal.previewId,'draft2');assert.deepEqual(result.commands,revised);assert.deepEqual(discarded,['draft1']);
+});
+
+test('View requests omit image actions for text-only models and reject stale replies',async()=>{
+ let fits=0;
+ const access={scene,context:()=>({}),fitView:()=>{fits++;},screenshot:()=>assert.fail('unexpected image')};
+ await assert.rejects(runCadAIRequest({input:{modelChecks:false},visualReview:false,access,maxCorrections:0,generate:async args=>{
+  assert.deepEqual(args.context.viewContract.actions,['fit']);return {revision:'stale',view:'fit'};
+ }}),/Ungültige KI-Ansichtsanfrage/);
+ assert.equal(fits,0);
+});
+
+test('Desktop provider preserves a requested candidate image and rejects mixed camera operations',async()=>{
+ const {generate}=createRequire(import.meta.url)('../backend/ai-provider.cjs'),original=globalThis.fetch;
+ const config={protocol:'chat',baseUrl:'http://127.0.0.1/v1',model:'fixture'};
+ const context={viewContract:{actions:['fit','candidate'],reply:'Request candidate views when needed.'}};
+ let answer={revision:'r',view:'candidate',commands:[{op:'create',type:'box'}]};
+ try{
+  globalThis.fetch=async(_url,options)=>{
+   assert.match(JSON.parse(options.body).messages[0].content,/viewContract/);
+   return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify(answer)}}]}));
+  };
+  const run=()=>generate(config,'',{prompt:'make',scene:scene(),context},new AbortController().signal);
+  assert.equal((await run()).view,'candidate');
+  answer={revision:'r',view:'fit'};
+  assert.equal((await run()).view,'fit');
+  answer.commands=[];
+  await assert.rejects(run(),/Invalid camera action/);
+ }finally{globalThis.fetch=original;}
+});
+
+test('Navigation chat can request a viewport image without gaining draft tools',async()=>{
+ let calls=0;
+ const access={scene,programOnly:true,context:()=>({programHelpOnly:true}),fitView:()=>{},inspectPreview:()=>assert.fail('unexpected draft'),
+  screenshot:async()=>({mimeType:'image/png',dataBase64:image.dataUrl.split(',')[1]})};
+ const result=await runCadAIRequest({input:{},access,generate:async args=>{
+  assert.deepEqual(args.context.viewContract.actions,['fit','screenshot']);
+  if(++calls===1)return {revision:'r',view:'screenshot'};
+  assert.equal(args.context.viewFeedback.status,'completed');
+  assert.equal(args.images[0].dataUrl,image.dataUrl);
+  return {message:'Bild erhalten'};
+ }});
+ assert.equal(result.message,'Bild erhalten');
+});
+
+test('confirmed viewport capture rejects an open preview and binds the returned image to the model revision',async()=>{
+ let revision='r',scope=1,busy=false,afterCapture;
+ const dataBase64=image.dataUrl.split(',')[1];
+ const access=createCadAutomationAccess({controller:{revision:()=>revision,projectScope:()=>scope},isBusy:()=>busy,
+  screenshot:async options=>{assert.deepEqual(options,{confirmed:true});afterCapture?.();return image.dataUrl;}});
+ assert.deepEqual(await access.confirmedScreenshot('r'),
+  {revision:'r',mimeType:'image/png',dataBase64,source:'confirmed-model',applied:true});
+ busy=true;
+ await assert.rejects(access.confirmedScreenshot('r'),{code:'BUSY'});
+ busy=false;afterCapture=()=>{scope++;};
+ await assert.rejects(access.confirmedScreenshot('r'),{code:'STALE_REVISION'});
+ afterCapture=()=>{revision='new';};
+ await assert.rejects(access.confirmedScreenshot('r'),{code:'STALE_REVISION'});
+});
+
+test('a confirmed view reports the applied revision with its image and cannot be requested as an exercise view',async()=>{
+ let calls=0;
+ const access={scene,context:()=>({}),programOnly:true,fitView:()=>{},
+  confirmedScreenshot:async revision=>({revision,mimeType:'image/png',dataBase64:image.dataUrl.split(',')[1],source:'confirmed-model',applied:true})};
+ const result=await runCadAIRequest({input:{},access,generate:async args=>{
+  assert.deepEqual(args.context.viewContract.actions,['fit','confirmed']);
+  if(++calls===1)return {revision:'r',view:'confirmed'};
+  assert.deepEqual(args.context.viewFeedback,{action:'confirmed',status:'completed',source:'confirmed-model',revision:'r',applied:true});
+  assert.equal(args.images[0].dataUrl,image.dataUrl);
+  return {message:'Bestätigtes Bild erhalten'};
+ }});
+ assert.equal(result.message,'Bestätigtes Bild erhalten');
+ await runCadAIRequest({input:{},access:{...access,practiceRequested:true},generate:async args=>{
+  assert.equal(args.context.viewContract,undefined);
+  return {message:'Übung ohne Hauptfensterbild'};
+ }});
+});
+
+test('blind bore check proves material beyond the directed bore end',async()=>{
+ const cad=controller();
+ try{
+  const p=await cad.preview({kind:'batch',commands:[
+   {op:'create',type:'box',size:[30,30,10],pos:[0,0,5],as:'plate'},
+   {op:'create',type:'cylinder',size:[6,6,8],pos:[0,0,9],solid:false,as:'hole'},
+   {op:'group',targets:['$plate','$hole'],as:'body'}
+  ]});
+  const c={kind:'bore',target:'$body',from:[0,0,10],to:[0,0,5],diameter:6,minWall:1,minBottom:4};
+  const passed=await cad.checkPreview(p.previewId,[c]);
+  assert.equal(passed.checks[0].actual.bottomPresent,true);
+  for(const bad of [{minBottom:6},{from:c.to,to:c.from}]){
+   await assert.rejects(cad.checkPreview(p.previewId,[{...c,...bad}]),e=>e.code==='AI_RESULT_MISMATCH'&&e.feedback.actual.bottomPresent===false);
+  }
+ }finally{cad.dispose();}
+});
+
+test('large AI scene uses the exact selected source path and omits unrelated recipes',async()=>{
+ const target={rootId:'assembly',path:['spindle']};
+ const selected={id:'spindle',target,name:'Spindel',kind:'cad'};
+ const root={id:'assembly',target:{rootId:'assembly',path:[]},name:'Assembly',kind:'cad',recipe:{data:'x'.repeat(710000)}};
+ const scene={revision:'r1',objects:[root,selected]};
+ const project={nodes:[]};
+ const access=createCadAutomationAccess({controller:{revision:()=>scene.revision,readSnapshot:()=>project},getScene:()=>scene,getSelection:()=>[target],refresh:async()=>{}});
+ assert.deepEqual(access.chatSelection(),['Spindel']);
+ const result=await access.sceneForAI();
+ assert.deepEqual(result.objects,[selected]);
+ assert.deepEqual(result.selectionTargets,[target]);
+ assert.equal(result.scope.totalObjects,2);
 });

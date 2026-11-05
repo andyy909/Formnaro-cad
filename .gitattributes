@@ -16,3 +16,21 @@ src/fonts/** -text
 converter/** -text
 
 parametric/** -text
+
+# This Nightly source snapshot preserves the tested application input bytes.
+ai/** -text
+backend/** -text
+packaging/** -text
+public/** -text
+python-runtime/** -text
+scripts/** -text
+src/** -text
+tests/** -text
+electron.cjs -text
+preload.cjs -text
+index.html -text
+package.json -text
+package-lock.json -text
+vite.config.js -text
+LICENSE.txt -text
+THIRD-PARTY-LICENSES.txt -text

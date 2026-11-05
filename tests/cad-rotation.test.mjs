@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Matrix4,Vector3} from 'three';
-import {cadRotationSnap,cadRotationDelta} from '../src/cad-rotation.js';
+import {cadRotationSnap,cadRotationDelta,cadViewRotationAxes} from '../src/cad-rotation.js';
 const close=(a,b)=>a.forEach((v,i)=>assert.ok(Math.abs(v-b[i])<1e-9,`${a} != ${b}`));
 
 test('Mini rotation uses 15 degrees inside, 1 degree outside and Shift overrides fine mode',()=>{
@@ -12,6 +12,24 @@ test('Mini rotation uses 15 degrees inside, 1 degree outside and Shift overrides
   }
   assert.equal(Object.is(cadRotationSnap(-.1,false).degrees,-0),false);
   assert.throws(()=>cadRotationSnap(NaN,true));
+});
+
+test('View handle snaps its axis while leaving the camera vector intact',()=>{
+  for(const [direction,expected] of [
+    [[.12,-1,.08],[0,-1,0]],
+    [[.66,-.81,.07],[Math.SQRT1_2,-Math.SQRT1_2,0]],
+    [[1,-.14,.07],[1,0,0]],
+    [[.06,-.04,1],[0,0,1]],
+    [[.06,-.04,-1],[0,0,-1]],
+    [[1,-1.3,1.1],[.5,-.5,Math.SQRT1_2]]
+  ]){
+    const camera=new Vector3(...direction);
+    const [right,depth,up,normal]=cadViewRotationAxes(camera,new Vector3(1,0,0));
+    close(normal.toArray(),expected);
+    close(right.clone().cross(depth).toArray(),up.toArray());
+    for(const axis of [right,depth,up])assert.ok(Math.abs(axis.length()-1)<1e-9);
+    assert.deepEqual(camera.toArray(),direction);
+  }
 });
 
 test('Rotation holds its world pivot and follows an inclined plane normal',()=>{

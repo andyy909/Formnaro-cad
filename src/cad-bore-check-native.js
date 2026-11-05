@@ -52,7 +52,15 @@ export function measureCadBore({oc,project,object,check}){
   const inner=cylinder(oc,s,origin,best.dir,best.r-eps,length),occupied=s.keep(cadBoolean(oc,'intersection',shape,inner,{allowEmpty:true}));
   const minWall=check.minWall??.1,outer=cylinder(oc,s,origin,best.dir,best.r+minWall/scale,length),hole=cylinder(oc,s,origin,best.dir,best.r+eps,length),ring=s.keep(cadBoolean(oc,'difference',outer,hole,{allowEmpty:true}));
   const missing=ring?s.keep(cadBoolean(oc,'difference',ring,shape,{allowEmpty:true})):null;
+  let bottom;
+  if(check.minBottom!==undefined){
+   const forward=new Vector3(...best.dir).transformDirection(matrix).dot(wantedAxis)>0,sign=forward?1:-1;
+   const start=best.a.map((x,i)=>x+best.dir[i]*((forward?best.length:0)+sign*eps));
+   const plug=cylinder(oc,s,start,best.dir.map(n=>sign*n),best.r-eps,check.minBottom/scale-eps);
+   const gap=s.keep(cadBoolean(oc,'difference',plug,shape,{allowEmpty:true}));
+   bottom={bottomPresent:!gap,minBottom:check.minBottom};
+  }
   const {a,dir,r,score,...actual}=best;delete actual.length;
-  return {...actual,clear:!occupied,surroundingMaterial:!!ring&&!missing,minWall,radialAllowance:tolerance,method:'analytic-cylinder-and-native-boolean-ring',scope:'Full cylindrical wall and continuous surrounding ring, excluding the reported axial/radial allowance. Endpoints measure the cylindrical portion, not countersinks or drill-tip cones.'};
+  return {...actual,...bottom,clear:!occupied,surroundingMaterial:!!ring&&!missing,minWall,radialAllowance:tolerance,method:'analytic-cylinder-and-native-boolean-ring',scope:'Full cylindrical wall and continuous surrounding ring, excluding the reported axial/radial allowance. Endpoints measure the cylindrical portion, not countersinks or drill-tip cones.'};
  }finally{s.close();}
 }

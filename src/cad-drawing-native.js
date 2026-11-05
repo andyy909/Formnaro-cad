@@ -36,9 +36,12 @@ function splineSpans(oc,edge){
  }finally{converter?.delete();spline?.delete();adapter?.delete();envelope?.[Symbol.dispose]?.();location?.delete();surface?.delete();face?.delete();maker?.delete();plane?.delete();}
 }
 
-function planarCurves(oc,edge){
- const dto=cadNativeCurveDto(oc,edge);
- if(dto.kind==='line'){let a=xy(dto.start),b=xy(dto.end);if(a[0]>b[0]||a[0]===b[0]&&a[1]>b[1])[a,b]=[b,a];return Math.hypot(a[0]-b[0],a[1]-b[1])>1e-10?[{kind:'line',a,b}]:[];}
+// OCCT can represent an affinely transformed line as a degree-one spline.
+// Two control points still describe exactly the segment between its ends.
+const isLineSegment=dto=>dto.kind==='line'||(['bezier','bspline'].includes(dto.kind)&&dto.degree===1&&dto.poles.length===2);
+
+function planarCurves(oc,edge,dto=cadNativeCurveDto(oc,edge)){
+ if(isLineSegment(dto)){let a=xy(dto.start),b=xy(dto.end);if(a[0]>b[0]||a[0]===b[0]&&a[1]>b[1])[a,b]=[b,a];return Math.hypot(a[0]-b[0],a[1]-b[1])>1e-10?[{kind:'line',a,b}]:[];}
  if(['circle','ellipse'].includes(dto.kind)){
   const [from,to]=dto.parameterRange,span=to-from;if(span>TAU+1e-7)fail('Native Zeichnungskurve überschreitet eine Periode.');
   const center=xy(dto.center),clockwise=dto.xAxis[0]*dto.yAxis[1]-dto.xAxis[1]*dto.yAxis[0]<0,closed=dto.closed&&Math.abs(span-TAU)<1e-7;
@@ -72,8 +75,8 @@ function drawingSourceReferences(oc,nodes,inverse){
   if(node.source==='step'||node.source==='native'&&['box','cylinder','sketch'].includes(node.recipe?.type)){
    const shape=readCadBrep(oc,node.brep.data),brepSignature=node.source==='step'?cadGeometryDigest(node.brep.data):null;let edges=[];
    try{edges=uniqueCadEdgesNative(oc,shape);for(const edge of edges){if(++count>20000){overflow=true;return;}let placed,placedEdge;try{
-    placed=transformCadGeometryAffineNative(oc,edge,multiplyCadMatrices(inverse,world));placedEdge=oc.TopoDS.Edge(placed);const dto=cadNativeCurveDto(oc,placedEdge);if(dto.kind!=='line'&&(dto.kind!=='circle'||Math.abs(Math.abs(dto.normal[2])-1)>1e-9||Math.abs(dto.parameterRange[1]-dto.parameterRange[0]-TAU)>1e-7))continue;
-    const curves=planarCurves(oc,placedEdge);if(curves.length!==1)continue;const curve=curves[0],bucket=referenceBucket(curve);if(!bucket)continue;let role;try{role=cadContourEdgeSourceKey(oc,node,edge);}catch(error){if(error.code==='CONTOUR_REBIND_REQUIRED')continue;throw error;}
+    placed=transformCadGeometryAffineNative(oc,edge,multiplyCadMatrices(inverse,world));placedEdge=oc.TopoDS.Edge(placed);const dto=cadNativeCurveDto(oc,placedEdge);if(!isLineSegment(dto)&&(dto.kind!=='circle'||Math.abs(Math.abs(dto.normal[2])-1)>1e-9||Math.abs(dto.parameterRange[1]-dto.parameterRange[0]-TAU)>1e-7))continue;
+    const curves=planarCurves(oc,placedEdge,dto);if(curves.length!==1)continue;const curve=curves[0],bucket=referenceBucket(curve);if(!bucket)continue;let role;try{role=cadContourEdgeSourceKey(oc,node,edge);}catch(error){if(error.code==='CONTOUR_REBIND_REQUIRED')continue;throw error;}
     let elementId;if(node.recipe?.type==='sketch'){const local=cadNativeCurveDto(oc,edge),z=local.start[2],side=Math.abs(z-node.stats.bounds.min[2])<=1e-7?'min':Math.abs(z-node.stats.bounds.max[2])<=1e-7?'max':null;if(!side)continue;role='sketch.cap.'+side+':'+role;if([2,3,4].includes(node.recipe.sketch.version))elementId=role.slice(role.indexOf('sketch.edge.')+12);}
     const ref={source:structuredClone(target),role,...(elementId?{elementId}:{}),...(node.source==='step'?{geometrySignature:brepSignature}:{})},list=buckets.get(bucket)??[];if(list.length<100)list.push({curve,ref});else overflow=true;buckets.set(bucket,list);
    }finally{placedEdge?.delete();placed?.delete();}}}finally{edges.forEach(edge=>edge.delete());shape.delete();}

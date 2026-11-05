@@ -1,7 +1,21 @@
 import {rectifyPhotoPixels} from './cad-photo-rectify.js';
 import {projectPhotoPoint} from './cad-photo-perspective.js';
 import {PHOTO_VIEWS,photoBounds,comparePhotoMasks} from './cad-photo-data.js';
+import {suggestPhotoContour,suggestPhotoSilhouette} from './cad-photo-contours.js';
 export async function loadPhotoImage(dataUrl){if(!/^data:image\/(png|jpeg|webp);base64,/.test(dataUrl))throw Error('Ungültiges lokales Bild.');return new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=()=>reject(Error('Foto konnte nicht gelesen werden.'));i.src=dataUrl;});}
+export function suggestPhotoImageContour(image,{includeSilhouette=false}={}){
+ const width=image.naturalWidth,height=image.naturalHeight,shrink=Math.min(1,640/Math.max(width,height));
+ const canvas=document.createElement('canvas');canvas.width=Math.round(width*shrink);canvas.height=Math.round(height*shrink);
+ const context=canvas.getContext('2d',{willReadFrequently:true});context.drawImage(image,0,0,canvas.width,canvas.height);
+ const pixels=context.getImageData(0,0,canvas.width,canvas.height);
+ const originalPoints=points=>points.map(([x,y])=>[x*width/canvas.width,y*height/canvas.height]);
+ if(includeSilhouette&&shrink===1){
+  const silhouette=suggestPhotoSilhouette(pixels);
+  if(silhouette)return {silhouette};
+ }
+ const result=suggestPhotoContour(pixels);
+ return {...result,points:originalPoints(result.points)};
+}
 export function photoGrid(image,{crop=[0,0,image.naturalWidth,image.naturalHeight],step}={}){
  const [x0,y0,x1,y1]=crop;if(crop.length!==4||!crop.every(Number.isFinite)||x0<0||y0<0||x1>image.naturalWidth||y1>image.naturalHeight||x1-x0<2||y1-y0<2)throw Error('Fotoausschnitt außerhalb des Originals.');
  const zoom=Math.min(8,1400/Math.max(x1-x0,y1-y0)),c=document.createElement('canvas');c.width=Math.max(2,Math.round((x1-x0)*zoom));c.height=Math.max(2,Math.round((y1-y0)*zoom));const ctx=c.getContext('2d');ctx.drawImage(image,x0,y0,x1-x0,y1-y0,0,0,c.width,c.height);

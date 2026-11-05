@@ -28,15 +28,18 @@ export function aiFeedback(error,context={}){
  if(typeof operation==='string')out.operation=operation.slice(0,64);
  if(target!==undefined)out.target=target;
  if(typeof source.field==='string')out.field=source.field.slice(0,120);
+ const sandboxOutput={};
+ for(const key of ['stdout','stderr'])if(typeof source.sandboxOutput?.[key]==='string'&&source.sandboxOutput[key])sandboxOutput[key]=source.sandboxOutput[key].slice(0,4000);
+ if(Object.keys(sandboxOutput).length)out.sandboxOutput=sandboxOutput;
  if(typeof source.value==='number'&&Number.isFinite(source.value)||typeof source.value==='boolean')out.value=source.value;
  if(Array.isArray(source.value)&&source.value.length<=4&&source.value.every(Number.isFinite))out.value=[...source.value];
  if(source.range&&['min','max'].some(k=>Number.isFinite(source.range[k])))out.range=Object.fromEntries(['min','max'].filter(k=>Number.isFinite(source.range[k])).map(k=>[k,source.range[k]]));
  if(Number.isSafeInteger(source.checkIndex)&&source.checkIndex>=1&&source.checkIndex<=32){out.checkIndex=source.checkIndex;if(['size','bounds','volume','solids','distance','clearance','bore','radialClearance'].includes(source.checkKind))out.checkKind=source.checkKind;for(const key of ['expected','actual'])if(Number.isFinite(source[key])||Array.isArray(source[key])&&source[key].length===3&&source[key].every(v=>Number.isFinite(v)||key==='expected'&&['size','bounds'].includes(source.checkKind)&&v===null)&&source[key].some(Number.isFinite))out[key]=structuredClone(source[key]);if(Number.isFinite(source.tolerance)&&source.tolerance>=0&&source.tolerance<=.1)out.tolerance=source.tolerance;}
  if(source.checkKind==='bore'&&source.actual&&typeof source.actual==='object'){
-  out.actual={};for(const key of ['diameter','depth','axisOffset','axisAngleDegrees','endpointError','minWall','radialAllowance'])if(Number.isFinite(source.actual[key]))out.actual[key]=source.actual[key];
+  out.actual={};for(const key of ['diameter','depth','axisOffset','axisAngleDegrees','endpointError','minWall','minBottom','radialAllowance'])if(Number.isFinite(source.actual[key]))out.actual[key]=source.actual[key];
   for(const key of ['from','to','axis'])if(Array.isArray(source.actual[key])&&source.actual[key].length===3&&source.actual[key].every(Number.isFinite))out.actual[key]=[...source.actual[key]];
-  for(const key of ['clear','surroundingMaterial'])if(typeof source.actual[key]==='boolean')out.actual[key]=source.actual[key];
-  if(source.expected&&typeof source.expected==='object')out.expected={diameter:source.expected.diameter,from:source.expected.from,to:source.expected.to,minWall:source.expected.minWall};
+  for(const key of ['clear','surroundingMaterial','bottomPresent'])if(typeof source.actual[key]==='boolean')out.actual[key]=source.actual[key];
+  if(source.expected&&typeof source.expected==='object')out.expected={diameter:source.expected.diameter,from:source.expected.from,to:source.expected.to,minWall:source.expected.minWall,...(Number.isFinite(source.expected.minBottom)?{minBottom:source.expected.minBottom}:{})};
  }
  if(source.checkKind==='radialClearance'&&source.actual&&typeof source.actual==='object'){
   const actual={};for(const k of ['minimumGapLowerBound','sampledMinimumGapLowerBound','samples','slabsChecked','numericalAllowance'])if(Number.isFinite(source.actual[k]))actual[k]=source.actual[k];

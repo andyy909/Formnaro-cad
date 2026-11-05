@@ -24,7 +24,7 @@ test('Small STEP shrinking and coarser display requests reuse the identical slig
     // an independent surface check; no display buffer proves native bounds.
     for(let i=0;i<smaller.mesh.vertices.length;i+=3){const point=cadPoint(smaller.transform,smaller.mesh.vertices.slice(i,i+3));assert.ok(Math.abs(Math.hypot(point[0]/1.02,point[1],point[2])-8)<1e-6);}
     smaller.mesh.vertices[0]=999;assert.notEqual(service.display(project,quality)[0].mesh.vertices[0],999,'Caller mutation corrupted shared cache');
-    project.nodes[0].transform[0]=1.04;const coarse=service.display(project,{...quality,deflection:.021})[0];assert.equal(calls,1);assert.deepEqual(coarse.mesh,first.mesh);assert.equal(serializeCadProject(project),before);
+    project.nodes[0].transform[0]=1.04;const coarse=service.display(project,{...quality,deflection:.0209})[0];assert.equal(calls,1);assert.deepEqual(coarse.mesh,first.mesh);assert.equal(serializeCadProject(project),before);
     const larger=service.display(project,{...quality,deflection:.023})[0];assert.equal(calls,2,'Mesh more than ten percent finer retained');assert.ok(larger.mesh.triangles.length>0);
   }finally{oc.ReplicadMeshExtractor.extract=extract;service.dispose();}
 });
@@ -34,7 +34,7 @@ test('Larger scales, angular changes and changed native source bytes require new
   oc.ReplicadMeshExtractor.extract=Object.assign(function(...args){calls++;return extract.apply(this,args);},extract);
   try{
     const source=service.nativeNode({type:'cylinder',size:[12,12,6]},{id:'body'}),project=createCadProject({nodes:[source]}),before=serializeCadProject(project),quality={deflection:.03,angleDegrees:12},exported=service.exportMeshes(project,{deflection:.02,angleDegrees:8});
-    service.display(project,quality);assert.equal(calls,1);project.nodes[0].transform[0]=1.01;service.display(project,quality);assert.equal(calls,2,'A coarser cached mesh survived enlargement');
+    service.display(project,quality);assert.equal(calls,1);project.nodes[0].transform[0]=1.2;service.display(project,quality);assert.equal(calls,2,'A coarser cached mesh survived enlargement');
     project.nodes[0].transform[0]=1;service.display(project,{...quality,angleDegrees:13});assert.equal(calls,3,'Different angular budget reused');
     const replacement=service.nativeNode({type:'cylinder',size:[14,14,6]},{id:'replacement'});project.nodes[0].brep=replacement.brep;service.display(project,quality);assert.equal(calls,4,'Different native source reused');
     project.nodes[0].brep=source.brep;service.display(project,{...quality,deflection:.031});assert.equal(calls,4);assert.equal(serializeCadProject(project),before);assert.deepEqual(service.exportMeshes(project,{deflection:.02,angleDegrees:8}),exported);

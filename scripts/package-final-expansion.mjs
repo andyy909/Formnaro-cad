@@ -25,7 +25,6 @@ junction('node_modules',path.join(root,'node_modules'));
 const unitCAD=path.join(source,'freecad-runtime/runtime');fs.mkdirSync(path.dirname(unitCAD),{recursive:true});fs.cpSync(path.join(base,'resources/freecad'),unitCAD,{recursive:true,errorOnExist:true,force:false});assert(!fs.lstatSync(unitCAD).isSymbolicLink());assert.equal(hash(path.join(unitCAD,'manifest.json')),hash(path.join(base,'resources/freecad/manifest.json')));
 junction('converter/runtime-v010-security',path.join(base,'resources/converter'));
 junction('converter/runtime-v010',path.join(base,'resources/converter'));
-for(const row of inventory(path.join(base,'resources/speech'))){const target=path.join(source,'speech-runtime',row.file);if(fs.existsSync(target))assert.equal(hash(target),row.sha256,'Speech source/bundle mismatch: '+row.file);else{fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(path.join(base,'resources/speech',row.file),target);}}
 if(fs.existsSync('parametric/runtime-win-x64'))junction('parametric/runtime-win-x64',path.resolve('parametric/runtime-win-x64'));
 const frozen=inventory(source);fs.writeFileSync(path.join(proof,'source-freeze.json'),JSON.stringify(frozen,null,2));
 async function execute(label,exe,args,{cwd=source,env={}}={}){
@@ -46,7 +45,7 @@ for(const file of ['dist','backend','ai','docs','licenses','scripts','electron.c
 const cadLicenses=path.join(stage,'licenses/cad-kernel');fs.mkdirSync(cadLicenses,{recursive:true});fs.cpSync(path.join(source,'cad-kernel-build/runtime/licenses'),path.join(cadLicenses,'licenses'),{recursive:true});for(const name of ['README.md','integrity.json','upstream-lock.json','system-license-lock.json','build-inputs.json','formnaro_cad.provenance.json','formnaro_cad.build-manifest.json'])fs.copyFileSync(path.join(source,'cad-kernel-build/runtime',name),path.join(cadLicenses,name));
 const manifestSha256=hash(path.join(base,'resources/freecad/manifest.json'));fs.writeFileSync(path.join(stage,'backend/freecad-runtime-pin.json'),JSON.stringify({sha256:manifestSha256}));const stagedFiles=inventory(stage);
 const [runtime]=await packager({dir:stage,tmpdir:path.join(proof,'tmp'),name:'Formnaro',platform:'win32',arch:'x64',out,asar:true,prune:false,overwrite:false,electronVersion:meta.devDependencies.electron,appVersion:meta.version,appCopyright:'Copyright (c) 2026 '+meta.author,win32metadata:{ProductName:'Formnaro',FileDescription:'Teile, Material und Baugruppen'}});
-for(const name of ['converter','speech','freecad'])fs.cpSync(path.join(base,'resources',name),path.join(runtime,'resources',name),{recursive:true});
+for(const name of ['converter','freecad'])fs.cpSync(path.join(base,'resources',name),path.join(runtime,'resources',name),{recursive:true});
 // External CPython cannot import from Electron ASAR archives.
 fs.cpSync(path.join(source,'ai'),path.join(runtime,'ai'),{recursive:true});fs.mkdirSync(path.join(runtime,'scripts'));fs.copyFileSync(path.join(source,'scripts/offlinecad_ai.py'),path.join(runtime,'scripts/offlinecad_ai.py'));
 for(const file of ['LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.copyFileSync(path.join(source,file),path.join(runtime,file));fs.cpSync(path.join(source,'docs'),path.join(runtime,'docs'),{recursive:true});

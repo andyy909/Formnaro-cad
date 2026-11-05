@@ -10,7 +10,7 @@ test('A fresh managed runtime reached through a directory junction runs an isola
  const physical=path.join(temporary,'physical-runtime'),moduleRoot=path.join(temporary,'linked-application');
  // A real copy has fresh inherited ACLs. A link to a runtime already used by
  // another test would hide the missing permission grant that caused the bug.
- await fs.cp(source.root,physical,{recursive:true});
+ await fs.cp(await fs.realpath(source.root),physical,{recursive:true});
  await fs.cp(path.resolve('backend'),path.join(moduleRoot,'backend'),{recursive:true});await fs.mkdir(path.join(moduleRoot,'freecad-runtime'),{recursive:true});await fs.symlink(physical,path.join(moduleRoot,'freecad-runtime/runtime'),'junction');
  const freecad=require(path.join(moduleRoot,'backend/freecad.cjs'));
  const result=await freecad.run({inspectOnly:true,script:{version:1,code:"measurements={'radius':Part.makeCircle(3.125).Curve.Radius}"}});

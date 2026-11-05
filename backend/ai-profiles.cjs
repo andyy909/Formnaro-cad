@@ -24,11 +24,16 @@ function createAIProfiles({stored,encrypt,decrypt,canEncrypt,persist}){
   let encryptedKey='';if(next.rememberKey){if(!value.clearKey&&!newKey&&previous?.encryptedKey)encryptedKey=previous.encryptedKey;else if(key){if(!canEncrypt())throw Error('Encrypted key storage is unavailable on this computer.');encryptedKey=encrypt(key);}}
   const updated=new Map(profiles);updated.set(id,{config:next,key,encryptedKey});persist(serialize(next,updated));profiles=updated;config=next;if(next.authMode==='api-key')lastAPIConfig={...next};return publicSettings();
  }
- function selectProvider(id){const existing=profiles.get(id),builtin=BUILTIN_PROVIDERS.find(p=>p.id===id);if(!existing&&!builtin)throw Error('Unbekannter KI-Anbieter. Zuerst in den API-Einstellungen einrichten.');return save({config:{...(existing?.config||{...DEFAULT_CONFIG,authMode:builtin.authMode||'api-key',protocol:builtin.protocol||'chat',baseUrl:builtin.baseUrl,model:builtin.model}),bridgeEnabled:config.bridgeEnabled}});}
- function selectModel(model){if(typeof model!=='string'||!model.trim())throw Error('Bitte ein Modell auswählen.');return save({config:{...config,model,...(model!==config.model?{openAIReasoningEffort:'auto',mistralReasoningEffort:'auto',providerReasoningEffort:'auto'}:{})}});}
+ function connection(id){
+  const existing=profiles.get(id),builtin=BUILTIN_PROVIDERS.find(p=>p.id===id);
+  if(!existing&&!builtin)throw Error('Unbekannter KI-Anbieter. Zuerst in den API-Einstellungen einrichten.');
+  return {config:{...(existing?.config||{...DEFAULT_CONFIG,authMode:builtin.authMode||'api-key',protocol:builtin.protocol||'chat',baseUrl:builtin.baseUrl,model:builtin.model}),bridgeEnabled:config.bridgeEnabled},key:existing?.key||''};
+ }
+ function selectProvider(id){return save({config:connection(id).config});}
+ function selectModel(model,id){if(typeof model!=='string'||!model.trim())throw Error('Bitte ein Modell auswählen.');const base=id===undefined?config:connection(id).config;return save({config:{...base,model,...(model!==base.model?{openAIReasoningEffort:'auto',mistralReasoningEffort:'auto',providerReasoningEffort:'auto'}:{})}});}
  function selectEffort(reasoningEffort){return save({config:{...config,...(new URL(config.baseUrl).hostname==='api.mistral.ai'?{mistralReasoningEffort:reasoningEffort}:new URL(config.baseUrl).hostname==='api.openai.com'?{openAIReasoningEffort:reasoningEffort}:{providerReasoningEffort:reasoningEffort,...(new URL(config.baseUrl).hostname==='api.deepseek.com'?{reasoningEffort}:{})})}});}
  function markUsed(c){usedProviders.set(origin(c),new Date().toISOString());persist(serialize());}
  function redact(text){for(const p of profiles.values())if(p.key)text=text.split(p.key).join('[redacted]');return text;}
- return {active,publicSettings,save,selectProvider,selectModel,selectEffort,serialize,redact,markUsed};
+ return {active,connection,publicSettings,save,selectProvider,selectModel,selectEffort,serialize,redact,markUsed};
 }
 module.exports={createAIProfiles};

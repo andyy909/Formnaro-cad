@@ -26,16 +26,21 @@ test('fresh model roots visibly use Zur Mitte before exact requested offsets',as
  }
 });
 
-function harness({aliases=new Map(),overshoot=7.5,ignoreNumber=false,ignoreCommit=false}={}){
+function harness({aliases=new Map(),overshoot=7.5,ignoreNumber=false,ignoreCommit=false,coupled=false}={}){
  const snapshot={nodes:[{id:'body',name:'Teil'}],joints:{joints:[{id:'drive',childId:'body',value:0}],gears:[]}};
  let rev=0,commits=0;const events=[],previews=[];
  const fields=new Map([['joint-panel',{getClientRects:()=>[{}]}],['joint-value-drive',{value:'0'}],['joint-slider-drive',{value:'0'}],['joint-apply',{disabled:true}]]);
+ if(coupled){snapshot.joints.joints.push({id:'slide',childId:'follower',value:0});fields.set('joint-value-slide',{value:'0'});}
+ const setDriver=value=>{
+  fields.get('joint-value-drive').value=String(value);
+  if(coupled)fields.get('joint-value-slide').value=String(Number(value)/90);
+ };
  const controller={readSnapshot:()=>structuredClone(snapshot),revision:()=>String(rev)};
  const ui=createPracticeModelUI({aliases,controller,document:{getElementById:id=>fields.get(id)},checkpoint:async()=>{},settled:async()=>{},waitFor:async predicate=>{assert(predicate(),'target state was not confirmed');},
   input:async spec=>{events.push(spec);const id=spec.target.slice('ui:id:'.length);
-   if(spec.action==='drag'){fields.get('joint-value-drive').value=String(Number(spec.value)+overshoot);fields.get('joint-apply').disabled=false;}
-   if(spec.action==='set'&&id==='joint-value-drive'&&!ignoreNumber)fields.get(id).value=spec.value;
-   if(id==='joint-apply'){commits++;if(!ignoreCommit)snapshot.joints.joints[0].value=Number(fields.get('joint-value-drive').value);rev++;fields.get(id).disabled=true;}
+   if(spec.action==='drag'){setDriver(Number(spec.value)+overshoot);fields.get('joint-apply').disabled=false;}
+   if(spec.action==='set'&&id==='joint-value-drive'&&!ignoreNumber)setDriver(spec.value);
+   if(id==='joint-apply'){commits++;if(!ignoreCommit)for(const joint of snapshot.joints.joints)joint.value=Number(fields.get('joint-value-'+joint.id).value);rev++;fields.get(id).disabled=true;}
    if(id==='joint-cancel')fields.delete('joint-panel');
   },access:{preview:async request=>{previews.push(request);return {previewId:'p',revision:String(rev),aliases:{next:'body'}};},apply:async()=>{rev++;},discard:()=>{}}});
  return {ui,events,previews,snapshot,get commits(){return commits;}};
@@ -52,10 +57,34 @@ test('motion corrects pixel rounding visibly and confirms the persisted exact an
  assert.equal(r.motionTargets[0].expected,90);assert.equal(r.motionTargets[0].actual,90);assert.equal(r.motionTargets[0].persisted,true);
 });
 
+test('two visible moves in one action retain the coupled intermediate reading and commit only the end',async()=>{
+ const h=harness({coupled:true});
+ const commands=[90,360].map(value=>({op:'joint',action:'move',values:[{jointId:'drive',value}]}));
+ const result=await h.ui.run({commands});
+ assert.equal(h.commits,1);
+ assert.deepEqual(h.events.filter(event=>event.action==='drag').map(event=>Number(event.value)),[90,360]);
+ assert.deepEqual(result.motionStates,[
+  {jointValues:[{id:'drive',value:90},{id:'slide',value:1}],persisted:false,revision:'0'},
+  {jointValues:[{id:'drive',value:360},{id:'slide',value:4}],persisted:true,revision:'1'}
+ ]);
+ assert.deepEqual(h.snapshot.joints.joints.map(({value})=>value),[360,4]);
+});
+
 test('an uncorrectable preview never commits a wrong target angle',async()=>{
  const h=harness({ignoreNumber:true});await assert.rejects(h.ui.run({commands:[{op:'joint',action:'move',values:[{jointId:'drive',value:90}]}]}));assert.equal(h.commits,0);
 });
 
 test('a silently ignored motion commit cannot produce a successful exercise result',async()=>{
  const h=harness({overshoot:0,ignoreCommit:true});await assert.rejects(h.ui.run({commands:[{op:'joint',action:'move',values:[{jointId:'drive',value:90}]}]}));
+});
+
+test('a screw coupling is checked at each observed angle using actual follower travel',async()=>{
+ const {practiceScrewEvidence}=await import('../src/cad-practice-model-ui.js');
+ const drive={id:'coupling',kind:'screw',rotary:'turn',linear:'slide',lead:4,direction:-1,phase:2};
+ const at=(angle,slide)=>practiceScrewEvidence([drive],[{id:'turn',value:angle},{id:'slide',value:slide}],['turn'])[0];
+ assert.equal(at(90,1).status,'passed');
+ assert.equal(at(360,-2).status,'passed');
+ assert.equal(at(360,1).status,'failed');
+ assert.equal(at(90,undefined).status,'unavailable');
+ assert.deepEqual(practiceScrewEvidence([drive],[],['unrelated']),[]);
 });

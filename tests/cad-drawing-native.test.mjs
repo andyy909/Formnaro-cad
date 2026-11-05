@@ -10,7 +10,7 @@ import {cadSourceGeometryDigest} from '../src/cad-geometry-digest.js';
 import {createCadWorkerClient} from '../src/cad-worker-client.js';
 import {buildCadContours} from '../src/cad-recipes.js';
 import {validateCadSolid,writeCadBrep} from '../src/cad-native-kernel.js';
-import {validateCadDrawingProjection} from '../src/cad-drawing-data.js';
+import {cadDrawingDimension,createCadDrawingSheet,updateCadDrawingProjection,validateCadDrawingProjection} from '../src/cad-drawing-data.js';
 const oc=await loader({print:()=>{},printErr:()=>{}});
 const near=(a,b,tolerance=1e-6)=>assert.ok(Math.abs(a-b)<=tolerance,`${a} != ${b}`);
 const size=projection=>projection.bounds.max.map((v,k)=>v-projection.bounds.min[k]);
@@ -28,6 +28,26 @@ test('drawing orthographic frames keep model millimetres and native sources exac
    const result=query(project,{ids:['body'],view});size(result).forEach((v,k)=>near(v,expected[k]));assert.equal(result.approximation,'exact-native-curves');assert.equal(result.curves.length,4,'coincident hidden rear edges must not mask visible silhouette');assert.ok(result.curves.every(c=>c.kind==='line'&&!c.hidden));assert.deepEqual(result.sourceSignatures,[{id:'body',signature:cadSourceGeometryDigest(project.nodes[0])}]);assert.deepEqual(result,query(project,{ids:['body'],view}));
   }
   assert.equal(serializeCadProject(project),before);
+ }finally{service.dispose();}
+});
+
+test('an exact native straight edge retains its drawing dimension after nonuniform model scaling',()=>{
+ const service=createCadService({oc});
+ try{
+  const node=service.nativeNode({type:'box',size:[20,20,20]},{id:'body'});
+  const project=createCadProject({nodes:[node]});
+  const query=createCadDrawingNative({oc,service}),projectTop=()=>query(project,{ids:['body'],view:'top'});
+  const sheet=createCadDrawingSheet({sourceIds:['body']});
+  const top=sheet.views.find(view=>view.kind==='top');
+  top.projection=projectTop();
+  const edge=top.projection.curves.find(curve=>curve.kind==='line'&&curve.b[0]-curve.a[0]>0);
+  sheet.annotations.push({id:'width',kind:'length',viewId:top.id,curveIds:[edge.id],position:[50,50]});
+  near(cadDrawingDimension(sheet,sheet.annotations[0]).value,20);
+  project.nodes[0].transform[0]=2.2;
+  project.nodes[0].transform[12]=12;
+  const updated=updateCadDrawingProjection(sheet,top.id,projectTop());
+  assert.equal(updated.annotations[0].id,'width');
+  near(cadDrawingDimension(updated,updated.annotations[0]).value,44);
  }finally{service.dispose();}
 });
 

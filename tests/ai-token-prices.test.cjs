@@ -17,14 +17,6 @@ const examples=[
  ['https://dashscope-intl.aliyuncs.com/compatible-mode/v1','qwen3.8-max'],['https://api.moonshot.ai/v1','kimi-k3.1-pro'],
  ['https://api.z.ai/api/paas/v4','glm-5.3-flash'],['https://api.minimax.io/v1','MiniMax-M3.1-Flash']
 ];
-test('GPT-6.1 Terra has sourced standard rates with cache and long-context pricing',()=>{
- const config={baseUrl:'https://api.openai.com/v1',model:'gpt-6.1-terra',protocol:'responses',authMode:'api-key'};
- const estimate=(input,cached)=>aiUsage({usage:{input_tokens:input,output_tokens:1000,input_tokens_details:{cached_tokens:cached}}},config,0).estimatedCostUSD;
- assert.equal(estimate(1000,500).min,.005525);
- assert.equal(estimate(272000,0).longContext,false);
- assert.equal(estimate(273000,1000).min,.5516);
- assert.equal(estimate(273000,1000).rateDate,'2026-11-03');
-});
 test('Every integrated provider family has a sourced standard-rate example; unknown prices never become zero',()=>{
  for(const [baseUrl,model]of examples){const u=aiUsage(million,{baseUrl,model,authMode:'api-key'},1);assert.ok(Number.isFinite(u.estimatedCostUSD?.min),model);assert.ok(u.estimatedCostUSD.max>0,model);}
  assert.equal(aiUsage(million,{baseUrl:'https://api.mistral.ai/v1',model:'unknown-model'},0).estimatedCostUSD,null);

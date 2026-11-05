@@ -5,21 +5,22 @@ async function invoke(name,value){try{practiceWindowOnly(name);const response=aw
 function invokeSync(name,value){practiceWindowOnly(name);const response=ipcRenderer.sendSync(name,value);if(!response?.ok)throw Error(response?.error||'Portable Daten konnten nicht geladen werden.');return response.value;}
 function automationFailure(id,error){const errorCode=typeof error.code==='string'&&/^[A-Z][A-Z0-9_]{0,79}$/.test(error.code)?error.code:undefined;ipcRenderer.send('cad-ai:reply',{id,error:String(error.message),...(error.feedback?{feedback:error.feedback}:{}),...(errorCode?{errorCode}:{})});}
 contextBridge.exposeInMainWorld('offlinecadDesktop',{
+ ...(!process.argv.includes('--formnaro-practice')?{openAboutLink:key=>invoke('cad-about:open',key)}:{}),
  automationState:value=>ipcRenderer.send('cad-ai:model-state',value),
  automationProgress:value=>ipcRenderer.send('cad-ai:progress',value),
  automationCommitted:value=>ipcRenderer.send('cad-ai:committed',value),
  ...(process.argv.includes('--formnaro-practice')?{
-  onPracticePlan:callback=>{const fn=(_event,value)=>callback(value);ipcRenderer.on('cad-practice:plan',fn);return ()=>ipcRenderer.removeListener('cad-practice:plan',fn);},
+  onPracticePlan:callback=>{const fn=(_event,value,projectCopy,files,phase)=>callback(value,projectCopy,files,phase);ipcRenderer.on('cad-practice:plan',fn);return ()=>ipcRenderer.removeListener('cad-practice:plan',fn);},
   onPracticeBlur:callback=>{const fn=(_event,value)=>callback(value);ipcRenderer.on('cad-practice:blur',fn);return ()=>ipcRenderer.removeListener('cad-practice:blur',fn);},
   onPracticeCancel:callback=>{const fn=()=>callback();ipcRenderer.on('cad-practice:cancel',fn);return ()=>ipcRenderer.removeListener('cad-practice:cancel',fn);},
   practiceClose:()=>invoke('cad-practice:close'),practiceParent:()=>invoke('cad-practice:parent'),practiceReady:()=>invoke('cad-practice:ready'),practiceAbort:()=>invoke('cad-practice:abort'),practiceStatus:value=>invoke('cad-practice:status',value),submitPracticeResult:value=>invoke('cad-practice:result',value),practiceInput:value=>invoke('cad-practice:input',value)
- }:{startPractice:value=>invoke('cad-practice:start',value),cancelPractice:()=>invoke('cad-practice:cancel')}),
+ }:{startPractice:value=>invoke('cad-practice:start',value),continuePractice:value=>invoke('cad-practice:continue',value),practiceProjectResult:value=>invoke('cad-practice:project-result',value),cancelPractice:()=>invoke('cad-practice:cancel')}),
  aiToolLibrary:value=>invoke('cad-ai-tools:request',value),aiToolLibraryReply:value=>invokeReply('cad-ai-tools:request',value),
  aiTasksReply:value=>ipcRenderer.invoke('cad-ai-tasks:request',value),
  readAIContextNote:value=>invoke('cad-ai:note-read',value),appendAIContextNote:value=>invoke('cad-ai:note-append',value),
  ...(process.argv.includes('--formnaro-error-log')?{recordError:value=>invoke('cad-log:write',value),openErrorLogFolder:()=>invoke('cad-log:folder'),getErrorLogStatus:()=>invoke('cad-log:status')}:{}),
- ...(process.argv.includes('--formnaro-portable-data')?{initializeProgramData:value=>invokeSync('cad-data:initialize',value),changeProgramData:value=>({...invokeSync('cad-data:change',value),value:value.value}),openProgramDataFolder:()=>invoke('cad-data:folder')}:{}),
- getSpeechStatus:()=>invoke('cad-speech:status'),downloadSpeechModel:()=>invoke('cad-speech:download-model'),cancelSpeechModelDownload:()=>invoke('cad-speech:cancel-download'),getOnlineSpeechStatus:()=>invoke('cad-speech:online-status'),saveOnlineSpeechKey:value=>invoke('cad-speech:online-save',value),transcribeSpeech:value=>invoke('cad-speech:transcribe',value),cancelSpeech:value=>invoke('cad-speech:cancel',value),
+ ...(process.argv.includes('--formnaro-portable-data')?{initializeProgramData:value=>invokeSync('cad-data:initialize',value),initializeProgramDataAsync:value=>invoke('cad-data:initialize-async',value),changeProgramData:value=>({...invokeSync('cad-data:change',value),value:value.value}),changeRecoveryData:value=>invoke('cad-data:change-recovery',value),openProgramDataFolder:()=>invoke('cad-data:folder')}:{}),
+ getOnlineSpeechStatus:()=>invoke('cad-speech:online-status'),saveOnlineSpeechKey:value=>invoke('cad-speech:online-save',value),transcribeSpeech:value=>invoke('cad-speech:transcribe',value),cancelSpeech:value=>invoke('cad-speech:cancel',value),
  ...(process.platform==='win32'?{openWindowsDictation:()=>invoke('cad-speech:windows-dictation')}:{}),
  getFreeCADStatus:()=>invoke('cad-freecad:status'),runFreeCADReply:value=>ipcRenderer.invoke('cad-freecad:run',value),cancelFreeCAD:value=>invoke('cad-freecad:cancel',value),
  saveFile:value=>invoke('cad-file:save',value),

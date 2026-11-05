@@ -1,11 +1,14 @@
 // This validates replies; the renderer resolves the trusted target catalogue.
-function assistantReply(value){
+function assistantReply(value,practiceObjectCount=0,practiceState){
  if(!value||typeof value!=='object'||Array.isArray(value)||JSON.stringify(value).length>250000)throw Error('Invalid program assistant response.');
- const fields={help:['kind','query'],guide:['kind','steps'],demonstrate:['kind','title','stages','checks'],practice:['kind','plan'],note:['kind','text']}[value.kind];if(!fields||Object.keys(value).some(k=>!fields.includes(k)))throw Error('Invalid program assistant operation.');
+ const operations={help:['kind','query'],guide:['kind','steps'],demonstrate:['kind','title','stages','checks'],practice:['kind','plan'],note:['kind','text']};
+ if(typeof value.kind!=='string'||!Object.hasOwn(operations,value.kind))throw Error('Invalid program assistant operation.');
+ const fields=operations[value.kind],unexpected=Object.keys(value).filter(key=>!fields.includes(key));
+ if(unexpected.length)throw Error(`Unexpected field in assistant.${value.kind}. Allowed fields: ${fields.join(', ')}.${unexpected.includes('message')?' Put message at the top level, next to assistant.':''}`);
  const target=v=>typeof v==='string'&&/^[a-z][a-z0-9-]*(?::[a-z0-9-]+)?$/.test(v)&&v.length<=100;
  if(value.kind==='help'&&(typeof value.query!=='string'||value.query.length>500))throw Error('Invalid help query.');
  if(value.kind==='note'&&(typeof value.text!=='string'||!value.text.trim()||value.text.length>2000))throw Error('Invalid context note.');
- if(value.kind==='practice')require('./practice-runner.cjs').validatePracticePlan(value.plan);
+ if(value.kind==='practice')require('./practice-runner.cjs').validatePracticePlan(value.plan,practiceObjectCount,practiceState);
  if(value.kind==='guide'){
   if(!Array.isArray(value.steps)||!value.steps.length||value.steps.length>24)throw Error('Invalid guide steps.');
   for(const s of value.steps)if(!s||Object.keys(s).some(k=>!['action','target','text','value'].includes(k))||!['point','click','set'].includes(s.action)||!target(s.target)||s.text!==undefined&&(typeof s.text!=='string'||s.text.length>600)||s.value!==undefined&&!['string','number','boolean'].includes(typeof s.value))throw Error('Invalid guide step.');

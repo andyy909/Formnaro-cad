@@ -5,8 +5,8 @@ import {lookupToolReference} from './cad-tool-reference.js';
 import './cad-program-assistant.css';
 const frame=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
 const aborted=()=>Object.assign(Error('Bedienhilfe abgebrochen.'),{name:'AbortError',code:'AI_ASSISTANT_ABORTED'});
-export function createCadProgramAssistant({access,showPreview,clearPreview,cancelComputation=()=>{},select=()=>{},getMode=()=>document.body.dataset.workbenchMode??'normal',getBusy=()=>false,desktop=window.offlinecadDesktop,language=()=> 'de'}={}){
- let active=null,practiceActive=false,speed=1600,paused=false,resume=null,lastReport=null;const recording=createAssistantRecording({capture:desktop?.captureAssistantFrame,language});
+export function createCadProgramAssistant({access,showPreview,clearPreview,cancelComputation=()=>{},select=()=>{},getSelection=()=>[],getMode=()=>document.body.dataset.workbenchMode??'normal',getBusy=()=>false,desktop=window.offlinecadDesktop,language=()=> 'de'}={}){
+ let active=null,practiceActive=false,practiceWaiting=false,speed=1600,paused=false,resume=null,lastReport=null;const recording=createAssistantRecording({capture:desktop?.captureAssistantFrame,language});
  const overlay=document.createElement('div');overlay.id='program-assistant-overlay';overlay.setAttribute('popover','manual');overlay.hidden=true;overlay.innerHTML='<div class="assistant-blue-border" aria-hidden="true"></div><div id="program-assistant-pointer" aria-hidden="true"><svg viewBox="0 0 36 44"><path d="M4 3 L4 33 L12 26 L20 40 L27 36 L19 23 L31 22 Z"/></svg><span></span></div><section class="program-assistant-controls" aria-label="Programm-Assistent"><strong>Formnaro-Assistent</strong><span id="program-assistant-caption" role="status" aria-live="polite"></span><div><button id="program-assistant-pause" type="button">Pause</button><select id="program-assistant-speed" aria-label="Vorführgeschwindigkeit"><option value="1600" selected>Langsam</option><option value="1000">Normal</option><option value="500">Schnell</option></select><button id="program-assistant-stop" type="button">Stop · Esc</button></div></section>';document.body.append(overlay);
  const pointer=overlay.querySelector('#program-assistant-pointer'),caption=overlay.querySelector('#program-assistant-caption'),pauseButton=overlay.querySelector('#program-assistant-pause');
  const visible=node=>!!node&&node.getClientRects().length>0&&getComputedStyle(node).visibility!=='hidden';
@@ -19,6 +19,7 @@ export function createCadProgramAssistant({access,showPreview,clearPreview,cance
   }else if(kind==='shape')selector=`.shape-tile[data-type="${key}"]:not([data-plugin])`;
   else if(kind==='menu'){const solid={cad:'features',mesh:'mesh',convert:'mesh','view-tools':'evaluate',arrange:'assembly'}[key],fusion={cad:'solid',mesh:'mesh',convert:'mesh','view-tools':'tools',arrange:'tools'}[key];selector=`details[data-tool-category="${key}"] > summary,details[data-solid-menu="${key}"] > summary,details[data-fusion-menu="${key}"] > summary`+(solid?`,[data-solid-tab="${solid}"]`:'')+(fusion?`,[data-fusion-tab="${fusion}"]`:'');}
   else if(kind==='mode')selector=`[data-workbench-mode="${key}"]`;
+  else if(id==='view:fit')selector='[data-action="fit"]';
   else if(kind==='view')selector=`[data-view="${key}"],[data-solid-view="${key}"]`;
   else if(kind==='settings')selector={usage:'#ai-meter-usage-tab',context:'#ai-meter-context-tab','usage-refresh':'#ai-meter-refresh'}[key]??(key==='close'?'dialog[open]:has([data-settings-page]) #modal-close':['theme','language'].includes(key)?'#settings-'+key:`[data-settings-tab="${key}"]`);
   else if(kind==='region')selector={viewport:'#viewport',library:'.shape-library-section',properties:'#inspector',tree:'#object-list','preview-apply':'#ai-chat-apply,#cad-ai-preview-apply','preview-discard':'#ai-chat-discard,#cad-ai-preview-discard'}[key];
@@ -26,7 +27,7 @@ export function createCadProgramAssistant({access,showPreview,clearPreview,cance
   return selector?[...document.querySelectorAll(selector)]:[];
  }
  function location(node){const d=node?.closest('details'),panel=node?.closest('[data-fusion-panel],[data-solid-panel]');return [getMode(),panel?.dataset.fusionPanel??panel?.dataset.solidPanel,d?.querySelector(':scope > summary')?.textContent?.trim()].filter(Boolean).join(' → ');}
- function state(){return {mode:getMode(),active:!!active,dialog:practiceDialogState(document),targets:PROGRAM_TARGETS.map(t=>{const nodes=candidates(t.id),node=nodes.find(visible)??nodes[0];return {id:t.id,present:!!node,visible:visible(node),disabled:!!node?.disabled,location:node?location(node):undefined,revealVia:t.key?PROGRAM_TOOL_TABS[getMode()]?.[t.key]:undefined};})};}
+ function state(){const selection=getSelection();return {selection:{count:selection.length,targets:structuredClone(selection.slice(0,8))},mode:getMode(),active:!!active,dialog:practiceDialogState(document),targets:PROGRAM_TARGETS.map(t=>{const nodes=candidates(t.id),node=nodes.find(visible)??nodes[0];return {id:t.id,present:!!node,visible:visible(node),disabled:!!node?.disabled,location:node?location(node):undefined,revealVia:t.key?PROGRAM_TOOL_TABS[getMode()]?.[t.key]:undefined};})};}
  function context(){return {...structuredClone(PROGRAM_ASSISTANT_CONTRACT),state:state()};}
  function check(signal){if(signal?.aborted)throw aborted();}
  async function wait(ms,signal){check(signal);await new Promise((resolve,reject)=>{const timer=setTimeout(done,ms);function done(){signal?.removeEventListener('abort',stop);resolve();}function stop(){clearTimeout(timer);signal?.removeEventListener('abort',stop);reject(aborted());}signal?.addEventListener('abort',stop,{once:true});});check(signal);while(paused){await new Promise(resolve=>{resume=resolve;signal?.addEventListener('abort',resolve,{once:true});});check(signal);}}
@@ -50,10 +51,27 @@ export function createCadProgramAssistant({access,showPreview,clearPreview,cance
  async function point(id,text,signal){
   front();const node=await reveal(id,signal);movePointer(node,text||PROGRAM_TARGETS.find(t=>t.id===id).label);await wait(Math.round(speed*.6),signal);return node;
  }
- async function execute(value,{isCurrent=()=>true,expectedProviderId}={}){
+ async function practiceRound(invoke,isCurrent){
+  practiceActive=true;
+  let waiting=false;
+  try{
+   const result=await invoke();
+   practiceWaiting=!!result?.continuationId;
+   if(!isCurrent())throw aborted();
+   if(practiceWaiting){waiting=true;return {kind:'practice',...result};}
+   if(!result?.ok)throw Object.assign(Error(result?.message||result?.reason||result?.error||'Die Übung wurde nicht abgeschlossen.'),{code:'PRACTICE_FAILED',feedback:{retryable:false,practice:result}});
+   return {kind:'practice',...result};
+  }finally{practiceActive=waiting;}
+ }
+ const acceptPractice=(id,{isCurrent})=>practiceRound(()=>desktop.continuePractice({id,accept:true}),isCurrent);
+ async function execute(value,{isCurrent=()=>true,expectedProviderId,projectCopy,practiceFiles,recovery,continuationId,quality}={}){
   value=validateAssistantAction(value);
   if(value.kind==='help')return {kind:'help',documentation:searchProgramHelp(value.query),toolReference:lookupToolReference(value.query.startsWith('tool:')?{tool:value.query}:{query:value.query},{state:state()}),ui:state(),scope:'Local program documentation and registered UI only; no model or filesystem mutation.'};
-  if(value.kind==='practice'){if(!desktop?.startPractice)throw Error('Der Übungsmodus ist in dieser Ausgabe nicht verfügbar.');practiceActive=true;try{const result=await desktop.startPractice(value.plan);if(!isCurrent())throw aborted();if(!result?.ok)throw Object.assign(Error(result?.message||result?.reason||result?.error||'Die Übung wurde nicht abgeschlossen.'),{code:'PRACTICE_FAILED',feedback:{retryable:false,practice:result}});return {kind:'practice',...result};}finally{practiceActive=false;}}
+  if(value.kind==='practice'){
+   if(!desktop?.startPractice)throw Error('Der Übungsmodus ist in dieser Ausgabe nicht verfügbar.');
+   return practiceRound(()=>continuationId?desktop.continuePractice({id:continuationId,plan:value.plan}):
+    desktop.startPractice(projectCopy||practiceFiles?.length||recovery||quality?{plan:value.plan,projectCopy,files:practiceFiles,recovery,quality}:value.plan),isCurrent);
+  }
   if(value.kind==='note'){if(!desktop?.readAIContextNote||!desktop?.appendAIContextNote)throw Error('Kontextnotizen sind in dieser Ausgabe nicht verfügbar.');const previous=await desktop.readAIContextNote({providerId:expectedProviderId});if(!isCurrent())throw aborted();return desktop.appendAIContextNote({providerId:expectedProviderId,expectedRevision:previous.revision,text:value.text});}
   if(value.kind!=='guide')throw Error('Modellvorführungen über den Vorschauablauf ausführen.');
   const signal=start('guide'),revision=access.scene().revision,steps=[];
@@ -80,5 +98,10 @@ export function createCadProgramAssistant({access,showPreview,clearPreview,cance
    }clearPreview();keep=true;lastReport={kind:'demonstrate',completed:true,stages:value.stages.length,modelChanged:false,guidance};return {proposal:last,commands:structuredClone(commands),report:lastReport};
   }finally{if(!keep&&last){clearPreview();access.discard(last.previewId);}await recording.stop();end();}
  }
- return {context,state,execute,demonstrate,cancel,isProgramQuestion:programQuestion,lastReport:()=>lastReport,dispose(){cancel();recording.dispose();window.removeEventListener('keydown',key,true);window.removeEventListener('pointerdown',takeover,true);window.removeEventListener('blur',blur);overlay.remove();}};
+ async function releasePractice(){
+  if(!practiceWaiting)return;
+  practiceWaiting=false;practiceActive=false;
+  await desktop?.cancelPractice?.().catch(()=>{});
+ }
+ return {context,state,execute,demonstrate,cancel,releasePractice,acceptPractice,isProgramQuestion:programQuestion,lastReport:()=>lastReport,dispose(){cancel();recording.dispose();window.removeEventListener('keydown',key,true);window.removeEventListener('pointerdown',takeover,true);window.removeEventListener('blur',blur);overlay.remove();}};
 }

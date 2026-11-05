@@ -45,7 +45,7 @@ for(const name of ['README.md','integrity.json','upstream-lock.json','system-lic
 const manifestSha256=hash(path.join(base,'resources/freecad/manifest.json'));fs.writeFileSync(path.join(stage,'backend/freecad-runtime-pin.json'),JSON.stringify({sha256:manifestSha256}));
 const [runtime]=await packager({dir:stage,tmpdir:path.join(proof,'tmp'),name:'Formnaro',platform:'win32',arch:'x64',out,asar:true,prune:false,overwrite:false,electronVersion:meta.devDependencies.electron,appVersion:meta.version,appCopyright:'Copyright (c) 2026 '+meta.author,win32metadata:{ProductName:'Formnaro',FileDescription:auditFix?'Paketprüfung und lokale Sicherheit':largeProjectFix?'Große Netzprojekte ohne 50-MB-Vorschaulimit':colorFix?'Eigene Farben für STL-Modelle':'Große Netze und Zahnradkopplungen'}});
 console.log('Copying accepted self-contained runtimes');
-for(const name of ['converter','speech','freecad'])fs.cpSync(path.join(base,'resources',name),path.join(runtime,'resources',name),{recursive:true});
+for(const name of ['converter','freecad'])fs.cpSync(path.join(base,'resources',name),path.join(runtime,'resources',name),{recursive:true});
 for(const name of ['ai','docs'])fs.cpSync(path.join(source,name),path.join(runtime,name),{recursive:true});
 fs.mkdirSync(path.join(runtime,'scripts'));fs.copyFileSync(path.join(source,'scripts/offlinecad_ai.py'),path.join(runtime,'scripts/offlinecad_ai.py'));
 for(const name of ['LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.copyFileSync(path.join(source,name),path.join(runtime,name));

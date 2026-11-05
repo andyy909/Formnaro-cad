@@ -347,18 +347,41 @@ export function serializeCadProject(value){return encodedProject(value);}
 /** Capture one validated model generation, then encode only its changing
  * workspace. The private prefix owns no mutable project references. */
 export function createCadWorkspaceSerializer(value){
-  const model=cadProjectSnapshot(value);delete model.workspace;
+  const model=readViews.has(value)?value:cadProjectSnapshot(value);
   // workspace sorts after every format-5 model field, preserving exactly the
   // ordinary serializer's canonical JSON without re-encoding large BReps.
-  const prefix=JSON.stringify(model).slice(0,-1)+',"workspace":',bytes=utf8.encode(prefix).byteLength;const workspacePrefixes=new Map();
-  return workspace=>{
+  const fields=Object.entries(model).filter(([key])=>key!=='workspace'),versionIndex=fields.findIndex(([key])=>key==='version');
+  const before=JSON.stringify(Object.fromEntries(fields.slice(0,versionIndex))).slice(0,-1)+',"version":';
+  const after=JSON.stringify(Object.fromEntries(fields.slice(versionIndex+1))).slice(1,-1);
+  const modelTail=after?','+after:'';
+  const workspaceField=',"workspace":';
+  const fixedBytes=utf8.encode(before).byteLength+utf8.encode(modelTail).byteLength;
+  function parts(workspace){
+    if(workspace===undefined){
+      if(fixedBytes+String(model.version).length+1>CAD_PROJECT_LIMITS.bytes)fail('root','Projektdatei ist größer als 50 MB. Für große Projekte ein Geometriepaket (.fnpack) speichern.');
+      return [String(model.version),'}'];
+    }
     if(workspace?.version>=2&&![5,6].includes(workspace.version)&&model.version<8)fail('workspace','Der gemeinsame Objektbaum benötigt Projektformat 8.');
-    const storedVersion=cadWorkspaceStoredProjectVersion(model.version,workspace);if(storedVersion!==model.version&&!workspacePrefixes.has(storedVersion))workspacePrefixes.set(storedVersion,JSON.stringify({...model,version:storedVersion}).slice(0,-1)+',"workspace":');
-    const selectedPrefix=storedVersion===model.version?prefix:workspacePrefixes.get(storedVersion),selectedBytes=selectedPrefix===prefix?bytes:utf8.encode(selectedPrefix).byteLength;
+    const storedVersion=String(cadWorkspaceStoredProjectVersion(model.version,workspace));
     const suffix=JSON.stringify(canonical(validateCadWorkspace(workspace)))+'}';
-    if(selectedBytes+utf8.encode(suffix).byteLength>CAD_PROJECT_LIMITS.bytes)fail('root','Projektdatei ist größer als 50 MB.');
-    return selectedPrefix+suffix;
+    if(fixedBytes+storedVersion.length+workspaceField.length+utf8.encode(suffix).byteLength>CAD_PROJECT_LIMITS.bytes)fail('root','Projektdatei ist größer als 50 MB.');
+    return [storedVersion,workspaceField+suffix];
+  }
+  function serialize(workspace){
+    const [version,suffix]=parts(workspace);
+    return before+version+modelTail+suffix;
+  }
+  let prefixBytes,tailBytes;
+  serialize.bytes=workspace=>{
+    const [version,suffix]=parts(workspace),versionBytes=utf8.encode(version),suffixBytes=utf8.encode(suffix);
+    prefixBytes??=utf8.encode(before);
+    tailBytes??=utf8.encode(modelTail);
+    const bytes=new Uint8Array(fixedBytes+versionBytes.length+suffixBytes.length);
+    let offset=0;
+    for(const segment of [prefixBytes,versionBytes,tailBytes,suffixBytes]){bytes.set(segment,offset);offset+=segment.length;}
+    return bytes;
   };
+  return serialize;
 }
 export function parseCadProject(value,{repairSources=false}={}){if(typeof value==='string'){if(utf8.encode(value).byteLength>CAD_PROJECT_LIMITS.bytes)fail('root','Projektdatei ist größer als 50 MB.');value=JSON.parse(value);}if(repairSources&&value?.format===CAD_PROJECT_FORMAT&&[27,28,29].includes(value.version)&&cadDrillSourceProblems(value,{includeHidden:true}).length)value={...value,version:SOURCE_REPAIR_PROJECT_VERSION};return validateCadProject(value);}
 /** Stable model identity, not a security hash. Array order remains semantic. */

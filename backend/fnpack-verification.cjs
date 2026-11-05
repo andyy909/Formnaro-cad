@@ -15,6 +15,7 @@ async function packageCapture(win,{run,pause}){
 exports.verifyFnpack=async(win,{directory,files,reads,phase='main'}={})=>{
  if(phase==='recovery')return verifyRecovery(win,{directory,files,reads});
  if(phase==='close')return verifyClose(win,{directory,reads});
+ if(phase==='ocad-close'||phase==='ocad-reopen')return require('./ocad-close-verification.cjs').verifyOcadClose(win,{directory,reopen:phase==='ocad-reopen'});
  const checks=[],phases=[],pause=ms=>new Promise(r=>setTimeout(r,ms));
  const run=async code=>{const result=await win.webContents.executeJavaScript(`(async()=>{const a=window.__cadTest,p=window.__packProof,check=(v,m)=>{if(!v)throw Error(m)};try{return {ok:true,value:await(async()=>{${code}})()};}catch(e){return {ok:false,error:e.message,stack:e.stack};}})()`);if(!result.ok)throw Error(result.error+'\n'+result.stack);return result.value;};
  async function proof(label,code){fs.writeFileSync(path.join(directory,'progress.json'),JSON.stringify({checks,pending:label}));await run(code);checks.push(label);phases.push({label,reads:reads.splice(0)});}
