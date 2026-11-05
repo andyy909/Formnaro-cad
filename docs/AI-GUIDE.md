@@ -22,3 +22,7 @@ The usage view reports available token counts and estimates costs for models wit
 3. Read `offlinecad_context` and `offlinecad_scene` first. For a model edit, preview the command batch against the scene's revision and inspect its result. Apply the returned preview ID against that same revision. After a revision conflict, read the current scene and prepare a new preview.
 
 The adapter connects to Formnaro over loopback. Any cloud connection used by the external client is governed by that client. The published r36 adapter supports MCP handshake versions up to `2025-11-25`. The updated source adapter also supports `2026-07-28` over stdio. [MCP versioning](https://modelcontextprotocol.io/specification/2026-07-28/basic/versioning), [Formnaro command contract](../ai/OfflineCAD-KI-Kontext.json)
+
+## STL conversion in Nightly r10
+
+The converter checks a local STEP candidate first. Optional refinement sends region measurements for suspect or selected areas and their edge neighbours. It uses at most two requests within 90 seconds and retains the valid local result when refinement fails or adds no measured benefit. Symmetry reconstruction runs locally. See the [converter guide](STL-TO-CAD.md).
