@@ -7,106 +7,107 @@
   },
   "proof": {
     "file": "tests/cad-kernel-proof-extended.test.mjs",
-    "sha256": "f85529ad46848349feaef6d80fdf601a2dd4af51968c5d99373647230df08b88",
+    "sha256": "68ac8beafe0aaa7a1963f86b76b3edef3319a59139511b7318d91f57f20e7ea7",
     "tests": 6,
     "exitCode": 0
   },
   "files": {
     "formnaro_cad.js": {
-      "bytes": 60115,
-      "sha256": "79431b159386e28ee8d3946d2f8a6f749740c8ae9fc2764acd9bab8c7f4f54f1"
+      "bytes": 60245,
+      "sha256": "cbb83e8645409a24d074aae9cfee8e9ced114cd0d3d011bc1fdc37fdc195ed8e"
     },
     "formnaro_cad.wasm": {
       "bytes": 23393741,
       "sha256": "9b9ae11e91f7c6ad7f3b124aa5b4e19a3e8b6631193ff431ba7c79bb98048537"
     },
     "formnaro_cad.d.ts": {
-      "bytes": 1628417,
-      "sha256": "c9a46d2b2e6289a8cd8d5fa922961bc180e2e1977a45131b01bf02dbbb4fc896"
+      "bytes": 1662563,
+      "sha256": "1d30ac4fe83725a60f67b2b89483d3f63217e596df98f939b2b7e6f47351e99c"
     },
     "formnaro_cad.provenance.json": {
-      "bytes": 7611,
-      "sha256": "57589ce4de18b6b10baa11b9666cdb7d5eb2bed4cf419cb7d3f4965d2cd26bec"
+      "bytes": 7612,
+      "sha256": "5d2fa2a22f40cf72097da81cc187a493ceeece68c1cee79eaa65a10a5b1b64e0"
     },
     "formnaro_cad.build-manifest.json": {
-      "bytes": 483836,
-      "sha256": "caef31827b70060412315320bfb827ae7900de6473998115a0948d4b2ef656eb"
+      "bytes": 483837,
+      "sha256": "ab10ededc46fa99a276ef6d1573a154999212dee4968b784ad5e3b5be6ae7f75"
     },
     "build-inputs.json": {
-      "bytes": 3575,
-      "sha256": "6a56268071a467d395839fe0f777e4e1cfbaac5e77ae641f25aabd8321e659d7"
+      "bytes": 3651,
+      "sha256": "fd0df4132fc685805b63f1422fde22232835165342792b2b3000a8859eecc04c"
     },
     "licenses/compiler-rt.txt": {
-      "bytes": 16708,
-      "sha256": "1a8f1058753f1ba890de984e48f0242a3a5c29a6a8f2ed9fd813f36985387e8d"
+      "bytes": 17019,
+      "sha256": "815455237d89628f7b995a9e11a6e9074f7443afdf63507d715a676f80d874a4"
     },
     "licenses/Emscripten-AUTHORS.txt": {
-      "bytes": 29004,
-      "sha256": "8585fa1b981f576f52806833481323007ccac5c00f31a873215e31c0f42820f0"
+      "bytes": 29608,
+      "sha256": "342eee86bf58095c38ba0afeedc881e83c434670c432cd9d99d7c195902c40a2"
     },
     "licenses/Emscripten.txt": {
-      "bytes": 5093,
-      "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86"
+      "bytes": 5195,
+      "sha256": "51a110c35dd90d7b882df62864f256859c4d6ad51023da42ae8138a130c890cf"
     },
     "licenses/Formnaro-Bridge-MIT.txt": {
-      "bytes": 1078,
-      "sha256": "2b680f4678cf7db8d88a99b5c89430db25bd27aba0f669020ab934d20c776480"
+      "bytes": 1099,
+      "sha256": "cf8fb1829064e04ab4ed6893e5d490ed698a567b540bada55d4a838e57dc6cf6"
     },
     "licenses/libcxx.txt": {
-      "bytes": 16703,
-      "sha256": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b"
+      "bytes": 17014,
+      "sha256": "a7de191338d328257ecec5ba1ea971ebd67633d0b4fce7d6272a39749547ec6b"
     },
     "licenses/libcxxabi.txt": {
-      "bytes": 16706,
-      "sha256": "e2b35be49f7284a45b7baca8fc7b3ab7440e7902392b2528a457816b5bb2a15c"
+      "bytes": 17017,
+      "sha256": "da1b3a1b8e0a947d934acfbe4e356b864199f65923cc2f89d8330b8b678e3cdd"
     },
     "licenses/libunwind.txt": {
-      "bytes": 16706,
-      "sha256": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d"
+      "bytes": 17017,
+      "sha256": "6ac83ceee5f3a784aed98f250bc7acf68dd7112528512c1a6d40dcb5a29154bf"
     },
     "licenses/mimalloc.txt": {
-      "bytes": 1096,
-      "sha256": "19c99805e7a44a34b297a75d1edea9985e300066dfc024d5c99d4236d4573b5d"
+      "bytes": 1117,
+      "sha256": "52436cf1073aab586e549cea9ac72afd6ceae390e3280a1c006cafae27704309"
     },
     "licenses/musl.txt": {
-      "bytes": 6204,
-      "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af"
+      "bytes": 6397,
+      "sha256": "5f7c882fccb097ee08aa9ff223cff44e4d5b284dedb85a8cc09d80768b2ecef9"
     },
     "licenses/OCCT-Exception.txt": {
-      "bytes": 947,
-      "sha256": "121ba3ff45b104d133fd1bd5072e1b821c20dbcf217c560f437b9e341b11e61d"
+      "bytes": 964,
+      "sha256": "bb86594d80cb6662c2ec44d4c55f120b55f6cacace0c9988a48db6ee6a7dcc0d"
     },
     "licenses/replicad-opencascadejs-LGPL-2.1.txt": {
-      "bytes": 26526,
-      "sha256": "20c17d8b8c48a600800dfd14f95d5cb9ff47066a9641ddeab48dc54aec96e331"
+      "bytes": 27030,
+      "sha256": "7ffe1954587c77dfba1cf8eb9b2ea743671fa6e63f9e7a2f258119d42e14eefe"
     },
     "licenses/RapidJSON.txt": {
-      "bytes": 5152,
-      "sha256": "a140e5d46fe734a1c78f1a3c3ef207871dd75648be71fdda8e309b23ab8b1f32"
+      "bytes": 5209,
+      "sha256": "55972017b8f8bffee8922b5be4ba582ac401a3b70b5e62a4b8fbea56342b0500"
     },
     "licenses/FreeType-FTL.txt": {
-      "bytes": 6743,
-      "sha256": "08c135755dd589039470f1fdbb400daaabaaa50d0b366d19cebff4d22986baa1"
+      "bytes": 6912,
+      "sha256": "650737ec7589c35600de73b0db88dafb314f7e32e7e3cf38d0c87ceb1a7ed31b"
     },
     "licenses/Replicad-MIT.txt": {
-      "bytes": 1063,
-      "sha256": "7a3c098c1cf5d8de05efa0b930e7c8398c221da2a59032b617057fb7f122cf70"
+      "bytes": 1070,
+      "sha256": "4ff4ebfe533b48f110f3028a3a7e4f02fa82d785b7d19c5e496e43637710a4be"
     },
     "upstream-lock.json": {
       "bytes": 3379,
       "sha256": "0087bde93eee91f93187fae285ee98099ba104529bbd9fa4c198d6b32cc8b4f4"
     },
     "system-license-lock.json": {
-      "bytes": 2482,
-      "sha256": "f661b3054058bde03fb68b8521712cb804f09a409eb45f16579747e06b56699b"
+      "bytes": 2536,
+      "sha256": "342abf2812a1c3b44260e2bc67c137d66d57c1f1a65a797f951438b3ccafea8f"
     },
     "README.md": {
       "bytes": 3437,
       "sha256": "2eff31769a3d6afb7adad8da97bf590d610a06420e715bcbad97be4d5fc5354f"
     },
     "package.json": {
-      "bytes": 567,
-      "sha256": "ac564e7ebf0687cc006310948777cf55a82d89954a8501c5961ba0792aeb70ec"
+      "bytes": 586,
+      "sha256": "d47fe7930edc7607c9ee21dd842b60ec2285ce313a530fc33f6085b133955d33"
     }
-  }
+  },
+  "snapshotNote": "r10 preserves the tested Windows input bytes, including CRLF glue and type files; the WASM binary is unchanged. Six native kernel proof tests were repeated on this snapshot."
 }

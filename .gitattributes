@@ -34,3 +34,6 @@ package-lock.json -text
 vite.config.js -text
 LICENSE.txt -text
 THIRD-PARTY-LICENSES.txt -text
+
+# Preserve all CAD build metadata and generated glue inputs.
+cad-kernel-build/** -text

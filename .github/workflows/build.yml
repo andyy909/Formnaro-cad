@@ -21,7 +21,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node cad-kernel-build/verify-runtime.mjs
-      - run: npm run build
+      - run: node node_modules/vite/bin/vite.js build --base ./
       - run: npm test
       - run: node --test tests/windows-dictation.test.cjs tests/renderer-recovery-lifecycle.test.cjs
       - name: Verify the build leaves tracked inputs untouched
