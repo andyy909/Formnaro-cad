@@ -22,13 +22,13 @@
         <p class="eyebrow">Formnaro · Windows x64</p>
         <h1 id="title">3D CAD for<br>your workshop.</h1>
         <p class="intro">Design parts for model making and 3D printing, repair imported meshes, and set assemblies in motion. Formnaro runs locally on Windows.</p>
-        <a class="download" href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r9">Windows download ↗</a>
+        <a class="download" href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10">Windows download ↗</a>
         <nav class="hero-links" aria-label="On this page">
           <a href="#uebung">Practice mode ↓</a>
           <a href="#konverter">STL converter ↓</a>
           <a href="#bewegung">ATLAS-5 in motion ↓</a>
         </nav>
-        <p class="version">0.127.0 Nightly r9 · Preview release · Windows x64</p>
+        <p class="version">0.127.0 Nightly r10 · Preview release · Windows x64</p>
       </div>
       <img class="hero-art" src="../cad-hero-lagerbaugruppe.webp" width="2400" height="1060" alt="Exploded view of a bearing assembly created in Formnaro">
     </section>
@@ -65,7 +65,7 @@
         <h2 id="uebung">Watch how it’s done.</h2>
         <p>Give the AI a task, such as building and coupling three gears. In a separate practice window, a visible mouse pointer shows you where to click in Formnaro, which tools and dialogs to open, and which values to enter, step by step.</p>
         <p>The demonstration uses the same controls you use when modeling. Pause to take a closer look at any step, then try it yourself.</p>
-        <p class="callout"><strong>Development preview:</strong> We’ve also tested running an exercise on a copy of an existing project. You decide whether to accept the result at the end. Until then, your project stays as it was.</p>
+        <p class="callout"><strong>Available in the Nightly:</strong> Practice can run on a copy of an existing project. You decide whether to accept the result at the end. Until then, your project stays as it was.</p>
       </div>
       <figure class="clip">
         <video controls playsinline preload="none" poster="../practice-gears.webp" width="1200" height="676" aria-label="Practice video: create, snap together, and drive three coupled gears">
@@ -80,12 +80,13 @@
       <h2 id="konverter">Keep designing from an STL.</h2>
       <p>Have a bracket as an STL and need to add another hole? An STL describes the surface with triangles. The local converter tries to reconstruct CAD surfaces such as planes and cylinders, so you can edit suitable models as solids.</p>
       <ol class="converter-steps">
-        <li><span class="step-no" aria-hidden="true">01</span><h3>Recognize surfaces</h3><p>The preview groups triangles by color. You can split, merge, or protect surface regions as needed.</p></li>
+        <li><span class="step-no" aria-hidden="true">01</span><h3>Check locally first</h3><p>Formnaro prepares a locally checked STEP candidate. A valid CAD preview can be ready without an AI request.</p></li>
         <li><span class="step-no" aria-hidden="true">02</span><h3>Compare the result</h3><p>Overlay the original and the result to inspect the displayed deviations in millimeters. The converter also checks the resulting STEP by reading it back.</p></li>
         <li><span class="step-no" aria-hidden="true">03</span><h3>Continue in CAD</h3><p>Save the result as STEP or preview it before bringing it into your Formnaro project. Conversion runs locally.</p></li>
       </ol>
+      <p><strong>New in r10:</strong> Optional AI refinement examines measured or selected problem regions. For suitable symmetric parts, reconstruct one overlapping side and mirror it. Formnaro checks the complete body and seam before you apply the CAD preview.</p>
       <p class="fine">The STL does not contain the original sketches or feature history. Open or damaged meshes may need repair first.</p>
-      <a href="https://github.com/andyy909/Formnaro-cad/blob/main/docs/GEMEINSAMER-KONVERTER.md">Converter guide on GitHub (German) ↗</a>
+      <a href="https://github.com/andyy909/Formnaro-cad/blob/main/docs/STL-TO-CAD.md">Converter guide on GitHub ↗</a>
     </section>
     <section class="start" aria-labelledby="beispiele">
       <h2 id="beispiele">Four modes in practice</h2>

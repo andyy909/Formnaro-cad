@@ -22,13 +22,13 @@
         <p class="eyebrow">Formnaro · Windows x64</p>
         <h1 id="title">3D-CAD für<br>deine Werkstatt.</h1>
         <p class="intro">Konstruiere Bauteile für Modellbau und 3D-Druck, repariere importierte Netze und setze Baugruppen in Bewegung. Formnaro läuft lokal unter Windows.</p>
-        <a class="download" href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r9">Windows-Download ↗</a>
+        <a class="download" href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10">Windows-Download ↗</a>
         <nav class="hero-links" aria-label="Auf der Seite">
           <a href="#uebung">Übungsmodus ↓</a>
           <a href="#konverter">STL-Konverter ↓</a>
           <a href="#bewegung">ATLAS-5 in Bewegung ↓</a>
         </nav>
-        <p class="version">0.127.0 Nightly r9 · Vorabversion · Windows x64</p>
+        <p class="version">0.127.0 Nightly r10 · Vorabversion · Windows x64</p>
       </div>
       <img class="hero-art" src="cad-hero-lagerbaugruppe.webp" width="2400" height="1060" alt="In Formnaro erstellte Explosionsansicht einer Lagerbaugruppe">
     </section>
@@ -65,7 +65,7 @@
         <h2 id="uebung">Sieh, wie ein Modell entsteht.</h2>
         <p>Gib der KI eine Aufgabe, zum Beispiel drei Zahnräder zu bauen und zu koppeln. Im getrennten Übungsfenster zeigt dir ein sichtbarer Mauszeiger Schritt für Schritt, wo du in Formnaro klickst, welche Werkzeuge und Dialoge du öffnest und welche Werte du eingibst.</p>
         <p>Die Vorführung nutzt dieselben Bedienelemente wie beim eigenen Konstruieren. Du kannst anhalten, dir einen Schritt genauer ansehen und ihn anschließend selbst nachmachen.</p>
-        <p class="callout"><strong>Ausblick aus der Entwicklung:</strong> Wir haben auch Übungen auf einer Kopie eines vorhandenen Projekts erprobt. Du entscheidest am Ende, ob du das Ergebnis übernimmst. Bis dahin bleibt dein Projekt unverändert.</p>
+        <p class="callout"><strong>In der Nightly-Ausgabe:</strong> Übungen können auf einer Kopie eines vorhandenen Projekts arbeiten. Du entscheidest am Ende, ob du das Ergebnis übernimmst. Bis dahin bleibt dein Projekt unverändert.</p>
       </div>
       <figure class="clip">
         <video controls playsinline preload="none" poster="practice-gears.webp" width="1200" height="676" aria-label="Übungsvideo: Drei Zahnräder erstellen, einrasten und gekoppelt bewegen">
@@ -80,10 +80,11 @@
       <h2 id="konverter">Ein STL-Modell weiterkonstruieren.</h2>
       <p>Du hast einen Halter als STL und willst eine weitere Bohrung setzen? Eine STL beschreibt die Oberfläche mit Dreiecken. Der lokale Konverter versucht, daraus wieder CAD-Flächen wie Ebenen und Zylinder aufzubauen. So kannst du geeignete Modelle als Volumenkörper weiterbearbeiten.</p>
       <ol class="converter-steps">
-        <li><span class="step-no" aria-hidden="true">01</span><h3>Flächen erkennen</h3><p>Die Vorschau färbt zusammengehörige Dreiecke ein. Bei Bedarf kannst du Flächenbereiche teilen, zusammenführen oder schützen.</p></li>
+        <li><span class="step-no" aria-hidden="true">01</span><h3>Zuerst lokal prüfen</h3><p>Formnaro erstellt einen lokal geprüften STEP-Kandidaten. Eine gültige CAD-Vorschau kann ohne KI-Anfrage bereitstehen.</p></li>
         <li><span class="step-no" aria-hidden="true">02</span><h3>Ergebnis vergleichen</h3><p>Lege Original und Ergebnis übereinander und prüfe die angezeigten Abweichungen in Millimetern. Der Konverter prüft die erzeugte STEP auch durch erneutes Einlesen.</p></li>
         <li><span class="step-no" aria-hidden="true">03</span><h3>Als CAD weiterarbeiten</h3><p>Speichere das Ergebnis als STEP oder übernimm es nach der Vorschau direkt in dein Formnaro-Projekt. Die Konvertierung läuft lokal.</p></li>
       </ol>
+      <p><strong>Neu in r10:</strong> Die optionale KI prüft einzelne gemessene oder markierte Problemflächen. Bei geeigneten symmetrischen Teilen lässt sich eine Seite mit Überlappung rekonstruieren und spiegeln. Formnaro prüft anschließend den gesamten Körper und die Naht. Du bestätigst die CAD-Vorschau mit Übernehmen.</p>
       <p class="fine">Die ursprünglichen Skizzen und Konstruktionsschritte stecken nicht in der STL. Offene oder beschädigte Netze müssen gegebenenfalls zuerst repariert werden.</p>
       <a href="https://github.com/andyy909/Formnaro-cad/blob/main/docs/GEMEINSAMER-KONVERTER.md">Konverter-Anleitung auf GitHub ↗</a>
     </section>
