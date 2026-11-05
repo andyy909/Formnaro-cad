@@ -85,3 +85,9 @@ figcaption { padding: .75rem 1rem; }
 @media (max-width: 740px) {
   .spotlight, .converter-steps { grid-template-columns: 1fr; }
 }
+
+.foot { flex-wrap: wrap; }
+.legal-page { padding-block: clamp(2rem, 5vw, 4rem); }
+.legal-page h1 { font-size: clamp(2.5rem, 5vw, 4rem); overflow-wrap: anywhere; }
+.legal-page .intro { margin-bottom: 2rem; }
+.legal-page address { margin-top: 1rem; font-style: normal; }
