@@ -91,3 +91,10 @@ figcaption { padding: .75rem 1rem; }
 .legal-page h1 { font-size: clamp(2.5rem, 5vw, 4rem); overflow-wrap: anywhere; }
 .legal-page .intro { margin-bottom: 2rem; }
 .legal-page address { margin-top: 1rem; font-style: normal; }
+
+/* KI-Labor navigation, shared across both languages. */
+.top nav { align-items: center; }
+.top nav a.nav-lab { display:inline-block; padding:.18rem .6rem; border:1px solid var(--accent); border-radius:999px; font-size:.9rem; text-decoration:none; }
+.top nav a.nav-lab:hover { background:#203d39; }
+.top nav a.nav-lab[aria-current="page"] { background:var(--accent); color:#122821; }
+@media(max-width:560px) { .top { flex-wrap:wrap; } .top nav { justify-content:flex-start; gap:.55rem .8rem; } }
