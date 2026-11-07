@@ -1,6 +1,3 @@
-Historisches Handbuch für Formnaro CAD 0.12.1.
-Aktuelle Bedienung: USER-GUIDE.md.
-
 Formnaro-CAD-Handbuch-DE
 Version 0.12.1 | Stand: 13.10.2026
 

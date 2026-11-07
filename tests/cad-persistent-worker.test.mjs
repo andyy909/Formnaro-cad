@@ -21,7 +21,17 @@ test('Actual persistent CAD worker constructs/rebuilds valid CAD offline and kee
     const first=await f.client.run({job:'create',project:f.get(),recipe:{type:'cylinder',size:[20,20,20]},options:{id:'body',name:'CAD-Zylinder'},display:true},{revision:cadProjectRevision(f.get())});f.set(first.project);
     assert.equal(first.project.nodes[0].kind,'cad');assert.equal(first.project.nodes[0].mesh,undefined);assert.ok(first.display[0].mesh.faceGroups.length);assert.equal(f.count(),1);
     await assert.rejects(f.client.run({job:'display',project:f.get()},{revision:'foreign'}),{code:'STALE_REVISION'});
+    assert.deepEqual(f.client.transportState().samples,[]);
+    f.client.measureTransport(true,{payload:false});
     const display=await f.client.run({job:'display',project:f.get(),quality:{deflection:.3,angleDegrees:20}},{revision:cadProjectRevision(f.get())});assert.ok(display[0].mesh.vertices.length);assert.equal(f.count(),1);
+    const measured=f.client.transportState();
+    assert.equal(measured.sentJsonUtf8Bytes,null);
+    assert.equal(measured.receivedJsonUtf8Bytes,null);
+    assert.equal(measured.samples.length,1);
+    const {workerTiming,elapsedMs}=measured.samples[0];
+    assert(workerTiming.preparationMs>=0&&workerTiming.operationMs>=0);
+    assert(elapsedMs>=workerTiming.operationMs);
+    f.client.measureTransport(false);
     const step=await f.client.run({job:'exportStep',project:f.get()},{revision:cadProjectRevision(f.get())});assert.ok(step instanceof Uint8Array);assert.match(new TextDecoder().decode(step),/CYLINDRICAL_SURFACE/);
     const unconfirmed=structuredClone(f.get());unconfirmed.nodes[0].name='Draft';await assert.rejects(f.client.run({job:'exportStep',project:unconfirmed,baseline:f.get()},{revision:cadProjectRevision(f.get())}),{code:'UNCONFIRMED_PROJECT'});
     const imported=await f.client.run({job:'importStep',project:f.get(),bytes:step,options:{id:'imported',name:'STEP-Zylinder'}},{revision:cadProjectRevision(f.get())});assert.equal(imported.project.nodes.length,2);assert.equal(imported.project.nodes[1].source,'step');assert.ok(Math.abs(imported.project.nodes[1].stats.volume-f.get().nodes[0].stats.volume)<1e-6);assert.equal(f.get().nodes.length,1);assert.equal(f.count(),1);

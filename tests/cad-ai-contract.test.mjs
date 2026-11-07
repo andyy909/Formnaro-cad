@@ -12,6 +12,7 @@ test('CAD context, generated OpenAPI and actual loopback routes share the native
   const context=cadAIContext(),openapi=JSON.parse(readFileSync(new URL('../ai/OfflineCAD-KI-OpenAPI.json',import.meta.url)));
   assert.deepEqual(Object.keys(context.endpoints).sort(),Object.keys(routes).sort());assert.equal(context.projectVersion,32);assert.deepEqual(context.supportedProjectVersions,[5,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]);assert.equal(context.version,FORMNARO_VERSION);assert.deepEqual(context.requestSchema.properties.commands,context.commandSchema.properties.commands);assert.deepEqual(context.requestSchema.properties.intermediateDisplay.enum,['inherit','final']);assert.ok(context.requestSchema.required.includes('revision'));
   for(const route of Object.keys(routes)){const [method,path]=route.split(' ');assert.ok(openapi.paths[path][method.toLowerCase()]);}
+  assert.deepEqual(openapi.paths['/v1/screenshot'].post.requestBody.content['application/json'].schema,context.screenshotSchema);
   assert.deepEqual(openapi.paths['/v1/export'].post.requestBody.content['application/json'].schema,context.exportSchema);assert.deepEqual(context.exportSchema.properties.format.enum,['step','stl','obj','3mf','gltf','glb','svg','drawing-svg','drawing-dxf','drawing-pdf']);assert.equal(context.exportSchema.properties.quality.additionalProperties,false);
 });
 

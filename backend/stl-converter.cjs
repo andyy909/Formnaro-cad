@@ -79,11 +79,21 @@ function createStlConverter({command,prefix=[],tempRoot=os.tmpdir(),timeoutMs=60
  }
  return {convert:args=>execute({...args,action:'convert'}),analyse:args=>execute({...args,action:'analyse'}),cancel,state:()=>active?{id:active.id,pid:active.child?.pid,cancelled:active.cancelled}:null};
 }
-function installStlConverter(win,{directory,ipcMain=require('electron').ipcMain,command,prefix}={}){
- const runner=createStlConverter({command:command??path.join(directory,'Formnaro-Konverter.exe'),prefix,onProgress:value=>{if(!win.webContents.isDestroyed())win.webContents.send('cad-stl:progress',value);}});
+function installStlConverter(win,{directory,ipcMain=require('electron').ipcMain,command,prefix,tempRoot,waitForClose=false}={}){
+ const runner=createStlConverter({command:command??path.join(directory,'Formnaro-Konverter.exe'),prefix,tempRoot,onProgress:value=>{if(!win.webContents.isDestroyed())win.webContents.send('cad-stl:progress',value);}});
  const sender=event=>{if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame||win.webContents.isDestroyed())throw Error('Invalid window.');};
  for(const action of ['convert','analyse'])ipcMain.handle('cad-stl:'+action,async(event,args)=>{try{sender(event);return {ok:true,value:await runner[action](args)};}catch(error){return {ok:false,error:error.message,code:error.code};}});
  ipcMain.handle('cad-stl:cancel',async(event,args)=>{try{sender(event);if(!args||typeof args.id!=='string')throw Error('Ungültiger Abbruchauftrag.');return {ok:true,value:await runner.cancel(args.id)};}catch(error){return {ok:false,error:error.message};}});
+ if(waitForClose){
+  let closing=false;
+  win.on('close',event=>{
+   if(!runner.state())return;
+   event.preventDefault();
+   if(closing)return;
+   closing=true;
+   void runner.cancel().finally(()=>{if(!win.isDestroyed())win.close();});
+  });
+ }
  const stop=()=>{void runner.cancel();};win.once('closed',stop);win.webContents.on('render-process-gone',stop);win.webContents.on('did-start-navigation',(_event,_url,inPlace,mainFrame)=>{if(mainFrame&&!inPlace)stop();});
  return runner;
 }

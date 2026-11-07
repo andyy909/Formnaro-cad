@@ -1,0 +1,340 @@
+[
+  {
+    "number": 1,
+    "id": "practice-01",
+    "label": "1. mode-translate",
+    "prompt": "Um 15 mm in Welt-X verschieben.",
+    "requiredCheck": "Mitte (15,0,4), Größe unverändert; Schutzteil unverändert.",
+    "toolIds": [
+      "tool:mode-translate"
+    ],
+    "initialState": "einzelner Quader 20×10×8, Mitte (0,0,4)"
+  },
+  {
+    "number": 2,
+    "id": "practice-02",
+    "label": "2. mode-rotate",
+    "prompt": "Um die eigene Z-Achse 90° drehen, Mittelpunkt erhalten.",
+    "requiredCheck": "Transformation und Orientierung prüfen; Welt-XY-Ausdehnung 10×30; Mitte und Volumen erhalten.",
+    "toolIds": [
+      "tool:mode-rotate"
+    ],
+    "initialState": "Quader 30×10×8, Mittelpunkt (0,0,4)"
+  },
+  {
+    "number": 3,
+    "id": "practice-03",
+    "label": "3. mode-scale",
+    "prompt": "Durchmesser auf Ø14 ändern, Länge und Mittelpunkt erhalten.",
+    "requiredCheck": "Größe 14×14×80; Mittelpunkt (0,0,40); natives Volumen π·7²·80.",
+    "toolIds": [
+      "tool:mode-scale"
+    ],
+    "initialState": "Zylinder Ø16×80, Mittelpunkt (0,0,40)"
+  },
+  {
+    "number": 4,
+    "id": "practice-04",
+    "label": "4. duplicate",
+    "prompt": "Duplizieren und Kopie 25 mm in X versetzen.",
+    "requiredCheck": "Zwei getrennte Körper gleicher Form; Original bytegleich; Mittelpunkte 25 mm auseinander.",
+    "toolIds": [
+      "tool:duplicate"
+    ],
+    "initialState": "einzelner Quader 10×8×6"
+  },
+  {
+    "number": 5,
+    "id": "practice-05",
+    "label": "5. copy,paste",
+    "prompt": "Kopieren und einfügen; Kopie an X30 setzen.",
+    "requiredCheck": "Zwei getrennte Körper mit gleichen Maßen; ursprüngliche Quelle erhalten; Position Kopie prüfen.",
+    "toolIds": [
+      "tool:copy",
+      "tool:paste"
+    ],
+    "initialState": "ausgewählter Zylinder"
+  },
+  {
+    "number": 6,
+    "id": "practice-06",
+    "label": "6. mirror",
+    "prompt": "Duplizieren, Kopie an Welt-YZ-Ebene spiegeln.",
+    "requiredCheck": "Original erhalten; spiegelbildliche Punkt-/Volumenproben, korrekte Lage und Stückzahl.",
+    "toolIds": [
+      "tool:mirror"
+    ],
+    "initialState": "asymmetrischer L-förmiger Körper"
+  },
+  {
+    "number": 7,
+    "id": "practice-07",
+    "label": "7. align",
+    "prompt": "Den beweglichen Quader an der Y-Mitte des Referenzkörpers ausrichten.",
+    "requiredCheck": "Gemeinsame Y-Mitte innerhalb Toleranz; Referenz und andere Koordinaten unverändert.",
+    "toolIds": [
+      "tool:align"
+    ],
+    "initialState": "zwei unterschiedlich große Quader"
+  },
+  {
+    "number": 8,
+    "id": "practice-08",
+    "label": "8. center",
+    "prompt": "Die gemeinsame Gruppe mittig zur Welt-XY-Mitte setzen, Unterkante auf Z0.",
+    "requiredCheck": "Gemeinsame Bounds-Mitte XY=(0,0), min Z=0; relativer Abstand und beide Formen erhalten.",
+    "toolIds": [
+      "tool:center"
+    ],
+    "initialState": "zwei gemeinsam ausgewählte Körper"
+  },
+  {
+    "number": 9,
+    "id": "practice-09",
+    "label": "9. drop",
+    "prompt": "Auf die Grundebene absetzen.",
+    "requiredCheck": "Unterkante Z0, XY-Lage und Maße erhalten.",
+    "toolIds": [
+      "tool:drop"
+    ],
+    "initialState": "Quader oberhalb der Grundebene"
+  },
+  {
+    "number": 10,
+    "id": "practice-10",
+    "label": "10. array",
+    "prompt": "Fünf Körper einschließlich Original in X-Richtung mit je 12 mm Abstand erzeugen.",
+    "requiredCheck": "Anzahl fünf, Abstände, Orientierung und unverändertes Original prüfen.",
+    "toolIds": [
+      "tool:array"
+    ],
+    "initialState": "einzelner Quader"
+  },
+  {
+    "number": 11,
+    "id": "practice-11",
+    "label": "11. array",
+    "prompt": "Sechs Körper einschließlich Original gleichmäßig auf einem Kreis mit Radius 20 mm und Weltmittelpunkt (0,0,5) anordnen. Das Original bei (20,0,5) als Startposition erhalten.",
+    "requiredCheck": "Sechs Mittelpunkte, Radius und 60°-Abstände; ursprünglicher Körper erhalten.",
+    "toolIds": [
+      "tool:array"
+    ],
+    "initialState": "einzelner Zylinder"
+  },
+  {
+    "number": 12,
+    "id": "practice-12",
+    "label": "12. group",
+    "prompt": "Beide geometrisch vereinigen.",
+    "requiredCheck": "Ein gültiger nativer Körper; Volumen = Summe abzüglich Überlappung; Quellen soweit unterstützt erhalten.",
+    "toolIds": [
+      "tool:group"
+    ],
+    "initialState": "zwei überlappende Quader"
+  },
+  {
+    "number": 13,
+    "id": "practice-13",
+    "label": "13. cut",
+    "prompt": "Einen 10×8-mm-Durchbruch vollständig durch eine 40×30×8-Platte schneiden.",
+    "requiredCheck": "Außenmaße, Durchgang und Position unabhängig messen; Volumen 9600−640 mm³.",
+    "toolIds": [
+      "tool:cut"
+    ],
+    "initialState": "Platte und geschlossener rechteckiger Ausschnitt"
+  },
+  {
+    "number": 14,
+    "id": "practice-14",
+    "label": "14. drill",
+    "prompt": "Mittige Durchgangsbohrung Ø6 setzen.",
+    "requiredCheck": "Achse, Durchmesser und Tiefe nativ prüfen; Außenmaße und Lage erhalten.",
+    "toolIds": [
+      "tool:drill"
+    ],
+    "initialState": "Platte 40×30×8"
+  },
+  {
+    "number": 15,
+    "id": "practice-15",
+    "label": "15. round",
+    "prompt": "Eine ausdrücklich markierte Außenkante mit Radius 2 mm verrunden.",
+    "requiredCheck": "Ausgewählte Kante und Rundungsradius nativ prüfen; Körper gültig, unbeteiligte Quelle erhalten.",
+    "toolIds": [
+      "tool:round"
+    ],
+    "initialState": "geeigneter Quader"
+  },
+  {
+    "number": 16,
+    "id": "practice-16",
+    "label": "16. chamfer",
+    "prompt": "Eine ausdrücklich markierte Außenkante um 1 mm fasen.",
+    "requiredCheck": "Fasenfläche und Abstand nativ messen; richtige Kante und gültiger Körper.",
+    "toolIds": [
+      "tool:chamfer"
+    ],
+    "initialState": "geeigneter Quader"
+  },
+  {
+    "number": 17,
+    "id": "practice-17",
+    "label": "17. cad-shell",
+    "prompt": "Oben öffnen; Wand und Boden je 2 mm.",
+    "requiredCheck": "Öffnung oben, vier Wände und Boden per nativen Messungen; Außenmaße erhalten.",
+    "toolIds": [
+      "tool:cad-shell"
+    ],
+    "initialState": "Quader 40×30×20"
+  },
+  {
+    "number": 18,
+    "id": "practice-18",
+    "label": "18. cad-face-offset",
+    "prompt": "Nur diese Fläche um 2 mm nach außen versetzen.",
+    "requiredCheck": "Gewünschte Wandlage um 2 mm geändert, gegenüberliegende Fläche und unbeteiligte Körper erhalten.",
+    "toolIds": [
+      "tool:cad-face-offset"
+    ],
+    "initialState": "Quader mit identifizierter ebener Seitenfläche"
+  },
+  {
+    "number": 19,
+    "id": "practice-19",
+    "label": "19. sketch,extrude",
+    "prompt": "Rechteck 40×30 mit mittigem Kreisloch Ø10 skizzieren und 5 mm extrudieren.",
+    "requiredCheck": "Editierbare Skizze mit Außen- und Innenkontur; Durchgang, Außenmaße und Volumen prüfen.",
+    "toolIds": [
+      "tool:sketch",
+      "tool:extrude"
+    ],
+    "initialState": "leeres Übungsprojekt"
+  },
+  {
+    "number": 20,
+    "id": "practice-20",
+    "label": "20. edit-sketch",
+    "prompt": "Breite von 40 auf 50 mm ändern, Tiefe, Extrusionshöhe und Mittelpunkt erhalten.",
+    "requiredCheck": "Skizzenquelle bleibt editierbar; neue Breite 50, übrige Maße und Lage wie vorgegeben.",
+    "toolIds": [
+      "tool:edit-sketch"
+    ],
+    "initialState": "vorhandene editierbare rechteckige Skizze"
+  },
+  {
+    "number": 21,
+    "id": "practice-21",
+    "label": "21. drawing",
+    "prompt": "A4-Blatt mit Vorder-, Drauf- und Seitenansicht und Titel „Übungsteil“ erstellen.",
+    "requiredCheck": "A4, Titel, drei tatsächlich aktualisierte Projektionen auf den richtigen Körper; Ausgangskörper unverändert.",
+    "toolIds": [
+      "tool:drawing"
+    ],
+    "initialState": "ausgewählter Körper"
+  },
+  {
+    "number": 22,
+    "id": "practice-22",
+    "label": "22. measure",
+    "prompt": "Die Breite anzeigen und nennen, ohne die Geometrie zu ändern.",
+    "requiredCheck": "Gemessener Wert 40 mm; unveränderter Projektzustand und keine ungeprüfte Behauptung.",
+    "toolIds": [
+      "tool:measure"
+    ],
+    "initialState": "Platte mit bekannter Breite 40 mm"
+  },
+  {
+    "number": 23,
+    "id": "practice-23",
+    "label": "23. hide,show-all",
+    "prompt": "Einen Körper ausblenden und wieder einblenden.",
+    "requiredCheck": "Sichtbarkeitsstatus wechselt korrekt; keine Geometrie oder Quelle gelöscht.",
+    "toolIds": [
+      "tool:hide",
+      "tool:show-all"
+    ],
+    "initialState": "zwei Körper"
+  },
+  {
+    "number": 24,
+    "id": "practice-24",
+    "label": "24. lock",
+    "prompt": "Einen Körper sperren und anschließend entsperren.",
+    "requiredCheck": "Sperrstatus wechselt; keine unautorisierte Geometrieänderung.",
+    "toolIds": [
+      "tool:lock"
+    ],
+    "initialState": "zwei Körper"
+  },
+  {
+    "number": 25,
+    "id": "practice-25",
+    "label": "25. isolate,end-isolation",
+    "prompt": "Einen Körper isoliert anzeigen und danach Gesamtansicht wiederherstellen.",
+    "requiredCheck": "Sichtbarer Umfang während/nach Isolation; alle Modellknoten und Geometrie erhalten.",
+    "toolIds": [
+      "tool:isolate",
+      "tool:end-isolation"
+    ],
+    "initialState": "drei Körper"
+  },
+  {
+    "number": 26,
+    "id": "practice-26",
+    "label": "26. undo,redo",
+    "prompt": "Änderung rückgängig machen und wiederholen.",
+    "requiredCheck": "Vorher-, Undo- und Redo-Zustände sowie Undo-Tiefe entsprechen den tatsächlich ausgeführten Aktionen.",
+    "toolIds": [
+      "tool:undo",
+      "tool:redo"
+    ],
+    "initialState": "Quader und eine durchgeführte Verschiebung"
+  },
+  {
+    "number": 27,
+    "id": "practice-27",
+    "label": "27. view-front,view-top,fit",
+    "prompt": "Vorderansicht, Draufsicht und Einpassen zeigen.",
+    "requiredCheck": "Kamerazustände und sichtbares Ziel prüfen; Projektgeometrie unverändert.",
+    "toolIds": [
+      "tool:view-front",
+      "tool:view-top",
+      "tool:fit"
+    ],
+    "initialState": "bestehendes Modell"
+  },
+  {
+    "number": 28,
+    "id": "practice-28",
+    "label": "28. workplane-top,reset-plane",
+    "prompt": "Arbeitsebene auf Oberseite setzen und anschließend Grundebene wiederherstellen.",
+    "requiredCheck": "Ebenenmatrix und Höhenlage vor/nach jeder Aktion; keine Modelländerung.",
+    "toolIds": [
+      "tool:workplane-top",
+      "tool:reset-plane"
+    ],
+    "initialState": "geeigneter ausgewählter Quader"
+  },
+  {
+    "number": 29,
+    "id": "practice-29",
+    "label": "29. split",
+    "prompt": "An der mittigen Ebene in zwei Körper teilen.",
+    "requiredCheck": "Zwei gültige Körper, jeweils halbes Volumen, gemeinsame Schnittebene und Erhalt der Gesamtform.",
+    "toolIds": [
+      "tool:split"
+    ],
+    "initialState": "geeigneter geschlossener Quader"
+  },
+  {
+    "number": 30,
+    "id": "practice-30",
+    "label": "30. joints",
+    "prompt": "Ein Drehgelenk um die vorgegebene Z-Achse anlegen und um 30° bewegen.",
+    "requiredCheck": "Echtes Gelenk, richtiger Eltern-/Kindbezug, Achse und gemessene Bewegung; keine Kollisionsfreiheit behaupten.",
+    "toolIds": [
+      "tool:joints"
+    ],
+    "initialState": "zwei getrennte geeignete Körper"
+  }
+]

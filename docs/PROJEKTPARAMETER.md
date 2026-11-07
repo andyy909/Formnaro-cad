@@ -1,69 +1,33 @@
-# Project parameters and variants
+# Projektparameter und Varianten
 
-Open the shared parameter table from the CAD tools. In Easy Tinker it is also
-available from the drawing and mesh tools.
+Paket 2 des CAD-Ausbauplans ergänzt eine gemeinsame Tabelle unter **CAD-Werkzeuge → Projektparameter und Varianten**. Im Easy-Modus steht dasselbe Werkzeug unter **Zeichnen & Netz** bereit.
 
-## Bind dimensions and apply changes
+## Maße sammeln und gemeinsam übernehmen
 
-1. Add a named parameter with a value or formula. Names use letters, digits
-   and underscores. Formulas support `+ - * /`, parentheses, and `sind` and
-   `cosd` for angles in degrees.
-2. Under bindings, select a parameter, a part or group source, and an available
-   target dimension. Each binding records its specific target.
-3. Update to calculate and validate affected parts. Apply to commit the table
-   and geometry together in one Undo step. Closing the editor discards the draft.
+1. Einen Parameter mit Namen und Zahl oder Formel anlegen. Namen bestehen aus Buchstaben, Ziffern und Unterstrichen; Formeln unterstützen `+ - * /`, Klammern sowie `sind` und `cosd` in Grad.
+2. Unter **Bindungen** einen Parameter, ein Teil beziehungsweise eine Gruppenquelle und ein freies Maß auswählen. Jede Bindung benennt das Ziel ausdrücklich.
+3. **Aktualisieren** berechnet und prüft die betroffenen Teile. **Übernehmen** bestätigt Tabelle und Geometrie gemeinsam in einem Undo-Schritt. Schließen verwirft den Entwurf.
 
-For example, set `width = 26` and `inside = width - 4`. Bind these to free
-sketch variables, supported native shape parameters, local sizes or centres,
-or modelling dimensions such as wall thickness, offset and sweep radius.
-If an existing sketch already calculates width as `outer - 2 * wall`, bind an
-upstream free variable to preserve the sketch formula. Unsupported or protected
-dimensions are disabled with an explanation.
+Beispiel: `breite = 26`, `innen = breite - 4`. Bindungen können diese Werte an freie Skizzenvariablen, vorhandene native Formparameter, lokale Größen/Mittelpunkte und unterstützte Modelliermaße wie Wandstärke, Versatz oder Sweep-Radius übertragen. Vorhandene Skizzenformeln bleiben erhalten: Ist die Breite bereits `aussen - 2 * wand`, wird stattdessen eine der freien vorgelagerten Variablen gebunden. Nicht unterstützte oder geschützte Maße sind mit einem Hinweis gesperrt.
 
-Geometry updates only when requested. Typing, selection, camera movement,
-unused parameters, renames and changes to inactive variants avoid a rebuild.
-Updating rebuilds each affected source and its dependent construction at most
-once and reuses independent committed parts.
+Während der Eingabe, Auswahl und Kamerabedienung entstehen keine nativen Neubauten. Ungenutzte Parameter, Umbenennungen und Änderungen in einer inaktiven Variante verändern keine Geometrie. Bei einer Aktualisierung wird jede betroffene Quelle und ihr abhängiger Aufbau höchstens einmal konstruiert; unabhängige bestätigte Teile werden weiterverwendet. Der bisherige Vorlagenweg sammelt ebenfalls seine Bindungen vor dem Teilaufbau.
 
-## Variants
+## Varianten
 
-A variant stores value or formula overrides and explicit visibility or CAD
-suppression states. Select it, update, and apply. The active variant has
-computed geometry. A bounded cache can reuse recent results.
+Eine Variante speichert abweichende Zahlen oder Formeln und ausdrücklich gesetzte Sichtbarkeits- beziehungsweise CAD-Unterdrückungszustände. Nur die aktive Variante erhält vollständig berechnete Geometrie. Die Auswahl einer Variante merkt diese zunächst vor; anschließend **Aktualisieren** und **Übernehmen** verwenden. Ein begrenzter Cache kann kürzlich berechnete Ergebnisse wiederverwenden.
 
-Hiding controls output of a whole part. Suppression excludes a CAD source
-from its construction or a finished CAD part from output. Switching to a
-variant without that override restores the base state. Mesh and view templates
-use visibility. Part, source, layer and folder locks also apply to variants.
+**Ausgeblendet** steuert die Ausgabe des ganzen Teils; **unterdrückt** nimmt eine CAD-Quelle aus ihrem Aufbau beziehungsweise ein fertiges CAD-Teil aus der Ausgabe. Die ursprünglichen Zustände werden als Basis erhalten und beim Wechsel ohne entsprechende Abweichung wiederhergestellt. Netz- und Ansichtsvorlagen verwenden Sichtbarkeit. Bestehende Sperren an Teilen, Quellen, Ebenen und Ordnern gelten auch für Parameter und Varianten.
 
-## References, files and export
+## Bezüge, Dateien und Export
 
-Stable IDs preserve bindings across renames. Renaming also updates referring
-parameter formulas. Cycles, unknown names, duplicate target bindings and
-invalid values are rejected before Apply. Reassign missing targets or remove
-their bindings. Cancelled, failed or stale updates leave the committed project
-intact.
+Parameter und Zielbezüge verwenden stabile Kennungen. Umbenennen erhält die Bindungen und passt referenzierende Parameterformeln an. Zyklen, unbekannte Namen, doppelte Zielbindungen und ungültige Werte werden vor der Übernahme abgewiesen. Fehlende Ziele bleiben erkennbar; sie erfordern eine neue Zuordnung oder **Bindung lösen**. Ein Abbruch, Fehler oder eine veraltete Antwort übernimmt keine Teiländerung.
 
-An edit to a bound source can leave it marked as needing an update. You can
-save this state. Update affected models and drawing sources before export.
-An explicitly selected independent subset can still be exported. Whole-project
-export checks pending active variant states so required parts cannot silently
-drop out.
+Separat veränderte gebundene Quellen können den Zustand **Aktualisierung nötig** hinterlassen. Dieser Zustand lässt sich speichern; betroffene Modelle und Zeichnungsquellen werden erst nach erfolgreicher Aktualisierung exportiert. Eine ausdrücklich gewählte unabhängige Teilmenge kann weiterhin ausgegeben werden. Ein Gesamtexport berücksichtigt auch noch nicht übernommene aktive Variantenstatus, damit erforderliche Teile nicht still fehlen.
 
-These features require project and library format 13 and parameter format 1.
-Older projects retain the format their contents require. Library entries
-store selected sources and their formula dependencies. Insertion remaps IDs
-and resolves name conflicts. Use either a legacy template control or a project
-parameter to drive a given dimension.
+Neue Daten verwenden Projekt- und Bibliotheksformat **13**, Parameterversion **1**. Alte Formate 5, 7 und 8–12 bleiben lesbar; reine Altprojekte werden nicht pauschal auf 13 angehoben. Bibliothekseinträge erhalten nur ihre ausgewählten Quellen und die dafür benötigten Formelabhängigkeiten; beim Einsetzen werden Kennungen und Namenskonflikte angepasst. Ein Maß darf nicht gleichzeitig durch einen alten Vorlagenregler und einen Projektparameter gesteuert werden.
 
-Limits are 100 parameters, 500 bindings, 32 variants, 500 distinct variant
-state targets and 100 values per variant. Existing tool geometry limits still
-apply. Geometry for inactive variants is calculated on demand.
+Grenzen: 100 Projektparameter, 500 Bindungen, 32 Varianten, 500 verschiedene Variantenstatusziele und 100 Werte je Variante. Bisherige Geometriegrenzen der Modellierwerkzeuge bleiben bestehen. Es gibt keine Hintergrundaktualisierung und keine Konstruktion sämtlicher Varianten im Voraus. Die weiteren Ausbaupakete verknüpfte Konturen, Skizzenbedingungen, Gelenke und selektives Laden sind separate Schritte.
 
-## Local automation
+## Lokale KI-Schnittstelle
 
-Use `parameter` operations with `put`/`data`, `selectVariant`/`variantId`,
-or `remove` in a homogeneous preview batch. End the batch with `update` when
-a put or variant change affects geometry. Reading the table or binding catalog
-leaves geometry alone. A revision-bound Apply commits the batch. Consult the
-[local API contract](../ai/) for complete request schemas.
+Die lokale Vorschau verwendet dieselbe Tabelle und dieselben Prüfungen: homogene Befehle `parameter` mit `put`/`data`, `selectVariant`/`variantId`, `remove` und abschließend `update`. Erst ein revisionsgebundenes Apply übernimmt den gesamten Auftrag. `put` oder ein Variantenwechsel mit Geometriefolgen erfordern ausdrücklich `update`; allein das Lesen von Tabelle oder Bindungskatalog startet keinen CAD-Aufbau. Der generierte lokale Schnittstellenvertrag enthält die vollständigen Schemas und begrenzten Leseabfragen.

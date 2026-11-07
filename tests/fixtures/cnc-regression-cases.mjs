@@ -26,6 +26,7 @@ async function run(){
  }
  if(name==='memory-after-commit')return (await import('./cad-memory-thread-acceptance.mjs')).recoveryAfterCommit();
  if(name==='memory-recovery')return (await import('./cad-memory-thread-acceptance.mjs')).memoryRecovery();
+ if(name==='jointed-memory-recovery')return (await import('./cad-memory-thread-acceptance.mjs')).jointedMemoryRecovery(parseCadProject(readFileSync(file,'utf8')));
  if(['large-project','correction-eight','scene-display-loop','memory-workflow','anchor-cnc'].includes(name)&&!file)return {status:'test-data-missing'};
  if(name==='large-project'){
   step('parse-project');const raw=readFileSync(file),project=parseCadProject(raw.toString('utf8'));

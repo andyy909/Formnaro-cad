@@ -1,0 +1,5 @@
+// Summaries of actual state after playback; never substitute the proposed values.
+export function practiceStepObservation({action,index,total,revision,ok,error,scene,project,selected,view,undo,aliases,visible}){
+ const nodes=project.nodes??[],objects=scene.objects??[];
+ return {version:1,index,total,revision,ok,action:{kind:action.kind,target:action.target,field:action.field,action:action.action,commands:Array.isArray(action.commands)?action.commands.length:undefined},actual:{objectCount:nodes.length,...(Array.isArray(visible)?{visible:visible.slice(0,256)}:{}),selection:selected.slice(0,8),objects:objects.filter(o=>!o.target?.path?.length).slice(0,8).map(o=>({id:o.id,kind:o.kind,worldBounds:o.worldBounds,volume:o.volume,solids:o.solids,...(Array.isArray(visible)?{visible:visible.includes(o.id)}:{}),hidden:!!nodes.find(n=>n.id===o.id)?.hidden,locked:!!nodes.find(n=>n.id===o.id)?.locked})),truncated:objects.length>8,workplane:project.workplane,view,undo,aliases:aliases?.slice(0,8),joints:project.joints?.joints?.slice(0,8).map(j=>({id:j.id,kind:j.kind,value:j.value,parentId:j.parentId,childId:j.childId}))},...(error?{error:String(error).slice(0,1500)}:{})};
+}

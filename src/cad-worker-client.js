@@ -8,8 +8,8 @@ function aborted(message='CAD-Berechnung abgebrochen.'){
 export function createCadWorkerClient({createWorker,confirmed=()=>null,initialization=()=>({}),onError=()=>{}}={}){
   if(typeof createWorker!=='function')throw new TypeError('CAD-Worker-Factory fehlt.');
   let memory=null,retirements=0,proofs=[];let worker=null,generation=0,sequence=0,disposed=false,recycleRequested=false,heapBytes=0;
-  const jobs=new Map(),displayDecoder=createCadDisplayDecoder();let measuring=false;const samples=[];let sentMessages=0,receivedMessages=0,sentJsonBytes=0,receivedJsonBytes=0,measurementErrors=0;const clock=()=>globalThis.performance?.now?.()??Date.now();
-  function payloadBytes(value){if(!measuring)return null;try{return new TextEncoder().encode(JSON.stringify(value)).byteLength;}catch{measurementErrors++;return null;}}
+  const jobs=new Map(),displayDecoder=createCadDisplayDecoder();let measuring=false,measurePayload=false;const samples=[];let sentMessages=0,receivedMessages=0,sentJsonBytes=0,receivedJsonBytes=0,measurementErrors=0;const clock=()=>globalThis.performance?.now?.()??Date.now();
+  function payloadBytes(value){if(!measurePayload)return null;try{return new TextEncoder().encode(JSON.stringify(value)).byteLength;}catch{measurementErrors++;return null;}}
   function send(instance,value){sentMessages++;const bytes=payloadBytes(value);if(bytes!==null)sentJsonBytes+=bytes;instance.postMessage(value);}
 
   function stop(error){
@@ -34,10 +34,12 @@ export function createCadWorkerClient({createWorker,confirmed=()=>null,initializ
       }
       if(data.type==='progress'){job.progress?.(data.value);return;}
       if(!['result','error'].includes(data.type))return;
-      jobs.delete(data.id);job.cleanup();if(measuring){samples.push({job:job.diagnostics.job,operation:job.diagnostics.operation??null,elapsedMs:clock()-job.started,resultJsonBytes:received,heapBytes});if(samples.length>128)samples.shift();}
+      jobs.delete(data.id);job.cleanup();
+      const sample=measuring&&job.started!==null?{job:job.diagnostics.job,operation:job.diagnostics.operation??null,elapsedMs:clock()-job.started,resultJsonBytes:received,heapBytes,...(data.timing?{workerTiming:data.timing,transportAndQueueMs:Math.max(0,clock()-job.started-data.timing.preparationMs-data.timing.operationMs)}:{})}:null;
+      if(sample){samples.push(sample);if(samples.length>128)samples.shift();}
       recycleRequested ||= data.recycleWorker===true;
       if(data.type==='error'){const error=new Error(data.message||'CAD-Berechnung fehlgeschlagen.');error.code=data.code||'CAD_ERROR';if(data.feedback)error.feedback=data.feedback;if(typeof data.stack==='string')error.stack=data.stack;try{onError(error,{...job.diagnostics,phase:data.phase});}catch{}job.reject(error);if(error.code==='CAD_KERNEL_FATAL')stop(error);}
-      else {try{job.resolve(job.diagnostics.job==='display'?displayDecoder.decode(data.result,job.displayMeshes):data.result);}catch(error){job.reject(error);}}
+      else {try{const start=sample?clock():0,value=job.diagnostics.job==='display'?displayDecoder.decode(data.result,job.displayMeshes):data.result;if(sample)sample.decodeMs=clock()-start;job.resolve(value);}catch(error){job.reject(error);}}
       // Queued jobs must finish before retiring; no rejected results or new
       // model state. A later request initializes from its confirmed snapshot.
       if(worker===instance)retireIfIdle();
@@ -57,12 +59,12 @@ export function createCadWorkerClient({createWorker,confirmed=()=>null,initializ
       const cleanup=()=>{hostAbort.abort();signal?.removeEventListener('abort',onAbort);};
       const diagnostics={source:'cad-worker',job:request.job,operation:request.operation?.name??request.operation?.kind??request.query?.kind,nodeCount:request.project?.nodes?.length??0,heapBytes};
       const displayMeshes=request.job==='display'?displayDecoder.capture():undefined;
-      jobs.set(id,{revision,resolve,reject,cleanup,progress,host,hostAbort,hostCalls:new Set(),diagnostics,started:clock(),displayMeshes});signal?.addEventListener('abort',onAbort,{once:true});
-      try{send(instance,{type:'compute',id,generation,revision,request:displayMeshes?{...request,knownMeshes:[...displayMeshes.keys()]}:request});}
+      jobs.set(id,{revision,resolve,reject,cleanup,progress,host,hostAbort,hostCalls:new Set(),diagnostics,started:measuring?clock():null,displayMeshes});signal?.addEventListener('abort',onAbort,{once:true});
+      try{send(instance,{type:'compute',id,generation,revision,...(measuring?{measureTiming:true}:{}),request:displayMeshes?{...request,knownMeshes:[...displayMeshes.keys()]}:request});}
       catch(error){jobs.delete(id);cleanup();reject(error);}
     });
   }
-  return {run,trim,measureTransport:value=>{measuring=!!value;samples.length=0;sentMessages=receivedMessages=sentJsonBytes=receivedJsonBytes=measurementErrors=0;},transportState:()=>({enabled:measuring,sentMessages,receivedMessages,sentJsonUtf8Bytes:measuring?sentJsonBytes:null,receivedJsonUtf8Bytes:measuring?receivedJsonBytes:null,measurementErrors,samples:samples.map(v=>({...v})),payloadDefinition:'UTF-8 JSON representation of full messages; not Chromium structured-clone wire bytes. Measurement serialization overhead is included in observed request latency.'}),cancel:()=>stop(aborted()),dispose:()=>{disposed=true;stop(aborted());},
+  return {run,trim,measureTransport:(value,{payload=true}={})=>{measuring=!!value;measurePayload=measuring&&payload;samples.length=0;sentMessages=receivedMessages=sentJsonBytes=receivedJsonBytes=measurementErrors=0;},transportState:()=>({enabled:measuring,sentMessages,receivedMessages,sentJsonUtf8Bytes:measurePayload?sentJsonBytes:null,receivedJsonUtf8Bytes:measurePayload?receivedJsonBytes:null,measurementErrors,samples:samples.map(v=>({...v})),payloadDefinition:'UTF-8 JSON representation of full messages; not Chromium structured-clone wire bytes. Measurement serialization overhead is included in observed request latency.'}),cancel:()=>stop(aborted()),dispose:()=>{disposed=true;stop(aborted());},
     state:()=>({generation,running:jobs.size,loaded:!!worker,disposed,heapBytes,memory,retirements,displayCache:displayDecoder.state()})};
 }
 

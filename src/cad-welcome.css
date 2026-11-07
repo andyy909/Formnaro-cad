@@ -1,0 +1,29 @@
+#viewport #empty-hint{top:50%;width:min(600px,calc(100% - 110px));max-height:calc(100% - 130px);overflow:auto;padding:22px 16px 16px;border-radius:14px;background:var(--welcome-background,#edf1f5f2);pointer-events:auto;box-shadow:0 6px 26px #00000012}
+#empty-hint[hidden]{display:none!important}
+#empty-hint .hint-icon{font-size:30px;margin-bottom:8px}
+#empty-hint h1{font-size:24px;line-height:1.3}
+#empty-hint p{margin:12px 0 18px}
+#empty-hint .welcome-close{position:absolute;right:8px;top:4px;margin:0;width:30px;height:30px;padding:0;font-size:22px;background:transparent;border-color:transparent}
+.welcome-examples{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#empty-hint .welcome-example{margin:0;padding:0 0 12px;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:#fff;border:1px solid var(--line);border-radius:9px;font-size:12px;text-align:center;color:#243649;transition:border-color .15s,box-shadow .15s}
+#empty-hint .welcome-example:hover,#empty-hint .welcome-example:focus-visible{border-color:#1597a9;box-shadow:0 0 0 2px #1597a940}
+.welcome-example img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:contain;background:#edf1f5}
+.welcome-example strong{padding:10px 4px 3px;font-size:13px}
+.welcome-example span{padding:0 4px;font-size:11px;opacity:.8}
+[data-theme=dark] #empty-hint{--welcome-background:#182530f5}
+[data-theme=dark] #empty-hint .welcome-example{background:#253747;color:#e1eaf2;border-color:#485c70}
+@media(max-width:650px){#empty-hint{width:calc(100% - 85px);padding:22px 10px 12px}#empty-hint h1{font-size:20px}.welcome-examples{grid-template-columns:1fr}.welcome-example img{max-height:120px}#empty-hint p{margin:8px 0}}
+
+.welcome-history{margin-top:14px}
+.welcome-history h2{font-size:14px;margin:0 0 7px;text-align:left}
+.welcome-history .welcome-example{min-width:0}
+.welcome-history .welcome-example strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.welcome-recent-preview{display:grid;place-items:center;aspect-ratio:3/2;background:var(--welcome-background,#edf1f5);font-size:26px}
+.welcome-recent-preview img{max-height:100%;object-fit:contain}
+
+#empty-hint:has(.welcome-history:not([hidden])) .welcome-example img,
+#empty-hint:has(.welcome-history:not([hidden])) .welcome-recent-preview{
+ height:clamp(60px,12vh,100px);aspect-ratio:auto;
+}
+#empty-hint:has(.welcome-history:not([hidden])) .hint-icon{display:none}
+#empty-hint:has(.welcome-history:not([hidden])) .welcome-history{margin-bottom:10px}

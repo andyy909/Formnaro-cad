@@ -34,7 +34,6 @@ const sourceFiles=inventory(stage);process.env.TEMP=temp;process.env.TMP=temp;
 const [runtime]=await packager({tmpdir:temp,dir:stage,name:'Formnaro',platform:'win32',arch:'x64',out,asar:true,prune:false,overwrite:false,electronVersion:meta.devDependencies.electron,appVersion:version,appCopyright:'Copyright (c) 2026 '+meta.author,win32metadata:{ProductName:'Formnaro',FileDescription:'Solid-Modus fuer Teilekonstruktion'}});
 fs.cpSync('converter/runtime-v010',runtime+'/resources/converter',{recursive:true});for(const n of ['README.md','provenance.json'])fs.copyFileSync('converter/'+n,runtime+'/resources/converter/'+n);
 for(const n of ['LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt','ai','docs','scripts'])fs.cpSync(stage+'/'+n,runtime+'/'+n,{recursive:true});
-const speechManifest=JSON.parse(fs.readFileSync('speech-runtime/manifest.json'));fs.mkdirSync(runtime+'/resources/speech');for(const item of speechManifest.files){assert.equal(hash('speech-runtime/'+item.name),item.sha256);fs.copyFileSync('speech-runtime/'+item.name,runtime+'/resources/speech/'+item.name);}for(const n of ['manifest.json','LICENSE-whisper.txt','LICENSE-model.txt'])fs.copyFileSync('speech-runtime/'+n,runtime+'/resources/speech/'+n);
 const asar=runtime+'/resources/app.asar',exe=runtime+'/Formnaro.exe',runtimeFiles=inventory(runtime),exeSha256=hash(exe),asarSha256=hash(asar);
 await ui('packaged',exe);
 assert.deepEqual(inventory(stage),sourceFiles);assert.deepEqual(inventory(runtime),runtimeFiles);

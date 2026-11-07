@@ -6,6 +6,7 @@ const TAU=Math.PI*2,NAME=/^[A-Za-z_][A-Za-z0-9_]{0,39}$/;
 const fail=message=>{throw Error('Skizze: '+message);};
 const record=(v,keys)=>{if(!v||![Object.prototype,null].includes(Object.getPrototypeOf(v))||Object.keys(v).some(k=>!keys.includes(k)))fail('Unbekannte oder ungültige Felder.');};
 const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]),cross=(a,b)=>a[0]*b[1]-a[1]*b[0],sub=(a,b)=>a.map((v,k)=>v-b[k]),add=(a,b)=>a.map((v,k)=>v+b[k]);
+const JOIN_TOLERANCE=1e-7;
 const mod=a=>(a%TAU+TAU)%TAU;
 export const profileId=prefix=>prefix+'-'+crypto.randomUUID();
 export function circleThrough(a,b,c){
@@ -74,7 +75,7 @@ export function resolveSketchProfile(input,expression,{segments=64,geometryOnly=
  if(geometryOnly)return {elements:resolved,values};
  for(const e of resolved.filter(isCadCurve))assertSimpleCurve(e);
  const byId=new Map(resolved.map(e=>[e.id,e])),used=new Set(),loopIds=new Set();let outer;
- const loops=input.loops.map(loop=>{record(loop,['id','role','elements']);if(typeof loop.id!=='string'||!loop.id||loop.id.length>100||loopIds.has(loop.id)||!['outer','hole'].includes(loop.role)||!Array.isArray(loop.elements)||!loop.elements.length)fail('Eine geschlossene Kontur mit eindeutiger Kennung wählen.');loopIds.add(loop.id);if(loop.role==='outer'){if(outer)fail('Nur eine Außenkontur pro Skizze.');outer=loop.id;}const entities=loop.elements.map(id=>{const e=byId.get(id);if(!e||e.construction||used.has(id))fail('Konturelement fehlt, ist doppelt oder eine Konstruktionslinie.');used.add(id);return e;});if(entities.some(e=>e.type==='circle')&&entities.length!==1)fail('Ein Vollkreis bildet eine eigene Kontur.');for(let i=0;i<entities.length;i++)if(dist(entities[i].end,entities[(i+1)%entities.length].start)>1e-7)fail('Kontur ist offen: Endpunkte verbinden.');const area=signedArea(entities);if(Math.abs(area)<1e-8)fail('Kontur besitzt keine Fläche.');return {id:loop.id,role:loop.role,entities:area<0?reversed(entities):entities,area:Math.abs(area)};});
+ const loops=input.loops.map(loop=>{record(loop,['id','role','elements']);if(typeof loop.id!=='string'||!loop.id||loop.id.length>100||loopIds.has(loop.id)||!['outer','hole'].includes(loop.role)||!Array.isArray(loop.elements)||!loop.elements.length)fail('Eine geschlossene Kontur mit eindeutiger Kennung wählen.');loopIds.add(loop.id);if(loop.role==='outer'){if(outer)fail('Nur eine Außenkontur pro Skizze.');outer=loop.id;}const entities=loop.elements.map(id=>{const e=byId.get(id);if(!e||e.construction||used.has(id))fail('Konturelement fehlt, ist doppelt oder eine Konstruktionslinie.');used.add(id);return e;});if(entities.some(e=>e.type==='circle')&&entities.length!==1)fail('Ein Vollkreis bildet eine eigene Kontur.');for(let i=0;i<entities.length;i++)if(dist(entities[i].end,entities[(i+1)%entities.length].start)>JOIN_TOLERANCE)fail('Kontur ist offen: Endpunkte verbinden.');const area=signedArea(entities);if(Math.abs(area)<1e-8)fail('Kontur besitzt keine Fläche.');return {id:loop.id,role:loop.role,entities:area<0?reversed(entities):entities,area:Math.abs(area)};});
  if(!outer)fail('Eine Außenkontur fehlt.');if(resolved.some(e=>!e.construction&&!used.has(e.id)))fail('Nicht zugeordnete Elemente einer Kontur hinzufügen.');
  const material=loops.flatMap(loop=>loop.entities.map((e,i)=>({...e,loop:loop.id,index:i,count:loop.entities.length}))),eps=1e-7;
  for(let i=0;i<material.length;i++)for(let j=i+1;j<material.length;j++){const a=material[i],b=material[j],hits=intersections(a,b,eps),adjacent=a.loop===b.loop&&(Math.abs(a.index-b.index)===1||Math.abs(a.index-b.index)===a.count-1);if(hits===null||hits.some(p=>!adjacent||![a.start,a.end].some(q=>dist(p,q)<eps)||![b.start,b.end].some(q=>dist(p,q)<eps)))fail('Konturen überschneiden oder berühren sich.');}
@@ -84,6 +85,39 @@ export function resolveSketchProfile(input,expression,{segments=64,geometryOnly=
  const sketch={version:input.version,kind:'profile',variables,dimensions:{height:formula(input.dimensions.height)},elements:stored,loops:input.loops.map(l=>({id:l.id,role:l.role,elements:[...l.elements]})),...(constraints?{constraints}:{})};
  return {sketch,kind:'profile',elements:resolved,loops,points,holes:holePoints,polygons:[points,...holePoints],native:{outer:profileNativeSegments(outside.entities),holes:holes.map(h=>profileNativeSegments(h.entities))},height,size,center:[(min[0]+max[0])/2,(min[1]+max[1])/2,height/2],bottom:[min[0],min[1],0],area,values};
 }
+export function profileGaps(loops,elements){
+ const byId=new Map(elements.map(element=>[element.id,element]));
+ const gaps=[];
+ for(const loop of loops){
+  const chain=loop.elements.map(id=>byId.get(id));
+  if(chain.some(element=>!element||element.construction||element.type==='circle'))continue;
+  for(let i=0;i<chain.length;i++){
+   const previous=chain[i],next=chain[(i+1)%chain.length];
+   const distance=dist(previous.end,next.start);
+   if(distance>JOIN_TOLERANCE)gaps.push({loopId:loop.id,role:loop.role,index:i,from:previous.end,to:next.start,distance});
+  }
+ }
+ return gaps;
+}
+
+export function closeProfileGap(sketch,elements,activeLoop){
+ const loops=activeLoop?sketch.loops.filter(loop=>loop.id===activeLoop):sketch.loops;
+ const gaps=profileGaps(loops,elements);
+ if(gaps.length>1)fail('Mehrere Konturlücken gefunden. Die zu verbindenden Endpunkte zuerst eindeutig festlegen.');
+ if(!gaps.length){
+  if(activeLoop&&loops[0]?.elements.length)return null;
+  fail('Keine offene Kontur gefunden. Zuerst einen Linienzug zeichnen.');
+ }
+ const {loopId,index}=gaps[0],loop=loops.find(item=>item.id===loopId);
+ const previous=sketch.elements.find(element=>element.id===loop.elements[index]);
+ if(loop.elements.length===1&&previous.type==='line')fail('Mindestens zwei Linien zeichnen, bevor die Kontur geschlossen wird.');
+ const next=sketch.elements.find(element=>element.id===loop.elements[(index+1)%loop.elements.length]);
+ const segment={id:profileId('line'),type:'line',start:[...previous.end],end:[...next.start],construction:false};
+ sketch.elements.push(segment);
+ loop.elements.splice(index+1,0,segment.id);
+ return segment.id;
+}
+
 export function appendProfileLoop(sketch,entities,role='hole'){
  const next=structuredClone(sketch);if(role==='outer'){const prior=next.loops.find(l=>l.role==='outer'),remove=new Set(prior?.elements??[]);next.elements=next.elements.filter(e=>!remove.has(e.id));next.loops=next.loops.filter(l=>l.role!=='outer');}next.elements.push(...entities);next.loops.push({id:profileId('loop'),role,elements:entities.map(e=>e.id)});return next;
 }

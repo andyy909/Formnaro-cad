@@ -36,6 +36,9 @@ export function createStlPreview(container,{onPick=()=>{},onRectangle=()=>{}}={}
   const edges=new Map(),lines=[];value.faces.forEach((face,id)=>{for(let j=0;j<3;j++){const a=face[j],b=face[(j+1)%3],key=[Math.min(a,b),Math.max(a,b)].join('/');if(edges.has(key)){if(edges.get(key)!==value.face_regions[id])lines.push(...value.vertices[a],...value.vertices[b]);}else edges.set(key,value.face_regions[id]);}});
   boundaries=new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(lines,3)),new THREE.LineBasicMaterial({color:'#273846',transparent:true,opacity:.8}));scene.add(boundaries);colours();if(!same)fit();
  }
+ function setOriginal(positions){remove(original);remove(boundaries);boundaries=null;analysis=null;
+  sourceIds=indices(positions.length/9);original=new THREE.Mesh(geometry(positions),material());scene.add(original);colours();fit();
+ }
  function setResult(bytes,deviation,tolerance){remove(result);const loaded=new STLLoader().parse(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength)),attribute=loaded.getAttribute('position'),positions=[];resultIds=indices(Math.floor(attribute.count/3));for(const id of resultIds)for(let j=0;j<3;j++)positions.push(attribute.getX(id*3+j),attribute.getY(id*3+j),attribute.getZ(id*3+j));loaded.dispose();result=new THREE.Mesh(geometry(positions),material());scene.add(result);measurements=deviation;budget=tolerance;colours();fit();}
  const point=event=>{const bounds=renderer.domElement.getBoundingClientRect();return {x:event.clientX-bounds.left,y:event.clientY-bounds.top,w:bounds.width,h:bounds.height};};
  function pointerDown(event){if(pickMode==='Drehen'||event.button!==0||!analysis||!original?.visible)return;drag={...point(event),shift:event.ctrlKey||event.shiftKey||event.metaKey};renderer.domElement.setPointerCapture(event.pointerId);}
@@ -48,7 +51,7 @@ export function createStlPreview(container,{onPick=()=>{},onRectangle=()=>{}}={}
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointermove',pointerMove);renderer.domElement.addEventListener('pointerup',pointerUp);
  const pointerCancel=()=>{drag=null;overlay?.remove();overlay=null;};renderer.domElement.addEventListener('pointercancel',pointerCancel);
  resize();
- return {setAnalysis,setResult,setMode:value=>{mode=value;colours();},setSelection:(regions,faces)=>{selected=new Set(regions);marked=new Set(faces);colours();},setPickMode:value=>{pickMode=value;controls.enableRotate=value==='Drehen';controls.enablePan=value==='Drehen';},fit,
+ return {setAnalysis,setOriginal,setResult,hasOriginal:()=>!!original,setMode:value=>{mode=value;colours();},setSelection:(regions,faces)=>{selected=new Set(regions);marked=new Set(faces);colours();},setPickMode:value=>{pickMode=value;controls.enableRotate=value==='Drehen';controls.enablePan=value==='Drehen';},fit,
   clearResult:()=>{remove(result);result=null;measurements=null;mode='Flächenarten';colours();},
   clearSource:()=>{remove(original);remove(boundaries);original=null;boundaries=null;analysis=null;sourceIds=[];render();},
   dispose:()=>{disposed=true;observer.disconnect();controls.dispose();remove(original);remove(result);remove(boundaries);pointerCancel();renderer.dispose();renderer.domElement.remove();}};

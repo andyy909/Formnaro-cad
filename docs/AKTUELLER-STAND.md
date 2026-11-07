@@ -1,16 +1,9 @@
-# Public releases
+# Current public release / Aktuelle öffentliche Ausgabe
 
-[Formnaro 0.125.0-r36](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) is the broadly verified preview, with its versioned source tree and catalogue report.
+[Formnaro 0.136.0-r3](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3) · [Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-v0.136.0-r3-Windows-x64.zip) · [Matching application sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-Quellcode-v0.136.0-r3.zip)
 
-## Current Nightly
+Benchmarks and a column chart in the AI model picker, independent modeler/supervisor/reviewer roles, versioned core benchmark and verified bundled FreeCAD.
 
-[Formnaro 0.127.0 Nightly r10](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10) adds local-first STL conversion, bounded correction of measured or selected regions, and local symmetry reconstruction with overlap and seam checks. It includes compact AI chat, selected-part context and project-copy practice from r9.
+Local acceptance:3135 Node cases with12 corrected/reverified harness findings,28 Python tests, packaged UI/native geometry/FreeCAD in four workspace modes. See [full scope](ABNAHME-0.136.0-r3.md). Real AI trials remain paused and the new16-trial benchmark has no real results yet.
 
-- [Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r10/Formnaro-v0.127.0-r10-Nightly-Windows-x64.zip)
-- [Matching r10 application sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r10/Formnaro-Quellcode-v0.127.0-r10.zip) and [versioned source tree](https://github.com/andyy909/Formnaro-cad/tree/v0.127.0-r10)
-- [Release notes and SHA-256 sums](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10)
-- [STL-to-CAD guide](STL-TO-CAD.md) and [German guide](GEMEINSAMER-KONVERTER.md)
-
-The release tag carries the matching Nightly application source snapshot. The default branch has its existing source baseline alongside the updated guides. Native CAD-kernel and FreeCAD source archives are linked in the [r36 release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36).
-
-The r10 verification includes 128 standard and 53 targeted tests, targeted Windows application checks, and three real STL comparisons. Packaged AI correction checks use a local provider fixture. Full release acceptance is pending.
+Native CAD and FreeCAD sources are separate release assets. Historical downloads remain in [all releases](https://github.com/andyy909/Formnaro-cad/releases).

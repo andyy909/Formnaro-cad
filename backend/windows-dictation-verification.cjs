@@ -10,7 +10,7 @@ exports.verifyWindowsDictation=async(win,{directory})=>{
  ipcMain.removeHandler('cad-speech:windows-dictation');
  require('./windows-dictation.cjs').installWindowsDictation(win,{entry:path.join(app.getAppPath(),'dist/index.html'),service:{async open(){calls++;check(await run("document.activeElement===document.getElementById('ai-chat-prompt')"),'Real preload and main-frame IPC see the focused chat field');if(fail)throw Error('Synthetic Windows launcher failure. Please use Win+H.');return {requested:true};}}});
  await run('window.__cadTest.aiUI.chat.open()');await pause(250);
- const original=await run('window.__cadTest.serialize()'),undo=await run('window.__cadTest.undoDepth()'),speechBefore=await run('window.offlinecadDesktop.getSpeechStatus()');
+ const original=await run('window.__cadTest.serialize()'),undo=await run('window.__cadTest.undoDepth()'),speechBefore=await run('window.offlinecadDesktop.getOnlineSpeechStatus()');
  check(await run("!document.getElementById('ai-chat-tools').open&&!!document.getElementById('ai-chat-windows-dictation')&&document.getElementById('ai-chat-windows-dictation').getClientRects().length>0"),'Windows dictation is directly visible below the chat field with speech tools collapsed');
  check(await run("document.getElementById('ai-chat-windows-dictation').title.includes('Microsoft')&&document.getElementById('ai-chat-windows-dictation').title.includes('Internet')"),'Button explains Windows online speech processing without requiring a model or API key');
  await run("const p=document.getElementById('ai-chat-prompt');p.value='Vorhandener Entwurf, 8 mm.';p.focus();p.setSelectionRange(10,10);void 0");
@@ -27,8 +27,8 @@ exports.verifyWindowsDictation=async(win,{directory})=>{
  fail=true;await click('ai-chat-windows-dictation');
  check(calls===2&&await run("document.getElementById('ai-chat-status').textContent.includes('Win+H')&&!document.getElementById('ai-chat-windows-dictation').disabled&&!window.__cadTest.aiUI.chat.state().windowsDictationActive"),'Launcher failure offers Win+H and restores an enabled idle button');
  check(await run('window.__cadTest.serialize()')===original&&await run('window.__cadTest.undoDepth()')===undo,'Dictation controls and failures preserve confirmed project and Undo');
- const speechAfter=await run('window.offlinecadDesktop.getSpeechStatus()');
- check(JSON.stringify(speechAfter)===JSON.stringify(speechBefore)&&await run("!!document.getElementById('ai-chat-mic')"),'Existing speech recorder remains available and no optional model download starts');
+ const speechAfter=await run('window.offlinecadDesktop.getOnlineSpeechStatus()');
+ check(JSON.stringify(speechAfter)===JSON.stringify(speechBefore)&&await run("!!document.getElementById('ai-chat-mic')"),'Windows dictation preserves the separate Deepgram recorder and configuration');
  for(const theme of ['light','dark']){
   await run(`window.__cadTest.ui.settings.open();document.getElementById('settings-theme').value=${JSON.stringify(theme)};document.getElementById('settings-theme').dispatchEvent(new Event('change'));document.getElementById('modal').close();void 0`);
   win.setSize(theme==='dark'?1000:1400,theme==='dark'?680:900);await pause(300);

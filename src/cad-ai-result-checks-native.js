@@ -43,7 +43,7 @@ export function checkCadAIResultNative({oc,project,scene,checks,aliases={}}){
   else if(check.kind==='volume'||check.kind==='solids'){if(object.kind!=='cad')unsupported();actual=object[check.kind==='volume'?'volume':'solids'];}
   else if(check.kind==='distance')actual=distance(oc,project,object,resolveAIResultTarget(scene,check.other,aliases));
   else if(check.kind==='bore'){
-   actual=measureCadBore({oc,project,object,check});if(Math.abs(actual.diameter-check.diameter)>tolerance||actual.endpointError>tolerance||!actual.clear||!actual.surroundingMaterial)throw aiCheckFailure(check,i+1,actual);
+   actual=measureCadBore({oc,project,object,check});if(Math.abs(actual.diameter-check.diameter)>tolerance||actual.endpointError>tolerance||!actual.clear||!actual.surroundingMaterial||actual.bottomPresent===false)throw aiCheckFailure(check,i+1,actual);
   }
   else if(check.kind==='clearance'){
    actual=clearance(oc,project,object,check);if(!actual.clear)throw aiCheckFailure(check,i+1,actual.obstructingVolume);

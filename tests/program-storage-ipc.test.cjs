@@ -21,3 +21,50 @@ test('The actual preload preserves portable data writes while successful IPC rep
     const invalid={sender:{}};on.get('cad-data:change')(invalid,{key,value,revision:'missing'});assert.equal(invalid.returnValue.ok,false);
   }finally{assert.equal(path.dirname(path.resolve(root)),path.resolve(os.tmpdir()));assert.ok(path.basename(root).startsWith('formnaro-storage-ipc-'));fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test('Async recovery IPC writes and reads a large value while excluding concurrent writes to its key',async()=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-storage-ipc-'));
+  const directory=path.join(root,'Daten'),on=new Map(),handles=new Map();
+  const win={webContents:{mainFrame:{}}};
+  const event=()=>({sender:win.webContents,senderFrame:win.webContents.mainFrame});
+  let desktop;
+  try{
+    const store=installProgramStorage(win,{directory,cadOnly:true,ipcMain:{on:(name,fn)=>on.set(name,fn),handle:(name,fn)=>handles.set(name,fn)},shell:{openPath:async()=>''}});
+    const electron={
+      contextBridge:{exposeInMainWorld:(_name,value)=>{desktop=value;}},
+      ipcRenderer:{
+        sendSync:(name,args)=>{const reply=event();on.get(name)(reply,args);return reply.returnValue;},
+        invoke:(name,args)=>handles.get(name)(event(),args)
+      }
+    };
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..','preload.cjs'),'utf8'),{require:()=>electron,process:{argv:['--formnaro-portable-data']}});
+    const {createProgramStorageAsync}=await import('../src/program-storage.js');
+    const startup=createProgramStorageAsync({getItem:()=>null},desktop,{cadOnly:true});
+    assert.equal(typeof startup.then,'function');
+    assert.throws(()=>store.change({key:'offlinecad-autosave-v7',value:'too early',revision:'missing'}),/bereits geladen/);
+    const storage=await startup;
+    const key='offlinecad-autosave-v7',value=JSON.stringify({fixture:'日本語'+'x'.repeat(16*1024*1024)});
+    storage.setItem(key,'previous');
+    const pending=storage.setRecoveryItem(key,value);
+    try{
+      assert.equal(storage.getItem(key),'previous');
+      await assert.rejects(storage.setRecoveryItem(key,'concurrent'),/bereits eine automatische Sicherung/);
+      assert.throws(()=>storage.setItem(key,'concurrent'),/bereits eine automatische Sicherung/);
+      await new Promise(resolve=>setImmediate(resolve));
+      assert.equal(storage.getItem(key),'previous');
+    }finally{await pending;}
+    assert.equal(storage.getItem(key),value);
+    assert.equal(store.read(key).value,value);
+    const file=require('../backend/program-data.json')[key].file;
+    assert.equal(fs.readFileSync(path.join(directory,file+'.vorher'),'utf8'),'previous');
+    fs.writeFileSync(path.join(directory,file),'external');
+    await assert.rejects(storage.setRecoveryItem(key,'after external edit'),/inzwischen geändert/);
+    assert.equal(storage.getItem(key),value);
+    assert.equal(store.read(key).value,'external');
+    assert.equal((await handles.get('cad-data:change-recovery')({sender:win.webContents,senderFrame:{}},{key})).ok,false);
+  }finally{
+    assert.equal(path.dirname(path.resolve(root)),path.resolve(os.tmpdir()));
+    assert.ok(path.basename(root).startsWith('formnaro-storage-ipc-'));
+    fs.rmSync(root,{recursive:true,force:true});
+  }
+});

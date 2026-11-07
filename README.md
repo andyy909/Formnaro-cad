@@ -21,8 +21,7 @@ Formnaro is portable on Windows x64. The modelling workspace works offline.
 
 | Build | Best for | Download |
 | --- | --- | --- |
-| **0.125.0-r36** · verified preview | The most thoroughly checked public package | **[Windows ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** · [Checks and matching sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) |
-| **0.127.0 Nightly r10** · test build | Local-first STL conversion, targeted AI corrections, symmetry reconstruction, and project-copy practice | **[Windows ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r10/Formnaro-v0.127.0-r10-Nightly-Windows-x64.zip)** · [Nightly release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10) |
+| **0.136.0-r3** · current release | Benchmarks in the model picker, three AI lab roles and checked bundled FreeCAD | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-v0.136.0-r3-Windows-x64.zip)** · [Verification and separate sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3) |
 
 Extract the whole application ZIP into its own folder and start **Formnaro.exe**. FreeCAD and Python are bundled. Source archives are separate downloads. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
@@ -36,7 +35,7 @@ Extract the whole application ZIP into its own folder and start **Formnaro.exe**
 
 *Actual application screenshots: Easy Tinker and Normal in dark mode from 0.117.0-r8; Solid with ATLAS-5 in light mode from 0.120.0-r4; Fusion in light mode from 0.119.0-r2. Click an image to enlarge it.*
 
-[Matching r10 sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r10/Formnaro-Quellcode-v0.127.0-r10.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
+[Matching application sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-Quellcode-v0.136.0-r3.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
 
 ## Quick start
 
@@ -88,7 +87,7 @@ Three functions are shown in a separate practice window using Formnaro's control
 
 Codex prepared the plan before playback; the practice window executes it through the actual controls without further model requests. The displayed **3,381,395 tokens including cached input** cover the entire gear task: planning, recording and verification.
 
-Recorded with the locally tested development build **0.125.0-r35**. The verified preview download above provides 0.125.0-r36.
+Recorded with the locally tested development build **0.125.0-r35**. The current download above provides 0.136.0-r3.
 
 ## Documentation
 
@@ -103,16 +102,13 @@ Some detailed reference material is available in German.
 | Development | [Build instructions](docs/BUILD.md) · [Architecture](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
-## Development status
+## Current release: 0.136.0-r3
 
-The **0.125.0-r36** portable application extends native modelling, error and memory handling, revision-bound saves, focused command information, screw and tilt couplings, and stored inspection records. Original sources and a single Undo step are retained.
+The model picker displays saved benchmark results and a column chart for previously tested AI models. Series, sample sizes and partial results remain separate. The AI lab offers independent modeler, supervisor and final reviewer choices, plus a versioned 16-trial core benchmark. The bundled new core benchmark has not been run against a real provider yet.
 
-The complete local function catalogue was processed: **2906 Node tests and 71 desktop groups**, plus **20 Python tests and eight native CNC regression cases**. Initial failures and their follow-up verification are documented in the report. A fresh DeepSeek Harness run checked error correction, explicit Apply and stale inspection records. The packaged EXE was checked with an isolated profile, native FreeCAD, saves and normal process exit; the ZIP was also tested after fresh Unicode extraction from a foreign working directory.
+Local verification covered **3,135 Node test cases and 28 Python tests**. The full Node run initially reported 12 outdated or incomplete test setups; all 12 were corrected and passed together in targeted follow-up checks. The packaged EXE passed model-picker IPC/UI checks, native drilling, FreeCAD modeling and all four workspace modes with normal shutdown. Complete runtime files were read back against their checksums. No new real AI performance tests or clean-Windows-VM run were performed.
 
-Motion and clearance results cover the sampled poses and pairs only. They do not establish continuous contact, load capacity or manufacturing approval. A fresh Windows VM was not tested. New inspection records use project format 32; older projects remain readable.
-
-Matching sources: [versioned tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r36) · [source ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-Quellcode-v0.125.0-r36.zip) · [verification report](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Paket-Pruefstand.json) · [acceptance scope](docs/GESAMTPLAN-RELEASE-ABNAHME.md)
-[Public downloads and verification](docs/AKTUELLER-STAND.md)
+[Release and checksums](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3) · [Matching source tag](https://github.com/andyy909/Formnaro-cad/tree/v0.136.0-r3) · [Application source ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-Quellcode-v0.136.0-r3.zip) · [Acceptance report](docs/ABNAHME-0.136.0-r3.md)
 
 <!-- formnaro-development-status:end -->
 

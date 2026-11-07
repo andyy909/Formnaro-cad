@@ -1,59 +1,75 @@
-# Fusion workspace
+# Fusion-Modus
 
-Fusion offers a toolbar, browser and construction steps for users familiar
-with Autodesk Fusion. It uses Formnaro's modelling tools, projects and formats.
+Formnaro 0.101.0 ergänzt **Fusion 360** oben neben **Easy Tinker**, **Normal**
+und **Solid**. Der Modus erleichtert den Umstieg von Autodesk Fusion mit einer
+eigenen Anordnung und vertrauten Befehlsnamen.
 
-## Layout
+Die Orientierung folgt der [Fusion-Oberfläche](https://help.autodesk.com/view/fusion360/ENU/?contextId=LP-STEPS-P13N-SNP-GS-OTH-CRD-1)
+und den [offiziellen Tastenkürzeln](https://help.autodesk.com/cloudhelp/ENU/Fusion-GetStarted/files/GUID-F0491540-0324-470A-B651-2238D0EFAC30.htm).
+Die Funktionen werden durch Formnaros vorhandene Werkzeuge ausgeführt.
 
-- **Top toolbar** groups solid, sketch, mesh and utility commands by task.
-  Open a group's menu to see its additional commands.
-- **Left browser** shows the model tree, visibility and retained sources.
-  Insert primitives from the browser or use its document settings to configure
-  the workplane.
-- **Right panel** shows properties when you double-click an item or select a
-  construction step. Editing tools retain their preview, apply and cancel
-  controls. Open the optional AI chat from the top-right control.
-- **Bottom construction steps** show retained sources in dependency order.
-  Select a step to inspect its source and properties. The steps represent
-  model dependencies. Features cannot be reordered or played back here.
-- Standard views remain at the top right. The bottom navigation bar also
-  offers fit, projection and orientation controls.
+## Aufbau
 
-## First model
+- Oben: **Konstruktion** mit **Volumenkörper**, **Skizze**, **Netz** und
+  **Werkzeuge**. Die Gruppen heißen Erstellen, Ändern, Zusammenfügen,
+  Konstruieren, Prüfen und Einfügen. Weitere Befehle öffnen sich über den
+  Gruppennamen mit Pfeil. Dienstprogramme enthält zusätzliche Formnaro-Werkzeuge.
+- Links: **Browser** mit dem tatsächlichen Modellbaum, Sichtbarkeit und
+  erhaltenen Quellen. Einfügen enthält die Grundkörper; Dokumenteinstellungen
+  enthalten die vorhandenen Arbeitsflächenoptionen.
+- Rechts: Eigenschaften nach einem Doppelklick im Browser oder Auswahl eines
+  Konstruktionsschritts. Bearbeitungen wie Abrunden und Schale verwenden ihre
+  vorhandene Vorschau, Übernahme und Abbrechen. Der KI-Chat öffnet sich über KI.
+- Unten: **Konstruktionsschritte** aus den tatsächlich erhaltenen Quellen,
+  in Abhängigkeitsreihenfolge. Ein Klick wählt die Quelle und ihre Eigenschaften.
+  Diese Leiste zeigt keine zusätzliche chronologische Bearbeitungshistorie und
+  bietet kein Verschieben oder Abspielen von Features.
+- Die Standardansichten bleiben oben rechts erreichbar. Einpassen, Projektion
+  und Ansichtsausrichtung stehen zusätzlich in der Navigationsleiste unten.
 
-1. Select **Fusion** and start an extrusion from the solid tools.
-2. Set the contour and dimensions in the native sketch editor. Preview and
-   apply to create a native CAD body.
-3. To make a cut, select an unlocked part, start an extrusion cut and pick its
-   reference face.
-4. Use fillet, chamfer, hole, shell, pattern and mirror on suitable selections.
-   Loft and sweep require compatible native sketches.
+## Erste Konstruktion
 
-New primitives are native CAD bodies. The mesh tab edits existing meshes.
-Normal mode keeps its own CAD and mesh preferences. The unit is millimetres and
-Z points up. Exchange and project formats follow Formnaro's existing support.
+1. **Fusion 360** wählen und unter Volumenkörper **Extrusion** starten.
+2. Kontur und Maße im nativen Skizzeneditor bestimmen, Vorschau berechnen und
+   übernehmen. Ein neuer nativer CAD-Körper entsteht.
+3. Für einen Schnitt zuerst ein entsperrtes Teil auswählen, **Extrusion ·
+   Ausschneiden** öffnen und seine Bezugsfläche anklicken.
+4. **Abrunden**, **Fase**, **Bohrung**, **Schale**, **Anordnung** und **Spiegeln**
+   verwenden die vorhandenen Modellierfunktionen. Erhebung und Sweeping
+   benötigen geeignete native Skizzen. Unpassende Befehle bleiben deaktiviert.
 
-## Mouse and keyboard
+Neue Grundkörper sind im Fusion-Modus native CAD-Körper. Die gespeicherte
+CAD/Netz-Auswahl des Normalmodus bleibt erhalten. Vorhandene Netze bleiben
+über das Register Netz bearbeitbar.
 
-With Fusion navigation enabled, drag with the middle button to pan.
-Hold Shift while middle-dragging, or right-drag, to rotate. Scroll to zoom.
+## Maus und Tastatur
 
-| Shortcut | Action |
-| --- | --- |
-| **S** | Search and select a tool |
-| **E**, **F**, **H** | Extrude, fillet, hole |
-| **M**, **I**, **J** | Move, measure, joints |
+Bei aktivierten Fusion-Optionen:
 
-Fusion settings store navigation, shortcuts and the starting tab independently.
-The mode also has its own editable context menu. Text inputs, active tool
-sessions and standard save, copy, paste and Undo shortcuts retain their
-existing controls.
+- Mittlere Maustaste ziehen: verschieben.
+- Umschalt + mittlere Maustaste ziehen: drehen.
+- Mausrad: zoomen. Rechts ziehen dreht ebenfalls die Ansicht.
+- **S**: Werkzeugsuche mit Texteingabe und direkter Befehlsauswahl.
+- **E**: Extrusion, **F**: Abrunden, **H**: Bohrung.
+- **M**: Verschieben, **I**: Messen, **J**: Gelenke.
 
-Apply or cancel an open edit before switching modes. The switch preserves
-geometry and Undo history and restores the saved sidebar arrangement when you
-leave.
+Texteingaben und laufende Bearbeitungen behalten ihre vorhandene Bedienung.
+Speichern, Kopieren, Einfügen und Rückgängig verwenden die bisherigen
+Tastenkombinationen. Unter **Einstellungen > Fusion 360** lassen sich Navigation,
+Tasten und Startregister getrennt speichern. Unter **Einstellungen > Rechtsklick**
+besitzt Fusion eine eigene anpassbare Befehlsliste. Bestehende Listen der anderen
+Modi bleiben beim ersten Laden erhalten.
 
-The implementation is in `src/cad-fusion-state.js`, `src/cad-fusion-ui.js` and
-`src/cad-fusion.css`. Preferences use `offlinecad-workbench-mode-v1` and
-`offlinecad-fusion-settings-v1` or `Daten/fusion-einstellungen.json`.
-Previously saved context-menu layouts keep their existing mode assignments.
+Moduswechsel ändern keine Geometrie und erzeugen keinen Undo-Schritt. Vor einem
+Wechsel laufende Bearbeitungen übernehmen oder abbrechen. Beim Verlassen kehren
+die echten Steuerelemente in die gespeicherte Seitenleistenanordnung zurück.
+
+Die Einheit bleibt Millimeter, Z zeigt nach oben. Projektformat und Dateiformate
+bleiben Formnaro-Formate; der Modus ergänzt keinen F3D/F3Z-Dateileser und keine
+Fusion-Cloud-Verbindung. Er ist eine eigene Formnaro-Oberfläche für Umsteiger.
+
+Technisch: `cad-fusion-state.js`, `cad-fusion-ui.js`, `cad-fusion.css`.
+Modus im bestehenden `offlinecad-workbench-mode-v1`, Optionen in
+`offlinecad-fusion-settings-v1` / `Daten/fusion-einstellungen.json`.
+Bestehende Rechtsklick-Einstellungen mit drei Modi werden ohne sofortiges
+Schreiben um Fusion ergänzt; alle bisherigen Befehlslisten bleiben erhalten.

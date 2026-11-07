@@ -3,11 +3,34 @@ import assert from 'node:assert/strict';
 import {createCadProject,createCadWorkspaceSerializer,parseCadProject,serializeCadProject,CAD_PROJECT_LIMITS} from '../src/cad-project.js';
 import {createCadTransactions} from '../src/cad-transactions.js';
 import {createCadController} from '../src/cad-controller.js';
+import {createRecoveryEncoding} from '../src/cad-recovery-encoding.js';
+import {encodeFnpackProject} from '../src/cad-fnpack-data.js';
 import {CAD_QUALITY_DEFAULTS} from '../src/cad-quality.js';
 import {defaultLayout} from '../src/layout-preferences.js';
 
 const workspace=()=>({version:1,view:{projection:'perspective',position:[123,-200,400],target:[2,3,4],up:[0,0,1],zoom:2.5},selection:[],mode:'rotate',snap:.25,quality:structuredClone(CAD_QUALITY_DEFAULTS),layout:defaultLayout()});
 const node=(id='body',data='Storage-only fixture')=>({id,kind:'cad',name:'日本語 · Fläche',source:'step',solid:true,transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],brep:{format:'OpenCascade-BRep',data,triangulation:false},stats:{bounds:{min:[-5,-5,-5],max:[5,5,5]},volume:1000,solids:1}});
+
+test('Recovery encoding keeps the model and geometry blocks across camera-only changes',()=>{
+ const model=createCadProject({nodes:[node()]}),state=workspace(),encode=createRecoveryEncoding();
+ for(const format of ['ocad','fnpack']){
+  state.view.zoom=2.5;
+  const first=encode({format,model,workspace:state});
+  assert.equal(first.modelEncodes,1);
+  state.view.zoom=4;
+  const second=encode({format,workspace:state});
+  assert.equal(second.modelEncodes,0);
+  if(format==='ocad'){
+   assert.equal(new TextDecoder().decode(second.value),serializeCadProject({...model,workspace:state}));
+   assert.equal(new TextDecoder().decode(encode({format}).value),serializeCadProject(model));
+  }else{
+   const expected=encodeFnpackProject({...model,workspace:state});
+   assert.deepEqual(second.value.project,expected.project);
+   assert.equal(second.value.blocks,first.value.blocks);
+   assert.deepEqual(second.value.blocks,expected.blocks);
+  }
+ }
+});
 
 test('Workspace serialization is byte-identical, validates each workspace and captures its own model generation',()=>{
   const initial=createCadProject({nodes:[node()],workspace:workspace()}),encode=createCadWorkspaceSerializer(initial),state=workspace();

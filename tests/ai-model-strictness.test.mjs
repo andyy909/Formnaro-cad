@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {validateAIModelStrictness,readAIModelStrictness,aiModellingPolicy,aiStrictnessDecision} from '../src/ai-model-strictness.js';
 import {runCadAIRequest} from '../src/cad-ai-request.js';
 test('strictness defaults preserve existing behavior, reject invalid values and scale numeric allowances monotonically',()=>{
- assert.equal(readAIModelStrictness({getItem:()=>null}),100);for(const v of [-1,101,.5,NaN,'0'])assert.throws(()=>validateAIModelStrictness(v));
+ assert.equal(readAIModelStrictness({getItem:()=>null}),95);for(const v of [-1,101,.5,NaN,'0'])assert.throws(()=>validateAIModelStrictness(v));
  const verification={passed:false,checks:[{kind:'size',passed:false,expected:[10,20,30],actual:[10.015,20,30],tolerance:.01}]};
  assert.equal(aiStrictnessDecision(verification,100).accepted,false);assert.equal(aiStrictnessDecision(verification,50).accepted,true);assert.equal(aiStrictnessDecision(verification,0).accepted,true);assert.equal(verification.checks[0].passed,false);
  assert.equal(aiStrictnessDecision({checks:[{kind:'solids',passed:false,expected:1,actual:2}]},1).accepted,false);

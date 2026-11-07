@@ -4,7 +4,7 @@ test('The desktop service shares one profile across CAD and converter and cancel
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-shared-ai-service-'));
   const electron={app:{getPath:()=>directory},ipcMain:{handle:(name,fn)=>handlers.set(name,fn),on(){}},safeStorage:{isEncryptionAvailable:()=>false}};
   const requireLocal=name=>name==='electron'?electron:name==='./ai-provider.cjs'?{...require('../backend/ai-provider.cjs'),generate:async(config,key,args,signal)=>{received.push({config,key,args,signal});return new Promise((resolve,reject)=>{release=resolve;signal.addEventListener('abort',()=>reject(Object.assign(Error('cancelled'),{name:'AbortError'})));});}}:name.startsWith('.')?require(path.resolve(__dirname,'../backend',name)):require(name);
-  const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../backend/desktop-ai.cjs'),'utf8'),{require:requireLocal,module,Buffer,setTimeout,clearTimeout,AbortController,URL});module.exports.installDesktopAI(win,{settingsFile:path.join(directory,'ai-settings.json')});
+  const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../backend/desktop-ai.cjs'),'utf8'),{require:requireLocal,module,Buffer,setTimeout,clearTimeout,AbortController,URL,process:{argv:[]}});module.exports.installDesktopAI(win,{settingsFile:path.join(directory,'ai-settings.json')});
   const call=(name,args)=>handlers.get('cad-ai:'+name)({sender:webContents},args);
   const config={protocol:'responses',baseUrl:'https://example.invalid/v1',model:'common-model',reasoningEffort:'high',rememberKey:false,bridgeEnabled:false};
   assert.equal((await call('save',{config,key:'synthetic-test-key'})).ok,true);

@@ -12,12 +12,12 @@
 
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
-| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-v0.125.0-r36-Windows.zip)** | **0.125.0-r36** | ca. **667 MB** | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
-| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36) | **0.125.0-r36** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
+| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-v0.136.0-r3-Windows-x64.zip)** | **0.136.0-r3** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
+| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3) | **0.136.0-r3** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
 
-**Nightly-Ausgabe.** [0.127.0 Nightly r10](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10) ergänzt die lokale STL-Prüfung um gezielte KI-Flächenkorrekturen und eine geprüfte Symmetrierekonstruktion. KI-Chat und Übungen auf einer Projektkopie sind ebenfalls enthalten. [Windows-x64-ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r10/Formnaro-v0.127.0-r10-Nightly-Windows-x64.zip).
+**Neu:** Benchmark-Details und Säulendiagramm in der KI-Modellauswahl, drei getrennte Laborrollen und ein versionierter Grundbenchmark. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3).
 
-[Passende r10-Quellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.127.0-r10/Formnaro-Quellcode-v0.127.0-r10.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
+[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-Quellcode-v0.136.0-r3.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
 
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
@@ -81,7 +81,7 @@ Im eigenen Übungsfenster werden drei Funktionen mit den Bedienelementen von For
 
 Der vorab von Codex erstellte Plan wird im Übungsfenster über die echten Bedienelemente ausgeführt; die Wiedergabe benötigt keine weiteren Modellanfragen. Die eingeblendeten **3.381.395 Tokens inklusive Cache** beziehen sich auf den gesamten Zahnradauftrag mit Planung, Aufnahme und Prüfung.
 
-Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der oben verlinkte geprüfte Download enthält 0.125.0-r36.
+Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der aktuelle Download enthält 0.136.0-r3.
 
 ## Anleitungen
 
@@ -94,16 +94,13 @@ Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der oben
 | Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
-## Entwicklungsstand
+## Aktuelle Ausgabe: 0.136.0-r3
 
-Die portable Ausgabe **0.125.0-r36** erweitert native Modellierung, Fehler- und Speicherbehandlung, revisionsgebundenes Speichern, gezielte Werkzeugauskunft, Schraub- und Kippkopplungen sowie gespeicherte Prüfstände. Bestehende Quellen und ein gemeinsamer Undo-Schritt bleiben erhalten.
+Die KI-Modellauswahl zeigt gespeicherte Benchmarks und ein Säulendiagramm für getestete Modelle. Testreihe, Umfang und Teilstand bleiben getrennt sichtbar. Das KI-Labor bietet eine eigene Profil-, Modell- und Denkstufenwahl für Modellierer, Überwacher und Abschlussauswerter sowie einen versionierten Grundbenchmark mit16 Versuchen. Für die neue mitgelieferte Suite liegen noch keine echten Anbieterläufe vor.
 
-Der vollständige lokale Funktionskatalog wurde abgearbeitet: **2906 Node-Tests und 71 Desktop-Prüfgruppen**, ergänzt durch **20 Python-Tests und acht native CNC-Regressionsfälle**. Befunde aus dem ersten Lauf und ihre Nachprüfungen sind im Prüfbericht ausgewiesen. Ein neuer DeepSeek-Harness-Durchlauf prüfte Fehlerkorrektur, explizites Apply und das Erkennen eines veralteten Prüfstands. Die gepackte EXE wurde mit isoliertem Profil, nativem FreeCAD, Speichern und regulärem Prozessende geprüft; das ZIP zusätzlich nach frischem Entpacken in einen Umlautordner aus einem fremden Arbeitsverzeichnis.
+Lokal geprüft: **3.135 Node-Testfälle und28 Python-Tests**. Im vollständigen Node-Lauf wurden zunächst12 veraltete oder unvollständige Testaufbauten gefunden; alle12 bestanden nach Korrektur die gemeinsame gezielte Nachprüfung. Die fertige EXE bestand Modellauswahl/IPC/Oberfläche, native Bohrung, FreeCAD-Modellierung und alle vier Arbeitsmodi mit regulärem Abschluss. Laufzeitdateien wurden vollständig per Prüfsumme zurückgelesen. Keine neue echte KI-Leistungsmessung und keine frische Windows-VM-Abnahme.
 
-Bewegungs- und Abstandsprüfungen gelten für die tatsächlich berechneten Stellungen und Paare. Sie sind keine durchgehende Kontakt-, Last- oder Fertigungsfreigabe. Eine frische Windows-VM-Abnahme ist nicht enthalten. Neue Prüfstände verwenden Projektformat 32; ältere Projekte bleiben lesbar.
-
-Passende Quellen: [Versions-Tag](https://github.com/andyy909/Formnaro-cad/tree/v0.125.0-r36) · [Quellcode-ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Formnaro-Quellcode-v0.125.0-r36.zip) · [Prüfbericht](https://github.com/andyy909/Formnaro-cad/releases/download/v0.125.0-r36/Paket-Pruefstand.json) · [Abnahmeumfang](docs/GESAMTPLAN-RELEASE-ABNAHME.md)
-[Aktueller veröffentlichter Stand](docs/AKTUELLER-STAND.md)
+[Release und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3) · [Passender Quelltag](https://github.com/andyy909/Formnaro-cad/tree/v0.136.0-r3) · [Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-Quellcode-v0.136.0-r3.zip) · [Abnahmebericht](docs/ABNAHME-0.136.0-r3.md)
 
 <!-- formnaro-development-status:end -->
 

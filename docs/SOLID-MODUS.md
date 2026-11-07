@@ -1,65 +1,103 @@
-# Solid workspace
+# Solid-Modus
 
-Solid offers a feature toolbar and a left-hand manager for users familiar with
-SolidWorks. It uses Formnaro's own modelling tools and file formats.
+Formnaro 0.99.0 ergänzt oben neben **Easy Tinker** und **Normal** den
+Bedienmodus **Solid**. Er richtet sich an Anwender, die von SolidWorks kommen.
 
-## Create and edit parts
+Die Einteilung orientiert sich am CommandManager und am linken Managerbereich
+der [SolidWorks-Hilfe 2026](https://help.solidworks.com/2026/english/SolidWorks/sldworks/c_management_panel.htm).
+Formnaro verwendet seine eigenen Modellierwerkzeuge und Dateiformate.
 
-1. Select **Solid** from the workspace modes.
-2. Start an extruded boss from the Features tab. The native sketch editor
-   supports rectangles, circles, closed contours, dimensions and formulas.
-3. Set the sketch dimensions and extrusion height, preview, and apply.
-4. For an extruded cut, select a visible, unlocked part and pick its reference
-   face. The cut depth starts at that face.
-5. The same workspace offers fillets, chamfers, holes, shell, patterns and
-   mirroring. Loft and sweep require compatible native sketches. The current
-   selection determines which commands are available.
+## Teile erstellen
 
-Use the Sketch, Inspect, Assembly and Mesh & Convert tabs for related tasks.
-Additional Formnaro tools are available through the menus. The left manager
-shows the model tree, properties, primitives or document options. Double-click
-an object to open its properties. Choose a standard view from the tree or use
-the active workplane for a new sketch. Feature dialogs open in the manager.
-The sketch editor and file and AI dialogs retain their own windows.
+1. Oben **Solid** einschalten.
+2. Im Register **Features** einen **Extrudierten Aufsatz** starten. Der native
+   Skizzeneditor bietet Rechtecke, Kreise, geschlossene Konturen, Maße und Formeln.
+3. Maße und Extrusionshöhe festlegen, **Vorschau berechnen** und übernehmen.
+4. Für **Linearer Schnitt** zuerst ein sichtbares, entsperrtes Teil auswählen,
+   dann seine Bezugsfläche anklicken. Der Skizzeneditor startet mit
+   **Material ausschneiden**. Die Schnitttiefe gilt ab dieser Fläche.
+5. Verrundung, Fase, Bohrung, Wandung, Muster und Spiegeln nutzen die vorhandenen
+   geprüften Werkzeuge. Ausformung und Austragung setzen geeignete native
+   Skizzen voraus; die Schaltflächen berücksichtigen die aktuelle Auswahl.
 
-New primitives are native CAD bodies. Existing meshes remain editable. Normal
-mode keeps its own CAD, mesh or automatic preference. The unit is millimetres
-and Z points up. Open the optional AI chat from the top-right control.
+Die weiteren Register heißen **Skizze**, **Prüfen**, **Baugruppe** sowie
+**Netz & Umwandeln**. Weitere bestehende Werkzeuge sind über **Extras** erreichbar.
+Der Menübereich enthält Datei, Bearbeiten, Ansicht, Einfügen, Extras und Hilfe.
 
-## Context menu
+## Rechte Maustaste
 
-Right-click a model part or its tree item to open the context menu. Selecting
-a face lets commands such as sketch-on-face and extruded cut reuse that native
-face. Right-clicking a member of an existing multi-selection keeps the
-selection. Locked parts allow inspection and disable commands that modify them.
+Ein Rechtsklick auf ein Teil oder einen Eintrag im Modellbaum öffnet ein
+Kontextmenü. Solid zeigt eine kleine Werkzeugleiste und Befehle wie
+Feature bearbeiten, Skizze auf Fläche, Linearer Schnitt, Verrundung,
+Ausblenden, Isolieren und Eigenschaften. Bei Skizze/Schnitt auf einer
+angeklickten Modellfläche wird diese Fläche direkt mit dem vorhandenen nativen
+Flächenprüfer gewählt. Eine bestehende Mehrfachauswahl bleibt erhalten, wenn
+eines ihrer Teile angeklickt wird. Gesperrte Teile bieten lesende Eigenschaften;
+ändernde Befehle sind ausgegraut.
 
-When a tool is open, the menu offers Cancel and, after a valid preview, Apply.
-Right-drag rotates the view. In context-menu settings you can add, remove,
-reorder or reset up to 32 entries per mode. Enabled function plugins can be
-assigned. An unavailable plugin keeps its assignment and is disabled.
+Während einer offenen Werkzeugbearbeitung bietet das Menü Abbrechen und,
+bei vorhandener gültiger Vorschau, Übernehmen. Rechts **ziehen** dreht weiter
+die Ansicht und öffnet kein Menü. Das bestehende Rechtsklick-Favorisieren in der
+Formenpalette bleibt erhalten.
 
-## Navigation and shortcuts
+Unter **Einstellungen > Rechtsklick** lassen sich Befehle für **Easy Tinker**,
+**Normal** und **Solid** getrennt hinzufügen, entfernen, nach oben/unten
+verschieben und pro Modus zurücksetzen. Bis zu 32 Einträge sind möglich.
+Auch aktivierte Funktions-Plugins können zugewiesen werden. Ausgeschaltete
+oder entfernte Plugins bleiben als nicht verfügbare Belegung erhalten und
+lassen sich nicht ausführen. Das Menü enthält ebenfalls einen direkten
+Zugang zu diesen Einstellungen. Leere Flächen bieten Ansichts- und passende
+allgemeine Befehle; Texteingaben behalten ihre gewohnte Rechtsklick-Bedienung.
 
-With Solid navigation enabled, drag with the middle button to rotate.
-Hold Ctrl to pan or Shift to zoom. The mouse wheel also zooms.
+Die Struktur orientiert sich an den
+[SolidWorks-Kontextmenüs 2026](https://help.solidworks.com/2026/english/SolidWorks/sldworks/c_shortcut_menus.htm).
+Die angebotenen Befehle entsprechen den vorhandenen Formnaro-Funktionen.
 
-| Shortcut | Action |
-| --- | --- |
-| **S** | Quick tools |
-| **Space** | View orientation |
-| **F** | Fit model |
-| **Ctrl+1** through **Ctrl+7** | Front, rear, left, right, top, bottom and isometric |
+## Modell und Eigenschaften
 
-Solid settings store navigation, shortcuts and the starting tab independently.
-Typing and active tool sessions retain their existing controls. Save, copy,
-paste and Undo retain their standard shortcuts.
+Links wechseln **Modellbaum**, **Eigenschaften**, **Grundkörper** und **Dokument**.
+Der Modellbaum zeigt die tatsächlichen Objekte und erhaltenen Quellen.
+Ein Doppelklick auf ein Objekt öffnet seine Eigenschaften. Die Standardansichten im
+Baum richten die Ansicht aus; neue Skizzen verwenden die aktive Arbeitsebene.
+Werkzeugdialoge wie Verrundung oder Wandung erscheinen im linken Managerbereich.
+Der bestehende Skizzeneditor und die Datei-/KI-Dialoge behalten ihre eigenen Fenster.
 
-Apply or cancel the current operation before switching workspace. The mode
-switch preserves model geometry and Undo history and restores the saved
-sidebar layout when you leave.
+Alle neuen Grundkörper im Solid-Modus entstehen als native CAD-Körper.
+Die gespeicherte Auswahl CAD/Netz/Automatisch des Normalmodus wird dadurch
+nicht geändert. Vorhandene Netze bleiben auch in Solid bearbeitbar.
+Die Einheit bleibt Millimeter; die Z-Achse zeigt weiterhin nach oben.
 
-The implementation is in `src/cad-solid-state.js`, `src/cad-solid-ui.js` and
-`src/cad-solid.css`. Preferences use `offlinecad-workbench-mode-v1` and
-`offlinecad-solid-settings-v1` or `Daten/solid-einstellungen.json`. Context
-menus use `offlinecad-context-menu-v1` and `Daten/rechtsklick-menues.json`.
-The workspace does not require a newer project format.
+Der KI-Chat öffnet sich bei Bedarf über **KI** oben rechts. Sein Solid-Bereich
+startet eingeklappt und verändert die gespeicherten Seitenleisten nicht.
+
+## Bedienung und Einstellungen
+
+Unter **Einstellungen > Solid** werden Navigation, Tastenkürzel und Startregister
+unabhängig gespeichert. Bei eingeschaltetem Solid-Navigationsprofil:
+
+- Mittlere Maustaste ziehen: Ansicht drehen.
+- Strg + mittlere Maustaste ziehen: Ansicht verschieben.
+- Umschalt + mittlere Maustaste ziehen: zoomen.
+- Mausrad: zoomen.
+- **S**: Schnellwerkzeuge.
+- **Leertaste**: Ansichtsausrichtung.
+- **F**: Modell einpassen.
+- **Strg+1 … 7**: Vorne, Hinten, Links, Rechts, Oben, Unten, Isometrisch.
+
+Texteingaben und laufende Bearbeitungen behalten ihre vorhandenen Tasten.
+Mit deaktivierten Solid-Tastenkürzeln gelten die normalen Formnaro-Tasten.
+Speichern, Kopieren, Einfügen und Rückgängig behalten ihre bisherigen Kürzel.
+
+Der Moduswechsel verändert weder die Modellgeometrie noch den Rückgängig-Verlauf.
+Beim Verlassen kehren die Originalkontrollen zu ihrer gespeicherten
+Seitenleistenanordnung zurück. Eine offene Bearbeitung muss zuerst übernommen
+oder abgebrochen werden.
+
+Technisch: `cad-solid-state.js`, `cad-solid-ui.js`, `cad-solid.css`;
+Bedienmodus weiterhin `offlinecad-workbench-mode-v1`, zusätzliche Optionen
+`offlinecad-solid-settings-v1` / `Daten/solid-einstellungen.json`.
+Die getrennten Rechtsklick-Belegungen verwenden `offlinecad-context-menu-v1`
+und `Daten/rechtsklick-menues.json`. Sie verändern keine Modelle oder
+gespeicherten Oberflächenanordnungen.
+Das Projektformat wird nicht angehoben. Es werden keine SolidWorks-Dateileser,
+Konfigurationen oder weiteren Modellierverfahren durch diesen Modus ergänzt.

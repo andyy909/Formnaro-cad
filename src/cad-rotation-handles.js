@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import {cadRotationSnap,cadRotationDelta} from './cad-rotation.js';
+import {cadRotationSnap,cadRotationDelta,cadViewRotationAxes} from './cad-rotation.js';
 import rotateIcon from './icons/rotate-part.svg';
 import './cad-rotation-handles.css';
 
-/** Mini's rotation ring, using the large editor's world/workplane axes and
+/** Mini's rotation ring, using the snapped viewing frame and
  * confirmed gesture transaction. The ring is a transient display helper. */
 export function createCadRotationHandles({host,camera,scene,getFrame,onStart,onPreview,onEnd,onCancel,invalidate}){
   const layer=document.createElement('div');layer.className='cad-rotation-handles';layer.setAttribute('aria-label','Auswahl drehen');layer.hidden=true;host.append(layer);
@@ -22,10 +22,10 @@ export function createCadRotationHandles({host,camera,scene,getFrame,onStart,onP
   function projected(p){const r=rect(),v=p.clone().project(camera());return {x:(v.x+1)*r.width/2,y:(1-v.y)*r.height/2,z:v.z};}
   function ray(event){const r=rect(),caster=new THREE.Raycaster();camera().updateMatrixWorld(true);caster.setFromCamera(new THREE.Vector2((event.clientX-r.left)/r.width*2-1,1-(event.clientY-r.top)/r.height*2),camera());return caster.ray;}
   const onPlane=(event,a)=>ray(event).intersectPlane(a.plane,new THREE.Vector3());
-  for(let axis=0;axis<3;axis++){
-    const button=document.createElement('button');button.type='button';button.className='cad-rotation-handle';button.dataset.rotationAxis=axis;
-    button.title=`Um ${'XYZ'[axis]} drehen · Im Kreis: 15° · Außerhalb: 1° · Shift: immer 15°`;button.setAttribute('aria-label',button.title);
-    const img=document.createElement('img');img.src=rotateIcon;img.alt='';const letter=document.createElement('span');letter.textContent='XYZ'[axis];button.append(img,letter);layer.append(button);buttons.push(button);
+  for(let axis=0;axis<4;axis++){
+    const button=document.createElement('button');button.type='button';button.className='cad-rotation-handle';if(axis===3)button.dataset.rotationView="true";else button.dataset.rotationAxis=axis;
+    button.title=(axis===3?'Aus der aktuellen Ansicht drehen':`Um Ansichts-${'XYZ'[axis]} drehen`)+' · Blickrichtung im 45°-Raster · Im Kreis: 15° · Außerhalb: 1° · Shift: immer 15°';button.setAttribute('aria-label',button.title);
+    const img=document.createElement('img');img.src=rotateIcon;img.alt='';const letter=document.createElement('span');letter.textContent=axis===3?'↻':'XYZ'[axis];button.append(img,letter);layer.append(button);buttons.push(button);
     button.addEventListener('pointerdown',e=>begin(e,button,axis));button.addEventListener('pointermove',move);button.addEventListener('pointerup',end);
     button.addEventListener('pointercancel',()=>cancel());button.addEventListener('lostpointercapture',()=>{if(active?.button===button)cancel();});
     button.addEventListener('keydown',e=>{if(e.key==='Escape'&&active){e.preventDefault();e.stopPropagation();cancel();}});
@@ -36,7 +36,7 @@ export function createCadRotationHandles({host,camera,scene,getFrame,onStart,onP
     const center=projected(f.center);if(center.z< -1||center.z>1){hidden(layer,true);return;}
     const corners=[];for(let n=0;n<8;n++)corners.push(projected(new THREE.Vector3(...f.bounds.min.map((v,k)=>n&(1<<k)?f.bounds.max[k]:v))));
     const left=Math.min(...corners.map(p=>p.x)),right=Math.max(...corners.map(p=>p.x)),top=Math.min(...corners.map(p=>p.y)),bottom=Math.max(...corners.map(p=>p.y)),r=rect();
-    const positions=[{x:center.x,y:top-39},{x:left-32,y:(top+bottom)/2},{x:right+32,y:(top+bottom)/2}];
+    const positions=[{x:left-32,y:(top+bottom)/2},{x:right+32,y:(top+bottom)/2},{x:center.x,y:bottom+39},{x:center.x,y:top-39}];
     const blocked=overlayBoxes(),obstacles=(f.obstacles??[]).map(projected).map(p=>({x:p.x-13,y:p.y-13,width:26,height:26}));
     buttons.forEach((button,i)=>{const p=positions[i],placement=placeBox(p.x-16,p.y-15,32,30,[...blocked,...obstacles]);if(placement){button.style.left=placement.x+16+'px';button.style.top=placement.y+15+'px';obstacles.push({x:placement.x,y:placement.y,width:32,height:30});}hidden(button,!placement||(!!active&&active.button!==button));});
     if(active)active.outline=Array.from({length:96},(_,i)=>projected(new THREE.Vector3(active.radius*Math.cos(i*Math.PI/48),active.radius*Math.sin(i*Math.PI/48),0).applyMatrix4(group.matrixWorld)));
@@ -56,12 +56,13 @@ export function createCadRotationHandles({host,camera,scene,getFrame,onStart,onP
   function clearRing(){for(const child of [...group.children]){child.geometry?.dispose();child.material?.dispose();group.remove(child);}}
   function begin(event,button,axis){
     if(event.button!==0||active)return;const f=getFrame();if(!f)return;event.preventDefault();event.stopPropagation();
-    const normal=new THREE.Vector3().setComponent(axis,1).applyQuaternion(f.quaternion),a={frame:f,normal,axis,button,pointerId:event.pointerId,start:{x:event.clientX,y:event.clientY},moved:false,angle:0,rawAngle:0,degrees:0};
+    const view=camera(),direction=view.getWorldDirection(new THREE.Vector3()).negate(),right=new THREE.Vector3().setFromMatrixColumn(view.matrixWorld,0);
+    const normal=cadViewRotationAxes(direction,right)[axis],a={frame:f,normal,axis,button,pointerId:event.pointerId,start:{x:event.clientX,y:event.clientY},moved:false,angle:0,rawAngle:0,degrees:0};
     a.plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,f.center);a.startVector=onPlane(event,a)?.sub(f.center);
     a.fallback=!a.startVector||a.startVector.length()<1e-5||Math.abs(ray(event).direction.dot(normal))<.08;
     if(!onStart())return;active=a;button.setPointerCapture(event.pointerId);button.classList.add('dragging');makeRing(a);update();readout(event,0,15);invalidate('rotation-start');
   }
-  function readout(event,degrees,step){const r=rect();label.hidden=false;label.textContent=`${degrees}° · ${'XYZ'[active.axis]} · ${step===15?'15°-Raster':'1° fein'}`;label.dataset.degrees=degrees;label.dataset.step=step;label.dataset.axis=active.axis;const p=placeBox(event.clientX-r.left+18,event.clientY-r.top+16,label.offsetWidth,label.offsetHeight,overlayBoxes());hidden(label,!p);if(p){label.style.left=p.x+'px';label.style.top=p.y+'px';}}
+  function readout(event,degrees,step){const r=rect();label.hidden=false;label.textContent=`${degrees}° · ${active.axis===3?'Ansicht':'XYZ'[active.axis]} · ${step===15?'15°-Raster':'1° fein'}`;label.dataset.degrees=degrees;label.dataset.step=step;label.dataset.axis=active.axis;const p=placeBox(event.clientX-r.left+18,event.clientY-r.top+16,label.offsetWidth,label.offsetHeight,overlayBoxes());hidden(label,!p);if(p){label.style.left=p.x+'px';label.style.top=p.y+'px';}}
   function move(event){
     const a=active;if(!a||event.pointerId!==a.pointerId)return;event.preventDefault();event.stopPropagation();if(!a.moved&&Math.hypot(event.clientX-a.start.x,event.clientY-a.start.y)<3)return;a.moved=true;
     let angle;if(a.fallback)angle=(event.clientX-a.start.x-(event.clientY-a.start.y))*.65;

@@ -1,0 +1,453 @@
+{
+  "format": "FormnaroTargetedCauseRetests",
+  "scope": "Development followups on four frozen builds, not a new full 90-case cohort. Case11/20 requirements and grouped-body input facts were clarified; geometry fixtures retained. Earlier failures remain in original cohorts.",
+  "cohorts": [
+    {
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "status": "completed",
+      "package": {
+        "version": "0.132.2",
+        "asarSHA256": "f9db70b9abd59a2de5e996c899b9159e76e3de16c8a72787e1308895dfabe6b9",
+        "executableSHA256": "523857c28aadfdb817f39ba0b6519b1108119f05268d8da958c03ef7b3405cdc"
+      },
+      "planned": 24,
+      "finished": 24,
+      "nativePassed": 17,
+      "roleRequests": {
+        "modeler": 40,
+        "supervisor": 160
+      }
+    },
+    {
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r6-2026-11-06",
+      "status": "completed",
+      "package": {
+        "version": "0.132.2",
+        "asarSHA256": "d4f693d15b6db6df2927b1fbaa4c57a46a332b60c29b6d644d08b6b8dba2332b",
+        "executableSHA256": "9395b15cfc259883e1ee6c3f977ffe58777413294ba17741be7e004752c57d86"
+      },
+      "planned": 8,
+      "finished": 8,
+      "nativePassed": 6,
+      "roleRequests": {
+        "modeler": 13,
+        "supervisor": 65
+      }
+    },
+    {
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r8-2026-11-06",
+      "status": "completed",
+      "package": {
+        "version": "0.132.2",
+        "asarSHA256": "20f208a45a850672653e9d38b91245a4dd9ca1a5a361791dc528e5e1bb33910d",
+        "executableSHA256": "ca727dcdd053e793fa6391da96edc77900e4112b0ca3578938d4072db17d5120"
+      },
+      "planned": 2,
+      "finished": 2,
+      "nativePassed": 2,
+      "roleRequests": {
+        "modeler": 3,
+        "supervisor": 15
+      }
+    },
+    {
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r8-close20-2026-11-06",
+      "status": "completed",
+      "package": {
+        "version": "0.132.2",
+        "asarSHA256": "20f208a45a850672653e9d38b91245a4dd9ca1a5a361791dc528e5e1bb33910d",
+        "executableSHA256": "ca727dcdd053e793fa6391da96edc77900e4112b0ca3578938d4072db17d5120"
+      },
+      "planned": 1,
+      "finished": 1,
+      "nativePassed": 0,
+      "roleRequests": {
+        "modeler": 2,
+        "supervisor": 3
+      }
+    },
+    {
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r9-2026-11-06",
+      "status": "completed",
+      "package": {
+        "version": "0.132.2",
+        "asarSHA256": "799207e9b63e4e903371cf5351e40878ef115532e9469de4bb21606e97c217b6",
+        "executableSHA256": "9d4d9448ca353235fc61e53ead77f446a1de56b66170f5259332bedc303ef7f3"
+      },
+      "planned": 1,
+      "finished": 1,
+      "nativePassed": 1,
+      "roleRequests": {
+        "modeler": 2,
+        "supervisor": 6
+      }
+    }
+  ],
+  "completedTrials": 36,
+  "uniqueConditions": 25,
+  "latestNativePassed": 25,
+  "allLatestPassed": true,
+  "monitor": {
+    "judgments": 246,
+    "errors": 0,
+    "missingFinal": 0,
+    "failedResultApproved": 0,
+    "retries": [
+      "output-budget",
+      "output-budget",
+      "output-budget"
+    ]
+  },
+  "rows": [
+    {
+      "id": "05af06aa-4403-4e6f-aeb9-a22c71ab9518",
+      "caseId": "practice-01",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 3,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "fb352fc5-6b33-47ed-9fca-f5a32fe7d1ea",
+      "caseId": "practice-02",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 5,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "d0b0ca8d-da09-442b-a463-74654e25a813",
+      "caseId": "practice-03",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 4,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "1445d501-ee25-4fbe-bde5-be081bf2adb8",
+      "caseId": "practice-04",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 4,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "62668a66-e4f4-4c08-b584-2196556a00f8",
+      "caseId": "practice-05",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r6-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 5,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "fde97266-ddd6-4119-b80d-3630414f1de1",
+      "caseId": "practice-06",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r8-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 8,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "8619dfc5-41cf-4097-a56a-3430ea9928cb",
+      "caseId": "practice-10",
+      "effort": "high",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 8,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "1e7bc832-cc7d-416f-91fd-f7698080a878",
+      "caseId": "practice-10",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 10,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "882da57b-052b-465b-84bc-91ba49ec4e8b",
+      "caseId": "practice-11",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r6-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 12,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "5851ad66-173d-407b-8e3d-96a0eae7ac5d",
+      "caseId": "practice-12",
+      "effort": "high",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 3,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "95b430b7-64f8-40d8-acab-26c3d5eb4846",
+      "caseId": "practice-13",
+      "effort": "high",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 12,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "c7da1198-3cbf-410c-9148-ce60ccfe85f3",
+      "caseId": "practice-13",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 11,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "b42a1f5e-ba7f-4910-9844-f717fd2b0e07",
+      "caseId": "practice-17",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 7,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "53fc2a73-0462-428a-9aad-ba14ca8a5c83",
+      "caseId": "practice-20",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r9-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 4,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "31f235cd-dbad-4feb-a313-fde0797d1135",
+      "caseId": "practice-21",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r6-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 9,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "9948384b-003c-43e3-b5b1-2ea5c8c0b1cb",
+      "caseId": "practice-23",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 2,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "dbfb4091-b1a0-4f9c-96a9-e61e704cd617",
+      "caseId": "practice-24",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 3,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "8a1ce3d7-8362-45d7-8464-46639b733feb",
+      "caseId": "practice-25",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 2,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "58a2f78a-7ab5-44d1-af9f-7a0c07cd64af",
+      "caseId": "practice-26",
+      "effort": "high",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r6-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 3,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "bf2cf653-8165-4b6b-b96b-9df9417563a7",
+      "caseId": "practice-26",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 4,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "34ba5812-d72f-4d37-864c-c0b5ee6785b5",
+      "caseId": "practice-27",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 3,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "70c16bb1-7e5d-49ff-8611-0a518d327aff",
+      "caseId": "practice-28",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r6-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 4,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "e20c83fb-4b16-4754-873d-e83b03334707",
+      "caseId": "practice-29",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 7,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "bde98b30-c3e1-4cde-8b75-fc60314684c1",
+      "caseId": "practice-30",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "practice",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r8-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 2,
+      "error": null,
+      "failedChecks": []
+    },
+    {
+      "id": "038fc3a5-fb96-4b3b-b905-b41371594b92",
+      "caseId": "sketch",
+      "effort": "low",
+      "variant": "C",
+      "workflow": "agent",
+      "output": "F:/Formnaro-Testausgaben/KI-Gezielte-Nachtests-0.132.2-r4-2026-11-06",
+      "nativePassed": true,
+      "cleanExit": true,
+      "finalVerdict": "continue",
+      "actualObservations": 2,
+      "error": null,
+      "failedChecks": []
+    }
+  ]
+}

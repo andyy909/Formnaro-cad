@@ -1,4 +1,5 @@
 import './cad-fusion.css';
+import {createFusionCommandIcon} from './cad-solid-icons.js';
 import {createFusionSettings,fusionLabel,fusionShortcut,FUSION_TABS,fusionSourceSteps} from './cad-fusion-state.js';
 
 const $=id=>document.getElementById(id);
@@ -8,12 +9,11 @@ const tabCommands={
   mesh:[['create',['mesh-tools','mesh-select','mesh-inspector']],['modify',['mesh-repair','mesh-close-hole','mesh-reduce','mesh-curved-reduce','mesh-sculpt','mesh-hollow','mesh-features']],['insert',['cad-to-mesh','mesh-to-cad','stl-to-step']]],
   tools:[['inspect',['measure','ruler','section','thickness','inspect','model-compare']],['assemble',['group','ungroup','bundle','align','reference-place','lay-on-face','joints','assembly-only','assembly-load','assembly-all']],['modify',['cad-edit-modeling','project-parameters']],['insert',['drawing','functions']]]
 };
-const symbols={extrude:'▰',cut:'⊟',round:'◜',chamfer:'◩',drill:'⊙',sketch:'✎','sketch-on-part':'▱','cad-contour':'▧','cad-shell':'⊔','cad-loft':'⌁','cad-sweep':'⤳',array:'▦',mirror:'◀│▶',measure:'↔',ruler:'⌐',section:'◨',inspect:'✓',drawing:'▤',joints:'⚙','project-parameters':'ƒx'};
 
 // Dock the real tree, inspector and operation panels. They keep their IDs,
 // listeners, focus, selection and controller transactions. Leaving Fusion
 // restores each node to its original parent using a placeholder.
-export function createCadFusionUI({storage,controls,toolbar,header,tools,safe,t=x=>x,getLanguage=()=> 'de',view,executeCommand=()=>{},openSettings=()=>{},isIdle=()=>true,getProject=()=>({nodes:[]}),getSelection=()=>[],select=()=>{}}){
+export function createCadFusionUI({storage,controls,toolbar,header,tools,safe,t=x=>x,getLanguage=()=> 'de',view,executeCommand=()=>{},openSettings=()=>{},openAbout=()=>{},isIdle=()=>true,getProject=()=>({nodes:[]}),getSelection=()=>[],select=()=>{}}){
   const settings=createFusionSettings(storage),moved=[],captions=new Map(),extraControls=new Map();
   let mounted=false,ribbon=null,manager=null,taskPane=null,menubar=null,popup=null,observer=null,managerTab='model',activeTab=settings.get().defaultTab,fusionChatOpen=false,chatState=null,sourceStrip=null,sourceSignature='',navigation=null;
   const label=key=>fusionLabel(key,getLanguage()),word=(de,en)=>getLanguage()==='en'?en:de;
@@ -32,9 +32,9 @@ export function createCadFusionUI({storage,controls,toolbar,header,tools,safe,t=
   function decorate(node,key){
     if(!captions.has(node)){
       const fragment=document.createDocumentFragment();fragment.append(...node.childNodes);captions.set(node,{fragment,title:node.getAttribute('title'),aria:node.getAttribute('aria-label')});
-      const icon=make('span',symbols[key]??'◇','fusion-command-icon');icon.setAttribute('aria-hidden','true');
+      const icon=createFusionCommandIcon(key);
       const text=label(key),caption=make('span',text===key?(node.title?.replace(/\s*\([^)]*\)/g,'')||fragment.textContent.trim()):text,'fusion-command-caption');
-      node.append(icon,caption);node.classList.add('fusion-command');node.title=caption.textContent;node.setAttribute('aria-label',caption.textContent);
+      if(icon)node.append(icon);node.append(caption);node.classList.add('fusion-command');node.title=caption.textContent;node.setAttribute('aria-label',caption.textContent);
     }
   }
   function selectTab(key,{focus=false}={}){
@@ -99,7 +99,7 @@ export function createCadFusionUI({storage,controls,toolbar,header,tools,safe,t=
     const assigned=new Set([...Object.values(tabCommands).flatMap(groups=>groups.flatMap(([,keys])=>keys)),'new','open','save','save-as','projects','import','export','ai','photo-project-open','ai-feature-open','freecad-document-open','settings','help','undo','redo','copy','paste','duplicate','delete','projection','fit','coordinates','magnet','view-iso','view-top','view-front','view-right','mode-translate','mode-scale','mode-rotate']);
     const remaining=[...controls].filter(([key,node])=>!assigned.has(key)&&node.matches('button')).map(([key,node])=>[node.title||node.textContent.trim(),act(key)]);
     menu('extras',[[label('tools'),tab('tools')],[label('project-parameters'),act('project-parameters')],[label('options'),()=>{openSettings();$('settings-tab-fusion')?.click();}],[t('Einstellungen'),openSettings],[word('KI-Werkstatt','AI workshop'),act('ai')],[t('Projektfotos'),act('photo-project-open')],[t('KI-Merkmalsbezüge'),act('ai-feature-open')],[t('FreeCAD-Merkmale'),act('freecad-document-open')],...remaining]);
-    menu('help',[[word('Fusion-Einstieg','Getting started with Fusion'),()=>selectManager('model')],[t('Hilfe'),act('help')]]);
+    menu('help',[[word('Fusion-Einstieg','Getting started with Fusion'),()=>selectManager('model')],[t('Hilfe'),act('help')],[word('Über Formnaro','About Formnaro'),openAbout]]);
     const modeNote=make('span',word('KONSTRUKTION','DESIGN'),'fusion-mode-note');menubar.append(modeNote);
     const quick=make('div',undefined,'fusion-quick-tools');tools.append(quick);
     for(const key of ['undo','redo','copy','paste','delete'])if(controls.has(key))quick.append(controls.get(key));

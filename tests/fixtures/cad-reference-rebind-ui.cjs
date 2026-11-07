@@ -1,7 +1,7 @@
 const Module=require('node:module'),path=require('node:path'),fs=require('node:fs'),assert=require('node:assert/strict'),original=Module._load;
 Module._load=function(request,parent,isMain){
- if(request==='./backend/maintenance-verification.cjs')return {verifyMaintenance:async win=>{
-  const js=code=>win.webContents.executeJavaScript(code),pause=ms=>new Promise(r=>setTimeout(r,ms)),checks=[],directory=path.dirname(process.argv.find(v=>v.startsWith('--verify-maintenance=')).split('=').slice(1).join('='));
+ if(request==='./backend/ai-result-checks-verification.cjs')return {verifyAIResultChecks:async win=>{
+  const js=code=>win.webContents.executeJavaScript(code),pause=ms=>new Promise(r=>setTimeout(r,ms)),checks=[],directory=path.dirname(process.argv.find(v=>v.startsWith('--verify-ai-result-checks=')).split('=').slice(1).join('='));
   async function until(code){for(let i=0;i<300;i++){if(await js(code))return;await pause(30);}throw Error('Timeout: '+code);}
   async function field(selector,value,event='change'){await js(`{const e=document.querySelector(${JSON.stringify(selector)});e.value=${JSON.stringify(value)};e.dispatchEvent(new Event(${JSON.stringify(event)},{bubbles:true}));}`);}
   async function capture(name){await js("new Promise(r=>{const p=document.querySelector('#reference-rebind-panel');p.scrollTop=p.scrollHeight;requestAnimationFrame(()=>requestAnimationFrame(r));})");fs.writeFileSync(path.join(directory,name+'.png'),(await win.webContents.capturePage()).toPNG());}

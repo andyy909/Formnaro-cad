@@ -66,7 +66,7 @@ for(const bad of ['symbolic','outside','oversized'])for(const format of ['plan',
 });
 const main=source('src/cad-main.js');
 function mainFunction(name,globals){const line=main.split('\n').find(line=>line.startsWith('function '+name+'('));assert(line);return vm.runInNewContext('('+line+')',globals);}
-function mainGlobals(){const globals={Error,console};for(const name of new Set(main.match(/\b\w+UI\b/g)))globals[name]=undefined;return {...globals,busy:false,fileBusy:false,activePreview:null,meshPartitionDraft:()=>false,tools:undefined,meshTools:undefined,meshExtras:undefined,view:{isEditing:()=>false},layoutUI:{isActive:()=>false,isSaving:()=>false}};}
+function mainGlobals(){const globals={Error,console,window:{__cadReady:true}};for(const name of new Set(main.match(/\b\w+UI\b/g)))globals[name]=undefined;return {...globals,busy:false,fileBusy:false,activePreview:null,meshPartitionDraft:()=>false,tools:undefined,meshTools:undefined,meshExtras:undefined,view:{isEditing:()=>false},layoutUI:{isActive:()=>false,isSaving:()=>false}};}
 test('File actions and workbench changes reject an open advanced/surface tool even before preview',()=>{
  const g=mainGlobals(),ready=mainFunction('readyForFile',g);ready();g.advancedFreeCADUI={state:()=>({kind:'surface-fill'})};assert.throws(ready,/abschließen/);
 });

@@ -1,0 +1,299 @@
+{
+  "version": "0.132.0",
+  "packageRevision": "r2",
+  "changes": [
+    "Failed tool feedback reaches observer immediately",
+    "Host-confirmed practice steps with exact revision and awaited private acknowledgement",
+    "Independent final native verification and close status reviewed separately",
+    "Compact transient traces preserve final model and fit the unchanged IPC report limit"
+  ],
+  "validation": {
+    "standardTests": 128,
+    "targetedTests": 60,
+    "nativePackagedControls": {
+      "passed": true,
+      "cloudRequests": 0,
+      "cases": [
+        {
+          "id": "1529faf7-b315-4dcb-8a6f-c27c6438b7d9",
+          "status": "completed",
+          "verification": true,
+          "finalReview": {
+            "assessment": "native-passed",
+            "judgment": {
+              "verdict": "continue",
+              "reasonCode": "none",
+              "confidence": 0.99,
+              "explanation": "Local deterministic transport control, not a real model judgment",
+              "evidence": "Actual recorded geometry and revision",
+              "kind": "final-result",
+              "round": "supervisor-6",
+              "revision": "f7d83e339330ec31"
+            }
+          },
+          "cleanExit": true
+        },
+        {
+          "id": "0833530d-648f-43b2-bb58-c0528beac5fc",
+          "status": "completed",
+          "verification": false,
+          "finalReview": {
+            "assessment": "native-failed",
+            "judgment": {
+              "verdict": "stop",
+              "reasonCode": "explicit_constraint",
+              "confidence": 0.99,
+              "explanation": "Local deterministic transport control, not a real model judgment",
+              "evidence": "Actual recorded geometry and revision",
+              "kind": "final-result",
+              "round": "supervisor-3",
+              "revision": "23d76a03b0ba1b21"
+            }
+          },
+          "cleanExit": true
+        },
+        {
+          "id": "44706897-e609-484b-a161-72fd36f7ce61",
+          "status": "failed",
+          "finalReview": {
+            "assessment": "unverified",
+            "judgment": {
+              "verdict": "stop",
+              "reasonCode": "explicit_constraint",
+              "confidence": 0.99,
+              "explanation": "Local deterministic transport control, not a real model judgment",
+              "evidence": "Actual recorded geometry and revision",
+              "kind": "final-result",
+              "round": "supervisor-3",
+              "revision": "57793cbf0c2bdb79"
+            }
+          },
+          "cleanExit": true
+        },
+        {
+          "id": "689c0f3a-e226-4071-a289-82513c83f207",
+          "status": "monitor-stopped",
+          "finalReview": {
+            "assessment": "unverified",
+            "judgment": null
+          },
+          "cleanExit": true
+        }
+      ]
+    },
+    "realSupervisorReplay": {
+      "passed": true,
+      "scope": "Real DeepSeek Flash supervisor on recorded actual native UI steps and independently evaluated final states; not a new CAD modeling benchmark.",
+      "results": [
+        {
+          "name": "correct",
+          "monitor": {
+            "verdict": "continue",
+            "reasonCode": "none",
+            "confidence": 0.99,
+            "explanation": "The observed final result matches the requested change: the selected cylinder is now Ã˜14 with length 80 and center (0,0,40), and the other part remains present. Verification passed.",
+            "evidence": "Final bounds for 966c2ede: size [14.0000002,14.0000002,80.0000002], center [~0,~0,40]; second object ca94fbc7 remains; verification status completed with all checks passed.",
+            "kind": "final-result",
+            "round": "supervisor-1",
+            "revision": "c3c31cfedfb2b41e",
+            "judgments": [
+              {
+                "verdict": "continue",
+                "reasonCode": "none",
+                "confidence": 0.95,
+                "explanation": "The executed step shows the selected cylinder already resized to diameter 14 while retaining length 80 and center (0,0,40); the second part remains present. No contradiction to the task is visible.",
+                "evidence": "ok:true; selected object 966c2ede... has size [14.0000002,14.0000002,80.0000002], center [~0,~0,40], and objectCount:2 with the second part still listed.",
+                "kind": "practice-step",
+                "round": "supervisor-0",
+                "revision": "c3c31cfedfb2b41e"
+              },
+              {
+                "verdict": "continue",
+                "reasonCode": "none",
+                "confidence": 0.99,
+                "explanation": "The observed final result matches the requested change: the selected cylinder is now Ã˜14 with length 80 and center (0,0,40), and the other part remains present. Verification passed.",
+                "evidence": "Final bounds for 966c2ede: size [14.0000002,14.0000002,80.0000002], center [~0,~0,40]; second object ca94fbc7 remains; verification status completed with all checks passed.",
+                "kind": "final-result",
+                "round": "supervisor-1",
+                "revision": "c3c31cfedfb2b41e"
+              }
+            ],
+            "final": {
+              "verdict": "continue",
+              "reasonCode": "none",
+              "confidence": 0.99,
+              "explanation": "The observed final result matches the requested change: the selected cylinder is now Ã˜14 with length 80 and center (0,0,40), and the other part remains present. Verification passed.",
+              "evidence": "Final bounds for 966c2ede: size [14.0000002,14.0000002,80.0000002], center [~0,~0,40]; second object ca94fbc7 remains; verification status completed with all checks passed.",
+              "kind": "final-result",
+              "round": "supervisor-1",
+              "revision": "c3c31cfedfb2b41e"
+            },
+            "executedObservations": 1,
+            "executionChecks": 1
+          },
+          "native": true,
+          "cleanExit": true
+        },
+        {
+          "name": "drift",
+          "monitor": {
+            "verdict": "stop",
+            "reasonCode": "explicit_constraint",
+            "confidence": 0.99,
+            "explanation": "Der Zylinder hat zwar Ã˜14 und LÃ¤nge 80, aber sein Mittelpunkt liegt bei (-1,-1,40) statt wie gefordert bei (0,0,40). Die EndprÃ¼fung bestÃ¤tigt diese Abweichung ausdrÃ¼cklich.",
+            "evidence": "Final verification check \"Ã˜14 Ã—80 bei gleicher Mitte\" passed=false; object center [-0.9999999999999996,-1.0000000000000004,40].",
+            "kind": "final-result",
+            "round": "supervisor-1",
+            "revision": "ca1b21fe13a1b1fe",
+            "judgments": [
+              {
+                "verdict": "uncertain",
+                "reasonCode": "insufficient_evidence",
+                "confidence": 0.55,
+                "explanation": "Step 1 of 2 produced a Ã˜14 x 80 cylinder (volume ~12315, bounds 14x14x80), but its center is currently (-1,-1,40) rather than the required (0,0,40). Because a second planned step remains that could reposition it, the trajectory does not yet clearly contradict the task, but the required center is not yet satisfied.",
+                "evidence": "executed step 1/2 ok: object 966c2ede size [14.0000002,14.0000002,80.0000002], center [-0.9999999999999996,-1.0000000000000004,40]",
+                "kind": "practice-step",
+                "round": "supervisor-0",
+                "revision": "ca1b21fe13a1b1fe"
+              },
+              {
+                "verdict": "stop",
+                "reasonCode": "explicit_constraint",
+                "confidence": 0.99,
+                "explanation": "Der Zylinder hat zwar Ã˜14 und LÃ¤nge 80, aber sein Mittelpunkt liegt bei (-1,-1,40) statt wie gefordert bei (0,0,40). Die EndprÃ¼fung bestÃ¤tigt diese Abweichung ausdrÃ¼cklich.",
+                "evidence": "Final verification check \"Ã˜14 Ã—80 bei gleicher Mitte\" passed=false; object center [-0.9999999999999996,-1.0000000000000004,40].",
+                "kind": "final-result",
+                "round": "supervisor-1",
+                "revision": "ca1b21fe13a1b1fe"
+              }
+            ],
+            "final": {
+              "verdict": "stop",
+              "reasonCode": "explicit_constraint",
+              "confidence": 0.99,
+              "explanation": "Der Zylinder hat zwar Ã˜14 und LÃ¤nge 80, aber sein Mittelpunkt liegt bei (-1,-1,40) statt wie gefordert bei (0,0,40). Die EndprÃ¼fung bestÃ¤tigt diese Abweichung ausdrÃ¼cklich.",
+              "evidence": "Final verification check \"Ã˜14 Ã—80 bei gleicher Mitte\" passed=false; object center [-0.9999999999999996,-1.0000000000000004,40].",
+              "kind": "final-result",
+              "round": "supervisor-1",
+              "revision": "ca1b21fe13a1b1fe"
+            },
+            "executedObservations": 1,
+            "executionChecks": 1
+          },
+          "native": false,
+          "cleanExit": true
+        },
+        {
+          "name": "error",
+          "monitor": {
+            "verdict": "stop",
+            "reasonCode": "unavailable_tool",
+            "confidence": 0.72,
+            "explanation": "Der Lauf endet als Fehlschlag: nichts wurde angewendet, keine Verifikation, und der einzige Schritt klickte ein nicht existierendes Bedienelement. Damit ist der Auftrag klar nicht erfÃ¼llt.",
+            "evidence": "final-result status=failed, appliedCount=0, practiceCompleted=false; executed step error: 'Formnaro-Bedienelement fehlt oder ist mehrdeutig: missing-monitor-control'",
+            "kind": "final-result",
+            "round": "supervisor-1",
+            "revision": "b739e612568e60f6",
+            "judgments": [
+              {
+                "verdict": "continue",
+                "reasonCode": "none",
+                "confidence": 0.6,
+                "explanation": "Only one executed step exists and it failed because a named UI control was missing, not because the modeling goal was violated. The selected cylinder is still Ã˜16 Ã— 80 and unmodified, so reducing it to Ã˜14 while preserving length and position remains achievable with other documented tools; a single missing-control error does not justify stopping. Note the stated target center (0,0,40) differs from the observed center [15,0,40], but this is an ambiguity to resolve during modeling rather than a grounded failure.",
+                "evidence": "Step 1 of 2 failed with 'Formnaro-Bedienelement fehlt oder ist mehrdeutig: missing-monitor-control' (target ui:id:missing-monitor-control); selected object 966c2ede remains size [16,16,80], center [15,0,40], undiminished volume 16084.95.",
+                "kind": "practice-step",
+                "round": "supervisor-0",
+                "revision": "62187f9e9a783a02"
+              },
+              {
+                "verdict": "stop",
+                "reasonCode": "unavailable_tool",
+                "confidence": 0.72,
+                "explanation": "Der Lauf endet als Fehlschlag: nichts wurde angewendet, keine Verifikation, und der einzige Schritt klickte ein nicht existierendes Bedienelement. Damit ist der Auftrag klar nicht erfÃ¼llt.",
+                "evidence": "final-result status=failed, appliedCount=0, practiceCompleted=false; executed step error: 'Formnaro-Bedienelement fehlt oder ist mehrdeutig: missing-monitor-control'",
+                "kind": "final-result",
+                "round": "supervisor-1",
+                "revision": "b739e612568e60f6"
+              }
+            ],
+            "final": {
+              "verdict": "stop",
+              "reasonCode": "unavailable_tool",
+              "confidence": 0.72,
+              "explanation": "Der Lauf endet als Fehlschlag: nichts wurde angewendet, keine Verifikation, und der einzige Schritt klickte ein nicht existierendes Bedienelement. Damit ist der Auftrag klar nicht erfÃ¼llt.",
+              "evidence": "final-result status=failed, appliedCount=0, practiceCompleted=false; executed step error: 'Formnaro-Bedienelement fehlt oder ist mehrdeutig: missing-monitor-control'",
+              "kind": "final-result",
+              "round": "supervisor-1",
+              "revision": "b739e612568e60f6"
+            },
+            "executedObservations": 1,
+            "executionChecks": 1
+          },
+          "native": null,
+          "cleanExit": true
+        }
+      ]
+    },
+    "realTwoAgentEndToEnd": {
+      "passed": true,
+      "runId": "f0c70e0e-048a-41a2-99e6-9625a3cc8dbd",
+      "native": {
+        "passed": true,
+        "checks": [
+          {
+            "name": "Schutzteil vollstÃ¤ndig erhalten",
+            "passed": true
+          },
+          {
+            "name": "TatsÃ¤chlicher sichtbarer Ablauf abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "GÃ¼ltige native KÃ¶rper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein AufgabenkÃ¶rper",
+            "passed": true
+          },
+          {
+            "name": "Ã˜14 Ã—80 bei gleicher Mitte",
+            "passed": true
+          }
+        ],
+        "scope": "Aufgabenspezifische native Endwerte und aufgezeichnete sichtbare ZwischenzustÃ¤nde. Keine allgemeine Bedien- oder Fertigungsfreigabe."
+      },
+      "finalReview": {
+        "assessment": "native-passed",
+        "judgment": {
+          "verdict": "continue",
+          "reasonCode": "none",
+          "confidence": 0.99,
+          "explanation": "The observed final geometry matches the requested Ã˜14 diameter while preserving the 80 mm length and center, and the unrelated part remains unchanged. The earlier response-format error was recovered and does not contradict the completed result.",
+          "evidence": "Final object size [14.0000002,14.0000002,80.0000002], center [~0,~0,40]; second object unchanged; verification passed.",
+          "kind": "final-result",
+          "round": "supervisor-6",
+          "revision": "df1e27ee6674c944"
+        }
+      },
+      "actualSteps": 5,
+      "modelerUsageEvents": 2,
+      "supervisorUsageEvents": 7,
+      "models": [
+        "deepseek-flash"
+      ],
+      "cleanExit": true
+    },
+    "packagedResourcesUI": {
+      "normalStart": true,
+      "settingsEntry": true,
+      "openCloseReopen": true,
+      "functionCases": 30,
+      "plannedTrials": 90,
+      "executedStepLabel": true,
+      "separateFinalResultLabel": true
+    }
+  },
+  "scope": "Small positive/negative controls, not general sensitivity/specificity or active-stop calibration. Old 0.131.0 cohort is separate and unchanged.",
+  "remainingLimitation": "Supervisor judgments are model opinions; native verification remains authoritative and missing evidence stays unverified. Intermediate proposal reviews and executed-step reviews have bounded request budgets; skipped/failed review is explicit."
+}

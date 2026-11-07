@@ -43,6 +43,7 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
     const recycle=(failed=false)=>failed&&importJob&&(kernel?.wasmMemory?.buffer?.byteLength??0)>=512*1024*1024;
     try{
       await ready;if(closed||generation!==message.generation)return;cadNativeMemory(kernel).check('request-'+message.request?.job);if((kernel?.wasmMemory?.buffer?.byteLength??0)>=memoryPolicy.stopBytes)throw Object.assign(Error('CAD-Speicherbudget erreicht.'),{code:'CAD_MEMORY_BUDGET'});
+      const started=message.measureTiming===true?performance.now():null;
       const request=message.request,readOnly=['display','query','exportMeshes','exportStep','exportModel'].includes(request.job),project=cadProjectSnapshot(request.project);
       // Read-only requests without a separate baseline have exactly one input.
       // Validate and hash it once; editing jobs still own independent copies.
@@ -52,6 +53,8 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
       const progress=value=>reply(message,{type:'progress',value});progress({phase:request.job==='query'?'query-'+request.query?.kind:request.job});let result;
       if(['exportModel','exportMeshes','exportStep'].includes(request.job))await verifyStepDrillExports(service,project,{ids:request.options?.ids});
       if(request.job==='query'&&['svgProjection','drawingProjection'].includes(request.query?.kind))await verifyStepDrillExports(service,project,{ids:request.query.options?.ids});
+      const operationStarted=started===null?null:performance.now();
+      const displayTiming=started!==null&&request.job==='display'?{cacheLookupMs:0,colorPartitionMs:0,brepReadMs:0,tessellationMs:0}:undefined;
       switch(request.job){
         case 'patternConsumerChoices':{
           const operation=request.operation,options={oc:kernel,service,collectConsumerChoices:true,freecadRun:value=>hostRequest(message,value),editRecipe:(node,patch)=>editRecipe(kernel,node,patch,{fonts})};
@@ -80,7 +83,7 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
         case 'create':{
           project.nodes.push(service.nativeNode(request.recipe,request.options));result={project:await service.rebuild(project,{progress,baseline})};if(request.display)result.display=service.display(result.project,request.quality);break;
         }
-        case 'display':result=service.display(project,request.quality,{colored:!!request.colored,knownMeshes:request.knownMeshes,...(request.ids!==undefined?{ids:request.ids}:{})});break;
+        case 'display':result=service.display(project,request.quality,{colored:!!request.colored,knownMeshes:request.knownMeshes,timings:displayTiming,...(request.ids!==undefined?{ids:request.ids}:{})});break;
         case 'exportMeshes':result=service.exportMeshes(project,request.quality);break;
         case 'exportStep':result=service.exportStep(project);break;
         case 'exportModel':result=service.exportModel(project,request.options);break;
@@ -123,7 +126,8 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
         case 'importStep':project.nodes.push(service.stepNode(request.bytes,request.options));result={project:await service.rebuild(project,{progress,baseline})};if(request.display)result.display=service.display(result.project,request.quality);break;
         default:throw Error('Unbekannter CAD-Workerauftrag.');
       }
-      cadNativeMemory(kernel).sample('request-complete');const retire=recycle()||(kernel?.wasmMemory?.buffer?.byteLength??0)>=memoryPolicy.retireBytes;reply(message,{type:'result',result,recycleWorker:retire,...(retire?{proofs:service.exportProofs()}:{})});
+      const timing=started===null?undefined:{preparationMs:operationStarted-started,operationMs:performance.now()-operationStarted,...(displayTiming?{display:displayTiming}:{})};
+      cadNativeMemory(kernel).sample('request-complete');const retire=recycle()||(kernel?.wasmMemory?.buffer?.byteLength??0)>=memoryPolicy.retireBytes;reply(message,{type:'result',result,...(timing?{timing}:{}),recycleWorker:retire,...(retire?{proofs:service.exportProofs()}:{})});
     }catch(error){const fatal=error instanceof WebAssembly.RuntimeError,code=fatal?'CAD_KERNEL_FATAL':error.code||'CAD_ERROR',phase=error.cadPhase??message.request?.job,messageText=fatal?'Die CAD-Berechnung musste beendet werden. Diesen Auftrag beenden und den Fehlerbericht prüfen.':error.message||'CAD-Workerauftrag fehlgeschlagen.';reply(message,{type:'error',recycleWorker:recycle(true)||code==='CAD_MEMORY_BUDGET',...(code==='CAD_MEMORY_BUDGET'&&service?{proofs:service.exportProofs()}:{}),code,feedback:aiFeedback({code,message:messageText,feedback:error.feedback,measuredTolerance:error.measuredTolerance,allowedTolerance:error.allowedTolerance},{phase}),phase,stack:String(error.stack??'').slice(0,12000),message:messageText});}
   }
   function receive(message){

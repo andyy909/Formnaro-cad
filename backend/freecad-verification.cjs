@@ -1,8 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 exports.verifyFreeCAD=async(win,{directory})=>{
  const run=s=>win.webContents.executeJavaScript(s),checks=[],check=(ok,label)=>{assert(ok,label);checks.push(label);},previous=await run('window.offlinecadDesktop.getAISettings()');let calls=0,constructions=0;
- const checkConfigKey='formnaro-model-checks-v1';
- const previousChecks=await run('window.__cadTest.storage.getItem('+JSON.stringify(checkConfigKey)+')');
  const until=async s=>{for(let i=0;i<1500;i++){if(await run(s))return;await new Promise(r=>setTimeout(r,40));}throw Error('FreeCAD UI timeout: '+s);};
  const server=http.createServer(async(req,res)=>{try{
   res.setHeader('Content-Type','application/json');if(req.url.endsWith('/models'))return res.end(JSON.stringify({data:[{id:'local-freecad-test',input_modalities:['text','image']}]}));
@@ -15,8 +13,6 @@ exports.verifyFreeCAD=async(win,{directory})=>{
  try{
   check((await run('window.offlinecadDesktop.getFreeCADStatus()')).available,'Actual desktop discovers installed FreeCAD');
   const before=await run('window.__cadTest.serialize()'),depth=await run('window.__cadTest.undoDepth()');
-  // This fixture intentionally needs three corrections to reach its target width.
-  await run(`(()=>{const mode=document.getElementById('ai-model-strictness-unchecked');if(mode.checked)mode.click();const key=${JSON.stringify(checkConfigKey)},storage=window.__cadTest.storage,config=JSON.parse(storage.getItem(key));storage.setItem(key,JSON.stringify({...config,autoCorrect:true,maxCorrections:3}));})()`);
   await run('window.offlinecadDesktop.saveAISettings('+JSON.stringify({config:{authMode:'api-key',protocol:'responses',baseUrl:'http://127.0.0.1:'+server.address().port+'/v1',model:'local-freecad-test',agentSteps:24},key:'synthetic-freecad-fixture'})+')');await run('window.__cadTest.aiUI.chat.refreshModels()');await until("!document.getElementById('ai-chat-send').disabled");
   await run("document.getElementById('ai-chat-new').click();document.getElementById('ai-chat-prompt').value='Erzeuge die FreeCAD-Testplatte mit Durchgangsbohrung.';document.getElementById('ai-chat-form').requestSubmit();void 0");await until("!document.getElementById('ai-chat-send').disabled");
   fs.writeFileSync(path.join(directory,'freecad-workflow.json'),JSON.stringify({calls,constructions,status:await run("document.getElementById('ai-chat-status').textContent"),log:await run("document.getElementById('ai-chat-log').textContent"),settings:await run('window.offlinecadDesktop.getAISettings().then(s=>({agentSteps:s.agentSteps,model:s.model,protocol:s.protocol}))')},null,2));
@@ -44,6 +40,6 @@ exports.verifyFreeCAD=async(win,{directory})=>{
   check(await run("document.getElementById('ai-agent-steps').value==='24'&&!!document.getElementById('ai-freecad-export')"),'Settings expose work budget, FreeCAD status and source-document export');
   await run("document.getElementById('ai-agent-steps').value='32';document.getElementById('ai-save-settings').click();void 0");await until("document.getElementById('ai-settings-message').textContent.includes('gespeichert')");check((await run('window.offlinecadDesktop.getAISettings()')).agentSteps===32,'Work budget is persisted through actual desktop IPC');
   fs.writeFileSync(path.join(directory,'freecad-settings.png'),(await win.webContents.capturePage()).toPNG());
- }finally{await run("document.getElementById('freecad-settings-test')?.remove();void 0").catch(()=>{});server.closeAllConnections();await new Promise(r=>server.close(r));await run(previousChecks===null?'window.__cadTest.storage.removeItem('+JSON.stringify(checkConfigKey)+')':'window.__cadTest.storage.setItem('+JSON.stringify(checkConfigKey)+','+JSON.stringify(previousChecks)+')');await run('window.offlinecadDesktop.saveAISettings('+JSON.stringify({config:previous})+')');}
+ }finally{await run("document.getElementById('freecad-settings-test')?.remove();void 0").catch(()=>{});server.closeAllConnections();await new Promise(r=>server.close(r));await run('window.offlinecadDesktop.saveAISettings('+JSON.stringify({config:previous})+')');}
  return checks;
 };

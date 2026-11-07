@@ -7,6 +7,39 @@ import {createCadDrawingSheet} from '../src/cad-drawing-data.js';
 import {createCadProjectParameters} from '../src/cad-project-parameters-data.js';
 function fixture(options={}){let count=0;const cad=createCadController({...options,createWorker:()=>{count++;const native=new Worker(new URL('./fixtures/cad-node-worker.mjs',import.meta.url)),adapter={onmessage:null,onerror:null,postMessage:data=>native.postMessage(data),terminate:()=>native.terminate()};native.on('message',data=>adapter.onmessage?.({data}));native.on('error',error=>adapter.onerror?.(error));return adapter;}});return {cad,count:()=>count};}
 
+test('identical scene and display reads share native requests and recover after worker renewal',async()=>{
+  const {cad,count}=fixture();
+  try{
+    const original=cad.serialize();
+    await cad.execute({kind:'create',recipe:{type:'box',size:[20,12,6]},options:{id:'body'}});
+    const saved=cad.serialize();
+    assert.equal(cad.serializeWorkspace(),saved);
+    cad.measureTransport(true);
+    const [scene,query]=await Promise.all([cad.describe(),cad.query('scene')]);
+    assert.deepEqual(query,scene);
+    query.objects.length=0;
+    assert.deepEqual(await cad.describe(),scene);
+    const displays=await Promise.all([cad.display(),cad.display(),cad.display()]);
+    assert.deepEqual(displays.map(display=>display.current),[false,false,true]);
+    assert.deepEqual(displays[0].meshes,displays[2].meshes);
+    assert.notEqual(displays[0].meshes[0],displays[2].meshes[0]);
+    const traffic=cad.transportState();
+    assert.deepEqual(traffic.samples.map(sample=>sample.job),['query','display']);
+    assert.equal(traffic.sentMessages,2);
+    const abort=new AbortController(),interrupted=cad.query('bounds',{ids:['body']},{signal:abort.signal});
+    abort.abort();
+    await assert.rejects(interrupted,{code:'ABORTED'});
+    assert.deepEqual(await cad.describe(),scene);
+    assert.deepEqual((await cad.display()).meshes,displays[2].meshes);
+    assert.equal(count(),2);
+    assert.equal(cad.serialize(),saved);
+    cad.undo();
+    assert.equal(cad.serialize(),original);
+    cad.redo();
+    assert.equal(cad.serialize(),saved);
+  }finally{cad.dispose();}
+});
+
 test('a confirmed change during an actual STEP or STL export rejects the delayed old revision before exposing bytes',async()=>{
  const exporting=new Set();let buffered,arrived,deliver;const cad=createCadController({createWorker:()=>{const native=new Worker(new URL('./fixtures/cad-node-worker.mjs',import.meta.url)),adapter={onmessage:null,onerror:null,postMessage:message=>{if(message.request?.job==='exportModel')exporting.add(message.id);native.postMessage(message);},terminate:()=>native.terminate()};native.on('message',message=>{if(message.type==='result'&&exporting.has(message.id)){buffered=message;deliver=()=>{exporting.delete(message.id);adapter.onmessage?.({data:message});};arrived();}else adapter.onmessage?.({data:message});});native.on('error',error=>adapter.onerror?.(error));return adapter;}});
  try{await cad.execute({kind:'create',recipe:{type:'box',size:[20,12,6]},options:{id:'body'}});for(const format of ['step','stl']){const proposal=await cad.preview({kind:'batch',commands:[{op:'transform',target:'body',translate:[1,0,0]}]}),gate=new Promise(resolve=>arrived=resolve),pending=cad.exportModel({format,ids:['body']});await gate;assert.ok(buffered.result.data instanceof Uint8Array);cad.apply(proposal);const after=cad.serialize(),depth=cad.state().undo;deliver();await assert.rejects(pending,{code:'STALE_REVISION'});assert.equal(cad.serialize(),after);assert.equal(cad.state().undo,depth);assert.equal(cad.state().busy,false);}}

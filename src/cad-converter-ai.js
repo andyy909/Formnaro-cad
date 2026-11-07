@@ -39,7 +39,7 @@ export function createConverterAI({desktop,snapshot,prepare,commit,show,clear,on
     const source=snapshot(),scene=converterAIScene(source);discard();const ticket=generation,id=crypto.randomUUID();active={id,network:false,task:null};emit();
     try{
       const settings=await desktop.getAISettings();if(ticket!==generation||!same(scene.revision))throw Error('Konverterstand geändert. Vorschlag erneut anfordern.');
-      const requestConfig=Object.fromEntries(['authMode','protocol','baseUrl','model','reasoningEffort','openAIReasoningEffort','maxOutputTokens'].map(k=>[k,settings[k]??null]));active.network=true;
+      const requestConfig=Object.fromEntries(['authMode','protocol','baseUrl','model','reasoningEffort','openAIReasoningEffort','mistralReasoningEffort','providerReasoningEffort','maxOutputTokens'].map(k=>[k,settings[k]??null]));active.network=true;
       const value=await generateDesktopAI(desktop,{domain:'converter',requestId:id,prompt,context:CONVERTER_AI_CONTEXT,scene,chat:true,requestConfig});
       if(ticket!==generation||!same(scene.revision))throw Error('Konverterstand geändert. Vorschlag erneut anfordern.');active.network=false;
       if(!value.commands)return value;

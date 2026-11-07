@@ -1,12 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Matrix4,Quaternion,Euler,Vector3} from 'three';
-import {cadDisplayStretch} from '../src/cad-display-scale.js';
+import {cadDisplayStretch,cadDisplayDeflectionLevels} from '../src/cad-display-scale.js';
 import {loadCadKernel} from '../src/cad-kernel-loader.js';
 import {createCadService} from '../src/cad-service.js';
 import {createCadProject} from '../src/cad-project.js';
 import {cadIdentity,cadPoint} from '../src/cad-affine.js';
 const pose=(angles,scale=[1,1,1])=>new Matrix4().compose(new Vector3(3,4,5),new Quaternion().setFromEuler(new Euler(...angles)),new Vector3(...scale)).toArray();
+test('display tiers and admissible neighbors are never coarser or over ten percent finer',()=>{
+ for(let i=-600;i<=600;i++){
+  const requested=1.013**i,levels=cadDisplayDeflectionLevels(requested);
+  assert(levels.length>=1&&levels.length<=2);
+  for(const level of levels)assert(level<=requested&&level>=requested/1.1);
+ }
+ assert.equal(cadDisplayDeflectionLevels(.03)[0],cadDisplayDeflectionLevels(.03/1.01)[0]);
+});
 test('world rotations share a conservative display stretch for uniform and anisotropic bodies',()=>{
  for(const scale of [[1,1,1],[2,2,2],[.3,2,1.4],[-1,1,1]]){
   const values=[0,.13,.29,.51,.87,1.3].map(a=>cadDisplayStretch(pose([a,2*a,-3*a],scale)));assert(values.every(v=>v===values[0]),JSON.stringify(values));assert(values[0]>=Math.max(...scale.map(Math.abs)));
@@ -24,6 +32,9 @@ test('native curved parts and colored groups rotate without re-tessellation or c
   for(const a of [.17,.37,.8,1.12]){p.nodes[0].transform=pose([a,-a*2,a*3]);const next=service.display(p,undefined,{colored:true});assert.deepEqual(next.map(v=>v.mesh),first.map(v=>v.mesh));assert.deepEqual(next.map(v=>v.color),first.map(v=>v.color));assert(next.every(v=>JSON.stringify(v.transform)===JSON.stringify(p.nodes[0].transform)));assert.equal(calls,0);assert.equal(p.nodes[0].brep.data,brep);}
   p.nodes[0].transform=pose([.4,.8,-.2],[-1.5,.7,1.2]);const stretched=service.display(p,undefined,{colored:true});assert(calls>0);assert(stretched.every(r=>r.mesh.vertices.every(Number.isFinite)));assert.equal(p.nodes[0].brep.data,brep);
   const before=JSON.stringify(stretched),again=service.display(p,undefined,{colored:true});assert.equal(JSON.stringify(again),before);
+  const repeats=calls;
+  const sameTier=service.display(p,{deflection:.0201,angleDegrees:8},{colored:true});
+  assert.deepEqual(sameTier,again);assert.equal(calls,repeats);
   // A fresh world-space native analysis independently checks placement. All
   // display points must stay within native body bounds plus display budget.
   const proof=service.inspect(p.nodes[0]);for(const r of again)for(let i=0;i<r.mesh.vertices.length;i+=3){const point=cadPoint(r.transform,r.mesh.vertices.slice(i,i+3));assert(point.every((v,k)=>v>=proof.worldBounds.min[k]-.021&&v<=proof.worldBounds.max[k]+.021));}

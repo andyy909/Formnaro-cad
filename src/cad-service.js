@@ -5,7 +5,7 @@ import {hasGeometryRefs,isGeometryRef,sameDeferredGeometry} from './cad-geometry
 import {cadStepMeshParts} from './cad-step-appearance.js';
 import {meshColorsEnabled} from './mesh-appearance.js';
 import {createCadDisplayEncoder} from './cad-display-cache.js';
-import {cadDisplayStretch,cadDisplayIsometry} from './cad-display-scale.js';
+import {cadDisplayStretch,cadDisplayIsometry,cadDisplayDeflectionLevels} from './cad-display-scale.js';
 import {cadConstructionStretch} from './cad-construction-scale.js';
 import {createCadAnnotationValidator} from './cad-annotations-native.js';
 import {buildCadRecipe,constructionTolerance,cadRecipeMinimumFeature,CAD_CONSTRUCTION_TOLERANCE} from './cad-recipes.js';
@@ -237,10 +237,12 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     for(const root of draft.nodes)if(roots.has(root.id))precision(root,cadIdentity());
     return rebindCadWorkplaneNative(oc,draft,{baseline:before});
   }
-  function display(project,quality={deflection:.02,angleDegrees:8},{colored=false,knownMeshes,ids}={}){
+  function display(project,quality={deflection:.02,angleDegrees:8},{colored=false,knownMeshes,ids,timings}={}){
     alive();cadNativeMemory(oc).check('display');const draft=cadProjectSnapshot(project),result=[];
     if(knownMeshes!==undefined&&(!Array.isArray(knownMeshes)||knownMeshes.length>128||knownMeshes.some(t=>typeof t!=='string'||!/^cad-mesh-[1-9]\d{0,15}$/.test(t))))throw Error('Ungültige CAD-Anzeigeverweise.');
     if(ids!==undefined&&(!Array.isArray(ids)||ids.length>500||new Set(ids).size!==ids.length||ids.some(id=>typeof id!=='string'||!draft.nodes.some(n=>n.id===id))))throw Error('Ungültige Teilauswahl für die Darstellung.');
+    const mark=()=>timings?performance.now():0;
+    const record=(name,start)=>{if(timings)timings[name]=(timings[name]??0)+performance.now()-start;};
     const known=knownMeshes===undefined?null:new Set(knownMeshes),included=ids===undefined?null:new Set(ids);
     for(const node of draft.nodes){
       if(included&&!included.has(node.id))continue;
@@ -248,37 +250,38 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
       if(colored&&node.solid&&node.multicolor&&node.children&&!hasCurrentPartSurfaceGroups(node)){
         const linear=[...node.transform];linear[12]=linear[13]=linear[14]=0;
         const colorSource=value=>[value.brep.data,value.transform,value.name,value.color,value.opacity,value.solid,!!value.suppressed,!!value.multicolor,value.children?.map(colorSource)];
-        const placementKey=JSON.stringify(['colored-placement',colorSource({...node,transform:cadIdentity()}),quality]),previous=displayCache.get(placementKey);
+        const placementStart=mark();
+        const localQuality={deflection:cadDisplayDeflectionLevels((quality.deflection??.02)/(1+1e-9))[0],angleDegrees:quality.angleDegrees??8};
+        const placementKey=JSON.stringify(['colored-placement',colorSource({...node,transform:cadIdentity()}),localQuality]),previous=displayCache.get(placementKey);
         let placedMeshes,displayTransform;
         if(previous){
           const sameFrame=linear.every((v,i)=>v===previous.frame[i]),delta=sameFrame?cadIdentity():multiplyCadMatrices(linear,inverseCadMatrix(previous.frame));
           if(cadDisplayIsometry(delta)){for(let k=0;k<3;k++)delta[12+k]=node.transform[12+k];placedMeshes=previous.meshes;displayTransform=delta;}
         }
+        record('cacheLookupMs',placementStart);
         if(placedMeshes){for(const part of placedMeshes){const {mesh,...style}=part;result.push({id:node.id,rootId:node.id,kind:'cad',...style,...displayEnvelope(mesh,known),transform:[...displayTransform]});}continue;}
         // Keep the native world-space partition on a genuine stretch/shear.
         // Reserve more than the isometry roundoff admitted above, so reusing
         // an existing frame cannot exceed the chosen world deflection.
-        const localQuality={deflection:(quality.deflection??.02)/(1+1e-9),angleDegrees:quality.angleDegrees??8};
-        const localNode={...node,transform:linear},key=JSON.stringify(['colored',colorSource(localNode),localQuality]);let meshes=displayCache.get(key);
-        if(!meshes){const parts=cadColorPartsNative(oc,localNode,{display:true,regionCache:colorRegionCache});try{meshes=parts.map(part=>{
-          const brep=part.displayBrep??writeCadBrep(oc,part.shape),meshKey=JSON.stringify([brep,localQuality]);let mesh=displayCache.get(meshKey);
-          if(!mesh){mesh=cadDisplayMesh(oc,part.shape,localQuality);const bytes=utf8.encode(meshKey).length+[mesh.vertices,mesh.normals,mesh.triangles,mesh.faceGroups].reduce((n,values)=>n+values.length*8,0);displayCache.set(meshKey,mesh,Math.max(1,bytes));}
+        const lookupStart=mark();
+        const localNode={...node,transform:linear},key=JSON.stringify(['colored',colorSource(localNode),localQuality]);let meshes=displayCache.get(key);record('cacheLookupMs',lookupStart);
+        if(!meshes){const colorStart=mark(),parts=cadColorPartsNative(oc,localNode,{display:true,regionCache:colorRegionCache});record('colorPartitionMs',colorStart);try{meshes=parts.map(part=>{
+          const partLookupStart=mark();
+          const brep=part.displayBrep??writeCadBrep(oc,part.shape),meshKey=JSON.stringify([brep,localQuality]);let mesh=displayCache.get(meshKey);record('cacheLookupMs',partLookupStart);
+          if(!mesh){const tessStart=mark();mesh=cadDisplayMesh(oc,part.shape,localQuality);record('tessellationMs',tessStart);const bytes=utf8.encode(meshKey).length+[mesh.vertices,mesh.normals,mesh.triangles,mesh.faceGroups].reduce((n,values)=>n+values.length*8,0);displayCache.set(meshKey,mesh,Math.max(1,bytes));}
           return {color:part.color,opacity:part.opacity,name:part.name,mesh};
         });const bytes=utf8.encode(key).length+meshes.reduce((sum,part)=>sum+[part.mesh.vertices,part.mesh.normals,part.mesh.triangles,part.mesh.faceGroups].reduce((n,values)=>n+values.length*8,0),0);displayCache.set(key,meshes,Math.max(1,bytes));}finally{parts.forEach(part=>part.shape.delete());}}
         const placementBytes=utf8.encode(placementKey).length+512+meshes.reduce((sum,part)=>sum+[part.mesh.vertices,part.mesh.normals,part.mesh.triangles,part.mesh.faceGroups].reduce((n,values)=>n+values.length*8,0),0);displayCache.set(placementKey,{frame:linear,meshes},Math.max(1,placementBytes));
         const transform=cadIdentity();for(let k=0;k<3;k++)transform[12+k]=node.transform[12+k];
         for(const part of meshes){const {mesh,...style}=part;result.push({id:node.id,rootId:node.id,kind:'cad',...style,...displayEnvelope(mesh,known),transform:[...transform]});}continue;
       }
-      const localQuality={deflection:(quality.deflection??.02)/cadDisplayStretch(node.transform),angleDegrees:quality.angleDegrees??8},key=JSON.stringify([node.brep.data,localQuality]);let mesh=displayCache.get(key);
-      if(!mesh){
-        // A slightly finer mesh of the identical native BRep already meets
-        // this world-space error budget. Reuse only the same angular budget
-        // and at most ten percent tighter deflection, so shrinking does not
-        // retain an arbitrarily dense mesh. No geometry/proof/export changes.
-        const prefix='['+JSON.stringify(node.brep.data)+',';
-        mesh=displayCache.find((value,candidateKey)=>{if(!candidateKey.startsWith(prefix))return false;const candidate=JSON.parse(candidateKey.slice(prefix.length,-1));return candidate.angleDegrees===localQuality.angleDegrees&&candidate.deflection<=localQuality.deflection&&candidate.deflection>=localQuality.deflection/1.1;});
-      }
-      if(!mesh){const shape=readCadBrep(oc,node.brep.data);try{mesh=cadDisplayMesh(oc,shape,localQuality);const bytes=utf8.encode(key).length+[mesh.vertices,mesh.normals,mesh.triangles,mesh.faceGroups].reduce((sum,values)=>sum+values.length*8,0);displayCache.set(key,mesh,Math.max(1,bytes));}finally{shape.delete();}}
+      const lookupStart=mark();
+      const [deflection,finer]=cadDisplayDeflectionLevels((quality.deflection??.02)/cadDisplayStretch(node.transform));
+      const localQuality={deflection,angleDegrees:quality.angleDegrees??8},key=JSON.stringify([node.brep.data,localQuality]);
+      let mesh=displayCache.get(key);
+      if(!mesh&&finer!==undefined)mesh=displayCache.get(JSON.stringify([node.brep.data,{...localQuality,deflection:finer}]));
+      record('cacheLookupMs',lookupStart);
+      if(!mesh){const readStart=mark(),shape=readCadBrep(oc,node.brep.data);record('brepReadMs',readStart);try{const tessStart=mark();mesh=cadDisplayMesh(oc,shape,localQuality);record('tessellationMs',tessStart);const bytes=utf8.encode(key).length+[mesh.vertices,mesh.normals,mesh.triangles,mesh.faceGroups].reduce((sum,values)=>sum+values.length*8,0);displayCache.set(key,mesh,Math.max(1,bytes));}finally{shape.delete();}}
       result.push({id:node.id,kind:'cad',transform:node.transform,...(partFaceColors(node).length?{faceColors:partFaceColors(node)}:{}),...displayEnvelope(mesh,known)});
     }
     return result;

@@ -1,10 +1,10 @@
 // Runs only with an explicit verification flag, in a separate temporary profile.
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 async function verifySharedAI(win,{directory,fixtures}){
-  fixtures=path.join(__dirname,'../converter/examples');
+  fixtures=process.env.FORMNARO_VERIFY_CONVERTER_FIXTURES||(fs.existsSync(fixtures)?fixtures:path.join(__dirname,'../converter/examples'));
  const checks=[],calls=[],js=code=>win.webContents.executeJavaScript(code),pause=ms=>new Promise(r=>setTimeout(r,ms));let mode='protect';
   const check=(value,label)=>{assert(value,label);checks.push(label);fs.writeFileSync(path.join(directory,'progress.json'),JSON.stringify({checks},null,2));};
-  const until=async code=>{const start=Date.now();while(Date.now()-start<120000){if(await js(code))return;await pause(40);}throw Error('Timeout: '+code+'; Status: '+await js("document.getElementById(\"converter-status\")?.textContent"));};
+  const until=async (code,limit=120000)=>{const start=Date.now();while(Date.now()-start<limit){if(await js(code))return;await pause(40);}throw Error('Timeout: '+code+'; Status: '+await js("document.getElementById(\"converter-status\")?.textContent"));};
   const click=id=>js(`document.getElementById(${JSON.stringify(id)}).click()`);
   const mock=http.createServer(async(req,res)=>{try{
     const chunks=[];for await(const c of req)chunks.push(c);res.setHeader('Content-Type','application/json');
@@ -12,7 +12,7 @@ async function verifySharedAI(win,{directory,fixtures}){
     const body=JSON.parse(Buffer.concat(chunks)),system=body.instructions??body.messages[0].content,messages=body.input??body.messages,raw=typeof messages==='string'?messages:messages.at(-1).content,text=typeof raw==='string'?raw:raw[0].text,scene=JSON.parse(text.split('Current scene (data):\n')[1].split('\nUser task:\n')[0]),domain=system.includes('region assistant')?'converter':'cad';
     calls.push({domain,model:body.model,protocol:req.url.endsWith('responses')?'responses':'chat',scene,auth:req.headers.authorization});
     let answer=domain==='cad'?{message:'Gemeinsame Formnaro-API aktiv.'}:{revision:scene.revision,label:'Bereich schützen',commands:[{op:'protect',regions:[scene.regions?.[0]?.id??0],enabled:true}]};
-    if(scene.phase==='settings')answer={revision:scene.revision,commands:[{op:'settings',mode:'auto',tolerance:scene.options.tolerance,repair:true,fallback:true}]};if(scene.phase==='regions')answer={revision:scene.revision,commands:[]};
+    if(scene.phase==='regions')answer={revision:scene.revision,commands:[]};
     if(mode==='bad'&&domain==='converter')answer.commands=[{op:'delete',regions:[scene.regions[0].id]}];
     const reply=()=>{if(!res.destroyed)res.end(JSON.stringify(body.instructions?{output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(answer)}]}],usage:{input_tokens:100,output_tokens:30}}:{choices:[{message:{content:JSON.stringify(answer)}}],usage:{prompt_tokens:100,completion_tokens:30}}));};
     if(mode==='slow')setTimeout(reply,1200);else reply();
@@ -62,20 +62,75 @@ async function verifySharedAI(win,{directory,fixtures}){
     };
     mode='protect';const autoStart=calls.length;await openAuto();
     await until(`window.__cadTest.functionsUI.state()?.projectPreview&&!window.__cadTest.functionsUI.state().busy`);
-    const autoCalls=calls.slice(autoStart);
-    check(autoCalls[0].scene.phase==='settings'&&autoCalls.some(c=>c.scene.phase==='regions'),'Mit KI automatically requests settings and all region pages');
-    check(autoCalls.filter(c=>c.scene.phase==='regions').reduce((n,c)=>n+c.scene.regions.length,0)===autoCalls[0].scene.overview.regionCount,'Automatic planning covers every region without manual selection');
+    check(calls.length===autoStart,'Normal AI import offers a checked local preview without unnecessary provider calls');
     check(await js('window.__cadTest.serialize()')===autoOriginal&&await js('window.__cadTest.undoDepth()')===autoDepth,'Automatic native conversion and CAD preview leave project and history unchanged');
     check(await js(`!document.getElementById('converter-apply').disabled&&!document.getElementById('converter-apply').hidden&&document.getElementById('converter-ai-send').hidden`),'Only final Apply/Discard is needed; manual proposal button is hidden');
-    check(await js(`document.getElementById('converter-auto-usage').textContent.length>0&&document.getElementById('converter-result').textContent.includes('CAD-Flächen')`),'Automatic workflow displays actual token usage and native conversion report');
+    check(await js(`document.getElementById('converter-auto-usage').textContent.length>0&&document.getElementById('converter-result').textContent.includes('CAD-Flächen')`),'Local-first workflow displays its outcome and native conversion report');
     await js('window.__cadTest.view.renderReady()');await pause(300);fs.writeFileSync(path.join(directory,'automatic-cad-preview.png'),(await win.webContents.capturePage()).toPNG());
     await click('converter-discard');check(await js('window.__cadTest.serialize()')===autoOriginal&&!await js('window.__cadTest.functionsUI.state().projectPreview'),'Discard keeps the project and the computed converter result');
     await click('converter-import');await until(`window.__cadTest.functionsUI.state()?.projectPreview&&!window.__cadTest.functionsUI.state().busy`);await click('converter-apply');await until(`window.__cadTest.functionsUI.state()?.sourceApplied&&!window.__cadTest.functionsUI.state().busy`);
     check(await js('window.__cadTest.undoDepth()')===autoDepth+1&&await js('window.__cadTest.serialize()')!==autoOriginal,'Explicit final Apply adds exactly one CAD history entry');
     await click('stl-close');await js('window.__cadTest.actions.undo()');await js('window.__cadTest.settled()');check(await js('window.__cadTest.serialize()')===autoOriginal,'One Undo restores exact project before automatic import');
-    mode='slow';await openAuto();await until(`window.__cadTest.functionsUI.state()?.automatic?.busy`);await click('converter-cancel');await until(`!window.__cadTest.functionsUI.state()?.busy`);await pause(1300);
-    check(!await js('window.__cadTest.functionsUI.state().hasResult')&&await js('window.__cadTest.serialize()')===autoOriginal,'Cancelling the automatic provider stage cannot produce or commit a late result');
+    const openTargets=async()=>{
+      await openAuto();
+      await until(`window.__cadTest.functionsUI.state()?.projectPreview&&!window.__cadTest.functionsUI.state().busy`);
+      await click('converter-discard');
+      await click('converter-auto-analyse');
+      await until(`window.__cadTest.functionsUI.state()?.regions>0&&!window.__cadTest.functionsUI.state().busy`);
+      await js(`document.querySelector('#stl-regions tr').click()`);
+      return await js(`Number(document.querySelector('#stl-regions tr.selected').dataset.region)`);
+    };
+    mode='bad';
+    const selected=await openTargets(),targetStart=calls.length;
+    await click('converter-auto-start');
+    await until(`window.__cadTest.functionsUI.state()?.projectPreview&&!window.__cadTest.functionsUI.state().busy`);
+    const targetCalls=calls.slice(targetStart);
+    check(targetCalls.length===2&&targetCalls.every(c=>c.scene.phase==='regions'&&c.scene.targets.length===1&&c.scene.targets[0]===selected),
+      'Rejected edits get one scoped retry without reopening other regions');
+    check(await js(`document.getElementById('converter-auto-usage').textContent.includes('bleibt erhalten')`),
+      'Rejected refinement preserves the checked local result');
+    await click('stl-close');
+    mode='slow';await openTargets();
+    const cancelStart=calls.length;await click('converter-auto-start');
+    const wait=Date.now()+4000;while(calls.length===cancelStart&&Date.now()<wait)await pause(20);
+    check(calls.length===cancelStart+1,'A targeted provider request was in flight');
+    await click('converter-cancel');
+    await until(`!window.__cadTest.functionsUI.state()?.busy`);await pause(1300);
+    check(await js('window.__cadTest.functionsUI.state().hasResult')&&await js('window.__cadTest.serialize()')===autoOriginal,
+      'Cancelling a targeted request retains the local result and the project');
     await click('stl-close');mode='protect';
+
+    if(process.env.FORMNARO_VERIFY_SYMMETRY_STL){
+      const file=process.env.FORMNARO_VERIFY_SYMMETRY_STL,source=fs.readFileSync(file),initialCount=calls.length;
+      const data=source.toString('base64');
+      await js(`(()=>{const input=document.getElementById('import-file'),d=new DataTransfer();d.items.add(new File([Uint8Array.from(atob(${JSON.stringify(data)}),c=>c.charCodeAt(0))],${JSON.stringify(path.basename(file))}));input.files=d.files;input.dispatchEvent(new Event('change'));})()`);
+      await until(`!!document.getElementById('import-kind')`);
+      await js(`document.getElementById('import-kind').value='cad';document.getElementById('import-kind').dispatchEvent(new Event('change'));document.getElementById('import-assistance').value='with';document.getElementById('import-confirm').click()`);
+      await until(`window.__cadTest.functionsUI.state()?.projectPreview&&!window.__cadTest.functionsUI.state().busy`,240000);
+      check(await js(`window.__cadTest.functionsUI.state().regions===0`)&&calls.length===initialCount,
+        'The normal assisted import converts the large original before analysis without a provider');
+      check(await js(`!Array.from(document.getElementById('stl-view').options).find(o=>o.text==='Original').disabled`),'Original comparison is available without region analysis');
+      await click('converter-discard');
+      await js(`document.getElementById('stl-symmetry').open=true;document.getElementById('stl-symmetry-axis').value='1';document.getElementById('stl-symmetry-plane').value='0';document.getElementById('stl-symmetry-overlap').value='.7'`);
+      await click('stl-symmetry-run');
+      await until(`window.__cadTest.functionsUI.state()?.projectPreview&&!window.__cadTest.functionsUI.state().busy`,240000);
+      check(await js(`document.getElementById('converter-result').textContent.includes('Naht:')`)&&calls.length===initialCount,
+        'Normal converter runs the full local symmetry workflow with verified seam and STEP preview');
+      check(await js('window.__cadTest.serialize()')===autoOriginal&&await js('window.__cadTest.undoDepth()')===autoDepth,
+        'Symmetry preview preserves project bytes and history');
+      check(await js(`document.getElementById('stl-symmetry').hidden&&document.getElementById('converter-apply').getBoundingClientRect().bottom<=innerHeight`),'Symmetry inputs collapse and Apply stays in the visible preview');
+      await js('window.__cadTest.view.renderReady()');
+      fs.writeFileSync(path.join(directory,'symmetry-cad-preview.png'),(await win.webContents.capturePage()).toPNG());
+      await click('converter-apply');
+      await until(`window.__cadTest.functionsUI.state()?.sourceApplied&&!window.__cadTest.functionsUI.state().busy`);
+      const added=await js('window.__cadTest.getModel().nodes.at(-1)');
+      check(added.kind==='cad'&&added.stats.solids===1&&await js('window.__cadTest.undoDepth()')===autoDepth+1,
+        'Symmetry Apply commits one native solid in one history entry');
+      await click('stl-close');
+      await js('window.__cadTest.actions.undo()');await js('window.__cadTest.settled()');
+      check(await js('window.__cadTest.serialize()')===autoOriginal&&fs.readFileSync(file).equals(source),
+        'Symmetry Undo restores the project and leaves the source STL byte-identical');
+    }
     return {ok:true,checks,calls:calls.map(({auth,scene,...rest})=>({...rest,regionSummary:!!scene.regions})),cloudRequests:0,syntheticProviderOnly:true};
   }finally{mock.closeAllConnections();await new Promise(r=>mock.close(r));}
 }

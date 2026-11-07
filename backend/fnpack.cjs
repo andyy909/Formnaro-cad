@@ -4,6 +4,11 @@ const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('n
 const MAGIC=Buffer.from('FNPACK\r\n'),HEADER=64,MAX_INDEX=16*1024*1024,MAX_PACK=2*1024*1024*1024,CHUNK=1024*1024;
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 const need=(value,message)=>{if(!value)throw Object.assign(Error(message),{code:'FNPACK_INVALID'});};
+const fnpackStamp=stat=>[stat.dev,stat.ino,stat.size,stat.mtimeMs,stat.ctimeMs].join('/');
+async function fnpackPathStamp(file){
+ try{return fnpackStamp(await fs.stat(file));}
+ catch(error){if(error.code==='ENOENT')return 'missing';throw error;}
+}
 function refs(value,result=new Map(),depth=0){
  need(depth<=100,'Paketkatalog ist zu tief.');
  if(value?.format==='Formnaro-GeometryRef'){
@@ -48,4 +53,18 @@ async function writeFnpack(file,{project,blocks=[],source,signal,createOnly=fals
   return {bytes:HEADER+raw.length+offset,indexSha256:sha(raw),geometryBlocks:table.length};
  }finally{await target?.close().catch(()=>{});await fs.rm(temporary,{force:true}).catch(()=>{});}
 }
-module.exports={openFnpack,writeFnpack,validateIndex,geometryReferences:refs,HEADER,MAX_INDEX,MAX_PACK};
+function combineFnpackSources(readers){
+ const blocks=new Map(),owners=new Map();
+ for(const reader of readers)for(const block of reader.index.blocks){
+  const old=blocks.get(block.sha256);
+  if(old&&(old.kind!==block.kind||old.bytes!==block.bytes))throw Error('Widersprüchliche Paketquellen.');
+  blocks.set(block.sha256,block);
+  owners.set(block.sha256,reader);
+ }
+ return {index:{blocks:[...blocks.values()]},copy:(hash,target,options)=>{
+  const reader=owners.get(hash);
+  if(!reader)throw Error('Erforderlicher Geometrieblock fehlt.');
+  return reader.copy(hash,target,options);
+ }};
+}
+module.exports={openFnpack,writeFnpack,combineFnpackSources,fnpackStamp,fnpackPathStamp,validateIndex,geometryReferences:refs,HEADER,MAX_INDEX,MAX_PACK};

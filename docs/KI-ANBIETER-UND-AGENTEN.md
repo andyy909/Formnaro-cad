@@ -39,8 +39,6 @@ Unter **Tokenpreise für den Kostenrechner** lassen sich für jede exakte Modell
 
 Tarifquellen stehen in `backend/ai-token-prices.cjs` sowie den vorhandenen OpenAI-/DeepSeek-Tarifdaten. Für Google werden bekannte Kontext- und Datumsgrenzen, für Claude gemeldete Cache-Schreib- und Lese-Tokens berücksichtigt.
 
-Für GPT-6.1 Terra sind die Standardtarife mit Cache-Eingabe und Langkontextschwelle hinterlegt. Für neue DeepSeek-Flash-Auswahlen wird `deepseek-flash` angeboten. Ein vorhandenes Profil mit `deepseek-v4-flash` oder `deepseek-v4-flash-vision-exp` zeigt seine gespeicherte Kennung als Altalias. Beide Aliasse werden derzeit von DeepSeek auf das aktuelle Flash-Modell umgeleitet. [GPT-6.1 Terra](https://developers.openai.com/api/docs/models/gpt-6.1-terra), [DeepSeek-Modelle und Preise](https://api-docs.deepseek.com/quick_start/pricing/)
-
 ## Begrenzte Bedienhilfe und Übung
 
 Die kleine Datei [FORMNARO-UI-KONTEXT.md](../ai/FORMNARO-UI-KONTEXT.md) beschreibt Layout, Modi, Menüziele und kurze Abläufe. Sie wird im lokalen Kontext unter `agentUI.layoutContext` mitgeliefert. Der aktuelle Zustand aus `offlinecad_ui` bleibt maßgeblich; feste semantische Ziele ersetzen Pixelraten.

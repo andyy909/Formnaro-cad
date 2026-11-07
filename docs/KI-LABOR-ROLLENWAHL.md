@@ -1,0 +1,15 @@
+# Eigene Modelle für die drei Laborrollen
+
+Privater Integrationsstand vom 07.11.2026 auf der eingefrorenen Quelle 0.134.0-r2. Entwicklung getrennt unter work/ki-rollenwahl-2026-11-07, damit die parallel laufenden Laborfehler-Korrekturen erhalten bleiben. Die Zusammenführung und endgültige Programmversion erfolgen im Hauptchat. Noch keine Installation oder Veröffentlichung dieser Erweiterung.
+
+Im Versuchsplan erhalten Modellieragent, Überwacher und Abschlussauswerter jeweils eine eigene Auswahl für Zugangsprofil, Modell und Denkstufe. Verwendet werden die bereits im Programm eingerichteten API-, lokalen oder unterstützten Konto-Zugänge. Der Profilwechsel einer Laborrolle ändert die normale Chat-Modellwahl nicht.
+
+Die Modellliste wird über die bestehende Anbieteranbindung geladen. Ein nicht verfügbarer Modellname oder eine nicht unterstützte Denkstufe wird vor der ersten Modellierantwort abgewiesen. Beim Modellieragenten kann „Denkstufen des Testplans“ mehrere unterstützte Bedingungen ausführen; eine feste Denkstufe ergibt nur eine entsprechende Bedingung und vervielfacht den Plan nicht zusätzlich mit den alten low/high/max-Checkboxen. Modelle ohne bestätigte einstellbare Denkstufe verwenden die Einstellung des Zugangsprofils.
+
+Die drei Einstellungen werden lokal in Labor-Agenten.json gespeichert. Pläne und Serienprotokolle halten die ausgewählten Profile und Modelle fest; die Versuchsprotokolle ergänzen die tatsächlich angefragten Rollen, effektiven Denkstufen und zurückgegebenen Modellkennungen. Bei einer abweichenden Antwortkennung bleibt die Abweichung sichtbar, auch bei Modellaliasen. Die native Bewertung wird dadurch nicht umgeschrieben.
+
+Zugangsdaten werden ausschließlich im Backend über die vorhandene Profilverwaltung aufgelöst. Sie stehen weder in den Auswahlfeldern noch in den Plänen. Modellierer, Überwacher und Auswerter erhalten ihre jeweils eigenen Zugangsdaten und getrennte Sitzungen. Während eines Laufs sind Änderungen an der Rollenauswahl und am normalen Anbieterprofil gesperrt. Ein eingefrorener Auswerterzugang wird nach Ende der Prüfungen mit derselben Modellwahl erneut aufgelöst, damit eine Kontoanmeldung bei Bedarf einen frischen Zugriffstoken liefern kann.
+
+Die bestehende Abschlussregel bleibt bestehen: Der dritte Agent beginnt erst nach dem vollständigen angeforderten Prüfumfang und erstellt Vorschläge mit Versuchsbelegen. Anfragen und Verbrauch werden je Rolle protokolliert. Chat-/Messages-APIs werden dafür ohne erzwungenes Responses-Streaming aufgezeichnet; Vibe-Anfragen erhalten ebenfalls einen eigenen Anfragebeleg. Getrennt gemeldete Cacheanteile werden bei vorhandenen normierten Abrechnungsdaten berücksichtigt. Angaben zu Abo-Zugängen sind API-Vergleichswerte, keine zusätzliche Aborechnung.
+
+Die technische Prüfung verwendet lokale Anbieterantworten und synthetische Zugangsdaten. Daraus folgt keine neue Live-Abnahme jeder Anbieter-/Modellkombination und keine Aussage über deren CAD-Leistung. Der vorbereitete Benchmark ist weiterhin eine eigene spätere Aufgabe.

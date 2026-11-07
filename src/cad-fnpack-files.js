@@ -11,13 +11,17 @@ export function createFnpackFiles(desktop){
   const blocks=value.blocks.map(b=>{if(!b||!/^[a-f0-9]{64}$/.test(b.sha256)||!['brep','mesh'].includes(b.kind)||!Number.isSafeInteger(b.bytes)||b.bytes<1||b.bytes>128*1024*1024)throw Error('Ungültiger Geometrieblock-Katalog.');return b;});sources.set(value.sourceId,blocks);for(const block of blocks)byHash.set(block.sha256,value.sourceId);
  }
  function encode(project,workspace){
-  const encoded=encodeFnpackProject({...project,...(workspace?{workspace}:{})}),blocks=new Map(encoded.blocks.map(block=>[block.sha256,block]));
+  const encoded=encodeFnpackProject({...project,...(workspace?{workspace}:{})});
+  return completeEncoding({...encoded,hashes:geometryRefs(encoded.project).keys()});
+ }
+ function completeEncoding({project,blocks:encodedBlocks,hashes}){
+  const blocks=new Map(encodedBlocks.map(block=>[block.sha256,block]));
   // Task bases own validated local bytes rather than a main-process file
   // capability. Include needed bytes in Save As and autosave, just like newly
   // built geometry; never attach blocks belonging only to another task.
-  for(const hash of geometryRefs(encoded.project).keys())if(!blocks.has(hash)&&taskBlocks.has(hash))blocks.set(hash,{sha256:hash,bytes:taskBlocks.get(hash)});
-  return {...encoded,blocks:[...blocks.values()],sourceIds:[...sources.keys()]};
+  for(const hash of hashes)if(!blocks.has(hash)&&taskBlocks.has(hash))blocks.set(hash,{sha256:hash,bytes:taskBlocks.get(hash)});
+  return {project,blocks:[...blocks.values()],sourceIds:[...sources.keys()]};
  }
  function state(project){const refs=geometryRefs(project),resident=[...refs.keys()].filter(hash=>resolver.has(hash)).length;return {geometryStorage:refs.size?'fnpack':'inline',geometryResident:resident===refs.size,geometryBlocks:refs.size,residentGeometryBlocks:resident,geometryReads:resolver.stats().reads};}
- return {register,registerTaskBasis,encode,resolve:resolver.hydrate,stats:resolver.stats,state,available:()=>typeof desktop?.readGeometryBlock==='function',sources:()=>sources.size};
+ return {register,registerTaskBasis,encode,completeEncoding,resolve:resolver.hydrate,stats:resolver.stats,state,available:()=>typeof desktop?.readGeometryBlock==='function',sources:()=>sources.size};
 }

@@ -78,8 +78,9 @@ function createProjectFiles({directory,cacheDirectory=path.join(path.dirname(dir
     return data;
   }
   async function thumbnail(args){
-    const input=await previewInput(args),file=path.join(cacheDirectory,args.id+'.json');if(input.unloaded)return {token:input.token,unloaded:true};
+    const input=await previewInput(args),file=path.join(cacheDirectory,args.id+'.json');
     try{if((await fs.stat(file)).size>350200)throw Error();const cached=JSON.parse(await fs.readFile(file,'utf8'));if(cached.version===1&&cached.token===input.token)return {token:input.token,image:png(cached.image)};}catch{/* Missing/stale/corrupt previews regenerate without changing projects. */}
+    if(input.unloaded)return {token:input.token,unloaded:true};
     return {token:input.token,...(input.bytes[0]===0x1f&&input.bytes[1]===0x8b?{bytes:new Uint8Array(input.bytes)}:{project:input.bytes.toString('utf8')})};
   }
   async function cacheThumbnail(args){

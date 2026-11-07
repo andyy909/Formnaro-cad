@@ -2,7 +2,7 @@ import {isCadCurve,curveBeziers,curveControlKeys,profilePointFields} from './cad
 import {installSketchToolsUI} from './sketch-tools-ui.js';
 import {editSketchCoordinate} from './sketch-tools.js';
 import {cadSketchExpression,resolveCadSketch} from './cad-sketch.js';
-import {profileFromLegacy,profilePrimitive,appendProfileLoop,resolveSketchProfile,profileHandles,profileId} from './sketch-profile.js';
+import {profileFromLegacy,profilePrimitive,appendProfileLoop,closeProfileGap,profileGaps,resolveSketchProfile,profileHandles,profileId} from './sketch-profile.js';
 export function installSketchProfileUI({s,board,svg,fields,changed,message,controller,isCurrent}){
  const $=id=>document.getElementById(id),root=document.createElement('section');root.id='sketch-profile-tools';
  root.innerHTML='<button id="sketch-profile-enable">Konturen mit Öffnungen …</button><div id="sketch-profile-controls" hidden><p class="small-note">Form aufziehen. Linien anklicken und anschließend schließen; Bogen: Start, Zwischenpunkt, Ende. Bézier: Start, zwei Kontrollpunkte, Ende. B-Spline: Kontrollpunkte anklicken, dann fertigstellen. Offene Konturen bleiben Entwürfe.</p><div class="sketch-canvas-toolbar"><label>Zeichenform<select id="sketch-profile-shape"><option value="circle">Kreis</option><option value="line">Linienzug</option><option value="arc">Dreipunktbogen</option><option value="bezier">Bézier · 4 Punkte</option><option value="bspline">B-Spline · 4–16 Punkte</option><option value="rectangle">Rechteck</option><option value="roundrect">Rundrechteck</option><option value="slot">Langloch</option><option value="construction">Konstruktionslinie</option></select></label><label>Kontur<select id="sketch-profile-role"><option value="hole">Innenöffnung hinzufügen</option><option value="outer">Außenkontur ersetzen</option></select></label><label>Eckradius (mm)<input id="sketch-profile-radius" type="number" value="2" min="0.01" step="0.1"></label><button id="sketch-curve-finish">B-Spline fertigstellen</button><button id="sketch-profile-close">Linienzug schließen</button></div></div>';
@@ -18,7 +18,14 @@ export function installSketchProfileUI({s,board,svg,fields,changed,message,contr
  function appendChain(element){const role=$('sketch-profile-role').value;if(!s.sketch.loops.some(l=>l.id===activeLoop))activeLoop=null;if(!activeLoop){const unfinished=s.sketch.loops.find(l=>{if(l.role!==role||!l.elements.length)return false;const first=s.sketch.elements.find(e=>e.id===l.elements[0]),last=s.sketch.elements.find(e=>e.id===l.elements.at(-1));return first?.start&&last?.end&&distancePoints(last.id,'end',first.id,'start')>1e-7&&distancePoints(last.id,'end',null,element.start)<1e-7;});activeLoop=unfinished?.id??null;}if(!activeLoop){if(role==='outer'){const old=s.sketch.loops.find(l=>l.role==='outer'),remove=new Set(old?.elements??[]);s.sketch.elements=s.sketch.elements.filter(e=>!remove.has(e.id));s.sketch.loops=s.sketch.loops.filter(l=>l.role!=='outer');}activeLoop=profileId('loop');s.sketch.loops.push({id:activeLoop,role,elements:[]});}s.sketch.elements.push(element);s.sketch.loops.find(l=>l.id===activeLoop).elements.push(element.id);activeId=element.id;}
  function finishCurve(type){if(pending.length<4||pending.length>16||type==='bezier'&&pending.length!==4)throw Error('Bézier benötigt vier, B-Spline vier bis sechzehn Kontrollpunkte.');s.sketch.version=4;s.sketch.constraints??=[];const element={id:profileId(type),type,start:[...pending[0]],end:[...pending.at(-1)],construction:false};pending.slice(1,-1).forEach((p,i)=>element['control'+(i+1)]=[...p]);appendChain(element);pending=[];fields();changed();}
  $('sketch-curve-finish').onclick=()=>{try{if($('sketch-profile-shape').value!=='bspline')throw Error('Zum Fertigstellen eine B-Spline zeichnen.');finishCurve('bspline');}catch(error){message(error.message,true);}};
- $('sketch-profile-close').onclick=()=>{try{const loop=s.sketch.loops.find(l=>l.id===activeLoop);if(!loop?.elements.length)throw Error('Zuerst einen Linienzug zeichnen.');const first=s.sketch.elements.find(e=>e.id===loop.elements[0]),last=s.sketch.elements.find(e=>e.id===loop.elements.at(-1));if(distancePoints(first.id,'start',last.id,'end')>1e-8)appendChain({id:profileId('line'),type:'line',start:[...last.end],end:[...first.start],construction:false});reset();fields();changed();}catch(error){message(error.message,true);}};
+ $('sketch-profile-close').onclick=()=>{
+  try{
+   const {elements}=resolveSketchProfile(s.sketch,cadSketchExpression,{geometryOnly:true});
+   const added=closeProfileGap(s.sketch,elements,activeLoop);
+   if(added)activeId=added;
+   reset();fields();changed();
+  }catch(error){message(error.message,true);}
+ };
  function pointerUp(origin,end){try{const shape=$('sketch-profile-shape').value,role=$('sketch-profile-role').value,dragged=Math.hypot(...origin.map((v,k)=>v-end[k]))>1e-6;
    if(['bezier','bspline'].includes(shape)){pending.push([...end]);if(pending.length>16){pending.pop();throw Error('Höchstens sechzehn Kontrollpunkte.');}if(shape==='bezier'&&pending.length===4)finishCurve(shape);else message(shape==='bezier'?'Bézier: '+(4-pending.length)+' weitere Punkte anklicken.':'B-Spline: '+pending.length+' Kontrollpunkte; ab vier Punkten fertigstellen.');return;}
    if(shape==='line'){if(!pending.length){pending=[dragged?origin:end];if(!dragged)return;}const start=pending[0];appendChain({id:profileId('line'),type:'line',start:[...start],end:[...end],construction:false});pending=[[...end]];}
@@ -26,7 +33,36 @@ export function installSketchProfileUI({s,board,svg,fields,changed,message,contr
    else{if(!dragged)throw Error('Die Form mit gedrückter Maustaste aufziehen.');const entities=profilePrimitive(shape==='construction'?'line':shape,origin,end,{radius:Number($('sketch-profile-radius').value),construction:shape==='construction'});if(shape==='construction')s.sketch.elements.push(...entities);else s.sketch=appendProfileLoop(s.sketch,entities,role);activeId=entities[0].id;reset();}fields();changed();
   }catch(error){message(error.message,true);}}
  function refresh(){const active=[2,3,4].includes(s.sketch.version);$('sketch-profile-enable').hidden=active;$('sketch-profile-controls').hidden=!active;properties.hidden=!active;$('modal').classList.toggle('sketch-profile-active',active);if(!active)return;select.value='profile';const list=$('sketch-profile-element');list.replaceChildren();for(const e of s.sketch.elements){const opt=document.createElement('option');opt.value=e.id;opt.textContent=({line:'Linie',arc:'Bogen',circle:'Kreis',bezier:'Bézier',bspline:'B-Spline'})[e.type]+(e.construction?' · Konstruktion':'')+' · '+e.id.slice(-6);list.append(opt);}if(!s.sketch.elements.some(e=>e.id===activeId))activeId=s.sketch.elements.at(-1)?.id??null;list.value=activeId??'';inputFields();toolsUI?.refresh();}
- function render(extent,geometry){if(![2,3,4].includes(s.sketch.version))return null;try{const r=geometry?geometry.resolved:resolveSketchProfile(s.sketch,cadSketchExpression,{geometryOnly:true});if(!r)return [];const map=new Map(r.elements.map(e=>[e.id,e]));let all='';for(const loop of s.sketch.loops){const entities=loop.elements.map(id=>map.get(id)).filter(Boolean);if(!entities.length)continue;let d='M '+entities[0].start[0]+' '+(-entities[0].start[1]);for(const e of entities){if(isCadCurve(e)){for(const p of curveBeziers(e))d+=' C '+p.slice(1).map(p=>p[0]+' '+(-p[1])).join(' ');}else if(e.type==='line')d+=' L '+e.end[0]+' '+(-e.end[1]);else if(e.type==='arc')d+=' A '+e.radius+' '+e.radius+' 0 '+(Math.abs(e.sweep)>Math.PI?1:0)+' '+(e.sweep>0?0:1)+' '+e.end[0]+' '+(-e.end[1]);else d+=' A '+e.radius+' '+e.radius+' 0 1 0 '+(e.center[0]-e.radius)+' '+(-e.center[1])+' A '+e.radius+' '+e.radius+' 0 1 0 '+e.start[0]+' '+(-e.start[1]);}if(entities.at(-1).end.every((v,k)=>Math.abs(v-entities[0].start[k])<1e-7))d+=' Z';all+=d+' ';}if(all)svg('path',{d:all,class:'contour','fill-rule':'evenodd'});for(const e of r.elements.filter(isCadCurve)){const points=profilePointFields(e).map(k=>e[k]);svg('polyline',{points:points.map(p=>p[0]+','+(-p[1])).join(' '),class:'construction',fill:'none'});}for(const e of r.elements.filter(e=>e.construction)){if(isCadCurve(e)){const d='M '+e.start[0]+' '+(-e.start[1])+curveBeziers(e).map(p=>' C '+p.slice(1).map(v=>v[0]+' '+(-v[1])).join(' ')).join('');svg('path',{d,class:'construction',fill:'none'});}else if(e.type==='circle')svg('circle',{cx:e.center[0],cy:-e.center[1],r:e.radius,class:'construction',fill:'none'});else if(e.type==='arc')svg('path',{d:'M '+e.start[0]+' '+(-e.start[1])+' A '+e.radius+' '+e.radius+' 0 '+(Math.abs(e.sweep)>Math.PI?1:0)+' '+(e.sweep>0?0:1)+' '+e.end[0]+' '+(-e.end[1]),class:'construction',fill:'none'});else svg('line',{x1:e.start[0],y1:-e.start[1],x2:e.end[0],y2:-e.end[1],class:'construction'});}const handles=geometry?geometry.handles:profileHandles(s.sketch,cadSketchExpression);for(let i=0;i<handles.length;i++){const p=handles[i].point;svg('circle',{cx:p[0],cy:-p[1],r:extent/100,class:'vertex','data-point-index':i});}return handles.map(h=>h.point);}catch{return [];}}
+ function render(extent,geometry){
+  if(![2,3,4].includes(s.sketch.version))return null;
+  try{
+   const r=geometry?geometry.resolved:resolveSketchProfile(s.sketch,cadSketchExpression,{geometryOnly:true});
+   if(!r)return [];
+   const map=new Map(r.elements.map(e=>[e.id,e])),gapsByLoop=new Map();
+   for(const {loopId,index} of profileGaps(s.sketch.loops,r.elements)){
+    if(!gapsByLoop.has(loopId))gapsByLoop.set(loopId,new Set());
+    gapsByLoop.get(loopId).add(index);
+   }
+   let closedPaths='',openPaths='';
+   for(const loop of s.sketch.loops){
+    const entities=loop.elements.map(id=>map.get(id)).filter(Boolean);
+    const gaps=gapsByLoop.get(loop.id);
+    let d='';
+    for(const [index,element] of entities.entries()){
+     const {start,end}=element;
+     if(index===0||gaps?.has(index-1))d+=' M '+start[0]+' '+(-start[1]);
+     if(isCadCurve(element)){
+      for(const points of curveBeziers(element))d+=' C '+points.slice(1).map(p=>p[0]+' '+(-p[1])).join(' ');
+     }else if(element.type==='line')d+=' L '+end[0]+' '+(-end[1]);
+     else if(element.type==='arc')d+=' A '+element.radius+' '+element.radius+' 0 '+(Math.abs(element.sweep)>Math.PI?1:0)+' '+(element.sweep>0?0:1)+' '+end[0]+' '+(-end[1]);
+     else d+=' A '+element.radius+' '+element.radius+' 0 1 0 '+(element.center[0]-element.radius)+' '+(-element.center[1])+' A '+element.radius+' '+element.radius+' 0 1 0 '+start[0]+' '+(-start[1]);
+    }
+    if(gaps)openPaths+=d;
+    else if(d)closedPaths+=d+' Z';
+   }
+   if(closedPaths)svg('path',{d:closedPaths,class:'contour','fill-rule':'evenodd'});
+   if(openPaths)svg('path',{d:openPaths,class:'contour contour-open'});
+   for(const e of r.elements.filter(isCadCurve)){const points=profilePointFields(e).map(k=>e[k]);svg('polyline',{points:points.map(p=>p[0]+','+(-p[1])).join(' '),class:'construction',fill:'none'});}for(const e of r.elements.filter(e=>e.construction)){if(isCadCurve(e)){const d='M '+e.start[0]+' '+(-e.start[1])+curveBeziers(e).map(p=>' C '+p.slice(1).map(v=>v[0]+' '+(-v[1])).join(' ')).join('');svg('path',{d,class:'construction',fill:'none'});}else if(e.type==='circle')svg('circle',{cx:e.center[0],cy:-e.center[1],r:e.radius,class:'construction',fill:'none'});else if(e.type==='arc')svg('path',{d:'M '+e.start[0]+' '+(-e.start[1])+' A '+e.radius+' '+e.radius+' 0 '+(Math.abs(e.sweep)>Math.PI?1:0)+' '+(e.sweep>0?0:1)+' '+e.end[0]+' '+(-e.end[1]),class:'construction',fill:'none'});else svg('line',{x1:e.start[0],y1:-e.start[1],x2:e.end[0],y2:-e.end[1],class:'construction'});}const handles=geometry?geometry.handles:profileHandles(s.sketch,cadSketchExpression);for(let i=0;i<handles.length;i++){const p=handles[i].point;svg('circle',{cx:p[0],cy:-p[1],r:extent/100,class:'vertex','data-point-index':i});}return handles.map(h=>h.point);}catch{return [];}}
  function removeLast(){const e=s.sketch.elements.at(-1);if(!e)return;if(s.sketch.version>=3&&s.sketch.constraints.some(c=>c.refs.some(r=>r.element===e.id))){message('Zuerst die Bedingungen dieses Elements entfernen.',true);return;}s.sketch.elements.pop();for(const l of s.sketch.loops)l.elements=l.elements.filter(id=>id!==e.id);s.sketch.loops=s.sketch.loops.filter(l=>l.elements.length);reset();fields();changed();}
  toolsUI=installSketchToolsUI({s,controller,properties,fields,changed,message,getId:()=>activeId,isCurrent});
  return {refresh,pointerUp,render,enable,reset,removeLast,asCopy:()=>toolsUI.asCopy()};

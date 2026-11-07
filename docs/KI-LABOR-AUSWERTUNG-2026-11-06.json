@@ -1,0 +1,86 @@
+{
+  "archive": "F:\\Formnaro-Testausgaben\\Ergebnissicherung-2026-11-06-051203\\Formnaro-Testergebnisse.zip",
+  "sha256": "2b4e35c12dc08507c8844c261fbd32609636cd07697f5198fdc0fb7afe83b9e4",
+  "runs": 150,
+  "groups": {
+    "Bestätigung · neue Aufgaben · low": {
+      "total": 24,
+      "nativePassed": 17,
+      "checked": 18,
+      "preparationErrors": 6,
+      "errors": {
+        "Ausdrückliche Quellziele wählen.": 4,
+        "Werkzeugauskunft: kurzer Werkzeugname oder Suchtext erforderlich.": 2
+      }
+    },
+    "Bestätigung · neue Aufgaben · max": {
+      "total": 24,
+      "nativePassed": 14,
+      "checked": 16,
+      "preparationErrors": 6,
+      "errors": {
+        "Ausdrückliche Quellziele wählen.": 4,
+        "Ungültige JSON-Antwort.": 1,
+        "Werkzeugauskunft: kurzer Werkzeugname oder Suchtext erforderlich.": 2,
+        "Unzulässige Werkzeuganfrage.": 1
+      }
+    },
+    "Pilot · A/C/D auf allen Denkstufen": {
+      "total": 9,
+      "nativePassed": 0,
+      "checked": 0,
+      "preparationErrors": 0,
+      "errors": {}
+    },
+    "Bildvergleich · vollständige Modelle": {
+      "total": 18,
+      "nativePassed": 17,
+      "checked": 17,
+      "preparationErrors": 0,
+      "errors": {
+        "Ungültige JSON-Antwort.": 1
+      }
+    },
+    "Bestätigung · neue Aufgaben · high": {
+      "total": 24,
+      "nativePassed": 16,
+      "checked": 16,
+      "preparationErrors": 6,
+      "errors": {
+        "Ausdrückliche Quellziele wählen.": 4,
+        "Werkzeugauskunft: kurzer Werkzeugname oder Suchtext erforderlich.": 2,
+        "Ungültige JSON-Antwort.": 2
+      }
+    },
+    "Entwicklung · vollständige Modelle C/D": {
+      "total": 36,
+      "nativePassed": 27,
+      "checked": 28,
+      "preparationErrors": 6,
+      "errors": {
+        "Vorschau gehört nicht zu diesem Versuch.": 2,
+        "Ausdrückliche Quellziele wählen.": 6
+      }
+    },
+    "Sichtbare Übung · Bilder und alle Denkstufen": {
+      "total": 9,
+      "nativePassed": 1,
+      "checked": 7,
+      "preparationErrors": 0,
+      "errors": {
+        "Formnaro-Bedienelement fehlt oder ist mehrdeutig: cad-edit-modeling": 1,
+        "Formnaro-Bedienelement ist deaktiviert: cad-edit-modeling": 1
+      }
+    },
+    "Auswahl gegen volle Szene": {
+      "total": 6,
+      "nativePassed": 5,
+      "checked": 5,
+      "preparationErrors": 0,
+      "errors": {
+        "Vorschau gehört nicht zu diesem Versuch.": 1
+      }
+    }
+  },
+  "scope": "Alte unveränderte Kohorte, keine nachträgliche Umwertung der Fehler zu Erfolgen."
+}

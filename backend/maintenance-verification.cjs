@@ -4,6 +4,7 @@ exports.verifyMaintenance=async(win,{directory,dataPath,startupWriteFailed})=>{
  const checks=[],run=code=>win.webContents.executeJavaScript(code);
  const check=(value,label)=>{assert(value,label);checks.push(label);};
  check(await run('window.__cadReady===true&&!window.__cadError'),'Editor is ready after a failed initial autosave');
+ for(let i=0;i<150&&!startupWriteFailed();i++)await new Promise(resolve=>setTimeout(resolve,20));
  check(startupWriteFailed(),'Initial autosave disk error was actually injected through portable storage IPC');
  check(fs.existsSync(path.join(dataPath,'profil.json'))&&fs.existsSync(path.join(dataPath,'Fehlerprotokolle/formnaro-fehler.jsonl')),'Early error logging directory is adopted without deleting the log');
  const sandbox=await run("window.__cadTest.runLocalScript({code:'return {value:21*2,origin:location.origin,storage:typeof localStorage,desktop:typeof offlinecadDesktop};',call:async()=>null})");
@@ -41,7 +42,6 @@ exports.verifyMaintenance=async(win,{directory,dataPath,startupWriteFailed})=>{
  try{await run(`location.assign(${JSON.stringify(target.href)})`);await run('new Promise(r=>setTimeout(r,200))');}
  finally{win.webContents.removeListener('will-navigate',observe);}
  check(attempted&&win.webContents.getURL()===original&&await run('window.__cadReady===true&&!window.__cadError'),'Real renderer navigation to a different local document is blocked and the editor remains usable');
- const speech=await run('window.offlinecadDesktop.getSpeechStatus()');check(speech.local&&(speech.available||speech.downloadRequired&&!speech.downloading),'Real main-frame IPC supports installed speech or the explicitly downloadable optional model');
- check(await run("typeof window.offlinecadDesktop.downloadSpeechModel==='function'&&typeof window.offlinecadDesktop.cancelSpeechModelDownload==='function'"),'The preload exposes both explicit speech model download controls');
+ const speech=await run('window.offlinecadDesktop.getOnlineSpeechStatus()');check(typeof speech.configured==='boolean'&&await run("!('downloadSpeechModel' in window.offlinecadDesktop)"),'Online speech IPC is available without local model download');
  return {ok:true,checks,cloudRequests:0,screenshots:[path.join(directory,'maintenance-dark.png'),path.join(directory,'maintenance-system-light.png')]};
 };

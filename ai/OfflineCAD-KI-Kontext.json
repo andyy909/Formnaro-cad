@@ -94,7 +94,7 @@
         "id": "tool:cad-shell",
         "label": "Wandung",
         "path": "CAD-Werkzeuge",
-        "description": "Einen nativen CAD-Körper aushöhlen; Öffnungsflächen und Wandstärke in einer Vorschau prüfen.",
+        "description": "Einen nativen CAD-Körper aushöhlen; Öffnungsfläche im Übungsfenster über face wählen, Wandstärke in ui:id:cad-modeling-thickness eingeben und mit ui:id:cad-modeling-preview sowie ui:id:cad-modeling-apply prüfen und bestätigen.",
         "requirement": "Ein nativer Materialkörper.",
         "click": true
       },
@@ -213,16 +213,16 @@
       {
         "id": "tool:mirror",
         "label": "Spiegeln",
-        "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
-        "description": "Vorhandenes Formnaro-Werkzeug. Die aktuelle Auswahl, Sperren und der eingestellte Bedienmodus bestimmen die Verfügbarkeit.",
-        "requirement": "editable",
+        "path": "Anordnen → Spiegeln",
+        "description": "Die Auswahl an der Mittelebene ihrer Begrenzung im aktiven Koordinatensystem spiegeln. Im geöffneten Panel sind ui:id:mirror-x, ui:id:mirror-y und ui:id:mirror-z die drei Achsen.",
+        "requirement": "Ein entsperrtes Teil auswählen. Bei Bedarf vorher eine Kopie erzeugen.",
         "click": false
       },
       {
         "id": "tool:array",
         "label": "Muster",
         "path": "Eigenschaften → Weitere Operationen → Anordnen … (Muster)",
-        "description": "Eine Anordnung aus ausgewählten Teilen aufbauen. Anzahl, Abstände und Ausrichtung in der Vorschau prüfen.",
+        "description": "Eine Anordnung aus ausgewählten Teilen aufbauen. Für eine Reihe ui:id:array-kind auf line setzen. Anzahl einschließlich Original in ui:id:array-count, Bezugsraum in ui:id:array-space und Schritt in ui:id:array-step-0/1/2 einstellen. Mit ui:id:array-apply erzeugen.",
         "requirement": "Geeignete entsperrte Auswahl.",
         "click": true
       },
@@ -911,6 +911,11 @@
         "click": true
       },
       {
+        "id": "view:fit",
+        "label": "Einpassen",
+        "click": true
+      },
+      {
         "id": "view:iso",
         "label": "Ansicht iso",
         "click": true
@@ -1077,7 +1082,7 @@
     ]
   },
   "application": "Formnaro",
-  "version": "0.125.0",
+  "version": "0.136.0",
   "apiVersion": 1,
   "projectVersion": 32,
   "supportedProjectVersions": [
@@ -2027,6 +2032,697 @@
           "additionalProperties": false
         }
       },
+      "previewId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "checks": {
+        "type": "array",
+        "maxItems": 8,
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "target",
+                "from",
+                "to",
+                "diameter"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "bore"
+                },
+                "target": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "from": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                },
+                "to": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                },
+                "diameter": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 10000
+                },
+                "minWall": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 10000
+                },
+                "minBottom": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 10000
+                },
+                "tolerance": {
+                  "type": "number",
+                  "minimum": 0.000001,
+                  "maximum": 0.1
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "target",
+                "space",
+                "expected"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "size"
+                },
+                "target": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "space": {
+                  "enum": [
+                    "edit",
+                    "worldAxes"
+                  ]
+                },
+                "expected": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "contains": {
+                    "type": "number"
+                  }
+                },
+                "tolerance": {
+                  "type": "number",
+                  "minimum": 0.000001,
+                  "maximum": 0.1
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "target",
+                "edge",
+                "expected"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "bounds"
+                },
+                "target": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "edge": {
+                  "enum": [
+                    "min",
+                    "max",
+                    "center",
+                    "size"
+                  ]
+                },
+                "expected": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": -100000,
+                        "maximum": 100000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "contains": {
+                    "type": "number"
+                  }
+                },
+                "tolerance": {
+                  "type": "number",
+                  "minimum": 0.000001,
+                  "maximum": 0.1
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "target",
+                "expected"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "volume"
+                },
+                "target": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "expected": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000
+                },
+                "tolerance": {
+                  "type": "number",
+                  "minimum": 0.000001,
+                  "maximum": 0.1
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "target",
+                "expected"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "solids"
+                },
+                "target": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "expected": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 500
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "target",
+                "other",
+                "expected"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "distance"
+                },
+                "target": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "other": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "expected": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 200000
+                },
+                "tolerance": {
+                  "type": "number",
+                  "minimum": 0.000001,
+                  "maximum": 0.1
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "target",
+                "other",
+                "expected"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "surfaceDeviation"
+                },
+                "target": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "other": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "expected": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000
+                },
+                "maxSamples": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12000
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "target",
+                "from",
+                "to",
+                "diameter"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "clearance"
+                },
+                "target": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "from": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                },
+                "to": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                },
+                "diameter": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 10000
+                },
+                "tolerance": {
+                  "type": "number",
+                  "minimum": 0.000001,
+                  "maximum": 0.1
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "target",
+                "other",
+                "from",
+                "to",
+                "expected"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "radialClearance"
+                },
+                "target": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "other": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "rootId",
+                        "path"
+                      ],
+                      "properties": {
+                        "rootId": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 12
+                        }
+                      }
+                    }
+                  ]
+                },
+                "from": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                },
+                "to": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number",
+                    "minimum": -100000,
+                    "maximum": 100000
+                  }
+                },
+                "expected": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 5
+                },
+                "samples": {
+                  "type": "integer",
+                  "minimum": 3,
+                  "maximum": 33
+                },
+                "tolerance": {
+                  "type": "number",
+                  "minimum": 0.000001,
+                  "maximum": 0.1
+                }
+              }
+            }
+          ]
+        },
+        "minItems": 1
+      },
       "reportBudget": {
         "type": "integer",
         "minimum": 1024,
@@ -2034,10 +2730,66 @@
       }
     },
     "required": [
-      "revision",
-      "queries"
+      "revision"
+    ],
+    "oneOf": [
+      {
+        "required": [
+          "queries"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "previewId"
+              ]
+            },
+            {
+              "required": [
+                "checks"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "required": [
+          "previewId",
+          "checks"
+        ],
+        "not": {
+          "required": [
+            "queries"
+          ]
+        }
+      }
     ],
     "additionalProperties": false
+  },
+  "screenshotSchema": {
+    "type": "object",
+    "properties": {
+      "previewId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "revision": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      }
+    },
+    "required": [],
+    "additionalProperties": false,
+    "dependentRequired": {
+      "previewId": [
+        "revision"
+      ],
+      "revision": [
+        "previewId"
+      ]
+    }
   },
   "toolReference": {
     "version": 1,
@@ -2228,6 +2980,7 @@
                       "mode:normal",
                       "mode:solid",
                       "mode:fusion",
+                      "view:fit",
                       "view:iso",
                       "view:top",
                       "view:front",
@@ -2288,6 +3041,10 @@
                           "kind": {
                             "const": "shape"
                           },
+                          "text": {
+                            "type": "string",
+                            "maxLength": 600
+                          },
                           "type": {
                             "enum": [
                               "box",
@@ -2333,6 +3090,10 @@
                           "kind": {
                             "const": "set"
                           },
+                          "text": {
+                            "type": "string",
+                            "maxLength": 600
+                          },
                           "field": {
                             "enum": [
                               "size-0",
@@ -2362,6 +3123,10 @@
                           "kind": {
                             "const": "role"
                           },
+                          "text": {
+                            "type": "string",
+                            "maxLength": 600
+                          },
                           "value": {
                             "enum": [
                               "solid",
@@ -2380,6 +3145,10 @@
                         "properties": {
                           "kind": {
                             "const": "select"
+                          },
+                          "text": {
+                            "type": "string",
+                            "maxLength": 600
                           },
                           "targets": {
                             "type": "array",
@@ -2403,6 +3172,10 @@
                         "properties": {
                           "kind": {
                             "const": "group"
+                          },
+                          "text": {
+                            "type": "string",
+                            "maxLength": 600
                           },
                           "as": {
                             "type": "string",
@@ -2480,6 +3253,84 @@
                           "kind",
                           "target",
                           "side"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "const": "edge"
+                          },
+                          "target": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_-]{0,40}$"
+                          },
+                          "sides": {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "uniqueItems": true,
+                            "items": {
+                              "enum": [
+                                "top",
+                                "bottom",
+                                "left",
+                                "right",
+                                "front",
+                                "back"
+                              ]
+                            }
+                          },
+                          "text": {
+                            "type": "string",
+                            "maxLength": 600
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "target",
+                          "sides"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "const": "sketch-gesture"
+                          },
+                          "point": {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": {
+                              "type": "number",
+                              "minimum": -10000,
+                              "maximum": 10000
+                            }
+                          },
+                          "to": {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": {
+                              "type": "number",
+                              "minimum": -10000,
+                              "maximum": 10000
+                            }
+                          },
+                          "add": {
+                            "type": "boolean"
+                          },
+                          "text": {
+                            "type": "string",
+                            "maxLength": 600
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "point"
                         ],
                         "additionalProperties": false
                       },
@@ -3301,9 +4152,687 @@
                           },
                           "checks": {
                             "type": "array",
-                            "maxItems": 64,
+                            "maxItems": 32,
                             "items": {
-                              "type": "object"
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "kind",
+                                    "target",
+                                    "from",
+                                    "to",
+                                    "diameter"
+                                  ],
+                                  "properties": {
+                                    "kind": {
+                                      "const": "bore"
+                                    },
+                                    "target": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "from": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number",
+                                        "minimum": -100000,
+                                        "maximum": 100000
+                                      }
+                                    },
+                                    "to": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number",
+                                        "minimum": -100000,
+                                        "maximum": 100000
+                                      }
+                                    },
+                                    "diameter": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 10000
+                                    },
+                                    "minWall": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 10000
+                                    },
+                                    "minBottom": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 10000
+                                    },
+                                    "tolerance": {
+                                      "type": "number",
+                                      "minimum": 0.000001,
+                                      "maximum": 0.1
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "kind",
+                                    "target",
+                                    "space",
+                                    "expected"
+                                  ],
+                                  "properties": {
+                                    "kind": {
+                                      "const": "size"
+                                    },
+                                    "target": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "space": {
+                                      "enum": [
+                                        "edit",
+                                        "worldAxes"
+                                      ]
+                                    },
+                                    "expected": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "anyOf": [
+                                          {
+                                            "type": "number",
+                                            "exclusiveMinimum": 0,
+                                            "maximum": 10000
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "contains": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "tolerance": {
+                                      "type": "number",
+                                      "minimum": 0.000001,
+                                      "maximum": 0.1
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "kind",
+                                    "target",
+                                    "edge",
+                                    "expected"
+                                  ],
+                                  "properties": {
+                                    "kind": {
+                                      "const": "bounds"
+                                    },
+                                    "target": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "edge": {
+                                      "enum": [
+                                        "min",
+                                        "max",
+                                        "center",
+                                        "size"
+                                      ]
+                                    },
+                                    "expected": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "anyOf": [
+                                          {
+                                            "type": "number",
+                                            "minimum": -100000,
+                                            "maximum": 100000
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "contains": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "tolerance": {
+                                      "type": "number",
+                                      "minimum": 0.000001,
+                                      "maximum": 0.1
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "kind",
+                                    "target",
+                                    "expected"
+                                  ],
+                                  "properties": {
+                                    "kind": {
+                                      "const": "volume"
+                                    },
+                                    "target": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "expected": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 1000000000000
+                                    },
+                                    "tolerance": {
+                                      "type": "number",
+                                      "minimum": 0.000001,
+                                      "maximum": 0.1
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "kind",
+                                    "target",
+                                    "expected"
+                                  ],
+                                  "properties": {
+                                    "kind": {
+                                      "const": "solids"
+                                    },
+                                    "target": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "expected": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 500
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "kind",
+                                    "target",
+                                    "other",
+                                    "expected"
+                                  ],
+                                  "properties": {
+                                    "kind": {
+                                      "const": "distance"
+                                    },
+                                    "target": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "other": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "expected": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 200000
+                                    },
+                                    "tolerance": {
+                                      "type": "number",
+                                      "minimum": 0.000001,
+                                      "maximum": 0.1
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "kind",
+                                    "target",
+                                    "other",
+                                    "expected"
+                                  ],
+                                  "properties": {
+                                    "kind": {
+                                      "const": "surfaceDeviation"
+                                    },
+                                    "target": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "other": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "expected": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1000
+                                    },
+                                    "maxSamples": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 12000
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "kind",
+                                    "target",
+                                    "from",
+                                    "to",
+                                    "diameter"
+                                  ],
+                                  "properties": {
+                                    "kind": {
+                                      "const": "clearance"
+                                    },
+                                    "target": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "from": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number",
+                                        "minimum": -100000,
+                                        "maximum": 100000
+                                      }
+                                    },
+                                    "to": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number",
+                                        "minimum": -100000,
+                                        "maximum": 100000
+                                      }
+                                    },
+                                    "diameter": {
+                                      "type": "number",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 10000
+                                    },
+                                    "tolerance": {
+                                      "type": "number",
+                                      "minimum": 0.000001,
+                                      "maximum": 0.1
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "kind",
+                                    "target",
+                                    "other",
+                                    "from",
+                                    "to",
+                                    "expected"
+                                  ],
+                                  "properties": {
+                                    "kind": {
+                                      "const": "radialClearance"
+                                    },
+                                    "target": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "other": {
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        {
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "required": [
+                                            "rootId",
+                                            "path"
+                                          ],
+                                          "properties": {
+                                            "rootId": {
+                                              "type": "string"
+                                            },
+                                            "path": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "maxItems": 12
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "from": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number",
+                                        "minimum": -100000,
+                                        "maximum": 100000
+                                      }
+                                    },
+                                    "to": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number",
+                                        "minimum": -100000,
+                                        "maximum": 100000
+                                      }
+                                    },
+                                    "expected": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 5
+                                    },
+                                    "samples": {
+                                      "type": "integer",
+                                      "minimum": 3,
+                                      "maximum": 33
+                                    },
+                                    "tolerance": {
+                                      "type": "number",
+                                      "minimum": 0.000001,
+                                      "maximum": 0.1
+                                    }
+                                  }
+                                }
+                              ]
                             }
                           }
                         },
@@ -3438,7 +4967,7 @@
         "label": "Wandung",
         "click": false,
         "path": "CAD-Werkzeuge",
-        "description": "Einen nativen CAD-Körper aushöhlen; Öffnungsflächen und Wandstärke in einer Vorschau prüfen.",
+        "description": "Einen nativen CAD-Körper aushöhlen; Öffnungsfläche im Übungsfenster über face wählen, Wandstärke in ui:id:cad-modeling-thickness eingeben und mit ui:id:cad-modeling-preview sowie ui:id:cad-modeling-apply prüfen und bestätigen.",
         "requirement": "Ein nativer Materialkörper."
       },
       {
@@ -3548,15 +5077,16 @@
         "id": "tool:mirror",
         "label": "Spiegeln",
         "click": false,
-        "path": "Aktuelle Werkzeugleiste / Werkzeugsuche; siehe UI-Zustand",
-        "requirement": "editable"
+        "path": "Anordnen → Spiegeln",
+        "description": "Die Auswahl an der Mittelebene ihrer Begrenzung im aktiven Koordinatensystem spiegeln. Im geöffneten Panel sind ui:id:mirror-x, ui:id:mirror-y und ui:id:mirror-z die drei Achsen.",
+        "requirement": "Ein entsperrtes Teil auswählen. Bei Bedarf vorher eine Kopie erzeugen."
       },
       {
         "id": "tool:array",
         "label": "Muster",
         "click": false,
         "path": "Eigenschaften → Weitere Operationen → Anordnen … (Muster)",
-        "description": "Eine Anordnung aus ausgewählten Teilen aufbauen. Anzahl, Abstände und Ausrichtung in der Vorschau prüfen.",
+        "description": "Eine Anordnung aus ausgewählten Teilen aufbauen. Für eine Reihe ui:id:array-kind auf line setzen. Anzahl einschließlich Original in ui:id:array-count, Bezugsraum in ui:id:array-space und Schritt in ui:id:array-step-0/1/2 einstellen. Mit ui:id:array-apply erzeugen.",
         "requirement": "Geeignete entsperrte Auswahl."
       },
       {
@@ -4131,6 +5661,11 @@
         "click": false
       },
       {
+        "id": "view:fit",
+        "label": "Einpassen",
+        "click": true
+      },
+      {
         "id": "view:iso",
         "label": "Ansicht iso",
         "click": true
@@ -4173,6 +5708,7 @@
     "GET /v1/scene": "Current confirmed revision, object kinds, available commands, source paths, measurements and locks without mesh arrays.",
     "GET /v1/project": "Full editable project including contour links/stable measured roles in format14, project parameters/variants in format13, technical drawings, native modeling sources, native BReps and separate raw meshes; compatible older formats remain readable.",
     "GET /v1/screenshot": "Current shared canvas image as PNG base64.",
+    "POST /v1/screenshot": "Capture the current shared canvas or a named preview as PNG base64 using screenshotSchema.",
     "POST /v1/preview": "Compute and validate one complete mixed CAD/mesh command batch against the confirmed revision without committing.",
     "POST /v1/discard": "Discard the named completed preview at its current revision without changing the model or Undo.",
     "POST /v1/analysis": "Read bounded native CAD, mesh and app measurements against the current revision.",
@@ -4180,7 +5716,7 @@
     "POST /v1/export": "Export confirmed visible production objects, optionally restricted to root IDs; STEP requires CAD targets and mesh exports retain their geometry domain."
   },
   "analysisContract": {
-    "format": "{revision,analysis:[{id,engine,kind,options,report?}]} without commands or checks. At most8 read-only queries per round. Photo measure/grid queries require a current calibrated context.photoReferences supplied by the internal chat; without it no photo access is available. Follow context.agentWorkflow for the current total request budget; measure again between constructions when useful. Legacy callers without agentWorkflow support2 rounds. Results are returned as analysisResults with the next request; the model and Undo remain unchanged. Use measurements to choose targets/parameters, then return ordinary commands/checks. Python/JavaScript analysis programs and task-local workspace/tools queries are documented in programTools.computation. No host file paths, provider configuration or OS access. Mesh query options are {id,options?}; native queries use existing options and current project only. Large computation results and oversized atomic contours are saved intact as workspaceResult.path in local task files. Read and select them locally using Python workspace.read_json; Python result payloads are under .value. Do not repeat successful measurements merely to reduce output. Successful source is retained under results[].program.path. Other reports are automatically paged to fit feedback limits. Optional query report:{detail:\"compact\"|\"full\",collection:\"profiles\",offset:0,limit:4} selects a top-level list page. value.reportPage.pages gives collection,total,offset,returned,nextOffset; null nextOffset means complete. Repeat the same geometry query and use nextOffset before claiming a complete catalogue. Omitted lists are disclosed; array lengths on pages are not total counts. Numeric vectors stay intact. Full is best-effort within budget; the effective mode is disclosed. Reports remain bound to the current revision; no stateful cursors. Extended workflows allow256000 JSON characters of aggregate measurement feedback; legacy callers allow32000. Full user context and modelling notes remain intact. Model revision/selection changes or cancellation stop the sequence.",
+    "format": "{revision,analysis:[{id,engine,kind,options,report?}]} without commands or checks. At most8 read-only queries per round. If the initial scene omits sources, use app sceneScope with options.ids or options.targets for exact records. Photo measure/grid queries require a current calibrated context.photoReferences supplied by the internal chat; without it no photo access is available. Follow context.agentWorkflow for the current total request budget; measure again between constructions when useful. Legacy callers without agentWorkflow support2 rounds. Results are returned as analysisResults with the next request; the model and Undo remain unchanged. Use measurements to choose targets/parameters, then return ordinary commands/checks. Python/JavaScript analysis programs and task-local workspace/tools queries are documented in programTools.computation. No host file paths, provider configuration or OS access. Mesh query options are {id,options?}; native queries use existing options and current project only. Large computation results and oversized atomic contours are saved intact as workspaceResult.path in local task files. Read and select them locally using Python workspace.read_json; Python result payloads are under .value. Do not repeat successful measurements merely to reduce output. Successful source is retained under results[].program.path. Other reports are automatically paged to fit feedback limits. Optional query report:{detail:\"compact\"|\"full\",collection:\"profiles\",offset:0,limit:4} selects a top-level list page. value.reportPage.pages gives collection,total,offset,returned,nextOffset; null nextOffset means complete. Repeat the same geometry query and use nextOffset before claiming a complete catalogue. Omitted lists are disclosed; array lengths on pages are not total counts. Numeric vectors stay intact. Full is best-effort within budget; the effective mode is disclosed. Reports remain bound to the current revision; no stateful cursors. Extended workflows allow256000 JSON characters of aggregate measurement feedback; legacy callers allow32000. Full user context and modelling notes remain intact. Model revision/selection changes or cancellation stop the sequence.",
     "queries": {
       "freecad": [
         "inspect"
@@ -4213,6 +5749,7 @@
         "hollowCatalog"
       ],
       "app": [
+        "sceneScope",
         "inspection",
         "joints",
         "jointCollision",
@@ -4320,6 +5857,11 @@
                 "maximum": 10000
               },
               "minWall": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 10000
+              },
+              "minBottom": {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "maximum": 10000
@@ -4929,7 +6471,7 @@
     }
   },
   "visualReviewContract": "The internal desktop chat automatically sends four labelled orthographic views and local verification results of a successful uncommitted candidate to image-capable models. Follow-up feedback may request a review response tied to previewId, or complete corrected commands against the original scene. Images never override failed numerical checks or authorize Apply. Failed/unavailable visual reviews are explicitly disclosed. Text-only models continue without images.",
-  "boreCheckContract": "Read-only query cad/bore takes {target,from,to,diameter,minWall?,tolerance?} and returns actual measurements without deciding acceptance. Use checks kind bore on a finished native material root with world from/to at the two exact cylindrical wall ends, diameter, optional minWall (default 0.1 mm, greater than twice tolerance). This measures analytic cylindrical inner walls, their diameter, axis, cylindrical depth and a continuous surrounding material ring; it also checks the cavity is empty. For two separated cheeks use two checks. Countersinks, cones, partial/split cylinders, BSpline approximations, meshes and nonuniform/sheared world placements are explicitly unavailable, never approximated. Tolerance is mm, default 0.01. Native measurement is authoritative; an image cannot prove these dimensions.",
+  "boreCheckContract": "Read-only query cad/bore takes {target,from,to,diameter,minWall?,tolerance?} and returns actual measurements without deciding acceptance. For a blind bore result check add minBottom (mm of continuous material immediately beyond to, excluding the boundary allowance). Use checks kind bore on a finished native material root with world from/to at the two exact cylindrical wall ends, diameter, optional minWall (default 0.1 mm, greater than twice tolerance). This measures analytic cylindrical inner walls, their diameter, axis, cylindrical depth and a continuous surrounding material ring; it also checks the cavity is empty. For two separated cheeks use two checks. Countersinks, cones, partial/split cylinders, BSpline approximations, meshes and nonuniform/sheared world placements are explicitly unavailable, never approximated. Tolerance is mm, default 0.01. Native measurement is authoritative; an image cannot prove these dimensions.",
   "requestSchema": {
     "type": "object",
     "additionalProperties": false,
@@ -37635,6 +39177,11 @@
                   "maximum": 10000
                 },
                 "minWall": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 10000
+                },
+                "minBottom": {
                   "type": "number",
                   "exclusiveMinimum": 0,
                   "maximum": 10000
@@ -72535,6 +74082,11 @@
                   "maximum": 10000
                 },
                 "minWall": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 10000
+                },
+                "minBottom": {
                   "type": "number",
                   "exclusiveMinimum": 0,
                   "maximum": 10000

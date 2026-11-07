@@ -1,4 +1,17 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {createCadAutomationSession} from '../src/cad-automation-session.js';
+test('cancelling draft inspection does not discard the draft it was reading',async()=>{
+ for(const method of ['analysis','screenshot']){
+  let finish;
+  const session=createCadAutomationSession({
+   dispatch:()=>new Promise(resolve=>{finish=resolve;}),cancel:actual=>assert.equal(actual,method),
+   discard:()=>assert.fail('A read must never discard its source draft'),
+  });
+  const pending=session.run(method,{previewId:'original'},17);
+  assert.equal(session.cancel(17),true);
+  finish({previewId:'original'});
+  await assert.rejects(pending,{code:'ABORTED'});
+ }
+});
 test('Only the matching external preview can cancel native work, and a late result is discarded',async()=>{
  let finish,cancelled=0,discarded=[];const session=createCadAutomationSession({dispatch:()=>new Promise(r=>{finish=r;}),cancel:()=>cancelled++,discard:id=>discarded.push(id)});
  const pending=session.run('preview',{},17);assert.equal(session.cancel(16),false);assert.equal(session.cancel(17),true);assert.equal(session.cancel(17),false);finish({previewId:'late'});await assert.rejects(pending,{name:'AbortError',code:'ABORTED'});assert.equal(cancelled,1);assert.deepEqual(discarded,['late']);assert.equal(session.cancel(17),false);

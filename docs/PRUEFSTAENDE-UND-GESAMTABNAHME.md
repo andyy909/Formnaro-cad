@@ -1,7 +1,7 @@
 # Mindestabstände, gespeicherte Prüfstände und gemeinsame Zugänge
 
-Entwicklungsstand 26–28, Entwicklungsstand 02.11.2026. Anforderungen:
-[26–28](GESAMTPLAN-RELEASE-ABNAHME.md).
+Privater Gesamtplan 26–28, Entwicklungsstand 02.11.2026. Anforderungen:
+[26–28](GESAMTPLAN-26-BIS-28-ANFORDERUNGEN.md).
 
 `app/jointCollision` und die Paare von `app/motionRange` ergänzen
 `minimumDistance` (mm, Standard 0), `allowContact` (Standard false) und

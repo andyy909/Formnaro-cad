@@ -1,4 +1,5 @@
 import {validateCadJoints,createCadJoints,cadJointProblems} from './cad-joints-data.js';
+import {driveJointIds} from './cad-drive-couplings.js';
 const id={type:'string',minLength:1,maxLength:200},number={type:'number'},vector={type:'array',minItems:3,maxItems:3,items:{type:'number',minimum:-100000,maximum:100000}},limits={type:'object',additionalProperties:false,required:['min','max'],properties:{min:number,max:number}};
 const command=(action,properties,required=Object.keys(properties))=>({type:'object',additionalProperties:false,required:['op','action',...required],properties:{op:{const:'joint'},action:{const:action},...properties}});
 export const CAD_JOINT_COMMAND_SCHEMAS=[
@@ -18,4 +19,21 @@ export async function previewCadJointCommands(controller,{commands,revision,labe
 export function cadJointsSummary(project,options={}){
  if(!options||Object.keys(options).some(k=>!['offset','limit','includeFrames'].includes(k)))throw Error('Gelenkabfrage: offset, limit und includeFrames wählen.');const {offset=0,limit=50,includeFrames=false}=options;if(!Number.isSafeInteger(offset)||offset<0||!Number.isSafeInteger(limit)||limit<1||limit>50||typeof includeFrames!=='boolean')throw Error('Gelenkabfrage: maximal 50 Verbindungen je Seite.');
  const data=validateCadJoints(project.joints??createCadJoints()),problems=cadJointProblems(project),name=id=>project.nodes.find(n=>n.id===id)?.name??'Fehlendes Teil';return {version:data.version,drives:structuredClone(data.drives??[]),gears:structuredClone(data.gears??[]),total:data.joints.length,offset,limit,truncated:offset+limit<data.joints.length,bases:data.bases.slice(0,50).map(id=>({id,name:name(id)})),baseTotal:data.bases.length,joints:data.joints.slice(offset,offset+limit).map(j=>({id:j.id,name:j.name,kind:j.kind,parentId:j.parentId,parentName:name(j.parentId),childId:j.childId,childName:name(j.childId),value:j.value,...(j.limits?{limits:j.limits,unit:j.kind==='revolute'?'degree':'mm'}:{}),...(includeFrames?{parentFrame:j.parentFrame,childFrame:j.childFrame}:{})})),problems:problems.slice(0,50),problemTotal:problems.length,scope:'Root rigid bodies; tree with fixed basis. Motion preview uses display matrices only. Collision is a separate explicit pose query, never a continuous-path guarantee.'};
+}
+
+// A scene carries the identities and values needed to choose a targeted
+// joint command. Frames and unrelated bodies stay in the explicit analysis.
+export function cadScopedJointState(project,rootIds){
+ const data=project.joints;
+ if(!data?.joints?.length)return undefined;
+ const roots=new Set(rootIds);
+ const related=data.joints.filter(joint=>roots.has(joint.parentId)||roots.has(joint.childId));
+ const joints=related.slice(0,50).map(({id,name,kind,parentId,childId,value,limits})=>({
+  id,name,kind,parentId,childId,value,...(limits?{limits:structuredClone(limits),unit:kind==='revolute'?'degree':'mm'}:{})
+ }));
+ const ids=new Set(joints.map(joint=>joint.id));
+ const gears=(data.gears??[]).filter(gear=>ids.has(gear.jointA)&&ids.has(gear.jointB));
+ const drives=(data.drives??[]).filter(drive=>driveJointIds(drive).every(id=>ids.has(id)));
+ return {joints,gears:structuredClone(gears.slice(0,50)),drives:structuredClone(drives.slice(0,50)),
+  relatedTotal:related.length,truncated:joints.length<related.length||gears.length>50||drives.length>50};
 }

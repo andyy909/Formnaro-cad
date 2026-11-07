@@ -32,7 +32,7 @@ fs.writeFileSync(path.join(stage,'backend/freecad-runtime-pin.json'),JSON.string
 // Reuse accepted binary runtimes, with complete integrity verification of the
 // copied CAD runtime. The new renderer/backend is built from the frozen source.
 const [runtime]=await packager({dir:stage,tmpdir:path.join(proof,'tmp'),name:'Formnaro',platform:'win32',arch:'x64',out,asar:true,prune:false,overwrite:false,electronVersion:meta.devDependencies.electron,appVersion:meta.version,appCopyright:'Copyright (c) 2026 '+meta.author,win32metadata:{ProductName:'Formnaro',FileDescription:'Netzreparatur und Flächen'}});
-for(const name of ['converter','speech','freecad'])fs.cpSync(path.join(base,'resources',name),path.join(runtime,'resources',name),{recursive:true});
+for(const name of ['converter','freecad'])fs.cpSync(path.join(base,'resources',name),path.join(runtime,'resources',name),{recursive:true});
 for(const file of ['LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.copyFileSync(path.join(source,file),path.join(runtime,file));
 fs.cpSync(path.join(source,'docs'),path.join(runtime,'docs'),{recursive:true});
 const integrity=await require('../backend/freecad-runtime.cjs').verifyRuntime(path.join(runtime,'resources/freecad'));assert(integrity.ok);assert.equal(hash(path.join(runtime,'resources/freecad/manifest.json')),manifestSha256);

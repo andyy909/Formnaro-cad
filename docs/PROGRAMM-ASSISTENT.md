@@ -1,41 +1,50 @@
-# Formnaro application assistant
+# Formnaro-Programm-Assistent
 
-Use the AI chat to ask about Formnaro, find a tool, or request a demonstration.
-The assistant uses the configured AI provider.
+Im KI-Chat kannst du Fragen zu Formnaro stellen, Werkzeuge erklären lassen und
+um eine sichtbare Vorführung bitten. Der eingerichtete KI-Anbieter wird auch
+hierfür verwendet. Beispiele:
 
-- “Where is the wall thickness map? Show me the menu.”
-- “What is the difference between a loft and a sweep?”
-- “Open AI settings and show me the context sizes.”
-- “Show me how to build a plate with a hole.”
+- „Wo finde ich die Wanddickenkarte? Zeig mir das Menü.“
+- „Was ist der Unterschied zwischen Ausformung und Austragung?“
+- „Öffne die KI-Einstellungen und zeig mir die Kontextgrößen.“
+- „Zeig Schritt für Schritt, wie eine Platte mit einer Bohrung aufgebaut wird.“
 
-The assistant can look up a local catalogue of tools, their requirements and
-known controls in the current workspace. Object names and document text are
-data and grant no additional permissions.
+Die KI erhält einen lokalen Werkzeugkatalog mit Voraussetzungen sowie den
+aktuellen Bedienmodus und die Verfügbarkeit bekannter Bedienelemente. Sie kann
+zusätzliche lokale Hilfe abfragen. Objektnamen und Dokumenttexte sind Daten;
+sie erteilen der KI keine zusätzlichen Rechte.
 
-During a walkthrough, a blue window border, enlarged pointer and explanation
-show the current step. Tabs and menus open in the real application. Pause,
-speed and stop are available in the playback controls. Press Esc, click
-outside the controls or switch applications to interrupt. Disabled tools
-stay disabled. The assistant can explain the selection they require.
+Bei einer Bedienhilfe erscheinen ein blauer Fensterrand, ein großer Zeiger und
+eine Erklärung zum aktuellen Schritt. Register und Menüs werden tatsächlich
+geöffnet. Pause, Geschwindigkeit und Stop sind in der Vorführung erreichbar.
+Esc, ein eigener Klick außerhalb der Vorführsteuerung oder ein Wechsel in ein
+anderes Programm unterbrechen sie. Deaktivierte Werkzeuge bleiben deaktiviert;
+die KI soll die benötigte Auswahl erklären.
 
-Modelling demonstrations show intermediate previews. Apply confirms the
-result in one Undo step. Discard preserves the prior model. The available
-verification results describe the checks performed. An application question
-leaves any existing modelling preview available.
+Eine Modellvorführung zeigt nacheinander berechnete Konstruktionsstände. Diese
+bleiben Vorschauen. Erst **Übernehmen** bestätigt das gesamte Ergebnis als
+einen Rückgängig-Schritt. **Verwerfen** erhält das bisherige Modell. Auch nach
+einer Vorführung sind nur die ausdrücklich aufgeführten Ergebnisprüfungen
+nachgewiesen. Eine reine Programmfrage erhält eine schon vorhandene KI-Vorschau.
 
-Walkthroughs use named Formnaro controls. The interface offers no operating
-system mouse, arbitrary keystrokes, selectors, applications or file paths.
-It can show a file dialog and leaves the file choice to the user. Modelling
-still uses the usual preview and isolated computation paths.
+Die Steuerung verwendet benannte Formnaro-Ziele. Sie hat keine Betriebssystem-
+Maus, freie Tastatureingabe, beliebige Selektoren, externen Programme oder freien
+Dateipfade. Sie kann Dialoge zeigen; Dateiöffnen und Speichern in fremde Ziele
+werden damit nicht automatisch bestätigt. Modellierbefehle verwenden weiter die
+vorhandene geprüfte Vorschau und die isolierten Rechenumgebungen.
 
-At your request the assistant can append a short note to the current
-provider's context file. Existing text is preserved. Provider, size and
-revision checks limit this operation and credential protection still applies.
-Use the current model to verify context notes before acting on them.
+Auf Wunsch kann die KI eine kurze Notiz an ihre eigene Kontextdatei des aktiven
+Anbieters anhängen. Vorhandener Text wird erhalten. Anbieterprüfung, Dateigröße,
+Änderungskennung und Schutz bekannter Zugangsdaten begrenzen diese Schnittstelle;
+ein beliebiger Schreibpfad ist nicht vorgesehen. Kontextnotizen ersetzen keine
+Prüfung am aktuellen Modell.
 
-Provider requests, including follow-up help and corrections, are included
-in usage estimates. Local pointer movements use no API tokens. Internally,
-`programAssistant` extends the shared context and chat replies use
-`assistant.kind` values `help`, `guide`, `demonstrate` or `note`. The renderer
-validates targets before playback. The external CAD `preview` contract is
-unchanged.
+Anbieteranfragen einschließlich Hilfesuche und Korrekturen werden im vorhandenen
+Kostenrechner erfasst. Bedienhilfen zählen zu „Bedienhilfe / Fragen“; Konstruktion,
+Bearbeitung und STL-Nachbau entsprechend ihrem Auftrag. Die Einteilung ist eine
+automatische Zuordnung. Reine lokale Zeigerbewegungen kosten keine API-Tokens.
+
+Technisch: `programAssistant` erweitert den gemeinsamen Kontext. Die internen
+Chatantworten verwenden `assistant.kind` mit `help`, `guide`, `demonstrate` oder
+`note`. Der Renderer prüft alle Ziele vor dem Start. Die externe Modell-API
+`preview` behält ihr bestehendes CAD-Befehlsformat.

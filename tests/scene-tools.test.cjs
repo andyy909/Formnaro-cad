@@ -13,7 +13,7 @@ app.whenReady().then(async()=>{
   const typeField=async(selector,value)=>{await mouseClick(await buttonPoint(selector));await win.webContents.insertText(value);win.webContents.sendInputEvent({type:'keyDown',keyCode:'Enter'});win.webContents.sendInputEvent({type:'keyUp',keyCode:'Enter'});await pause();};
   const near=(a,b,label)=>assert.ok(Math.abs(a-b)<.001,`${label}: ${a} vs ${b}`);
   try{
-    await win.loadFile(path.join(__dirname,'../dist/index.html'),{query:{test:'1'}});
+    await win.loadFile(process.env.OFFLINECAD_TEST_ENTRY||path.join(__dirname,'../dist/index.html'),{query:{test:'1'}});
     await evaluate(`new Promise((resolve,reject)=>{let i=0;const t=setInterval(async()=>{if(window.__cadReady){clearInterval(t);resolve();}else if(window.__cadError||i++>120){clearInterval(t);reject(new Error(window.__cadError||'Timeout'));}},100);})`);
     await evaluate(`(async()=>{const api=window.__cadTest;api.restore({nodes:[],bed:[200,200],planeZ:0,name:'Maße am Modell'});api.addShape('box');const s=api.snapshot();s.nodes[0].size=[30,20,10];s.nodes[0].pos=[0,0,5];api.restore(s);api.select([s.nodes[0].id]);api.actions.fit();})()`);
     await pause();

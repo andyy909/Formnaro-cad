@@ -1,7 +1,7 @@
 {
   "name": "formnaro",
   "productName": "Formnaro",
-  "version": "0.125.0",
+  "version": "0.136.0",
   "private": true,
   "author": "Andreas Klisch",
   "license": "MIT",
@@ -189,7 +189,6 @@
     "test:assembly-display": "node --test --test-concurrency=1 tests/cad-assembly-display.test.mjs tests/cad-assembly-native.test.mjs tests/cad-assembly-automation.test.mjs tests/audit-assembly-display-release.test.mjs",
     "package:python": "node scripts/package-python-api.mjs",
     "test:python": "python tests/python-sdk.test.py && node --test tests/cad-python-contract.test.mjs",
-    "package:speech": "node scripts/package-speech.mjs",
     "test:speech": "node --test tests/speech.test.mjs",
     "package:chatgpt": "node scripts/package-chatgpt.mjs",
     "test:chatgpt": "node --test tests/chatgpt-login.test.cjs",
@@ -204,7 +203,7 @@
     "package:surfaces": "node scripts/package-surfaces.mjs",
     "test:surfaces": "node --test --test-concurrency=1 tests/cad-surfaces.test.mjs tests/freecad-surfaces.test.cjs tests/surfaces-release-config.test.mjs",
     "setup:windows-dictation": "node scripts/setup-windows-dictation.mjs",
-    "prebuild": "node scripts/setup-windows-dictation.mjs --verify"
+    "prebuild": "node scripts/setup-windows-dictation.mjs"
   },
   "dependencies": {
     "fflate": "0.8.3",
@@ -214,18 +213,10 @@
   "devDependencies": {
     "@electron/packager": "20.3.0",
     "@xmldom/xmldom": "0.9.12",
-    "electron": "44.10.2",
+    "electron": "44.10.0",
     "manifold-3d": "3.5.4",
     "replicad-opencascadejs": "1.1.0",
-    "vite": "8.3.5"
+    "vite": "8.3.4"
   },
-  "engines": {
-    "node": ">=22.16.0"
-  },
-  "overrides": {
-    "@electron/asar": {
-      "glob": "14.0.2",
-      "minimatch": "11.0.1"
-    }
-  }
+  "diagnosticEdition": false
 }

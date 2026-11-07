@@ -454,6 +454,8 @@ Neu|New
 Speichern|Save
 Projektname|Project name
 Lokal · ohne Cloud|Local · no cloud
+Sicherung läuft|Autosaving
+Autosicherung fehlgeschlagen|Autosave failed
 Lokal automatisch gesichert · Datei noch nicht gespeichert|Autosaved locally · project file not saved
 Lokal · Autosicherung ausgeschaltet|Local · autosave disabled
 Autosicherung voll · bitte Projektdatei speichern|Autosave storage full · please save a project file

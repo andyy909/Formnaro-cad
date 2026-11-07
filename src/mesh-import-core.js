@@ -9,27 +9,37 @@ const abort=signal=>{if(signal?.aborted)throw Object.assign(Error('Netzimport ab
 function tick(i,signal){if(!(i%4096))abort(signal);}
 
 /** Strict binary length preflight before allocating; binary headers may say solid. */
-export function readImportStl(buffer,{unit=1,signal}={}){
+export function readImportStl(buffer,{unit=1,signal,maxTriangles=MESH_IMPORT_LIMITS.triangles,auditPrecision=false}={}){
  if(!(buffer instanceof ArrayBuffer)||buffer.byteLength>MESH_IMPORT_LIMITS.bytes)fail('STL-Import: maximal 256 MiB.','MESH_IMPORT_LIMIT');
  if(![1,10,25.4].includes(unit))fail('Ungültige Importeinheit.');
- const view=new DataView(buffer);let positions,triangles;
+ const view=new DataView(buffer);let positions,triangles,coordinateRoundoff=0;
+ const triangleLimit=()=>fail(maxTriangles===MESH_IMPORT_LIMITS.triangles?'STL-Import: maximal 5 Millionen Dreiecke.':
+   'STL-Import: maximal '+maxTriangles.toLocaleString('de-DE')+' Dreiecke.','MESH_IMPORT_LIMIT');
+ const setPosition=auditPrecision?(i,value)=>{
+  positions[i]=value;coordinateRoundoff=Math.max(coordinateRoundoff,Math.abs(value-positions[i]));
+ }:(i,value)=>{positions[i]=value;};
  const count=buffer.byteLength>=84?view.getUint32(80,true):0,binary=count>0&&84+count*50===buffer.byteLength;
  if(binary){
-  if(count>MESH_IMPORT_LIMITS.triangles)fail('STL-Import: maximal 5 Millionen Dreiecke.','MESH_IMPORT_LIMIT');
+  if(count>maxTriangles)triangleLimit();
   positions=new Float32Array(count*9);triangles=count;
-  for(let f=0;f<count;f++){tick(f,signal);for(let j=0;j<9;j++)positions[f*9+j]=view.getFloat32(84+f*50+12+j*4,true)*unit;}
+  for(let f=0;f<count;f++){tick(f,signal);for(let j=0;j<9;j++)setPosition(f*9+j,view.getFloat32(84+f*50+12+j*4,true)*unit);}
  }else{
   if(buffer.byteLength>MESH_IMPORT_LIMITS.asciiBytes)fail('ASCII-STL: maximal 64 MiB; große Dateien als binäre STL speichern.','MESH_IMPORT_LIMIT');
   const text=new TextDecoder('utf-8',{fatal:true}).decode(buffer);
   if(!/^\s*solid\b/i.test(text)||!(/\bendsolid\b/i).test(text))fail('Keine vollständige binäre oder ASCII-STL.');
-  const faces=[...text.matchAll(/\bfacet\s+normal\s+[^\r\n]*\s+outer\s+loop\s+([\s\S]*?)\s+endloop\s+endfacet\b/gi)];
-  triangles=faces.length;if(!triangles||triangles>MESH_IMPORT_LIMITS.triangles)fail('Leere oder zu große ASCII-STL.');
+  const faces=[];
+  for(const face of text.matchAll(/\bfacet\s+normal\s+[^\r\n]*\s+outer\s+loop\s+([\s\S]*?)\s+endloop\s+endfacet\b/gi)){
+   if(faces.length===maxTriangles)triangleLimit();
+   faces.push(face);
+  }
+  triangles=faces.length;if(!triangles)fail('Leere oder zu große ASCII-STL.');
   if((text.match(/\bfacet\s+normal\b/gi)||[]).length!==triangles)fail('Unvollständige ASCII-STL-Fläche.');
   positions=new Float32Array(triangles*9);
-  for(let f=0;f<triangles;f++){tick(f,signal);const vertices=[...faces[f][1].matchAll(/\bvertex\s+(\S+)\s+(\S+)\s+(\S+)/gi)];if(vertices.length!==3)fail('Jede STL-Fläche muss drei Punkte besitzen.');for(let j=0;j<3;j++)for(let k=0;k<3;k++)positions[f*9+j*3+k]=Number(vertices[j][k+1])*unit;}
+  for(let f=0;f<triangles;f++){tick(f,signal);const vertices=[...faces[f][1].matchAll(/\bvertex\s+(\S+)\s+(\S+)\s+(\S+)/gi)];if(vertices.length!==3)fail('Jede STL-Fläche muss drei Punkte besitzen.');for(let j=0;j<3;j++)for(let k=0;k<3;k++)setPosition(f*9+j*3+k,Number(vertices[j][k+1])*unit);}
  }
  for(let i=0;i<positions.length;i++){tick(i,signal);if(!Number.isFinite(positions[i])||Math.abs(positions[i])>100000)fail('STL enthält ungültige oder zu große Koordinaten.');if(positions[i]===0)positions[i]=0;}
- return {positions,inputTriangles:triangles,encoding:binary?'binary':'ascii'};
+ return {positions,inputTriangles:triangles,encoding:binary?'binary':'ascii',
+  ...(auditPrecision?{coordinateRoundoffMM:Math.sqrt(3)*coordinateRoundoff}:{})};
 }
 
 export async function compactImportPositions(positions,{signal}={}){

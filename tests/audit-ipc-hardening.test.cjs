@@ -46,7 +46,7 @@ test('Desktop AI validates empty requests before configuration or network access
  const f=setup(t),file=path.resolve(__dirname,'../backend/desktop-ai.cjs'),local=createRequire(file),module={exports:{}};let sent,ready;
  const request=new Promise(resolve=>{ready=resolve;});f.win.webContents.send=(_name,value)=>{sent=value;ready();};
  const electron={app:{getPath:()=>f.directory},ipcMain:f.ipcMain,safeStorage:{isEncryptionAvailable:()=>false}};
- vm.runInNewContext(fs.readFileSync(file,'utf8'),{require:name=>name==='electron'?electron:local(name),module,Buffer,URL,AbortController,setTimeout,clearTimeout},{filename:file});
+ vm.runInNewContext(fs.readFileSync(file,'utf8'),{require:name=>name==='electron'?electron:local(name),module,Buffer,URL,AbortController,setTimeout,clearTimeout,process:{argv:[]}},{filename:file});
  const installed=module.exports.installDesktopAI(f.win,{settingsFile:path.join(f.directory,'ai-settings.json')});
  for(const args of [undefined,null,[],42,'invalid']){const r=await f.handlers.get('cad-ai:generate')(f.right,args);assert.equal(r.ok,false);assert.equal(r.code,'INVALID_AI_REQUEST');}
  const save=f.handlers.get('cad-ai:save');

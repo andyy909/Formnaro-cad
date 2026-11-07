@@ -9,6 +9,11 @@ export function sandboxWorkerMain(){
   const m=event.data;
   if(m.type==='reply'){const p=pending.get(m.id);if(!p)return;pending.delete(m.id);m.error?p.reject(Object.assign(Error(m.error.message),{code:m.error.code})):p.resolve(m.value);return;}
   if(m.type!=='start')return;
+  let stdout='',stderr='';
+  const line=values=>values.slice(0,16).map(value=>value===null||['string','number','boolean','undefined'].includes(typeof value)?String(value).slice(0,1000):'[object]').join(' ')+'\n';
+  const append=(buffer,values)=>buffer.length>=4000?buffer:buffer+line(values).slice(0,4000-buffer.length);
+  for(const name of ['log','info','debug'])console[name]=(...values)=>{stdout=append(stdout,values);};
+  for(const name of ['warn','error'])console[name]=(...values)=>{stderr=append(stderr,values);};
   try{
    const modules=new Map(Object.entries(m.modules??{})),loaded=new Map();
    async function importTool(name,source){
@@ -25,7 +30,7 @@ export function sandboxWorkerMain(){
    const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
    const value=await new AsyncFunction('api','"use strict";\n'+m.code)(api);
    postMessage({type:'done',value:value??null});
-  }catch(error){postMessage({type:'failed',error:{message:String(error.message??error),code:String(error.code??'AI_SCRIPT')}});}
+  }catch(error){postMessage({type:'failed',error:{message:String(error.message??error).slice(0,6000),code:String(error.code??'AI_SCRIPT'),sandboxOutput:{stdout,stderr}}});}
  };
 }
 export function sandboxFrameSource(channel,{bootstrap=`(${sandboxWorkerMain.toString()})();`,blobConnections=false}={}){
@@ -54,7 +59,13 @@ export function runCadAIScript({code,modules,call,signal,timeoutMs=120000,worker
     if(!Number.isSafeInteger(m.id)||!['model','query','run'].includes(m.method)){finish(Object.assign(Error('Unbekannte Skriptfunktion.'),{code:'AI_SCRIPT'}));return;}
     queue=queue.then(async()=>{if(stopped)return;try{const value=await call(m.method,m.args);if(!stopped)frame.contentWindow.postMessage({channel,type:'reply',id:m.id,value},'*');}catch(error){if(!stopped)frame.contentWindow.postMessage({channel,type:'reply',id:m.id,error:{message:String(error.message),code:error.code}},'*');}});
    }else if(m.type==='done'){queue.then(()=>{try{const json=JSON.stringify(m.value??null);if(json.length>1000000)throw Error('Das Rechenergebnis ist zu groß. Eine Messzusammenfassung zurückgeben.');finish(null,JSON.parse(json));}catch(error){finish(Object.assign(error,{code:'AI_SCRIPT_RESULT'}));}});}
-   else if(m.type==='failed')finish(Object.assign(Error(String(m.error?.message??'Lokale Berechnung fehlgeschlagen.')),{code:String(m.error?.code??'AI_SCRIPT')}));
+   else if(m.type==='failed'){
+    const error=Object.assign(Error(String(m.error?.message??'Lokale Berechnung fehlgeschlagen.')),{code:String(m.error?.code??'AI_SCRIPT')});
+    const sandboxOutput={};
+    for(const key of ['stdout','stderr'])if(typeof m.error?.sandboxOutput?.[key]==='string'&&m.error.sandboxOutput[key])sandboxOutput[key]=m.error.sandboxOutput[key].slice(0,4000);
+    if(Object.keys(sandboxOutput).length)error.feedback={sandboxOutput};
+    finish(error);
+   }
   }
   win.addEventListener('message',receive);signal?.addEventListener('abort',cancel,{once:true});
   if(signal?.aborted){cancel();return;}

@@ -20,7 +20,19 @@ test('post-commit display failure returns the actual receipt; retry refreshes wi
  }finally{f.controller.dispose();}
 });
 test('lost successful Apply response can be repeated with original identity and revision',async()=>{
- const f=await fixture({});try{const result=await f.access.apply(f.request),depth=f.controller.state().undo,retry=await f.access.apply(f.request);assert.equal(retry.alreadyApplied,true);assert.equal(retry.revision,result.revision);assert.equal(f.controller.state().undo,depth);assert.equal(retry.label,'revolute fixture');}finally{f.controller.dispose();}
+ const f=await fixture({});try{
+  const before=f.access.applyState(f.request);
+  assert.deepEqual(before,{revision:f.request.revision,undo:0});
+  const result=await f.access.apply(f.request),confirmed=f.access.applyState(f.request);
+  assert.equal(confirmed.receipt.applied,true);
+  assert.equal(confirmed.revision,result.revision);
+  assert.equal(confirmed.undo,before.undo+1);
+  assert.equal(f.access.applyState({...f.request,revision:'different'}).receipt,undefined);
+  assert.equal(f.access.applyState({...f.request,previewId:'different'}).receipt,undefined);
+  const retry=await f.access.apply(f.request);
+  assert.equal(retry.alreadyApplied,true);assert.equal(retry.revision,result.revision);
+  assert.equal(f.controller.state().undo,confirmed.undo);assert.equal(retry.label,'revolute fixture');
+ }finally{f.controller.dispose();}
 });
 test('rejected Apply preserves revision/history; stale receipt never masquerades as a new commit',async()=>{
  const f=await fixture({});try{const before=f.controller.serialize(),depth=f.controller.state().undo;await assert.rejects(f.access.apply({...f.request,revision:'wrong'}),{code:'STALE_REVISION'});assert.equal(f.controller.serialize(),before);assert.equal(f.controller.state().undo,depth);await f.access.apply(f.request);f.controller.undo();await assert.rejects(f.access.apply(f.request),{code:'STALE_REVISION'});}finally{f.controller.dispose();}

@@ -1,16 +1,55 @@
 const test=require('node:test'),assert=require('node:assert/strict'),{EventEmitter}=require('node:events');
 const {installPracticeChild}=require('../backend/practice-child.cjs');
-function harness(results,{initialFocus=true}={}){
+function harness(results,{initialFocus=true,audit=false,projectCopy,quality,recovery,observe=false}={}){
  const handlers=new Map(),channel=new EventEmitter(),sent=[],input=[],mainFrame={};channel.send=v=>sent.push(v);
  const contents={mainFrame,send:()=>{},sendInputEvent:v=>input.push(v),executeJavaScript:async()=>results.shift()};
  let focused=initialFocus;const win=Object.assign(new EventEmitter(),{webContents:contents,isDestroyed:()=>false,isFocused:()=>focused,getContentBounds:()=>({width:500,height:500}),close:()=>{}});
- installPracticeChild(win,{ipc:{handle:(n,f)=>handlers.set(n,f)},channel});const event={sender:contents,senderFrame:mainFrame};
- channel.emit('message',{type:'plan',nonce:'a'.repeat(48),plan:{version:1,title:'Test',actions:[{kind:'shape',type:'box',as:'block'}]}});
- return {handlers,event,input,win,sent,setFocused:value=>focused=value};
+ installPracticeChild(win,{ipc:{handle:(n,f)=>handlers.set(n,f)},channel,audit});const event={sender:contents,senderFrame:mainFrame};
+ channel.emit('message',{type:'plan',nonce:'a'.repeat(48),plan:{version:1,title:'Test',actions:[{kind:'shape',type:'box',as:'block'}]},projectCopy,quality,recovery,observe});
+ return {handlers,event,input,win,sent,channel,setFocused:value=>focused=value};
 }
+test('only a private audit child emits the blocked snapshot and it remains separate from the result project',async()=>{
+ const project={format:'OfflineCAD',nodes:[]},revision='b'.repeat(16),projectCopy={project,revision,selection:[]};
+ const quality={mode:'enforce',criteria:[]};
+ const value={ok:false,steps:[],reason:'Fixed discrepancy',report:{revision,failedAction:{kind:'quality'},
+  state:{known:[],selectable:[],selected:[]},quality:{mode:'enforce',revision,blocked:true,items:[]}}};
+ for(const audit of [false,true]){
+  const reads=[project],h=harness(reads,{audit,projectCopy,quality,recovery:'text'});
+  const reply=await h.handlers.get('cad-practice:result')(h.event,value);
+  assert.equal(reply.ok,true);
+  const result=h.sent.find(message=>message.type==='result');
+  assert.equal(result.waiting,true);
+  assert.equal(result.project,undefined);
+  assert.deepEqual(result.auditProject,audit?project:undefined);
+  assert.equal(reads.length,audit?0:1);
+ }
+});
 test('covered target never receives a native mouseDown',async()=>{
  const h=harness([{x:20,y:20,width:20,height:20},false]);await h.handlers.get('cad-practice:ready')(h.event);
  const r=await h.handlers.get('cad-practice:input')(h.event,{target:'shape:box',action:'click'});assert.equal(r.ok,false);assert.match(r.error,/verdeckt/);assert.deepEqual(h.input.map(v=>v.type),['mouseMove']);
+});
+
+test('native edge input rejects caller pixels, invalid sides and a changed or covered hit before clicking',async()=>{
+ const spec={target:'cad-edge',action:'click',rootId:'body',sides:['top','front']};
+ for(const patch of [{x:123},{edgeToken:'forged'},{sides:['top','bottom']},{sides:['top','top']},{sides:['top','unknown']},{rootId:'../host'}]){
+  const h=harness([]);await h.handlers.get('cad-practice:ready')(h.event);
+  const r=await h.handlers.get('cad-practice:input')(h.event,{...spec,...patch});assert.equal(r.ok,false);assert.equal(h.input.length,0);
+ }
+ const h=harness([{x:20,y:20,width:24,height:24,revision:'a'.repeat(16),edgeToken:'edge-a'},{ok:false,hit:'panel'}]);await h.handlers.get('cad-practice:ready')(h.event);
+ const r=await h.handlers.get('cad-practice:input')(h.event,spec);assert.equal(r.ok,false);assert(!h.input.some(e=>e.type==='mouseDown'));
+});
+test('large supplemental motion traces do not invalidate an otherwise admissible result',async()=>{
+ const step={kind:'model',jointValues:[{id:'rotary',value:360}],motionStates:Array.from({length:1000},()=>({
+  jointValues:[{id:'rotary',value:90}],persisted:false,revision:'a'.repeat(16)
+ }))};
+ for(const motionStates of [step.motionStates.slice(0,2),step.motionStates]){
+  const h=harness([]);
+  const reply=await h.handlers.get('cad-practice:result')(h.event,{ok:true,steps:[{...step,motionStates}]});
+  assert.equal(reply.ok,true);
+  const [returned]=h.sent.find(message=>message.type==='result').value.steps;
+  assert.deepEqual(returned.jointValues,step.jointValues);
+  assert.deepEqual(returned.motionStates,motionStates.length===2?motionStates:undefined);
+ }
 });
 test('lost focus stops before typing and unknown DOM targets are rejected',async()=>{
  const h=harness([{x:20,y:20,width:20,height:20},true,false]);await h.handlers.get('cad-practice:ready')(h.event);
@@ -61,4 +100,15 @@ test('practice parent/close operations stay scoped and produce an explicit ended
 
 test('resuming an interrupted numeric entry reselects the field and replaces its whole value once',async()=>{
  const h=harness([]);await h.handlers.get('cad-practice:ready')(h.event);let focused=true,interrupted=false,reads=0;h.win.webContents.executeJavaScript=async code=>{if(++reads===1)return {x:20,y:20,width:20,height:20};return code.includes('document.activeElement')?focused:true;};const send=h.win.webContents.sendInputEvent;h.win.webContents.sendInputEvent=e=>{send(e);if(e.type==='mouseDown')focused=true;if(e.type==='char'&&!interrupted){interrupted=true;focused=false;h.setFocused(false);h.win.emit('blur');}};const pending=h.handlers.get('cad-practice:input')(h.event,{target:'size-0',action:'set',value:'42'});await new Promise(r=>setTimeout(r,400));assert.deepEqual(h.input.filter(e=>e.type==='char').map(e=>e.keyCode),['4']);h.setFocused(true);await h.handlers.get('cad-practice:status')(h.event,{paused:false,generation:1});assert.equal((await pending).ok,true);assert.deepEqual(h.input.filter(e=>e.type==='char').map(e=>e.keyCode),['4','4','2']);assert.equal(h.input.filter(e=>e.type==='keyDown'&&e.keyCode==='Return').length,1);
+});
+
+
+test('Step observation requires trusted frame and explicit host observer, then awaits private nonce ack',async()=>{
+ const value={version:1,index:0,total:1,revision:'b'.repeat(16),ok:true,action:{kind:'set'},actual:{center:[0,0,40]}};
+ const denied=harness([]);assert.equal((await denied.handlers.get('cad-practice:observation')(denied.event,value)).ok,false);
+ const h=harness([],{observe:true});const handler=h.handlers.get('cad-practice:observation');assert.equal((await handler({...h.event,senderFrame:{}},value)).ok,false);
+ let settled=false;const pending=handler(h.event,value).then(r=>{settled=true;return r;});await Promise.resolve();assert.equal(settled,false);const m=h.sent.find(m=>m.type==='observation');assert.ok(m);
+ h.channel.emit('message',{type:'observation-reply',nonce:'wrong',id:m.id});await Promise.resolve();assert.equal(settled,false);
+ h.channel.emit('message',{type:'observation-reply',nonce:'a'.repeat(48),id:m.id});assert.equal((await pending).ok,true);
+ assert.equal((await handler(h.event,{...value,revision:'stale'})).ok,false);
 });

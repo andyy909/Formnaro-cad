@@ -4,7 +4,7 @@ In den KI-Einstellungen den Anbieter **ChatGPT-Abo** auswählen und **Continue w
 
 Die offizielle dynamische Registrierung für lokal betriebene Anwendungen benötigt weder einen API-Schlüssel noch ein Client-Secret. Ein ChatGPT-Konto mit zulässiger Abo-Nutzung ist erforderlich. Formnaro überträgt beim Senden Auftrag, Chatverlauf, benötigten Modellkontext und gegebenenfalls Bilder. Bestehende ChatGPT-Unterhaltungen werden nicht gelesen. Lokal installierte Formnaro-Werkzeuge prüfen die zurückgegebenen Vorschläge wie bisher. Eine Anmeldung führt selbst keine Modelländerung aus.
 
-**Nutzung verwalten** öffnet die ChatGPT-Nutzungseinstellungen. Dort gelten die Konto- und App-Limits sowie die vom Benutzer gewählte Behandlung eines Guthabens. Formnaro zeigt keine erfundenen Kontingente an. Die lokale Whisper-Erkennung bleibt unabhängig vom Konto; die ChatGPT-Abo-Anbindung unterstützt derzeit keine Audioeingabe oder Transkriptions-API.
+**Nutzung verwalten** öffnet die ChatGPT-Nutzungseinstellungen. Dort gelten die Konto- und App-Limits sowie die vom Benutzer gewählte Behandlung eines Guthabens. Formnaro zeigt keine erfundenen Kontingente an. Die ChatGPT-Abo-Anbindung unterstützt derzeit keine Audioeingabe oder Transkriptions-API.
 
 ## Speicherung und Abmeldung
 

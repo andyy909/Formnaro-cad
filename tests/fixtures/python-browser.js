@@ -46,7 +46,21 @@ result = {"width": scene["objects"][0]["worldBounds"]["size"][0], "holes": len(b
   check(cad.state().undo===1,'Eine Übernahme ist genau ein Undo-Schritt');cad.undo();check(cad.serialize()===before,'Python-Undo stellt Original exakt wieder her');cad.redo();check(cad.serialize()===after,'Python-Redo erhält Quellen und Ergebnis exakt');
   await cad.open(parseCadProject(after));check(cad.serialize()===after,'Gespeicherte Python-Ergebnisse lassen sich ohne Python-Prozess wieder öffnen');
   const original=cad.serialize();
-  try{await cad.preview({kind:'batch',commands:[{op:'python',code:'from formnaro import model\nmodel.box(3,4,5)\nawait model.flush()\nraise RuntimeError("Geplanter Rechenfehler")'}]});throw Error('Fehler ignoriert');}catch(error){check(error.message.includes('Geplanter Rechenfehler')&&cad.serialize()===original&&cad.state().previews===0,'Python-Fehler nach echtem CAD-Aufruf verwirft alle Zwischenänderungen');}
+  const feedbackAccess=createCadAutomationAccess({controller:cad,getModelChecksEnabled:()=>false});
+  for(const [op,code,tag] of [
+   ['python','from formnaro import model\nmodel.box(3,4,5)\nawait model.flush()\nprint("python-zwischenwert")\nraise RuntimeError("Geplanter Rechenfehler")','python-zwischenwert'],
+   ['script','await api.run({op:"create",type:"box",size:[3,4,5]}); console.log("js-zwischenwert"); throw Error("Geplanter Rechenfehler");','js-zwischenwert'],
+  ]){
+   const undo=cad.state().undo;
+   try{
+    await feedbackAccess.preview({revision:cad.revision(),commands:[{op,code}]});
+    throw Error('Fehler ignoriert');
+   }catch(error){
+    check(error.message.includes('Geplanter Rechenfehler')&&error.feedback?.sandboxOutput?.stdout?.includes(tag)
+      &&error.feedback?.commandIndex===1&&error.feedback?.applied===false&&cad.serialize()===original
+      &&cad.state().undo===undo&&cad.state().previews===0,op+' liefert Ausgabe und Fehler über die Vorschau, ohne Änderungen zu übernehmen');
+   }
+  }
   const locked=cad.snapshot();locked.layers[0].locked=true;await cad.open(locked);const lockedBefore=cad.serialize();
   try{await cad.preview({kind:'batch',commands:[{op:'python',code:`from formnaro import model\nmodel.get(${JSON.stringify(n.id)}).edit(name="Verboten")`}]});throw Error('Sperre ignoriert');}catch(error){check(cad.serialize()===lockedBefore&&/gesperrt|geschützt/.test(error.message),'Python respektiert geerbte Quellensperren');}
   locked.layers[0].locked=false;await cad.open(locked);
@@ -59,7 +73,14 @@ result = {"width": scene["objects"][0]["worldBounds"]["size"][0], "holes": len(b
   await namedRefresh();const access=createCadAutomationAccess({controller:named,getScene:()=>namedScene,refresh:namedRefresh});
   const proposal=await access.preview({revision:named.revision(),commands:[{op:'python',code:'from formnaro import model\np=model.box(20,30,4)\nh=model.cylinder(2,6,origin=(10,15,-1),hole=True)\nmodel.cut(p,h,alias="result")'}],checks:[{kind:'size',target:'$result',space:'worldAxes',expected:[20,30,4]},{kind:'volume',target:'$result',expected:2400-Math.PI*4*4,tolerance:.001},{kind:'solids',target:'$result',expected:1}]});
   check(proposal.aliases.result&&proposal.verification.checks.length===3,'Benannter Python-Ergebnisalias erreicht die echten äußeren Maß- und Volumenprüfungen');
+  const beforeImage=named.serialize();
+  const image=await access.dispatch('screenshot',{previewId:proposal.previewId,revision:proposal.revision});
+  check(image.mimeType==='image/png'&&image.dataBase64.startsWith('iVBORw0KGgo')&&image.views.length===4&&image.applied===false
+   &&image.previewId===proposal.previewId&&image.revision===proposal.revision&&named.serialize()===beforeImage&&named.state().undo===0,
+   'Externer Vorschaubildabruf rendert vier Ansichten ohne Modellübernahme');
   await access.apply(proposal);check(named.snapshot().nodes[0].children.length===2&&named.state().undo===1,'Benannter Python-Alias erzeugt keine zusätzliche Kopie und erhält alle Quellen');
+  try{await access.dispatch('screenshot',{previewId:proposal.previewId,revision:proposal.revision});throw Error('Veraltetes Bild akzeptiert');}
+  catch(error){check(error.code==='STALE_REVISION','Vorschaubild der früheren Revision wird abgewiesen');}
  }finally{named.dispose();}
  const multiple=await runCadPython({code:'from formnaro import Model\na=Model()\nb=Model()\na.box(1,2,3)\nb.box(3,2,1)\nresult={"ok":True}',call:async(method,args)=>({method,args})});check(multiple.value.ok,'Mehrere Python-Modelle können automatisch und geordnet abgeschlossen werden');
  try{await runCadPython({code:'while True:\n    pass',timeoutMs:2500,call:async()=>null});throw Error('Timeout fehlt');}catch(error){check(error.code==='AI_SCRIPT_TIMEOUT','Endloses Python beendet ohne blockierte Oberfläche');}

@@ -2,17 +2,16 @@ const {reasoningEfforts}=require('./ai-reasoning.cjs');
 const {BUILTIN_PROVIDERS}=require('./ai-provider-presets.cjs');
 const DEEPSEEK_MODELS=[
  {id:'deepseek-flash',name:'DeepSeek V4.1 Flash',vision:true},
- {id:'deepseek-v4-pro',name:'DeepSeek V4 Pro',vision:false}
+ {id:'deepseek-v4-pro',name:'DeepSeek V4 Pro',vision:false},
+ {id:'deepseek-v4-flash',name:'V4 Flash · Alias → V4.1 Flash',vision:true},
+ {id:'deepseek-v4-flash-vision-exp',name:'V4 Flash Vision Exp · Alias → V4.1 Flash',vision:true}
 ];
-const DEEPSEEK_ALIASES=new Set(['deepseek-v4-flash','deepseek-v4-flash-vision-exp']);
-function knownVision(config){return new URL(config.baseUrl).hostname==='api.deepseek.com'?(DEEPSEEK_ALIASES.has(config.model)?true:DEEPSEEK_MODELS.find(m=>m.id===config.model)?.vision??null):null;}
+function knownVision(config){return new URL(config.baseUrl).hostname==='api.deepseek.com'?DEEPSEEK_MODELS.find(m=>m.id===config.model)?.vision??null:null;}
 function modelCatalog(config,details=[]){
  const host=new URL(config.baseUrl).hostname,result=new Map();
  for(const model of host==='api.deepseek.com'?DEEPSEEK_MODELS:[])result.set(model.id,{...model});
- if(host==='api.deepseek.com'&&DEEPSEEK_ALIASES.has(config.model))result.set(config.model,{id:config.model,name:config.model+' · Legacy alias → DeepSeek V4.1 Flash',vision:true,current:true});
  for(const model of details){
   if(typeof model.id!=='string'||!model.id.trim()||model.id.length>200)continue;
-  if(host==='api.deepseek.com'&&DEEPSEEK_ALIASES.has(model.id))continue;
   if(host==='api.groq.com'&&(/^(?:whisper-|canopylabs\/|playai-)/i.test(model.id)||/(?:guard|safeguard)/i.test(model.id)))continue;
   // /models includes speech, image generation and embedding models too.
   if(config.authMode!=='chatgpt'&&host==='api.openai.com'&&(!/^(?:gpt-|chatgpt-|ft:gpt-)/.test(model.id)||/(?:audio|realtime|transcrib|tts|image|instruct|search|embedding)/i.test(model.id)))continue;

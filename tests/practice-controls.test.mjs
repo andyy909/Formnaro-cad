@@ -13,6 +13,8 @@ test('new internal tools require no per-tool allowlist; external/password target
  const tool={id:'brand-new-tool',dataset:{action:'future-tool'},tagName:'BUTTON',getClientRects:()=>[{}],closest:()=>null,hasAttribute:()=>false};
  const document={getElementById:()=>tool,querySelectorAll:()=>[tool]};assert.equal(practiceControl(document,'ui:tool:future-tool'),tool);
  tool.id='provider-login';assert.throws(()=>practiceControl(document,'ui:tool:future-tool'),/heraus/);tool.id='ordinary';tool.type='password';assert.throws(()=>practiceControl(document,'ui:id:ordinary'),/heraus/);
+ tool.type='button';tool.hasAttribute=name=>name==='data-drawing-export';
+ assert.throws(()=>practiceControl(document,'ui:id:ordinary'),/heraus/,'Drawing export must not open a file dialog in practice');
 });
 
 test('automatic gear demonstration is semantic and cannot request coordinates or external targets',()=>{
@@ -38,4 +40,23 @@ test('dialog feedback contains current modelling fields and excludes hidden and 
  const dialog={id:'modal',getClientRects:()=>[{}],querySelector:()=>null,querySelectorAll:()=>fields};const document={querySelectorAll:()=>[dialog]};
  const state=practiceDialogState(document);assert.equal(state.controls.length,1);assert.equal(state.controls[0].value,'3');assert.equal(state.controls[0].target,'ui:id:shell-thickness');assert(!JSON.stringify(state).includes('private'));
  dialog.querySelector=()=>({});assert.equal(practiceDialogState(document),null);
+});
+
+test('a closed title block names the real next control',t=>{
+ const old=globalThis.getComputedStyle;
+ globalThis.getComputedStyle=()=>({visibility:'visible'});
+ t.after(()=>globalThis.getComputedStyle=old);
+ const block={id:'drawing-title-block',getClientRects:()=>[{}],closest:()=>null};
+ const doc={getElementById:id=>id===block.id?block:null};
+ assert.throws(()=>practiceControl(doc,'ui:id:drawing-title'),/Titelblock geschlossen.*ui:id:drawing-title-block/);
+});
+
+test('registered transform tools resolve the actual data-mode buttons',t=>{const old=globalThis.getComputedStyle;globalThis.getComputedStyle=()=>({visibility:'visible'});t.after(()=>globalThis.getComputedStyle=old);for(const mode of ['translate','rotate','scale']){const button={dataset:{mode},tagName:'BUTTON',getClientRects:()=>[{}],closest:()=>null,hasAttribute:()=>false};assert.equal(practiceControl({querySelectorAll:()=>[button]},'ui:tool:mode-'+mode),button);}});
+test('a tool hidden in a closed menu reports the actual reveal target',()=>{const group={dataset:{toolCategory:'view-tools'}},button={dataset:{action:'reset-plane'},getClientRects:()=>[],closest:selector=>selector==='details:not([open])'?group:null};assert.throws(()=>practiceControl({querySelectorAll:()=>[button]},'ui:tool:reset-plane'),/geschlossenen Menü menu:view-tools/);});
+
+test('drawing update wording resolves the exact visible drawing control and retains disabled/hidden guards',t=>{
+ const old=globalThis.getComputedStyle;globalThis.getComputedStyle=()=>({visibility:'visible'});t.after(()=>globalThis.getComputedStyle=old);
+ let shown=true;const button={id:'drawing-update',tagName:'BUTTON',dataset:{},textContent:'Blatt aktualisieren',getClientRects:()=>shown?[{}]:[],closest:()=>null,hasAttribute:()=>false,getAttribute:()=>null};
+ const doc={getElementById:id=>id==='drawing-update'?button:null,querySelectorAll:q=>q==='label'?[]:[button]};
+ assert.equal(practiceControl(doc,'ui:label:Ansichten aktualisieren'),button);button.disabled=true;assert.throws(()=>practiceControl(doc,'ui:label:Ansichten aktualisieren'),/deaktiviert/);button.disabled=false;shown=false;assert.throws(()=>practiceControl(doc,'ui:label:Ansichten aktualisieren'),/fehlt/);
 });

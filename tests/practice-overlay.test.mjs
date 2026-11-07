@@ -3,18 +3,23 @@ import assert from 'node:assert/strict';
 import {installCadPracticeRunner} from '../src/cad-practice-runner.js';
 
 // Exercise the real runner's lifecycle without CAD work or native input.
-function harness(t){
+function harness(t,{nested=false}={}){
  const elements=new Map(['practice-pointer','practice-caption','practice-pause','practice-stop','practice-interaction-warning','practice-speed','practice-end','practice-main'].map(id=>[id,{style:{},textContent:'',disabled:false}]));
  const sessionBar={style:{},contains:()=>false,querySelector:s=>elements.get(s.slice(1))};const overlay={style:{},hidden:false,querySelector:s=>elements.get(s.slice(1)),contains:()=>false};
  const listeners=new Map();let plan,cancel,resolveReport,releasePreview,cancelled=0,applies=0;
  const report=new Promise(resolve=>{resolveReport=resolve;});
  const preview=new Promise(resolve=>{releasePreview=resolve;});
  const oldDocument=globalThis.document,oldWindow=globalThis.window;
- globalThis.document={createElement:tag=>tag==='aside'?sessionBar:overlay,body:{append(){}},getElementById:()=>null,querySelectorAll:()=>[]};
+ const mount={append(node){node.parentElement=this;}},dialogs=nested?[{...mount},{...mount}]:[];
+ if(nested){
+  let open=false;
+  Object.assign(overlay,{showPopover(){open=true;},hidePopover(){open=false;},matches:()=>open,setAttribute(){},removeAttribute(){}});
+ }
+ globalThis.document={createElement:tag=>tag==='aside'?sessionBar:overlay,body:mount,getElementById:()=>null,querySelectorAll:selector=>selector==='dialog:modal'?dialogs:[]};
  globalThis.window={addEventListener:(name,fn)=>listeners.set(name,fn)};
  t.after(()=>{globalThis.document=oldDocument;globalThis.window=oldWindow;});
- installCadPracticeRunner({modelUIFactory:()=>({reset(){},aliasState:()=>[],run:async()=>{await preview;if(!cancelled)applies++;return {};}}),desktop:{onPracticePlan:fn=>{plan=fn;},onPracticeCancel:fn=>{cancel=fn;},practiceInput:async()=>{},submitPracticeResult:resolveReport,practiceReady:async()=>{},practiceAbort:async()=>{}},controller:{cancel(){cancelled++;},readSnapshot:()=>({nodes:[]}),revision:()=> 'test'},access:{preview:()=>preview,apply:async()=>{applies++;},discard(){}},getSelection:()=>[],settled:async()=>{}});
- return {overlay,notice:elements.get('practice-interaction-warning'),start(){plan({version:1,actions:[{kind:'model',commands:[{op:'create',type:'box'}]}]});},release:()=>releasePreview({previewId:'test',revision:'test'}),report,stop:()=>elements.get('practice-stop').onclick(),cancel:()=>cancel(),escape:()=>listeners.get('keydown')({isTrusted:true,key:'Escape',preventDefault(){},stopImmediatePropagation(){}}),applies:()=>applies,cancelled:()=>cancelled};
+ installCadPracticeRunner({modelUIFactory:()=>({reset(){},aliasState:()=>[],run:async()=>{await preview;if(!cancelled)applies++;return {};}}),desktop:{onPracticePlan:fn=>{plan=fn;},onPracticeCancel:fn=>{cancel=fn;},practiceInput:async()=>{},submitPracticeResult:resolveReport,practiceReady:async()=>{},practiceAbort:async()=>{},practiceStatus:async()=>({generation:0})},controller:{state:()=>({undo:0}),cancel(){cancelled++;},readSnapshot:()=>({nodes:[]}),revision:()=> 'test'},access:{scene:()=>({objects:[]}),preview:()=>preview,apply:async()=>{applies++;},discard(){}},getSelection:()=>[],settled:async()=>{}});
+ return {overlay,dialogs,pause:()=>elements.get('practice-pause').onclick(),notice:elements.get('practice-interaction-warning'),start(){plan({version:1,actions:[{kind:'model',commands:[{op:'create',type:'box'}]}]});},release:()=>releasePreview({previewId:'test',revision:'test'}),report,stop:()=>elements.get('practice-stop').onclick(),cancel:()=>cancel(),escape:()=>listeners.get('keydown')({isTrusted:true,key:'Escape',preventDefault(){},stopImmediatePropagation(){}}),applies:()=>applies,cancelled:()=>cancelled};
 }
 
 test('Practice notice is hidden until an exercise starts',t=>{assert.equal(harness(t).overlay.hidden,true);});
@@ -27,4 +32,15 @@ for(const action of ['stop','escape','cancel'])test(`Practice ${action} removes 
 
 test('construction notice explicitly allows tempo controls and becomes a calm playback notice afterwards',async t=>{
  const h=harness(t);h.start();await new Promise(resolve=>setImmediate(resolve));assert.match(h.notice.textContent,/Modell wird aufgebaut/);assert.match(h.notice.textContent,/Tempo, Pause und Stop.*jederzeit/);h.release();assert.equal((await h.report).ok,true);assert.match(h.notice.textContent,/Vorführung läuft/);assert.doesNotMatch(h.notice.textContent,/nichts anklicken|Maus nicht bewegen|nicht ins Modell/);assert.equal(h.notice.style.fontSize,'14px');
+});
+
+test('a pause leaves the controls inside the frontmost modal when dialogs are stacked',async t=>{
+ const h=harness(t,{nested:true});
+ h.start();
+ await new Promise(resolve=>setImmediate(resolve));
+ h.pause();
+ assert.equal(h.overlay.parentElement,h.dialogs.at(-1));
+ assert.equal(h.overlay.matches(':popover-open'),true);
+ h.cancel();h.release();
+ assert.equal((await h.report).ok,false);
 });

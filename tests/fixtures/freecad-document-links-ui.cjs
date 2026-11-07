@@ -1,7 +1,7 @@
 const Module=require('node:module'),path=require('node:path'),fs=require('node:fs'),assert=require('node:assert/strict'),{createHash}=require('node:crypto'),original=Module._load,{code}=require('./freecad-link-fixture.cjs'),freecad=require('../../backend/freecad.cjs');
 Module._load=function(request,parent,isMain){
- if(request==='./backend/maintenance-verification.cjs')return {verifyMaintenance:async win=>{
-  const directory=path.dirname(process.argv.find(v=>v.startsWith('--verify-maintenance=')).split('=').slice(1).join('=')),checks=[],js=async source=>{try{return await win.webContents.executeJavaScript(source);}catch(error){fs.writeFileSync(path.join(directory,'failed-script.txt'),source);throw error;}},pause=ms=>new Promise(r=>setTimeout(r,ms));
+ if(request==='./backend/ai-result-checks-verification.cjs')return {verifyAIResultChecks:async win=>{
+  const directory=path.dirname(process.argv.find(v=>v.startsWith('--verify-ai-result-checks=')).split('=').slice(1).join('=')),checks=[],js=async source=>{try{return await win.webContents.executeJavaScript(source);}catch(error){fs.writeFileSync(path.join(directory,'failed-script.txt'),source);throw error;}},pause=ms=>new Promise(r=>setTimeout(r,ms));
   async function until(source){for(let i=0;i<4000;i++){if(await js(source))return;await pause(30);}throw Error('Timeout: '+source+' / '+await js("document.querySelector('.ai-freecad-document [role=status]')?.textContent"));}
   async function capture(name){await js('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');fs.writeFileSync(path.join(directory,name+'.png'),(await win.webContents.capturePage()).toPNG());}
   async function preview(){await js("document.querySelector('[data-freecad-action=preview]').click()");await until("!document.querySelector('[data-freecad-action=apply]').hidden");}

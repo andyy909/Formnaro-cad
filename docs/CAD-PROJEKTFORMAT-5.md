@@ -1,7 +1,5 @@
 # Vertrag für CAD-Projektformat 5
 
-> Historische Beschreibung des Basisformats v5. Der aktuelle Validator akzeptiert in 0.125.0-r36 Projektversion 5 sowie 7 bis 32 und prüft die von den Modellmerkmalen benötigte Version. [Aktueller Validator](../src/cad-project.js), [FNPACK-Spezifikation](FNPACK-FORMAT.md)
-
 Stand: 11.10.2026. `src/cad-project.js` beschreibt die strikte Datengrenze
 des produktiven nativen CAD-Editors in Formnaro 0.11.0. Die ältere Ausgabe
 0.10 verwendet Format 4 und bleibt separat erhalten. Native Nachweise und

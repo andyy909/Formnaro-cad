@@ -1,92 +1,148 @@
-# Python modelling in Formnaro
+# Python-Modellierung in Formnaro
 
-Use Python to compute a local modelling preview with the same CAD kernel,
-precision and tool limits as the interactive workspace. The desktop app
-loads its bundled Python runtime on demand.
+Ab Version 0.90 kann Python direkt eine lokale Modellvorschau berechnen.
+Die mitgelieferte Laufzeit wird erst bei einer Python-Berechnung geladen.
+In der Anwendung ist keine zusätzliche Python-Installation erforderlich.
 
-## In the application
+Die KI erhält bei ihren normalen Modellieraufträgen die Python-Befehlsbeschreibung
+zusammen mit dem bestehenden Werkzeugkontext. Externe KI-Werkzeuge können die
+gleiche Vorschau über `offlinecad_python` oder die lokale API aufrufen.
+Der CAD-Kern, seine Genauigkeit und die vorhandenen Bearbeitungsgrenzen bleiben
+dieselben wie bei den jeweiligen interaktiven Werkzeugen.
 
-Open the AI workshop, expand Python modelling and insert an example.
-Calculate the preview and inspect the model and dimensions before applying.
-Apply commits the whole result in one Undo step.
+## In der Anwendung
+
+1. Die große **KI-Werkstatt** öffnen.
+2. **Python-Modellierung** aufklappen und **Beispiel einsetzen** wählen.
+3. **Python-Vorschau berechnen** anklicken.
+4. Maße und Ergebnis prüfen, bei Bedarf **Auf Fläche ansehen** wählen.
+5. **Änderungen übernehmen** erzeugt genau einen Rückgängig-Schritt.
 
 ```python
 from formnaro import model
 
-plate = model.box(60, 40, 6, origin=(-30, -20, 0), name="Plate")
-holes = [model.cylinder(2.5, 8, origin=(x, 0, -1), hole=True)
-         for x in (-20, 20)]
-part = model.cut(plate, *holes, name="Drilled plate")
-result = {"holes": len(holes)}
+platte = model.box(60, 40, 6, origin=(-30, -20, 0), name="Platte")
+bohrungen = [model.cylinder(2.5, 8, origin=(x, 0, -1), hole=True)
+             for x in (-20, 20)]
+teil = model.cut(platte, *bohrungen, name="Platte mit Bohrungen")
+result = {"bohrungen": len(bohrungen)}
 ```
 
-Dimensions are in millimetres. A box origin is its lower local corner.
-A cylinder or cone origin is the centre of its base. `normal` gives the
-extrusion direction. `frame(origin, normal, x_axis)` defines a right-handed
-sketch plane. Sketches extrude along local +Z.
+Alle Maße sind Millimeter. Bei einem Quader ist `origin` die untere lokale
+Ecke, bei einem Zylinder oder Kegel der Mittelpunkt seiner Grundfläche.
+`normal` gibt die Extrusionsrichtung runder Grundformen an.
+`frame(origin, normal, x_axis)` liefert eine rechtshändige Skizzenebene;
+Skizzen extrudieren entlang ihrer lokalen positiven Z-Achse.
 
-The runtime executes pending commands at successful script completion.
-`await model.flush()` submits pending commands before an intermediate check.
-`await model.snapshot()` and `await model.query(...)` flush automatically.
-Top-level `await` is supported.
+`model` ist ein vorbereiteter Befehlsentwurf. Er wird am erfolgreichen Skriptende
+automatisch ausgeführt. Weitere mit `Model()` angelegte Entwürfe werden ebenfalls
+automatisch abgeschlossen. Für eine Zwischenmessung zuerst `await model.flush()`
+aufrufen; `await model.snapshot()` und `await model.query(...)` erledigen dies
+automatisch. Python unterstützt hier auch `await` auf oberster Ebene.
 
-| Operation | Python call |
-| --- | --- |
-| Box, cylinder and truncated cone | `model.box(...)`, `model.cylinder(...)`, `model.cone(...)` |
-| Cylinder between points | `model.cylinder_between(diameter=8, start=(30,-1,18), end=(30,41,18), overrun=0.5, hole=True)` |
-| Extrude a contour or native sketch | `model.polygon(...)`, `model.profile(...)`, `model.sketch(...)` |
-| Boolean operations | `model.union(...)`, `model.cut(body, *tools)`, `model.intersect(...)` |
-| Loft and sweep | `model.loft(*profiles)`, `model.sweep(profile, {"kind":"line", "length":30})` |
-| Duplicate or find a source | `model.duplicate(part, offset=(x,y,z))`, `model.get(observed_id, path=[source_ids])` |
-| Edit placement and dimensions | `part.move(...)`, `part.rotate(...)`, `part.edit(...)`, `await part.resize([10,10,44], anchor="center")` |
-| Modify features | `model.offset_face(...)`, `model.shell(...)`, `model.drill(...)`, `model.finish(...)` |
+## Werkzeuge
 
-`model.command(command)` exposes documented CAD and mesh operations. Linked
-contours, parameters, joints and drawings use their own preview flows.
-Loft and sweep save editable profile copies. Use `keep_profiles=True` for
-a loft or `keep_profile=True` for a sweep to keep the separate helper parts.
+| Aufgabe | Python-Aufruf |
+|---|---|
+| Quader | `model.box(breite, tiefe, hoehe, origin=(x,y,z))` |
+| Zylinder | `model.cylinder(radius, hoehe, origin=(x,y,z), normal=(0,0,1))` |
+| Zylinder zwischen Weltpunkten | `model.cylinder_between(diameter=8, start=(30,-1,18), end=(30,41,18), overrun=0.5, hole=True)` |
+| Kegelstumpf | `model.cone(radius, oberer_radius, hoehe, ...)` |
+| Polygonkontur extrudieren | `model.polygon(punkte, hoehe, plane=frame(...))` |
+| Linien, Kreise, Bögen, Innenkonturen | `model.profile(elemente, hoehe, loops=..., variables=...)` |
+| Vorbereitete native Skizze | `model.sketch(skizzendaten, plane=...)` |
+| Vereinigen, ausschneiden, schneiden | `model.union(...)`, `model.cut(koerper, *werkzeuge)`, `model.intersect(...)` |
+| Profilübergang | `model.loft(*profile)` |
+| Profil entlang Pfad | `model.sweep(profil, {"kind":"line", "length":30})` |
+| Kopieren | `model.duplicate(teil, offset=(x,y,z))` |
+| Vorhandene Quelle | `model.get(beobachtete_id, path=[quellen_ids])` |
+| Ändern | `teil.move(...)`, `teil.rotate(...)`, `teil.edit(size=[...], ...)` |
+| Größe bei festem Mittelpunkt | `await teil.resize([10,10,44], anchor="center")` |
+| Gemessene Fläche versetzen | `model.offset_face(teil, gemessene_flaeche, abstand)` |
+| Innen aushöhlen | `model.shell(teil, gemessene_oeffnungsflaechen, wandstaerke)` |
+| Native Bohrung | `model.drill(teil, gemessener_bezug, diameter=..., ...)` |
+| Geprüfte Kantenoperation | `model.finish(teil, gemessener_bearbeitungsschritt)` |
 
-Read part, face and edge references from the current scene or a measurement.
-Refresh them after a geometry change. Native validation determines which
-imported faces can be offset, shelled or rounded. Errors, cancellation and
-timeouts discard intermediate work. A stale preview cannot replace a newer
-project revision.
+`model.command(befehl)` stellt außerdem die dokumentierten gemeinsamen
+CAD-/Netzbefehle bereit. Für Konturverknüpfungen, Projektparameter, Gelenke und
+Zeichnungen gelten weiterhin deren eigene Vorschauabläufe; sie lassen sich
+nicht durch ein Geometrieskript umgehen.
 
-## External Python scripts
+Native Gruppen erhalten ihre Körper- und Lochquellen. Loft und Sweep speichern
+unabhängige bearbeitbare Profilkopien; standardmäßig werden ihre zusätzlichen
+Hilfsprofile als eigenständige Teile entfernt. `keep_profiles=True` beziehungsweise
+`keep_profile=True` erhält diese bei Bedarf zusätzlich.
 
-Use Python 3.10 or newer. Add `ai/python` to the Python path or install it
-with `python -m pip install <path>/ai/python`. Enable the local interface in
-the running app. [AI and local automation guide](AI-GUIDE.md)
+IDs, Flächen- und Kantenbezüge aus der aktuellen Szene beziehungsweise einer
+Messabfrage übernehmen. Flächennummern nach einer Geometrieänderung erneut
+ermitteln. Beispiele und die vollständigen akzeptierten Felder stehen im
+aktuellen KI-Kontext. Nicht jede importierte Fläche eignet sich für Versatz,
+Schale oder Abrundung; der native Geometrieprüfer entscheidet darüber.
+
+```python
+szene = await model.query("cad", "scene")
+result = {"teile": len(szene["objects"])}
+```
+
+`result` darf eine JSON-kompatible Zusammenfassung enthalten. `print()` wird
+begrenzt in der Python-Ausgabe der Vorschau angezeigt. Fehler, Abbruch und
+Zeitüberschreitung verwerfen sämtliche Zwischenänderungen. Eine veraltete
+Vorschau ersetzt keinen neueren Modellstand.
+
+## Externe Python-Skripte
+
+Die Bibliothek liegt unter `ai/python/formnaro`. Sie benötigt Python ab 3.10
+und keine zusätzlichen Laufzeitpakete. Den Ordner `ai/python` dem Python-Pfad
+hinzufügen oder das lokale Paket mit `python -m pip install <Pfad>/ai/python`
+installieren. Die vorhandene lokale KI-Schnittstelle in Formnaro muss laufen.
 
 ```python
 from formnaro import Client, Model
 
-client = Client()  # Or pass the connection file path.
-context = client.context()
-scene = client.scene()
-model = Model()
-model.box(30, 20, 5, name="Part")
-preview = client.preview(model, revision=scene["revision"])
-# Inspect the preview before applying.
-client.apply(preview)
+client = Client()  # alternativ Client(verbindungsdateipfad)
+kontext = client.context()
+szene = client.scene()
+modell = Model()
+modell.box(30, 20, 5, name="Bauteil")
+vorschlag = client.preview(modell, revision=szene["revision"])
+# Erst nach Prüfung:
+client.apply(vorschlag)
 ```
 
-`Client.preview_python(code)` runs a script inside the bundled runtime.
-`Client.export("step")` returns file bytes. The client reads the local access
-token internally. Keep it and the connection file private. This connection
-requires no cloud key. Use `Client.discard(preview)` to discard a completed
-preview without changing the confirmed model or Undo history. MCP provides
-`offlinecad_python` for preview and `offlinecad_apply` for Apply.
+`Client.preview_python(code)` lässt Python in der mitgelieferten Anwendungs-
+Laufzeit rechnen. `Client.export("step")` liefert Dateibytes. Der Client liest
+den lokalen Zugriffstoken intern; Verbindungsdatei und Token nicht ausgeben,
+in Modelle übernehmen oder weitergeben. Es wird kein Cloud-Schlüssel benötigt.
 
-## Runtime and saved models
+`Client.discard(vorschlag)` verwirft eine fertige, noch nicht übernommene
+Vorschau. Vorschaukennung und Revision stammen aus derselben Vorschauantwort.
+Danach kann das Skript eine neue Vorschau anfordern. Das bestätigte Modell
+und der Undo-Verlauf bleiben beim Verwerfen erhalten.
 
-In-app Python uses an isolated worker with an opaque origin and a temporary
-WebAssembly filesystem. It has no mounted user folders, network, desktop
-bridge, credentials or program storage. External CPython scripts run with the
-permissions of the environment that started them.
+Der MCP-Adapter `scripts/offlinecad_ai.py` bietet bei einer entsprechend neuen
+Anwendung zusätzlich `offlinecad_python({revision, code, label?})`. Dieses
+Werkzeug berechnet ausschließlich eine Vorschau. Die Übernahme erfolgt
+getrennt mit `offlinecad_apply`.
 
-Projects store the resulting Formnaro sources. Reopening a model does not run
-the original script. The required project version depends on the features used.
-See [Python examples](../ai/python/examples),
-[runtime provenance](../python-runtime/provenance.json) and
-[modelling helper semantics](KI-MODELLIERHILFEN.md).
+## Laufzeit und gespeicherte Modelle
+
+Python läuft in einem getrennten Worker mit undurchsichtigem Ursprung. Seine
+Dateien liegen ausschließlich in flüchtigem WebAssembly-Speicher. Es sind
+keine Benutzerordner eingebunden; Netzwerk, Desktop-Bridge, Zugangsdaten und
+Programmspeicher werden nicht bereitgestellt. Zusätzliche Python-Pakete werden
+nicht heruntergeladen. Standardbibliothek und die Formnaro-Helfer werden lokal
+mitgeliefert. Externe CPython-Skripte laufen dagegen in der vom Nutzer gestarteten
+normalen Python-Umgebung und haben deren übliche Rechte.
+
+Die neue Schnittstelle speichert gewöhnliche native Formnaro-Quellen. Beim
+Wiederöffnen ist keine erneute Skriptausführung erforderlich. Das benötigte
+Projektformat richtet sich nach den verwendeten Funktionen, etwa Format 11
+bei Loft/Sweep; ein einfaches Python-Modell erzwingt kein neues Dateiformat.
+
+Beispiele: `ai/python/examples`. Die Laufzeit basiert auf dem unveränderten,
+fest eingebundenen Pyodide 314.0.7 mit Python 3.14.2. Quellen, Lizenztexte und
+Prüfsummen sind unter `python-runtime/provenance.json` im Quellpaket sowie
+unter `licenses/python` in der Auslieferung dokumentiert.
+
+Die genaue Koordinaten- und Ankersemantik der neuen SDK1.3-Hilfen steht in
+[KI-MODELLIERHILFEN.md](KI-MODELLIERHILFEN.md).

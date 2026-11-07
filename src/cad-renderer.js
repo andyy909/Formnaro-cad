@@ -16,7 +16,7 @@ import * as THREE from 'three';
 import {createScaleDimensions} from './cad-scale-dimensions.js';
 import {createMoveDimensions} from './cad-move-dimensions.js';
 import {createCadRotationHandles} from './cad-rotation-handles.js';
-import {cadBedGrid,workplaneOnGround} from './cad-bed-grid.js';
+import {cadAdaptiveBedSize,cadBedGrid,workplaneOnGround} from './cad-bed-grid.js';
 import {marqueeIntersectsMesh} from './cad-marquee-selection.js';
 import {cadEdgeRenderBuffers} from './cad-edge-rendering.js';
 import {cadDisplayGeometry as buildGeometry,cadVisibleRayHit} from './cad-renderer-geometry.js';
@@ -129,7 +129,7 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
     const mesh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,toneMapped:false}));mesh.userData={rootId:id,input,result};
     clear(thicknessMarks);thicknessId=id;thicknessMarks.add(mesh);refreshVisibility();invalidate('thickness-map');
   }
-  let stagedDisplay=null,bedSignature=null,lastReuse=0,lastCreated=0,pendingCommit=false;
+  let stagedDisplay=null,bedSignature=null,bedInput=null,lastReuse=0,lastCreated=0,pendingCommit=false;
   function dropStage(){if(stagedDisplay){for(const entry of stagedDisplay.entries)if(!entry.reused)dispose(entry.mesh);stagedDisplay=null;}}
   const sameArray=(a,b,float=false)=>!!a&&!!b&&a.length===b.length&&a.every((v,i)=>v===(float?Math.fround(b[i]):b[i]));
   function sameGeometry(mesh,record){const data=record.mesh,g=mesh.geometry;if(record.kind!=='cad'&&mesh.userData.reference)return meshDisplayMatches(g,data);if(record.kind==='cad'&&!mesh.userData.reference&&isCadDisplaySnapshot(data)&&mesh.userData.record.mesh===data)return true;return mesh.userData.reference===(record.kind!=='cad')&&sameArray(g.attributes.position.array,data.vertices??data.verts,true)&&sameArray(g.index?.array,data.triangles)&&((record.kind!=='cad')||(sameArray(g.attributes.normal.array,data.normals,true)&&sameArray(g.userData.cadFaceGroups,data.faceGroups)));}
@@ -146,6 +146,7 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
   }
   function validateDisplay(result,project){dropStage();stagedDisplay=prepareDisplay(result,project);return {bytes:stagedDisplay.nextBytes,maxBytes:128*1024*1024};}
   function setDisplay(result,project=getProject()){
+    clearCornerPreview();
     const prepared=stagedDisplay?.result===result?stagedDisplay:prepareDisplay(result,project);if(prepared===stagedDisplay)stagedDisplay=null;else dropStage();
     clearAlignmentPreview();const keep=new Set(prepared.entries.map(e=>e.mesh));for(const mesh of [...bodies.children])if(!keep.has(mesh))dispose(mesh);records.clear();displayBytes=prepared.nextBytes;lastReuse=0;lastCreated=0;
     for(const {mesh,record,node,reused}of prepared.entries){if(reused)lastReuse++;else lastCreated++;
@@ -159,27 +160,70 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
   function plane(event,at){const project=getProject(),normal=new THREE.Vector3(0,0,1).applyQuaternion(new THREE.Quaternion(...project.workplane.orientation)),surface=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,at??point(project.workplane.origin));return cast(event).intersectPlane(surface,new THREE.Vector3());}
   function projected(pointValue){camera.updateMatrixWorld(true);const projected=point(pointValue).project(camera),rect=renderer.domElement.getBoundingClientRect();return {x:rect.left+(projected.x+1)*rect.width/2,y:rect.top+(1-projected.y)*rect.height/2,z:projected.z};}
   const scaleDimensions=createScaleDimensions({viewport,projectPoint:projected,getPreferences});
-  const moveDimensions=createMoveDimensions({viewport,projectPoint:projected,getPreferences});
+  const scalePreviewStatus=document.createElement('div');
+  scalePreviewStatus.className='cad-scale-preview-status';scalePreviewStatus.hidden=true;
+  scalePreviewStatus.setAttribute('role','status');viewport.append(scalePreviewStatus);
+  let cornerPreview=null,pendingScale=null;
+  function scalePreviewVisible(visible,ready=false){
+    scalePreviewStatus.hidden=!visible;
+    if(visible){
+      const english=getPreferences().language==='en';
+      const text=ready?(english?'Preview ready':'Vorschau bereit'):(english?'Preview – calculating':'Vorschau – wird berechnet');
+      if(scalePreviewStatus.textContent!==text)scalePreviewStatus.textContent=text;
+    }
+  }
+  function drawCornerPreview(data,{showDimensions=true}={}){
+    const sizes=data.latest;
+    if(data.appliedSize===sizes)return;
+    data.appliedSize=sizes;
+    const resized=resizeCadAtCorner(data.source,sizes,{corner:data.corner});
+    const parent=multiplyCadMatrices(data.item.worldMatrix,inverseCadMatrix(data.item.transform));
+    const next=multiplyCadMatrices(parent,resized.transform),delta=matrix(multiplyCadMatrices(next,inverseCadMatrix(data.item.worldMatrix)));
+    if(showDimensions)scaleDimensions.update({bounds:data.item.localBounds,worldMatrix:next,sizes});
+    for(const [mesh,original]of data.matrices){mesh.matrix.copy(delta).multiply(original);mesh.matrixWorldNeedsUpdate=true;}
+    for(const handle of handles.children)if(handle.userData.local)handle.position.copy(point(cadPoint(next,handle.userData.local)));
+    clear(outlines);scalePreviewVisible(true);
+  }
+  function clearCornerPreview(){
+    if(!cornerPreview)return;
+    for(const [mesh,original]of cornerPreview.matrices){mesh.matrix.copy(original);mesh.matrixWorldNeedsUpdate=true;}
+    cornerPreview=null;scaleDimensions.hide();scalePreviewVisible(false);
+    setSelection(getSelection(),getScene());invalidate('scale-preview-clear');
+  }
+  function previewCornerSize({item,corner,size}){
+    if(!cornerPreview)cornerPreview={item,corner,source:{kind:'cad',transform:item.transform,stats:{bounds:item.localBounds}},matrices:gestureMeshes().map(mesh=>[mesh,mesh.matrix.clone()])};
+    cornerPreview.latest=size;invalidate('scale-preview');
+  }
+  const moveDimensions=createMoveDimensions({viewport,projectPoint:projected,getPreferences,onEdit:editMoveDimension});
   const rotationHandles=createCadRotationHandles({host:viewport,camera:()=>camera,scene,getFrame:()=>{
     if(closed||pendingCommit||gesture||handleDrag||interaction||dragInteraction||!canEdit()||!selection.length)return null;
     const items=selection.map(target=>sourceInfo(target));
     if(items.some(item=>!item||assemblyBoxes.proxies.some(p=>p.userData.rootId===item.target.rootId)||item.hidden||item.locked||!allows(item.target.rootId)||previewIds.has(item.target.rootId)))return null;
     const bounds=selectionBounds(getScene(),items);if(!bounds)return null;
-    const project=getProject();return {bounds,center:point(bounds.center),size:point(bounds.size),obstacles:handles.children.map(h=>h.position.clone()),quaternion:project.coordinateMode==='plane'?new THREE.Quaternion(...project.workplane.orientation):new THREE.Quaternion()};
+    return {bounds,center:point(bounds.center),size:point(bounds.size),obstacles:handles.children.map(h=>h.position.clone())};
   },onStart:()=>{const started=startGesture({translation:false});if(started){gizmo.detach();clear(handles);clear(outlines);}return started;},onPreview:delta=>moveGesture(matrix(delta)),onEnd:()=>void finishGesture(),onCancel:()=>cancel(),invalidate});
   const sectionPreview=createCadSectionPreview({renderer,scene,bodies,outlines,getCamera:()=>camera,projectPoint:projected,orbit,invalidate});
   function pixelRadius(position,pixels,rect=renderer.domElement.getBoundingClientRect()){return camera.isPerspectiveCamera?camera.position.distanceTo(position)*Math.tan(camera.fov*Math.PI/360)*2*pixels/rect.height:(camera.top-camera.bottom)/camera.zoom*pixels/rect.height;}
   function updateBed(project){
-    const signature=JSON.stringify([project.bed,project.workplane.origin,project.workplane.orientation,getPreferences().gridVisible]);if(signature===bedSignature)return;bedSignature=signature;
-    clear(bed);const data=cadBedGrid(...project.bed),onGround=workplaneOnGround(project.workplane);
-    function addGrid(transform,active){for(const [kind,positions]of Object.entries(data)){
+    const info=getScene(),preferences=getPreferences(),plane=frame(project),onGround=workplaneOnGround(project.workplane);
+    const input=JSON.stringify([project.bed,project.workplane,preferences.gridVisible,preferences.language]);
+    if(bedInput?.scene===info&&bedInput.input===input)return;
+    bedInput={scene:info,input};
+    const activeSize=cadAdaptiveBedSize(project.bed,info?.objects??[],plane.clone().invert().toArray());
+    const ground=new THREE.Matrix4(),groundSize=onGround?null:cadAdaptiveBedSize(project.bed,info?.objects??[],ground.toArray());
+    const signature=JSON.stringify([input,activeSize,groundSize]);
+    if(signature===bedSignature)return;bedSignature=signature;
+    const label=viewport.querySelector('#workspace-label');if(label)label.textContent=(preferences.language==='en'?'Workplane':'Arbeitsfläche')+' '+activeSize.join(' × ')+' mm';
+    clear(bed);
+    function addGrid(transform,active,size){
+      const data=cadBedGrid(...size,{adaptive:true});for(const [kind,positions]of Object.entries(data)){
       if(!positions.length)continue;const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
       const colors=active?{minor:0xcdd7e2,major:0xa4b3c5,axes:0xe2913d,border:0xe2913d}:{minor:0xd5dee7,major:0xb6c4d2,axes:0xa4b3c5,border:0x9baabd};
       const line=new THREE.LineSegments(geometry,new THREE.LineBasicMaterial({color:colors[kind],depthWrite:false}));line.matrixAutoUpdate=false;line.matrix.copy(transform);line.visible=kind==='border'||getPreferences().gridVisible;line.userData={gridKind:kind,activeGrid:active};bed.add(line);
     }}
     // Coplanar ground/workplane grids otherwise create interference patterns.
-    if(!onGround)addGrid(new THREE.Matrix4(),false);
-    addGrid(frame(project),true);
+    if(groundSize)addGrid(ground,false,groundSize);
+    addGrid(plane,true,activeSize);
   }
   function selectionBounds(info=getScene(),items=selection.map(target=>sourceInfo(target,info))){
     const values=items.filter(v=>v?.worldBounds);
@@ -187,7 +231,7 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
   }
   function setSelection(targets,info=getScene()){
     if(jointView?.state().active||explosionView?.state().active){selection=structuredClone(targets??[]);gizmo.detach();clear(outlines);clear(handles);invalidate('joint-selection');return;}
-    if(!handleDrag&&!gesture){scaleDimensions.hide();moveDimensions.hide();}
+    if(!handleDrag&&!gesture){scaleDimensions.hide();const retained=moveDimensions.retained();if(!retained||retained.revision!==info?.revision||JSON.stringify(retained.targets)!==JSON.stringify(targets??[]))moveDimensions.hide();}
     selection=structuredClone(targets??[]);clear(outlines);clear(handles);gizmo.detach();
     const lookup=new Map((info?.objects??[]).map(item=>[targetKey(item.target),item])),items=selection.map(target=>lookup.get(targetKey(target))),bounds=selectionBounds(info,items);for(let i=0;i<selection.length;i++){const target=selection[i],item=items[i];if(item?.worldBounds){const box=new THREE.Box3(point(item.worldBounds.min),point(item.worldBounds.max)),helper=new THREE.Box3Helper(box,item.locked?0x8390a0:0xf3a448);helper.userData={rootId:target.rootId,locked:item.locked};helper.visible=allows(target.rootId)&&!previewIds.has(target.rootId);if(alignmentReference)helper.material.color.set(target.rootId===alignmentReference?'#ffc44b':'#4a9cac');outlines.add(helper);}}
     if(!bounds||pendingCommit||!canEdit()||interaction||dragInteraction||items.some(item=>item?.locked||assemblyBoxes.proxies.some(p=>p.userData.rootId===item?.target.rootId)))return;
@@ -214,16 +258,38 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
     }}
   }
   function gestureMeshes(){const chosen=new Set(selection.filter(target=>!target.path.length).map(target=>target.rootId)),sourceKeys=new Set(selection.filter(target=>target.path.length).map(targetKey));return [...bodies.children.filter(mesh=>chosen.has(mesh.userData.rootId)&&mesh.visible),...sources.children.filter(mesh=>mesh.visible&&mesh.userData.sourceTarget&&sourceKeys.has(targetKey(mesh.userData.sourceTarget)))];}
-  function startGesture({translation=mode==='translate'}={}){const bounds=selectionBounds();if(!bounds||pendingCommit||!canEdit())return false;gesture={targets:structuredClone(selection),revision:getScene()?.revision,pivot:pivot.matrixWorld.clone(),matrices:gestureMeshes().map(mesh=>[mesh,mesh.matrix.clone()]),center:point(bounds.center),bounds,planeMatrix:frame().toArray(),translation,delta:cadIdentity()};orbit.enabled=false;return true;}
+  function startGesture({translation=mode==='translate'}={}){const bounds=selectionBounds();if(!bounds||pendingCommit||!canEdit())return false;moveDimensions.hide();gesture={targets:structuredClone(selection),revision:getScene()?.revision,pivot:pivot.matrixWorld.clone(),matrices:gestureMeshes().map(mesh=>[mesh,mesh.matrix.clone()]),center:point(bounds.center),bounds,planeMatrix:frame().toArray(),translation,delta:cadIdentity()};orbit.enabled=false;return true;}
   function moveGesture(delta){if(!gesture)return;gesture.delta=delta.toArray();const snapped=gesture.translation?onSnapGesture?.({targets:gesture.targets,delta:gesture.delta}):null;if(snapped)delta=new THREE.Matrix4().fromArray(snapped);for(const [mesh,original]of gesture.matrices){mesh.matrix.copy(delta).multiply(original);mesh.matrixWorldNeedsUpdate=true;}if(gesture.translation){const {bounds,planeMatrix}=gesture;moveDimensions.update({bounds,planeMatrix,delta:delta.toArray().slice(12,15),gap:Math.max(2,pixelRadius(point(cadPoint(planeMatrix,[0,0,0])),22))});}clear(outlines);clear(handles);}
   async function commitGesture(data,commit){
     pendingCommit=true;clear(outlines);clear(handles);gizmo.detach();invalidate('commit-start');
-    try{await commit();}catch(error){
+    try{return await commit();}catch(error){
       if(getScene()?.revision===data.revision)for(const [mesh,original]of data.matrices){mesh.matrix.copy(original);mesh.matrixWorldNeedsUpdate=true;}
       onError(error);
-    }finally{pendingCommit=false;if(!closed){setSelection(getSelection(),getScene());invalidate('commit-end');}}
+    }finally{pendingCommit=false;if(pendingScale===data){pendingScale=null;scalePreviewVisible(false);}if(!closed){setSelection(getSelection(),getScene());invalidate('commit-end');}}
   }
-  async function finishGesture(){if(!gesture)return;const completed=gesture;gesture=null;scaleDimensions.hide();moveDimensions.hide();orbit.enabled=true;await commitGesture(completed,()=>onGesture?.({targets:completed.targets,revision:completed.revision,delta:completed.delta}));}
+  function retainMove(data,result){
+    const scene=getScene();
+    if(!result||!scene||scene.revision!==result.revision||closed||JSON.stringify(data.targets)!==JSON.stringify(getSelection()))return;
+    const current=selectionBounds(scene,data.targets.map(target=>sourceInfo(target,scene)));
+    if(!current)return;
+    const delta=current.center.map((value,i)=>value-data.bounds.center[i]);
+    if(!delta.some(value=>Math.abs(value)>1e-7))return;
+    const {bounds,planeMatrix,targets}=data;
+    moveDimensions.update({bounds,planeMatrix,targets,delta,revision:scene.revision,editable:true,gap:Math.max(2,pixelRadius(point(cadPoint(planeMatrix,[0,0,0])),22))});
+  }
+  async function editMoveDimension(data,axis,value){
+    if(pendingCommit||gesture||handleDrag||!canEdit()||getScene()?.revision!==data.revision)return;
+    const plane=matrix(data.planeMatrix),direction=new THREE.Vector3().setFromMatrixColumn(plane,axis);
+    const change=value-point(data.delta).dot(direction);
+    if(Math.abs(change)<1e-8)return;
+    const delta=new THREE.Matrix4().makeTranslation(...direction.multiplyScalar(change).toArray()).toArray();
+    const result=await commitGesture({...data,matrices:[]},()=>onGesture?.({targets:data.targets,revision:data.revision,delta,exactTranslation:true}));
+    retainMove(data,result);
+  }
+  async function finishGesture(){if(!gesture)return;const completed=gesture;gesture=null;scaleDimensions.hide();moveDimensions.hide();orbit.enabled=true;
+    const result=await commitGesture(completed,()=>onGesture?.({targets:completed.targets,revision:completed.revision,delta:completed.delta}));
+    if(completed.translation&&!result?.snapped)retainMove(completed,result);
+  }
   gizmo.addEventListener('mouseDown',()=>{pivot.updateMatrixWorld(true);startGesture();});
   gizmo.addEventListener('objectChange',()=>{if(gesture){pivot.updateMatrixWorld(true);moveGesture(pivot.matrixWorld.clone().multiply(gesture.pivot.clone().invert()));}});
   gizmo.addEventListener('mouseUp',()=>void finishGesture());
@@ -283,11 +349,7 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
         else if(a.axis===2){const worldSize=data.item.localBounds.size[2]*Math.hypot(...data.item.worldMatrix.slice(8,11));change(2,-dy*pixelRadius(data.position,1)/worldSize);}
       }
       data.latest=sizes;
-      const resized=resizeCadAtCorner(data.source,sizes,{corner:data.corner}),parent=multiplyCadMatrices(data.item.worldMatrix,inverseCadMatrix(data.item.transform)),next=multiplyCadMatrices(parent,resized.transform),delta=matrix(multiplyCadMatrices(next,inverseCadMatrix(data.item.worldMatrix)));
-      scaleDimensions.update({bounds:data.item.localBounds,worldMatrix:next,sizes});
-      for(const [mesh,original]of data.matrices){mesh.matrix.copy(delta).multiply(original);mesh.matrixWorldNeedsUpdate=true;}
-      for(const handle of handles.children)if(handle.userData.local)handle.position.copy(point(cadPoint(next,handle.userData.local)));
-      clear(outlines);
+      invalidate('scale-preview');
       return;
     }
     if(!marquee)return;
@@ -296,12 +358,12 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
   });
   renderer.domElement.addEventListener('pointerup',event=>{
     if(interactionDrag){const completed=interactionDrag;interactionDrag=null;orbit.enabled=true;void Promise.resolve(dragInteraction?.end({ray:cadRay(event),event,moved:completed.moved})).catch(onError);return;}
-    if(handleDrag){const data=handleDrag;handleDrag=null;scaleDimensions.hide();orbit.enabled=true;if(data.moved&&(data.lift||data.latest.some((v,k)=>v!==data.sizes[k])))void commitGesture(data,()=>data.lift?onGesture?.({targets:[data.target],delta:data.delta,revision:data.revision}):onResize?.({target:data.target,size:data.latest,corner:data.corner,revision:data.revision}));else if(!data.lift&&!data.moved)onDimensions?.({item:data.item,target:data.target,corner:data.corner,event});return;}
+    if(handleDrag){const data=handleDrag;handleDrag=null;scaleDimensions.hide();orbit.enabled=true;if(data.moved&&(data.lift||data.latest.some((v,k)=>v!==data.sizes[k]))){if(!data.lift)pendingScale=data;void commitGesture(data,()=>data.lift?onGesture?.({targets:[data.target],delta:data.delta,revision:data.revision}):onResize?.({target:data.target,size:data.latest,corner:data.corner,revision:data.revision}));}else{scalePreviewVisible(false);if(data.moved){for(const [mesh,original]of data.matrices){mesh.matrix.copy(original);mesh.matrixWorldNeedsUpdate=true;}setSelection(getSelection(),getScene());}}if(!data.lift&&!data.moved)onDimensions?.({item:data.item,target:data.target,corner:data.corner,event});return;}
     if(!marquee)return;const start=marquee;marquee=null;document.getElementById('selection-marquee')?.style.setProperty('display','none');
     if(start.move){void finishGesture();return;}
     updateMarquee(start,event);
   });
-  function cancel(){rotationHandles.cancel({notify:false});dropStage();clearAlignmentPreview();scaleDimensions.hide();moveDimensions.hide();const originalSelection=marquee&&!marquee.move?marquee.base:null;const active=!!gesture||!!handleDrag||!!interactionDrag;if(gesture){for(const [mesh,original]of gesture.matrices){mesh.matrix.copy(original);mesh.matrixWorldNeedsUpdate=true;}gesture=null;}if(handleDrag){for(const [mesh,original]of handleDrag.matrices){mesh.matrix.copy(original);mesh.matrixWorldNeedsUpdate=true;}handleDrag=null;}dragInteraction?.cancel?.();dragInteraction=null;interactionDrag=null;marquee=null;document.getElementById('selection-marquee')?.style.setProperty('display','none');orbit.enabled=true;gizmo.dragging=false;gizmo.axis=null;interaction=null;interactionAllowsCanvasListeners=false;if(originalSelection)select(originalSelection);setSelection(getSelection(),getScene());return active;}
+  function cancel(){clearCornerPreview();if(pendingScale){if(pendingScale.revision===getScene()?.revision)for(const [mesh,original]of pendingScale.matrices){mesh.matrix.copy(original);mesh.matrixWorldNeedsUpdate=true;}pendingScale=null;}scalePreviewVisible(false);rotationHandles.cancel({notify:false});dropStage();clearAlignmentPreview();scaleDimensions.hide();moveDimensions.hide();const originalSelection=marquee&&!marquee.move?marquee.base:null;const active=!!gesture||!!handleDrag||!!interactionDrag;if(gesture){for(const [mesh,original]of gesture.matrices){mesh.matrix.copy(original);mesh.matrixWorldNeedsUpdate=true;}gesture=null;}if(handleDrag){for(const [mesh,original]of handleDrag.matrices){mesh.matrix.copy(original);mesh.matrixWorldNeedsUpdate=true;}handleDrag=null;}dragInteraction?.cancel?.();dragInteraction=null;interactionDrag=null;marquee=null;document.getElementById('selection-marquee')?.style.setProperty('display','none');orbit.enabled=true;gizmo.dragging=false;gizmo.axis=null;interaction=null;interactionAllowsCanvasListeners=false;if(originalSelection)select(originalSelection);setSelection(getSelection(),getScene());return active;}
   renderer.domElement.addEventListener('pointercancel',()=>{cancel();document.getElementById('selection-marquee')?.style.setProperty('display','none');});
   renderer.domElement.addEventListener('lostpointercapture',()=>{if(gesture||handleDrag||marquee||interactionDrag)cancel();});
   function fit(items,{includePreview=false}={}){const targets=items??getScene()?.objects?.filter(item=>!item.target.path.length&&!item.hidden&&allows(item.target.rootId)).map(item=>item.target)??[],values=targets.map(target=>sourceInfo(target)).filter(item=>item?.worldBounds&&allows(item.target.rootId));if(!values.length&&!includePreview)return;const box=new THREE.Box3(),jointMotion=jointView?.state().active;if(explosionView?.state().active||jointMotion){const chosen=new Set(targets.map(t=>t.rootId));for(const mesh of bodies.children)if(mesh.visible&&(!chosen.size||chosen.has(mesh.userData.rootId))){mesh.updateMatrixWorld(true);box.union(mesh.geometry.boundingBox.clone().applyMatrix4(mesh.matrixWorld));}}if(includePreview)for(const mesh of preview.children.filter(m=>m.visible)){mesh.updateMatrixWorld(true);box.union(mesh.geometry.boundingBox.clone().applyMatrix4(mesh.matrixWorld));}for(const item of values){if(jointMotion)continue;const proposed=preview.children.filter(mesh=>mesh.visible&&(mesh.userData.rootId===item.target.rootId||previewReplaceIds.has(item.target.rootId)&&previewAllowedIds.has(mesh.userData.rootId)));if(proposed.length){for(const mesh of proposed){mesh.updateMatrixWorld(true);box.union(mesh.geometry.boundingBox.clone().applyMatrix4(mesh.matrixWorld));}}else{box.expandByPoint(point(item.worldBounds.min));box.expandByPoint(point(item.worldBounds.max));}}if(box.isEmpty())return;const center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3()).length(),direction=camera.position.clone().sub(orbit.target).normalize();orbit.target.copy(center);camera.position.copy(center).addScaledVector(direction,Math.max(40,size*1.8));if(camera.isOrthographicCamera){const aspect=host.clientWidth/Math.max(1,host.clientHeight),extent=Math.max(1,size*.575/Math.min(1,aspect));camera.zoom=camera.top/extent;camera.updateProjectionMatrix();}orbit.update();camera.updateMatrixWorld(true);invalidate('view');}
@@ -317,7 +379,10 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
   const observer=new ResizeObserver(resize);observer.observe(host);
   function updateHandles(rect,preferences=getPreferences()){if(!handles.children.length)return;rect??=renderer.domElement.getBoundingClientRect();for(const handle of handles.children){handle.scale.setScalar(pixelRadius(handle.position,preferences.handleSize??14,rect)/2);if(handle.userData.scaleAxes)handle.quaternion.copy(camera.quaternion);}}
   const cameraStep=createCadCameraStep({getCamera:()=>camera,orbit});
-  function draw(){updateMeshNotice();const preferences=getPreferences();const style=preferences.meshDisplayStyle??'blue',styleKey=style+':'+darkTheme;if(sceneStyleKey!==styleKey){const preset=MESH_DISPLAY_STYLES[style]??MESH_DISPLAY_STYLES.blue;scene.background.set(darkTheme?'#18232e':preset.background??'#eef2f6');light.intensity=preset.light??3;for(const lamp of scene.children)if(lamp.isHemisphereLight)lamp.intensity=preset.ambient??2.5;sceneStyleKey=styleKey;}for(const mesh of bodies.children)if(mesh.userData.reference)applyMeshDisplayStyle(mesh,preferences.meshDisplayStyle,mesh.userData.record.kind==='mesh');orbit.zoomSpeed=preferences.zoomSpeed??1;gizmo.setTranslationSnap(Number(preferences.snap)||null);gizmo.setRotationSnap((Number(preferences.rotationSnap)||0)*Math.PI/180||null);updateBed(getProject());updateHandles(undefined,preferences);scaleDimensions.draw();moveDimensions.draw();rotationHandles.update();onViewUpdate();cutoutDisplay.render(scene,camera,[...bodies.children,...sources.children,...preview.children,...section.children],[bodies,sources,preview,section,bed],[sectionPreview.group,outlines,handles,edges,measurements,motionMarks,alignmentGhosts,annotations,meshSelectionMarks,meshProtectionMarks,meshInspectionMarks,rotationHandles.group,gizmo.getHelper()]);}
+  function draw(){
+    const scale=cornerPreview??(handleDrag?.moved&&!handleDrag.lift?handleDrag:pendingScale);
+    if(scale&&(scale!==pendingScale||scale.revision===getScene()?.revision))drawCornerPreview(scale,{showDimensions:scale!==pendingScale});
+    updateMeshNotice();const preferences=getPreferences();const style=preferences.meshDisplayStyle??'blue',styleKey=style+':'+darkTheme;if(sceneStyleKey!==styleKey){const preset=MESH_DISPLAY_STYLES[style]??MESH_DISPLAY_STYLES.blue;scene.background.set(darkTheme?'#18232e':preset.background??'#eef2f6');light.intensity=preset.light??3;for(const lamp of scene.children)if(lamp.isHemisphereLight)lamp.intensity=preset.ambient??2.5;sceneStyleKey=styleKey;}for(const mesh of bodies.children)if(mesh.userData.reference)applyMeshDisplayStyle(mesh,preferences.meshDisplayStyle,mesh.userData.record.kind==='mesh');orbit.zoomSpeed=preferences.zoomSpeed??1;gizmo.setTranslationSnap(Number(preferences.snap)||null);gizmo.setRotationSnap((Number(preferences.rotationSnap)||0)*Math.PI/180||null);updateBed(getProject());updateHandles(undefined,preferences);scaleDimensions.draw();moveDimensions.draw();rotationHandles.update();onViewUpdate();cutoutDisplay.render(scene,camera,[...bodies.children,...sources.children,...preview.children,...section.children],[bodies,sources,preview,section,bed],[sectionPreview.group,outlines,handles,edges,measurements,motionMarks,alignmentGhosts,annotations,meshSelectionMarks,meshProtectionMarks,meshInspectionMarks,rotationHandles.group,gizmo.getHelper()]);}
   scheduler=createCadRenderScheduler({step:cameraStep,render:draw,onError});
   orbit.addEventListener('change',()=>invalidate('camera'));
   orbit.addEventListener('start',()=>scheduler.wake());orbit.addEventListener('end',()=>scheduler.wake());
@@ -330,7 +395,7 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
   const explosionView=createCadJointView({objectsForRoot:id=>[...bodies.children,...edges.children,...assemblyBoxes.group.children].filter(o=>o.userData.rootId===id),begin:()=>{gizmo.detach();clear(outlines);clear(handles);explosionHidden=[annotations,measurements,section,meshSelectionMarks,meshProtectionMarks,meshInspectionMarks,thicknessMarks,comparisonMarks].map(g=>[g,g.visible]);for(const [g]of explosionHidden)g.visible=false;},end:()=>{for(const [g,v]of explosionHidden)g.visible=v;explosionHidden=[];setSelection(getSelection(),getScene());},invalidate});
   const api={setExplosion:placements=>{jointView.clear();explosionView.preview(placements);},clearExplosion:explosionView.clear,explosionState:explosionView.state,setAssemblyBoxes:values=>{assemblyBoxes.set(values);refreshVisibility();setSelection(getSelection(),getScene());},assemblyBoxesState:assemblyBoxes.state,setJointPreview:jointView.preview,clearJointPreview:jointView.clear,jointPreviewState:jointView.state,setComparison,clearComparison,comparisonState:()=>comparisonMarks.children[0]?.userData.summary??null,setAlignmentReference:id=>{alignmentReference=id;for(const h of outlines.children)h.material.color.set(id?h.userData.rootId===id?'#ffc44b':'#4a9cac':h.userData.locked?'#8390a0':'#f3a448');},setAlignmentPreview,clearAlignmentPreview,scene,renderer,camera:()=>camera,canvas:renderer.domElement,cadRay,visualHit,projectPoint:projected,setDisplay,setSelection,fit,setView,setNavigationProfile,cancel,validateDisplay,
     offsetPreviewRoots:placements=>{const shifts=new Map(placements.map(({rootId,delta})=>{if(!Array.isArray(delta)||delta.length!==3||delta.some(v=>!Number.isFinite(v)))throw Error('Ungültiger CAD-Vorschauversatz.');return [rootId,new THREE.Matrix4().makeTranslation(...delta)];}));for(const mesh of preview.children){const shift=shifts.get(mesh.userData.rootId);if(shift){mesh.matrix.copy(mesh.userData.originalMatrix).premultiply(shift);mesh.matrixWorldNeedsUpdate=true;}}invalidate('view');},
-    viewState,restoreView,getMode:()=>mode,isDragging:()=>!!gesture||!!handleDrag||!!interactionDrag,isEditing:()=>pendingCommit||!!gesture||!!handleDrag||!!interactionDrag,setMeshSelection,setMeshProtection,setMeshInspection,focusWorldPoints,meshInspectionAvailable:id=>bodies.children.some(m=>m.visible&&m.userData.rootId===id),meshSelectionCameraKey:()=>{camera.updateMatrixWorld(true);const r=renderer.domElement.getBoundingClientRect();return JSON.stringify([camera.projectionMatrix.toArray().map(n=>Math.round(n*1e9)/1e9),camera.matrixWorldInverse.toArray().map(n=>Math.round(n*1e9)/1e9),r.width,r.height]);},meshSelectionScreenContext:node=>meshSelectionScreenContext(camera,renderer.domElement,bodies,sources,node),meshSelectionHit:meshSelectionSurfaceHit,
+    isScalePending:()=>!!(pendingScale||handleDrag?.moved&&!handleDrag.lift),previewCornerSize,clearCornerPreview,markCornerPreviewReady:()=>{if(cornerPreview)scalePreviewVisible(true,true);},viewState,restoreView,getMode:()=>mode,isDragging:()=>!!gesture||!!handleDrag||!!interactionDrag,isEditing:()=>pendingCommit||!!gesture||!!handleDrag||!!interactionDrag,setMeshSelection,setMeshProtection,setMeshInspection,focusWorldPoints,meshInspectionAvailable:id=>bodies.children.some(m=>m.visible&&m.userData.rootId===id),meshSelectionCameraKey:()=>{camera.updateMatrixWorld(true);const r=renderer.domElement.getBoundingClientRect();return JSON.stringify([camera.projectionMatrix.toArray().map(n=>Math.round(n*1e9)/1e9),camera.matrixWorldInverse.toArray().map(n=>Math.round(n*1e9)/1e9),r.width,r.height]);},meshSelectionScreenContext:node=>meshSelectionScreenContext(camera,renderer.domElement,bodies,sources,node),meshSelectionHit:meshSelectionSurfaceHit,
     setIsolation:ids=>{isolationIds=ids?new Set(ids):null;refreshVisibility();},allows,
     sectionPreview,setThickness,clearThickness,
     setMode:value=>{mode=value;setSelection(getSelection(),getScene());},setInteraction:(callback,{allowCanvasListeners=false}={})=>{interaction=callback;interactionAllowsCanvasListeners=!!callback&&allowCanvasListeners===true;setSelection(getSelection(),getScene());},setDragInteraction:callbacks=>{if(interactionDrag){dragInteraction?.cancel?.();interactionDrag=null;orbit.enabled=true;}dragInteraction=callbacks;setSelection(getSelection(),getScene());},
@@ -345,7 +410,7 @@ export function createCadRenderer({host,viewport,getProject,getScene,getSelectio
     clearSection:()=>{clear(section);sectionIds.clear();refreshVisibility();},
     invalidate,renderReady:()=>scheduler.paint(),captureDataURL:async()=>{await scheduler.paint();return renderer.domElement.toDataURL('image/png');},renderState:()=>scheduler.state(),verificationControls:new URLSearchParams(location.search).has('test')?orbit:undefined,
     groups:{motionMarks,aiErrorMarks,assemblyBoxes:assemblyBoxes.group,comparison:comparisonMarks,thickness:thicknessMarks,annotations,alignmentGhosts,meshSelection:meshSelectionMarks,meshProtection:meshProtectionMarks,meshInspection:meshInspectionMarks,rotation:rotationHandles.group,bodies,outlines,handles,bed,edges,measurements,motionMarks,section,preview,sources},cacheState:()=>({meshes:bodies.children.length,bytes:displayBytes,maxBytes:128*1024*1024,reused:lastReuse,created:lastCreated,stagedBytes:stagedDisplay?.nextBytes??0}),
-    dispose:()=>{explosionView.clear();assemblyBoxes.clear();jointView.clear();closed=true;scheduler.dispose();dropStage();clearAlignmentPreview();cutoutDisplay.dispose();sectionPreview.dispose();scaleDimensions.dispose();moveDimensions.dispose();rotationHandles.dispose();observer.disconnect();gizmo.dispose();orbit.dispose();for(const group of [aiErrorMarks,comparisonMarks,thicknessMarks,bodies,outlines,handles,bed,edges,measurements,motionMarks,section,preview,sources,meshSelectionMarks,meshProtectionMarks,meshInspectionMarks])clear(group);renderer.dispose();renderer.domElement.remove();meshNotice.remove();}
+    dispose:()=>{explosionView.clear();assemblyBoxes.clear();jointView.clear();closed=true;scheduler.dispose();dropStage();clearAlignmentPreview();cutoutDisplay.dispose();sectionPreview.dispose();scaleDimensions.dispose();scalePreviewStatus.remove();moveDimensions.dispose();rotationHandles.dispose();observer.disconnect();gizmo.dispose();orbit.dispose();for(const group of [aiErrorMarks,comparisonMarks,thicknessMarks,bodies,outlines,handles,bed,edges,measurements,motionMarks,section,preview,sources,meshSelectionMarks,meshProtectionMarks,meshInspectionMarks])clear(group);renderer.dispose();renderer.domElement.remove();meshNotice.remove();}
   };
   for(const name of ['setExplosion','clearExplosion','setAssemblyBoxes','setComparison','clearComparison','setMeshInspection','setMeshSelection','setMeshProtection','setAlignmentReference','setAlignmentPreview','clearAlignmentPreview','setDisplay','setSelection','setView','restoreView','fit','cancel','offsetPreviewRoots','setIsolation','setMode','setInteraction','setDragInteraction','toggleProjection','setTheme','setPreview','clearPreview','setSourceDisplay','clearSource','setEdges','setSectionDisplay','clearSection']){const action=api[name];api[name]=(...args)=>{const result=action(...args);invalidate(name);return result;};}
   return api;

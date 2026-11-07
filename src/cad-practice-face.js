@@ -3,14 +3,38 @@ import {cadSelectionContext} from './cad-interface-state.js';
 
 export const PRACTICE_FACE_SIDES=Object.freeze({top:[0,0,1],bottom:[0,0,-1],left:[-1,0,0],right:[1,0,0],front:[0,-1,0],back:[0,1,0]});
 
+export const practiceReferenceMarker=(document,id)=>[...document.querySelectorAll('.cad-reference-marker')].find(node=>node.dataset.pointId===id);
+
 // Only the local host computes screen points from the current display. Native
 // rayPick then verifies the actual face before normal mouse input can use it.
-export function installPracticeFace({controller,view,getFacePickState,host=window}){
+export function installPracticeFace({controller,view,getFacePickState,getDrillState,getInspectionState,host=window}){
  host.__formnaroPracticeFace=async spec=>{
   const direction=PRACTICE_FACE_SIDES[spec.side],state=getFacePickState?.(),revision=controller.revision(),project=controller.readSnapshot();
-  if(!direction||!state?.picking||!['shell','face-offset'].includes(state.kind)||state.ids?.length!==1||state.ids[0]!==spec.rootId)throw Error('Zuerst Aushöhlen oder CAD-Fläche versetzen für dieses Teil öffnen.');
+  const inspection=getInspectionState?.(),measuring=inspection?.kind==='measure'&&inspection.revision===revision&&inspection.mode==='faces'&&!inspection.busy;
+  const drill=getDrillState?.();
+  const drilling=drill?.stage==='target'&&drill.id===spec.rootId&&drill.revision===revision&&drill.ready&&!drill.target;
+  if(!direction||(!drilling&&!measuring&&(!state?.picking||!['shell','face-offset'].includes(state.kind)||state.ids?.length!==1||state.ids[0]!==spec.rootId))){
+   throw Error('Zuerst die Flächenauswahl für Aushöhlen, CAD-Flächenversatz, Bohrung oder Messung „Zwei CAD-Flächen“ am gewählten Teil öffnen.');
+  }
   const context=cadSelectionContext(project,{rootId:spec.rootId,path:[]});
   if(context.node.kind!=='cad'||!context.node.solid||context.locked||context.hidden||!view.allows(spec.rootId))throw Error('Eine sichtbare, entsperrte CAD-Körperfläche wählen.');
+  if(drilling){
+   const axis=new Vector3(...direction),candidates=drill.centers.filter(point=>new Vector3(...point.normal).dot(axis)>.99999);
+   const level=point=>new Vector3(...point.point).dot(axis),outer=Math.max(...candidates.map(level));
+   const faces=candidates.filter(point=>Math.abs(level(point)-outer)<1e-4);
+   if(faces.length!==1)throw Error('Eine eindeutige äußere ebene Bohrfläche wählen.');
+   const face=faces[0],marker=practiceReferenceMarker(host.document,face.id);
+   if(!marker?.getClientRects().length)throw Error('Flächenschwerpunkt ist nicht sichtbar. Ansicht und Fangziel „Flächenschwerpunkte“ prüfen.');
+   const rect=marker.getBoundingClientRect(),screen=view.projectPoint(face.point);
+   const at={clientX:screen.x,clientY:screen.y};
+   if(view.visualHit(at)?.object?.userData.rootId!==spec.rootId)throw Error('Der Flächenschwerpunkt ist verdeckt.');
+   const hit=await controller.query('rayPick',{ids:[spec.rootId],ray:view.cadRay(at)});
+   if(controller.revision()!==revision||!marker.isConnected||getDrillState()?.target)throw Error('Bohrbezug wurde während der Auswahl geändert.');
+   if(hit?.faceIndex!==face.faceIndex||!Array.isArray(hit?.normal)||new Vector3(...hit.normal).dot(axis)<.99999||
+     new Vector3(...hit.point).distanceTo(new Vector3(...face.point))>.01)throw Error('Der native Flächentreffer bestätigt den Bohrbezug nicht.');
+   return {x:Math.round(rect.x+rect.width/2),y:Math.round(rect.y+rect.height/2),width:rect.width,height:rect.height,
+    revision,faceIndex:face.faceIndex,point:face.point,normal:face.normal,markerId:face.id};
+  }
   view.scene.updateMatrixWorld(true);const axis=new Vector3(...direction),candidates=[];let triangles=0;
   view.scene.traverse(mesh=>{
    if(!mesh.isMesh||mesh.userData.rootId!==spec.rootId||mesh.userData.record?.kind!=='cad')return;
@@ -35,7 +59,7 @@ export function installPracticeFace({controller,view,getFacePickState,host=windo
   }
   if(!chosen)throw Error('Die gewünschte Fläche ist verdeckt. Ansicht zuerst passend ausrichten.');
   const hit=await controller.query('rayPick',{ids:[spec.rootId],ray:view.cadRay({clientX:chosen.x,clientY:chosen.y})});
-  if(controller.revision()!==revision||getFacePickState()?.revision!==state.revision)throw Error('Modell während der Flächenauswahl geändert.');
+  if(controller.revision()!==revision||(measuring?getInspectionState()?.revision!==revision:getFacePickState()?.revision!==state.revision))throw Error('Modell während der Flächenauswahl geändert.');
   if(!hit||hit.objectId!==spec.rootId||hit.faceIndex!==chosen.faceIndex||!Array.isArray(hit.normal)||new Vector3(...hit.normal).dot(axis)<.99999)throw Error('Der native Flächentreffer stimmt nicht mit der gewünschten Seite überein.');
   return {x:chosen.x,y:chosen.y,width:24,height:24,revision,faceIndex:hit.faceIndex,point:hit.point,normal:hit.normal};
  };
