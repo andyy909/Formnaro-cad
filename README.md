@@ -27,6 +27,14 @@ New: complete drilling controls and automatic token renewal in the AI lab. Histo
 
 Extract the whole application ZIP into its own folder and start **Formnaro.exe**. FreeCAD and Python are bundled. Source archives are separate downloads. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
+## New complete Sol benchmark: 16/16
+
+GPT-6.1 Sol/high passed all sixteen fresh trials on the published **0.137.4-r2 / suite 1.0.4** build (eight fixed CAD tasks, two trials each; supervisor off). DeepSeek’s original **16/16 on 0.137.0-r1 / suite 1.0.2** is unchanged. Different program, tool-reference and prompt states are shown explicitly; this is not a controlled same-build model ranking. Sol’s previous 14/16 and 15/16 and the separate successful drawing 2/2 and drilling 1/1 retests remain intact.
+
+![DeepSeek 16/16 (0.137.0-r1) / Sol 16/16 (0.137.4-r2)](docs/bilder/benchmark-sol-deepseek-16-2026-11-08-en.svg)
+
+[Sol evidence](docs/benchmarks/core-sol-01374-2026-11-08.json) · [Comparison data](docs/benchmarks/sol-deepseek-16-vergleich-2026-11-08.json) · [All original results](docs/benchmarks/README.md)
+
 ## A look inside Formnaro
 
 | **Easy Tinker** · bearing bracket (dark mode) | **Normal** · precision vise (dark mode) |

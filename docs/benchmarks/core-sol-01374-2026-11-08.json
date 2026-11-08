@@ -1,0 +1,374 @@
+{
+  "format": "FormnaroPublicBenchmarkResult",
+  "version": 1,
+  "benchmarkId": "2a5927e5-ed1f-4611-8a15-2d8fed2e977f",
+  "measuredProgram": {
+    "version": "0.137.4-r2",
+    "sourceHash": "d52e7d8ae406b654f8a5d577b32aa349f1d5102c84f5eb9ee4ec5e231caec883",
+    "asarSHA256": "830fe5199e13c0d9517880f74fc0e955dd07443f1681a2fe175acb2af2f826bb",
+    "exeSHA256": "3313578cb2900e7aea6a454e40701c6023eacb95506b99a989582448344ea4fb"
+  },
+  "publishedWithRelease": "0.137.4-r2",
+  "newTrialsOnPublishedBuild": 16,
+  "summary": {
+    "id": "2a5927e5-ed1f-4611-8a15-2d8fed2e977f",
+    "suite": {
+      "suiteId": "formnaro-practice-core",
+      "suiteVersion": "1.0.4",
+      "suiteHash": "666d1f278a94441b89567e1cd1c4ff620c6ba306c412576eebc2483a29469924",
+      "cases": [
+        {
+          "id": "B01",
+          "caseId": "practice-03",
+          "label": "Maße und Mittelpunkt"
+        },
+        {
+          "id": "B02",
+          "caseId": "assembly",
+          "label": "Ein Teil aus einer Baugruppe"
+        },
+        {
+          "id": "B03",
+          "caseId": "practice-14",
+          "label": "Durchgangsbohrung"
+        },
+        {
+          "id": "B04",
+          "caseId": "practice-11",
+          "label": "Kreismuster"
+        },
+        {
+          "id": "B05",
+          "caseId": "practice-16",
+          "label": "Bestimmte Kante fasen"
+        },
+        {
+          "id": "B06",
+          "caseId": "practice-17",
+          "label": "Aushöhlen"
+        },
+        {
+          "id": "B07",
+          "caseId": "practice-22",
+          "label": "Native Messung"
+        },
+        {
+          "id": "B08",
+          "caseId": "practice-21",
+          "label": "Technische Zeichnung"
+        }
+      ],
+      "planned": 16,
+      "challenge": {
+        "available": false,
+        "reason": "Halter-Grenztest: Aufgaben und native Prüfer noch nicht kalibriert."
+      }
+    },
+    "createdAt": "2026-11-08T16:38:47.325Z",
+    "status": "completed",
+    "reviewStatus": "completed",
+    "planned": 16,
+    "finished": 16,
+    "pending": 0,
+    "rawAttempts": 16,
+    "passed": 16,
+    "withoutCorrections": 16,
+    "afterCorrections": 0,
+    "byOutcome": {
+      "pending": 0,
+      "passed": 16,
+      "failed": 0,
+      "unverified": 0,
+      "infrastructure": 0,
+      "model-unverified": 0
+    },
+    "medianSuccessfulMs": 54256.5,
+    "cases": [
+      {
+        "id": "B01",
+        "caseId": "practice-03",
+        "label": "Maße und Mittelpunkt",
+        "taskHash": "abdbdf1daf4441b25ed012498575817976213be26ee6a138a36080c148500b02",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B02",
+        "caseId": "assembly",
+        "label": "Ein Teil aus einer Baugruppe",
+        "taskHash": "0543ea97926928d554f0d7ab32b7375f50452f5a3d440d1ea7f8a96ddbc67d28",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B03",
+        "caseId": "practice-14",
+        "label": "Durchgangsbohrung",
+        "taskHash": "eb357b2d75b9f7bbac4e914422ec0ed256ef57bbaa71602ef7f83f55a189b270",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B04",
+        "caseId": "practice-11",
+        "label": "Kreismuster",
+        "taskHash": "a5b3f04aec3cbcb346154f96cc313b7730cbb9fbedcc4339b9aa2d415e3af06c",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B05",
+        "caseId": "practice-16",
+        "label": "Bestimmte Kante fasen",
+        "taskHash": "3cf5633250b4f87387fe42b2a648a4fa81e31d9868e04c99958b1bab8a5d98c2",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B06",
+        "caseId": "practice-17",
+        "label": "Aushöhlen",
+        "taskHash": "604744b253ac644dde1f3d042fa86aa6537c4b36e822552c943cc705424b38b0",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B07",
+        "caseId": "practice-22",
+        "label": "Native Messung",
+        "taskHash": "08455a14df5edc78da6f5b256f750ca8571242eac27831f2282ffb3ef6817c2e",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B08",
+        "caseId": "practice-21",
+        "label": "Technische Zeichnung",
+        "taskHash": "4ff7f13d302715dcad4f9efcb982655b5a600596324ef1fc5b37c1f206854092",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      }
+    ]
+  },
+  "model": {
+    "id": "gpt-6.1-sol",
+    "displayName": "GPT-6.1 Sol",
+    "reasoningEffort": "high"
+  },
+  "monitor": {
+    "mode": "off"
+  },
+  "requests": {
+    "modeler": 16,
+    "supervisor": 0,
+    "reviewer": 2
+  },
+  "conditions": [
+    {
+      "condition": "B01-r1",
+      "caseId": "practice-03",
+      "nativePassed": true,
+      "nativeChecksPassed": 5,
+      "nativeChecksTotal": 5,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "199b0f63c82fab0aeed705dd85b3714a717575ddd1ed05a4f02db4002341ec90"
+    },
+    {
+      "condition": "B01-r2",
+      "caseId": "practice-03",
+      "nativePassed": true,
+      "nativeChecksPassed": 5,
+      "nativeChecksTotal": 5,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "b7cdc3e0f0ef578878ca27fb7026bda647799236db9296e9f7c17bbedf3896f8"
+    },
+    {
+      "condition": "B02-r1",
+      "caseId": "assembly",
+      "nativePassed": true,
+      "nativeChecksPassed": 3,
+      "nativeChecksTotal": 3,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "ab5a2f1523abab08e10a50a7519eac5d044019c366a9cd4577ddce15b870772e"
+    },
+    {
+      "condition": "B02-r2",
+      "caseId": "assembly",
+      "nativePassed": true,
+      "nativeChecksPassed": 3,
+      "nativeChecksTotal": 3,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "5d008947cb6821e3c8ccdf9e8c9744eba6268aa7d090345aa046d4386528c7b5"
+    },
+    {
+      "condition": "B03-r1",
+      "caseId": "practice-14",
+      "nativePassed": true,
+      "nativeChecksPassed": 7,
+      "nativeChecksTotal": 7,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "d929a98ae22b5fce72a86f7336c1016c83e6ee5843784076ae8c02dac0fbc9b3"
+    },
+    {
+      "condition": "B03-r2",
+      "caseId": "practice-14",
+      "nativePassed": true,
+      "nativeChecksPassed": 7,
+      "nativeChecksTotal": 7,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "0a627cbfc6006e906f9a1919f6d8abe91d602dc354ce9dbd0d697ca44a38cf0b"
+    },
+    {
+      "condition": "B04-r1",
+      "caseId": "practice-11",
+      "nativePassed": true,
+      "nativeChecksPassed": 7,
+      "nativeChecksTotal": 7,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "a57f8657f229e52ab7655f7b85dfbdabd1b49e6c7bb6f5b97b273d0feee11c47"
+    },
+    {
+      "condition": "B04-r2",
+      "caseId": "practice-11",
+      "nativePassed": true,
+      "nativeChecksPassed": 7,
+      "nativeChecksTotal": 7,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "b21a4b55f4a92cf8f1ee404320768fbeb331ebbaaceb2db269a7167c6e1e46b1"
+    },
+    {
+      "condition": "B05-r1",
+      "caseId": "practice-16",
+      "nativePassed": true,
+      "nativeChecksPassed": 6,
+      "nativeChecksTotal": 6,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "17ef600632c636cbbfe7c89dddfd3b35a01be55d8f127393403c324927352588"
+    },
+    {
+      "condition": "B05-r2",
+      "caseId": "practice-16",
+      "nativePassed": true,
+      "nativeChecksPassed": 6,
+      "nativeChecksTotal": 6,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "eddb8713bed3dad06c398c69913d536670732b0fd206d4a034f682c4ca82b447"
+    },
+    {
+      "condition": "B06-r1",
+      "caseId": "practice-17",
+      "nativePassed": true,
+      "nativeChecksPassed": 8,
+      "nativeChecksTotal": 8,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "41ac08aa9ef2e57191f3544f85e38b523659936216268b366b41b3d0eebab2a1"
+    },
+    {
+      "condition": "B06-r2",
+      "caseId": "practice-17",
+      "nativePassed": true,
+      "nativeChecksPassed": 8,
+      "nativeChecksTotal": 8,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "01b3b29e5dbc2d66a9b1b62f14645f71582cbd7585f41e3b82f1a19790749480"
+    },
+    {
+      "condition": "B07-r1",
+      "caseId": "practice-22",
+      "nativePassed": true,
+      "nativeChecksPassed": 4,
+      "nativeChecksTotal": 4,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "8dc0987d1c0c5e9a5536076bd57c126504cb77c47422660edc043056c3968694"
+    },
+    {
+      "condition": "B07-r2",
+      "caseId": "practice-22",
+      "nativePassed": true,
+      "nativeChecksPassed": 4,
+      "nativeChecksTotal": 4,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "50a3fb97ddd8663390f3b21eea70d1b92b1f9d9f929a51b177621803e9c0c751"
+    },
+    {
+      "condition": "B08-r1",
+      "caseId": "practice-21",
+      "nativePassed": true,
+      "nativeChecksPassed": 7,
+      "nativeChecksTotal": 7,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "90183ce4eeddbf530720ce2fe72042e2e070e4b090543413b36faa77eedd3fdd"
+    },
+    {
+      "condition": "B08-r2",
+      "caseId": "practice-21",
+      "nativePassed": true,
+      "nativeChecksPassed": 7,
+      "nativeChecksTotal": 7,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "originalProtocolSHA256": "e23d9a47c7126df84dec853d684ad6a39979a1052afc35cdd2bba658defe6f3a"
+    }
+  ],
+  "limitations": [
+    "One new complete run: eight fixed CAD tasks with two trials each. Not an aggregation of previous successes and targeted retests.",
+    "DeepSeek comparison retains the original 0.137.0-r1 / suite 1.0.2 result. Sol used 0.137.4-r2 / suite 1.0.4. Different program, tool-reference and prompt states; not a controlled same-build model ranking.",
+    "16/16 reports only the observed native checks for these tasks, not general reliability or manufacturing suitability.",
+    "The reviewer completed after an initial output-cap response and the existing bounded retry. Sixteen modeler requests; no modeler format or execution corrections."
+  ]
+}

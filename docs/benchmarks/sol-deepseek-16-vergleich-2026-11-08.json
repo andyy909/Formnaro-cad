@@ -1,0 +1,78 @@
+{
+  "format": "FormnaroBenchmarkComparison",
+  "version": 1,
+  "measuredDate": "2026-11-08",
+  "metric": "Native-passed conditions in one complete fixed 16-condition run",
+  "axis": {
+    "min": 0,
+    "max": 16,
+    "unit": "conditions",
+    "ticks": [
+      0,
+      4,
+      8,
+      12,
+      16
+    ]
+  },
+  "rows": [
+    {
+      "model": "DeepSeek V4.1 Flash",
+      "modelId": "deepseek-flash",
+      "reasoningEffort": "high",
+      "benchmarkId": "98ad2af0-6860-4096-a7da-fd92d316453a",
+      "program": {
+        "version": "0.137.0-r1",
+        "sourceHash": "979baa5caf641d073f788ea8fbae2d312067005316a30d1bfbb2f4ec3db582ac",
+        "asarSHA256": "9ab21739fa22bb28c1d00e6f70aac6a89885c477c407c908ae76cb75599555e2",
+        "executableSHA256": "479608992d606af826002ca001e67201475e4a96dd0f0d7ec85dffcd2b40b203"
+      },
+      "suite": {
+        "id": "formnaro-practice-core",
+        "version": "1.0.2",
+        "sha256": "7b22f2247c1f03f2806fc665ff3c7038abf951f22129fd490bf6c46b67430879"
+      },
+      "nativePassed": 16,
+      "planned": 16,
+      "evidence": "core-deepseek-2026-11-08.json",
+      "evidenceSHA256": "88b95b056d437668a3bd978d5aa6fef94648aae170460bbb8e71fb2c3b726590",
+      "evidenceURL": "https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.4-r2/Benchmark-DeepSeek-V4.1-Flash-16.json"
+    },
+    {
+      "model": "GPT-6.1 Sol",
+      "modelId": "gpt-6.1-sol",
+      "reasoningEffort": "high",
+      "benchmarkId": "2a5927e5-ed1f-4611-8a15-2d8fed2e977f",
+      "program": {
+        "version": "0.137.4-r2",
+        "sourceHash": "d52e7d8ae406b654f8a5d577b32aa349f1d5102c84f5eb9ee4ec5e231caec883",
+        "asarSHA256": "830fe5199e13c0d9517880f74fc0e955dd07443f1681a2fe175acb2af2f826bb",
+        "exeSHA256": "3313578cb2900e7aea6a454e40701c6023eacb95506b99a989582448344ea4fb"
+      },
+      "suite": {
+        "id": "formnaro-practice-core",
+        "version": "1.0.4",
+        "sha256": "666d1f278a94441b89567e1cd1c4ff620c6ba306c412576eebc2483a29469924"
+      },
+      "nativePassed": 16,
+      "planned": 16,
+      "evidence": "core-sol-01374-2026-11-08.json",
+      "evidenceSHA256": "3680c088461941929934ef821aaa978b01f35bff2bba17f3c3b5ee60dfdedae4",
+      "evidenceURL": "https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.4-r2/Benchmark-Sol-16-0.137.4.json"
+    }
+  ],
+  "conditions": {
+    "tasks": 8,
+    "repeatsPerTask": 2,
+    "reasoningEffort": "high",
+    "monitor": "off",
+    "sameTaskSelectionAndExecutionBudgets": true,
+    "sameProgramBuild": false,
+    "sameSuiteVersion": false
+  },
+  "limitations": [
+    "One new complete run: eight fixed CAD tasks with two trials each. Not an aggregation of previous successes and targeted retests.",
+    "DeepSeek comparison retains the original 0.137.0-r1 / suite 1.0.2 result. Sol used 0.137.4-r2 / suite 1.0.4. Different program, tool-reference and prompt states; not a controlled same-build model ranking.",
+    "16/16 reports only the observed native checks for these tasks, not general reliability or manufacturing suitability."
+  ]
+}
