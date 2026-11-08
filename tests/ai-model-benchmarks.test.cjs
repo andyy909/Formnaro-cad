@@ -14,9 +14,16 @@ test('Model attribution is exact and does not borrow other access modes or alias
  const {modelBenchmarks,benchmarkEntries}=await import('../src/cad-ai-model-benchmarks.js'),entries=benchmarkCatalog().entries;
  assert.equal(modelBenchmarks(entries,'https://api.mistral.ai','mistral-large-4').length,0);
  assert.equal(modelBenchmarks(entries,'https://api.deepseek.com','deepseek-v4-flash').length,0);
- assert.equal(modelBenchmarks(entries,'https://api.deepseek.com','deepseek-flash').length,5);
+ assert.equal(modelBenchmarks(entries,'https://api.deepseek.com','deepseek-flash').length,6);
  assert.equal(benchmarkEntries(entries,'all','MISTRAL').length,2);
  assert.equal(benchmarkEntries(entries,'all','untested').length,0);
+});
+
+test('Both latest core 16/16 references retain their real matching build and remain outside advanced results',()=>{
+ const entries=benchmarkCatalog().entries.filter(e=>e.id.startsWith('core-sol-01374-')||e.id.startsWith('core-deepseek-01374-'));
+ assert.equal(entries.length,2);assert(entries.every(e=>e.passed===16&&e.total===16&&e.finished===16&&e.rawAttempts===16&&e.suiteVersion==='1.0.4'&&e.sourceVersion==='0.137.4'));
+ assert.equal(entries[0].sourceHash,entries[1].sourceHash);assert.equal(entries[0].suiteHash,entries[1].suiteHash);
+ for(const name of ['sol','deepseek']){const p=require('../docs/benchmarks/core-'+name+'-01374-2026-11-08.json');assert.equal(p.measuredProgram.version,'0.137.4-r2');assert.equal(p.summary.passed,16);assert.equal(p.summary.finished,16);assert.equal(p.conditions.length,16);}
 });
 function local(overrides={}){return {id:'fixture',plan:{roles:{modeler:{providerId:'chatgpt',model:'gpt-test',effort:'high'},reviewer:{model:'reviewer-private'}},efforts:['high'],monitor:{mode:'off'}},createdAt:'2026-11-07T12:00:00Z',suite:{suiteVersion:'1.0.1',suiteHash:'a'.repeat(64)},status:'incomplete',passed:2,planned:16,finished:3,rawAttempts:4,byOutcome:{passed:2,failed:1,pending:13},source:{programVersion:'0.136.0',privatePath:'C:/private',files:[{path:'private'}]},secret:'never sent',...overrides};}
 test('Local benchmark uses planned denominator, fixed suite and only public summary fields',()=>{
@@ -89,7 +96,7 @@ test('Different program builds have a separate explicit comparison without chang
 
 test('Published Sol history keeps the original 14/16 separate from two successful drawing retests',async()=>{
  const {benchmarkComparisonOptions,comparableBenchmarks,modelBenchmarks}=await import('../src/cad-ai-model-benchmarks.js');
- const entries=benchmarkCatalog().entries,sol=modelBenchmarks(entries,'chatgpt','gpt-6.1-sol');assert.equal(sol.length,4);
+ const entries=benchmarkCatalog().entries,sol=modelBenchmarks(entries,'chatgpt','gpt-6.1-sol');assert.equal(sol.length,5);
  const original=sol.find(r=>r.id==='sol-core-84a16ca2-fb68-48f5-93fb-fa609fe03ab6'),repair=sol.find(r=>r.id==='sol-drawing-retests-332740b2-2270-4e9a-a041-df1dacc32aa2');
  assert.deepEqual([original.passed,original.total,original.sourceVersion],[14,16,'0.137.2']);assert.deepEqual([repair.passed,repair.total,repair.sourceVersion],[2,2,'0.137.3']);
  const group=benchmarkComparisonOptions(entries).find(g=>g.differentSources&&g.entries.some(r=>r.id===original.id));assert(group);

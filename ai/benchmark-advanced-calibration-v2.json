@@ -1,0 +1,320 @@
+{
+  "format": "FormnaroLocalNativeCalibration",
+  "version": 1,
+  "suiteId": "formnaro-practice-advanced",
+  "suiteVersion": "2.0.0",
+  "program": "0.138.0-r1",
+  "providerRequests": 0,
+  "positiveNative": 8,
+  "noopRejected": 8,
+  "nearMissRejected": 8,
+  "missingReplayRejected": 8,
+  "regularChildExit": true,
+  "driverSHA256": "e44b9405214df8109b4ad2c73186dc5cbef6ba5f707fc0ebfaf6a480b33348bc",
+  "referenceConstructionSHA256": "042aea175c8457f202e203bdb561b8b7980e496a58e6429ee4ce54a550c14509",
+  "cases": [
+    {
+      "caseId": "advanced-01",
+      "nativeChecks": [
+        {
+          "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+          "passed": true
+        },
+        {
+          "name": "Sichtbare Ausführung abgeschlossen",
+          "passed": true
+        },
+        {
+          "name": "Nur sichtbare gültige native Einzelkörper",
+          "passed": true
+        },
+        {
+          "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+          "passed": true
+        },
+        {
+          "name": "Unabhängig berechnetes Materialvolumen",
+          "passed": true
+        },
+        {
+          "name": "Alle drei asymmetrischen Bohrungen nativ bestätigt",
+          "passed": true
+        }
+      ],
+      "noopRejected": true,
+      "nearMissRejected": true,
+      "missingReplayRejected": true,
+      "nearMissFailedChecks": [
+        "Alle drei asymmetrischen Bohrungen nativ bestätigt"
+      ]
+    },
+    {
+      "caseId": "advanced-02",
+      "nativeChecks": [
+        {
+          "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+          "passed": true
+        },
+        {
+          "name": "Sichtbare Ausführung abgeschlossen",
+          "passed": true
+        },
+        {
+          "name": "Nur sichtbare gültige native Einzelkörper",
+          "passed": true
+        },
+        {
+          "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+          "passed": true
+        },
+        {
+          "name": "Unabhängig berechnetes Materialvolumen",
+          "passed": true
+        },
+        {
+          "name": "Zwei getrennte rechteckige Durchbrüche und Materialstege",
+          "passed": true
+        }
+      ],
+      "noopRejected": true,
+      "nearMissRejected": true,
+      "missingReplayRejected": true,
+      "nearMissFailedChecks": [
+        "Zwei getrennte rechteckige Durchbrüche und Materialstege"
+      ]
+    },
+    {
+      "caseId": "advanced-03",
+      "nativeChecks": [
+        {
+          "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+          "passed": true
+        },
+        {
+          "name": "Sichtbare Ausführung abgeschlossen",
+          "passed": true
+        },
+        {
+          "name": "Nur sichtbare gültige native Einzelkörper",
+          "passed": true
+        },
+        {
+          "name": "Acht Hülsen an genau den acht versetzten Winkelpositionen",
+          "passed": true
+        },
+        {
+          "name": "Jede Hülse mit echter koaxialer Durchgangsbohrung",
+          "passed": true
+        }
+      ],
+      "noopRejected": true,
+      "nearMissRejected": true,
+      "missingReplayRejected": true,
+      "nearMissFailedChecks": [
+        "Acht Hülsen an genau den acht versetzten Winkelpositionen"
+      ]
+    },
+    {
+      "caseId": "advanced-04",
+      "nativeChecks": [
+        {
+          "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+          "passed": true
+        },
+        {
+          "name": "Sichtbare Ausführung abgeschlossen",
+          "passed": true
+        },
+        {
+          "name": "Nur sichtbare gültige native Einzelkörper",
+          "passed": true
+        },
+        {
+          "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+          "passed": true
+        },
+        {
+          "name": "Unabhängig berechnetes Materialvolumen",
+          "passed": true
+        },
+        {
+          "name": "Stufe links Z24, Grundplatte rechts Z8, Loch offen",
+          "passed": true
+        },
+        {
+          "name": "Ø6 durch die gesamte Stufenhöhe",
+          "passed": true
+        }
+      ],
+      "noopRejected": true,
+      "nearMissRejected": true,
+      "missingReplayRejected": true,
+      "nearMissFailedChecks": [
+        "Unabhängig berechnetes Materialvolumen",
+        "Stufe links Z24, Grundplatte rechts Z8, Loch offen",
+        "Ø6 durch die gesamte Stufenhöhe"
+      ]
+    },
+    {
+      "caseId": "advanced-05",
+      "nativeChecks": [
+        {
+          "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+          "passed": true
+        },
+        {
+          "name": "Sichtbare Ausführung abgeschlossen",
+          "passed": true
+        },
+        {
+          "name": "Nur sichtbare gültige native Einzelkörper",
+          "passed": true
+        },
+        {
+          "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+          "passed": true
+        },
+        {
+          "name": "Unabhängig berechnetes Materialvolumen",
+          "passed": true
+        },
+        {
+          "name": "Oben offen, Boden3 mm und vier obere Wandränder erhalten",
+          "passed": true
+        },
+        {
+          "name": "Vordere Öffnung 10×12, seitliches Material und Rückwand erhalten",
+          "passed": true
+        }
+      ],
+      "noopRejected": true,
+      "nearMissRejected": true,
+      "missingReplayRejected": true,
+      "nearMissFailedChecks": [
+        "Unabhängig berechnetes Materialvolumen",
+        "Vordere Öffnung 10×12, seitliches Material und Rückwand erhalten"
+      ]
+    },
+    {
+      "caseId": "advanced-06",
+      "nativeChecks": [
+        {
+          "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+          "passed": true
+        },
+        {
+          "name": "Sichtbare Ausführung abgeschlossen",
+          "passed": true
+        },
+        {
+          "name": "Nur sichtbare gültige native Einzelkörper",
+          "passed": true
+        },
+        {
+          "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+          "passed": true
+        },
+        {
+          "name": "Unabhängig berechnetes Materialvolumen",
+          "passed": true
+        },
+        {
+          "name": "Taschenboden Z12, Bohrungsboden Z8 und übrige Oberseite Z20",
+          "passed": true
+        }
+      ],
+      "noopRejected": true,
+      "nearMissRejected": true,
+      "missingReplayRejected": true,
+      "nearMissFailedChecks": [
+        "Unabhängig berechnetes Materialvolumen",
+        "Taschenboden Z12, Bohrungsboden Z8 und übrige Oberseite Z20"
+      ]
+    },
+    {
+      "caseId": "advanced-07",
+      "nativeChecks": [
+        {
+          "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+          "passed": true
+        },
+        {
+          "name": "Sichtbare Ausführung abgeschlossen",
+          "passed": true
+        },
+        {
+          "name": "Nur sichtbare gültige native Einzelkörper",
+          "passed": true
+        },
+        {
+          "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+          "passed": true
+        },
+        {
+          "name": "Unabhängig berechnetes Materialvolumen",
+          "passed": true
+        },
+        {
+          "name": "L-Aussparung und beide Schenkel an richtigen Weltpositionen",
+          "passed": true
+        },
+        {
+          "name": "Beide Skizzenlöcher mit richtigen Durchmessern und Weltlagen",
+          "passed": true
+        },
+        {
+          "name": "Bearbeitbare Skizzenquelle mit Außenkontur und zwei Innenkonturen",
+          "passed": true
+        }
+      ],
+      "noopRejected": true,
+      "nearMissRejected": true,
+      "missingReplayRejected": true,
+      "nearMissFailedChecks": [
+        "Unabhängig berechnetes Materialvolumen",
+        "Beide Skizzenlöcher mit richtigen Durchmessern und Weltlagen",
+        "Bearbeitbare Skizzenquelle mit Außenkontur und zwei Innenkonturen"
+      ]
+    },
+    {
+      "caseId": "advanced-08",
+      "nativeChecks": [
+        {
+          "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+          "passed": true
+        },
+        {
+          "name": "Sichtbare Ausführung abgeschlossen",
+          "passed": true
+        },
+        {
+          "name": "Nur sichtbare gültige native Einzelkörper",
+          "passed": true
+        },
+        {
+          "name": "Vollständiger Ausgangskörper unverändert",
+          "passed": true
+        },
+        {
+          "name": "A3 quer, Maßstab1:2, Nummer AB-08, Revision B",
+          "passed": true
+        },
+        {
+          "name": "Vier berechnete Ansichten einschließlich Schnitt Y−5",
+          "passed": true
+        },
+        {
+          "name": "Mindestens drei gültige geometrisch verknüpfte Maße",
+          "passed": true
+        }
+      ],
+      "noopRejected": true,
+      "nearMissRejected": true,
+      "missingReplayRejected": true,
+      "nearMissFailedChecks": [
+        "A3 quer, Maßstab1:2, Nummer AB-08, Revision B"
+      ]
+    }
+  ],
+  "scope": "Deterministic local CAD reference calibration. No AI model score or live benchmark result."
+}

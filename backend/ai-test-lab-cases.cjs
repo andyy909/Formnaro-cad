@@ -2,6 +2,7 @@ const {cases}=require('./ai-diagnostic-cases.cjs');
 const {assemblyCase}=require('./ai-diagnostic-assembly.cjs');
 // New task instances are held out from prompt tuning. Oracle data stays local.
 function taskInstance(caseId,dataset='development'){
+ const advanced=require('./ai-benchmark-advanced-cases.cjs').advancedTask(caseId,dataset);if(advanced)return advanced;
  const functional=require('./ai-practice-function-cases.cjs').functionTask(caseId,dataset);if(functional)return functional;
  const source=[...cases,assemblyCase].find(c=>c.id===caseId);if(!source)throw Error('Unbekannte Testaufgabe.');
  const task=structuredClone(source);task.dataset=dataset;

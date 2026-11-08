@@ -80,10 +80,10 @@ export function createCadAIModelPicker({host,desktop,language,onBusy,onChange,on
   const models=catalogs.flatMap(entry=>entry.models.map(model=>({model,entry,sample:modelPracticeSample(entry.providerId,model.id,scope)})))
    .filter(({model,entry})=>(scope!=='photo'||model.vision!==false)&&[model.name,model.id,entry.provider?.label].join(' ').toLocaleLowerCase().includes(query));
   models.sort((a,b)=>Number(b.entry.hasKey)-Number(a.entry.hasKey)||a.model.name.localeCompare(b.model.name));
-  el('#ai-model-chart-title').textContent=text('Grundbenchmark · 16 feste Versuche','Core benchmark · 16 fixed trials');
+  el('#ai-model-chart-title').textContent=text('KI-Benchmarks · 16 feste Versuche','AI benchmarks · 16 fixed trials');
   el('[data-method]').textContent=text('Je Modell der neueste vollständige Lauf mit gleichen Aufgaben, Denkstufe, Überwachung und Programmstand. Jede Säule zeigt einen einzelnen Lauf: bestätigt / 16, Skala 0–100 %.','Latest complete run per model with the same tasks, effort, monitoring and app build. Each column shows one run: confirmed / 16, scale 0–100%.');
   const groups=benchmarkComparisonOptions(benchmarks.entries),select=el('[data-comparison]'),previous=select.value;
-  select.replaceChildren(...(groups.length?groups.map(g=>new Option(g.sample.suiteVersion+' · '+g.sample.effort+' · '+g.sample.monitor+' · '+(g.differentSources?text('Unterschiedliche Programmstände','Different app builds'):'Formnaro '+g.sample.sourceVersion+' · '+(g.sample.sourceHash||g.sample.suiteHash).slice(0,8)),g.id)):[new Option(text('Noch kein vollständiger Benchmark','No complete benchmark yet'),'')]));
+  select.replaceChildren(...(groups.length?groups.map(g=>new Option((language()==='en'?(g.sample.labelEn||g.sample.label):g.sample.label)+' '+g.sample.suiteVersion+' · '+g.sample.effort+' · '+g.sample.monitor+' · '+(g.differentSources?text('Unterschiedliche Programmstände','Different app builds'):'Formnaro '+g.sample.sourceVersion+' · '+(g.sample.sourceHash||g.sample.suiteHash).slice(0,8)),g.id)):[new Option(text('Noch kein vollständiger Benchmark','No complete benchmark yet'),'')]));
   if(groups.some(g=>g.id===previous))select.value=previous;select.disabled=!groups.length;
   el('[data-comparison-label]').textContent=text('Benchmark-Vergleich','Benchmark comparison');
   const mixed=groups.find(g=>g.id===select.value)?.differentSources===true,note=el('[data-comparison-note]');note.hidden=!mixed;
@@ -91,8 +91,8 @@ export function createCadAIModelPicker({host,desktop,language,onBusy,onChange,on
   if(mixed)el('[data-method]').textContent=text('Je Modell ein vollständiger Einzellauf: bestätigt / 16, Skala 0–100 %. Der gemessene Programmstand steht unter jeder Säule.','One complete run per model: confirmed / 16, scale 0–100%. The measured app build is shown below each column.');
   renderBenchmarkChart(chart,comparableBenchmarks(benchmarks.entries,select.value,query),language());
   el('[data-benchmark-status]').textContent=benchmarkError;
-  const hasCore=groups.length>0;
-  el('[data-benchmark-suite]').textContent=benchmarks.suite?text('Grundbenchmark ','Core benchmark ')+benchmarks.suite.version+' · '+(hasCore?text('nur vollständige Einzelläufe im Diagramm','only complete individual runs in the chart'):text('noch kein vollständiger 16er-Lauf. Übungs-, Reparatur- und Teilstände bleiben außerhalb des Diagramms.','no complete 16-trial run yet. Practice, repair and partial results stay outside the chart.')):'';
+  const shown=groups.find(g=>g.id===select.value)?.sample;
+  el('[data-benchmark-suite]').textContent=shown?(language()==='en'?(shown.labelEn||shown.label):shown.label)+' '+shown.suiteVersion+' · '+text('nur vollständige Einzelläufe dieser Suite im Diagramm','only complete individual runs of this suite in the chart'):text('Noch kein vollständiger 16er-Lauf. Übungs-, Reparatur- und Teilstände bleiben außerhalb des Diagramms.','No complete 16-trial run yet. Practice, repair and partial results stay outside the chart.');
   list.replaceChildren();
   for(const {model,entry,sample} of models){
    const active=entry.providerId===settings?.providerId&&model.id===settings.model;

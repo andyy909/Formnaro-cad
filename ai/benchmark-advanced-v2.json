@@ -1,0 +1,130 @@
+{
+  "id": "formnaro-practice-advanced",
+  "label": "Aufbaubenchmark",
+  "version": "2.0.0",
+  "knownDevelopmentTasks": true,
+  "limits": {
+    "seconds": 600,
+    "outputTokens": 16384,
+    "rounds": 30,
+    "formatRepairs": 2,
+    "requestBudget": 1000
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "caseId": "advanced-01",
+      "label": "Asymmetrisches Bohrbild",
+      "taskHash": "61fa244734c9a8d03e9794f19f41807ac6670e85f3e5af44a35c185c76e36ac5"
+    },
+    {
+      "id": "A02",
+      "caseId": "advanced-02",
+      "label": "Zwei versetzte Durchbrüche",
+      "taskHash": "e1cf361a514837ae2f1f52c1a08303ed577afae8b4ac01c68d9ed0c36a25d8cb"
+    },
+    {
+      "id": "A03",
+      "caseId": "advanced-03",
+      "label": "Gebohrte Hülsen im versetzten Muster",
+      "taskHash": "2431fb17166c8509909fe946bace5f9fd2c3f9d819a1366b508d310b70dfe2f7"
+    },
+    {
+      "id": "A04",
+      "caseId": "advanced-04",
+      "label": "Stufenkörper aufbauen und bohren",
+      "taskHash": "33be6ac2f73a791d1c359ef56341dcd45b29cb3d893e75ce9cbac5a7915778fc"
+    },
+    {
+      "id": "A05",
+      "caseId": "advanced-05",
+      "label": "Gehäuse mit seitlichem Durchbruch",
+      "taskHash": "afceb1aa64b5dea51df85c8c6c85ef74ee686b2e32fc1805602200c6cf5dcce8"
+    },
+    {
+      "id": "A06",
+      "caseId": "advanced-06",
+      "label": "Blindtasche und blinde Bohrung",
+      "taskHash": "dd5e7155caa690ea425cca847352deee1fc93387167186277e5ca582dbc8fe33"
+    },
+    {
+      "id": "A07",
+      "caseId": "advanced-07",
+      "label": "Bearbeitbare L-Skizze mit zwei Löchern",
+      "taskHash": "627e86b3f39e04136c8e64896c2ac438d4b75b2330aefbe1af667ebd959ef90b"
+    },
+    {
+      "id": "A08",
+      "caseId": "advanced-08",
+      "label": "Stufenteil mit Schnitt und Bemaßung",
+      "taskHash": "26cd389b56c12fa145a6ae32d7cada418998c29be5c0feb9064bc165e2099c1a"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "backend/ai-practice-function-evaluate.cjs",
+      "sha256": "a0da5955d43f03bfb87aaae7de1631b1380c336c206cfe7fd644144b6555e039"
+    },
+    {
+      "path": "backend/ai-diagnostic-evaluate.cjs",
+      "sha256": "df969f58c8b16d0e8a57ebf0a8ce2ecd881551541f558dc09988fda2612a7cd5"
+    },
+    {
+      "path": "backend/ai-diagnostic-assembly.cjs",
+      "sha256": "4f01099b49de84b2e856fb3aac50c4b6af749c85b3030ebd18e43b1e4f45b8ba"
+    },
+    {
+      "path": "backend/ai-practice-context.cjs",
+      "sha256": "ef2493637653974ac423537940948187706c4db1d522288aed1edf8f23351500"
+    },
+    {
+      "path": "backend/ai-practice-prompt.cjs",
+      "sha256": "a05024a3b87da04b6e622b0f17621b144df97c786c5ff6d6791ad3189e5d11b9"
+    },
+    {
+      "path": "backend/practice-result-checks.cjs",
+      "sha256": "0b63b20ac35711c08fa6af7b0cab8d01998fd1999539d1a512b7272a4df1e991"
+    },
+    {
+      "path": "ai/formnaro-tool-reference.mjs",
+      "sha256": "56337589f3214a97afb7a634e19fe2b6347be02f8e945d2bc92f93fae533f6aa"
+    },
+    {
+      "path": "ai/practice-plan-feedback.mjs",
+      "sha256": "4f224ee3d8565c3a96d689626dcec1f9bab8c7ad133e8b07e31126dee44b162f"
+    },
+    {
+      "path": "backend/ai-benchmark-advanced-cases.cjs",
+      "sha256": "228e1ea9ff023712fef74003a016c377cbb464702469ed5a470face90faefaf5"
+    },
+    {
+      "path": "backend/ai-benchmark-advanced-evaluate.cjs",
+      "sha256": "e61c210dad44bc2ab703ef4b862412de4057e1bce88ff10679f42de638cee4b4"
+    },
+    {
+      "path": "backend/ai-test-lab-cases.cjs",
+      "sha256": "1edcc75587824fef1b97ef409ba0f85f7dd1a6088ec522fc8b7a4b77075a11f1"
+    },
+    {
+      "path": "backend/ai-test-lab-plan.cjs",
+      "sha256": "284c5e6d9108aa1f289b69d237c0057dc9ef8360b55449bdd9fc9b3d7af8a59d"
+    },
+    {
+      "path": "backend/ai-diagnostics.cjs",
+      "sha256": "2d865f5f2108d8fed7eafca2690b6abf4b3be2056fca1fab2f905c9f94569f68"
+    },
+    {
+      "path": "ai/benchmark-advanced-calibration-v2.json",
+      "sha256": "6ed7a598ca8843bca08b82cb7120536489c7198f01a8474458fdc2a98ccd70ad"
+    }
+  ],
+  "calibration": {
+    "status": "passed",
+    "evidence": "ai/benchmark-advanced-calibration-v2.json",
+    "sha256": "6ed7a598ca8843bca08b82cb7120536489c7198f01a8474458fdc2a98ccd70ad",
+    "positiveNative": 8,
+    "negativeNative": 24,
+    "providerRequests": 0
+  },
+  "revisionReason": "Separate multi-step benchmark. The original core tasks and all previous measurements remain unchanged."
+}
