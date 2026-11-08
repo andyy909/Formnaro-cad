@@ -19,9 +19,21 @@ export function benchmarkComparisons(entries){
  return [...groups.values()].sort((a,b)=>b.entries.map(r=>r.createdAt||r.date).sort().at(-1).localeCompare(a.entries.map(r=>r.createdAt||r.date).sort().at(-1)));
 }
 export function comparableBenchmarks(entries,comparison,query=''){
- const group=benchmarkComparisons(entries).find(g=>g.id===comparison),latest=new Map();
+ const group=benchmarkComparisonOptions(entries).find(g=>g.id===comparison),latest=new Map();
  for(const r of (group?.entries??[]).slice().sort((a,b)=>(a.createdAt||a.date).localeCompare(b.createdAt||b.date)||a.id.localeCompare(b.id)))latest.set(JSON.stringify([r.providerId,r.model]),r);
  return benchmarkEntries([...latest.values()],'all',query);
+}
+// Different builds are an explicit additional view, never a matching-build group.
+export function benchmarkComparisonOptions(entries){
+ const exact=benchmarkComparisons(entries),groups=new Map();
+ for(const group of exact)for(const r of group.entries){
+  if(!r.sourceVersion||!r.sourceHash)continue;
+  const key=JSON.stringify(['different-builds',r.suiteHash,r.effort,r.monitor]);
+  if(!groups.has(key))groups.set(key,{id:key,sample:r,entries:[],differentSources:true});
+  groups.get(key).entries.push(r);
+ }
+ const additional=[...groups.values()].filter(g=>new Set(g.entries.map(r=>JSON.stringify([r.sourceVersion,r.sourceHash]))).size>1&&new Set(g.entries.map(r=>JSON.stringify([r.providerId,r.model]))).size>1);
+ return [...exact,...additional];
 }
 export function benchmarkRunEntries(run){
  if(!run)return [];
@@ -50,6 +62,7 @@ export function renderBenchmarkChart(host,entries,language='de'){
   bar.style.height=Math.max(0,Math.min(100,percent))+'%';track.append(bar);track.setAttribute('aria-hidden','true');column.append(track);
   column.append(node('strong','ai-benchmark-model',r.modelName),node('small','',((en?r.labelEn:r.label)||r.label)+(r.suiteVersion?' '+r.suiteVersion:'')),
    node('small','',r.date+' · '+r.effort),node('small','ai-benchmark-state',r.status==='completed'?t('abgeschlossen','completed'):t('Teilstand','partial')));
+  if(r.sourceVersion)column.append(node('small','', 'Formnaro '+r.sourceVersion+' · '+(r.sourceHash||'').slice(0,8)));
   column.title=benchmarkDescription(r,language);plot.append(column);
  }
  host.append(plot);

@@ -1,7 +1,7 @@
 import { renderReasoningSelect } from './ai-reasoning-ui.js';
 import { providerCredentialLabel } from './ai-provider-status.js';
 import { modelPracticeSample } from './cad-ai-model-samples.js';
-import { benchmarkComparisons, comparableBenchmarks, modelBenchmarks, renderBenchmarkChart, renderBenchmarkDetail } from './cad-ai-model-benchmarks.js';
+import { benchmarkComparisonOptions, comparableBenchmarks, modelBenchmarks, renderBenchmarkChart, renderBenchmarkDetail } from './cad-ai-model-benchmarks.js';
 
 export function createCadAIModelPicker({host,desktop,language,onBusy,onChange,onProviderChange,onStatus,onSettings}){
  const text=(de,en)=>language()==='en'?en:de;
@@ -28,7 +28,7 @@ export function createCadAIModelPicker({host,desktop,language,onBusy,onChange,on
   </div>
   <section class="ai-model-comparison" aria-labelledby="ai-model-chart-title">
    <div class="ai-model-chart-heading"><h3 id="ai-model-chart-title"></h3><p data-method></p></div>
-   <label class="ai-benchmark-comparison-label"><span data-comparison-label></span><select data-comparison></select></label><div data-chart class="ai-model-chart"></div>
+   <label class="ai-benchmark-comparison-label"><span data-comparison-label></span><select data-comparison></select></label><p data-comparison-note class="small-note" hidden></p><div data-chart class="ai-model-chart"></div>
    <p data-benchmark-status class="ai-model-benchmark-status" role="status"></p>
    <p data-benchmark-suite class="ai-model-benchmark-status"></p>
   </section>
@@ -82,10 +82,13 @@ export function createCadAIModelPicker({host,desktop,language,onBusy,onChange,on
   models.sort((a,b)=>Number(b.entry.hasKey)-Number(a.entry.hasKey)||a.model.name.localeCompare(b.model.name));
   el('#ai-model-chart-title').textContent=text('Grundbenchmark · 16 feste Versuche','Core benchmark · 16 fixed trials');
   el('[data-method]').textContent=text('Je Modell der neueste vollständige Lauf mit gleichen Aufgaben, Denkstufe, Überwachung und Programmstand. Jede Säule zeigt einen einzelnen Lauf: bestätigt / 16, Skala 0–100 %.','Latest complete run per model with the same tasks, effort, monitoring and app build. Each column shows one run: confirmed / 16, scale 0–100%.');
-  const groups=benchmarkComparisons(benchmarks.entries),select=el('[data-comparison]'),previous=select.value;
-  select.replaceChildren(...(groups.length?groups.map(g=>new Option(g.sample.suiteVersion+' · '+g.sample.effort+' · '+g.sample.monitor+' · Formnaro '+g.sample.sourceVersion+' · '+(g.sample.sourceHash||g.sample.suiteHash).slice(0,8),g.id)):[new Option(text('Noch kein vollständiger Benchmark','No complete benchmark yet'),'')]));
+  const groups=benchmarkComparisonOptions(benchmarks.entries),select=el('[data-comparison]'),previous=select.value;
+  select.replaceChildren(...(groups.length?groups.map(g=>new Option(g.sample.suiteVersion+' · '+g.sample.effort+' · '+g.sample.monitor+' · '+(g.differentSources?text('Unterschiedliche Programmstände','Different app builds'):'Formnaro '+g.sample.sourceVersion+' · '+(g.sample.sourceHash||g.sample.suiteHash).slice(0,8)),g.id)):[new Option(text('Noch kein vollständiger Benchmark','No complete benchmark yet'),'')]));
   if(groups.some(g=>g.id===previous))select.value=previous;select.disabled=!groups.length;
-  el('[data-comparison-label]').textContent=text('Gleiche Benchmark-Bedingungen','Matching benchmark conditions');
+  el('[data-comparison-label]').textContent=text('Benchmark-Vergleich','Benchmark comparison');
+  const mixed=groups.find(g=>g.id===select.value)?.differentSources===true,note=el('[data-comparison-note]');note.hidden=!mixed;
+  note.textContent=mixed?text('Gleiche Suite, Denkstufe und Überwachung; unterschiedliche Programmstände. Die Originalmessungen bleiben unverändert. Unterschiede können auch vom Programmstand abhängen.','Same suite, effort and monitoring; different app builds. Original measurements remain unchanged. Differences can also depend on the app build.'):'';
+  if(mixed)el('[data-method]').textContent=text('Je Modell ein vollständiger Einzellauf: bestätigt / 16, Skala 0–100 %. Der gemessene Programmstand steht unter jeder Säule.','One complete run per model: confirmed / 16, scale 0–100%. The measured app build is shown below each column.');
   renderBenchmarkChart(chart,comparableBenchmarks(benchmarks.entries,select.value,query),language());
   el('[data-benchmark-status]').textContent=benchmarkError;
   const hasCore=groups.length>0;

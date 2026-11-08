@@ -72,6 +72,8 @@ async function completeModelOnce(config,key,{system,user,input,outputBudget=conf
   const messages=input.history.map(t=>({role:t.role,content:content(t.text,t.images)}));messages.push({role:'user',content:content(user,input.images)});
   data=await request(config,key,'/messages',{model:config.model,system,messages,max_tokens:outputBudget,...(effort?{output_config:{effort},...(!/^claude-opus-4[.-]5(?:-|$)/.test(config.model)?{thinking:{type:'adaptive'}}:{})}:{})},signal,onDiagnostic);text=(data.content??[]).filter(x=>x.type==='text').map(x=>x.text).join('\n');
  }else if(config.protocol==='responses'){
+  // JSON mode validates input messages separately from top-level instructions.
+  if(!/json/i.test(user))user='Return only the requested JSON object.\n'+user;
   const content=(text,images)=>[{type:'input_text',text},...images.map(image_url=>({type:'input_image',image_url,detail:'auto'}))],messages=input.history.map(t=>({role:t.role,content:t.role==='assistant'?t.text:content(t.text,t.images)}));messages.push({role:'user',content:content(user,input.images)});
   data=await request(config,key,'/responses',{model:config.model,instructions:system,input:config.authMode==='chatgpt'||input.images.length||input.history.length?messages:user,store:false,text:{format:{type:'json_object'}},...(config.authMode==='chatgpt'?{stream:true}:{max_output_tokens:outputBudget}),...(effort?{reasoning:{effort}}:{})},signal,onDiagnostic);text=(data.output||[]).filter(x=>x.type==='message').flatMap(x=>x.content||[]).filter(x=>x.type==='output_text').map(x=>x.text).join('\n');
  }else{

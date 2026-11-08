@@ -72,6 +72,17 @@ test('Task chart uses exactly the eight cases from one selected benchmark, inclu
  assert.ok(rows.every(r=>r.id.startsWith('selected:')&&r.total===2));assert.equal(rows[1].status,'incomplete');assert.deepEqual(benchmarkRunEntries(null),[]);
 });
 
+test('Different program builds have a separate explicit comparison without changing exact groups or original results',async()=>{
+ const {benchmarkComparisons,benchmarkComparisonOptions,comparableBenchmarks}=await import('../src/cad-ai-model-benchmarks.js');
+ const first=local({id:'deepseek',status:'completed',finished:16,passed:16,source:{programVersion:'0.137.0',hash:'old'}});
+ const second=local({id:'sol',status:'completed',finished:16,passed:12,source:{programVersion:'0.137.2',hash:'fixed'}});second.plan.roles.modeler.model='gpt-sol';
+ const entries=benchmarkCatalog([first,second,local({id:'partial'})]).entries.filter(r=>r.origin==='local'),before=structuredClone(entries);
+ assert.equal(benchmarkComparisons(entries).length,2);
+ const options=benchmarkComparisonOptions(entries),mixed=options.find(g=>g.differentSources);assert.equal(options.length,3);assert(mixed);
+ const bars=comparableBenchmarks(entries,mixed.id);assert.equal(bars.length,2);assert.deepEqual(bars.map(r=>[r.sourceVersion,r.passed]).sort(),[['0.137.0',16],['0.137.2',12]]);
+ assert.deepEqual(entries,before);assert.equal(benchmarkComparisonOptions(entries.filter(r=>r.id!=='local:sol')).some(g=>g.differentSources),false);
+});
+
  test('Published fixed benchmark preserves its measured build and sixteen successful conditions',async()=>{
  const c=benchmarkCatalog(),r=c.entries.find(r=>r.kind==='benchmark'&&r.origin==='reference');assert.equal(r.passed,16);assert.equal(r.total,16);assert.equal(r.finished,16);assert.equal(r.sourceVersion,'0.137.0');assert.equal(r.effort,'high');assert.equal(r.monitor,'off');assert.equal(r.rawAttempts,16);assert.equal(r.suiteVersion,'1.0.2');assert.match(r.sourceHash,/^[a-f0-9]{64}$/);
  });
