@@ -265,6 +265,68 @@
       "origin": "reference",
       "note": "Ein einzelner echter Lauf auf Formnaro0.137.0-r1: acht bekannte Aufgaben je zweimal. Alle16nativ bestätigt und regulär beendet, ohne Modellierkorrektur. Unverändert übernommen; kein neuer Modellversuch auf0.137.1.",
       "noteEn": "One real run on Formnaro0.137.0-r1: eight known tasks repeated twice. All16native checks and clean exits passed without modeler corrections. Preserved unchanged; not a new model trial on0.137.1."
+    },
+    {
+      "id": "sol-core-84a16ca2-fb68-48f5-93fb-fa609fe03ab6",
+      "kind": "benchmark",
+      "scope": "all",
+      "providerId": "chatgpt",
+      "model": "gpt-6.1-sol",
+      "modelName": "GPT-6.1 Sol",
+      "label": "Formnaro Grundbenchmark",
+      "labelEn": "Formnaro core benchmark",
+      "date": "2026-11-08",
+      "createdAt": "2026-11-08T13:01:23.971Z",
+      "effort": "high",
+      "suiteVersion": "1.0.2",
+      "suiteHash": "7b22f2247c1f03f2806fc665ff3c7038abf951f22129fd490bf6c46b67430879",
+      "status": "completed",
+      "passed": 14,
+      "total": 16,
+      "finished": 16,
+      "rawAttempts": 16,
+      "byOutcome": {
+        "pending": 0,
+        "passed": 14,
+        "failed": 2,
+        "unverified": 0,
+        "infrastructure": 0,
+        "model-unverified": 0
+      },
+      "medianSuccessfulMs": 55813.5,
+      "monitor": "off",
+      "sourceVersion": "0.137.2",
+      "sourceHash": "a6d5c6ad963e3c87d8be7ad74eb0fb6d700d4d081d209c86537e983edf55f940",
+      "origin": "reference",
+      "note": "Ursprünglicher vollständiger Lauf auf 0.137.2-r1: 14/16. Zwei Zeichnungsfehler bleiben historisch erhalten; spätere 2/2-Nachtests werden separat gezeigt.",
+      "noteEn": "Original complete run on 0.137.2-r1: 14/16. The two drawing failures remain historical; later 2/2 targeted retests are shown separately."
+    },
+    {
+      "id": "sol-drawing-retests-332740b2-2270-4e9a-a041-df1dacc32aa2",
+      "kind": "lab",
+      "scope": "all",
+      "providerId": "chatgpt",
+      "model": "gpt-6.1-sol",
+      "modelName": "GPT-6.1 Sol",
+      "label": "Zeichnung · gezielte Nachtests",
+      "labelEn": "Drawing · targeted retests",
+      "date": "2026-11-08",
+      "effort": "high",
+      "status": "completed",
+      "passed": 2,
+      "total": 2,
+      "finished": 2,
+      "rawAttempts": 2,
+      "byOutcome": {
+        "passed": 2,
+        "failed": 0
+      },
+      "monitor": "off",
+      "sourceVersion": "0.137.3",
+      "sourceHash": "17842ca1d9d3dc58e2e68bfbd07ecb71865782ba486e45a816b6e65790a7a6a7",
+      "origin": "reference",
+      "note": "Nur B08-r1/r2 auf 0.137.3-r2 erneut geprüft: 2/2 nativ bestanden. 14 erfolgreiche Sol-Originale beibehalten; kein neuer vollständiger 16er-Benchmark.",
+      "noteEn": "Only B08-r1/r2 rerun on 0.137.3-r2: 2/2 native passes. Fourteen successful Sol originals retained; not a new complete 16-trial benchmark."
     }
   ]
 }

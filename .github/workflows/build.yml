@@ -23,6 +23,6 @@ jobs:
       - run: node cad-kernel-build/verify-runtime.mjs
       - run: npm run build
       - run: npm test
-      - run: node --test tests/windows-dictation.test.cjs tests/renderer-recovery-lifecycle.test.cjs tests/desktop-ai-lifecycle.test.cjs tests/ai-model-benchmarks.test.cjs tests/ai-lab-benchmark.test.cjs
+      - run: node --test tests/windows-dictation.test.cjs tests/renderer-recovery-lifecycle.test.cjs tests/desktop-ai-lifecycle.test.cjs tests/ai-model-benchmarks.test.cjs tests/ai-lab-benchmark.test.cjs tests/ai-drawing-reference.test.cjs tests/ai-tool-reference.test.cjs tests/ai-responses-json-input.test.cjs
       - name: Verify the build leaves tracked inputs untouched
         run: git diff --exit-code

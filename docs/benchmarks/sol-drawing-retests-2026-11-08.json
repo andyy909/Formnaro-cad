@@ -1,0 +1,145 @@
+{
+  "format": "FormnaroPublicTargetedRetestResult",
+  "version": 1,
+  "seriesId": "332740b2-2270-4e9a-a041-df1dacc32aa2",
+  "originalBenchmarkId": "84a16ca2-fb68-48f5-93fb-fa609fe03ab6",
+  "measuredProgram": {
+    "version": "0.137.3-r2",
+    "sourceHash": "17842ca1d9d3dc58e2e68bfbd07ecb71865782ba486e45a816b6e65790a7a6a7",
+    "revision": "r2",
+    "asarSHA256": "1a4c34d08e8fffc9e75fae8e64491af141be6b154e4677b66a1ca0dc744ba68c",
+    "exeSHA256": "e1cb3b38eb1cd224516b5d9e03cfc98822867b76796addd63ac3809bd2169d79"
+  },
+  "preservedInRelease": "0.137.3-r3",
+  "newTrialsOnPublishedBuild": 0,
+  "suiteVersion": "1.0.3",
+  "model": {
+    "provider": "chatgpt",
+    "id": "gpt-6.1-sol",
+    "displayName": "GPT-6.1 Sol",
+    "reasoningEffort": "high"
+  },
+  "monitor": "off",
+  "limits": {
+    "seconds": 360,
+    "outputTokens": 16384,
+    "rounds": 20,
+    "formatRepairs": 2,
+    "requestBudget": 1000
+  },
+  "sameTasksFixturesOraclesAndBudgets": true,
+  "result": {
+    "planned": 2,
+    "finished": 2,
+    "nativePassed": 2,
+    "fullyAccepted": 2,
+    "retainedOriginalSuccesses": 14,
+    "effectiveConditionsAccepted": 16,
+    "rawSolAttempts": 18,
+    "freshFullBenchmark": false
+  },
+  "conditions": [
+    {
+      "conditionId": "B08-r2",
+      "originalRunId": "bf6421e6-4a80-41bd-bb06-d1f42d89df3a",
+      "newRunId": "0c03da75-f476-406f-9bb7-d58dddba9e70",
+      "native": true,
+      "cleanExit": true,
+      "modelExact": true,
+      "checks": [
+        {
+          "name": "Schutzteil vollständig erhalten",
+          "passed": true
+        },
+        {
+          "name": "Tatsächlicher sichtbarer Ablauf abgeschlossen",
+          "passed": true
+        },
+        {
+          "name": "Unbeteiligtes Teil vollständig erhalten",
+          "passed": true
+        },
+        {
+          "name": "Nur native sichtbare Volumenkörper",
+          "passed": true
+        },
+        {
+          "name": "Zeichnungskörper unverändert",
+          "passed": true
+        },
+        {
+          "name": "A4 und Titelblock",
+          "passed": true
+        },
+        {
+          "name": "Drei berechnete Ansichten des richtigen Körpers",
+          "passed": true
+        }
+      ],
+      "actions": 8,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 51221,
+      "originalProtocolSHA256": "20ba1843d9826540c82162e7fd2b47ddd05cd3a7fe91348c56025ba0c3794f08",
+      "newProtocolSHA256": "810c7ee6e394631c99b569711b124229a5c7dc17706ef2697158498c229391eb"
+    },
+    {
+      "conditionId": "B08-r1",
+      "originalRunId": "bd0883a8-d227-4891-9349-d67043fdf659",
+      "newRunId": "1646aee0-58ff-4b2a-9269-ca2f43ffffb7",
+      "native": true,
+      "cleanExit": true,
+      "modelExact": true,
+      "checks": [
+        {
+          "name": "Schutzteil vollständig erhalten",
+          "passed": true
+        },
+        {
+          "name": "Tatsächlicher sichtbarer Ablauf abgeschlossen",
+          "passed": true
+        },
+        {
+          "name": "Unbeteiligtes Teil vollständig erhalten",
+          "passed": true
+        },
+        {
+          "name": "Nur native sichtbare Volumenkörper",
+          "passed": true
+        },
+        {
+          "name": "Zeichnungskörper unverändert",
+          "passed": true
+        },
+        {
+          "name": "A4 und Titelblock",
+          "passed": true
+        },
+        {
+          "name": "Drei berechnete Ansichten des richtigen Körpers",
+          "passed": true
+        }
+      ],
+      "actions": 8,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 50307,
+      "originalProtocolSHA256": "d06e23f40ce7920a4e563a11b0b140e59b182d52a8fd1201719e85f99e248016",
+      "newProtocolSHA256": "c2dcb763b52fe2c3020f5ff70f5302bac4db2ca4a409548f0e01645b473340f9"
+    }
+  ],
+  "originalFilesUnchanged": 98,
+  "originalBenchmarkScore": {
+    "passed": 14,
+    "planned": 16,
+    "unchanged": true
+  },
+  "DeepSeekOriginal": {
+    "passed": 16,
+    "planned": 16,
+    "unchanged": true
+  },
+  "limitations": [
+    "Targeted repairs across different builds, not a new full benchmark or general reliability estimate."
+  ]
+}

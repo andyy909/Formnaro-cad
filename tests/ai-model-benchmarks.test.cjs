@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {benchmarkCatalog}=require('../backend/ai-model-benchmarks.cjs');
 test('Bundled live evidence preserves all tested models, separate series and paused raw attempts',async()=>{
- const {benchmarkEntries}=await import('../src/cad-ai-model-benchmarks.js'),c=benchmarkCatalog(),all=benchmarkEntries(c.entries.filter(r=>r.kind!=='benchmark'));
+ const {benchmarkEntries}=await import('../src/cad-ai-model-benchmarks.js'),c=benchmarkCatalog(),all=benchmarkEntries(c.entries.filter(r=>r.kind!=='benchmark'&&r.model!=='gpt-6.1-sol'));
  assert.deepEqual([...new Set(all.map(r=>r.model))].sort(),['deepseek-flash','mistral-large-4']);
  assert.equal(all.length,6);assert.ok(all.every(r=>r.kind!=='benchmark'));
  const lab=all.filter(r=>r.kind==='lab');assert.equal(lab.reduce((n,r)=>n+r.passed,0),59);assert.equal(lab.reduce((n,r)=>n+r.total,0),72);
@@ -86,3 +86,13 @@ test('Different program builds have a separate explicit comparison without chang
  test('Published fixed benchmark preserves its measured build and sixteen successful conditions',async()=>{
  const c=benchmarkCatalog(),r=c.entries.find(r=>r.kind==='benchmark'&&r.origin==='reference');assert.equal(r.passed,16);assert.equal(r.total,16);assert.equal(r.finished,16);assert.equal(r.sourceVersion,'0.137.0');assert.equal(r.effort,'high');assert.equal(r.monitor,'off');assert.equal(r.rawAttempts,16);assert.equal(r.suiteVersion,'1.0.2');assert.match(r.sourceHash,/^[a-f0-9]{64}$/);
  });
+
+test('Published Sol history keeps the original 14/16 separate from two successful drawing retests',async()=>{
+ const {benchmarkComparisonOptions,comparableBenchmarks,modelBenchmarks}=await import('../src/cad-ai-model-benchmarks.js');
+ const entries=benchmarkCatalog().entries,sol=modelBenchmarks(entries,'chatgpt','gpt-6.1-sol');assert.equal(sol.length,2);
+ const original=sol.find(r=>r.kind==='benchmark'),repair=sol.find(r=>r.kind==='lab');
+ assert.deepEqual([original.passed,original.total,original.sourceVersion],[14,16,'0.137.2']);assert.deepEqual([repair.passed,repair.total,repair.sourceVersion],[2,2,'0.137.3']);
+ const group=benchmarkComparisonOptions(entries).find(g=>g.differentSources&&g.entries.some(r=>r.id===original.id));assert(group);
+ const bars=comparableBenchmarks(entries,group.id);assert.deepEqual(bars.map(r=>[r.model,r.passed,r.total]).sort(),[['deepseek-flash',16,16],['gpt-6.1-sol',14,16]]);assert(!bars.some(r=>r.id===repair.id));
+ const evidence=require('../docs/benchmarks/sol-drawing-retests-2026-11-08.json');assert.equal(evidence.result.freshFullBenchmark,false);assert.equal(evidence.result.fullyAccepted,2);assert.equal(evidence.conditions.length,2);assert(evidence.conditions.every(c=>c.native&&c.cleanExit&&c.modelExact));
+});
