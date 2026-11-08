@@ -1,7 +1,7 @@
 {
   "id": "formnaro-practice-advanced",
   "label": "Aufbaubenchmark",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 600,
@@ -87,7 +87,7 @@
     },
     {
       "path": "ai/formnaro-tool-reference.mjs",
-      "sha256": "56337589f3214a97afb7a634e19fe2b6347be02f8e945d2bc92f93fae533f6aa"
+      "sha256": "ae07bf706ac0ff544b65ea336714c7c4186fea19f33b118cafc0dc20739e09ff"
     },
     {
       "path": "ai/practice-plan-feedback.mjs",
@@ -115,16 +115,28 @@
     },
     {
       "path": "ai/benchmark-advanced-calibration-v2.json",
-      "sha256": "6ed7a598ca8843bca08b82cb7120536489c7198f01a8474458fdc2a98ccd70ad"
+      "sha256": "acca7fecc3e3ffea97904983e1f9c7ac66ce0d1b4b50d4a1977f7b375d007545"
+    },
+    {
+      "path": "src/cad-service.js",
+      "sha256": "dc9e742c33327b710a506b7ea89ed86fb3ce03c6f003a7145faefc823790fa57"
+    },
+    {
+      "path": "src/cad-drill-stock-native.js",
+      "sha256": "32d34372cb46ed80c92d9e7d1ef913188952934db3cd105da1b391fc9e67d896"
+    },
+    {
+      "path": "src/cad-bore-check-native.js",
+      "sha256": "49a4b406e488b8366cabd701df29add54079c6939c2cdb2220a12006cae241e5"
     }
   ],
   "calibration": {
     "status": "passed",
     "evidence": "ai/benchmark-advanced-calibration-v2.json",
-    "sha256": "6ed7a598ca8843bca08b82cb7120536489c7198f01a8474458fdc2a98ccd70ad",
+    "sha256": "acca7fecc3e3ffea97904983e1f9c7ac66ce0d1b4b50d4a1977f7b375d007545",
     "positiveNative": 8,
     "negativeNative": 24,
     "providerRequests": 0
   },
-  "revisionReason": "Separate multi-step benchmark. The original core tasks and all previous measurements remain unchanged."
+  "revisionReason": "Analytic native cylinder placement preserved after radial/axial affine scaling; complete existing drawing controls documented. Tasks, fixtures, native acceptance thresholds and limits unchanged. Historical benchmarks remain immutable; only non-confirmed conditions receive separate targeted retests."
 }

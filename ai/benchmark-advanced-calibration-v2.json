@@ -2,15 +2,15 @@
   "format": "FormnaroLocalNativeCalibration",
   "version": 1,
   "suiteId": "formnaro-practice-advanced",
-  "suiteVersion": "2.0.0",
-  "program": "0.138.0-r1",
+  "suiteVersion": "2.0.1",
+  "program": "0.138.1-r1",
   "providerRequests": 0,
   "positiveNative": 8,
   "noopRejected": 8,
   "nearMissRejected": 8,
   "missingReplayRejected": 8,
   "regularChildExit": true,
-  "driverSHA256": "e44b9405214df8109b4ad2c73186dc5cbef6ba5f707fc0ebfaf6a480b33348bc",
+  "driverSHA256": "7fd79551dc8d3ce9eadb8bf21c76b8a859810cdc09697d2ffeb45719f2f36e9b",
   "referenceConstructionSHA256": "042aea175c8457f202e203bdb561b8b7980e496a58e6429ee4ce54a550c14509",
   "cases": [
     {
@@ -45,7 +45,10 @@
       "nearMissRejected": true,
       "missingReplayRejected": true,
       "nearMissFailedChecks": [
-        "Alle drei asymmetrischen Bohrungen nativ bestätigt"
+        {
+          "name": "Alle drei asymmetrischen Bohrungen nativ bestätigt",
+          "passed": false
+        }
       ]
     },
     {
@@ -80,7 +83,10 @@
       "nearMissRejected": true,
       "missingReplayRejected": true,
       "nearMissFailedChecks": [
-        "Zwei getrennte rechteckige Durchbrüche und Materialstege"
+        {
+          "name": "Zwei getrennte rechteckige Durchbrüche und Materialstege",
+          "passed": false
+        }
       ]
     },
     {
@@ -111,7 +117,10 @@
       "nearMissRejected": true,
       "missingReplayRejected": true,
       "nearMissFailedChecks": [
-        "Acht Hülsen an genau den acht versetzten Winkelpositionen"
+        {
+          "name": "Acht Hülsen an genau den acht versetzten Winkelpositionen",
+          "passed": false
+        }
       ]
     },
     {
@@ -150,9 +159,22 @@
       "nearMissRejected": true,
       "missingReplayRejected": true,
       "nearMissFailedChecks": [
-        "Unabhängig berechnetes Materialvolumen",
-        "Stufe links Z24, Grundplatte rechts Z8, Loch offen",
-        "Ø6 durch die gesamte Stufenhöhe"
+        {
+          "name": "Unabhängig berechnetes Materialvolumen",
+          "passed": false,
+          "actual": {
+            "actual": 31660.707993412307,
+            "expected": 31321.415986824606
+          }
+        },
+        {
+          "name": "Stufe links Z24, Grundplatte rechts Z8, Loch offen",
+          "passed": false
+        },
+        {
+          "name": "Ø6 durch die gesamte Stufenhöhe",
+          "passed": false
+        }
       ]
     },
     {
@@ -191,8 +213,18 @@
       "nearMissRejected": true,
       "missingReplayRejected": true,
       "nearMissFailedChecks": [
-        "Unabhängig berechnetes Materialvolumen",
-        "Vordere Öffnung 10×12, seitliches Material und Rückwand erhalten"
+        {
+          "name": "Unabhängig berechnetes Materialvolumen",
+          "passed": false,
+          "actual": {
+            "actual": 21707.99999999998,
+            "expected": 22068
+          }
+        },
+        {
+          "name": "Vordere Öffnung 10×12, seitliches Material und Rückwand erhalten",
+          "passed": false
+        }
       ]
     },
     {
@@ -227,8 +259,18 @@
       "nearMissRejected": true,
       "missingReplayRejected": true,
       "nearMissFailedChecks": [
-        "Unabhängig berechnetes Materialvolumen",
-        "Taschenboden Z12, Bohrungsboden Z8 und übrige Oberseite Z20"
+        {
+          "name": "Unabhängig berechnetes Materialvolumen",
+          "passed": false,
+          "actual": {
+            "actual": 66196.81421051074,
+            "expected": 66836.81421051075
+          }
+        },
+        {
+          "name": "Taschenboden Z12, Bohrungsboden Z8 und übrige Oberseite Z20",
+          "passed": false
+        }
       ]
     },
     {
@@ -271,9 +313,22 @@
       "nearMissRejected": true,
       "missingReplayRejected": true,
       "nearMissFailedChecks": [
-        "Unabhängig berechnetes Materialvolumen",
-        "Beide Skizzenlöcher mit richtigen Durchmessern und Weltlagen",
-        "Bearbeitbare Skizzenquelle mit Außenkontur und zwei Innenkonturen"
+        {
+          "name": "Unabhängig berechnetes Materialvolumen",
+          "passed": false,
+          "actual": {
+            "actual": 12298.407105255379,
+            "expected": 12128.76110196153
+          }
+        },
+        {
+          "name": "Beide Skizzenlöcher mit richtigen Durchmessern und Weltlagen",
+          "passed": false
+        },
+        {
+          "name": "Bearbeitbare Skizzenquelle mit Außenkontur und zwei Innenkonturen",
+          "passed": false
+        }
       ]
     },
     {
@@ -312,9 +367,12 @@
       "nearMissRejected": true,
       "missingReplayRejected": true,
       "nearMissFailedChecks": [
-        "A3 quer, Maßstab1:2, Nummer AB-08, Revision B"
+        {
+          "name": "A3 quer, Maßstab1:2, Nummer AB-08, Revision B",
+          "passed": false
+        }
       ]
     }
   ],
-  "scope": "Deterministic local CAD reference calibration. No AI model score or live benchmark result."
+  "scope": "Local native fixtures only, zero AI requests. Fresh isolated child per case, each closed normally. Eight positive references and 24 negative checks. No task, fixture, acceptance threshold or limit relaxed. Historical measurements remain unchanged."
 }

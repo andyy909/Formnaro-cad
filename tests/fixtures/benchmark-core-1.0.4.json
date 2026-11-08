@@ -1,0 +1,97 @@
+{
+  "id": "formnaro-practice-core",
+  "version": "1.0.4",
+  "knownDevelopmentTasks": true,
+  "limits": {
+    "seconds": 360,
+    "outputTokens": 16384,
+    "rounds": 20,
+    "formatRepairs": 2,
+    "requestBudget": 1000
+  },
+  "cases": [
+    {
+      "id": "B01",
+      "caseId": "practice-03",
+      "label": "Maße und Mittelpunkt",
+      "taskHash": "abdbdf1daf4441b25ed012498575817976213be26ee6a138a36080c148500b02"
+    },
+    {
+      "id": "B02",
+      "caseId": "assembly",
+      "label": "Ein Teil aus einer Baugruppe",
+      "taskHash": "0543ea97926928d554f0d7ab32b7375f50452f5a3d440d1ea7f8a96ddbc67d28"
+    },
+    {
+      "id": "B03",
+      "caseId": "practice-14",
+      "label": "Durchgangsbohrung",
+      "taskHash": "eb357b2d75b9f7bbac4e914422ec0ed256ef57bbaa71602ef7f83f55a189b270"
+    },
+    {
+      "id": "B04",
+      "caseId": "practice-11",
+      "label": "Kreismuster",
+      "taskHash": "a5b3f04aec3cbcb346154f96cc313b7730cbb9fbedcc4339b9aa2d415e3af06c"
+    },
+    {
+      "id": "B05",
+      "caseId": "practice-16",
+      "label": "Bestimmte Kante fasen",
+      "taskHash": "3cf5633250b4f87387fe42b2a648a4fa81e31d9868e04c99958b1bab8a5d98c2"
+    },
+    {
+      "id": "B06",
+      "caseId": "practice-17",
+      "label": "Aushöhlen",
+      "taskHash": "604744b253ac644dde1f3d042fa86aa6537c4b36e822552c943cc705424b38b0"
+    },
+    {
+      "id": "B07",
+      "caseId": "practice-22",
+      "label": "Native Messung",
+      "taskHash": "08455a14df5edc78da6f5b256f750ca8571242eac27831f2282ffb3ef6817c2e"
+    },
+    {
+      "id": "B08",
+      "caseId": "practice-21",
+      "label": "Technische Zeichnung",
+      "taskHash": "4ff7f13d302715dcad4f9efcb982655b5a600596324ef1fc5b37c1f206854092"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "backend/ai-practice-function-evaluate.cjs",
+      "sha256": "a0da5955d43f03bfb87aaae7de1631b1380c336c206cfe7fd644144b6555e039"
+    },
+    {
+      "path": "backend/ai-diagnostic-evaluate.cjs",
+      "sha256": "df969f58c8b16d0e8a57ebf0a8ce2ecd881551541f558dc09988fda2612a7cd5"
+    },
+    {
+      "path": "backend/ai-diagnostic-assembly.cjs",
+      "sha256": "4f01099b49de84b2e856fb3aac50c4b6af749c85b3030ebd18e43b1e4f45b8ba"
+    },
+    {
+      "path": "backend/ai-practice-context.cjs",
+      "sha256": "ef2493637653974ac423537940948187706c4db1d522288aed1edf8f23351500"
+    },
+    {
+      "path": "backend/ai-practice-prompt.cjs",
+      "sha256": "a05024a3b87da04b6e622b0f17621b144df97c786c5ff6d6791ad3189e5d11b9"
+    },
+    {
+      "path": "backend/practice-result-checks.cjs",
+      "sha256": "0b63b20ac35711c08fa6af7b0cab8d01998fd1999539d1a512b7272a4df1e991"
+    },
+    {
+      "path": "ai/formnaro-tool-reference.mjs",
+      "sha256": "56337589f3214a97afb7a634e19fe2b6347be02f8e945d2bc92f93fae533f6aa"
+    },
+    {
+      "path": "ai/practice-plan-feedback.mjs",
+      "sha256": "4f224ee3d8565c3a96d689626dcec1f9bab8c7ad133e8b07e31126dee44b162f"
+    }
+  ],
+  "revisionReason": "Actual drill controls and preview/commit workflow documented. Tasks, fixtures, native oracles and limits unchanged. Targeted retest is separate from previous full benchmarks."
+}

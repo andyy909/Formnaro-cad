@@ -14,6 +14,17 @@ export function affineCadDrillStock(oc,source,bounds){
  return affinePrism(oc,matrix,bounds,box);
 }
 
+// Preserve native cylindrical walls when only radial/axial scale differs.
+// Reconstruct only a pristine retained primitive, never metadata over a
+// different BRep. Elliptic and sheared images remain exact ellipse prisms.
+export function affineCadNativeCylinder(oc,source,bounds,matrix=source.transform){
+ const recipe=source.recipe,params=recipe?.params??{};
+ if(source.source!=='native'||recipe?.type!=='cylinder'||recipe.size[0]!==recipe.size[1]||params.edgeSize&&params.edgeStyle!=='none'||similarity(matrix))return null;
+ const canonical=buildCadRecipe(oc,recipe);
+ try{if(writeCadBrep(oc,canonical)!==source.brep.data)return null;}finally{canonical.delete();}
+ return affinePrism(oc,matrix,bounds,false);
+}
+
 // Circle profiles need the same exact working extrusion when an explicit
 // contour size binding stretches their placement. Keep the native profile,
 // source BRep and target identity intact; arbitrary profiles still use OCCT.
