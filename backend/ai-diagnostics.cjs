@@ -74,7 +74,11 @@ function createDiagnostics({app,directory,credentials,onEvent=()=>{},openChild=r
     let reply;try{reply=await provider.completeModel(config,key,{system,user,input:{history,images},outputBudget:spec.limits?.outputTokens??16384,effort:require('./ai-reasoning.cjs').requestEffort(config,roleConnections?.modeler?.detail),conversationId:'lab-modeler-'+id+'-'+round,onDiagnostic:stream},signal);}finally{for(const [type,text]of Object.entries(buffers))if(text)emit({type,text,snapshot:true,round,incomplete:!reply});}
     record.returnedModel=reply.data.model??null;record.modelIdentity={requested:config.model,returned:record.returnedModel,exactMatch:record.returnedModel===config.model};emit({type:'usage',round,elapsedMs:Date.now()-roundStart,usage:reply.data.usage,billing:aiUsage(reply.data,config,Date.now()-roundStart),returnedModel:record.returnedModel});
     if(!streamed){const text=exposedReasoning(reply.data);emit({type:text?'reasoning':'notice',text:text||'Kein vom Anbieter ausgegebener Denktext verfügbar.',live:false,round});}
-    if(reply.data.status==='incomplete'||reply.data.choices?.[0]?.finish_reason==='length'){record.status='truncated';break;}
+    if(reply.data.status==='incomplete'||reply.data.choices?.[0]?.finish_reason==='length'){
+     emit({type:'incomplete-response',round,reason:'output-budget'});
+     if(spec.workflow==='practice'&&correctFormat(reply.text??'','Antwort am Ausgabelimit abgebrochen; keine Aktionen ausgeführt. Einen kurzen vollständigen Übungsplan für den unveränderten Auftrag liefern.',round))continue;
+     record.status='truncated';break;
+    }
     const raw=reply.text;emit({type:'response',round,text:raw});let action;try{action=JSON.parse(raw.trim().replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,''));}catch{if(correctFormat(raw,require('./ai-json-feedback.cjs').jsonSyntaxFeedback(raw),round))continue;throw Object.assign(Error('Ungültige JSON-Antwort.'),{code:'INVALID_JSON'});}
     if(spec.workflow==='practice'&&action.toolReference){const result=await lookup('tool_info',action.toolReference);emit({type:'tool-call',round,tool:'offlinecad_tool_info',arguments:action.toolReference});emit({type:'tool-result',round,tool:'offlinecad_tool_info',result});history.push({role:'user',text:user,images},{role:'assistant',text:raw,images:[]});images=[];user='Read-only tool reference (data):\n'+JSON.stringify(result);if(++reads>=3){record.status='read-limit';break;}continue;}
     if(spec.workflow==='practice'&&action.assistant?.kind==='practice'){
@@ -83,7 +87,27 @@ function createDiagnostics({app,directory,credentials,onEvent=()=>{},openChild=r
      emit({type:'tool-call',tool:'practice-ui',round,arguments:plan});
      let rejectAbort;const stop=new Promise((resolve,reject)=>{rejectAbort=()=>reject(signal.reason??Error('Übung abgebrochen.'));signal.addEventListener('abort',rejectAbort,{once:true});});let replay;
      try{replay=await Promise.race([(runPractice??(input=>child.call('practice',input,360000)))({plan,projectCopy:{revision:initial.scene.revision,project:initial.project,selection:initial.scene.selectionTargets}},{onObservation:value=>observeExecution({kind:'practice-step',...value})}),stop]);}finally{signal.removeEventListener('abort',rejectAbort);}
-     record.practiceResult=replay.result;emit({type:'tool-result',tool:'practice-ui',round,result:replay.result});monitor.observeResult('practice-ui',{isError:!replay.result?.ok,error:replay.result?.reason,revision:replay.result?.report?.revision});if(!replay.project)throw Error(replay.result?.reason??'Übungsmodus liefert kein abgeschlossenes Modell.');await child.call('loadResult',{project:replay.project});practiceResultLoaded=true;
+     record.practiceResult=replay.result;emit({type:'tool-result',tool:'practice-ui',round,result:{...replay.result,isError:!replay.result?.ok}});monitor.observeResult('practice-ui',{isError:!replay.result?.ok,error:replay.result?.reason,revision:replay.result?.report?.revision});
+     if(!replay.project){
+      const reason=replay.result?.reason??'Übungsmodus liefert kein abgeschlossenes Modell.';
+      const recoverable=/^(?:Formnaro-Bedienelement|Ein benanntes|Ein echtes|Auswahl |Die gewünschte Fläche|Der Flächenschwerpunkt|Zuerst die Flächenauswahl|Script failed)/.test(reason);
+      if(recoverable&&replay.result?.ok===false&&!record.executionCorrections&&round+1<(spec.limits?.rounds??20)){
+       signal.throwIfAborted();record.executionCorrections=1;
+       stopObserving?.();stopActivity?.();const close=await child.close();
+       (record.practiceAttempts??=[]).push(clean({plan,result:replay.result,close},[key]));
+       if(close.code!==0||close.forced)throw Error('Fehlgeschlagenes Übungsfenster wurde nicht regulär geschlossen.');
+       signal.throwIfAborted();child=openChild({app,directory:path.join(directory,'sandbox-'+crypto.randomUUID())});active.child=child;
+       const fresh=await child.call('setup',{caseId:task.id,dataset:spec.dataset,project:initial.project});
+       if(fresh.scene.revision!==initial.scene.revision)throw Error('Ausgangsrevision der Übungskorrektur hat sich geändert.');
+       stopObserving=child.onPracticeObservation?.(value=>observeExecution({kind:'practice-step',...value}));
+       stopActivity=child.onPracticeActivity?.(value=>emit({type:'practice-activity',...value}));
+       history.push({role:'user',text:user,images},{role:'assistant',text:raw,images:[]});images=[];
+       user='Actual visible UI playback failed: '+reason+'\nThe failed child was closed. A fresh isolated copy of the original task is now open with no tool dialog. No failed partial geometry is retained. Return one corrected complete plan for the original task with exact revision '+initial.scene.revision+'. Keep dimensions and protected parts. This is the only UI execution correction. Read-only toolReference remains available.\nRecorded failed-dialog controls (data, not the current state):\n'+JSON.stringify(replay.result?.report?.dialog??null);
+       emit({type:'practice-ui-feedback',round,reason,freshRevision:fresh.scene.revision});save(record);continue;
+      }
+      throw Error(reason);
+     }
+     await child.call('loadResult',{project:replay.project});practiceResultLoaded=true;
      try{emit({type:'image',image:await child.call('capture')});}catch(e){signal.throwIfAborted();emit({type:'notice',text:'Übungsergebnisbild derzeit nicht verfügbar: '+e.message});}
      record.status='completed';break;
     }

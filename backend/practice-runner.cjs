@@ -18,6 +18,9 @@ const photoPoints=value=>Array.isArray(value)&&value.length>=1&&value.length<=16
 const FIELDS=new Set(['size-0','size-1','size-2','pos-0','pos-1','pos-2']);
 const exact=(v,keys)=>v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).every(k=>keys.includes(k));
 const PRACTICE_CONTINUATION_LIMIT=7;
+// Up to50 steps can contain real multi-body observations; the project payload
+// is validated separately and is never part of this bounded report allowance.
+const PRACTICE_REPORT_MAX_BYTES=1024*1024;
 function practiceAliasState(state){
  const names=list=>Array.isArray(list)&&list.length<=256&&new Set(list).size===list.length&&list.every(name=>typeof name==='string'&&/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name));
  if(!exact(state,['known','selectable','selected'])||!names(state.known)||!names(state.selectable)||!names(state.selected)||
@@ -143,7 +146,7 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
     Promise.resolve().then(async()=>{const value=require('./practice-observations.cjs').validateObservation(msg.value);for(const observer of observers)await observer(value);if(active?.child!==child||session.cancelRequested)throw Error('Übung abgebrochen.');child.send({type:'observation-reply',nonce,id:msg.id});}).catch(error=>{if(child.connected)child.send({type:'observation-reply',nonce,id:msg.id,error:String(error.message).slice(0,1500)});}).finally(()=>{observationInFlight=false;});
    }else if(msg.type==='result'&&msg.nonce===nonce&&!finished&&active?.child===child){
     if(!reply||recovery&&msg.round!==retries)return;
-    if(!exact(msg.value,['ok','steps','report','reason'])||typeof msg.value.ok!=='boolean'||JSON.stringify(msg.value).length>30000){
+    if(!exact(msg.value,['ok','steps','report','reason'])||typeof msg.value.ok!=='boolean'||Buffer.byteLength(JSON.stringify(msg.value),'utf8')>PRACTICE_REPORT_MAX_BYTES){
      finish(Error('Ungültiger Übungsbericht.'));
      try{child.send({type:'cancel',nonce});}catch{}
      return;
@@ -199,4 +202,4 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
  ipcMain.handle('cad-practice:cancel',async(e)=>{try{if(!trusted(e))throw Error('Ungültiges Fenster.');return done(cancel());}catch(error){return fail(error);}});
  return {cancel};
 }
-module.exports={PRACTICE_CONTINUATION_LIMIT,validatePracticePlan,installPracticeRunner,sketchPoint,practiceAliasState};
+module.exports={PRACTICE_CONTINUATION_LIMIT,PRACTICE_REPORT_MAX_BYTES,validatePracticePlan,installPracticeRunner,sketchPoint,practiceAliasState};

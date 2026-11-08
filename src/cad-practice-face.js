@@ -7,13 +7,14 @@ export const practiceReferenceMarker=(document,id)=>[...document.querySelectorAl
 
 // Only the local host computes screen points from the current display. Native
 // rayPick then verifies the actual face before normal mouse input can use it.
-export function installPracticeFace({controller,view,getFacePickState,getDrillState,getInspectionState,host=window}){
+export function installPracticeFace({controller,view,getFacePickState,getDrillState,getInspectionState,getAlignmentState,host=window}){
  host.__formnaroPracticeFace=async spec=>{
   const direction=PRACTICE_FACE_SIDES[spec.side],state=getFacePickState?.(),revision=controller.revision(),project=controller.readSnapshot();
   const inspection=getInspectionState?.(),measuring=inspection?.kind==='measure'&&inspection.revision===revision&&inspection.mode==='faces'&&!inspection.busy;
+  const alignment=getAlignmentState?.(),aligning=alignment?.revision===revision&&alignment.ids?.length>=2&&alignment.ids.includes(spec.rootId);
   const drill=getDrillState?.();
   const drilling=drill?.stage==='target'&&drill.id===spec.rootId&&drill.revision===revision&&drill.ready&&!drill.target;
-  if(!direction||(!drilling&&!measuring&&(!state?.picking||!['shell','face-offset'].includes(state.kind)||state.ids?.length!==1||state.ids[0]!==spec.rootId))){
+  if(!direction||(!drilling&&!measuring&&!aligning&&(!state?.picking||!['shell','face-offset'].includes(state.kind)||state.ids?.length!==1||state.ids[0]!==spec.rootId))){
    throw Error('Zuerst die Flächenauswahl für Aushöhlen, CAD-Flächenversatz, Bohrung oder Messung „Zwei CAD-Flächen“ am gewählten Teil öffnen.');
   }
   const context=cadSelectionContext(project,{rootId:spec.rootId,path:[]});
@@ -45,7 +46,7 @@ export function installPracticeFace({controller,view,getFacePickState,getDrillSt
     if(++triangles>200000)throw Error('Die Fläche überschreitet das Auswahlbudget.');
     a.fromBufferAttribute(position,index.getX(i)).applyMatrix4(mesh.matrixWorld);b.fromBufferAttribute(position,index.getX(i+1)).applyMatrix4(mesh.matrixWorld);c.fromBufferAttribute(position,index.getX(i+2)).applyMatrix4(mesh.matrixWorld);
     normal.subVectors(b,a).cross(edge.subVectors(c,a));const area=normal.length()/2;if(area<1e-10||normal.normalize().multiplyScalar(sign).dot(axis)<.99999)continue;
-    const point=a.clone().add(b).add(c).multiplyScalar(1/3);candidates.push({point,area,level:point.dot(axis),faceIndex:groups[g+2]});
+    const point=a.clone().add(b).add(c).multiplyScalar(1/3);candidates.push({point,area,level:point.dot(axis),faceIndex:groups[g+2],triangle:[a.clone(),b.clone(),c.clone()]});
    }
   });
   if(!candidates.length)throw Error('Keine ebene Körperfläche in dieser Welt-Richtung gefunden.');
@@ -53,13 +54,19 @@ export function installPracticeFace({controller,view,getFacePickState,getDrillSt
   if(new Set(outer.map(c=>c.faceIndex)).size!==1)throw Error('Mehrere äußerste Flächen sind möglich. Einen eindeutigen Körper oder eine andere Seite wählen.');
   const rect=view.canvas.getBoundingClientRect();let chosen;
   for(const candidate of outer.sort((a,b)=>b.area-a.area).slice(0,40)){
-   const point=view.projectPoint(candidate.point.toArray()),x=Math.round(point.x),y=Math.round(point.y);
-   if(point.z< -1||point.z>1||x<rect.left||x>=rect.right||y<rect.top||y>=rect.bottom)continue;
-   const hit=view.visualHit({clientX:x,clientY:y});if(hit?.object?.userData.rootId===spec.rootId&&Math.abs(hit.point.dot(axis)-candidate.level)<.02){chosen={...candidate,x,y};break;}
+   // A different body can obscure the centroid while leaving this face visible.
+   // Sample only strict triangle interiors; each screen hit is still checked.
+   const points=[candidate.point,...candidate.triangle.map(vertex=>candidate.point.clone().lerp(vertex,.6))];
+   for(const sample of points){
+    const point=view.projectPoint(sample.toArray()),x=Math.round(point.x),y=Math.round(point.y);
+    if(point.z< -1||point.z>1||x<rect.left||x>=rect.right||y<rect.top||y>=rect.bottom)continue;
+    const hit=view.visualHit({clientX:x,clientY:y});if(hit?.object?.userData.rootId===spec.rootId&&Math.abs(hit.point.dot(axis)-candidate.level)<.02){chosen={...candidate,x,y};break;}
+   }
+   if(chosen)break;
   }
   if(!chosen)throw Error('Die gewünschte Fläche ist verdeckt. Ansicht zuerst passend ausrichten.');
   const hit=await controller.query('rayPick',{ids:[spec.rootId],ray:view.cadRay({clientX:chosen.x,clientY:chosen.y})});
-  if(controller.revision()!==revision||(measuring?getInspectionState()?.revision!==revision:getFacePickState()?.revision!==state.revision))throw Error('Modell während der Flächenauswahl geändert.');
+  if(controller.revision()!==revision||(measuring?getInspectionState()?.revision!==revision:aligning?getAlignmentState()?.revision!==revision||!getAlignmentState()?.ids?.includes(spec.rootId):getFacePickState()?.revision!==state.revision))throw Error('Modell während der Flächenauswahl geändert.');
   if(!hit||hit.objectId!==spec.rootId||hit.faceIndex!==chosen.faceIndex||!Array.isArray(hit.normal)||new Vector3(...hit.normal).dot(axis)<.99999)throw Error('Der native Flächentreffer stimmt nicht mit der gewünschten Seite überein.');
   return {x:chosen.x,y:chosen.y,width:24,height:24,revision,faceIndex:hit.faceIndex,point:hit.point,normal:hit.normal};
  };

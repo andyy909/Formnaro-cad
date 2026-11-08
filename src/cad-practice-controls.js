@@ -1,6 +1,13 @@
 import {PROGRAM_NAV,PROGRAM_TARGETS} from './cad-program-help.js';
 import {PHOTO_SET_LABELS} from './cad-photo-multiview-data.js';
-export const practiceTarget=target=>typeof target==='string'&&/^(menu|tool|view):[A-Za-z][A-Za-z0-9_-]{0,199}$/.test(target)?'ui:'+target:target;
+export function practiceTarget(target){
+ if(typeof target!=='string')return target;
+ if(target.startsWith('ui:label:')){
+  const label=target.slice(9).toLowerCase(),menu=PROGRAM_NAV.find(t=>t.id.toLowerCase()===label||t.id.slice(5).toLowerCase()===label);
+  if(menu)target='ui:'+menu.id;
+ }
+ return /^(menu|tool|view):[A-Za-z][A-Za-z0-9_-]{0,199}$/.test(target)?'ui:'+target:target;
+}
 const outside=node=>/^(?:converter-(?:assistance|save-step|report)|stl-(?:save-edits|load-edits|repaired-3mf|repaired-stl|preview-save))$/.test(node.id)||!!node.closest('#converter-ai')||/^(?:ai-|script-|python-|function-|plugin-)|freecad.*(?:code|script)/i.test(node.id)||!!node.dataset.plugin||node.dataset.action==='functions'||['file','password','color','hidden'].includes(node.type)||node.tagName==='A'||/(?:login|sign.?in|open.?folder|open.?browser|subscription-open|provider-docs|context-folder|log-folder|layout-folder|project-folder|data-folder)/i.test(node.id)||node.hasAttribute('data-external')||node.hasAttribute('data-drawing-export')||['open','save','save-as','import'].includes(node.dataset.action);
 const visibleControl=node=>{if(!node?.getClientRects().length||getComputedStyle(node).visibility==='hidden')return false;for(let parent=node.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS'&&!parent.open&&!parent.querySelector(':scope > summary')?.contains(node))return false;return true;};
 
@@ -35,7 +42,7 @@ export function practiceControl(document,target){
  if(kind==='label'&&name==='Ansichten aktualisieren'){const drawing=document.getElementById?.('drawing-update');if(drawing&&visible(drawing))return practiceControl(document,'ui:id:drawing-update');}
  if(kind==='label'&&{'Vorderansicht':'front','Draufsicht':'top','Seitenansicht':'right'}[name])return practiceControl(document,'view:'+{'Vorderansicht':'front','Draufsicht':'top','Seitenansicht':'right'}[name]);
  if(kind==='label'){const view=PROGRAM_TARGETS.find(t=>t.id.startsWith('view:')&&normal(t.label)===normal(name));if(view)return practiceControl(document,'ui:'+view.id);}
- if(kind==='tool'&&/^view-(iso|front|top|right)$/.test(name))return practiceControl(document,'ui:view:'+name.slice(5));
+ if(kind==='tool'&&/^view-(iso|front|top|right|fit)$/.test(name))return practiceControl(document,'ui:view:'+name.slice(5));
  let candidates=[];
  if(kind==='id')candidates=[document.getElementById(name)];
  else if(kind==='tool')candidates=[...document.querySelectorAll('button')].filter(n=>[n.dataset.action,n.dataset.solidCommand,n.dataset.fusionCommand].includes(name)||/^mode-(translate|rotate|scale)$/.test(name)&&n.dataset.mode===name.slice(5));
@@ -50,7 +57,7 @@ export function practiceControl(document,target){
  }
  const existing=[...new Set(candidates.filter(Boolean))];
  candidates=existing.filter(visible);
- if(!candidates.length&&existing.length===1){const group=existing[0].closest('details:not([open])'),category=group?.dataset?.toolCategory;if(category&&PROGRAM_NAV.some(t=>t.id==='menu:'+category))throw Error('Formnaro-Bedienelement '+name+' liegt im geschlossenen Menü menu:'+category+'. Dieses Menü vor dem Werkzeugklick erneut öffnen.');}
+ if(!candidates.length&&existing.length===1){const group=existing[0].closest('details:not([open])'),category=group?.dataset?.toolCategory;if(category&&PROGRAM_NAV.some(t=>t.id==='menu:'+category))throw Object.assign(Error('Formnaro-Bedienelement '+name+' liegt im geschlossenen Menü menu:'+category+'. Dieses Menü vor dem Werkzeugklick erneut öffnen.'),{nextAction:{target:'ui:menu:'+category,action:'click'}});}
  if(kind==='view'&&name==='fit'&&candidates.length>1)candidates=[candidates[0]];
  if(candidates.length!==1&&kind==='label'){const tools=PROGRAM_TARGETS.filter(t=>t.id.startsWith('tool:')&&normal(t.label)===normal(name));if(tools.length===1)return practiceControl(document,'ui:'+tools[0].id);}
  if(candidates.length>1){const semantic=n=>{const tool=n.dataset.action??n.dataset.solidCommand??n.dataset.fusionCommand,view=n.dataset.view??n.dataset.solidView??n.dataset.fusionView;return tool?'tool:'+tool:view?'view:'+view:null;},key=semantic(candidates[0]);if(key&&candidates.every(n=>semantic(n)===key))candidates=[candidates[0]];}
@@ -89,8 +96,11 @@ export function installPracticeControlBridge(document,host=window,{onLocate}={})
   if(operation!=='locate')throw Error('Unbekannte Bedienelementabfrage.');
   node.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});onLocate?.(node);const r=node.getBoundingClientRect(),result={x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),width:r.width,height:r.height};
   if(spec.action==='drag'){if(node.tagName!=='INPUT'||node.type!=='range')throw Error('Einen Schieberegler wählen.');result.range={min:Number(node.min||0),max:Number(node.max||100),value:Number(node.value)};}
-  if(spec.action==='choose')result.optionIndex=practiceOptionIndex(node,spec.value);
-  if(spec.action==='set'&&!['INPUT','TEXTAREA'].includes(node.tagName))throw Error('Ein echtes Eingabefeld wählen.');
+  if(spec.action==='choose'||spec.action==='set'&&node.tagName==='SELECT'){
+   result.optionIndex=practiceOptionIndex(node,spec.value);
+   if(spec.action==='set')result.controlAction='choose';
+  }
+  if(spec.action==='set'&&!['INPUT','TEXTAREA','SELECT'].includes(node.tagName))throw Error('Ein echtes Eingabefeld wählen.');
   return result;
  };
 }

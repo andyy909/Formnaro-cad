@@ -8,6 +8,12 @@ function result(runId){return {summary:'Ein konkreter Bedienbefund.',findings:[{
 function provider(fn){return {completeModel:async(c,k,e,signal)=>{e.onDiagnostic({type:'request',body:{model:c.model}});return fn(c,k,e,signal);}};}
 const reply=v=>({text:JSON.stringify(v),data:{model:'deepseek-flash',usage:{input_tokens:20,output_tokens:10,input_tokens_details:{cached_tokens:0}}}});
 
+test('a truncated analyst response retries once with enough output room and retains both requests',async t=>{
+ const dir=directory(t),r=row(),budgets=[];
+ const reviewer=createLabReviewer({directory:dir,credentials,provider:provider((c,k,e)=>{budgets.push(e.outputBudget);if(budgets.length===1)return {text:'',data:{status:'incomplete',model:'deepseek-flash',usage:{input_tokens:20,output_tokens:8192}}};return reply(result(r.id));})});
+ const analysis=await reviewer.run([r]);assert.equal(analysis.status,'completed');assert.deepEqual(budgets,[8192,16384]);assert.equal(analysis.events.filter(e=>e.type==='request').length,2);
+});
+
 test('Outcome counts keep missing native checks distinct from failed checks and shadow completion',()=>{
  const a=row(),b=row({verification:null,status:'failed'}),c=row({verification:{passed:false}}),d=row({monitor:{final:{verdict:'stop'}},verification:{passed:true}});
  const s=data.summarize([a,b,c,d],{planned:6,status:'blocked'});

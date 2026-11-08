@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -78,7 +78,7 @@
     },
     {
       "path": "backend/ai-practice-prompt.cjs",
-      "sha256": "d83bb0771cc3dd98ad5904ecb890600b4a32783793797db362898cbf33f61e60"
+      "sha256": "a05024a3b87da04b6e622b0f17621b144df97c786c5ff6d6791ad3189e5d11b9"
     },
     {
       "path": "backend/practice-result-checks.cjs",
@@ -86,7 +86,7 @@
     },
     {
       "path": "ai/formnaro-tool-reference.mjs",
-      "sha256": "2c56518d63cf5e36dfe0dac7c6290286bad9e9f2acb885ab9db94e092b467b12"
+      "sha256": "407d66f4b34c9fa16e5e5603bbb22b77fc46afd8a375fb1bb2ba215383b0c8a2"
     },
     {
       "path": "ai/practice-plan-feedback.mjs",

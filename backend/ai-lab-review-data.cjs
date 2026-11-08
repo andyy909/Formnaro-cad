@@ -29,7 +29,7 @@ function summarize(records,completion={}){
   fullyAccepted:finished.filter(r=>r.status==='completed'&&!r.error&&native(r)===true&&r.cleanExit===true&&(r.spec.monitor?.mode==='off'||r.monitor?.final?.verdict==='continue'&&(!r.monitor.final.completion||r.monitor.final.completion==='met'))).length,
   byStatus:Object.fromEntries([...new Set(records.map(r=>r.status))].map(s=>[s,records.filter(r=>r.status===s).length])),
   monitorErrors:records.reduce((n,r)=>n+(r.events??[]).filter(e=>e.type==='monitor-error').length,0),missingFinal:finished.filter(r=>r.spec.stage==='full'&&r.spec.monitor?.mode!=='off'&&!r.monitor?.final).length,
-  formatCorrections:records.reduce((n,r)=>n+(r.formatCorrections??0),0),sourceHashes:[...new Set(records.map(r=>r.sourceHash).filter(Boolean))]};
+  formatCorrections:records.reduce((n,r)=>n+(r.formatCorrections??0),0),executionCorrections:records.reduce((n,r)=>n+(r.executionCorrections??0),0),sourceHashes:[...new Set(records.map(r=>r.sourceHash).filter(Boolean))]};
 }
 function selectScope(directory,records,{seriesId,ids,completion}={}){
  if(seriesId!==undefined&&!uuid.test(seriesId))throw Error('Ungültige Serienkennung.');
@@ -54,9 +54,9 @@ function selectScope(directory,records,{seriesId,ids,completion}={}){
 }
 function evidenceFor(scope,secrets=[]){
  const counts=scope.summary;
- const runs=scope.records.map(r=>({id:r.id,caseId:r.spec.caseId,variant:r.spec.variant,effort:r.spec.effort,workflow:r.spec.workflow,stage:r.spec.stage,dataset:r.spec.dataset,seriesId:r.spec.seriesId,sourceHash:r.sourceHash,status:r.status,native:native(r),cleanExit:r.cleanExit??null,finalVerdict:r.monitor?.final?.verdict??null,elapsedMs:r.elapsedMs,formatCorrections:r.formatCorrections??0,error:r.error?.message??null}));
+ const runs=scope.records.map(r=>({id:r.id,caseId:r.spec.caseId,variant:r.spec.variant,effort:r.spec.effort,workflow:r.spec.workflow,stage:r.spec.stage,dataset:r.spec.dataset,seriesId:r.spec.seriesId,sourceHash:r.sourceHash,status:r.status,native:native(r),cleanExit:r.cleanExit??null,finalVerdict:r.monitor?.final?.verdict??null,elapsedMs:r.elapsedMs,formatCorrections:r.formatCorrections??0,executionCorrections:r.executionCorrections??0,error:r.error?.message??null}));
  const details=scope.records.map(r=>{
-  const events=r.events??[],interesting=events.map((e,index)=>({e,index})).filter(({e})=>['executed-step','format-feedback','verification','monitor-error','monitor-final-result','error'].includes(e.type));
+  const events=r.events??[],interesting=events.map((e,index)=>({e,index})).filter(({e})=>['executed-step','format-feedback','practice-ui-feedback','verification','monitor-error','monitor-final-result','error'].includes(e.type));
   const steps=interesting.filter(({e})=>e.type==='executed-step');
   const changes=(r.practiceResult?.steps??[]).filter(s=>s.kind==='set').map(s=>({field:s.field,previous:s.previous,actual:s.actual,expected:s.expected}));
   const issue=!!r.error||native(r)!==true||!!r.monitor?.final&&r.monitor.final.verdict!=='continue'||events.some(e=>e.type==='monitor-error');

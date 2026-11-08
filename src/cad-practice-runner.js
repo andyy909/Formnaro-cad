@@ -17,11 +17,11 @@ import {checkPracticeResult,validatePracticeNativeCriteria} from './cad-practice
 
 // Runs only in the separately provisioned practice window. All edits go through
 // the visible product controls and the child process's bounded input bridge.
-export function installCadPracticeRunner({desktop,controller,access,getSelection,select,settled,view,getPreferences,getFacePickState=()=>null,getDrillState=()=>null,getEdgeState=()=>null,getInspectionState=()=>null,openPracticeFile,getPracticeConverterState=()=>null,getSketchFeedback=()=>null,openSketchDraft,modelUIFactory=createPracticeModelUI}){
+export function installCadPracticeRunner({desktop,controller,access,getSelection,select,settled,view,getPreferences,getFacePickState=()=>null,getDrillState=()=>null,getEdgeState=()=>null,getInspectionState=()=>null,getAlignmentState=()=>null,openPracticeFile,getPracticeConverterState=()=>null,getSketchFeedback=()=>null,openSketchDraft,modelUIFactory=createPracticeModelUI}){
  if(!desktop?.onPracticePlan||!desktop?.practiceInput||!desktop?.submitPracticeResult||!desktop?.practiceReady)return false;
  let running=false,waiting=false,stopped=false,closing=false,paused=false,unpause=null,expectedInput=null,captionBeforePause='',completedSteps=[],pauseError=null,statusQueue=Promise.resolve(),pauseGeneration=0,mainGeneration=0;
  window.__formnaroPracticeSketch=spec=>locatePracticeSketchGesture(document,spec);
- installPracticeControlBridge(document,window,{onLocate:positionNotice});if(view){window.__formnaroPracticeGearPreferences=getPreferences;installPracticeGearDrag({controller,view});installPracticeFace({controller,view,getFacePickState,getDrillState,getInspectionState});installPracticeEdge({controller,view,getEdgeState});}
+ installPracticeControlBridge(document,window,{onLocate:positionNotice});if(view){window.__formnaroPracticeGearPreferences=getPreferences;installPracticeGearDrag({controller,view});installPracticeFace({controller,view,getFacePickState,getDrillState,getInspectionState,getAlignmentState});installPracticeEdge({controller,view,getEdgeState});}
  const pause=ms=>new Promise(r=>setTimeout(r,ms));
  const overlay=document.createElement('div');overlay.id='practice-overlay';overlay.hidden=true;
  overlay.style.cssText='position:fixed;inset:0;z-index:2147483000;pointer-events:none;font-family:system-ui,sans-serif';
@@ -210,6 +210,7 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
     const inspection=getInspectionState(),measurementPoints=inspection?.points?.length;
     const hit=await input({target:'cad-face',action:'click',rootId,side:action.side},action.text??'Die Fläche '+action.side+' am ausgewählten Körper sichtbar anklicken.');
     if(inspection?.kind==='measure')await waitFor(()=>getInspectionState()?.kind==='measure'&&getInspectionState()?.points?.length!==measurementPoints&&!getInspectionState()?.busy,'native Messfläche');
+    else if(getAlignmentState())await waitFor(()=>getAlignmentState()?.referenceId===rootId,'tatsächliche Ausrichtreferenz');
     else if(hit?.markerId)await waitFor(()=>getDrillState()?.target?.reference?.token===hit.markerId,'nativen Bohrbezug wählen');
     else await waitFor(()=>getFacePickState()?.picked?.faceIndex===hit?.faceIndex&&!getFacePickState()?.picking,'native Flächenauswahl');
     if(revision()!==before)throw Error('Flächenauswahl hat unerwartet das Modell geändert.');
@@ -263,7 +264,16 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
      if(action.target==='ui:id:converter-import'&&document.getElementById('converter-import')?.disabled&&getPracticeConverterState()?.hasResult===false)
       throw Error('Die CAD-Übernahme ist erst nach erfolgreicher Konvertierung verfügbar. Verwende im offenen STL-Konverter converter-run.');
     }
-    const control=practiceControl(document,action.target),before=revision();
+    let control;
+    for(let opening=0;opening<3;opening++){
+     try{control=practiceControl(document,action.target);break;}
+     catch(error){
+      if(action.action!=='click'||!error.nextAction)throw error;
+      await input(error.nextAction,'Werkzeugmenü für '+action.target+' sichtbar öffnen.');await settled();
+     }
+    }
+    if(!control)throw Error('Das Werkzeug bleibt nach dem Öffnen des Menüs nicht sichtbar: '+action.target);
+    const before=revision();
     if(vision&&action.action==='click'&&control.id==='photo-save'&&document.querySelector('#photo-measures li')){
      const svg=document.getElementById('photo-canvas');
      const marks=JSON.stringify([opening?.index,document.getElementById('photo-mm')?.value,svg?.innerHTML]);
@@ -451,7 +461,11 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
      ...(waiting?{failedAction,state:continuationState(),revision:waitingRevision,confirmedCount}:{})
     }});
    }
-  })().catch(()=>desktop.practiceClose?.().catch(()=>{}));
+  })().catch(async error=>{
+   // A failed large-result transfer must not be presented as a user stop.
+   try{await desktop.submitPracticeResult({ok:false,reason:'Übungsergebnis konnte nicht übertragen werden: '+String(error.message).slice(0,1000),steps:[]});}
+   catch{await desktop.practiceClose?.().catch(()=>{});}
+  });
  });
  desktop.onPracticeCancel?.(endSession);void desktop.practiceReady();return {isRunning:()=>running,onBuildPreview:async({completed,total})=>{if(!running)return;caption.textContent='Live-Aufbau · Schritt '+completed+' / '+total;pointer.style.display='none';await playback.delay(650);}};
 }

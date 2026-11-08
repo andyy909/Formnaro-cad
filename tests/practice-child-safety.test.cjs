@@ -8,6 +8,12 @@ function harness(results,{initialFocus=true,audit=false,projectCopy,quality,reco
  channel.emit('message',{type:'plan',nonce:'a'.repeat(48),plan:{version:1,title:'Test',actions:[{kind:'shape',type:'box',as:'block'}]},projectCopy,quality,recovery,observe});
  return {handlers,event,input,win,sent,channel,setFocused:value=>focused=value};
 }
+test('a normal six-step assembly report keeps its23 body observations instead of losing the result',async()=>{
+ const bounds={min:[-20,-15,0],max:[20,15,8],size:[40,30,8],center:[0,0,4],corners:Array.from({length:8},()=>[20,15,8])};
+ const value={ok:true,steps:Array.from({length:6},()=>({kind:'set',observation:{scene:Array.from({length:23},(_,i)=>({id:'body-'+i,worldBounds:bounds,volume:9600,solids:1})),selection:['body-0']}}))};
+ assert(JSON.stringify(value).length>30000);const h=harness([]);assert.equal((await h.handlers.get('cad-practice:result')(h.event,value)).ok,true);assert.equal(h.sent.find(m=>m.type==='result').value.steps[0].observation.scene.length,23);
+ const tooLarge={ok:true,steps:[],report:{text:'x'.repeat(1024*1024)}};const other=harness([]);assert.equal((await other.handlers.get('cad-practice:result')(other.event,tooLarge)).ok,false);
+});
 test('only a private audit child emits the blocked snapshot and it remains separate from the result project',async()=>{
  const project={format:'OfflineCAD',nodes:[]},revision='b'.repeat(16),projectCopy={project,revision,selection:[]};
  const quality={mode:'enforce',criteria:[]};

@@ -1,5 +1,5 @@
 const {ipcMain}=require('electron');
-const {PRACTICE_CONTINUATION_LIMIT,validatePracticePlan,sketchPoint,practiceAliasState}=require('./practice-runner.cjs');
+const {PRACTICE_CONTINUATION_LIMIT,PRACTICE_REPORT_MAX_BYTES,validatePracticePlan,sketchPoint,practiceAliasState}=require('./practice-runner.cjs');
 const {validatePracticeProjectCopy,validatePracticeResultProject}=require('./practice-project-copy.cjs');
 const {validatePracticeFiles}=require('./practice-files.cjs');
 const {validatePracticeQuality}=require('./practice-quality.cjs');
@@ -61,7 +61,7 @@ function installPracticeChild(win,{ipc=ipcMain,channel=process,audit=false}={}){
     return compact;
    })};
   }
-  if(finished||cancelled||waitingForPlan||!nonce||!value||typeof value.ok!=='boolean'||JSON.stringify(value).length>30000||Object.keys(value).some(k=>!['ok','steps','report','reason'].includes(k)))throw Error('Ungültiger Übungsbericht.');
+  if(finished||cancelled||waitingForPlan||!nonce||!value||typeof value.ok!=='boolean'||Buffer.byteLength(JSON.stringify(value),'utf8')>PRACTICE_REPORT_MAX_BYTES||Object.keys(value).some(k=>!['ok','steps','report','reason'].includes(k)))throw Error('Ungültiger Übungsbericht.');
   const resultProject=wrapped&&projectCopy&&value.ok?validatePracticeResultProject(input.project):undefined;
   if(wrapped&&!resultProject)throw Error('Ergebnisprojekt gehört zu keiner erfolgreichen Projektübung.');
   const review=quality?.mode==='report'&&value.ok&&value.report?.review===true;
@@ -105,7 +105,7 @@ function installPracticeChild(win,{ipc=ipcMain,channel=process,audit=false}={}){
  ipc.handle('cad-practice:input',reply(async input=>{
   if(!plan||!ready||finished||cancelled||waitingForPlan||inFlight)throw Error('Übung nicht aktiv.');
   if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!['target','action','value','rootId','append','tempo','anchorId','side','sides','point','to','add'].includes(k)))throw Error('Ungültige Übungseingabe.');
-  const {target,action,value,rootId,append,tempo=1,anchorId,side,sides,point,to:sketchTo,add}=input;if(!Number.isFinite(tempo)||tempo<1/3||tempo>10)throw Error('Ungültiges Übungstempo.');const gearDrag=target==='gear-mesh',faceClick=target==='cad-face',edgeClick=target==='cad-edge',sketch=target==='sketch-board';const generic=typeof target==='string'&&/^ui:(id|label|tool|menu|view):[^\r\n\x00]{1,220}$/.test(target);if(!['click','set','choose','drag','locate'].includes(action)||!(generic||target==='tree'||gearDrag||faceClick||edgeClick||sketch||Object.hasOwn(fixed,target)))throw Error('Unbekanntes Übungsziel.');
+  const {target,action:requestedAction,value,rootId,append,tempo=1,anchorId,side,sides,point,to:sketchTo,add}=input;let action=requestedAction;if(!Number.isFinite(tempo)||tempo<1/3||tempo>10)throw Error('Ungültiges Übungstempo.');const gearDrag=target==='gear-mesh',faceClick=target==='cad-face',edgeClick=target==='cad-edge',sketch=target==='sketch-board';const generic=typeof target==='string'&&/^ui:(id|label|tool|menu|view):[^\r\n\x00]{1,220}$/.test(target);if(!['click','set','choose','drag','locate'].includes(action)||!(generic||target==='tree'||gearDrag||faceClick||edgeClick||sketch||Object.hasOwn(fixed,target)))throw Error('Unbekanntes Übungsziel.');
   if((target==='tree'||gearDrag||faceClick||edgeClick)&&(typeof rootId!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(rootId)))throw Error('Ungültiger Objektbezug.');
   if(sketch?(!sketchPoint(point)||sketchTo!==undefined&&!sketchPoint(sketchTo)||action!==(sketchTo?'drag':'click')||add!==undefined&&typeof add!=='boolean'):point!==undefined||sketchTo!==undefined||add!==undefined)throw Error('Ungültige Skizzengeste.');
   if(faceClick&&(action!=='click'||!['top','bottom','left','right','front','back'].includes(side))||!faceClick&&side!==undefined)throw Error('Ungültiger Flächenauftrag.');
@@ -120,6 +120,7 @@ function installPracticeChild(win,{ipc=ipcMain,channel=process,audit=false}={}){
    const selector=target==='tree'?null:fixed[target];
    const genericSpec=JSON.stringify({target,action,value});const gearSpec=JSON.stringify({rootId,anchorId,value});const faceSpec=JSON.stringify({rootId,side});const edgeSpec=JSON.stringify({rootId,sides});const sketchScript='window.__formnaroPracticeSketch('+JSON.stringify({point,to:sketchTo})+')';const script=sketch?sketchScript:edgeClick?'window.__formnaroPracticeEdge('+edgeSpec+')':faceClick?'window.__formnaroPracticeFace('+faceSpec+')':gearDrag?'window.__formnaroPracticeGearDrag('+gearSpec+')':generic?'window.__formnaroPracticeControl("locate",'+genericSpec+')':`(()=>{const selector=${JSON.stringify(selector)},id=${JSON.stringify(rootId??null)};const row=selector?null:[...document.querySelectorAll('#object-list [data-root-id]')].find(n=>n.dataset.rootId===id&&n.dataset.path==='[]');const node=selector?document.querySelector(selector):row?.querySelector(':scope > .object-label');if(!node||node.disabled||!node.getClientRects().length||getComputedStyle(node).visibility==='hidden')throw Error('Übungsziel nicht sichtbar oder deaktiviert.');node.scrollIntoView({block:'nearest',inline:'nearest'});const r=node.getBoundingClientRect();return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),width:r.width,height:r.height};})()`;
    await checkpoint();const box=await win.webContents.executeJavaScript(script);const bounds=win.getContentBounds();if(!box||box.width<=0||box.height<=0||box.x<0||box.y<0||box.x>=bounds.width||box.y>=bounds.height)throw Error('Übungsziel liegt außerhalb des Fensters.');if(action==='locate')return box;
+   if(box.controlAction!==undefined){if(!generic||requestedAction!=='set'||box.controlAction!=='choose')throw Error('Ungültige interne Feldaktion.');action='choose';}
    await checkpoint();const modifiers=append||add?['shift']:[];
    win.webContents.sendInputEvent({type:'mouseMove',x:box.x,y:box.y,modifiers});await pause(180);await checkpoint();
    const hitScript=sketch?'(()=>{const p='+sketchScript+';return {ok:p.x==='+box.x+'&&p.y==='+box.y+'&&JSON.stringify(p.to??null)==='+JSON.stringify(JSON.stringify(box.to??null))+'};})()':edgeClick?`(()=>{const p=window.__formnaroPracticeEdge(${edgeSpec});return {ok:p.revision===${JSON.stringify(box.revision)}&&p.edgeToken===${JSON.stringify(box.edgeToken)}&&p.x===${box.x}&&p.y===${box.y}&&!!document.elementFromPoint(${box.x},${box.y})?.closest('canvas')};})()`:faceClick?`(async()=>{
