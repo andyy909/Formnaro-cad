@@ -72,3 +72,13 @@ test('ChatGPT and API profiles at same origin never share keys or selected model
 test('Saved Abo selection remains readable by older API-only releases without overwriting their key',()=>{
  let stored;const p=createAIProfiles({canEncrypt:()=>true,encrypt:s=>'encrypted:'+s,decrypt:s=>s.slice(10),persist:s=>stored=s});p.save({config:{model:'keep-api',rememberKey:true},key:'keep-key'});p.selectProvider('chatgpt');p.selectModel('plan-model');assert.equal(stored.config.model,'keep-api');assert.equal(stored.encryptedKey,'encrypted:keep-key');assert.equal(stored.profiles.length,1);assert.equal(stored.profiles[0].encryptedKey,'encrypted:keep-key');assert.equal(stored.chatgptConfig.model,'plan-model');assert.equal(stored.selectedProviderId,'chatgpt');
 });
+
+
+test('a running laboratory turn refreshes an expired encrypted OAuth session before its next HTTP request',async t=>{
+ const f=fixture(t);await f.auth.start();await f.callback();
+ const config=validateConfig({authMode:'chatgpt',protocol:'responses',model:'gpt-6.1-sol'}),roles=require('../backend/ai-lab-roles.cjs').createLabRoles({directory:f.directory,credentials:()=>({config,key:''}),provider:{},connections:{connection:()=>({config,key:''}),credential:(_c,_k,signal)=>f.auth.token(signal),catalog:async()=>({hasKey:true,models:[{id:'gpt-6.1-sol',reasoningEfforts:['high']}],availableModelIds:['gpt-6.1-sol']})}});
+ const role=await roles.resolve('modeler',{providerId:'chatgpt',model:'gpt-6.1-sol',effort:'high'},{signal:new AbortController().signal});let requests=0;
+ t.mock.method(globalThis,'fetch',async(url,o)=>{requests++;assert.equal(o.headers.Authorization,'Bearer '+(requests===1?'private-access-token':'renewed-private-token'));assert.equal(JSON.parse(o.body).model,'gpt-6.1-sol');if(requests===1)f.advance();const text=JSON.stringify(requests===1?{toolReference:{tool:'tool:drill'}}:{message:'Done'});return new Response(event('response.completed',{...completed,model:'gpt-6.1-sol',output:[{type:'message',content:[{type:'output_text',text}]}]}));});
+ const reply=await require('../backend/ai-provider.cjs').completeModel(role.config,role.key,{system:'JSON',user:'Read drill help.',input:{history:[],images:[]},context:{toolReference:{version:1},practiceOnly:true}},new AbortController().signal,{credential:role.credential});
+ assert.equal(requests,2);assert.equal(f.calls.filter(c=>c.options.body?.get('grant_type')==='refresh_token').length,1);assert.equal(JSON.parse(reply.text).message,'Done');assert.equal(f.auth.publicStatus().connected,true);assert(!JSON.stringify(roles.redact({message:'private-access-token renewed-private-token'})).includes('private-token'));assert.equal(roles.redact('renewed-private-token'),'[entfernt]');
+});

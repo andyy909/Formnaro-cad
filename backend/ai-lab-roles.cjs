@@ -53,8 +53,9 @@ function createLabRoles({directory,credentials,provider,connections,onChange=()=
   const detail=cat.models.find(m=>m.id===model),base={...config,model},efforts=selection.effort==='series'?seriesEfforts:[selection.effort==='monitor'?(monitor?.effort??'low'):selection.effort];
   // Validate every requested condition before the first modeling request.
   for(const e of efforts)applyEffort(base,e,detail);
-  const key=connections?.credential?await connections.credential(base,stored.key,signal):stored.key;
-  if(key)secrets.add(key);const resolved={providerId:cat.providerId,config:base,key,detail,selection};
+  const credential=async signal=>{signal?.throwIfAborted();const key=connections?.credential?await connections.credential(base,stored.key,signal):stored.key;if(key)secrets.add(key);return key;};
+  const key=await credential(signal);
+  const resolved={providerId:cat.providerId,config:base,key,credential,detail,selection};
   resolved.forEffort=e=>{const chosen=selection.effort==='series'?e:selection.effort==='monitor'?(monitor?.effort??'low'):selection.effort;const applied=applyEffort(base,chosen,detail);return {...resolved,...applied,public:publicConnection(resolved,applied.effort,chosen)};};
   return resolved.forEffort(efforts[0]);
  }

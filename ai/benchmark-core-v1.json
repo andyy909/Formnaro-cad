@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -86,12 +86,12 @@
     },
     {
       "path": "ai/formnaro-tool-reference.mjs",
-      "sha256": "648a85adb46a4c177098f0963146e89edd87e3bf222acb001aecffa4d049e36a"
+      "sha256": "56337589f3214a97afb7a634e19fe2b6347be02f8e945d2bc92f93fae533f6aa"
     },
     {
       "path": "ai/practice-plan-feedback.mjs",
       "sha256": "4f224ee3d8565c3a96d689626dcec1f9bab8c7ad133e8b07e31126dee44b162f"
     }
   ],
-  "revisionReason": "Complete drawing controls restored after duplicate recipe overwrote the field schema. Tasks, fixtures and native oracles unchanged."
+  "revisionReason": "Actual drill controls and preview/commit workflow documented. Tasks, fixtures, native oracles and limits unchanged. Targeted retest is separate from previous full benchmarks."
 }
