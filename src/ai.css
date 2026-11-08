@@ -263,3 +263,5 @@ body main > aside > .cad-ai-chat.chat-focus{
  .ai-model-card .ai-model-price{grid-column:1;grid-row:2}
  .ai-model-card>button{grid-column:2;grid-row:1/3}
 }
+
+.ai-benchmark-comparison-label{display:grid;gap:4px;font-size:12px;margin:10px 0}.ai-benchmark-comparison-label select{max-width:100%;width:100%}

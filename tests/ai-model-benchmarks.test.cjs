@@ -41,3 +41,33 @@ test('Reading the catalog neither starts a model request nor changes existing pr
   assert.deepEqual(first,second);assert.deepEqual(fs.readdirSync(dir),before);assert.equal(calls,0);assert.equal(runner.state().records.length,0);
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('Comparison excludes partial, exercise and repair history and keeps the latest single complete run per model',async()=>{
+ const {benchmarkComparisons,comparableBenchmarks}=await import('../src/cad-ai-model-benchmarks.js');
+ const complete=local({status:'completed',finished:16,passed:15,createdAt:'2026-11-08T10:00:00Z'});
+ const later=local({id:'later',status:'completed',finished:16,passed:12,createdAt:'2026-11-08T11:00:00Z'});
+ const partial=local({id:'partial',createdAt:'2026-11-08T12:00:00Z'});
+ const entries=benchmarkCatalog([complete,later,partial]).entries,groups=benchmarkComparisons(entries);
+ assert.equal(groups.length,1);const bars=comparableBenchmarks(entries,groups[0].id);
+ assert.equal(bars.length,1);assert.equal(bars[0].id,'local:later');assert.equal(bars[0].passed,12);assert.equal(bars[0].total,16);
+ assert.equal(comparableBenchmarks(entries,groups[0].id,'Mistral').length,0);
+ assert.equal(benchmarkComparisons(benchmarkCatalog([partial]).entries).length,0);
+});
+
+test('Comparison separates suite, effort, monitor and exact program build without borrowing another model result',async()=>{
+ const {benchmarkComparisons,comparableBenchmarks}=await import('../src/cad-ai-model-benchmarks.js');
+ const base=local({status:'completed',finished:16,source:{programVersion:'0.137.0',asarSHA256:'one'}});
+ const variants=[base,{...base,id:'two',source:{...base.source,asarSHA256:'two'}},{...base,id:'suite',suite:{...base.suite,suiteHash:'other'}},
+ {...base,id:'effort',plan:{...base.plan,efforts:['max']}},{...base,id:'monitor',plan:{...base.plan,monitor:{mode:'shadow'}}},
+ {...base,id:'model',plan:{...base.plan,roles:{modeler:{...base.plan.roles.modeler,model:'different'}}}}];
+ const entries=benchmarkCatalog(variants).entries,groups=benchmarkComparisons(entries);assert.equal(groups.length,5);
+ const same=groups.find(g=>g.entries.length===2);assert.equal(comparableBenchmarks(entries,same.id).length,2);
+ assert.deepEqual(comparableBenchmarks(entries,same.id).map(r=>r.model).sort(),['different','gpt-test']);
+});
+
+test('Task chart uses exactly the eight cases from one selected benchmark, including unfinished zero results',async()=>{
+ const {benchmarkRunEntries}=await import('../src/cad-ai-model-benchmarks.js');
+ const run=local({id:'selected',cases:Array.from({length:8},(_,i)=>({id:'B0'+(i+1),label:'Task '+i,passed:i===0?2:0,finished:i===0?2:0}))});
+ const rows=benchmarkRunEntries(run);assert.equal(rows.length,8);assert.equal(rows[0].passed,2);assert.equal(rows[1].passed,0);
+ assert.ok(rows.every(r=>r.id.startsWith('selected:')&&r.total===2));assert.equal(rows[1].status,'incomplete');assert.deepEqual(benchmarkRunEntries(null),[]);
+});

@@ -1,7 +1,7 @@
 import { renderReasoningSelect } from './ai-reasoning-ui.js';
 import { providerCredentialLabel } from './ai-provider-status.js';
 import { modelPracticeSample } from './cad-ai-model-samples.js';
-import { benchmarkEntries, modelBenchmarks, renderBenchmarkChart, renderBenchmarkDetail } from './cad-ai-model-benchmarks.js';
+import { benchmarkComparisons, comparableBenchmarks, modelBenchmarks, renderBenchmarkChart, renderBenchmarkDetail } from './cad-ai-model-benchmarks.js';
 
 export function createCadAIModelPicker({host,desktop,language,onBusy,onChange,onProviderChange,onStatus,onSettings}){
  const text=(de,en)=>language()==='en'?en:de;
@@ -20,7 +20,7 @@ export function createCadAIModelPicker({host,desktop,language,onBusy,onChange,on
   </header>
   <div class="ai-model-toolbar">
    <div class="ai-model-scopes" role="group" aria-label="${text('Vergleichsbereich','Comparison category')}">
-    <button type="button" data-scope="all">${text('Alle Tests','All tests')}</button><button type="button" data-scope="text">Text</button><button type="button" data-scope="cad">CAD</button>
+    <button type="button" data-scope="all">${text('Alle Modelle','All models')}</button><button type="button" data-scope="text">Text</button><button type="button" data-scope="cad">CAD</button>
     <button type="button" data-scope="photo">Foto-CAD</button>
    </div>
    <input type="search" data-search aria-label="${text('Modell suchen','Search models')}" placeholder="${text('Modell oder Anbieter suchen','Search model or provider')}">
@@ -28,7 +28,7 @@ export function createCadAIModelPicker({host,desktop,language,onBusy,onChange,on
   </div>
   <section class="ai-model-comparison" aria-labelledby="ai-model-chart-title">
    <div class="ai-model-chart-heading"><h3 id="ai-model-chart-title"></h3><p data-method></p></div>
-   <div data-chart class="ai-model-chart"></div>
+   <label class="ai-benchmark-comparison-label"><span data-comparison-label></span><select data-comparison></select></label><div data-chart class="ai-model-chart"></div>
    <p data-benchmark-status class="ai-model-benchmark-status" role="status"></p>
    <p data-benchmark-suite class="ai-model-benchmark-status"></p>
   </section>
@@ -80,12 +80,16 @@ export function createCadAIModelPicker({host,desktop,language,onBusy,onChange,on
   const models=catalogs.flatMap(entry=>entry.models.map(model=>({model,entry,sample:modelPracticeSample(entry.providerId,model.id,scope)})))
    .filter(({model,entry})=>(scope!=='photo'||model.vision!==false)&&[model.name,model.id,entry.provider?.label].join(' ').toLocaleLowerCase().includes(query));
   models.sort((a,b)=>Number(b.entry.hasKey)-Number(a.entry.hasKey)||a.model.name.localeCompare(b.model.name));
-  el('#ai-model-chart-title').textContent=scope==='all'?text('Bereits getestete KI-Modelle','Previously tested AI models'):scope==='text'?text('Textqualität','Text quality'):scope==='photo'?text('Foto-CAD in der Praxis','Photo CAD in practice'):text('CAD in der Praxis','CAD in practice');
-  el('[data-method]').textContent=text('Bestätigt / Testumfang · Säulenhöhe: Anteil 0–100 %. Alle getesteten Modelle, unabhängig vom eingerichteten Zugang. Aufgaben, Prüfprofile und Programmstände unterscheiden sich; Teilstände sind keine abschließenden Erfolgsquoten.','Confirmed / test scope · Column height: proportion 0–100%. All tested models, regardless of connected access. Tasks, test profiles and app versions differ; partial results are not final success rates.');
-  renderBenchmarkChart(chart,benchmarkEntries(benchmarks.entries,scope,query),language());
+  el('#ai-model-chart-title').textContent=text('Grundbenchmark · 16 feste Versuche','Core benchmark · 16 fixed trials');
+  el('[data-method]').textContent=text('Je Modell der neueste vollständige Lauf mit gleichen Aufgaben, Denkstufe, Überwachung und Programmstand. Jede Säule zeigt einen einzelnen Lauf: bestätigt / 16, Skala 0–100 %.','Latest complete run per model with the same tasks, effort, monitoring and app build. Each column shows one run: confirmed / 16, scale 0–100%.');
+  const groups=benchmarkComparisons(benchmarks.entries),select=el('[data-comparison]'),previous=select.value;
+  select.replaceChildren(...(groups.length?groups.map(g=>new Option(g.sample.suiteVersion+' · '+g.sample.effort+' · '+g.sample.monitor+' · Formnaro '+g.sample.sourceVersion+' · '+(g.sample.sourceHash||g.sample.suiteHash).slice(0,8),g.id)):[new Option(text('Noch kein vollständiger Benchmark','No complete benchmark yet'),'')]));
+  if(groups.some(g=>g.id===previous))select.value=previous;select.disabled=!groups.length;
+  el('[data-comparison-label]').textContent=text('Gleiche Benchmark-Bedingungen','Matching benchmark conditions');
+  renderBenchmarkChart(chart,comparableBenchmarks(benchmarks.entries,select.value,query),language());
   el('[data-benchmark-status]').textContent=benchmarkError;
-  const hasCore=benchmarks.entries.some(r=>r.kind==='benchmark');
-  el('[data-benchmark-suite]').textContent=benchmarks.suite?text('Grundbenchmark ','Core benchmark ')+benchmarks.suite.version+' · '+(hasCore?text('gespeicherte Läufe oben enthalten','saved runs included above'):text('noch keine ausgewerteten Tests · 16 geplante Tests','no evaluated tests yet · 16 planned tests')):'';
+  const hasCore=groups.length>0;
+  el('[data-benchmark-suite]').textContent=benchmarks.suite?text('Grundbenchmark ','Core benchmark ')+benchmarks.suite.version+' · '+(hasCore?text('nur vollständige Einzelläufe im Diagramm','only complete individual runs in the chart'):text('noch kein vollständiger 16er-Lauf. Übungs-, Reparatur- und Teilstände bleiben außerhalb des Diagramms.','no complete 16-trial run yet. Practice, repair and partial results stay outside the chart.')):'';
   list.replaceChildren();
   for(const {model,entry,sample} of models){
    const active=entry.providerId===settings?.providerId&&model.id===settings.model;
@@ -100,7 +104,7 @@ export function createCadAIModelPicker({host,desktop,language,onBusy,onChange,on
    const measured=modelBenchmarks(benchmarks.entries,entry.providerId,model.id);
    if(measured.length){
     const details=element('details','ai-model-benchmark-results');
-    details.append(element('summary','',text('Benchmarks anzeigen','Show benchmarks')+' ('+measured.length+')'));
+    details.append(element('summary','',text('Gespeicherte Teststände anzeigen','Show saved test results')+' ('+measured.length+')'));
     for(const result of measured)details.append(renderBenchmarkDetail(result,language()));
     identity.append(details);
    }else identity.append(element('small','',text('Noch keine Benchmark-Ergebnisse','No benchmark results yet')));
@@ -162,7 +166,7 @@ export function createCadAIModelPicker({host,desktop,language,onBusy,onChange,on
  trigger.onclick=()=>{render();dialog.showModal();search.focus();void discover();void loadBenchmarks();};
  close.onclick=()=>dialog.close();
  dialog.addEventListener('close',()=>trigger.focus());
- search.oninput=render;
+ search.oninput=render;el('[data-comparison]').onchange=render;
  refresh.onclick=()=>{void discover(true);void loadBenchmarks();};
  dialog.querySelectorAll('[data-scope]').forEach(button=>{button.onclick=()=>{scope=button.dataset.scope;render();};});
  effort.onchange=()=>{const reasoningEffort=effort.value;void update({action:()=>desktop.selectAIEffort({reasoningEffort})});};

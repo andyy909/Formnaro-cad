@@ -7,6 +7,28 @@ export function modelBenchmarks(entries,providerId,model){
  // Exact provider and model identity; aliases and other access modes stay separate.
  return benchmarkEntries(entries).filter(r=>r.providerId===providerId&&r.model===model);
 }
+// Compare one complete fixed run per exact model, never pooled development trials.
+export function benchmarkComparisons(entries){
+ const groups=new Map();
+ for(const r of entries){
+  if(r.kind!=='benchmark'||r.status!=='completed'||r.total!==16||r.finished!==16||!r.suiteHash)continue;
+  const key=JSON.stringify([r.suiteHash,r.effort,r.monitor,r.sourceVersion,r.sourceHash]);
+  if(!groups.has(key))groups.set(key,{id:key,sample:r,entries:[]});
+  groups.get(key).entries.push(r);
+ }
+ return [...groups.values()].sort((a,b)=>b.entries.map(r=>r.createdAt||r.date).sort().at(-1).localeCompare(a.entries.map(r=>r.createdAt||r.date).sort().at(-1)));
+}
+export function comparableBenchmarks(entries,comparison,query=''){
+ const group=benchmarkComparisons(entries).find(g=>g.id===comparison),latest=new Map();
+ for(const r of (group?.entries??[]).slice().sort((a,b)=>(a.createdAt||a.date).localeCompare(b.createdAt||b.date)||a.id.localeCompare(b.id)))latest.set(JSON.stringify([r.providerId,r.model]),r);
+ return benchmarkEntries([...latest.values()],'all',query);
+}
+export function benchmarkRunEntries(run){
+ if(!run)return [];
+ return run.cases.map(c=>({id:run.id+':'+c.id,kind:'benchmark',scope:'all',modelName:c.id+' · '+c.label,
+  label:run.plan.roles.modeler.model,date:run.createdAt.slice(0,10),effort:run.plan.efforts[0],passed:c.passed,total:2,finished:c.finished,
+  status:c.finished===2?'completed':'incomplete',origin:'local',note:'Einzelner Benchmark-Lauf '+run.id}));
+}
 const node=(tag,cls,text)=>{const e=document.createElement(tag);e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 export function benchmarkDescription(r,language='de'){
  const en=language==='en',t=(de,enText)=>en?enText:de;
