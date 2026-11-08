@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -86,12 +86,12 @@
     },
     {
       "path": "ai/formnaro-tool-reference.mjs",
-      "sha256": "407d66f4b34c9fa16e5e5603bbb22b77fc46afd8a375fb1bb2ba215383b0c8a2"
+      "sha256": "648a85adb46a4c177098f0963146e89edd87e3bf222acb001aecffa4d049e36a"
     },
     {
       "path": "ai/practice-plan-feedback.mjs",
       "sha256": "4f224ee3d8565c3a96d689626dcec1f9bab8c7ad133e8b07e31126dee44b162f"
     }
   ],
-  "revisionReason": "Drawing update wording now names stable controls; the exact known label also resolves the same visible button. Fixtures and native oracles unchanged."
+  "revisionReason": "Complete drawing controls restored after duplicate recipe overwrote the field schema. Tasks, fixtures and native oracles unchanged."
 }

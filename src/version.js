@@ -1,2 +1,2 @@
-export const FORMNARO_VERSION='0.137.2';
-export const FORMNARO_BUILD_LABEL='Privat r1';
+export const FORMNARO_VERSION='0.137.3';
+export const FORMNARO_BUILD_LABEL='Privat r2';

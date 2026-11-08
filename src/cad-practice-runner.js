@@ -378,6 +378,8 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
       result.feedback=[message()?.textContent,panel.querySelector('[data-drawing-freshness]')?.textContent].filter(Boolean).join(' · ').slice(0,500);
      }
     }
+    const activeDialog=practiceDialogState(document);
+    if(activeDialog&&!result.dialog)result.dialog=activeDialog;
     checks.push(result);
    }else throw Error('Nicht freigegebener Übungsschritt.');
    await settled();
