@@ -1,0 +1,168 @@
+{
+  "format": "FormnaroPublicBenchmarkResult",
+  "version": 1,
+  "benchmarkId": "a19790ac-bdcd-4cc1-b1a7-4c901ec804ed",
+  "measuredProgram": {
+    "version": "0.137.3-r3",
+    "sourceHash": "9b8ee6b012cb5876f0083e749134e1408a77297dfd2955b3f901ba40c2c16589",
+    "asarSHA256": "44dce79d98a79a219bed9cc630c32585f0c645d2d11b2d6434dacdd800ce52b5",
+    "exeSHA256": "9d27a27cfb27f90dcef1ff63edd06fe7573e9ade7e6623dad59723107e5d7e9e"
+  },
+  "preservedInRelease": "0.137.4-r2",
+  "newTrialsOnPublishedBuild": 0,
+  "summary": {
+    "id": "a19790ac-bdcd-4cc1-b1a7-4c901ec804ed",
+    "suite": {
+      "suiteId": "formnaro-practice-core",
+      "suiteVersion": "1.0.3",
+      "suiteHash": "7969efecc682e7a34538036637559e5d71dc40f7253753d7f86608769facc22b",
+      "cases": [
+        {
+          "id": "B01",
+          "caseId": "practice-03",
+          "label": "Maße und Mittelpunkt"
+        },
+        {
+          "id": "B02",
+          "caseId": "assembly",
+          "label": "Ein Teil aus einer Baugruppe"
+        },
+        {
+          "id": "B03",
+          "caseId": "practice-14",
+          "label": "Durchgangsbohrung"
+        },
+        {
+          "id": "B04",
+          "caseId": "practice-11",
+          "label": "Kreismuster"
+        },
+        {
+          "id": "B05",
+          "caseId": "practice-16",
+          "label": "Bestimmte Kante fasen"
+        },
+        {
+          "id": "B06",
+          "caseId": "practice-17",
+          "label": "Aushöhlen"
+        },
+        {
+          "id": "B07",
+          "caseId": "practice-22",
+          "label": "Native Messung"
+        },
+        {
+          "id": "B08",
+          "caseId": "practice-21",
+          "label": "Technische Zeichnung"
+        }
+      ],
+      "planned": 16,
+      "challenge": {
+        "available": false,
+        "reason": "Halter-Grenztest: Aufgaben und native Prüfer noch nicht kalibriert."
+      }
+    },
+    "createdAt": "2026-11-08T14:35:13.500Z",
+    "status": "completed",
+    "reviewStatus": "completed",
+    "planned": 16,
+    "finished": 16,
+    "pending": 0,
+    "rawAttempts": 17,
+    "passed": 15,
+    "withoutCorrections": 15,
+    "afterCorrections": 0,
+    "byOutcome": {
+      "pending": 0,
+      "passed": 15,
+      "failed": 1,
+      "unverified": 0,
+      "infrastructure": 0,
+      "model-unverified": 0
+    },
+    "medianSuccessfulMs": 52146,
+    "cases": [
+      {
+        "id": "B01",
+        "caseId": "practice-03",
+        "label": "Maße und Mittelpunkt",
+        "taskHash": "abdbdf1daf4441b25ed012498575817976213be26ee6a138a36080c148500b02",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B02",
+        "caseId": "assembly",
+        "label": "Ein Teil aus einer Baugruppe",
+        "taskHash": "0543ea97926928d554f0d7ab32b7375f50452f5a3d440d1ea7f8a96ddbc67d28",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B03",
+        "caseId": "practice-14",
+        "label": "Durchgangsbohrung",
+        "taskHash": "eb357b2d75b9f7bbac4e914422ec0ed256ef57bbaa71602ef7f83f55a189b270",
+        "passed": 1,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B04",
+        "caseId": "practice-11",
+        "label": "Kreismuster",
+        "taskHash": "a5b3f04aec3cbcb346154f96cc313b7730cbb9fbedcc4339b9aa2d415e3af06c",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B05",
+        "caseId": "practice-16",
+        "label": "Bestimmte Kante fasen",
+        "taskHash": "3cf5633250b4f87387fe42b2a648a4fa81e31d9868e04c99958b1bab8a5d98c2",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B06",
+        "caseId": "practice-17",
+        "label": "Aushöhlen",
+        "taskHash": "604744b253ac644dde1f3d042fa86aa6537c4b36e822552c943cc705424b38b0",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B07",
+        "caseId": "practice-22",
+        "label": "Native Messung",
+        "taskHash": "08455a14df5edc78da6f5b256f750ca8571242eac27831f2282ffb3ef6817c2e",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      },
+      {
+        "id": "B08",
+        "caseId": "practice-21",
+        "label": "Technische Zeichnung",
+        "taskHash": "4ff7f13d302715dcad4f9efcb982655b5a600596324ef1fc5b37c1f206854092",
+        "passed": 2,
+        "finished": 2,
+        "planned": 2
+      }
+    ]
+  },
+  "model": {
+    "provider": "chatgpt",
+    "id": "gpt-6.1-sol",
+    "reasoningEffort": "high"
+  },
+  "monitor": "off",
+  "note": "Historical complete run: 15/16 confirmed, 16/16 conditions finished. One retained authentication failure plus its successful replacement means 17 raw attempts. The failed B03-r2 remains unchanged. Targeted drilling retest is separate."
+}

@@ -12,12 +12,12 @@
 
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
-| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.3-r3/Formnaro-v0.137.3-r3-Windows-x64.zip)** | **0.137.3-r3** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
-| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.3-r3) | **0.137.3-r3** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
+| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.4-r2/Formnaro-v0.137.4-r2-Windows-x64.zip)** | **0.137.4-r2** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
+| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2) | **0.137.4-r2** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
 
-**Neu:** Eigenständiger Benchmark mit 16 festen Versuchen, getrenntes Säulendiagramm, verbesserte Menü-/Flächenauswahl und behobene Listenerwarnung. DeepSeek V4.1 Flash/high bestand 16/16 auf 0.137.0-r1; diese Messung bleibt unverändert erhalten. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.3-r3).
+**Neu:** Vollständiger Bohrungsablauf und automatische Token-Erneuerung im KI-Labor. DeepSeek 16/16, Sol 14/16 und Sol 15/16 bleiben unverändert; Zeichnungsnachtests 2/2 und Bohrungsnachtest 1/1 stehen als eigene Serien. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2).
 
-[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.3-r3/Formnaro-Quellcode-v0.137.3-r3.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
+[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.4-r2/Formnaro-Quellcode-v0.137.4-r2.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
 
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
@@ -81,7 +81,7 @@ Im eigenen Übungsfenster werden drei Funktionen mit den Bedienelementen von For
 
 Der vorab von Codex erstellte Plan wird im Übungsfenster über die echten Bedienelemente ausgeführt; die Wiedergabe benötigt keine weiteren Modellanfragen. Die eingeblendeten **3.381.395 Tokens inklusive Cache** beziehen sich auf den gesamten Zahnradauftrag mit Planung, Aufnahme und Prüfung.
 
-Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der aktuelle Download enthält 0.137.3-r3.
+Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der aktuelle Download enthält 0.137.4-r2.
 
 ## Anleitungen
 
@@ -94,13 +94,13 @@ Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der aktu
 | Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
-## Aktuelle Ausgabe: 0.137.3-r3
+## Aktuelle Ausgabe: 0.137.4-r2
 
 Die KI erhält jetzt die vollständigen Bedienelemente und den Ablauf des Zeichnungswerkzeugs. Die ursprünglichen Benchmarks bleiben unverändert: [DeepSeek 16/16 auf 0.137.0-r1](docs/benchmarks/core-deepseek-2026-11-08.json) und [GPT-6.1 Sol 14/16 auf 0.137.2-r1](docs/benchmarks/core-sol-2026-11-08.json). Nur die beiden fehlgeschlagenen Sol-Zeichnungsversuche wurden auf 0.137.3-r2 erneut geprüft: [2/2 bestanden](docs/benchmarks/sol-drawing-retests-2026-11-08.json). Die vierzehn erfolgreichen Sol-Originale bleiben erhalten. Die gezielte Abdeckung über verschiedene Programmstände ist kein neuer vollständiger 16er-Benchmark.
 
 Lokal geprüft: 128 Standardtests, gezielte Regressionen, echte Zeichnungsprüfungen im fertigen Paket, Anzeige gespeicherter Ergebnisse und regulärer Fensterschluss. Die CAD-Laufzeitdateien werden vor und nach dem Paketieren geprüft. Für die Veröffentlichung startet kein weiterer Cloud-Benchmark; Messversionen und ursprüngliche Hashes bleiben an jedem Ergebnis erhalten.
 
-[Release und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.3-r3) · [Passender Quelltag](https://github.com/andyy909/Formnaro-cad/tree/v0.137.3-r3) · [Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.3-r3/Formnaro-Quellcode-v0.137.3-r3.zip) · [Abnahmebericht](docs/ABNAHME-0.137.3-r3.md)
+[Release und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2) · [Passender Quelltag](https://github.com/andyy909/Formnaro-cad/tree/v0.137.4-r2) · [Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.4-r2/Formnaro-Quellcode-v0.137.4-r2.zip) · [Abnahmebericht](docs/ABNAHME-0.137.4-r2.md)
 
 <!-- formnaro-development-status:end -->
 

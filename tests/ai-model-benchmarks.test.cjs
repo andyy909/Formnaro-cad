@@ -89,10 +89,19 @@ test('Different program builds have a separate explicit comparison without chang
 
 test('Published Sol history keeps the original 14/16 separate from two successful drawing retests',async()=>{
  const {benchmarkComparisonOptions,comparableBenchmarks,modelBenchmarks}=await import('../src/cad-ai-model-benchmarks.js');
- const entries=benchmarkCatalog().entries,sol=modelBenchmarks(entries,'chatgpt','gpt-6.1-sol');assert.equal(sol.length,2);
- const original=sol.find(r=>r.kind==='benchmark'),repair=sol.find(r=>r.kind==='lab');
+ const entries=benchmarkCatalog().entries,sol=modelBenchmarks(entries,'chatgpt','gpt-6.1-sol');assert.equal(sol.length,4);
+ const original=sol.find(r=>r.id==='sol-core-84a16ca2-fb68-48f5-93fb-fa609fe03ab6'),repair=sol.find(r=>r.id==='sol-drawing-retests-332740b2-2270-4e9a-a041-df1dacc32aa2');
  assert.deepEqual([original.passed,original.total,original.sourceVersion],[14,16,'0.137.2']);assert.deepEqual([repair.passed,repair.total,repair.sourceVersion],[2,2,'0.137.3']);
  const group=benchmarkComparisonOptions(entries).find(g=>g.differentSources&&g.entries.some(r=>r.id===original.id));assert(group);
  const bars=comparableBenchmarks(entries,group.id);assert.deepEqual(bars.map(r=>[r.model,r.passed,r.total]).sort(),[['deepseek-flash',16,16],['gpt-6.1-sol',14,16]]);assert(!bars.some(r=>r.id===repair.id));
  const evidence=require('../docs/benchmarks/sol-drawing-retests-2026-11-08.json');assert.equal(evidence.result.freshFullBenchmark,false);assert.equal(evidence.result.fullyAccepted,2);assert.equal(evidence.conditions.length,2);assert(evidence.conditions.every(c=>c.native&&c.cleanExit&&c.modelExact));
+});
+
+
+test('Published newer Sol 15/16 and drilling 1/1 remain separate with their original measured builds',async()=>{
+ const entries=benchmarkCatalog().entries,newer=entries.find(r=>r.id==='sol-core-a19790ac-bdcd-4cc1-b1a7-4c901ec804ed'),repair=entries.find(r=>r.id==='sol-drill-retest-32b8a60a-a39e-484f-a273-403c5f0fb2cc');
+ assert.deepEqual([newer.kind,newer.passed,newer.total,newer.rawAttempts,newer.sourceVersion],['benchmark',15,16,17,'0.137.3']);assert.equal(newer.suiteVersion,'1.0.3');
+ assert.deepEqual([repair.kind,repair.passed,repair.total,repair.sourceVersion],['lab',1,1,'0.137.4']);
+ const evidence=require('../docs/benchmarks/sol-drill-retest-2026-11-08.json');assert.equal(evidence.measuredProgram.version,'0.137.4-r1');assert.equal(evidence.result.freshFullBenchmark,false);assert.equal(evidence.result.retainedOriginalSuccesses,15);assert.equal(evidence.conditions.length,1);assert.equal(evidence.conditions[0].conditionId,'B03-r2');assert.equal(evidence.conditions[0].checks.length,7);assert(evidence.conditions[0].checks.every(c=>c.passed));assert(evidence.conditions[0].modelExact&&evidence.conditions[0].cleanExit);
+ const {benchmarkComparisonOptions,comparableBenchmarks}=await import('../src/cad-ai-model-benchmarks.js');for(const group of benchmarkComparisonOptions(entries))assert(!comparableBenchmarks(entries,group.id).some(r=>r.id===repair.id));
 });

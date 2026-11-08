@@ -1,0 +1,88 @@
+{
+  "format": "FormnaroPublicTargetedRetestResult",
+  "version": 1,
+  "seriesId": "32b8a60a-a39e-484f-a273-403c5f0fb2cc",
+  "originalBenchmarkId": "a19790ac-bdcd-4cc1-b1a7-4c901ec804ed",
+  "measuredProgram": {
+    "version": "0.137.4-r1",
+    "sourceHash": "0403462ae89ab3eacc1223555e6fabbae1ee24cca7127746ca007c7ac873886f",
+    "asarSHA256": "163df78ffe4b0556f9879238fcb55eb34169d8eba6aa53df0fa84a5fe501dada",
+    "exeSHA256": "efda5237d0eb72f7ae09e68ae3bc323b9f09926c2be8f092ad01d58690951851"
+  },
+  "preservedInRelease": "0.137.4-r2",
+  "newTrialsOnPublishedBuild": 0,
+  "suiteVersion": "1.0.4",
+  "model": {
+    "provider": "chatgpt",
+    "id": "gpt-6.1-sol",
+    "reasoningEffort": "high"
+  },
+  "monitor": "off",
+  "limits": {
+    "seconds": 360,
+    "outputTokens": 16384,
+    "rounds": 20,
+    "formatRepairs": 2,
+    "requestBudget": 1000
+  },
+  "sameTasksFixturesOraclesAndBudgets": true,
+  "result": {
+    "planned": 1,
+    "finished": 1,
+    "nativePassed": 1,
+    "fullyAccepted": 1,
+    "retainedOriginalSuccesses": 15,
+    "freshFullBenchmark": false
+  },
+  "conditions": [
+    {
+      "conditionId": "B03-r2",
+      "originalRunId": "483eb4e1-a517-4507-9998-161be90b066a",
+      "newRunId": "59839a8c-41fe-4a4e-bc95-01214cb1a97a",
+      "originalRepeat": 1,
+      "standaloneRepeat": 0,
+      "fixtureSHA256": "82a6510e8a3e9125a882e2c1fc3bb3935f8e29fd1346ca32965963fdcf4dfb6e",
+      "native": true,
+      "cleanExit": true,
+      "modelExact": true,
+      "checks": [
+        {
+          "name": "Schutzteil vollständig erhalten",
+          "passed": true
+        },
+        {
+          "name": "Tatsächlicher sichtbarer Ablauf abgeschlossen",
+          "passed": true
+        },
+        {
+          "name": "Unbeteiligtes Teil vollständig erhalten",
+          "passed": true
+        },
+        {
+          "name": "Nur native sichtbare Volumenkörper",
+          "passed": true
+        },
+        {
+          "name": "Ein Körper mit geforderten Außenmaßen und Lage",
+          "passed": true
+        },
+        {
+          "name": "Unabhängig erwartetes Materialvolumen",
+          "passed": true
+        },
+        {
+          "name": "Native mittige Durchgangsbohrung",
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "requests": {
+    "modeler": 1,
+    "supervisor": 0,
+    "reviewer": 1
+  },
+  "archiveSHA256": "5e0414a12535bc6650cc42124763888f9146a8797fd205362227fb52a54cedd1",
+  "historicalResultsUnchanged": true,
+  "note": "One targeted drilling retest on the corrected private build. Original 15/16 remains unchanged. Fifteen retained successes plus this retest span different builds; this is not a new complete 16-trial benchmark."
+}

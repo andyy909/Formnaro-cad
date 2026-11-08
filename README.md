@@ -21,7 +21,9 @@ Formnaro is portable on Windows x64. The modelling workspace works offline.
 
 | Build | Best for | Download |
 | --- | --- | --- |
-| **0.137.3-r3** · current release | Fixed 16-trial benchmarks, repaired practice navigation and clean AI shutdown | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.3-r3/Formnaro-v0.137.3-r3-Windows-x64.zip)** · [Verification and separate sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.3-r3) |
+| **0.137.4-r2** · current release | Complete drilling workflow, automatic lab token renewal and preserved benchmark history | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.4-r2/Formnaro-v0.137.4-r2-Windows-x64.zip)** · [Verification and separate sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2) |
+
+New: complete drilling controls and automatic token renewal in the AI lab. Historical DeepSeek 16/16, Sol 14/16 and Sol 15/16 remain unchanged; drawing 2/2 and drilling 1/1 retests are separate series.
 
 Extract the whole application ZIP into its own folder and start **Formnaro.exe**. FreeCAD and Python are bundled. Source archives are separate downloads. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
@@ -35,7 +37,7 @@ Extract the whole application ZIP into its own folder and start **Formnaro.exe**
 
 *Actual application screenshots: Easy Tinker and Normal in dark mode from 0.117.0-r8; Solid with ATLAS-5 in light mode from 0.120.0-r4; Fusion in light mode from 0.119.0-r2. Click an image to enlarge it.*
 
-[Matching application sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.3-r3/Formnaro-Quellcode-v0.137.3-r3.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
+[Matching application sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.4-r2/Formnaro-Quellcode-v0.137.4-r2.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
 
 ## Quick start
 
@@ -87,7 +89,7 @@ Three functions are shown in a separate practice window using Formnaro's control
 
 Codex prepared the plan before playback; the practice window executes it through the actual controls without further model requests. The displayed **3,381,395 tokens including cached input** cover the entire gear task: planning, recording and verification.
 
-Recorded with the locally tested development build **0.125.0-r35**. The current download above provides 0.137.3-r3.
+Recorded with the locally tested development build **0.125.0-r35**. The current download above provides 0.137.4-r2.
 
 ## Documentation
 
@@ -102,13 +104,13 @@ Some detailed reference material is available in German.
 | Development | [Build instructions](docs/BUILD.md) · [Architecture](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
-## Current release: 0.137.3-r3
+## Current release: 0.137.4-r2
 
 The drawing tool now exposes its complete controls and workflow to the AI. Original benchmark results stay unchanged: [DeepSeek 16/16 on 0.137.0-r1](docs/benchmarks/core-deepseek-2026-11-08.json) and [GPT-6.1 Sol 14/16 on 0.137.2-r1](docs/benchmarks/core-sol-2026-11-08.json). Only Sol's two failed drawing trials were rerun on 0.137.3-r2: [2/2 passed](docs/benchmarks/sol-drawing-retests-2026-11-08.json). The fourteen successful Sol originals are retained. Targeted coverage across builds is not a new full 16-trial benchmark.
 
 Local verification includes 128 standard tests, focused regressions, actual packaged drawing checks, saved-result UI verification and normal shutdown. CAD runtime files are checked before and after packaging. Publication adds no cloud benchmark; measured versions and original hashes remain attached to every result.
 
-[Release and checksums](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.3-r3) · [Matching source tag](https://github.com/andyy909/Formnaro-cad/tree/v0.137.3-r3) · [Application source ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.3-r3/Formnaro-Quellcode-v0.137.3-r3.zip) · [Acceptance report](docs/ABNAHME-0.137.3-r3.md)
+[Release and checksums](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2) · [Matching source tag](https://github.com/andyy909/Formnaro-cad/tree/v0.137.4-r2) · [Application source ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.4-r2/Formnaro-Quellcode-v0.137.4-r2.zip) · [Acceptance report](docs/ABNAHME-0.137.4-r2.md)
 
 <!-- formnaro-development-status:end -->
 

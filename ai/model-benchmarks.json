@@ -327,6 +327,68 @@
       "origin": "reference",
       "note": "Nur B08-r1/r2 auf 0.137.3-r2 erneut geprüft: 2/2 nativ bestanden. 14 erfolgreiche Sol-Originale beibehalten; kein neuer vollständiger 16er-Benchmark.",
       "noteEn": "Only B08-r1/r2 rerun on 0.137.3-r2: 2/2 native passes. Fourteen successful Sol originals retained; not a new complete 16-trial benchmark."
+    },
+    {
+      "id": "sol-core-a19790ac-bdcd-4cc1-b1a7-4c901ec804ed",
+      "kind": "benchmark",
+      "scope": "all",
+      "providerId": "chatgpt",
+      "model": "gpt-6.1-sol",
+      "modelName": "GPT-6.1 Sol",
+      "label": "Formnaro Grundbenchmark",
+      "labelEn": "Formnaro core benchmark",
+      "date": "2026-11-08",
+      "createdAt": "2026-11-08T14:35:13.500Z",
+      "effort": "high",
+      "suiteVersion": "1.0.3",
+      "suiteHash": "7969efecc682e7a34538036637559e5d71dc40f7253753d7f86608769facc22b",
+      "status": "completed",
+      "passed": 15,
+      "total": 16,
+      "finished": 16,
+      "rawAttempts": 17,
+      "byOutcome": {
+        "pending": 0,
+        "passed": 15,
+        "failed": 1,
+        "unverified": 0,
+        "infrastructure": 0,
+        "model-unverified": 0
+      },
+      "medianSuccessfulMs": 52146,
+      "monitor": "off",
+      "sourceVersion": "0.137.3",
+      "sourceHash": "9b8ee6b012cb5876f0083e749134e1408a77297dfd2955b3f901ba40c2c16589",
+      "origin": "reference",
+      "note": "Eigenständiger vollständiger Sol-Lauf auf 0.137.3-r3: 15/16. Der Bohrungsfehler und ein unbewerteter Authentifizierungsversuch samt Ersatz bleiben erhalten. Bohrungsnachtest 1/1 separat; kein neuer 16/16-Lauf.",
+      "noteEn": "Independent complete Sol run on 0.137.3-r3: 15/16. Drilling failure and an unverified authentication attempt with its replacement remain. Drilling retest 1/1 is separate; not a new 16/16 run."
+    },
+    {
+      "id": "sol-drill-retest-32b8a60a-a39e-484f-a273-403c5f0fb2cc",
+      "kind": "lab",
+      "scope": "all",
+      "providerId": "chatgpt",
+      "model": "gpt-6.1-sol",
+      "modelName": "GPT-6.1 Sol",
+      "label": "Bohrung · gezielter Nachtest",
+      "labelEn": "Drilling · targeted retest",
+      "date": "2026-11-08",
+      "effort": "high",
+      "status": "completed",
+      "passed": 1,
+      "total": 1,
+      "finished": 1,
+      "rawAttempts": 1,
+      "byOutcome": {
+        "passed": 1,
+        "failed": 0
+      },
+      "monitor": "off",
+      "sourceVersion": "0.137.4",
+      "sourceHash": "0403462ae89ab3eacc1223555e6fabbae1ee24cca7127746ca007c7ac873886f",
+      "origin": "reference",
+      "note": "Nur B03-r2 auf 0.137.4-r1 erneut geprüft: 1/1 nativ bestanden, 7/7 Kriterien. Alle 15 Sol-Erfolge des ursprünglichen 15/16-Laufs erhalten. Eigene Serie; kein neuer vollständiger 16er-Benchmark.",
+      "noteEn": "Only B03-r2 rerun on 0.137.4-r1: 1/1 native pass, 7/7 checks. All 15 Sol successes from the original 15/16 run retained. Separate series; not a new complete 16-trial benchmark."
     }
   ]
 }
