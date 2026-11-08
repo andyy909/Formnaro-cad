@@ -21,7 +21,7 @@ Formnaro is portable on Windows x64. The modelling workspace works offline.
 
 | Build | Best for | Download |
 | --- | --- | --- |
-| **0.136.0-r3** · current release | Benchmarks in the model picker, three AI lab roles and checked bundled FreeCAD | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-v0.136.0-r3-Windows-x64.zip)** · [Verification and separate sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3) |
+| **0.137.1-r1** · current release | Fixed 16-trial benchmarks, repaired practice navigation and clean AI shutdown | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.1-r1/Formnaro-v0.137.1-r1-Windows-x64.zip)** · [Verification and separate sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.1-r1) |
 
 Extract the whole application ZIP into its own folder and start **Formnaro.exe**. FreeCAD and Python are bundled. Source archives are separate downloads. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
@@ -35,7 +35,7 @@ Extract the whole application ZIP into its own folder and start **Formnaro.exe**
 
 *Actual application screenshots: Easy Tinker and Normal in dark mode from 0.117.0-r8; Solid with ATLAS-5 in light mode from 0.120.0-r4; Fusion in light mode from 0.119.0-r2. Click an image to enlarge it.*
 
-[Matching application sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-Quellcode-v0.136.0-r3.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
+[Matching application sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.1-r1/Formnaro-Quellcode-v0.137.1-r1.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
 
 ## Quick start
 
@@ -87,7 +87,7 @@ Three functions are shown in a separate practice window using Formnaro's control
 
 Codex prepared the plan before playback; the practice window executes it through the actual controls without further model requests. The displayed **3,381,395 tokens including cached input** cover the entire gear task: planning, recording and verification.
 
-Recorded with the locally tested development build **0.125.0-r35**. The current download above provides 0.136.0-r3.
+Recorded with the locally tested development build **0.125.0-r35**. The current download above provides 0.137.1-r1.
 
 ## Documentation
 
@@ -102,13 +102,13 @@ Some detailed reference material is available in German.
 | Development | [Build instructions](docs/BUILD.md) · [Architecture](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
-## Current release: 0.136.0-r3
+## Current release: 0.137.1-r1
 
-The model picker displays saved benchmark results and a column chart for previously tested AI models. Series, sample sizes and partial results remain separate. The AI lab offers independent modeler, supervisor and final reviewer choices, plus a versioned 16-trial core benchmark. The bundled new core benchmark has not been run against a real provider yet.
+The model picker compares complete individual16-trial benchmarks under matching conditions. Earlier practice and partial results remain in the details. DeepSeek V4.1 Flash/high passed16/16 on0.137.0-r1; this measurement is preserved unchanged in0.137.1-r1. The AI lab has independent modeler, supervisor and reviewer roles. [Measured conditions and provenance](docs/benchmarks/core-deepseek-2026-11-08.json).
 
 Local verification covered **3,135 Node test cases and 28 Python tests**. The full Node run initially reported 12 outdated or incomplete test setups; all 12 were corrected and passed together in targeted follow-up checks. The packaged EXE passed model-picker IPC/UI checks, native drilling, FreeCAD modeling and all four workspace modes with normal shutdown. Complete runtime files were read back against their checksums. No new real AI performance tests or clean-Windows-VM run were performed.
 
-[Release and checksums](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3) · [Matching source tag](https://github.com/andyy909/Formnaro-cad/tree/v0.136.0-r3) · [Application source ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-Quellcode-v0.136.0-r3.zip) · [Acceptance report](docs/ABNAHME-0.136.0-r3.md)
+[Release and checksums](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.1-r1) · [Matching source tag](https://github.com/andyy909/Formnaro-cad/tree/v0.137.1-r1) · [Application source ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.1-r1/Formnaro-Quellcode-v0.137.1-r1.zip) · [Acceptance report](docs/ABNAHME-0.137.1-r1.md)
 
 <!-- formnaro-development-status:end -->
 

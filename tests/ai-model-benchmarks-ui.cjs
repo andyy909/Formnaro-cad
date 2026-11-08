@@ -32,12 +32,12 @@ app.whenReady().then(async()=>{
   assert.equal(await js("document.querySelectorAll('[data-model-list] .ai-model-card').length"),2);
   assert.equal(await js("document.querySelector('[data-chart] .ai-benchmark-column').dataset.benchmarkId"),'local:'+completeId);
   assert.match(await js("document.querySelector('[data-chart]').textContent"),/14 \/ 16/);assert.doesNotMatch(await js("document.querySelector('[data-chart]').textContent"),/57 \/ 72|1 \/ 16|Teilstand/);
-  assert.equal(await js("document.querySelector('[data-comparison]').options.length"),2);
-  await js("document.querySelector('[data-comparison]').selectedIndex=1;document.querySelector('[data-comparison]').dispatchEvent(new Event('change'))");assert.match(await js("document.querySelector('[data-chart]').textContent"),/8 \/ 16/);
+  assert.equal(await js("document.querySelector('[data-comparison]').options.length"),3);
+  await js("document.querySelector('[data-comparison]').value=[...document.querySelector('[data-comparison]').options].find(o=>o.text.includes('other-bu')).value;document.querySelector('[data-comparison]').dispatchEvent(new Event('change'))");assert.match(await js("document.querySelector('[data-chart]').textContent"),/8 \/ 16/);
   await js("document.querySelector('[data-comparison]').selectedIndex=0;document.querySelector('[data-comparison]').dispatchEvent(new Event('change'))");
   assert.equal(selections,0);assert.ok(networkRequests.every(url=>new URL(url).hostname==='www.ecb.europa.eu'),JSON.stringify(networkRequests));
   await pause(300);fs.writeFileSync(path.join(out,'model-benchmarks-wide.png'),(await win.webContents.capturePage()).toPNG());
-  await js("document.querySelector('.ai-model-card .ai-model-benchmark-results').open=true");assert.equal(await js("document.querySelector('.ai-model-benchmark-results').querySelectorAll('.ai-benchmark-detail').length"),7);
+  await js("document.querySelector('.ai-model-card .ai-model-benchmark-results').open=true");assert.equal(await js("document.querySelector('.ai-model-benchmark-results').querySelectorAll('.ai-benchmark-detail').length"),8);
   await js("document.querySelector('[data-search]').value='mistral';document.querySelector('[data-search]').dispatchEvent(new Event('input'))");assert.equal(await js("document.querySelectorAll('#ai-model-dialog .ai-benchmark-column').length"),0);assert.equal(await js("document.querySelectorAll('.ai-model-card').length"),0);
   await js("document.querySelector('[data-search]').value='';document.querySelector('[data-search]').dispatchEvent(new Event('input'));document.querySelector('[data-scope=photo]').click()");assert.equal(await js("document.querySelectorAll('#ai-model-dialog .ai-benchmark-column').length"),1);
   await js("document.querySelector('[data-scope=all]').click();document.querySelector('[data-select-model=untested-model]').click()");await until("document.querySelector('[data-select-model=untested-model]').textContent==='Ausgewählt'",'model saved');assert.equal(selections,1);

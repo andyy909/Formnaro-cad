@@ -1,0 +1,290 @@
+{
+  "format": "FormnaroPublicBenchmarkResult",
+  "version": 1,
+  "benchmarkId": "98ad2af0-6860-4096-a7da-fd92d316453a",
+  "measuredAt": "2026-11-08T09:52:03.617Z",
+  "measuredProgram": {
+    "version": "0.137.0-r1",
+    "sourceHash": "979baa5caf641d073f788ea8fbae2d312067005316a30d1bfbb2f4ec3db582ac",
+    "asarSHA256": "9ab21739fa22bb28c1d00e6f70aac6a89885c477c407c908ae76cb75599555e2",
+    "executableSHA256": "479608992d606af826002ca001e67201475e4a96dd0f0d7ec85dffcd2b40b203"
+  },
+  "preservedInRelease": "0.137.1-r1",
+  "rerunOnNewRelease": false,
+  "suite": {
+    "id": "formnaro-practice-core",
+    "version": "1.0.2",
+    "sha256": "7b22f2247c1f03f2806fc665ff3c7038abf951f22129fd490bf6c46b67430879"
+  },
+  "model": {
+    "provider": "https://api.deepseek.com",
+    "id": "deepseek-flash",
+    "displayName": "DeepSeek V4.1 Flash",
+    "reasoningEffort": "high"
+  },
+  "monitor": "off",
+  "limits": {
+    "seconds": 360,
+    "outputTokens": 16384,
+    "rounds": 20,
+    "formatRepairs": 2,
+    "requestBudget": 1000
+  },
+  "result": {
+    "planned": 16,
+    "finished": 16,
+    "nativePassed": 16,
+    "fullyAccepted": 16,
+    "withoutModelerCorrections": 16,
+    "rawAttempts": 16
+  },
+  "cases": [
+    {
+      "id": "B01",
+      "caseId": "practice-03",
+      "label": "Maße und Mittelpunkt",
+      "passed": 2,
+      "finished": 2,
+      "planned": 2
+    },
+    {
+      "id": "B02",
+      "caseId": "assembly",
+      "label": "Ein Teil aus einer Baugruppe",
+      "passed": 2,
+      "finished": 2,
+      "planned": 2
+    },
+    {
+      "id": "B03",
+      "caseId": "practice-14",
+      "label": "Durchgangsbohrung",
+      "passed": 2,
+      "finished": 2,
+      "planned": 2
+    },
+    {
+      "id": "B04",
+      "caseId": "practice-11",
+      "label": "Kreismuster",
+      "passed": 2,
+      "finished": 2,
+      "planned": 2
+    },
+    {
+      "id": "B05",
+      "caseId": "practice-16",
+      "label": "Bestimmte Kante fasen",
+      "passed": 2,
+      "finished": 2,
+      "planned": 2
+    },
+    {
+      "id": "B06",
+      "caseId": "practice-17",
+      "label": "Aushöhlen",
+      "passed": 2,
+      "finished": 2,
+      "planned": 2
+    },
+    {
+      "id": "B07",
+      "caseId": "practice-22",
+      "label": "Native Messung",
+      "passed": 2,
+      "finished": 2,
+      "planned": 2
+    },
+    {
+      "id": "B08",
+      "caseId": "practice-21",
+      "label": "Technische Zeichnung",
+      "passed": 2,
+      "finished": 2,
+      "planned": 2
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "B01-r1",
+      "caseId": "practice-03",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 33330,
+      "originalProtocolSHA256": "a0478f512626ae1e3efcafa81c9e4e857d017fda494a6cf5350cdeb39518c79b"
+    },
+    {
+      "condition": "B01-r2",
+      "caseId": "practice-03",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 38566,
+      "originalProtocolSHA256": "4e614588835661088603e51e96c2a5e927d4dd7b8cd891d09ddc4426fea61ceb"
+    },
+    {
+      "condition": "B02-r1",
+      "caseId": "assembly",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 34072,
+      "originalProtocolSHA256": "c890d1e96ed6d21dd4d9fc21e5d3cc50b7e19c147dac077e97de9c8c50f89650"
+    },
+    {
+      "condition": "B02-r2",
+      "caseId": "assembly",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 35550,
+      "originalProtocolSHA256": "a532c2002e46c8fd1a3eacfd40b89e5c0bbc361c6f1fa118576f43801b1955fe"
+    },
+    {
+      "condition": "B03-r1",
+      "caseId": "practice-14",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 56411,
+      "originalProtocolSHA256": "0a6d647f92aa27d4b26465f8057417c8a20010ae9fe9cda620dc72fbbc7d8ed1"
+    },
+    {
+      "condition": "B03-r2",
+      "caseId": "practice-14",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 47683,
+      "originalProtocolSHA256": "c4e84333225a3e3a59ed98b45c1cfd077583617ffa4c7de598f41199574e3161"
+    },
+    {
+      "condition": "B04-r1",
+      "caseId": "practice-11",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 71955,
+      "originalProtocolSHA256": "2cdea4e1b2d71c055631f2ff322480d1add7d51983b29b2a9512245dad3b5cb9"
+    },
+    {
+      "condition": "B04-r2",
+      "caseId": "practice-11",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 68354,
+      "originalProtocolSHA256": "c3995225a5d6aedccea415db8a1c1c8893030e9c25899ca62f6a03d228069415"
+    },
+    {
+      "condition": "B05-r1",
+      "caseId": "practice-16",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 46793,
+      "originalProtocolSHA256": "7cdfd953ae32309851ac6430144d4d01d44a669e32a7dd61bb8f6d44728f4010"
+    },
+    {
+      "condition": "B05-r2",
+      "caseId": "practice-16",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 49424,
+      "originalProtocolSHA256": "4eee4a470f92a4bfbefa43359a09b0d6b98219ac2c3e28821f7058c24dcfa5dd"
+    },
+    {
+      "condition": "B06-r1",
+      "caseId": "practice-17",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 45750,
+      "originalProtocolSHA256": "076cc01a6847db396e76af141c64650fbe87ad9b18f56f72953561039df92ebf"
+    },
+    {
+      "condition": "B06-r2",
+      "caseId": "practice-17",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 48499,
+      "originalProtocolSHA256": "2b18f4375b5cd96a8f0f503717b198e7ebc368367482858b7313c80a19fe66dd"
+    },
+    {
+      "condition": "B07-r1",
+      "caseId": "practice-22",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 63073,
+      "originalProtocolSHA256": "d79b77368e7f913fc2b0ac73c4927e5111f359b8c9ace7fba4aaffcb93c7d632"
+    },
+    {
+      "condition": "B07-r2",
+      "caseId": "practice-22",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 54745,
+      "originalProtocolSHA256": "9929cc71ad7d8a8dc4ff74573f29f56c27d12dbfdbd5dc07e972e98a2826e444"
+    },
+    {
+      "condition": "B08-r1",
+      "caseId": "practice-21",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 52289,
+      "originalProtocolSHA256": "81be8e0542cd740632f04c1410cff33e15c28a8d6f0bd164496442d900617a13"
+    },
+    {
+      "condition": "B08-r2",
+      "caseId": "practice-21",
+      "nativePassed": true,
+      "cleanExit": true,
+      "returnedModelExact": true,
+      "formatCorrections": 0,
+      "executionCorrections": 0,
+      "elapsedMs": 55097,
+      "originalProtocolSHA256": "b3ac9d8d724799311c69a27aed88c5056af412459aeda13ec0a80470a0125735"
+    }
+  ],
+  "limitations": [
+    "Eight known development tasks, two fresh repeats each; not sixteen independent tasks or a general reliability estimate.",
+    "Measured on the stated original program build. The later listener fix preserves this evidence and does not claim a new cloud benchmark.",
+    "Native checks and clean exits for all16 conditions; supervisor intentionally off."
+  ]
+}

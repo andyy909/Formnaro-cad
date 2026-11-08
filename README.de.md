@@ -12,12 +12,12 @@
 
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
-| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-v0.136.0-r3-Windows-x64.zip)** | **0.136.0-r3** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
-| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3) | **0.136.0-r3** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
+| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.1-r1/Formnaro-v0.137.1-r1-Windows-x64.zip)** | **0.137.1-r1** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
+| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.1-r1) | **0.137.1-r1** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
 
-**Neu:** Benchmark-Details und Säulendiagramm in der KI-Modellauswahl, drei getrennte Laborrollen und ein versionierter Grundbenchmark. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3).
+**Neu:** Eigenständiger Benchmark mit 16 festen Versuchen, getrenntes Säulendiagramm, verbesserte Menü-/Flächenauswahl und behobene Listenerwarnung. DeepSeek V4.1 Flash/high bestand 16/16 auf 0.137.0-r1; diese Messung bleibt unverändert erhalten. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.1-r1).
 
-[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-Quellcode-v0.136.0-r3.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
+[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.1-r1/Formnaro-Quellcode-v0.137.1-r1.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
 
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
@@ -81,7 +81,7 @@ Im eigenen Übungsfenster werden drei Funktionen mit den Bedienelementen von For
 
 Der vorab von Codex erstellte Plan wird im Übungsfenster über die echten Bedienelemente ausgeführt; die Wiedergabe benötigt keine weiteren Modellanfragen. Die eingeblendeten **3.381.395 Tokens inklusive Cache** beziehen sich auf den gesamten Zahnradauftrag mit Planung, Aufnahme und Prüfung.
 
-Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der aktuelle Download enthält 0.136.0-r3.
+Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der aktuelle Download enthält 0.137.1-r1.
 
 ## Anleitungen
 
@@ -94,13 +94,13 @@ Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der aktu
 | Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
-## Aktuelle Ausgabe: 0.136.0-r3
+## Aktuelle Ausgabe: 0.137.1-r1
 
-Die KI-Modellauswahl zeigt gespeicherte Benchmarks und ein Säulendiagramm für getestete Modelle. Testreihe, Umfang und Teilstand bleiben getrennt sichtbar. Das KI-Labor bietet eine eigene Profil-, Modell- und Denkstufenwahl für Modellierer, Überwacher und Abschlussauswerter sowie einen versionierten Grundbenchmark mit16 Versuchen. Für die neue mitgelieferte Suite liegen noch keine echten Anbieterläufe vor.
+Die KI-Modellauswahl vergleicht vollständige einzelne16erBenchmarks unter gleichen Bedingungen. Frühere Übungen und Teilstände bleiben in den Details. DeepSeek V4.1 Flash/high bestand16/16 auf0.137.0-r1; diese Messung bleibt in0.137.1-r1 unverändert erhalten. Das KI-Labor bietet getrennte Modellierer-, Überwacher- und Auswerterrollen. [Messbedingungen und Herkunft](docs/benchmarks/core-deepseek-2026-11-08.json).
 
 Lokal geprüft: **3.135 Node-Testfälle und28 Python-Tests**. Im vollständigen Node-Lauf wurden zunächst12 veraltete oder unvollständige Testaufbauten gefunden; alle12 bestanden nach Korrektur die gemeinsame gezielte Nachprüfung. Die fertige EXE bestand Modellauswahl/IPC/Oberfläche, native Bohrung, FreeCAD-Modellierung und alle vier Arbeitsmodi mit regulärem Abschluss. Laufzeitdateien wurden vollständig per Prüfsumme zurückgelesen. Keine neue echte KI-Leistungsmessung und keine frische Windows-VM-Abnahme.
 
-[Release und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3) · [Passender Quelltag](https://github.com/andyy909/Formnaro-cad/tree/v0.136.0-r3) · [Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.136.0-r3/Formnaro-Quellcode-v0.136.0-r3.zip) · [Abnahmebericht](docs/ABNAHME-0.136.0-r3.md)
+[Release und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.1-r1) · [Passender Quelltag](https://github.com/andyy909/Formnaro-cad/tree/v0.137.1-r1) · [Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.1-r1/Formnaro-Quellcode-v0.137.1-r1.zip) · [Abnahmebericht](docs/ABNAHME-0.137.1-r1.md)
 
 <!-- formnaro-development-status:end -->
 

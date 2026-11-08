@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "asOf": "2026-11-07",
+  "asOf": "2026-11-08",
   "entries": [
     {
       "id": "mistral-practice-matrix-v1",
@@ -230,6 +230,41 @@
       "origin": "reference",
       "note": "Bisherige Modellauswahl-Stichprobe: drei gemeinsame Arbeitsabläufe mit unterschiedlichen Prüfprofilen. Kein zusätzlicher unabhängiger Versuch.",
       "noteEn": "Existing model picker sample: three common workflows with different check profiles. Not additional independent trials."
+    },
+    {
+      "id": "deepseek-core-98ad2af0-6860-4096-a7da-fd92d316453a",
+      "kind": "benchmark",
+      "scope": "all",
+      "providerId": "https://api.deepseek.com",
+      "model": "deepseek-flash",
+      "modelName": "DeepSeek V4.1 Flash",
+      "label": "Formnaro Grundbenchmark",
+      "labelEn": "Formnaro core benchmark",
+      "date": "2026-11-08",
+      "createdAt": "2026-11-08T09:52:03.617Z",
+      "effort": "high",
+      "suiteVersion": "1.0.2",
+      "suiteHash": "7b22f2247c1f03f2806fc665ff3c7038abf951f22129fd490bf6c46b67430879",
+      "status": "completed",
+      "passed": 16,
+      "total": 16,
+      "finished": 16,
+      "rawAttempts": 16,
+      "byOutcome": {
+        "pending": 0,
+        "passed": 16,
+        "failed": 0,
+        "unverified": 0,
+        "infrastructure": 0,
+        "model-unverified": 0
+      },
+      "medianSuccessfulMs": 48961.5,
+      "monitor": "off",
+      "sourceVersion": "0.137.0",
+      "sourceHash": "979baa5caf641d073f788ea8fbae2d312067005316a30d1bfbb2f4ec3db582ac",
+      "origin": "reference",
+      "note": "Ein einzelner echter Lauf auf Formnaro0.137.0-r1: acht bekannte Aufgaben je zweimal. Alle16nativ bestätigt und regulär beendet, ohne Modellierkorrektur. Unverändert übernommen; kein neuer Modellversuch auf0.137.1.",
+      "noteEn": "One real run on Formnaro0.137.0-r1: eight known tasks repeated twice. All16native checks and clean exits passed without modeler corrections. Preserved unchanged; not a new model trial on0.137.1."
     }
   ]
 }

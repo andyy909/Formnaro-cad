@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {benchmarkCatalog}=require('../backend/ai-model-benchmarks.cjs');
 test('Bundled live evidence preserves all tested models, separate series and paused raw attempts',async()=>{
- const {benchmarkEntries}=await import('../src/cad-ai-model-benchmarks.js'),c=benchmarkCatalog(),all=benchmarkEntries(c.entries);
+ const {benchmarkEntries}=await import('../src/cad-ai-model-benchmarks.js'),c=benchmarkCatalog(),all=benchmarkEntries(c.entries.filter(r=>r.kind!=='benchmark'));
  assert.deepEqual([...new Set(all.map(r=>r.model))].sort(),['deepseek-flash','mistral-large-4']);
  assert.equal(all.length,6);assert.ok(all.every(r=>r.kind!=='benchmark'));
  const lab=all.filter(r=>r.kind==='lab');assert.equal(lab.reduce((n,r)=>n+r.passed,0),59);assert.equal(lab.reduce((n,r)=>n+r.total,0),72);
@@ -14,7 +14,7 @@ test('Model attribution is exact and does not borrow other access modes or alias
  const {modelBenchmarks,benchmarkEntries}=await import('../src/cad-ai-model-benchmarks.js'),entries=benchmarkCatalog().entries;
  assert.equal(modelBenchmarks(entries,'https://api.mistral.ai','mistral-large-4').length,0);
  assert.equal(modelBenchmarks(entries,'https://api.deepseek.com','deepseek-v4-flash').length,0);
- assert.equal(modelBenchmarks(entries,'https://api.deepseek.com','deepseek-flash').length,4);
+ assert.equal(modelBenchmarks(entries,'https://api.deepseek.com','deepseek-flash').length,5);
  assert.equal(benchmarkEntries(entries,'all','MISTRAL').length,2);
  assert.equal(benchmarkEntries(entries,'all','untested').length,0);
 });
@@ -47,11 +47,11 @@ test('Comparison excludes partial, exercise and repair history and keeps the lat
  const complete=local({status:'completed',finished:16,passed:15,createdAt:'2026-11-08T10:00:00Z'});
  const later=local({id:'later',status:'completed',finished:16,passed:12,createdAt:'2026-11-08T11:00:00Z'});
  const partial=local({id:'partial',createdAt:'2026-11-08T12:00:00Z'});
- const entries=benchmarkCatalog([complete,later,partial]).entries,groups=benchmarkComparisons(entries);
+ const entries=benchmarkCatalog([complete,later,partial]).entries.filter(r=>r.origin==='local'||r.kind!=='benchmark'),groups=benchmarkComparisons(entries);
  assert.equal(groups.length,1);const bars=comparableBenchmarks(entries,groups[0].id);
  assert.equal(bars.length,1);assert.equal(bars[0].id,'local:later');assert.equal(bars[0].passed,12);assert.equal(bars[0].total,16);
  assert.equal(comparableBenchmarks(entries,groups[0].id,'Mistral').length,0);
- assert.equal(benchmarkComparisons(benchmarkCatalog([partial]).entries).length,0);
+ assert.equal(benchmarkComparisons(benchmarkCatalog([partial]).entries.filter(r=>r.origin==='local')).length,0);
 });
 
 test('Comparison separates suite, effort, monitor and exact program build without borrowing another model result',async()=>{
@@ -60,7 +60,7 @@ test('Comparison separates suite, effort, monitor and exact program build withou
  const variants=[base,{...base,id:'two',source:{...base.source,asarSHA256:'two'}},{...base,id:'suite',suite:{...base.suite,suiteHash:'other'}},
  {...base,id:'effort',plan:{...base.plan,efforts:['max']}},{...base,id:'monitor',plan:{...base.plan,monitor:{mode:'shadow'}}},
  {...base,id:'model',plan:{...base.plan,roles:{modeler:{...base.plan.roles.modeler,model:'different'}}}}];
- const entries=benchmarkCatalog(variants).entries,groups=benchmarkComparisons(entries);assert.equal(groups.length,5);
+ const entries=benchmarkCatalog(variants).entries.filter(r=>r.origin==='local'),groups=benchmarkComparisons(entries);assert.equal(groups.length,5);
  const same=groups.find(g=>g.entries.length===2);assert.equal(comparableBenchmarks(entries,same.id).length,2);
  assert.deepEqual(comparableBenchmarks(entries,same.id).map(r=>r.model).sort(),['different','gpt-test']);
 });
@@ -71,3 +71,7 @@ test('Task chart uses exactly the eight cases from one selected benchmark, inclu
  const rows=benchmarkRunEntries(run);assert.equal(rows.length,8);assert.equal(rows[0].passed,2);assert.equal(rows[1].passed,0);
  assert.ok(rows.every(r=>r.id.startsWith('selected:')&&r.total===2));assert.equal(rows[1].status,'incomplete');assert.deepEqual(benchmarkRunEntries(null),[]);
 });
+
+ test('Published fixed benchmark preserves its measured build and sixteen successful conditions',async()=>{
+ const c=benchmarkCatalog(),r=c.entries.find(r=>r.kind==='benchmark'&&r.origin==='reference');assert.equal(r.passed,16);assert.equal(r.total,16);assert.equal(r.finished,16);assert.equal(r.sourceVersion,'0.137.0');assert.equal(r.effort,'high');assert.equal(r.monitor,'off');assert.equal(r.rawAttempts,16);assert.equal(r.suiteVersion,'1.0.2');assert.match(r.sourceHash,/^[a-f0-9]{64}$/);
+ });
