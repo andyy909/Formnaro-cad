@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -114,7 +114,7 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "2a5572a952a92322a827c3f5cabc7f440f2dde27aa7ccc0c2b69564c52ba3dc0"
+      "sha256": "07a3a49588204bd899cc7b157bc9e86f5388bac352859dffb1859821f30fae9c"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -123,7 +123,15 @@
     {
       "path": "backend/practice-child.cjs",
       "sha256": "87182da27e4c7a62161e9dcc8b19508d96a924dd46e29e51240fe8a46847e90e"
+    },
+    {
+      "path": "backend/practice-runner.cjs",
+      "sha256": "ecbe8eb590697ebcd471e61a17f6bb7bfdbdd8332654bf11399e59bc34151617"
+    },
+    {
+      "path": "src/cad-agent-ui-policy.js",
+      "sha256": "442e21d5f0db858dbc14638c44294afa86de03300babc11ce73f9cf172066440"
     }
   ],
-  "revisionReason": "Preserve analytic box faces and unique unary replacement aliases; bounded native-result feedback before completing a failed visible trial. Tasks, fixtures, thresholds and budgets unchanged."
+  "revisionReason": "A07 clarifies Z=+4mm without changing its physical requirements; seven other task prompts unchanged. Exact title-length feedback and numeric native bounds feedback. Preserve last completed failed native evidence when a correction is invalid. Same limits, fixtures and acceptance thresholds."
 }

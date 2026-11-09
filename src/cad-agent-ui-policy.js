@@ -49,6 +49,7 @@ export function validateAgentUIRequest(value){
  return structuredClone(value);
 }
 export function validateAgentPracticePlan(plan){
+ if(typeof plan?.title==='string'&&plan.title.length>200)throw Error('plan.title ist zu lang: '+plan.title.length+' Zeichen, höchstens 200. Nur eine kurze Überschrift verwenden; eine Erklärung gehört in das oberste diagnosis-Feld.');
  if(!exact(plan,['version','title','actions'])||plan.version!==1||typeof plan.title!=='string'||!plan.title.trim()||plan.title.length>200||!Array.isArray(plan.actions)||!plan.actions.length||plan.actions.length>50)throw Error('Ungültiger begrenzter Übungsplan.');
  const aliases=new Set(),used=new Set();let selected=[];
  function add(id){if(typeof id!=='string'||!/^[a-z][a-z0-9_-]{0,40}$/.test(id)||used.has(id))throw Error('Ungültiger Übungsalias.');used.add(id);aliases.add(id);selected=[id];}

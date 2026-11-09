@@ -9,7 +9,7 @@ async function evaluateAdvanced(task,before,after,lookup,replay){
  const protectedIds=new Set(protectedNodes.map(n=>n.id)),roots=after.scene.objects.filter(o=>!o.target.path.length&&!o.suppressed&&!protectedIds.has(o.id));
  check('Nur sichtbare gültige native Einzelkörper',roots.length>0&&roots.every(o=>o.kind==='cad'&&o.solid&&o.solids===1&&!o.hidden));
  const body=roots[0],one=(size,center,volume)=>{
-  check('Genau ein Körper mit richtigen Außenmaßen und Lage',roots.length===1&&vec(body?.worldBounds?.size,size)&&vec(body?.worldBounds?.center,center));
+  check('Genau ein Körper mit richtigen Außenmaßen und Lage',roots.length===1&&vec(body?.worldBounds?.size,size)&&vec(body?.worldBounds?.center,center),{actual:{count:roots.length,bodies:roots.slice(0,12).map(o=>({size:o.worldBounds?.size,center:o.worldBounds?.center}))},expected:{count:1,size,center}});
   check('Unabhängig berechnetes Materialvolumen',near(body?.volume,volume,.25),{actual:body?.volume,expected:volume});
  };
  const rays=async(points,direction=[0,0,-1])=>{

@@ -2,8 +2,8 @@
   "format": "FormnaroLocalNativeCalibration",
   "version": 1,
   "suiteId": "formnaro-practice-advanced",
-  "suiteVersion": "2.0.2",
-  "program": "0.138.2-r1",
+  "suiteVersion": "2.0.3",
+  "program": "0.138.2-r2",
   "providerRequests": 0,
   "positiveNative": 8,
   "noopRejected": 8,
@@ -374,5 +374,5 @@
       ]
     }
   ],
-  "scope": "Local native fixtures only, zero provider requests. Eight positive references and24 negative checks in separate regularly closed child windows. Tasks, fixtures, native thresholds and limits unchanged. Alias and bounded final-feedback regressions are verified separately."
+  "scope": "Local native fixtures only, zero provider requests. Eight positive and24 negative checks with regular isolated-child closes. Two close-only failures retained and repeated successfully after packaging. A07 wording clarifies the unchanged +4mm floor; all native thresholds and budgets unchanged."
 }

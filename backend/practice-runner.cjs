@@ -28,6 +28,7 @@ function practiceAliasState(state){
  return structuredClone(state);
 }
 function validatePracticePlan(value,initialCount=0,continuation){
+ if(typeof value?.title==='string'&&value.title.length>200)throw Error('plan.title ist zu lang: '+value.title.length+' Zeichen, höchstens 200. Nur eine kurze Überschrift verwenden; eine Erklärung gehört in das oberste diagnosis-Feld.');
  if(!exact(value,['version','title','actions'])||value.version!==1||typeof value.title!=='string'||!value.title.trim()||value.title.length>200||!Array.isArray(value.actions)||!value.actions.length||value.actions.length>50)throw Error('Ungültiger Übungsplan.');
  if(!Number.isSafeInteger(initialCount)||initialCount<0||initialCount>8)throw Error('Ungültige Übungsauswahl.');
  let selected=Array.from({length:initialCount},(_,index)=>'existing-'+(index+1));

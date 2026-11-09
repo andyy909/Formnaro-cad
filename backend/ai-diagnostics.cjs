@@ -118,6 +118,7 @@ function createDiagnostics({app,directory,credentials,onEvent=()=>{},openChild=r
       if(!verification.passed){
        signal.throwIfAborted();record.executionCorrections=1;record.nativeCorrections=1;
        const modelFile='model-'+id+'-attempt-1.ocad';fs.writeFileSync(path.join(directory,modelFile),JSON.stringify(after.project));
+       record.lastPracticeVerification=verification;record.lastPracticeModelFile=modelFile;
        const protectedIds=new Set(initial.project.nodes.filter(n=>!initial.scene.selectionTargets.some(t=>t.rootId===n.id)).map(n=>n.id));
        const measurements=after.scene.objects.filter(o=>!o.target?.path?.length&&!protectedIds.has(o.id)).slice(0,12).map(o=>({id:o.id,name:o.name,worldBounds:o.worldBounds,volume:o.volume}));
        const fresh=await restartPractice({plan,result:replay.result,verification,modelFile});
@@ -160,7 +161,8 @@ function createDiagnostics({app,directory,credentials,onEvent=()=>{},openChild=r
     const after=await child.call('snapshot');finalSnapshot=after;
     record.verification=task.id.startsWith('advanced-')?await require('./ai-benchmark-advanced-evaluate.cjs').evaluateAdvanced(task,initial,after,lookup,record.practiceResult):task.id.startsWith('practice-')?await require('./ai-practice-function-evaluate.cjs').evaluateFunction(task,initial,after,lookup,record.practiceResult):task.id==='assembly'?evaluateAssembly(initial,after,task.geometry):await evaluate(task.id,initial,after,lookup,task.geometry);emit({type:'verification',...record.verification});fs.writeFileSync(path.join(directory,'model-'+id+'.ocad'),JSON.stringify(after.project));
    }catch(e){record.verificationError=String(e.message);record.verificationFailure='checker-error';}
-   if(spec.workflow==='practice'&&!practiceResultLoaded){record.verificationError??='Kein abgeschlossenes Übungsmodell verfügbar; Ausgangsmodell ist kein Endergebnis.';record.verificationSkipped='no-practice-result';}
+   if(spec.workflow==='practice'&&!practiceResultLoaded&&!record.verification&&record.lastPracticeVerification){record.verification=record.lastPracticeVerification;record.verificationScope='last-completed-practice-attempt';}
+   if(spec.workflow==='practice'&&!practiceResultLoaded&&!record.verification){record.verificationError??='Kein abgeschlossenes Übungsmodell verfügbar; Ausgangsmodell ist kein Endergebnis.';record.verificationSkipped='no-practice-result';}
    stopObserving?.();stopActivity?.();
    if(child)try{record.close=await child.close();}catch(e){record.close={code:null,signal:'close-error',error:e.message};}record.cleanExit=!record.close||record.close.code===0&&!record.close.signal&&!record.close.forced;
    if(monitor&&spec.stage==='full')await monitor.inspectFinal({status:record.status,error:record.error??null,revision:finalSnapshot?.scene?.revision??currentRevision,verification:record.verification??null,verificationError:record.verificationError??null,appliedCount,practiceCompleted:record.practiceResult?.ok??null,cleanExit:record.cleanExit,close:record.close??null,objects:finalSnapshot?.scene?.objects?.filter(o=>!o.target?.path?.length).slice(0,8).map(o=>({id:o.id,worldBounds:o.worldBounds,volume:o.volume}))});

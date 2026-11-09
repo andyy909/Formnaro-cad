@@ -1,0 +1,52 @@
+{
+  "id": "advanced-07",
+  "label": "Bearbeitbare L-Skizze mit zwei Löchern",
+  "toolIds": [
+    "tool:sketch",
+    "tool:extrude"
+  ],
+  "fixture": [
+    {
+      "op": "create",
+      "type": "box",
+      "name": "Aufgabenteil",
+      "size": [
+        10,
+        10,
+        6
+      ],
+      "pos": [
+        100,
+        0,
+        3
+      ]
+    },
+    {
+      "op": "create",
+      "type": "box",
+      "name": "Unbeteiligtes Teil",
+      "size": [
+        7,
+        9,
+        11
+      ],
+      "pos": [
+        150,
+        0,
+        5.5
+      ]
+    }
+  ],
+  "prompt": "Ersetze nur das ausgewählte Aufgabenteil durch eine einzige bearbeitbare Skizzenextrusion6 mm hoch, Unterseite Welt-Z4. Lokale XY-Kontur: (−30,−20),(30,−20),(30,5),(10,5),(10,20),(−30,20), geschlossen. Zwei kreisförmige Innenkonturen: Ø8 mit lokaler Mitte (−15,0) und Ø6 bei (15,−10). Verschiebe die gesamte Kontur um Welt-X7,Y−9; lokale (0,0) liegt somit bei Welt (7,−9). Beide Löcher müssen durchgehen. Skizze mit Außenkontur und beiden Innenkonturen bearbeitbar erhalten. Alle unbeteiligten Teile einschließlich Schutzteil vollständig erhalten. Modellierung ausschließlich mit sichtbaren Übungswerkzeugen.",
+  "dataset": "development",
+  "selectName": "Aufgabenteil",
+  "geometry": {
+    "scale": 1,
+    "origin": [
+      0,
+      0,
+      0
+    ],
+    "title": "Aufbauhalter"
+  }
+}
