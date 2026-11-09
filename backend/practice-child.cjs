@@ -120,7 +120,11 @@ function installPracticeChild(win,{ipc=ipcMain,channel=process,audit=false}={}){
    const selector=target==='tree'?null:fixed[target];
    const genericSpec=JSON.stringify({target,action,value});const gearSpec=JSON.stringify({rootId,anchorId,value});const faceSpec=JSON.stringify({rootId,side});const edgeSpec=JSON.stringify({rootId,sides});const sketchScript='window.__formnaroPracticeSketch('+JSON.stringify({point,to:sketchTo})+')';const script=sketch?sketchScript:edgeClick?'window.__formnaroPracticeEdge('+edgeSpec+')':faceClick?'window.__formnaroPracticeFace('+faceSpec+')':gearDrag?'window.__formnaroPracticeGearDrag('+gearSpec+')':generic?'window.__formnaroPracticeControl("locate",'+genericSpec+')':`(()=>{const selector=${JSON.stringify(selector)},id=${JSON.stringify(rootId??null)};const row=selector?null:[...document.querySelectorAll('#object-list [data-root-id]')].find(n=>n.dataset.rootId===id&&n.dataset.path==='[]');const node=selector?document.querySelector(selector):row?.querySelector(':scope > .object-label');if(!node||node.disabled||!node.getClientRects().length||getComputedStyle(node).visibility==='hidden')throw Error('Übungsziel nicht sichtbar oder deaktiviert.');node.scrollIntoView({block:'nearest',inline:'nearest'});const r=node.getBoundingClientRect();return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),width:r.width,height:r.height};})()`;
    await checkpoint();const box=await win.webContents.executeJavaScript(script);const bounds=win.getContentBounds();if(!box||box.width<=0||box.height<=0||box.x<0||box.y<0||box.x>=bounds.width||box.y>=bounds.height)throw Error('Übungsziel liegt außerhalb des Fensters.');if(action==='locate')return box;
-   if(box.controlAction!==undefined){if(!generic||requestedAction!=='set'||box.controlAction!=='choose')throw Error('Ungültige interne Feldaktion.');action='choose';}
+   if(box.controlAction!==undefined){
+    if(!generic||requestedAction!=='set'||!['choose','check'].includes(box.controlAction))throw Error('Ungültige interne Feldaktion.');
+    if(box.controlAction==='check'&&(!['true','false'].includes(value)||typeof box.currentChecked!=='boolean'||typeof box.expectedChecked!=='boolean'||box.expectedChecked!==(value==='true')))throw Error('Ungültiger Kontrollkästchenzustand.');
+    action=box.controlAction;
+   }
    await checkpoint();const modifiers=append||add?['shift']:[];
    win.webContents.sendInputEvent({type:'mouseMove',x:box.x,y:box.y,modifiers});await pause(180);await checkpoint();
    const hitScript=sketch?'(()=>{const p='+sketchScript+';return {ok:p.x==='+box.x+'&&p.y==='+box.y+'&&JSON.stringify(p.to??null)==='+JSON.stringify(JSON.stringify(box.to??null))+'};})()':edgeClick?`(()=>{const p=window.__formnaroPracticeEdge(${edgeSpec});return {ok:p.revision===${JSON.stringify(box.revision)}&&p.edgeToken===${JSON.stringify(box.edgeToken)}&&p.x===${box.x}&&p.y===${box.y}&&!!document.elementFromPoint(${box.x},${box.y})?.closest('canvas')};})()`:faceClick?`(async()=>{
@@ -144,7 +148,14 @@ function installPracticeChild(win,{ipc=ipcMain,channel=process,audit=false}={}){
     }finally{if(!released&&!win.isDestroyed()){win.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});win.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});win.webContents.sendInputEvent({type:'mouseUp',...from,button:'left',clickCount:1});}}
     return box;
    }
+   if(action==='check'){
+    while(true){await checkpoint();const version=pauseVersion,checked=await win.webContents.executeJavaScript('window.__formnaroPracticeControl("checked",'+genericSpec+')');
+     await checkpoint();if(version!==pauseVersion)continue;if(typeof checked!=='boolean')throw Error('Kontrollkästchenzustand fehlt.');if(checked===box.expectedChecked)return box;break;}
+   }
    win.webContents.sendInputEvent({type:'mouseDown',x:box.x,y:box.y,button:'left',clickCount:1,modifiers});win.webContents.sendInputEvent({type:'mouseUp',x:box.x,y:box.y,button:'left',clickCount:1,modifiers});
+   if(action==='check'){
+    await pause(120);await checkpoint();if(await win.webContents.executeJavaScript('window.__formnaroPracticeControl("checked",'+genericSpec+')')!==box.expectedChecked)throw Error('Kontrollkästchen hat den verlangten Zustand nicht übernommen.');return box;
+   }
    if(action==='set'){
     const focusScript=generic?'window.__formnaroPracticeControl("focused",'+genericSpec+')':`document.activeElement===document.querySelector(${JSON.stringify(selector)})`,retry=Symbol('resume-field');let version=pauseVersion,restarting=false;
     const focused=async()=>{await checkpoint();if(version!==pauseVersion)throw retry;if(!await win.webContents.executeJavaScript(focusScript))throw Error('Das Eingabefeld hat den Fokus verloren.');await checkpoint();if(version!==pauseVersion)throw retry;};

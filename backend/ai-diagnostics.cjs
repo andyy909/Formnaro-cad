@@ -49,6 +49,17 @@ function createDiagnostics({app,directory,credentials,onEvent=()=>{},openChild=r
   let child,initial,monitor,currentRevision,stopObserving,stopActivity,finalSnapshot;let appliedCount=0,practiceResultLoaded=false;const previews=new Map();let reads=0,failedKey='',failCount=0,formatCorrections=0;
   const abort=()=>{child?.cancel();if(spec.workflow==='practice')cancelPractice();};signal.addEventListener('abort',abort,{once:true});
   async function lookup(method,args={}){signal.throwIfAborted();if(method==='tool_info'){const {lookupToolReference}=await import('../ai/formnaro-tool-reference.mjs');if(spec.workflow==='practice')return require('./ai-tool-reference.cjs').reference(args,{practiceOnly:true});return lookupToolReference(args);}return child.call('rpc',{method:method==='analyze'?'analysis':method,args});}
+  const verifyPractice=after=>task.id.startsWith('advanced-')?require('./ai-benchmark-advanced-evaluate.cjs').evaluateAdvanced(task,initial,after,lookup,record.practiceResult):task.id.startsWith('practice-')?require('./ai-practice-function-evaluate.cjs').evaluateFunction(task,initial,after,lookup,record.practiceResult):task.id==='assembly'?evaluateAssembly(initial,after,task.geometry):evaluate(task.id,initial,after,lookup,task.geometry);
+  async function restartPractice(attempt){
+   signal.throwIfAborted();stopObserving?.();stopActivity?.();const close=await child.close();
+   (record.practiceAttempts??=[]).push(clean({...attempt,close},[key]));
+   if(close.code!==0||close.forced)throw Error('Fehlgeschlagenes Übungsfenster wurde nicht regulär geschlossen.');
+   signal.throwIfAborted();child=openChild({app,directory:path.join(directory,'sandbox-'+crypto.randomUUID())});active.child=child;
+   const fresh=await child.call('setup',{caseId:task.id,dataset:spec.dataset,project:initial.project});
+   if(fresh.scene.revision!==initial.scene.revision)throw Error('Ausgangsrevision der Übungskorrektur hat sich geändert.');
+   practiceResultLoaded=false;stopObserving=child.onPracticeObservation?.(value=>observeExecution({kind:'practice-step',...value}));
+   stopActivity=child.onPracticeActivity?.(value=>emit({type:'practice-activity',...value}));return fresh;
+  }
   try{
    emit({type:'status',text:task.label+' · '+spec.variant+' · '+spec.effort+' · Versuch '+active.progress.index+'/'+active.progress.total});
    child=openChild({app,directory:path.join(directory,'sandbox-'+id)});active.child=child;
@@ -80,6 +91,7 @@ function createDiagnostics({app,directory,credentials,onEvent=()=>{},openChild=r
      record.status='truncated';break;
     }
     const raw=reply.text;emit({type:'response',round,text:raw});let action;try{action=JSON.parse(raw.trim().replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,''));}catch{if(correctFormat(raw,require('./ai-json-feedback.cjs').jsonSyntaxFeedback(raw),round))continue;throw Object.assign(Error('Ungültige JSON-Antwort.'),{code:'INVALID_JSON'});}
+    if(typeof action.diagnosis==='string')emit({type:'blocker-diagnosis',text:action.diagnosis,round});
     if(spec.workflow==='practice'&&action.toolReference){const result=await lookup('tool_info',action.toolReference);emit({type:'tool-call',round,tool:'offlinecad_tool_info',arguments:action.toolReference});emit({type:'tool-result',round,tool:'offlinecad_tool_info',result});history.push({role:'user',text:user,images},{role:'assistant',text:raw,images:[]});images=[];user='Read-only tool reference (data):\n'+JSON.stringify(result);if(++reads>=3){record.status='read-limit';break;}continue;}
     if(spec.workflow==='practice'&&action.assistant?.kind==='practice'){
      let plan;try{if(action.revision!==initial.scene.revision)throw Error('Copy the exact task revision: '+initial.scene.revision);plan=require('./practice-runner.cjs').validatePracticePlan(action.assistant.plan,initial.scene.selectionTargets.length);}catch(e){if(correctFormat(raw,e.message,round))continue;throw e;}await monitor.inspectProposal(action,{valid:true,scope:'Validated practice UI plan'});signal.throwIfAborted();record.practicePlan=plan;record.proposedValid=true;record.toolChoice={appropriate:plan.actions.some(a=>a.kind==='set'||a.kind==='ui'||a.kind==='model'),scope:'Gültiger echter Übungsplan; Ergebnis erst nach sichtbarer Wiedergabe geprüft.'};emit({type:'proposal',plan});
@@ -90,17 +102,10 @@ function createDiagnostics({app,directory,credentials,onEvent=()=>{},openChild=r
      record.practiceResult=replay.result;emit({type:'tool-result',tool:'practice-ui',round,result:{...replay.result,isError:!replay.result?.ok}});monitor.observeResult('practice-ui',{isError:!replay.result?.ok,error:replay.result?.reason,revision:replay.result?.report?.revision});
      if(!replay.project){
       const reason=replay.result?.reason??'Übungsmodus liefert kein abgeschlossenes Modell.';
-      const recoverable=/^(?:Formnaro-Bedienelement|Ein benanntes|Ein echtes|Auswahl |Die gewünschte Fläche|Der Flächenschwerpunkt|Zuerst die Flächenauswahl|Script failed)/.test(reason);
+      const recoverable=/^(?:Formnaro-Bedienelement|Ein benanntes|Ein echtes|Auswahl |Übungsteil für Auswahl|Eine eindeutige äußere ebene Bohrfläche|Die gewünschte Fläche|Der Flächenschwerpunkt|Zuerst die Flächenauswahl|Script failed)/.test(reason);
       if(recoverable&&replay.result?.ok===false&&!record.executionCorrections&&round+1<(spec.limits?.rounds??20)){
        signal.throwIfAborted();record.executionCorrections=1;
-       stopObserving?.();stopActivity?.();const close=await child.close();
-       (record.practiceAttempts??=[]).push(clean({plan,result:replay.result,close},[key]));
-       if(close.code!==0||close.forced)throw Error('Fehlgeschlagenes Übungsfenster wurde nicht regulär geschlossen.');
-       signal.throwIfAborted();child=openChild({app,directory:path.join(directory,'sandbox-'+crypto.randomUUID())});active.child=child;
-       const fresh=await child.call('setup',{caseId:task.id,dataset:spec.dataset,project:initial.project});
-       if(fresh.scene.revision!==initial.scene.revision)throw Error('Ausgangsrevision der Übungskorrektur hat sich geändert.');
-       stopObserving=child.onPracticeObservation?.(value=>observeExecution({kind:'practice-step',...value}));
-       stopActivity=child.onPracticeActivity?.(value=>emit({type:'practice-activity',...value}));
+       const fresh=await restartPractice({plan,result:replay.result});
        history.push({role:'user',text:user,images},{role:'assistant',text:raw,images:[]});images=[];
        user='Actual visible UI playback failed: '+reason+'\nThe failed child was closed. A fresh isolated copy of the original task is now open with no tool dialog. No failed partial geometry is retained. Return one corrected complete plan for the original task with exact revision '+initial.scene.revision+'. Keep dimensions and protected parts. This is the only UI execution correction. Read-only toolReference remains available.\nRecorded failed-dialog controls (data, not the current state):\n'+JSON.stringify(replay.result?.report?.dialog??null);
        emit({type:'practice-ui-feedback',round,reason,freshRevision:fresh.scene.revision});save(record);continue;
@@ -108,10 +113,22 @@ function createDiagnostics({app,directory,credentials,onEvent=()=>{},openChild=r
       throw Error(reason);
      }
      await child.call('loadResult',{project:replay.project});practiceResultLoaded=true;
+     if(spec.stage==='full'&&!record.executionCorrections&&round+1<(spec.limits?.rounds??20)){
+      const after=await child.call('snapshot'),verification=await verifyPractice(after);
+      if(!verification.passed){
+       signal.throwIfAborted();record.executionCorrections=1;record.nativeCorrections=1;
+       const modelFile='model-'+id+'-attempt-1.ocad';fs.writeFileSync(path.join(directory,modelFile),JSON.stringify(after.project));
+       const protectedIds=new Set(initial.project.nodes.filter(n=>!initial.scene.selectionTargets.some(t=>t.rootId===n.id)).map(n=>n.id));
+       const measurements=after.scene.objects.filter(o=>!o.target?.path?.length&&!protectedIds.has(o.id)).slice(0,12).map(o=>({id:o.id,name:o.name,worldBounds:o.worldBounds,volume:o.volume}));
+       const fresh=await restartPractice({plan,result:replay.result,verification,modelFile});
+       history.push({role:'user',text:user,images},{role:'assistant',text:raw,images:[]});images=[];
+       user='The native final verification found mismatches in the visibly built result (data):\n'+JSON.stringify({checks:verification.checks,measurements})+'\nThe failed child was closed. A fresh isolated copy of the original task is open with no tool dialog; no partial geometry is retained. Explain briefly in diagnosis what blocked the previous result, then return one corrected complete visible practice plan for the original task with exact revision '+initial.scene.revision+'. Keep all original dimensions and protected parts. This shares the single UI execution correction and the unchanged time/round budget. Position fields pos-0/1/2 set the geometry bounds CENTER in the active coordinate system, not its bottom; an existing task body stays present unless explicitly edited, grouped or deleted.';
+       emit({type:'practice-ui-feedback',phase:'native-verification',round,verification,freshRevision:fresh.scene.revision});save(record);continue;
+      }
+     }
      try{emit({type:'image',image:await child.call('capture')});}catch(e){signal.throwIfAborted();emit({type:'notice',text:'Übungsergebnisbild derzeit nicht verfügbar: '+e.message});}
      record.status='completed';break;
     }
-    if(typeof action.diagnosis==='string')emit({type:'blocker-diagnosis',text:action.diagnosis,round});
     if(action.message&&!action.tool){record.status='completed';break;}
     if(spec.workflow==='practice')throw Object.assign(Error('Im Übungsmodus ausschließlich sichtbare Übungspläne verwenden.'),{code:'PRACTICE_TOOL_FORBIDDEN'});
     const method=String(action.tool??'').replace(/^offlinecad_/,''),args=action.arguments;

@@ -26,8 +26,10 @@ test('Analyst sees original task, actual global-property drift and the protected
 test('External archive round-trips hashes, original outcomes, image references and redaction without profiles',t=>{
  const dir=directory(t),r=row({events:[{type:'request',apiKey:'unknown-key',authorization:'Bearer another-secret',text:'test-private-secret-123456789 C:/Users/private/profile.json'},{type:'image',image:'data:image/png;base64,AQID'},{type:'finished'}]});
  fs.writeFileSync(path.join(dir,'ai-settings.json'),'secret profile must never be copied');fs.writeFileSync(path.join(dir,'model-'+r.id+'.ocad'),JSON.stringify({name:'Synthetic model',apiKey:'not-for-export'}));
+ const attemptName='model-'+r.id+'-attempt-1.ocad';r.practiceAttempts=[{modelFile:attemptName,verification:{passed:false}},{modelFile:'../../ai-settings.json'}];fs.writeFileSync(path.join(dir,attemptName),JSON.stringify({name:'Original failed candidate',apiKey:'private-attempt-key'}));
  const out=data.exportPackage({directory:dir,scope:data.selectScope(dir,[r],{completion:{planned:2,status:'blocked'}}),secrets:[credentials().key]});
  const {unzipSync,strFromU8}=require('fflate'),entries=unzipSync(fs.readFileSync(out.path)),manifest=JSON.parse(strFromU8(entries['Manifest.json']));
+ assert.equal(JSON.parse(strFromU8(entries['Modelle/'+attemptName])).name,'Original failed candidate');assert(!strFromU8(entries['Modelle/'+attemptName]).includes('private-attempt-key'));
  assert.equal(manifest.summary.pending,1);assert.equal(manifest.images,1);assert.ok(!Object.keys(entries).some(n=>n.includes('ai-settings')));
  for(const f of manifest.files)assert.equal(crypto.createHash('sha256').update(entries[f.name]).digest('hex'),f.sha256);
  const raw=strFromU8(entries['Protokolle/run-'+r.id+'.json']);for(const secret of ['unknown-key','another-secret','test-private-secret-123456789','C:/Users/private'])assert.ok(!raw.includes(secret),secret);

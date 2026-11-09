@@ -26,6 +26,23 @@ export function createPracticeModelUI({controller,access,input,waitFor,checkpoin
   if(Array.isArray(value))return value.map(v=>resolve(v,key,local,deferUnknown));if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,resolve(v,k,local,deferUnknown)]));return value;
  }
  const root=value=>typeof value==='string'?value:value?.path?.length===0?value.rootId:null;
+ function rootAlias(name){
+  const id=root(aliases.get(name)),nodes=project().nodes;if(!id||nodes.some(n=>n.id===id))return id;
+  // A native edit retains its one positive source identity. Ordinary drilling
+  // also adds negative cutters. Never follow a consumed cutter, multiple solid
+  // sources, an unrelated body, or an ambiguous clone.
+  const follows=(node,seen=new Set())=>{
+   if(node.id===id)return true;if(seen.has(node.id))return false;seen.add(node.id);
+   if(node.kind!=='cad'||!node.children?.length)return false;
+   const positive=node.children.filter(c=>c.solid!==false&&!c.suppressed);
+   const unary=node.children.length===1&&['finish','modeling'].includes(node.source);
+   const subtractive=node.source==='group'&&(node.operation??'union')==='union'&&positive.length===1;
+   return (unary||subtractive)&&follows(unary?node.children[0]:positive[0],seen);
+  };
+  const replacements=nodes.filter(n=>follows(n));
+  if(replacements.length!==1)return id;
+  aliases.set(name,replacements[0].id);return replacements[0].id;
+ }
  async function open(){if(q('joint-panel')?.getClientRects().length)return;await input({target:'ui:label:CAD-Werkzeuge',action:'click'},'CAD-Werkzeuge öffnen.');await input({target:'ui:tool:joints',action:'click'},'„Gelenke und Bewegung“ öffnen. Hier werden Teile verbunden und Zahnräder gekoppelt.');await waitFor(()=>!!q('joint-panel'),'Gelenkdialog öffnen');}
  async function close(){if(q('joint-panel')?.getClientRects().length){await click('joint-cancel','Dialog schließen. Bereits angelegte Verbindungen und Kopplungen bleiben erhalten.');await waitFor(()=>!q('joint-panel')?.getClientRects().length,'Dialog schließen');}}
  async function details(id,toggle,text){if(!q(id).open)await click(toggle,text);}
@@ -106,5 +123,5 @@ export function createPracticeModelUI({controller,access,input,waitFor,checkpoin
   let verification={version:1,checks:[]};if(action.checks?.length){const p=await controller.preview(undefined);try{verification=await controller.checkPreview(p.previewId,resolve(action.checks),{collectFailures:true});}finally{controller.discard(p.previewId);}}
   return {verification,motionTargets,...(motionCouplings.length?{motionCouplings}:{}),...(motionStates?{motionStates}:{}),jointValues:(project().joints?.joints??[]).map(j=>({id:j.id,value:Number(q('joint-value-'+j.id)?.value??j.value)})),visibleJointControls:true};
  }
- return {run,rootAlias:name=>root(aliases.get(name)),aliasState:()=>[...aliases].slice(0,32).map(([alias,target])=>({alias,target:structuredClone(target),kind:project().nodes.find(n=>n.id===root(target))?.kind??null})),reset(){aliases.clear();joints.clear();gears.clear();}};
+ return {run,rootAlias,aliasState:()=>[...aliases.keys()].slice(0,32).map(alias=>{const id=rootAlias(alias);return {alias,target:structuredClone(aliases.get(alias)),kind:project().nodes.find(n=>n.id===id)?.kind??null};}),reset(){aliases.clear();joints.clear();gears.clear();}};
 }

@@ -19,3 +19,10 @@ test('setting a real select is converted into a native selection with a validate
  assert.equal(value.optionIndex,1);assert.equal(value.controlAction,'choose');
  assert.throws(()=>host.__formnaroPracticeControl('locate',{target:'ui:id:cad-edge-kind',action:'set',value:'unknown'}),/Auswahl/);
 });
+
+test('setting a real checkbox exposes its desired state without toggling or text input',t=>{
+ visible(t);const node={...control('INPUT',''),id:'cad-drill-through',type:'checkbox',checked:true,scrollIntoView(){},getBoundingClientRect:()=>({left:0,top:0,width:20,height:20})},host={};installPracticeControlBridge({getElementById:()=>node},host);
+ const box=host.__formnaroPracticeControl('locate',{target:'ui:id:cad-drill-through',action:'set',value:'true'});
+ assert.equal(box.controlAction,'check');assert.equal(box.currentChecked,true);assert.equal(box.expectedChecked,true);assert.equal(node.checked,true);
+ assert.throws(()=>host.__formnaroPracticeControl('locate',{target:'ui:id:cad-drill-through',action:'set',value:'yes'}),/true|false/);
+});

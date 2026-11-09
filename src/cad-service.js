@@ -24,7 +24,7 @@ import {extractCadNative} from './cad-extraction-native.js';
 import {cadGeometryDigest,cadSourceGeometryDigest} from './cad-geometry-digest.js';
 import {cadModelingNative,cadProfileModelingNative} from './cad-modeling-native.js';
 import {buildAssociativeBoxDrill} from './cad-associative-drill.js';
-import {affineCadSketchCircle,affineCadNativeCylinder} from './cad-drill-stock-native.js';
+import {affineCadSketchCircle,affineCadNativeStock} from './cad-drill-stock-native.js';
 import {cadDrillSourceProblems,assertCadDrillSourcesReady} from './cad-drill-source-data.js';
 
 // This independent service is not enabled in the v4 application. Unsupported
@@ -40,7 +40,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     if([...min,...max].some(v=>Math.abs(v)>100000)||min.some((v,k)=>max[k]-v>10000))throw Error('Netzreferenz überschreitet den darstellbaren Arbeitsbereich.');
   }
   function bodyRecord(shape){const checked=validateCadSolid(oc,shape);return {shape,brep:writeCadBrep(oc,shape),stats:{bounds:{min:checked.bounds.min,max:checked.bounds.max},volume:checked.volume,solids:checked.solids}};}
-  function placed(node){const local=readCadBrep(oc,node.brep.data);try{const bounds=cadBounds(oc,local);return affineCadNativeCylinder(oc,node,bounds)??affineCadSketchCircle(oc,node,bounds)??transformCad(oc,local,node.transform);}finally{local.delete();}}
+  function placed(node){const local=readCadBrep(oc,node.brep.data);try{const bounds=cadBounds(oc,local);return affineCadNativeStock(oc,node,bounds)??affineCadSketchCircle(oc,node,bounds)??transformCad(oc,local,node.transform);}finally{local.delete();}}
   function snapshotNode(node,record){return {...node,brep:{format:'OpenCascade-BRep',data:record.brep,triangulation:false},stats:structuredClone(record.stats)};}
   function tolerance(recipe,world){
     if(!['heart','gear','thread','nut'].includes(recipe?.type))return undefined;

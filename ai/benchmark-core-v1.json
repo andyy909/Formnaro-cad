@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -78,7 +78,7 @@
     },
     {
       "path": "backend/ai-practice-prompt.cjs",
-      "sha256": "a05024a3b87da04b6e622b0f17621b144df97c786c5ff6d6791ad3189e5d11b9"
+      "sha256": "e64a00628424cc0784d1aaacd3505f6f06a3d6791893f4b1adbb943b1c8b3769"
     },
     {
       "path": "backend/practice-result-checks.cjs",
@@ -94,16 +94,36 @@
     },
     {
       "path": "src/cad-service.js",
-      "sha256": "dc9e742c33327b710a506b7ea89ed86fb3ce03c6f003a7145faefc823790fa57"
+      "sha256": "60a729a7b6bc282d32d43b87c144f86278ac879fba88da2742f5653b8d4346bb"
     },
     {
       "path": "src/cad-drill-stock-native.js",
-      "sha256": "32d34372cb46ed80c92d9e7d1ef913188952934db3cd105da1b391fc9e67d896"
+      "sha256": "570c00945d9b02f8fcb2c904a6799c85b8703c0600362d3478242503ea7741fc"
     },
     {
       "path": "src/cad-bore-check-native.js",
       "sha256": "49a4b406e488b8366cabd701df29add54079c6939c2cdb2220a12006cae241e5"
+    },
+    {
+      "path": "src/cad-practice-model-ui.js",
+      "sha256": "cf63d3aab359daaca19ae439f734072054b47891b4efcce83745480c7f93c04c"
+    },
+    {
+      "path": "backend/ai-lab-review-data.cjs",
+      "sha256": "20331957490cca341376d9f5c57a67aabb274bd3a2cb444804edb8bb4fa3e416"
+    },
+    {
+      "path": "backend/ai-diagnostics.cjs",
+      "sha256": "2a5572a952a92322a827c3f5cabc7f440f2dde27aa7ccc0c2b69564c52ba3dc0"
+    },
+    {
+      "path": "src/cad-practice-controls.js",
+      "sha256": "548f0c9e0ad41ff2c30dc6f8eb824c86d52e1326fa5c639af9b160ff8735df30"
+    },
+    {
+      "path": "backend/practice-child.cjs",
+      "sha256": "87182da27e4c7a62161e9dcc8b19508d96a924dd46e29e51240fe8a46847e90e"
     }
   ],
-  "revisionReason": "Analytic native cylinder placement preserved after radial/axial affine scaling; complete existing drawing controls documented. Tasks, fixtures, native acceptance thresholds and limits unchanged. Historical benchmarks remain immutable; only non-confirmed conditions receive separate targeted retests."
+  "revisionReason": "Preserve analytic box faces and unique unary replacement aliases; bounded native-result feedback before completing a failed visible trial. Tasks, fixtures, thresholds and budgets unchanged."
 }

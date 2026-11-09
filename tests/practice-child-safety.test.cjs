@@ -8,6 +8,20 @@ function harness(results,{initialFocus=true,audit=false,projectCopy,quality,reco
  channel.emit('message',{type:'plan',nonce:'a'.repeat(48),plan:{version:1,title:'Test',actions:[{kind:'shape',type:'box',as:'block'}]},projectCopy,quality,recovery,observe});
  return {handlers,event,input,win,sent,channel,setFocused:value=>focused=value};
 }
+
+test('checkbox setting is idempotent and uses one native click only when needed',async()=>{
+ for(const currentChecked of [false,true])for(const expectedChecked of [false,true]){
+  const h=harness([{x:20,y:20,width:20,height:20,controlAction:'check',currentChecked,expectedChecked},true,currentChecked,expectedChecked]);await h.handlers.get('cad-practice:ready')(h.event);
+  const result=await h.handlers.get('cad-practice:input')(h.event,{target:'ui:id:cad-drill-through',action:'set',value:String(expectedChecked)});
+  assert.equal(result.ok,true,result.error);assert.equal(h.input.filter(e=>e.type==='mouseDown').length,currentChecked===expectedChecked?0:1);assert(!h.input.some(e=>['char','keyDown','keyUp'].includes(e.type)));
+ }
+});
+test('a paused checkbox read is checked again before any native toggle',async()=>{
+ const h=harness([]);await h.handlers.get('cad-practice:ready')(h.event);let reads=0;
+ h.win.webContents.executeJavaScript=async()=>{reads++;if(reads===1)return {x:20,y:20,width:20,height:20,controlAction:'check',currentChecked:false,expectedChecked:true};if(reads===2)return true;if(reads===3){h.setFocused(false);h.win.emit('blur');return false;}return true;};
+ const pending=h.handlers.get('cad-practice:input')(h.event,{target:'ui:id:cad-drill-through',action:'set',value:'true'});await new Promise(r=>setTimeout(r,230));assert(!h.input.some(e=>e.type==='mouseDown'));h.setFocused(true);assert.equal((await h.handlers.get('cad-practice:status')(h.event,{paused:false,generation:1})).ok,true);
+ const result=await pending;assert.equal(result.ok,true,result.error);assert.equal(reads,4);assert(!h.input.some(e=>e.type==='mouseDown'));
+});
 test('a normal six-step assembly report keeps its23 body observations instead of losing the result',async()=>{
  const bounds={min:[-20,-15,0],max:[20,15,8],size:[40,30,8],center:[0,0,4],corners:Array.from({length:8},()=>[20,15,8])};
  const value={ok:true,steps:Array.from({length:6},()=>({kind:'set',observation:{scene:Array.from({length:23},(_,i)=>({id:'body-'+i,worldBounds:bounds,volume:9600,solids:1})),selection:['body-0']}}))};

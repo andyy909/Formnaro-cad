@@ -92,6 +92,7 @@ export function installPracticeControlBridge(document,host=window,{onLocate}={})
  host.__formnaroPracticeControl=(operation,spec,point)=>{
   const node=practiceControl(document,spec.target);
   if(operation==='focused')return document.activeElement===node;
+  if(operation==='checked'){if(node.tagName!=='INPUT'||node.type!=='checkbox')throw Error('Ein echtes Kontrollkästchen wählen.');return !!node.checked;}
   if(operation==='hit'){const hit=document.elementFromPoint(point.x,point.y);return {ok:!!hit&&(node===hit||node.contains(hit)),hit:hit?hit.tagName+'#'+hit.id:'none'};}
   if(operation!=='locate')throw Error('Unbekannte Bedienelementabfrage.');
   node.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});onLocate?.(node);const r=node.getBoundingClientRect(),result={x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),width:r.width,height:r.height};
@@ -101,6 +102,10 @@ export function installPracticeControlBridge(document,host=window,{onLocate}={})
    if(spec.action==='set')result.controlAction='choose';
   }
   if(spec.action==='set'&&!['INPUT','TEXTAREA','SELECT'].includes(node.tagName))throw Error('Ein echtes Eingabefeld wählen.');
+  if(spec.action==='set'&&node.tagName==='INPUT'&&node.type==='checkbox'){
+   if(!['true','false'].includes(spec.value))throw Error('Ein Kontrollkästchen mit true oder false setzen.');
+   result.controlAction='check';result.currentChecked=!!node.checked;result.expectedChecked=spec.value==='true';
+  }
   return result;
  };
 }
