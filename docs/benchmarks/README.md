@@ -22,4 +22,4 @@ Dies ist eine nachträgliche Ergebnisergänzung zur bestehenden Veröffentlichun
 
 Diagramme reproduzieren / rebuild diagrams: `python scripts/render-benchmark-comparison.py` (Python 3.10+, nur Standardbibliothek). Die JSON-Datei enthält die geprüften zwei Datenzeilen und SHA-256 der Ergebnisbelege.
 
-Der neue Aufbaubenchmark 2.0.0 hat eigene schwierigere Aufgaben. Alle obigen Werte bleiben historische Grundbenchmark-Ergebnisse; es wurden noch keine KI-Aufbau-Ergebnisse gemessen. / Advanced suite 2.0.0 has separate harder tasks. All figures above remain core-benchmark measurements; no advanced AI benchmark has been measured yet.
+Aufbau-Ergebnisse: ursprünglicher DeepSeek-Lauf5/16 auf0.138.0-r1; gezielte Nachtests getrennt in [diesem Beleg](advanced-deepseek-2026-11-09.json). Alle16 ursprünglichen Bedingungen sind über verschiedene Programmstände bestätigt. Kein neuer vollständiger16/16-Lauf. / Original advanced run5/16; all16 original conditions later confirmed by separate cross-build retests, not a new complete16/16 benchmark.

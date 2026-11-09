@@ -12,10 +12,10 @@
 
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
-| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.4-r2/Formnaro-v0.137.4-r2-Windows-x64.zip)** | **0.137.4-r2** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
-| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2) | **0.137.4-r2** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
+| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.138.2-r4/Formnaro-v0.138.2-r4-Windows-x64.zip)** | **0.138.2-r4** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
+| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.138.2-r4) | **0.138.2-r4** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
 
-**Neu:** Vollständiger Bohrungsablauf und automatische Token-Erneuerung im KI-Labor. DeepSeek 16/16, Sol 14/16 und Sol 15/16 bleiben unverändert; Zeichnungsnachtests 2/2 und Bohrungsnachtest 1/1 stehen als eigene Serien. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2).
+**Neu:** Korrigierte Körperauswahl, Bohrflächen und Skizzenersatz/Höhenrückmeldung. Alle historischen Benchmarks und erfolgreichen Nachtests bleiben erhalten. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.138.2-r4).
 
 ## Neuer vollständiger Sol-Benchmark: 16/16
 
@@ -25,7 +25,7 @@ GPT-6.1 Sol/high bestand alle sechzehn frischen Versuche auf der veröffentlicht
 
 [Sol-Beleg](docs/benchmarks/core-sol-01374-2026-11-08.json) · [Vergleichsdaten](docs/benchmarks/sol-deepseek-16-vergleich-2026-11-08.json) · [Alle Originalergebnisse](docs/benchmarks/README.md)
 
-[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.4-r2/Formnaro-Quellcode-v0.137.4-r2.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
+[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.138.2-r4/Formnaro-Quellcode-v0.138.2-r4.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
 
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
@@ -108,7 +108,7 @@ Die KI erhält jetzt die vollständigen Bedienelemente und den Ablauf des Zeichn
 
 Lokal geprüft: 128 Standardtests, gezielte Regressionen, echte Zeichnungsprüfungen im fertigen Paket, Anzeige gespeicherter Ergebnisse und regulärer Fensterschluss. Die CAD-Laufzeitdateien werden vor und nach dem Paketieren geprüft. Für die Veröffentlichung startet kein weiterer Cloud-Benchmark; Messversionen und ursprüngliche Hashes bleiben an jedem Ergebnis erhalten.
 
-[Release und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2) · [Passender Quelltag](https://github.com/andyy909/Formnaro-cad/tree/v0.137.4-r2) · [Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.137.4-r2/Formnaro-Quellcode-v0.137.4-r2.zip) · [Abnahmebericht](docs/ABNAHME-0.137.4-r2.md)
+[Release und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2) · [Passender Quelltag](https://github.com/andyy909/Formnaro-cad/tree/v0.137.4-r2) · [Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.138.2-r4/Formnaro-Quellcode-v0.138.2-r4.zip) · [Abnahmebericht](docs/ABNAHME-0.137.4-r2.md)
 
 <!-- formnaro-development-status:end -->
 
@@ -134,4 +134,9 @@ Für FreeCAD-Funktionen im Entwicklungscheckout: `npm run setup:cad-runtime`. We
 Fehler oder Ideen? Erstelle ein [Issue](https://github.com/andyy909/Formnaro-cad/issues). Bei Fehlern helfen die verwendete Version und nachvollziehbare Schritte.
 
 Der eigene Anwendungscode steht unter **[MIT](LICENSE.txt)**. Fremdkomponenten behalten ihre [eigenen Lizenzen](THIRD-PARTY-LICENSES.txt); der kombinierte CAD-Kern ist nicht insgesamt MIT-lizenziert. [Lizenzdetails](docs/LIZENZ-MIT.md) · [CAD-Quellen und Build](licenses/CAD-Quellen-und-Build.txt).
+
+
+## Aufbaubenchmark und gezielte Reparaturen
+
+Neu in **0.138.2-r4**: ebene Bohrflächen skalierter Quader, Auswahl des bearbeiteten Körpers, eindeutige Checkbox-Zustände sowie Rückmeldung zu Skizzenersatz und Höhenlage. Der ursprüngliche DeepSeek-Aufbaulauf bleibt **5/16 auf 0.138.0-r1**. Durch getrennte Nachtests sind alle 16 ursprünglichen Bedingungen über mehrere Programmstände bestätigt; das ist kein neuer vollständiger 16/16-Lauf. Der letzte A07-Test mit der neuen EXE bestand 8/8 native Kriterien in 144,199s. [Versionierte Ergebnisse und getrennte Nachtests](docs/benchmarks/advanced-deepseek-2026-11-09.json).
 
