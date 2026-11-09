@@ -1,7 +1,7 @@
 {
   "id": "formnaro-practice-advanced",
   "label": "Aufbaubenchmark",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 600,
@@ -87,7 +87,7 @@
     },
     {
       "path": "ai/formnaro-tool-reference.mjs",
-      "sha256": "ae07bf706ac0ff544b65ea336714c7c4186fea19f33b118cafc0dc20739e09ff"
+      "sha256": "da5cfb9ad6d23ec3a3c5e7c8f7b4aa3bf2d46f329c71dd87f8b2635b59395cdc"
     },
     {
       "path": "ai/practice-plan-feedback.mjs",
@@ -115,7 +115,7 @@
     },
     {
       "path": "ai/benchmark-advanced-calibration-v2.json",
-      "sha256": "5e1666aac823711e155c38d55cc865fe062932da7568a4473c038cb0569aaac6"
+      "sha256": "867bef4f69342cdd4a9b24bc3c44ca1241f92ed908065dade86a18dd7ec16f1b"
     },
     {
       "path": "src/cad-service.js",
@@ -157,10 +157,10 @@
   "calibration": {
     "status": "passed",
     "evidence": "ai/benchmark-advanced-calibration-v2.json",
-    "sha256": "5e1666aac823711e155c38d55cc865fe062932da7568a4473c038cb0569aaac6",
+    "sha256": "867bef4f69342cdd4a9b24bc3c44ca1241f92ed908065dade86a18dd7ec16f1b",
     "positiveNative": 8,
     "negativeNative": 24,
     "providerRequests": 0
   },
-  "revisionReason": "A07 clarifies Z=+4mm without changing its physical requirements; seven other task prompts unchanged. Exact title-length feedback and numeric native bounds feedback. Preserve last completed failed native evidence when a correction is invalid. Same limits, fixtures and acceptance thresholds."
+  "revisionReason": "Document the existing visible delete route for explicit part replacement, including its toolbar location and selection; sketch creation keeps existing bodies. All task prompts, fixtures, native predicates and limits unchanged from 2.0.3."
 }

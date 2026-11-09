@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -86,7 +86,7 @@
     },
     {
       "path": "ai/formnaro-tool-reference.mjs",
-      "sha256": "ae07bf706ac0ff544b65ea336714c7c4186fea19f33b118cafc0dc20739e09ff"
+      "sha256": "da5cfb9ad6d23ec3a3c5e7c8f7b4aa3bf2d46f329c71dd87f8b2635b59395cdc"
     },
     {
       "path": "ai/practice-plan-feedback.mjs",
@@ -133,5 +133,5 @@
       "sha256": "442e21d5f0db858dbc14638c44294afa86de03300babc11ce73f9cf172066440"
     }
   ],
-  "revisionReason": "A07 clarifies Z=+4mm without changing its physical requirements; seven other task prompts unchanged. Exact title-length feedback and numeric native bounds feedback. Preserve last completed failed native evidence when a correction is invalid. Same limits, fixtures and acceptance thresholds."
+  "revisionReason": "Document the existing visible delete route for explicit part replacement, including its toolbar location and selection; sketch creation keeps existing bodies. All task prompts, fixtures, native predicates and limits unchanged from 2.0.3."
 }

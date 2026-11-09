@@ -14,7 +14,7 @@ test('practice lookups exclude parent state and offer only the locked visible UI
  const r=await reference({tool:'align'},context);assert(!JSON.stringify(r).includes('private-parent'));assert(!r.tool.activePanel);assert(!r.tool.availability);
  const drawing=await reference({tool:'drawing'},context);
  for(const id of ['drawing-title-block','drawing-title','drawing-update','drawing-apply'])assert(drawing.tool.steps.some(step=>step.includes('ui:id:'+id)),id);
- assert(drawing.tool.steps.some(step=>step.includes('Titelblock')&&step.includes('Titel')));
+ assert(drawing.tool.steps.some(step=>step.includes('ui:id:drawing-title-block')&&step.includes('Titel')));
  const full=await reference({section:'modeling'},context);assert.equal(full.kind,'practice-ui-contract');assert(!full.contract.commandSchema);assert(!full.contract.programAssistant);assert.equal(full.contract.practicePolicy.directGeometry,false);assert(!full.contract.practiceCommandSchema.oneOf.some(s=>['python','script','pattern'].includes(s.properties.op.const)));
  const normalContract=await reference({section:'modeling'},{...context,practiceOnly:false});assert.equal(normalContract.contract.commandSchema.secretShapeContract,true);
  const normal=await reference({tool:'align'},{...context,practiceOnly:false});assert.equal(normal.tool.activePanel.value,'private-parent-value');

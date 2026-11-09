@@ -2,8 +2,8 @@
   "format": "FormnaroLocalNativeCalibration",
   "version": 1,
   "suiteId": "formnaro-practice-advanced",
-  "suiteVersion": "2.0.3",
-  "program": "0.138.2-r2",
+  "suiteVersion": "2.0.4",
+  "program": "0.138.2-r3",
   "providerRequests": 0,
   "positiveNative": 8,
   "noopRejected": 8,
@@ -30,11 +30,47 @@
         },
         {
           "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": {
+              "count": 1,
+              "bodies": [
+                {
+                  "size": [
+                    60,
+                    40,
+                    10
+                  ],
+                  "center": [
+                    10,
+                    -5,
+                    10
+                  ]
+                }
+              ]
+            },
+            "expected": {
+              "count": 1,
+              "size": [
+                60,
+                40,
+                10
+              ],
+              "center": [
+                10,
+                -5,
+                10
+              ]
+            }
+          }
         },
         {
           "name": "Unabhängig berechnetes Materialvolumen",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": 22429.203673205102,
+            "expected": 22429.203673205102
+          }
         },
         {
           "name": "Alle drei asymmetrischen Bohrungen nativ bestätigt",
@@ -68,11 +104,47 @@
         },
         {
           "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": {
+              "count": 1,
+              "bodies": [
+                {
+                  "size": [
+                    70,
+                    50,
+                    8
+                  ],
+                  "center": [
+                    7,
+                    -9,
+                    8
+                  ]
+                }
+              ]
+            },
+            "expected": {
+              "count": 1,
+              "size": [
+                70,
+                50,
+                8
+              ],
+              "center": [
+                7,
+                -9,
+                8
+              ]
+            }
+          }
         },
         {
           "name": "Unabhängig berechnetes Materialvolumen",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": 24352.000000000007,
+            "expected": 24352
+          }
         },
         {
           "name": "Zwei getrennte rechteckige Durchbrüche und Materialstege",
@@ -140,11 +212,47 @@
         },
         {
           "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": {
+              "count": 1,
+              "bodies": [
+                {
+                  "size": [
+                    60,
+                    40,
+                    24
+                  ],
+                  "center": [
+                    10,
+                    -5,
+                    12
+                  ]
+                }
+              ]
+            },
+            "expected": {
+              "count": 1,
+              "size": [
+                60,
+                40,
+                24
+              ],
+              "center": [
+                10,
+                -5,
+                12
+              ]
+            }
+          }
         },
         {
           "name": "Unabhängig berechnetes Materialvolumen",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": 31321.415986824606,
+            "expected": 31321.415986824606
+          }
         },
         {
           "name": "Stufe links Z24, Grundplatte rechts Z8, Loch offen",
@@ -194,11 +302,47 @@
         },
         {
           "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": {
+              "count": 1,
+              "bodies": [
+                {
+                  "size": [
+                    60,
+                    40,
+                    30
+                  ],
+                  "center": [
+                    10,
+                    -5,
+                    18
+                  ]
+                }
+              ]
+            },
+            "expected": {
+              "count": 1,
+              "size": [
+                60,
+                40,
+                30
+              ],
+              "center": [
+                10,
+                -5,
+                18
+              ]
+            }
+          }
         },
         {
           "name": "Unabhängig berechnetes Materialvolumen",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": 22068.000000000007,
+            "expected": 22068
+          }
         },
         {
           "name": "Oben offen, Boden3 mm und vier obere Wandränder erhalten",
@@ -244,11 +388,47 @@
         },
         {
           "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": {
+              "count": 1,
+              "bodies": [
+                {
+                  "size": [
+                    70,
+                    50,
+                    20
+                  ],
+                  "center": [
+                    10,
+                    -5,
+                    10
+                  ]
+                }
+              ]
+            },
+            "expected": {
+              "count": 1,
+              "size": [
+                70,
+                50,
+                20
+              ],
+              "center": [
+                10,
+                -5,
+                10
+              ]
+            }
+          }
         },
         {
           "name": "Unabhängig berechnetes Materialvolumen",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": 66836.81421051074,
+            "expected": 66836.81421051075
+          }
         },
         {
           "name": "Taschenboden Z12, Bohrungsboden Z8 und übrige Oberseite Z20",
@@ -290,11 +470,47 @@
         },
         {
           "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": {
+              "count": 1,
+              "bodies": [
+                {
+                  "size": [
+                    60,
+                    40,
+                    6
+                  ],
+                  "center": [
+                    7,
+                    -9,
+                    7
+                  ]
+                }
+              ]
+            },
+            "expected": {
+              "count": 1,
+              "size": [
+                60,
+                40,
+                6
+              ],
+              "center": [
+                7,
+                -9,
+                7
+              ]
+            }
+          }
         },
         {
           "name": "Unabhängig berechnetes Materialvolumen",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "actual": 12128.76110196153,
+            "expected": 12128.76110196153
+          }
         },
         {
           "name": "L-Aussparung und beide Schenkel an richtigen Weltpositionen",
@@ -360,7 +576,11 @@
         },
         {
           "name": "Mindestens drei gültige geometrisch verknüpfte Maße",
-          "passed": true
+          "passed": true,
+          "actual": {
+            "dimensions": 4,
+            "problems": []
+          }
         }
       ],
       "noopRejected": true,
