@@ -1,0 +1,1630 @@
+{
+  "format": "FormnaroPublicAdvancedBenchmarkEvidence",
+  "version": 1,
+  "asOf": "2026-11-09",
+  "model": "DeepSeek V4.1 Flash/high",
+  "original": {
+    "benchmarkId": "bdd0153b-342a-4c70-8801-587753539b9f",
+    "program": {
+      "version": "0.138.0",
+      "revision": "r1",
+      "asarSHA256": "2beac0acaae12e7c4cb15661d14259566d0f1a0a4bb24bed21780811efedd3bd",
+      "executableSHA256": "43c0bbd5c3ab7e525e1543077bd81ec0359c50e1ecd8ce03379f555a4e0c6311"
+    },
+    "score": "5/16",
+    "planned": 16,
+    "confirmed": 5,
+    "suite": {
+      "label": "Aufbaubenchmark",
+      "available": true,
+      "suiteId": "formnaro-practice-advanced",
+      "suiteVersion": "2.0.0",
+      "suiteHash": "7a51a388b0b65e7f5a4720ff62d208a82f850ea855dbc8bc8f0ef652772254c9",
+      "cases": [
+        {
+          "id": "A01",
+          "caseId": "advanced-01",
+          "label": "Asymmetrisches Bohrbild"
+        },
+        {
+          "id": "A02",
+          "caseId": "advanced-02",
+          "label": "Zwei versetzte Durchbrüche"
+        },
+        {
+          "id": "A03",
+          "caseId": "advanced-03",
+          "label": "Gebohrte Hülsen im versetzten Muster"
+        },
+        {
+          "id": "A04",
+          "caseId": "advanced-04",
+          "label": "Stufenkörper aufbauen und bohren"
+        },
+        {
+          "id": "A05",
+          "caseId": "advanced-05",
+          "label": "Gehäuse mit seitlichem Durchbruch"
+        },
+        {
+          "id": "A06",
+          "caseId": "advanced-06",
+          "label": "Blindtasche und blinde Bohrung"
+        },
+        {
+          "id": "A07",
+          "caseId": "advanced-07",
+          "label": "Bearbeitbare L-Skizze mit zwei Löchern"
+        },
+        {
+          "id": "A08",
+          "caseId": "advanced-08",
+          "label": "Stufenteil mit Schnitt und Bemaßung"
+        }
+      ],
+      "limits": {
+        "seconds": 600,
+        "outputTokens": 16384,
+        "rounds": 30,
+        "formatRepairs": 2,
+        "requestBudget": 1000
+      },
+      "planned": 16,
+      "challenge": {
+        "available": false,
+        "reason": "Halter-Grenztest: Aufgaben und native Prüfer noch nicht kalibriert."
+      }
+    },
+    "records": [
+      {
+        "condition": "A01-r2",
+        "runId": "012800b2-535c-4cda-978b-bc71b99cc947",
+        "passed": false,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 181654,
+        "model": "deepseek-flash",
+        "protocolSHA256": "2949522f818fe6f48fa878629a321a365ff36928d2b92bfe9246f4b34fefb629",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": true
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": true
+          },
+          {
+            "name": "Native Gegenprüfung ausführbar",
+            "passed": false
+          }
+        ]
+      },
+      {
+        "condition": "A01-r1",
+        "runId": "06c8b7a0-dab9-4196-bb9b-37412ba50fd3",
+        "passed": false,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 185623,
+        "model": "deepseek-flash",
+        "protocolSHA256": "4e832b9781dcaed9cbf40d1ef6863e3e232cb2da5386505419f136d12ba4dd18",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": true
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": true
+          },
+          {
+            "name": "Native Gegenprüfung ausführbar",
+            "passed": false
+          }
+        ]
+      },
+      {
+        "condition": "A02-r1",
+        "runId": "0712527a-5028-4e84-b4f3-474baec3009c",
+        "passed": false,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 164563,
+        "model": "deepseek-flash",
+        "protocolSHA256": "2a2b34d3c5e1d1665d70b957f9a455d1767605f0a8c3cee2e4501cc054532fb5",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": false
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": false
+          },
+          {
+            "name": "Zwei getrennte rechteckige Durchbrüche und Materialstege",
+            "passed": false
+          }
+        ]
+      },
+      {
+        "condition": "A03-r1",
+        "runId": "1bdc3781-6ac8-42a5-b6e7-05403511c327",
+        "passed": false,
+        "cleanExit": true,
+        "status": "failed",
+        "elapsedMs": 111670,
+        "model": "deepseek-flash",
+        "protocolSHA256": "ba11cdc82733414764dae3b0ce9921a807d26ebc79d6fb6822f55e7153d1be11",
+        "checks": []
+      },
+      {
+        "condition": "A03-r2",
+        "runId": "225291b8-7017-4294-ad64-73f3b5589676",
+        "passed": false,
+        "cleanExit": true,
+        "status": "failed",
+        "elapsedMs": 63194,
+        "model": "deepseek-flash",
+        "protocolSHA256": "2fbe2b3b80ff05a594d53922cbfb0cd152d9d42e545139dd18181ae7b7ce8123",
+        "checks": []
+      },
+      {
+        "condition": "A08-r2",
+        "runId": "433a6c59-802b-4563-addf-9883d900fb94",
+        "passed": false,
+        "cleanExit": false,
+        "status": "failed",
+        "elapsedMs": 54576,
+        "model": "deepseek-flash",
+        "protocolSHA256": "2c372b4ab0adea874b2fbed6fa05c08edc0571727ee53e304965a17a77953ca9",
+        "checks": []
+      },
+      {
+        "condition": "A07-r2",
+        "runId": "591ac1e6-8f52-4421-bf41-a204de9e0f43",
+        "passed": false,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 60225,
+        "model": "deepseek-flash",
+        "protocolSHA256": "abe6044ee7bac14ccb69b0e76f95519448e9b44862c9625af53524338f97344f",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": false
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": false
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": false
+          },
+          {
+            "name": "L-Aussparung und beide Schenkel an richtigen Weltpositionen",
+            "passed": false
+          },
+          {
+            "name": "Native Gegenprüfung ausführbar",
+            "passed": false
+          }
+        ]
+      },
+      {
+        "condition": "A05-r2",
+        "runId": "65664d9e-48e1-4c5f-8d54-5642fd12f6f6",
+        "passed": true,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 117115,
+        "model": "deepseek-flash",
+        "protocolSHA256": "cb7f056ddac42df2620ac376bbb13dbad641831035fe2db3ec855abaea7ca9c4",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": true
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": true
+          },
+          {
+            "name": "Oben offen, Boden3 mm und vier obere Wandränder erhalten",
+            "passed": true
+          },
+          {
+            "name": "Vordere Öffnung 10×12, seitliches Material und Rückwand erhalten",
+            "passed": true
+          }
+        ]
+      },
+      {
+        "condition": "A07-r1",
+        "runId": "7d6fae76-6433-49ae-87f8-be2cd31114d8",
+        "passed": true,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 176675,
+        "model": "deepseek-flash",
+        "protocolSHA256": "2412f74fc9cf264cf73d78953f84f006fb91cb8b6b1e4645554358f1f7d857c1",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": true
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": true
+          },
+          {
+            "name": "L-Aussparung und beide Schenkel an richtigen Weltpositionen",
+            "passed": true
+          },
+          {
+            "name": "Beide Skizzenlöcher mit richtigen Durchmessern und Weltlagen",
+            "passed": true
+          },
+          {
+            "name": "Bearbeitbare Skizzenquelle mit Außenkontur und zwei Innenkonturen",
+            "passed": true
+          }
+        ]
+      },
+      {
+        "condition": "A06-r2",
+        "runId": "7dce2f91-2436-4828-ab89-a9c8a0f0cdb4",
+        "passed": false,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 136265,
+        "model": "deepseek-flash",
+        "protocolSHA256": "ba892e0ade55e1821b41507e9772ef6c53e163ce37b16ff3c20d71d1e85c7e03",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": true
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": true
+          },
+          {
+            "name": "Taschenboden Z12, Bohrungsboden Z8 und übrige Oberseite Z20",
+            "passed": false
+          }
+        ]
+      },
+      {
+        "condition": "A08-r1",
+        "runId": "80c1f79e-55ee-49c0-b7f4-4a9fd2ac32a7",
+        "passed": false,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 23045,
+        "model": "deepseek-flash",
+        "protocolSHA256": "0ecf53171e0b6356f2793f80615731eb5ec7341517b9cde9c694c15f6757d90d",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": false
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Vollständiger Ausgangskörper unverändert",
+            "passed": true
+          },
+          {
+            "name": "A3 quer, Maßstab1:2, Nummer AB-08, Revision B",
+            "passed": false
+          },
+          {
+            "name": "Vier berechnete Ansichten einschließlich Schnitt Y−5",
+            "passed": false
+          },
+          {
+            "name": "Mindestens drei gültige geometrisch verknüpfte Maße",
+            "passed": false
+          }
+        ]
+      },
+      {
+        "condition": "A04-r1",
+        "runId": "a0ba8068-a280-468b-96eb-078d0b0008a5",
+        "passed": false,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 153198,
+        "model": "deepseek-flash",
+        "protocolSHA256": "ac25d5d39dead14abaf43591672b984bd8c7996598916e5a284acbc131c4704f",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": true
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": false
+          },
+          {
+            "name": "Stufe links Z24, Grundplatte rechts Z8, Loch offen",
+            "passed": false
+          },
+          {
+            "name": "Ø6 durch die gesamte Stufenhöhe",
+            "passed": false
+          }
+        ]
+      },
+      {
+        "condition": "A02-r2",
+        "runId": "bee7b762-0fbe-49e1-a01f-de46c117c362",
+        "passed": true,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 142613,
+        "model": "deepseek-flash",
+        "protocolSHA256": "14b254f6a594d19b08df005c86216d04f6417e6a0c28ca60c495ced9443fdfa7",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": true
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": true
+          },
+          {
+            "name": "Zwei getrennte rechteckige Durchbrüche und Materialstege",
+            "passed": true
+          }
+        ]
+      },
+      {
+        "condition": "A05-r1",
+        "runId": "cd0eecf4-cd3e-4c0b-aa5f-93bfc9f0f9e2",
+        "passed": true,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 114965,
+        "model": "deepseek-flash",
+        "protocolSHA256": "0f210fa03c3f74bd102af078583bdaeafd6e63814e39e7c9f88f55392dc52df7",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": true
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": true
+          },
+          {
+            "name": "Oben offen, Boden3 mm und vier obere Wandränder erhalten",
+            "passed": true
+          },
+          {
+            "name": "Vordere Öffnung 10×12, seitliches Material und Rückwand erhalten",
+            "passed": true
+          }
+        ]
+      },
+      {
+        "condition": "A04-r2",
+        "runId": "cdef677c-71cd-41fc-a653-d4811feb1f83",
+        "passed": false,
+        "cleanExit": true,
+        "status": "failed",
+        "elapsedMs": 164991,
+        "model": "deepseek-flash",
+        "protocolSHA256": "1fb812f3f0edf0f05bc963b878505d60b692ca78542448fcb3e1ff46569e0a57",
+        "checks": []
+      },
+      {
+        "condition": "A06-r1",
+        "runId": "f31d735e-e37d-4de5-b4e8-298a3605243e",
+        "passed": true,
+        "cleanExit": true,
+        "status": "completed",
+        "elapsedMs": 177725,
+        "model": "deepseek-flash",
+        "protocolSHA256": "648401c8369a7b56af55208bc8e77a385c662a1aabed14f36ccc560ccb22125e",
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": true
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": true
+          },
+          {
+            "name": "Taschenboden Z12, Bohrungsboden Z8 und übrige Oberseite Z20",
+            "passed": true
+          }
+        ]
+      }
+    ]
+  },
+  "retestSeries": [
+    {
+      "program": {
+        "version": "0.138.1",
+        "revision": "r1",
+        "asarSHA256": "f9e15ecf1b87b8c3fa4e5ee60a9e5e4ff6a4a4eb171f253990adf087c08cb6e4",
+        "executableSHA256": "94af13c4b429c95e38ed8087cee8339a3ccb8979eda34c62a3ee7763d6149d1a"
+      },
+      "suite": {
+        "label": "Aufbaubenchmark",
+        "available": true,
+        "suiteId": "formnaro-practice-advanced",
+        "suiteVersion": "2.0.1",
+        "suiteHash": "1d4810624f4088afe4403efb40a2abfc86df07be45dfb2e3447b36e2d607c658",
+        "cases": [
+          {
+            "id": "A01",
+            "caseId": "advanced-01",
+            "label": "Asymmetrisches Bohrbild"
+          },
+          {
+            "id": "A02",
+            "caseId": "advanced-02",
+            "label": "Zwei versetzte Durchbrüche"
+          },
+          {
+            "id": "A03",
+            "caseId": "advanced-03",
+            "label": "Gebohrte Hülsen im versetzten Muster"
+          },
+          {
+            "id": "A04",
+            "caseId": "advanced-04",
+            "label": "Stufenkörper aufbauen und bohren"
+          },
+          {
+            "id": "A05",
+            "caseId": "advanced-05",
+            "label": "Gehäuse mit seitlichem Durchbruch"
+          },
+          {
+            "id": "A06",
+            "caseId": "advanced-06",
+            "label": "Blindtasche und blinde Bohrung"
+          },
+          {
+            "id": "A07",
+            "caseId": "advanced-07",
+            "label": "Bearbeitbare L-Skizze mit zwei Löchern"
+          },
+          {
+            "id": "A08",
+            "caseId": "advanced-08",
+            "label": "Stufenteil mit Schnitt und Bemaßung"
+          }
+        ],
+        "limits": {
+          "seconds": 600,
+          "outputTokens": 16384,
+          "rounds": 30,
+          "formatRepairs": 2,
+          "requestBudget": 1000
+        },
+        "planned": 16,
+        "challenge": {
+          "available": false,
+          "reason": "Halter-Grenztest: Aufgaben und native Prüfer noch nicht kalibriert."
+        }
+      },
+      "sourceHash": "9894fe7329fb3cb881bc634c702548ebaa2bde3a01a92cc93503fb228be470da",
+      "kind": "targeted-retests",
+      "planned": 11,
+      "confirmed": 5,
+      "records": [
+        {
+          "condition": "A01-r1",
+          "runId": "96be872b-0078-471c-8f42-da2a0b2106ec",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 161405,
+          "model": "deepseek-flash",
+          "protocolSHA256": "bc1bf8c60a0f869d8d3aad3d6a753843188938ee3707c7ba82025755a1ba3648",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": true
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": true
+            },
+            {
+              "name": "Alle drei asymmetrischen Bohrungen nativ bestätigt",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "condition": "A02-r1",
+          "runId": "2d69bfad-e525-451d-b479-69e4bbd0798a",
+          "passed": false,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 167756,
+          "model": "deepseek-flash",
+          "protocolSHA256": "fa1602da3f1a9ce9d82ada5f51f18ae8ecb4b179ac14aaf0edb427ea46861c40",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": false
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": false
+            },
+            {
+              "name": "Zwei getrennte rechteckige Durchbrüche und Materialstege",
+              "passed": false
+            }
+          ]
+        },
+        {
+          "condition": "A03-r1",
+          "runId": "6788748b-42c0-4315-87e9-dd914c1b4077",
+          "passed": false,
+          "cleanExit": true,
+          "status": "failed",
+          "elapsedMs": 73359,
+          "model": "deepseek-flash",
+          "protocolSHA256": "42e3413c03d7e50f6dbc84a68fad31fcc945ce1cc6c33886c241c3819d8046e8",
+          "checks": []
+        },
+        {
+          "condition": "A04-r1",
+          "runId": "0fe482af-fc77-4477-aa9a-04e71188acdb",
+          "passed": false,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 176879,
+          "model": "deepseek-flash",
+          "protocolSHA256": "75bc0ad3f3922ad267b2adaaa92c1b92284616eae69410109efc3d3f92de5c81",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": false
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": false
+            },
+            {
+              "name": "Stufe links Z24, Grundplatte rechts Z8, Loch offen",
+              "passed": false
+            },
+            {
+              "name": "Native Gegenprüfung ausführbar",
+              "passed": false
+            }
+          ]
+        },
+        {
+          "condition": "A08-r1",
+          "runId": "9cf529be-1d81-475b-a4da-ebc9031e48af",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 109406,
+          "model": "deepseek-flash",
+          "protocolSHA256": "491bafa911040d06ed40bdb2a5820474faf5e4e191b64d7dd818f22798cc005e",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Vollständiger Ausgangskörper unverändert",
+              "passed": true
+            },
+            {
+              "name": "A3 quer, Maßstab1:2, Nummer AB-08, Revision B",
+              "passed": true
+            },
+            {
+              "name": "Vier berechnete Ansichten einschließlich Schnitt Y−5",
+              "passed": true
+            },
+            {
+              "name": "Mindestens drei gültige geometrisch verknüpfte Maße",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "condition": "A01-r2",
+          "runId": "5ccd6c87-bb25-4dae-92d9-3af663bab121",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 195000,
+          "model": "deepseek-flash",
+          "protocolSHA256": "5a24672c572719bb5cdb3af20f8261f2dcdac8ae0f430c5a2be2df29f8e2c75c",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": true
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": true
+            },
+            {
+              "name": "Alle drei asymmetrischen Bohrungen nativ bestätigt",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "condition": "A03-r2",
+          "runId": "bff7d6b8-f9a8-4150-8336-6d73c259a98a",
+          "passed": false,
+          "cleanExit": true,
+          "status": "failed",
+          "elapsedMs": 65916,
+          "model": "deepseek-flash",
+          "protocolSHA256": "29d8aec7a3acdaa9eff43a126531c495cc2fce4172531f96f812e4bde7f49595",
+          "checks": []
+        },
+        {
+          "condition": "A04-r2",
+          "runId": "e51d00fa-9707-405a-9bc1-97604d3f991d",
+          "passed": false,
+          "cleanExit": true,
+          "status": "failed",
+          "elapsedMs": 145225,
+          "model": "deepseek-flash",
+          "protocolSHA256": "0d9b56f715355d6b66d392250993abd1950a6529440247212accad1b21925eef",
+          "checks": []
+        },
+        {
+          "condition": "A06-r2",
+          "runId": "56cf3c3b-8e4a-488f-8abe-6f9b1dffb109",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 157681,
+          "model": "deepseek-flash",
+          "protocolSHA256": "bcc1e4ff3f69d7d796733b6921432dd6230c7816935b41a606a1e617143c4bc1",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": true
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": true
+            },
+            {
+              "name": "Taschenboden Z12, Bohrungsboden Z8 und übrige Oberseite Z20",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "condition": "A07-r2",
+          "runId": "e694391d-2c98-42dd-94a4-dc2752ca061c",
+          "passed": false,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 176299,
+          "model": "deepseek-flash",
+          "protocolSHA256": "85897157703452d6b640e59084a31a73fd4ec6b713058d6e8f899f283dc094c8",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": false
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": true
+            },
+            {
+              "name": "L-Aussparung und beide Schenkel an richtigen Weltpositionen",
+              "passed": false
+            },
+            {
+              "name": "Beide Skizzenlöcher mit richtigen Durchmessern und Weltlagen",
+              "passed": false
+            },
+            {
+              "name": "Bearbeitbare Skizzenquelle mit Außenkontur und zwei Innenkonturen",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "condition": "A08-r2",
+          "runId": "e37a4f68-ce58-477a-9d9f-f170f5ca89e1",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 116932,
+          "model": "deepseek-flash",
+          "protocolSHA256": "defe3b64054b67f76e9123be3d43a03cd3af91327b8a4d5a120c163ed34f8222",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Vollständiger Ausgangskörper unverändert",
+              "passed": true
+            },
+            {
+              "name": "A3 quer, Maßstab1:2, Nummer AB-08, Revision B",
+              "passed": true
+            },
+            {
+              "name": "Vier berechnete Ansichten einschließlich Schnitt Y−5",
+              "passed": true
+            },
+            {
+              "name": "Mindestens drei gültige geometrisch verknüpfte Maße",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "originalBenchmarkScoreUnchanged": "5/16"
+    },
+    {
+      "program": {
+        "version": "0.138.2",
+        "revision": "r1",
+        "asarSHA256": "eb314c0139e4619e061accfe51f977034877d761fc6cd851a0b694d0a17e1f7a",
+        "executableSHA256": "144fa74ae767580f47ac12982f8d45c469928e71ccd99fe4e1a5e080fe279984"
+      },
+      "suite": {
+        "label": "Aufbaubenchmark",
+        "available": true,
+        "suiteId": "formnaro-practice-advanced",
+        "suiteVersion": "2.0.2",
+        "suiteHash": "715692d7356077eca5ba0bc0e3f1c4bc2af75b89031a9022f116ffd8cc855a3d",
+        "cases": [
+          {
+            "id": "A01",
+            "caseId": "advanced-01",
+            "label": "Asymmetrisches Bohrbild"
+          },
+          {
+            "id": "A02",
+            "caseId": "advanced-02",
+            "label": "Zwei versetzte Durchbrüche"
+          },
+          {
+            "id": "A03",
+            "caseId": "advanced-03",
+            "label": "Gebohrte Hülsen im versetzten Muster"
+          },
+          {
+            "id": "A04",
+            "caseId": "advanced-04",
+            "label": "Stufenkörper aufbauen und bohren"
+          },
+          {
+            "id": "A05",
+            "caseId": "advanced-05",
+            "label": "Gehäuse mit seitlichem Durchbruch"
+          },
+          {
+            "id": "A06",
+            "caseId": "advanced-06",
+            "label": "Blindtasche und blinde Bohrung"
+          },
+          {
+            "id": "A07",
+            "caseId": "advanced-07",
+            "label": "Bearbeitbare L-Skizze mit zwei Löchern"
+          },
+          {
+            "id": "A08",
+            "caseId": "advanced-08",
+            "label": "Stufenteil mit Schnitt und Bemaßung"
+          }
+        ],
+        "limits": {
+          "seconds": 600,
+          "outputTokens": 16384,
+          "rounds": 30,
+          "formatRepairs": 2,
+          "requestBudget": 1000
+        },
+        "planned": 16,
+        "challenge": {
+          "available": false,
+          "reason": "Halter-Grenztest: Aufgaben und native Prüfer noch nicht kalibriert."
+        }
+      },
+      "sourceHash": "503ffe87c45cd709f7a37934a452b3245cec0216e74d660919d0fd19a2c65515",
+      "kind": "targeted-retests",
+      "planned": 6,
+      "confirmed": 5,
+      "records": [
+        {
+          "condition": "A02-r1",
+          "runId": "e43f7516-2f8c-4cbb-84a1-d3599eb78ba2",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 160919,
+          "model": "deepseek-flash",
+          "protocolSHA256": "ad082203cb9e6b6dc27152e619683e4d4e1c8eb67d07cde6d5f7b68528e28130",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": true
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": true
+            },
+            {
+              "name": "Zwei getrennte rechteckige Durchbrüche und Materialstege",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "condition": "A03-r1",
+          "runId": "422cc6e3-d0da-4de3-a5b9-80bc316121ed",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 130991,
+          "model": "deepseek-flash",
+          "protocolSHA256": "1119b84c38b956ad4e6d0ae32755c050fb7d97288f86be335860ff0691c4c151",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Acht Hülsen an genau den acht versetzten Winkelpositionen",
+              "passed": true
+            },
+            {
+              "name": "Jede Hülse mit echter koaxialer Durchgangsbohrung",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "condition": "A04-r1",
+          "runId": "7569f681-50c1-40f6-8c5d-c5309ff65bfc",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 171198,
+          "model": "deepseek-flash",
+          "protocolSHA256": "0661cff98c888f628505a414cfb9b173113796bacabb2e2ba6ba8684874f54ed",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": true
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": true
+            },
+            {
+              "name": "Stufe links Z24, Grundplatte rechts Z8, Loch offen",
+              "passed": true
+            },
+            {
+              "name": "Ø6 durch die gesamte Stufenhöhe",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "condition": "A03-r2",
+          "runId": "ff45f213-20f1-4a25-b6fa-195fd71e18ca",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 139222,
+          "model": "deepseek-flash",
+          "protocolSHA256": "7dd7911068668b76896ddfd021464564692e86634e910606fee8684161ef68f9",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Acht Hülsen an genau den acht versetzten Winkelpositionen",
+              "passed": true
+            },
+            {
+              "name": "Jede Hülse mit echter koaxialer Durchgangsbohrung",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "condition": "A04-r2",
+          "runId": "71dd49c8-b4f1-4331-a6c7-66b283aea673",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 139060,
+          "model": "deepseek-flash",
+          "protocolSHA256": "89b4da3e13f8a61017baf95f2a18b42d3c0f1bb8b7d331b24f4cd3bdb89ef958",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": true
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": true
+            },
+            {
+              "name": "Stufe links Z24, Grundplatte rechts Z8, Loch offen",
+              "passed": true
+            },
+            {
+              "name": "Ø6 durch die gesamte Stufenhöhe",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "condition": "A07-r2",
+          "runId": "dd3c7463-5b8c-47a0-b709-148997e35f77",
+          "passed": false,
+          "cleanExit": true,
+          "status": "failed",
+          "elapsedMs": 270072,
+          "model": "deepseek-flash",
+          "protocolSHA256": "bb7a740c01b37f01d13f6b3533cbbde5e9c2870b540066f316d3140eee2e960f",
+          "checks": []
+        }
+      ],
+      "originalBenchmarkScoreUnchanged": "5/16"
+    },
+    {
+      "program": {
+        "version": "0.138.2",
+        "revision": "r2",
+        "asarSHA256": "1779ce1100b3650173d5ea949b1d7bc6ebf9580661749fdc468026dc9729506e",
+        "executableSHA256": "9493ef425800e0f6035ab0a11681ecb89f5e1da6088cffffb8ef693454398d0d"
+      },
+      "suite": {
+        "label": "Aufbaubenchmark",
+        "available": true,
+        "suiteId": "formnaro-practice-advanced",
+        "suiteVersion": "2.0.3",
+        "suiteHash": "9ebdb62dbb5a363d64a9a33acc352049ea3198896fff5b64ef396d18bf859e67",
+        "cases": [
+          {
+            "id": "A01",
+            "caseId": "advanced-01",
+            "label": "Asymmetrisches Bohrbild"
+          },
+          {
+            "id": "A02",
+            "caseId": "advanced-02",
+            "label": "Zwei versetzte Durchbrüche"
+          },
+          {
+            "id": "A03",
+            "caseId": "advanced-03",
+            "label": "Gebohrte Hülsen im versetzten Muster"
+          },
+          {
+            "id": "A04",
+            "caseId": "advanced-04",
+            "label": "Stufenkörper aufbauen und bohren"
+          },
+          {
+            "id": "A05",
+            "caseId": "advanced-05",
+            "label": "Gehäuse mit seitlichem Durchbruch"
+          },
+          {
+            "id": "A06",
+            "caseId": "advanced-06",
+            "label": "Blindtasche und blinde Bohrung"
+          },
+          {
+            "id": "A07",
+            "caseId": "advanced-07",
+            "label": "Bearbeitbare L-Skizze mit zwei Löchern"
+          },
+          {
+            "id": "A08",
+            "caseId": "advanced-08",
+            "label": "Stufenteil mit Schnitt und Bemaßung"
+          }
+        ],
+        "limits": {
+          "seconds": 600,
+          "outputTokens": 16384,
+          "rounds": 30,
+          "formatRepairs": 2,
+          "requestBudget": 1000
+        },
+        "planned": 16,
+        "challenge": {
+          "available": false,
+          "reason": "Halter-Grenztest: Aufgaben und native Prüfer noch nicht kalibriert."
+        }
+      },
+      "sourceHash": "9b05b15ba368baeab8f6c9a2e3ad168a3703cffde09b910f121862a633ca9954",
+      "kind": "single-retest",
+      "planned": 1,
+      "confirmed": 0,
+      "records": [
+        {
+          "condition": "A07-r2",
+          "runId": "8a3cc64e-0ed1-4d14-b05d-9ebf640d08bf",
+          "passed": false,
+          "cleanExit": true,
+          "status": "failed",
+          "elapsedMs": 296669,
+          "model": "deepseek-flash",
+          "protocolSHA256": "035481430112124d1651058c90393351184f5ecde262cdd000d6030f893b57e8",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": false
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": false
+            },
+            {
+              "name": "L-Aussparung und beide Schenkel an richtigen Weltpositionen",
+              "passed": false
+            },
+            {
+              "name": "Native Gegenprüfung ausführbar",
+              "passed": false
+            }
+          ]
+        }
+      ],
+      "originalBenchmarkScoreUnchanged": "5/16"
+    },
+    {
+      "program": {
+        "version": "0.138.2",
+        "revision": "r3",
+        "asarSHA256": "40b48d68038ba26c022daf6b7311984443b8cd5a760aa330da53dadb45908d5d",
+        "executableSHA256": "49ea02171bd45cd554c835ab3aab34f28e07ce0735c667b7abe85628904468c2"
+      },
+      "suite": {
+        "label": "Aufbaubenchmark",
+        "available": true,
+        "suiteId": "formnaro-practice-advanced",
+        "suiteVersion": "2.0.4",
+        "suiteHash": "83cd9f640885d0fc2bf973ef36a546d1f927acf1ed64c03c926d841bb1e8e18f",
+        "cases": [
+          {
+            "id": "A01",
+            "caseId": "advanced-01",
+            "label": "Asymmetrisches Bohrbild"
+          },
+          {
+            "id": "A02",
+            "caseId": "advanced-02",
+            "label": "Zwei versetzte Durchbrüche"
+          },
+          {
+            "id": "A03",
+            "caseId": "advanced-03",
+            "label": "Gebohrte Hülsen im versetzten Muster"
+          },
+          {
+            "id": "A04",
+            "caseId": "advanced-04",
+            "label": "Stufenkörper aufbauen und bohren"
+          },
+          {
+            "id": "A05",
+            "caseId": "advanced-05",
+            "label": "Gehäuse mit seitlichem Durchbruch"
+          },
+          {
+            "id": "A06",
+            "caseId": "advanced-06",
+            "label": "Blindtasche und blinde Bohrung"
+          },
+          {
+            "id": "A07",
+            "caseId": "advanced-07",
+            "label": "Bearbeitbare L-Skizze mit zwei Löchern"
+          },
+          {
+            "id": "A08",
+            "caseId": "advanced-08",
+            "label": "Stufenteil mit Schnitt und Bemaßung"
+          }
+        ],
+        "limits": {
+          "seconds": 600,
+          "outputTokens": 16384,
+          "rounds": 30,
+          "formatRepairs": 2,
+          "requestBudget": 1000
+        },
+        "planned": 16,
+        "challenge": {
+          "available": false,
+          "reason": "Halter-Grenztest: Aufgaben und native Prüfer noch nicht kalibriert."
+        }
+      },
+      "sourceHash": "d176ec7174029dbebeac7ced3e259f7af890aa333f6506df6ea816f3d957e203",
+      "kind": "single-retest",
+      "planned": 1,
+      "confirmed": 1,
+      "records": [
+        {
+          "condition": "A07-r2",
+          "runId": "e4190c4f-da42-4eb3-970d-f1e3e91a3964",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 136602,
+          "model": "deepseek-flash",
+          "protocolSHA256": "a70581a3dac4b589c27871d114803fa453843884516fc4eef37c33a868fd615a",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": true
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": true
+            },
+            {
+              "name": "L-Aussparung und beide Schenkel an richtigen Weltpositionen",
+              "passed": true
+            },
+            {
+              "name": "Beide Skizzenlöcher mit richtigen Durchmessern und Weltlagen",
+              "passed": true
+            },
+            {
+              "name": "Bearbeitbare Skizzenquelle mit Außenkontur und zwei Innenkonturen",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "originalBenchmarkScoreUnchanged": "5/16"
+    },
+    {
+      "program": {
+        "version": "0.138.2",
+        "revision": "r4",
+        "asarSHA256": "77f7c3fa0d199f0cf2c3fc95390aaee16bec2c50dbb0a73273a195f918d26373",
+        "executableSHA256": "95df1ef7a2a94330ba392ad69a5b1aab2930e9ae1109359d9d5ad787babdb0c6"
+      },
+      "suite": {
+        "label": "Aufbaubenchmark",
+        "available": true,
+        "suiteId": "formnaro-practice-advanced",
+        "suiteVersion": "2.0.4",
+        "suiteHash": "83cd9f640885d0fc2bf973ef36a546d1f927acf1ed64c03c926d841bb1e8e18f",
+        "cases": [
+          {
+            "id": "A01",
+            "caseId": "advanced-01",
+            "label": "Asymmetrisches Bohrbild"
+          },
+          {
+            "id": "A02",
+            "caseId": "advanced-02",
+            "label": "Zwei versetzte Durchbrüche"
+          },
+          {
+            "id": "A03",
+            "caseId": "advanced-03",
+            "label": "Gebohrte Hülsen im versetzten Muster"
+          },
+          {
+            "id": "A04",
+            "caseId": "advanced-04",
+            "label": "Stufenkörper aufbauen und bohren"
+          },
+          {
+            "id": "A05",
+            "caseId": "advanced-05",
+            "label": "Gehäuse mit seitlichem Durchbruch"
+          },
+          {
+            "id": "A06",
+            "caseId": "advanced-06",
+            "label": "Blindtasche und blinde Bohrung"
+          },
+          {
+            "id": "A07",
+            "caseId": "advanced-07",
+            "label": "Bearbeitbare L-Skizze mit zwei Löchern"
+          },
+          {
+            "id": "A08",
+            "caseId": "advanced-08",
+            "label": "Stufenteil mit Schnitt und Bemaßung"
+          }
+        ],
+        "limits": {
+          "seconds": 600,
+          "outputTokens": 16384,
+          "rounds": 30,
+          "formatRepairs": 2,
+          "requestBudget": 1000
+        },
+        "planned": 16,
+        "challenge": {
+          "available": false,
+          "reason": "Halter-Grenztest: Aufgaben und native Prüfer noch nicht kalibriert."
+        }
+      },
+      "sourceHash": "11fce2b82049428306bf092b781700058e4a403ee7e988213af167cb448d546b",
+      "kind": "single-retest",
+      "planned": 1,
+      "confirmed": 1,
+      "records": [
+        {
+          "condition": "A07-r2",
+          "runId": "9b01818f-964e-4fb4-8594-c841d91ab11e",
+          "passed": true,
+          "cleanExit": true,
+          "status": "completed",
+          "elapsedMs": 144199,
+          "model": "deepseek-flash",
+          "protocolSHA256": "d336cbb6c491b8ff3d948293b480e86babbeddab089bb5a07542a585b4cb3d83",
+          "checks": [
+            {
+              "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+              "passed": true
+            },
+            {
+              "name": "Sichtbare Ausführung abgeschlossen",
+              "passed": true
+            },
+            {
+              "name": "Nur sichtbare gültige native Einzelkörper",
+              "passed": true
+            },
+            {
+              "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+              "passed": true
+            },
+            {
+              "name": "Unabhängig berechnetes Materialvolumen",
+              "passed": true
+            },
+            {
+              "name": "L-Aussparung und beide Schenkel an richtigen Weltpositionen",
+              "passed": true
+            },
+            {
+              "name": "Beide Skizzenlöcher mit richtigen Durchmessern und Weltlagen",
+              "passed": true
+            },
+            {
+              "name": "Bearbeitbare Skizzenquelle mit Außenkontur und zwei Innenkonturen",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "originalBenchmarkScoreUnchanged": "5/16"
+    }
+  ],
+  "distinctOriginalConditionsConfirmedAcrossBuilds": 16,
+  "notANewFullBenchmark": true,
+  "scope": "Eight fixed advanced tasks repeated twice. Original full run and targeted retests remain separate, including failures. Cross-build condition coverage is not a fresh 16/16 benchmark or a general reliability estimate."
+}
