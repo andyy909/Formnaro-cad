@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -114,7 +114,7 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "07a3a49588204bd899cc7b157bc9e86f5388bac352859dffb1859821f30fae9c"
+      "sha256": "b5e1cb1dc47447823dc203c8b2f26e0daaa1448d33c80b24fdb704a3d0414d5b"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -133,5 +133,5 @@
       "sha256": "442e21d5f0db858dbc14638c44294afa86de03300babc11ce73f9cf172066440"
     }
   ],
-  "revisionReason": "Document the existing visible delete route for explicit part replacement, including its toolbar location and selection; sketch creation keeps existing bodies. All task prompts, fixtures, native predicates and limits unchanged from 2.0.3."
+  "revisionReason": "Keep execution observations reachable after restarting a practice child for UI or native correction. Tasks, fixtures, native predicates, prompts and all model budgets unchanged."
 }

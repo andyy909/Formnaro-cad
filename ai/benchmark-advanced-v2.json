@@ -1,7 +1,7 @@
 {
   "id": "formnaro-practice-advanced",
   "label": "Aufbaubenchmark",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 600,
@@ -111,11 +111,11 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "07a3a49588204bd899cc7b157bc9e86f5388bac352859dffb1859821f30fae9c"
+      "sha256": "b5e1cb1dc47447823dc203c8b2f26e0daaa1448d33c80b24fdb704a3d0414d5b"
     },
     {
       "path": "ai/benchmark-advanced-calibration-v2.json",
-      "sha256": "867bef4f69342cdd4a9b24bc3c44ca1241f92ed908065dade86a18dd7ec16f1b"
+      "sha256": "7d8921f8844b5bde563bc00c48f17f94c28e8115158a6fa8389b0360360c1c61"
     },
     {
       "path": "src/cad-service.js",
@@ -157,10 +157,10 @@
   "calibration": {
     "status": "passed",
     "evidence": "ai/benchmark-advanced-calibration-v2.json",
-    "sha256": "867bef4f69342cdd4a9b24bc3c44ca1241f92ed908065dade86a18dd7ec16f1b",
+    "sha256": "7d8921f8844b5bde563bc00c48f17f94c28e8115158a6fa8389b0360360c1c61",
     "positiveNative": 8,
     "negativeNative": 24,
     "providerRequests": 0
   },
-  "revisionReason": "Document the existing visible delete route for explicit part replacement, including its toolbar location and selection; sketch creation keeps existing bodies. All task prompts, fixtures, native predicates and limits unchanged from 2.0.3."
+  "revisionReason": "Keep execution observations reachable after restarting a practice child for UI or native correction. Tasks, fixtures, native predicates, prompts and all model budgets unchanged."
 }

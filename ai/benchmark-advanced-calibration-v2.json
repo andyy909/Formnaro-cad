@@ -2,16 +2,17 @@
   "format": "FormnaroLocalNativeCalibration",
   "version": 1,
   "suiteId": "formnaro-practice-advanced",
-  "suiteVersion": "2.0.4",
-  "program": "0.138.2-r3",
+  "suiteVersion": "2.0.5",
+  "program": "0.138.3-r1",
   "providerRequests": 0,
   "positiveNative": 8,
   "noopRejected": 8,
   "nearMissRejected": 8,
   "missingReplayRejected": 8,
   "regularChildExit": true,
-  "driverSHA256": "7fd79551dc8d3ce9eadb8bf21c76b8a859810cdc09697d2ffeb45719f2f36e9b",
+  "driverSHA256": "ce4ed888247ad1b1705ef237cacd496aebe7f5a6c2ece84581116f334c585561",
   "referenceConstructionSHA256": "042aea175c8457f202e203bdb561b8b7980e496a58e6429ee4ce54a550c14509",
+  "scope": "Fresh private package: eight positive and24 negative native reference checks; actual regular child exits. Observer scope correction only; no changes to prompts, tasks, fixtures, native predicates or model budgets.",
   "cases": [
     {
       "caseId": "advanced-01",
@@ -593,6 +594,5 @@
         }
       ]
     }
-  ],
-  "scope": "Local native fixtures only, zero provider requests. Eight positive and24 negative checks with regular isolated-child closes. Two close-only failures retained and repeated successfully after packaging. A07 wording clarifies the unchanged +4mm floor; all native thresholds and budgets unchanged."
+  ]
 }
