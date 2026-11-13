@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -131,7 +131,11 @@
     {
       "path": "src/cad-agent-ui-policy.js",
       "sha256": "442e21d5f0db858dbc14638c44294afa86de03300babc11ce73f9cf172066440"
+    },
+    {
+      "path": "backend/desktop-ai.cjs",
+      "sha256": "65359bf66a559b50842fef5ccedec6ea9d2b60a6559d7454dbd52a7dc882e273"
     }
   ],
-  "revisionReason": "Keep execution observations reachable after restarting a practice child for UI or native correction. Tasks, fixtures, native predicates, prompts and all model budgets unchanged."
+  "revisionReason": "Forward the per-request credential resolver through the actual desktop lab adapter. Freeze that adapter as a suite dependency. No changes to tasks, prompts, fixtures, native predicates, model identities or model budgets."
 }

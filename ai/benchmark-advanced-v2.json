@@ -1,7 +1,7 @@
 {
   "id": "formnaro-practice-advanced",
   "label": "Aufbaubenchmark",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 600,
@@ -115,7 +115,7 @@
     },
     {
       "path": "ai/benchmark-advanced-calibration-v2.json",
-      "sha256": "7d8921f8844b5bde563bc00c48f17f94c28e8115158a6fa8389b0360360c1c61"
+      "sha256": "c20eaa5a371ab84b566fe08efc78311ad60e6035088eb0d0fc46c55d6301f375"
     },
     {
       "path": "src/cad-service.js",
@@ -152,15 +152,19 @@
     {
       "path": "src/cad-agent-ui-policy.js",
       "sha256": "442e21d5f0db858dbc14638c44294afa86de03300babc11ce73f9cf172066440"
+    },
+    {
+      "path": "backend/desktop-ai.cjs",
+      "sha256": "65359bf66a559b50842fef5ccedec6ea9d2b60a6559d7454dbd52a7dc882e273"
     }
   ],
   "calibration": {
     "status": "passed",
     "evidence": "ai/benchmark-advanced-calibration-v2.json",
-    "sha256": "7d8921f8844b5bde563bc00c48f17f94c28e8115158a6fa8389b0360360c1c61",
+    "sha256": "c20eaa5a371ab84b566fe08efc78311ad60e6035088eb0d0fc46c55d6301f375",
     "positiveNative": 8,
     "negativeNative": 24,
     "providerRequests": 0
   },
-  "revisionReason": "Keep execution observations reachable after restarting a practice child for UI or native correction. Tasks, fixtures, native predicates, prompts and all model budgets unchanged."
+  "revisionReason": "Forward the per-request credential resolver through the actual desktop lab adapter. Freeze that adapter as a suite dependency. No changes to tasks, prompts, fixtures, native predicates, model identities or model budgets."
 }
