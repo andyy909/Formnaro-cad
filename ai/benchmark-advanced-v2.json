@@ -1,7 +1,7 @@
 {
   "id": "formnaro-practice-advanced",
   "label": "Aufbaubenchmark",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 600,
@@ -111,11 +111,11 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "f7de68102cb9dd588303211b73bec6c91247b4f22723dfa9893b2bea9c55aad1"
+      "sha256": "0d4c09004f859713b394cf82dcbb5ae9680dfaf1db482c5c92bf156a23adc1a2"
     },
     {
       "path": "ai/benchmark-advanced-calibration-v2.json",
-      "sha256": "b8bcaee7ad764c7516c373405d749145bbfabf98632346e3dce1297a0057ac11"
+      "sha256": "247f9e5ef32075370b1af42d5125d45c235fa35d3f5d1d8e66975b3449648ad8"
     },
     {
       "path": "src/cad-service.js",
@@ -167,7 +167,7 @@
     },
     {
       "path": "backend/ai-lab-response.cjs",
-      "sha256": "82a3389ae4412896a8eca0c78b2d4f1525177dfa79e7847868489255ac668eb9"
+      "sha256": "0a52f5168cbff310ef52aa829d39fe751ac729d49f88036ac54ab9904fb8243f"
     },
     {
       "path": "backend/ai-lab-reviewer.cjs",
@@ -175,7 +175,7 @@
     },
     {
       "path": "backend/ai-diagnostic-child.cjs",
-      "sha256": "c44eab321a7ea63a81ab04b5c7827c96441c89abd3027731ba0d06d22757fd39"
+      "sha256": "b594bbdc5c86a3160ffb3cccd756df2aed1252fa8cd3f661cb15f103045c97d9"
     },
     {
       "path": "src/cad-ai-analysis.js",
@@ -189,7 +189,7 @@
   "calibration": {
     "status": "passed",
     "evidence": "ai/benchmark-advanced-calibration-v2.json",
-    "sha256": "d6393de41a3cfe8f1fbb05d9044cd1d21d9679e92d59e6b10ed34fffc720f96f",
+    "sha256": "9b708b115570879721fbe299ff56f36129aedd0fa0e385593d925d7075cac3e0",
     "positiveNative": 8,
     "negativeNative": 24,
     "providerRequests": 0

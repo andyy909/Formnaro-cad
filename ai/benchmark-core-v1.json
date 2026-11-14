@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -114,7 +114,7 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "f7de68102cb9dd588303211b73bec6c91247b4f22723dfa9893b2bea9c55aad1"
+      "sha256": "0d4c09004f859713b394cf82dcbb5ae9680dfaf1db482c5c92bf156a23adc1a2"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -146,7 +146,7 @@
     },
     {
       "path": "backend/ai-lab-response.cjs",
-      "sha256": "82a3389ae4412896a8eca0c78b2d4f1525177dfa79e7847868489255ac668eb9"
+      "sha256": "0a52f5168cbff310ef52aa829d39fe751ac729d49f88036ac54ab9904fb8243f"
     },
     {
       "path": "backend/ai-lab-reviewer.cjs",
@@ -154,7 +154,7 @@
     },
     {
       "path": "backend/ai-diagnostic-child.cjs",
-      "sha256": "c44eab321a7ea63a81ab04b5c7827c96441c89abd3027731ba0d06d22757fd39"
+      "sha256": "b594bbdc5c86a3160ffb3cccd756df2aed1252fa8cd3f661cb15f103045c97d9"
     },
     {
       "path": "src/cad-ai-analysis.js",

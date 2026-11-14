@@ -1,5 +1,5 @@
 const METHODS=['context','scene','project','command_info','tool_info','preview','apply','discard','analyze','screenshot','ui'];
-const CONTRACT='Return one JSON object: {"tool":"offlinecad_TOOL","arguments":{...}} for the next action, {"status":"completed","message":"verified result or honest remaining failure"} to finish, or {"status":"question","message":"necessary clarification"}. Optional diagnosis describes an observed blocker. Do not use message alone to describe future work; next/tool calls must never be nested. A completion claim is still independently checked.';
+const CONTRACT='Return one JSON object: {"tool":"offlinecad_TOOL","arguments":{...}} for the next action, {"status":"completed","message":"verified result or honest remaining failure"} to finish, or {"status":"question","message":"necessary clarification"}. Optional diagnosis describes an observed blocker. Do not use message alone to describe future work; next/tool calls must never be nested. Stop after that single object; only the application supplies tool results. A completion claim is still independently checked.';
 function validateAgentResponse(value){
  const fail=message=>{throw Object.assign(Error(message),{code:'INVALID_AGENT_RESPONSE'});};
  if(!value||typeof value!=='object'||Array.isArray(value))fail('Antwort muss ein JSON-Objekt sein. '+CONTRACT);

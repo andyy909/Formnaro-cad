@@ -16,8 +16,14 @@ function openDiagnosticChild({app,directory,executable=process.execPath}){
  function call(method,args={},timeout=180000){if(exited)return Promise.reject(Error('Testfenster beendet.'));return new Promise((resolve,reject)=>{const id=++seq,timer=setTimeout(()=>{pending.delete(id);reject(Error('Testfenster-Zeitlimit: '+method));},timeout);pending.set(id,{resolve,reject,timer,method});send({id,method,args});});}
  return {call,onPracticeActivity(callback){activityObservers.add(callback);return ()=>activityObservers.delete(callback);},onPracticeObservation(callback){observers.add(callback);return ()=>observers.delete(callback);},async close(){
   if(exited)return exit;const shutdownStarted=Date.now();send({id:++seq,method:'close',args:{}});let timer;
-  const timeout=new Promise(resolve=>{timer=setTimeout(()=>{child.kill();resolve(null);},30000);});const normal=await Promise.race([exit,timeout]);clearTimeout(timer);if(normal)return {...normal,shutdownMs:Date.now()-shutdownStarted};
-  const forced=await Promise.race([exit,new Promise(resolve=>{timer=setTimeout(()=>resolve({code:null,signal:'exit-unconfirmed'}),5000);})]);clearTimeout(timer);return {...forced,forced:true,shutdownMs:Date.now()-shutdownStarted};
+  const wait=async ms=>{const value=await Promise.race([exit,new Promise(resolve=>{timer=setTimeout(()=>resolve(null),ms);})]);clearTimeout(timer);return value;};
+  const normal=await wait(30000);if(normal)return {...normal,shutdownMs:Date.now()-shutdownStarted};
+  // IPC can already be closed while Electron's native teardown still owns the
+  // process. Under parallel CAD load Windows can report exit only after 30 s.
+  // Disconnection is progress, never proof of success: still require OS exit.
+  const nativeExitGrace=!child.connected;
+  if(nativeExitGrace){const late=await wait(Math.max(1,120000-(Date.now()-shutdownStarted)));if(late)return {...late,nativeExitGrace,shutdownMs:Date.now()-shutdownStarted};}
+  child.kill();const forced=await wait(5000)??{code:null,signal:'exit-unconfirmed'};return {...forced,forced:true,nativeExitGrace,shutdownMs:Date.now()-shutdownStarted};
  },cancel(){rejectPending(Object.assign(Error('Testberechnung abgebrochen.'),{name:'AbortError'}));if(!exited)send({id:++seq,method:'cancel',args:{}});}};
 }
 function installDiagnosticChild(win){
