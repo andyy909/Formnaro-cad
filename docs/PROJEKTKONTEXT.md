@@ -5578,3 +5578,6 @@ Private Abnahme:269 automatische Pruefungen bestanden (128Standard,112Labor/Desk
 
 
 2026-11-14 Veröffentlichungsauftrag für 0.139.1-r1: geprüfte EXE/ASAR/ZIP unverändert; aktuelle README-Downloads, separate Quellarchive, zweisprachige Webseite und begrenzte öffentliche Laborbelege werden gemeinsam aktualisiert. Neue Windows-CI-Regressionsstufe deckt Speicherung, Credential-Weitergabe, verzögerten OS-Abschluss und abgewiesene Antworthistorie ab. Historische Berichte behalten ihre Messstände; offene Testabdeckung wird nicht als abgeschlossen ausgegeben.
+
+
+2026-11-14 Nach der eingefrorenen Veröffentlichung 0.139.1-r1: Entwicklungsabhängigkeiten der drei Paketbäume auf korrigierte ASAR-/glob-/minimatch-/XML-Versionen aktualisiert. Drei lokale npm-audit-Prüfungen ohne bekannte Schwachstelle, 128/61/64 Standardtests und drei Archiv-/Dateisystem-Integrationstests bestanden; Builds erfolgreich. Mini/Mini-CAD in Windows-CI aufgenommen. Release-Tag und geprüfte Programmdateien bleiben unverändert. Details: docs/DEPENDENCY-MAINTENANCE-2026-11-14.md.

@@ -26,5 +26,32 @@ jobs:
       - run: node --test tests/windows-dictation.test.cjs tests/renderer-recovery-lifecycle.test.cjs tests/desktop-ai-lifecycle.test.cjs tests/ai-model-benchmarks.test.cjs tests/ai-lab-benchmark.test.cjs tests/ai-advanced-benchmark.test.cjs tests/ai-drawing-reference.test.cjs tests/ai-tool-reference.test.cjs tests/ai-responses-json-input.test.cjs tests/ai-drill-completion.test.cjs tests/ai-lab-token-renewal.test.cjs tests/chatgpt-login.test.cjs
       - name: Verify laboratory storage, credentials and process shutdown
         run: node --test --test-concurrency=1 tests/ai-lab-integration-01390.test.cjs tests/ai-lab-ui-feedback.test.cjs tests/desktop-ai-lab-credentials.test.cjs tests/ai-diagnostic-close-grace.test.cjs tests/ai-diagnostic-os-exit.test.cjs tests/ai-lab-rejected-history.test.cjs
+      - name: Verify archive and filesystem tooling
+        run: node --test tests/dependency-toolchain.test.cjs
       - name: Verify the build leaves tracked inputs untouched
         run: git diff --exit-code
+
+  mini-source:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        directory: [mini, mini-cad]
+    defaults:
+      run:
+        working-directory: ${{ matrix.directory }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: ${{ matrix.directory }}/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: node --test ../tests/dependency-toolchain.test.cjs
+      - run: git diff --exit-code
