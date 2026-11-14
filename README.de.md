@@ -12,10 +12,14 @@
 
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
-| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.138.2-r4/Formnaro-v0.138.2-r4-Windows-x64.zip)** | **0.138.2-r4** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
-| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.138.2-r4) | **0.138.2-r4** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
+| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.139.1-r1/Formnaro-v0.139.1-r1-Windows-x64.zip)** | **0.139.1-r1** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
+| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1) | **0.139.1-r1** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
 
-**Neu:** Korrigierte Körperauswahl, Bohrflächen und Skizzenersatz/Höhenrückmeldung. Alle historischen Benchmarks und erfolgreichen Nachtests bleiben erhalten. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.138.2-r4).
+**Neu:** Verbesserte Laborspeicherung, Werkzeugrückmeldungen und Prozess-/KI-Antwortbehandlung. Historische Benchmarks bleiben erhalten. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1).
+
+## Aktuelle Ausgabe: zuverlässigeres KI-Labor
+
+**0.139.1-r1** integriert sichere Ergebnisspeicherung, klarere Werkzeug- und Auswerterrückmeldungen, kompatible alte Skizzenkantenbezüge und die Prozess-/KI-Antwortkorrekturen. 128 Standardtests, 152 gezielte Regressionen und vier gezielte Liveversuche bestanden. Ein Liveversuch benötigte eine erfolgreiche Formatkorrektur. Die vollständige Testkampagne und die Ursache langen nativen Prozessabbaus bleiben offen; kein neuer Vollbenchmark. [Releasebericht](docs/VEROEFFENTLICHUNG-0.139.1-r1.md) · [Versionierte Belege](docs/benchmarks/lab-targeted-01391-2026-11-14.json).
 
 ## Neuer vollständiger Sol-Benchmark: 16/16
 
@@ -25,7 +29,7 @@ GPT-6.1 Sol/high bestand alle sechzehn frischen Versuche auf der veröffentlicht
 
 [Sol-Beleg](docs/benchmarks/core-sol-01374-2026-11-08.json) · [Vergleichsdaten](docs/benchmarks/sol-deepseek-16-vergleich-2026-11-08.json) · [Alle Originalergebnisse](docs/benchmarks/README.md)
 
-[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.138.2-r4/Formnaro-Quellcode-v0.138.2-r4.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
+[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.139.1-r1/Formnaro-Quellcode-v0.139.1-r1.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
 
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
@@ -102,13 +106,11 @@ Aufgenommen mit dem lokal getesteten Entwicklungsstand **0.125.0-r35**. Der aktu
 | Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
-## Aktuelle Ausgabe: 0.137.4-r2
+## Veröffentlichungsstand: 0.139.1-r1
 
-Die KI erhält jetzt die vollständigen Bedienelemente und den Ablauf des Zeichnungswerkzeugs. Die ursprünglichen Benchmarks bleiben unverändert: [DeepSeek 16/16 auf 0.137.0-r1](docs/benchmarks/core-deepseek-2026-11-08.json) und [GPT-6.1 Sol 14/16 auf 0.137.2-r1](docs/benchmarks/core-sol-2026-11-08.json). Nur die beiden fehlgeschlagenen Sol-Zeichnungsversuche wurden auf 0.137.3-r2 erneut geprüft: [2/2 bestanden](docs/benchmarks/sol-drawing-retests-2026-11-08.json). Die vierzehn erfolgreichen Sol-Originale bleiben erhalten. Die gezielte Abdeckung über verschiedene Programmstände ist kein neuer vollständiger 16er-Benchmark.
+Die neue Ausgabe enthält die geprüften Verbesserungen aus 0.139.0 und die anschließenden Prozess-/JSON-Korrekturen. Die vier gezielten Live-Nachtests ersetzen keinen neuen Vollbenchmark. Weitere Testbedingungen und die genaue Ursache langsamen nativen Prozessabbaus bleiben offen.
 
-Lokal geprüft: 128 Standardtests, gezielte Regressionen, echte Zeichnungsprüfungen im fertigen Paket, Anzeige gespeicherter Ergebnisse und regulärer Fensterschluss. Die CAD-Laufzeitdateien werden vor und nach dem Paketieren geprüft. Für die Veröffentlichung startet kein weiterer Cloud-Benchmark; Messversionen und ursprüngliche Hashes bleiben an jedem Ergebnis erhalten.
-
-[Release und Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2) · [Passender Quelltag](https://github.com/andyy909/Formnaro-cad/tree/v0.137.4-r2) · [Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.138.2-r4/Formnaro-Quellcode-v0.138.2-r4.zip) · [Abnahmebericht](docs/ABNAHME-0.137.4-r2.md)
+[Release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1) · [Source tag](https://github.com/andyy909/Formnaro-cad/tree/v0.139.1-r1) · [ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.139.1-r1/Formnaro-Quellcode-v0.139.1-r1.zip) · [Abnahme / acceptance](docs/VEROEFFENTLICHUNG-0.139.1-r1.md)
 
 <!-- formnaro-development-status:end -->
 

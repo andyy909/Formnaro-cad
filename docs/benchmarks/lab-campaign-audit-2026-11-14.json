@@ -1,0 +1,2089 @@
+{
+  "format": "FormnaroPublicCampaignAudit",
+  "version": 1,
+  "asOf": "2026-11-14T06:55:22.555Z",
+  "scope": "Four new main campaign outputs. Earlier prestart and 120 historical records are separate. Post-hoc audit; raw records and frozen campaign gates unchanged.",
+  "totals": {
+    "attempts": 256,
+    "passed": 227,
+    "modelFailures": 9,
+    "infrastructureOrInterrupted": 20,
+    "passedWithoutCorrection": 157,
+    "passedAfterCorrection": 70
+  },
+  "cohorts": {
+    "0.138.2-r4": {
+      "passed": 110,
+      "infrastructure-or-interrupted": 2,
+      "model-outcome-failed": 1
+    },
+    "0.138.3-r1": {
+      "infrastructure-or-interrupted": 14,
+      "passed": 34,
+      "model-outcome-failed": 1
+    },
+    "0.138.4-r1 C": {
+      "passed": 26,
+      "model-outcome-failed": 4,
+      "infrastructure-or-interrupted": 2
+    },
+    "0.138.4-r1 G": {
+      "passed": 57,
+      "model-outcome-failed": 3,
+      "infrastructure-or-interrupted": 1,
+      "infrastructure": 1
+    }
+  },
+  "sourceAuditSHA256": "a2b1f4f04e29da5cf24fcc71321596e4018d03b7d7b61758564cedfbe8a25e47",
+  "records": [
+    {
+      "runId": "00f54ee2-a07d-4433-b0c3-44dd0d27858d",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-12",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "041bef87-f2a9-421c-81c1-4355c19f762f",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-11",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "04d38f1a-3441-4cd3-81ac-08de171bb1c6",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-26",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "05d78ae4-a7a0-43cb-aac0-acfc51383420",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-17",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "0a894680-f8f3-41e3-94ac-a07c6ee0d43b",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-17",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "0b9202a5-59af-42b6-b66b-5f43e74184c2",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-03",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "0da255d6-3430-4161-8598-6bec34ca1a84",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-16",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "0ded4ef2-efbb-4ec3-8af4-968793b70c84",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-28",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "0efacea1-ee13-49da-a22d-41ec0ad71fdc",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-22",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "183d13e8-7da1-4ec9-a463-3b4cf362fb00",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-10",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "1a3bf2d7-0abc-4fc0-98bd-87b49b228517",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-22",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "1e5666cf-384f-4cba-a909-18b982bbb92b",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-24",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "1e647079-cacf-426b-84e3-7640fa9f9c34",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-25",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "1efd8843-753c-4a7b-ba01-01de039ade16",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-12",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "1fac820d-b8a4-4664-918e-ef02e5c7b6e5",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-15",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "22185cf5-107b-4102-bf0b-c344a8716891",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-08",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "25b40c2f-eb0f-4583-aea3-cf8eaa95b22d",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-22",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "2674e195-e8e6-4f89-af77-9d1748c57cae",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-25",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "31b220d5-2fa3-4a46-b434-a0bd6ba0ebf5",
+      "cohort": "0.138.2-r4",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "practice-22",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "31e11254-2409-411d-a219-35d364225a28",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-13",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "32cde21e-7ee5-483c-84e9-f5159b91ce4f",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-11",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "32ef961f-3d49-4c16-b4ee-8a3f1cbb8003",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-15",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "3316aae7-1180-48f2-83b0-d86fd3592d1f",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-30",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "38a88f96-4633-4259-b6b3-31d1db8cf583",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-14",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "3eb2198e-4a29-474f-b9e5-924191ee0258",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-03",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "4209f12a-0a6a-41b5-be61-86fc5688fb76",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-30",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "436d693a-74b4-4b1a-aae0-fc66d5bae003",
+      "cohort": "0.138.2-r4",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-01",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "44f444cb-c04c-4d50-8392-77e1d5e22e62",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-21",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "4690b98e-148c-494d-9cb9-1b45dc706479",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-12",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "4e13f613-fff7-4a07-b56a-16dbe6b3ae67",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-24",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "4eb27387-4de8-4331-9b7b-affdf5ad472e",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-28",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "4f66a3c6-8589-42ee-8feb-0b9913bedab2",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-23",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "51cc94b8-3ac2-47e5-80cf-793109d6d3f7",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-15",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "592ea7a8-d542-4d97-bfa7-b3be04b26e81",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-21",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "5a10021b-65bf-4d7e-a83b-ce9b1d927b52",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-10",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "5a91fbb5-8ad7-49eb-8ad3-09f093465f5b",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-03",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "5ae8b76d-d206-46b1-b8a6-b214f01156e3",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "5b7bb1c2-c0ab-4523-880b-9635c213e2d4",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-23",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "5c8793dd-2c4d-47b6-a19e-1f08344e6005",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-22",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "5d2c092f-c461-4f71-b391-3fc6d875d879",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-09",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "5fa5a833-fad4-46aa-8ec2-706246e97982",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-21",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "61cef7e1-e0c8-4551-a372-4e317c70db87",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-04",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "62bd62c1-57ae-424b-b21a-6694cff70df6",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-05",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "641563a6-221a-4201-b71c-6691f21a1381",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-03",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "646adcfb-2dfd-4eab-8925-0e5d6937f3d5",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-14",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "649ec406-a327-4109-a8dc-6f9afc2b3907",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-01",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "64b09c45-9237-475c-bf20-62ed5db4003c",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-17",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "64f570b3-8a17-4136-a5d2-4fbfff127596",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-02",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "65d87971-c387-4f37-9b51-b729ca9ab2e9",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-19",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "674a74a0-cb72-4f51-b900-021937f3b3de",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-06",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "6ef92117-3214-4b17-8350-dba775f09ee6",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-16",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "727f4389-8e49-4d49-b4cc-d8bb64db9dc5",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-09",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "742de815-4443-4f7c-bc35-0474e6aab896",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-05",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "7aac6ddf-0896-4311-be63-325d9a22715f",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-07",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "7b35b953-6a3d-400e-a234-672cc45daabd",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-01",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "7c1768dd-ad1b-4195-be1a-0de4e2c17ccb",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-13",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "84950484-8d3e-443b-a553-97551a740f83",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-16",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "8582670c-0f98-4320-a5d0-91f6c0c2e191",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-01",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "8772fc05-1bce-443f-ad12-504390354e57",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-19",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "8ad63a9e-6f8f-47bb-81f2-e5dbbdb237e6",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-29",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "8c244949-d582-4181-b121-fb165ec25276",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-15",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "8de1a663-cc41-4553-b927-51c47ff8a972",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-20",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "8fee76e5-3a45-4dfe-a443-c44d3a34f70c",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-16",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "902fbe60-b438-4dc3-ac87-0b62bc5b7479",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-20",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "9280517f-5266-444a-af21-7194ec5237ac",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-07",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "961a5a51-3ede-4979-81ff-418c04106336",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-18",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "96c3ef58-a975-46a8-b58b-5d4e475ac44c",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-14",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "97ad9aea-79ac-4dd6-aa03-866efdf16afc",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-27",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "9875853b-a3e1-463f-b823-541bbffd91ed",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-10",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "987e89d1-6ebc-4eca-aa2e-5c7d6e81cf62",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-19",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "98d099c6-8330-4485-9b8f-c870ac460fd6",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-26",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "995a5318-0340-4dec-aff5-711984557888",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-02",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "9b74200e-40bf-4f71-bc5a-3109d2251525",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-29",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "9bffd7e6-a876-49e2-8342-fcdf8da29940",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-25",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "9dee9089-11ec-4568-bcb7-4435ad7fa6fb",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-21",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "a0627b00-1661-4ec9-86fb-df3e14c70151",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-20",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "a398ea08-7294-49c3-9d1e-46dfe6c251fe",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-22",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "a46fda4b-bdf8-4fdb-a239-296a9720ebc8",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-04",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "a600c1f1-2933-4daa-b27f-2ad48c657568",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-30",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "a956547c-79e3-4860-be7f-57b6b6acbb7c",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-29",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "aa71904b-d0da-48b1-b5d6-13bbfb73a2be",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-16",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "acc1aed9-680c-4c52-a73f-5c8db2945c1f",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-08",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "aef24389-7a17-4dfc-b43e-9dedcdfe4e75",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-17",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "b083d744-3c52-4822-b0f1-64b7532c0be3",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-01",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "b0de5d28-861c-4659-9f39-5215b743e505",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-23",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "b7c63530-2fdd-42b6-9717-feba0dd51fae",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-18",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "b8f421f5-93a5-41f0-8f36-0f9932681e93",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-14",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "bcc6318e-d738-47c8-8589-b8aba3f89db1",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-03",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "bd4f0b2d-74ef-44f6-99b7-447c62572728",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-11",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "bd6b1f38-770c-4f0d-822c-ab1ec686a69a",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-05",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "c07abfe7-83e6-401e-bbba-2c39715d489c",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-24",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "c26666b8-032b-4213-ad14-5c9da8ced5df",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-07",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "c3047ca7-9dbc-415b-a17a-cb4471329980",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-26",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "c342d6b1-336f-473e-bfe5-77934838e3b9",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-11",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "c52c71e5-dfd0-4e2a-b1a7-bc5c813bdd1f",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-09",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "c73064d7-7c13-42ad-8574-be2b2d1edccc",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-18",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "c88f6e80-74f9-41d9-b550-9c4d2bc0c9ca",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-14",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "ccae3d9d-a779-4e51-a501-15d9ed7b33df",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-04",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "cce4331c-a36b-4483-8c8e-7f4141820d4f",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-28",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "d2a2ebce-8255-4b46-a474-bf0e4e99ee7e",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-02",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "d5790440-4dc5-40f4-af91-6bcccc47a623",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-21",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "d9b1063e-a668-4401-aab6-68bbac080d47",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "dca4f9de-7ca0-41de-aeb5-c75063704a69",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-27",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "dcd284f6-f977-41bc-af51-6e31b5af79c8",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-27",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "e14ac749-f116-4053-82fa-4511cb636e3c",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-13",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "e2d35236-200b-4e79-9dc2-2f608059c366",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-21",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "e6dfb4b5-a141-4334-9561-86a2bd6e6108",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-17",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "e7478f10-01e7-4b19-b121-01ad56a8d497",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-11",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "ee20067b-064d-4d15-9ed7-6243e5772d84",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-06",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "ef330726-9261-46d5-9f9d-211a838bb589",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-08",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "ef599a25-a092-474d-adeb-c93937d71af0",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-06",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "f09eecdb-0b8c-4e8a-ac89-3a2f07352e81",
+      "cohort": "0.138.2-r4",
+      "classification": "model-outcome-failed",
+      "caseId": "practice-30",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "fd236d78-f98f-4a42-9575-a9eaf59d4395",
+      "cohort": "0.138.2-r4",
+      "classification": "passed",
+      "caseId": "practice-16",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "01a3c935-50d3-4561-ad9f-50639bed4504",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-05",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "17ce6de2-f5ab-45ae-9a65-0a944d5ce498",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-03",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "19f40b93-9d68-4bed-a84c-adfa63453aed",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-01",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "297aefde-ae60-4d14-86b2-0c9ac8e2672e",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "2b175169-65e0-4c19-a18d-0140164f44e2",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-17",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "2d8eed44-ddd0-4fca-8517-5ef9a0f6c2f4",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-16",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "2e19a5e2-9e42-4001-b66a-1c3b042af322",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-22",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "4211385e-9ed7-4611-927e-d74dbf48a698",
+      "cohort": "0.138.3-r1",
+      "classification": "model-outcome-failed",
+      "caseId": "advanced-04",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "4301576a-4617-48cf-ae12-423c043a0ae9",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-22",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "465c735f-b27d-465a-ac16-0babe901778b",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-04",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "4baf9f03-6a1c-4083-af63-74965b701fef",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-03",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "5509d4ed-1af9-4586-959a-a5fd9be4c6b5",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-07",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "57c703f1-a750-480f-a624-dccfcdac33d0",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-01",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "600e1499-f9a3-4d93-973b-22ce7db77466",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-02",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "66707685-59d7-4de6-ae06-98462106f8a4",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-06",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "6b0c8be4-0a44-4be0-bb5b-8f2f4e2b7c33",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-02",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "6d6afc80-61e2-4aeb-bdfb-bb0206794ef2",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-21",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "6d75c196-2809-492b-af6f-514e415139a4",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-08",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "6db6d577-0388-4f0d-90b3-a833ba78fa98",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-04",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "7350bb31-ad86-4009-827d-ab3bf2dc1a5e",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-03",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "750f4277-93f1-441b-bc27-bde26e5a3b54",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "7a435f19-be9d-42c6-a7ed-8b6427d81b8c",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-01",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "801eef8a-733c-4d7d-91ef-58f80b7b9274",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-06",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "87cca064-321d-41cf-9720-78066db409ee",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-22",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "88088cca-3c99-4e7a-81b5-3e1ae47fddd4",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-16",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "8a25bb96-c5bf-409f-bba6-ad527d78b973",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-02",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "8e9fafa1-3553-48b1-b6c1-05594151a742",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-05",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "8f68e8e4-6d68-4317-829e-304178f050ab",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-14",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "947dc920-e6cb-4ce7-9e5f-15c522991ce9",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-07",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "9ed43469-f659-475e-a858-7dd8200bd4b1",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-11",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "a35fe1aa-4d3b-4f6e-8a17-4912cfe8e356",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-05",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "a5f595b6-c5c8-451e-a81f-06a062219ff1",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-21",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "afcb405e-39f3-4ab1-91fb-3822f1cd6917",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-11",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "b189c009-edb2-43ab-b43a-a4b0ba94c183",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-02",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "b67f98c4-e608-4b99-80f3-bc5595d8ab67",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-03",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "b6bf4b4e-88ab-4e3e-8ad3-da5f0b272f66",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-03",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "bd26968a-6343-4bbd-827f-b8e257e165e3",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-07",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "c484b81e-a0fe-418d-8899-50dc1080215d",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-05",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "cdca6c1f-3039-42ee-887e-6b1ae1dd9c33",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-06",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "d30e14a4-b56a-483f-a4a6-becfea82714f",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-14",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "d8e310a9-2cf2-4588-99c2-33430b042377",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-07",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "d97c1ce9-ee01-48ba-a4d5-a45af0e52007",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-08",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "dea7d9cf-86eb-4f6c-a6fe-a7d5f986433e",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-01",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "e51d8d00-e430-4800-b62c-85f8da6763bc",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-04",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "efa9d0d6-0bc3-414a-ba0d-345964ff36a4",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-08",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "efc94b71-2503-467a-b49c-ca7d9d12e9c1",
+      "cohort": "0.138.3-r1",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "advanced-03",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "f3219ff2-c25f-46a1-a76b-1db901ec48c0",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-06",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "f72fd3e2-d4cb-483f-b1c7-53fa12ed41e4",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "advanced-08",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "fde1d306-3596-423c-90f6-18f85d25d2e6",
+      "cohort": "0.138.3-r1",
+      "classification": "passed",
+      "caseId": "practice-17",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "0268155e-6145-4678-8f03-cf4717cb2120",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "12dbef53-6f72-4cf2-b309-059a7f92be0c",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "15534e6c-4856-43c0-9c3c-a36811d40b36",
+      "cohort": "0.138.4-r1 C",
+      "classification": "model-outcome-failed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "18e53b63-5409-4ed1-b177-6f2501b2fe4f",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "24097edb-7efd-4e6e-b247-30ce5c9e63e4",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "2731f83f-9616-4c24-8d34-63e1bbdad550",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "468cafb4-b96b-44c0-9ca1-c1ebc1dcfce5",
+      "cohort": "0.138.4-r1 C",
+      "classification": "model-outcome-failed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "4ac873f8-30b1-4142-ac77-f536de198da2",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "66127862-69e1-496d-95e7-e6042778af04",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "681ef58a-c0ff-43e0-9b9d-9bcd7050771c",
+      "cohort": "0.138.4-r1 C",
+      "classification": "model-outcome-failed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "6be6b2a6-c16d-463f-8831-773824eba220",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "7241cce2-bc08-44de-ac30-c3a2e324dafc",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "798edcc0-d992-4dad-9c95-608a4769be62",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "7a366c79-4647-49f3-82eb-cbc955a9a8d6",
+      "cohort": "0.138.4-r1 C",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "817a29b5-430b-42e7-990d-ea8af84f3191",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "882b984d-8789-4e52-b3cf-fb03a0067fa6",
+      "cohort": "0.138.4-r1 C",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "9cdf1278-8e59-463e-930c-65fc39a0bce5",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "a8a5c7d9-ee75-4ee6-93dd-ddd3e1c4b2e0",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "ab48846b-3960-4cf3-b573-43db84b5bf1c",
+      "cohort": "0.138.4-r1 C",
+      "classification": "model-outcome-failed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "adf8ba92-cd12-4636-a21f-bd12599079a3",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "b277f12d-3e3b-4fc9-951a-60c2037033dc",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "b3ed6824-f7f9-4f11-96fa-58f1b68f3330",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "c2c10bf9-c96e-40c2-83a7-2b1163ec3bc0",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "ca4d3a55-b774-4451-917e-8b326ab47035",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "d123b5b9-1964-4ded-95ef-8cff718c8e01",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "e4d00d66-9b37-45bc-9805-d40ccb8fcca9",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "ec16477b-8348-468e-8ab7-7dc9f6da3871",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "f479fe28-f4cc-47b3-92fa-8ebb75e7c06f",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "f650f2de-0a7d-4359-a0be-bfecf0ae5b1d",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "faf98f42-60f8-419e-813f-e21478692b00",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "fc473847-3846-4782-b103-0ba085958e76",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "fe92ea02-c698-4601-bec3-1671033d8bdc",
+      "cohort": "0.138.4-r1 C",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "020a0839-e07a-44dd-bf79-55f4a07b1c5f",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "02ea3830-1a7d-45e3-877b-52c245f96b51",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "0405d17e-72d3-4bf0-8c4f-56721102a980",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "0467d936-6a54-4442-8f41-1e8d000f8829",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "12ca0a12-2fb7-4b57-99f1-2a2f5d369bab",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "1a305882-d43c-4628-8232-af5fdb24c3bb",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "1b8e19b5-65f5-45b0-a9ed-3968744b495d",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "1e6015df-2df6-4dd4-be9c-8375f270a728",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "practice-01",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "2673660f-08bf-4b12-84ba-9df44f78b70d",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "2b2575f5-941a-4358-8ae5-94727cf5b042",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "306dde7b-e5dd-4fc3-96ab-90366c7982cb",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "3b0d1c1d-169c-4280-8b80-f22993e1ab28",
+      "cohort": "0.138.4-r1 G",
+      "classification": "model-outcome-failed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "3dcdf3ee-247c-4cb3-af9c-d0805ffb6d64",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "3f103ae4-db73-4702-a57d-0b46aea7aa1d",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "3ff6430e-aa94-4c13-b9ae-3dc10607e0a0",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "448254f1-7fa9-4366-9f9b-b7abe0d2a8e6",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "469a9cab-7dd0-42af-8d92-978e42991bee",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "46fe5bba-ee75-46bf-b500-9b8551dd59ee",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "low",
+      "workflow": "agent"
+    },
+    {
+      "runId": "4ad81fd5-0bf4-4eee-afcb-3675bb0cd914",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "4aee4896-0466-491b-832a-fe61cdebca5d",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "low",
+      "workflow": "agent"
+    },
+    {
+      "runId": "4f086f44-0ac6-4697-ad31-bd4da08fd648",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "4f3d0b54-6038-4236-95da-28b100ca6381",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "500cdf66-8f28-4220-a371-f4b262d8c43e",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "565d265e-c3a8-42ef-8e0a-b4c111565002",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "5b5f3b13-28f6-4c8a-80c0-ea997a7eaed1",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "65754336-4b7f-4f37-a20f-e6d699305b85",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "65ce3c97-7f28-4edd-882c-7f07877253a4",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "pattern",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "6a849a4a-31c6-46d1-8b8c-ed498d85f830",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "max",
+      "workflow": "agent"
+    },
+    {
+      "runId": "767ea2a7-e1bd-41a3-954f-d5f6e7494563",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "7bbe8d15-0b27-476e-a3ae-e2c2ef30cf90",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "7d585232-9cca-44b2-bebc-e67f696c0109",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "max",
+      "workflow": "practice"
+    },
+    {
+      "runId": "81c100d0-3733-4680-85a9-7e83856775ed",
+      "cohort": "0.138.4-r1 G",
+      "classification": "model-outcome-failed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "82eb824a-7a92-4545-bbd1-aa2668156cd2",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "863ea5c8-c414-4f83-93a4-7cf3abd5f38c",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "8ac9321e-1af5-4ecc-bb50-11e20256713c",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "91b7dbbc-3181-4fad-827b-1f958b15de41",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "94f9e8ed-163a-4330-8c02-7bac7a631eee",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "95ad870b-6b52-452e-809c-34fb89c36ec2",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "998c4113-2413-4ec4-929e-8c580d84af61",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "abf50804-a9e8-4fa4-bd49-979fa7572593",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "b676207c-2c6b-4567-8616-be69734eff33",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "b7864bd9-5172-4ce6-b990-d66712fbe261",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "b7e4d61c-9c49-413d-a36f-6d35937a8176",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "ba47c69f-d6a5-446a-8e80-23ea1db710ec",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "bc6c9ab0-fa19-4c31-836b-836433242ea4",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "max",
+      "workflow": "agent"
+    },
+    {
+      "runId": "c01ce387-a401-42ca-b8d5-bfc88e4a7f14",
+      "cohort": "0.138.4-r1 G",
+      "classification": "infrastructure-or-interrupted",
+      "caseId": "practice-06",
+      "effort": "high",
+      "workflow": "practice"
+    },
+    {
+      "runId": "c31888b5-f433-4142-87c2-7d14da171fcf",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "shell",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "c3d1c71a-a4f5-4c5b-8d53-4faecdd9fede",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "c7eabf25-c57a-475e-b150-939ecbba5083",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "d49f0e0d-5710-4c79-9125-008618eb99c9",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "d7e4873d-3beb-44b9-918e-81a06ab8c24d",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "e583604e-ed24-494c-a265-2bc10d3efad1",
+      "cohort": "0.138.4-r1 G",
+      "classification": "infrastructure",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "e7d803fe-6e6b-49c7-9039-c890b8ff4a3a",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "ecc86bb5-c4d6-4829-8d07-79e4d16ef76f",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "ee636f00-9ced-4d13-9b5f-65d0405cf6d1",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "f0c42893-96e8-4c72-98ab-d07421c18235",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "assembly",
+      "effort": "low",
+      "workflow": "practice"
+    },
+    {
+      "runId": "f6a98d66-074c-4a73-930f-57bb38d9d485",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "f7684fe3-9323-4005-9cda-c14e3ec0bdb6",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "f98d19b8-eda1-4cc0-904d-cc85f9dcf234",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "drawing",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "fa9d4550-21e8-405b-bd26-c797dfe3749c",
+      "cohort": "0.138.4-r1 G",
+      "classification": "model-outcome-failed",
+      "caseId": "drill",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "fd53bead-b95f-4a39-adcf-90ca6b99994e",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "sketch",
+      "effort": "high",
+      "workflow": "agent"
+    },
+    {
+      "runId": "fe42c812-cce4-4c27-9712-7370792cdfa5",
+      "cohort": "0.138.4-r1 G",
+      "classification": "passed",
+      "caseId": "thread",
+      "effort": "high",
+      "workflow": "agent"
+    }
+  ],
+  "interpretation": "Historical mixed-build diagnostic inventory, not a new benchmark score. 44 original conditions were missing at this audit; later targeted runs are documented separately. No raw prompts, plans, profiles or credentials included."
+}

@@ -23,3 +23,9 @@ Dies ist eine nachträgliche Ergebnisergänzung zur bestehenden Veröffentlichun
 Diagramme reproduzieren / rebuild diagrams: `python scripts/render-benchmark-comparison.py` (Python 3.10+, nur Standardbibliothek). Die JSON-Datei enthält die geprüften zwei Datenzeilen und SHA-256 der Ergebnisbelege.
 
 Aufbau-Ergebnisse: ursprünglicher DeepSeek-Lauf5/16 auf0.138.0-r1; gezielte Nachtests getrennt in [diesem Beleg](advanced-deepseek-2026-11-09.json). Alle16 ursprünglichen Bedingungen sind über verschiedene Programmstände bestätigt. Kein neuer vollständiger16/16-Lauf. / Original advanced run5/16; all16 original conditions later confirmed by separate cross-build retests, not a new complete16/16 benchmark.
+
+## Laborstand 14.11.2026 / laboratory update
+
+[Historische Kampagnenauswertung: 256 Versuche](lab-campaign-audit-2026-11-14.json): 227 bestätigt, neun Modellfehler, 20 technische/abgebrochene Versuche. Getrennte Builds und Versuchsbedingungen, keine gemeinsame Erfolgsquote. / Historical mixed-build inventory, not a controlled ranking.
+
+[0.139.1-r1: vier gezielte Live-Nachtests](lab-targeted-01391-2026-11-14.json): 4/4 bestanden, eine erfolgreiche Formatkorrektur; kein neuer Vollbenchmark. / Four targeted live trials passed, one after a format correction; not a new full benchmark.

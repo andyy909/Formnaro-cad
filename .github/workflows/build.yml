@@ -24,5 +24,7 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: node --test tests/windows-dictation.test.cjs tests/renderer-recovery-lifecycle.test.cjs tests/desktop-ai-lifecycle.test.cjs tests/ai-model-benchmarks.test.cjs tests/ai-lab-benchmark.test.cjs tests/ai-advanced-benchmark.test.cjs tests/ai-drawing-reference.test.cjs tests/ai-tool-reference.test.cjs tests/ai-responses-json-input.test.cjs tests/ai-drill-completion.test.cjs tests/ai-lab-token-renewal.test.cjs tests/chatgpt-login.test.cjs
+      - name: Verify laboratory storage, credentials and process shutdown
+        run: node --test --test-concurrency=1 tests/ai-lab-integration-01390.test.cjs tests/ai-lab-ui-feedback.test.cjs tests/desktop-ai-lab-credentials.test.cjs tests/ai-diagnostic-close-grace.test.cjs tests/ai-diagnostic-os-exit.test.cjs tests/ai-lab-rejected-history.test.cjs
       - name: Verify the build leaves tracked inputs untouched
         run: git diff --exit-code
