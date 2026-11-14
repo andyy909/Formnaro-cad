@@ -5581,3 +5581,6 @@ Private Abnahme:269 automatische Pruefungen bestanden (128Standard,112Labor/Desk
 
 
 2026-11-14 Nach der eingefrorenen Veröffentlichung 0.139.1-r1: Entwicklungsabhängigkeiten der drei Paketbäume auf korrigierte ASAR-/glob-/minimatch-/XML-Versionen aktualisiert. Drei lokale npm-audit-Prüfungen ohne bekannte Schwachstelle, 128/61/64 Standardtests und drei Archiv-/Dateisystem-Integrationstests bestanden; Builds erfolgreich. Mini/Mini-CAD in Windows-CI aufgenommen. Release-Tag und geprüfte Programmdateien bleiben unverändert. Details: docs/DEPENDENCY-MAINTENANCE-2026-11-14.md.
+
+
+2026-11-14: Uebungsdemo auf GitHub und DE/EN-Webseite auf Bohrung/Kreismuster in 0.139.1-r1 umgestellt. Aufnahme100Prozent/66.3s: unveraenderter Plan als lokale Wiedergabe,0neueKI-Tokens; echter OriginalauftragDeepSeekFlash/high1Anfrage13758Tokens,5/5nativeKriterien. Exakter66-Wort-Prompt und oeffentliche Belege unter docs/demos/muster-100.{md,json}; klar begrenzte USD/EUR-Tarifschaetzung mitQuellen/Kursdatum. Kein neuerBuild/Release/Benchmark; historischeZahnradmedien bleiben alsArchiv erhalten.

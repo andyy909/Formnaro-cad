@@ -87,25 +87,21 @@ STEP, STL, OBJ, 3MF and GLB/glTF support model exchange. Choose from four interf
 
 Two stages, four gears and a **6:1 reduction ratio** — an open gearbox concept, for example for a slow rotary table. Only the input shaft is driven; the others follow through the coupling. [Download the example project](https://github.com/andyy909/Formnaro-cad/releases/download/v0.119.0-r3/schraeggetriebe-6zu1.ocad). This is a kinematic demonstration from 0.119.0-r2, not a contact or load simulation.
 
-### Practice mode
+### Practice mode: drilling and a circular pattern
 
-![Practice mode: create three gears, snap them together and demonstrate coupled motion](bilder/formnaro-uebungsmodus.gif)
+[![Eight drilled sleeves in a circular pattern — video at 100% practice speed](bilder/formnaro-uebungsmodus-muster-100.jpg)](https://formnaro.de/en/#uebung)
 
-Three functions are shown in a separate practice window using Formnaro's controls:
+**Formnaro 0.139.1-r1 · DeepSeek Flash/high · 22 visible steps · 5/5 native checks passed.** Turn one cylinder into eight separate sleeves with real through-bores, while preserving an unrelated part.
 
-1. **Create gears:** insert three involute gears from the library and set their parameters.
-2. **Snap gears together:** drag the gears into place to create revolute joints and gear couplings automatically.
-3. **Show coupled motion:** set the driver to −90°, 0° and +90°, then apply the final position. The middle gear turns in the opposite direction at half the speed.
+[Watch: 100% speed, 1:06](https://formnaro.de/en/#uebung) · [Download MP4](bilder/formnaro-uebungsmodus-muster-100.mp4) · [Prompt, usage and cost calculation](docs/demos/muster-100.md)
 
-[Full-quality video with model and token labels (MP4, 1:52)](bilder/formnaro-uebungsmodus-zahnraeder.mp4)
+**Exact prompt (German, 66 words):**
 
-**Exercise brief written by Codex (GPT-6.1 Sol, xhigh), translated from German**
+> Bohre den vorhandenen Zylinder Ø10×12 mm, Mitte (37,7,9), koaxial durchgehend Ø4. Erzeuge daraus insgesamt acht getrennte identische Hülsen einschließlich des gebohrten Originals. Die Mittelpunkte liegen auf Radius30 um die Welt-Z-Achse X7,Y7, Z-Mitte9, gleichmäßig alle45°. Das Original bei (37,7,9) gibt den Startwinkel0° vor. Jede Hülse reicht von Z3 bis15 und muss dieselbe echte Durchgangsbohrung besitzen. Alle unbeteiligten Teile einschließlich Schutzteil vollständig erhalten. Modellierung ausschließlich mit sichtbaren Übungswerkzeugen.
 
-> In practice mode, show three involute gears with 20, 40 and 20 teeth, a module of 1.5 mm and a width of 6 mm. Demonstrate automatic snapping by visibly dragging the gears. Then show the coupled motion with the driver at −90°, 0° and +90°, and apply the final position. The two small gears turn in the same direction. The middle gear turns in the opposite direction at half their speed. Keep the action clearly visible.
+**13,758 tokens:** 7,354 input (including 6,912 cached) + 6,404 output (including 5,705 reasoning). One original provider request. The 100% recording replays the same plan in real time with no additional AI tokens; it is not a new AI benchmark.
 
-Codex prepared the plan before playback; the practice window executes it through the actual controls without further model requests. The displayed **3,381,395 tokens including cached input** cover the entire gear task: planning, recording and verification.
-
-Recorded with the locally tested development build **0.125.0-r35**. The current download above provides 0.137.4-r2.
+**Estimated AI-request cost: USD 0.00393 ≈ EUR 0.00356.** [DeepSeek weekend rate](https://api-docs.deepseek.com/quick_start/pricing/), checked 14 November 2026; [ECB rate](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/eurofxref-graph-usd.en.html) dated 13 November 2026: EUR 1 = USD 1.1052. Rate-based estimate, not a verified account debit. Codex work and video production are excluded; see the report for details.
 
 ## Documentation
 
