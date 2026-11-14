@@ -26,3 +26,8 @@ frozen release tag, rather than this later maintenance commit.
 The local acceptance counts are 128 main, 61 Mini Mesh and 64 Mini CAD tests,
 plus one tooling integration test per dependency tree. No cloud model requests
 are needed for this maintenance.
+
+The first standalone Mini Mesh CI run exposed a test-only dependency on the
+parent checkout's node_modules directory. Its mesh-import fixture now resolves
+the WASM through the installed package export, matching the JavaScript import.
+This allows Mini Mesh to be tested with only its own dependencies installed.
