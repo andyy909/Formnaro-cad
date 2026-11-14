@@ -98,3 +98,17 @@ figcaption { padding: .75rem 1rem; }
 .top nav a.nav-lab:hover { background:#203d39; }
 .top nav a.nav-lab[aria-current="page"] { background:var(--accent); color:#122821; }
 @media(max-width:560px) { .top { flex-wrap:wrap; } .top nav { justify-content:flex-start; gap:.55rem .8rem; } }
+
+/* Circular-pattern practice evidence */
+.clip-pattern video { aspect-ratio: 1600 / 1002; }
+.practice-evidence { grid-column: 1 / -1; min-width: 0; padding: clamp(1rem, 3vw, 1.75rem); border: 1px solid var(--line); border-radius: .7rem; background: #18222d; }
+.practice-evidence p { max-width: none; }
+.practice-metrics { display: flex; flex-wrap: wrap; gap: .5rem 3rem; }
+.practice-metrics p { margin: 0 0 .6rem; }
+.practice-metrics span, .practice-metrics strong { display: block; }
+.practice-metrics span { font-size: .85rem; color: var(--muted); }
+.practice-metrics strong { color: var(--accent); font-size: clamp(1.1rem, 2vw, 1.5rem); }
+.practice-prompt { border-block: 1px solid var(--line); padding-block: .85rem; }
+.practice-prompt summary { cursor: pointer; color: var(--accent); font-weight: 650; }
+.practice-prompt summary:focus-visible { outline: 2px solid white; outline-offset: 4px; }
+.practice-prompt blockquote { margin: 1rem 0; border-left: 2px solid var(--accent); padding-left: 1rem; overflow-wrap: anywhere; color: #f3f6fa; }

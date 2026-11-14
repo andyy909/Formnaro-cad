@@ -1,0 +1,75 @@
+{
+  "date": "2026-11-14",
+  "version": "0.139.1-r1",
+  "model": "deepseek-flash",
+  "reasoningEffort": "high",
+  "prompt": "Bohre den vorhandenen Zylinder Ø10×12 mm, Mitte (37,7,9), koaxial durchgehend Ø4. Erzeuge daraus insgesamt acht getrennte identische Hülsen einschließlich des gebohrten Originals. Die Mittelpunkte liegen auf Radius30 um die Welt-Z-Achse X7,Y7, Z-Mitte9, gleichmäßig alle45°. Das Original bei (37,7,9) gibt den Startwinkel0° vor. Jede Hülse reicht von Z3 bis15 und muss dieselbe echte Durchgangsbohrung besitzen. Alle unbeteiligten Teile einschließlich Schutzteil vollständig erhalten. Modellierung ausschließlich mit sichtbaren Übungswerkzeugen.",
+  "promptWords": 66,
+  "originalRunId": "be710d5a-d710-42b1-acc4-5ed186911093",
+  "providerRequests": 1,
+  "usage": {
+    "input_tokens": 7354,
+    "output_tokens": 6404,
+    "total_tokens": 13758,
+    "cached_input_tokens": 6912,
+    "reasoning_output_tokens": 5705
+  },
+  "checks": [
+    {
+      "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+      "passed": true
+    },
+    {
+      "name": "Sichtbare Ausführung abgeschlossen",
+      "passed": true
+    },
+    {
+      "name": "Nur sichtbare gültige native Einzelkörper",
+      "passed": true
+    },
+    {
+      "name": "Acht Hülsen an genau den acht versetzten Winkelpositionen",
+      "passed": true
+    },
+    {
+      "name": "Jede Hülse mit echter koaxialer Durchgangsbohrung",
+      "passed": true
+    }
+  ],
+  "cleanExit": true,
+  "practiceSteps": 22,
+  "recording": {
+    "duration": "00:01:06.30",
+    "sha256": "981d73747b020eb4d7fd667202f19fc41ed718a40943bff4c94a96e5b42253ff",
+    "bytes": 1471723,
+    "practiceTempoPercent": 100,
+    "fullDecode": true,
+    "replayRunId": "ef777147-1ef5-474a-8bb9-7ef02b44eee0",
+    "unchangedPlan": true,
+    "newProviderRequests": 0,
+    "additionalTokens": 0,
+    "realTime": true,
+    "finalStillSeconds": 4
+  },
+  "priceEstimate": {
+    "currency": "USD",
+    "amount": "0.003929436",
+    "euroAmount": "0.003555407166123778501628664495",
+    "inputCacheHit": 6912,
+    "inputCacheMiss": 442,
+    "output": 6404,
+    "usdPerMillion": {
+      "cacheHit": "0.003",
+      "cacheMiss": "0.15",
+      "output": "0.60"
+    },
+    "tariff": "off-peak; Saturday",
+    "tariffChecked": "2026-11-14",
+    "tariffSource": "https://api-docs.deepseek.com/quick_start/pricing/",
+    "eurBaseRateUSD": "1.1052",
+    "exchangeRateDate": "2026-11-13",
+    "exchangeRateSource": "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/eurofxref-graph-usd.en.html",
+    "actualAccountDebitVerified": false,
+    "scope": "One original Formnaro model request; excludes Codex work, recording, taxes, payment/FX fees and discounts."
+  }
+}

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Formnaro ist eine lokale 3D-CAD-Werkstatt für Windows: mit Übungsmodus, STL-zu-STEP-Konverter und beweglichen Baugruppen.">
   <title>Formnaro | 3D-CAD für Windows</title>
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
   <header class="wrap top">
@@ -64,21 +64,28 @@
         <figcaption>Querfahrt, Tischvorschub, Werkzeugzustellung, Schwenkwiege und Rundtisch.</figcaption>
       </figure>
     </section>
-    <section class="start spotlight" aria-labelledby="uebung">
+    <section class="start spotlight practice-demo" aria-labelledby="uebung">
       <div class="spotlight-copy">
         <p class="eyebrow">Übungsmodus · Schritt für Schritt</p>
-        <h2 id="uebung">Sieh, wie ein Modell entsteht.</h2>
-        <p>Gib der KI eine Aufgabe, zum Beispiel drei Zahnräder zu bauen und zu koppeln. Im getrennten Übungsfenster zeigt dir ein sichtbarer Mauszeiger Schritt für Schritt, wo du in Formnaro klickst, welche Werkzeuge und Dialoge du öffnest und welche Werte du eingibst.</p>
-        <p>Die Vorführung nutzt dieselben Bedienelemente wie beim eigenen Konstruieren. Du kannst anhalten, dir einen Schritt genauer ansehen und ihn anschließend selbst nachmachen.</p>
-        <p class="callout"><strong>In der aktuellen Ausgabe:</strong> Übungen können auf einer Kopie eines vorhandenen Projekts arbeiten. Du entscheidest am Ende, ob du das Ergebnis übernimmst. Bis dahin bleibt dein Projekt unverändert.</p>
+        <h2 id="uebung">Vom Zylinder zum Kreismuster.</h2>
+        <p>Eine echte Durchgangsbohrung, acht getrennte Hülsen und ein versetzter Kreis: Die KI zeigt 22 Schritte mit den normalen Formnaro-Werkzeugen. Das unbeteiligte Schutzteil bleibt erhalten.</p>
+        <ul class="facts"><li><strong>100 %</strong> Tempo</li><li><strong>1:06</strong> Minuten</li><li><strong>5/5</strong> Modellprüfungen</li></ul>
+        <p>Du kannst die Übung anhalten und jeden Schritt selbst nachmachen. Sie läuft auf einer eigenen Projektkopie.</p>
       </div>
-      <figure class="clip">
-        <video controls playsinline preload="none" poster="practice-gears.webp" width="1200" height="676" aria-label="Übungsvideo: Drei Zahnräder erstellen, einrasten und gekoppelt bewegen">
-          <source src="practice-gears.mp4" type="video/mp4">
-          <a href="practice-gears.mp4">Zahnradübung als Video öffnen</a>
+      <figure class="clip clip-pattern">
+        <video controls playsinline preload="none" poster="practice-pattern-100.jpg" width="1600" height="1002" aria-label="Übungsvideo: Bohrung und Kreismuster bei 100 Prozent Tempo">
+          <source src="practice-pattern-100.mp4" type="video/mp4">
+          <a href="practice-pattern-100.mp4">Video öffnen</a>
         </video>
-        <figcaption>Eine echte Bedienfolge aus einem zuvor erstellten Plan: Zahnräder bauen, einrasten lassen und gemeinsam bewegen. Aufnahme aus einem Entwicklungsstand.</figcaption>
+        <figcaption>Formnaro 0.139.1-r1 · DeepSeek Flash/high. Wiederholung des unveränderten KI-Plans bei 100 % Übungstempo, in Echtzeit. Keine zusätzlichen KI-Anfragen.</figcaption>
       </figure>
+      <div class="practice-evidence">
+        <div class="practice-metrics"><p><span>Ursprünglicher KI-Auftrag</span><strong>13.758 Tokens</strong></p><p><span>Geschätzter API-Preis</span><strong>0,00393 US-Dollar ≈ 0,00356 Euro</strong></p></div>
+        <p>7.354 Eingabe (6.912 Cache) + 6.404 Ausgabe (5.705 Denktokens). Cache und Denktokens sind bereits enthalten. Eine ursprüngliche Anbieteranfrage; die lokale Wiederholung benötigt 0 weitere KI-Tokens.</p>
+        <details class="practice-prompt"><summary>Genauer Prompt · 66 Wörter</summary><blockquote lang="de">Bohre den vorhandenen Zylinder Ø10×12 mm, Mitte (37,7,9), koaxial durchgehend Ø4. Erzeuge daraus insgesamt acht getrennte identische Hülsen einschließlich des gebohrten Originals. Die Mittelpunkte liegen auf Radius30 um die Welt-Z-Achse X7,Y7, Z-Mitte9, gleichmäßig alle45°. Das Original bei (37,7,9) gibt den Startwinkel0° vor. Jede Hülse reicht von Z3 bis15 und muss dieselbe echte Durchgangsbohrung besitzen. Alle unbeteiligten Teile einschließlich Schutzteil vollständig erhalten. Modellierung ausschließlich mit sichtbaren Übungswerkzeugen.</blockquote><p>Formnaro ergänzt System-/Werkzeugkontext und Szenendaten; deren Tokens sind oben mitgezählt.</p></details>
+        <p class="fine">Geschätzter Preis dieses KI-Auftrags nach <a href="https://api-docs.deepseek.com/quick_start/pricing/">DeepSeek-Tarif</a> vom 14.11.2026 (Wochenende). Euro-Umrechnung mit <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/eurofxref-graph-usd.en.html">EZB-Kurs vom 13.11.2026</a>: 1 Euro = 1,1052 US-Dollar. Keine bestätigte Kontobelastung; ohne Codex-Arbeit, Videoerstellung, Steuern, Zahlungs-/Wechselkursgebühren oder Rabatte.</p>
+        <p class="fine">Ein einzelner geprüfter Fall, kein vollständiger Benchmark. <a href="demos/muster-100.md">Prompt, Prüfergebnis und Preisrechnung</a> · <a href="demos/muster-100.json">Messdaten (JSON)</a> · <a href="modelle/muster-huelsen.ocad" download>Modell herunterladen (.ocad)</a></p>
+      </div>
     </section>
     <section class="start converter" aria-labelledby="konverter">
       <p class="eyebrow">STL to CAD · STL → STEP</p>

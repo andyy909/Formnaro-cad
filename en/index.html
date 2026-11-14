@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Formnaro is a local 3D CAD workshop for Windows, with practice mode, STL-to-STEP conversion, and moving assemblies.">
   <title>Formnaro | 3D CAD for Windows</title>
-  <link rel="stylesheet" href="../style.css?v=10">
+  <link rel="stylesheet" href="../style.css?v=11">
 </head>
 <body>
   <header class="wrap top">
@@ -64,21 +64,28 @@
         <figcaption>Cross travel, table feed, tool feed, tilting cradle, and rotary table.</figcaption>
       </figure>
     </section>
-    <section class="start spotlight" aria-labelledby="uebung">
+    <section class="start spotlight practice-demo" aria-labelledby="uebung">
       <div class="spotlight-copy">
         <p class="eyebrow">Practice mode · Step by step</p>
-        <h2 id="uebung">Watch how it’s done.</h2>
-        <p>Give the AI a task, such as building and coupling three gears. In a separate practice window, a visible mouse pointer shows you where to click in Formnaro, which tools and dialogs to open, and which values to enter, step by step.</p>
-        <p>The demonstration uses the same controls you use when modeling. Pause to take a closer look at any step, then try it yourself.</p>
-        <p class="callout"><strong>In the current release:</strong> Practice can run on a copy of an existing project. You decide whether to accept the result at the end. Until then, your project stays as it was.</p>
+        <h2 id="uebung">From one cylinder to a circular pattern.</h2>
+        <p>A real through-bore, eight separate sleeves and an offset circle: the AI demonstrates 22 steps using the regular Formnaro tools. The unrelated guard part stays intact.</p>
+        <ul class="facts"><li><strong>100 %</strong> speed</li><li><strong>1:06</strong> minutes</li><li><strong>5/5</strong> model checks</li></ul>
+        <p>Pause the exercise and try each step yourself. It runs on a separate project copy.</p>
       </div>
-      <figure class="clip">
-        <video controls playsinline preload="none" poster="../practice-gears.webp" width="1200" height="676" aria-label="Practice video: create, snap together, and drive three coupled gears">
-          <source src="../practice-gears.mp4" type="video/mp4">
-          <a href="../practice-gears.mp4">Open the gear exercise video</a>
+      <figure class="clip clip-pattern">
+        <video controls playsinline preload="none" poster="../practice-pattern-100.jpg" width="1600" height="1002" aria-label="Practice video: drilling and circular pattern at 100 percent speed">
+          <source src="../practice-pattern-100.mp4" type="video/mp4">
+          <a href="../practice-pattern-100.mp4">Open video</a>
         </video>
-        <figcaption>A real sequence replayed from an existing plan: build three gears, snap them into place, and drive them together. Recorded in a development build.</figcaption>
+        <figcaption>Formnaro 0.139.1-r1 · DeepSeek Flash/high. The unchanged AI plan replayed at 100% practice speed, in real time. No additional AI requests.</figcaption>
       </figure>
+      <div class="practice-evidence">
+        <div class="practice-metrics"><p><span>Original AI request</span><strong>13,758 Tokens</strong></p><p><span>Estimated API cost</span><strong>USD 0.00393 ≈ EUR 0.00356</strong></p></div>
+        <p>7,354 input (6,912 cached) + 6,404 output (5,705 reasoning). Cached and reasoning tokens are already included. One original provider request; the local replay uses 0 additional AI tokens.</p>
+        <details class="practice-prompt"><summary>Exact prompt · German, 66 words</summary><blockquote lang="de">Bohre den vorhandenen Zylinder Ø10×12 mm, Mitte (37,7,9), koaxial durchgehend Ø4. Erzeuge daraus insgesamt acht getrennte identische Hülsen einschließlich des gebohrten Originals. Die Mittelpunkte liegen auf Radius30 um die Welt-Z-Achse X7,Y7, Z-Mitte9, gleichmäßig alle45°. Das Original bei (37,7,9) gibt den Startwinkel0° vor. Jede Hülse reicht von Z3 bis15 und muss dieselbe echte Durchgangsbohrung besitzen. Alle unbeteiligten Teile einschließlich Schutzteil vollständig erhalten. Modellierung ausschließlich mit sichtbaren Übungswerkzeugen.</blockquote><p>Formnaro adds system/tool context and scene data; their tokens are included above.</p></details>
+        <p class="fine">Estimated cost of this AI request using the <a href="https://api-docs.deepseek.com/quick_start/pricing/">DeepSeek rate</a> checked on 14 November 2026 (weekend). Euro conversion uses the <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/eurofxref-graph-usd.en.html">ECB rate of 13 November 2026</a>: EUR 1 = USD 1.1052. Not a verified account debit; excludes Codex work, video production, taxes, payment/FX fees and discounts.</p>
+        <p class="fine">One verified case, not a full benchmark. <a href="../demos/muster-100.md">Prompt, verification and cost calculation</a> · <a href="../demos/muster-100.json">Evidence data (JSON)</a> · <a href="../modelle/muster-huelsen.ocad" download>Download model (.ocad)</a></p>
+      </div>
     </section>
     <section class="start converter" aria-labelledby="konverter">
       <p class="eyebrow">STL to CAD · STL → STEP</p>
