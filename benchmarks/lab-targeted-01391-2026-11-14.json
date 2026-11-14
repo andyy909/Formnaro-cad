@@ -1,0 +1,132 @@
+{
+  "format": "FormnaroPublicTargetedVerification",
+  "version": 1,
+  "asOf": "2026-11-14",
+  "program": "0.139.1-r1",
+  "testedSourceCommit": "803cc4588bb3cbf2e765f34997414dd77f85735d",
+  "suiteVersions": {
+    "core": "1.0.12",
+    "advanced": "2.0.8"
+  },
+  "tests": {
+    "standard": {
+      "tests": 128,
+      "pass": 128,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "regression-suite": {
+      "tests": 152,
+      "pass": 152,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    }
+  },
+  "native": {
+    "positive": 8,
+    "negative": 24,
+    "cleanChildExits": 8
+  },
+  "live": {
+    "conditions": 2,
+    "rawRuns": 4,
+    "accepted": 4,
+    "requests": 30,
+    "formatCorrections": 1,
+    "runs": [
+      {
+        "id": "b8fd53fc-716d-47a8-88b5-f8c76820da6b",
+        "case": "drawing",
+        "status": "completed",
+        "native": true,
+        "close": {
+          "code": 0,
+          "signal": null,
+          "shutdownMs": 703
+        },
+        "formatCorrections": 0,
+        "modelIdentity": {
+          "requested": "deepseek-flash",
+          "returned": "deepseek-flash",
+          "exactMatch": true
+        },
+        "error": null
+      },
+      {
+        "id": "cd66111e-9620-4418-bdbe-7d9e4d22eff9",
+        "case": "drill",
+        "status": "completed",
+        "native": true,
+        "close": {
+          "code": 0,
+          "signal": null,
+          "shutdownMs": 9933
+        },
+        "formatCorrections": 1,
+        "modelIdentity": {
+          "requested": "deepseek-flash",
+          "returned": "deepseek-flash",
+          "exactMatch": true
+        },
+        "error": null
+      },
+      {
+        "id": "7c9e9250-9d4f-44c2-a88d-3d8c8eb42a71",
+        "case": "drawing",
+        "status": "completed",
+        "native": true,
+        "close": {
+          "code": 0,
+          "signal": null,
+          "nativeExitGrace": true,
+          "shutdownMs": 93995
+        },
+        "formatCorrections": 0,
+        "modelIdentity": {
+          "requested": "deepseek-flash",
+          "returned": "deepseek-flash",
+          "exactMatch": true
+        },
+        "error": null
+      },
+      {
+        "id": "d943dd56-1de4-48fe-be8f-083cea0d2b25",
+        "case": "drill",
+        "status": "completed",
+        "native": true,
+        "close": {
+          "code": 0,
+          "signal": null,
+          "shutdownMs": 6609
+        },
+        "formatCorrections": 0,
+        "modelIdentity": {
+          "requested": "deepseek-flash",
+          "returned": "deepseek-flash",
+          "exactMatch": true
+        },
+        "error": null
+      }
+    ]
+  },
+  "historicalReplay": {
+    "runs": 20,
+    "cleanExits": 20,
+    "deliberatelyRejectedOldInvalidReplies": 10,
+    "newProviderRequests": 0
+  },
+  "exactProgramHashes": {
+    "exeSHA256": "32068dcc5353edaa75254aea4fc945e4bc6992f21a903af2833f4867fb2ce3e9",
+    "asarSHA256": "9eb785082900cc8005835b12e7fdd88861b0f67fa3fff4bd98ca7139506494a2"
+  },
+  "notAFullBenchmark": true,
+  "limitations": [
+    "Four targeted live trials on two conditions; not a general reliability score.",
+    "Invalid provider output remains possible; one trial recovered after a format correction.",
+    "The native component causing long process teardown is not isolated. Connected hangs remain failures.",
+    "Image and supervisor comparisons and additional Sol conditions remain incomplete.",
+    "The broad 3211-test development run was followed by targeted repairs, not one fresh all-green full run."
+  ]
+}
