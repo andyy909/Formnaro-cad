@@ -20,7 +20,7 @@ test('a lab series renews ChatGPT credentials after expiry between trials withou
 test('credentials renew inside one tool-reference/format-correction turn and never enter the wire body',async t=>{
  const config=validateConfig({authMode:'chatgpt',protocol:'responses',model:'gpt-6.1-sol'});let calls=0,resolutions=0;
  const credential=async signal=>{signal?.throwIfAborted();return 'turn-secret-'+(++resolutions);};
- t.mock.method(globalThis,'fetch',async(url,o)=>{calls++;assert.equal(o.headers.Authorization,'Bearer turn-secret-'+calls);assert(!o.body.includes('turn-secret-'));if(calls===1)return completed(JSON.stringify({toolReference:{tool:'tool:drill'}}));if(calls===2)return completed('{malformed');assert(o.body.includes('cad-ref-apply'));return completed(JSON.stringify({message:'Reference read.'}));});
+ t.mock.method(globalThis,'fetch',async(url,o)=>{calls++;assert.equal(o.headers.Authorization,'Bearer turn-secret-'+calls);assert(!o.body.includes('turn-secret-'));if(calls===1)return completed(JSON.stringify({toolReference:{tool:'tool:drill'}}));if(calls===2)return completed('{malformed');assert(o.body.includes('cad-ref-apply'));return completed(JSON.stringify({status:'completed',message:'Reference read.'}));});
  const reply=await completeModel(config,'expired-initial',{system:'JSON',user:'Read drilling help.',input:{history:[],images:[]},context:{toolReference:{version:1},practiceOnly:true}},new AbortController().signal,{credential});
  assert.equal(calls,3);assert.equal(resolutions,3);assert.equal(JSON.parse(reply.text).message,'Reference read.');assert(!JSON.stringify(reply.data).includes('turn-secret-'));
 });

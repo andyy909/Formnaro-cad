@@ -1,6 +1,6 @@
 const Module=require('node:module'),path=require('node:path'),assert=require('node:assert/strict'),original=Module._load;
 Module._load=function(request,parent,isMain){
- if(request==='./backend/maintenance-verification.cjs')return {verifyMaintenance:async win=>{
+ if(request==='./backend/ai-result-checks-verification.cjs')return {verifyAIResultChecks:async win=>{
   const js=code=>win.webContents.executeJavaScript(code),pause=ms=>new Promise(r=>setTimeout(r,ms)),checks=[];
   async function waitFor(code){for(let i=0;i<200;i++){if(await js(code))return;await pause(30);}throw Error('Timeout: '+code);}
   async function clickWorld(point){await js("window.__cadTest.view.setView('top')");await js('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');const p=await js('window.__cadTest.view.projectPoint('+JSON.stringify(point)+')'),x=Math.round(p.x),y=Math.round(p.y);assert(await js('document.elementFromPoint('+x+','+y+')===window.__cadTest.view.canvas'));for(const type of ['mouseMove','mouseDown','mouseUp'])win.webContents.sendInputEvent({type,x,y,button:'left',clickCount:1});await pause(100);}

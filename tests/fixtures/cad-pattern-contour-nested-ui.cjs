@@ -1,7 +1,7 @@
 const Module=require('node:module'),path=require('node:path'),fs=require('node:fs'),assert=require('node:assert/strict'),original=Module._load;
 Module._load=function(request,parent,isMain){
- if(request==='./backend/maintenance-verification.cjs')return {verifyMaintenance:async win=>{
-  const directory=path.dirname(process.argv.find(v=>v.startsWith('--verify-maintenance=')).split('=').slice(1).join('=')),checks=[],js=async code=>{try{return await win.webContents.executeJavaScript(code);}catch(error){fs.writeFileSync(path.join(directory,'failed-script.txt'),code);throw error;}},pause=ms=>new Promise(r=>setTimeout(r,ms));
+ if(request==='./backend/ai-result-checks-verification.cjs')return {verifyAIResultChecks:async win=>{
+  const directory=path.dirname(process.argv.find(v=>v.startsWith('--verify-ai-result-checks=')).split('=').slice(1).join('=')),checks=[],js=async code=>{try{return await win.webContents.executeJavaScript(code);}catch(error){fs.writeFileSync(path.join(directory,'failed-script.txt'),code);throw error;}},pause=ms=>new Promise(r=>setTimeout(r,ms));
   async function until(code){for(let i=0;i<2400;i++){if(await js(code))return;await pause(30);}throw Error('Timeout: '+code);}
   async function capture(name){await js('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');fs.writeFileSync(path.join(directory,name+'.png'),(await win.webContents.capturePage()).toPNG());}
   async function open(){await js("{window.__cadTest.projectParametersUI.open();document.querySelector('[data-project-parameters-tab=variants]').click();}");}

@@ -8,6 +8,11 @@ function sanitize(value,secrets=[]){
  return JSON.parse(text,(k,v)=>typeof v==='string'?v.replace(/[A-Za-z]:[\\/](?:[^\s"<>|]| (?=[^\n]))+/g,'[lokaler Pfad entfernt]').replace(/\/(?:home|Users)\/[^\s"<>]+/g,'[lokaler Pfad entfernt]'):v);
 }
 const native=r=>r.verification?.passed??null;
+const {failureClass}=require('./ai-lab-storage.cjs');
+function compactObservation(actual){
+ if(!actual)return null;const objects=actual.objects??[];
+ return {revision:actual.revision,objectCount:actual.objectCount,selection:actual.selection,objects:objects.slice(0,4).map(o=>({id:o.id,name:o.name,worldBounds:o.worldBounds,hidden:o.hidden,locked:o.locked})),objectsCoverage:{included:Math.min(objects.length,4),recorded:objects.length,total:actual.objectCount??objects.length,truncated:objects.length>4||actual.truncated===true||(actual.objectCount??0)>objects.length}};
+}
 function complete(r){return r.status!=='running'&&r.status!=='interrupted'&&r.status!=='cancelled'&&(r.events??[]).some(e=>e.type==='finished');}
 function resolvedInterruptions(records,completion={}){
  const mappings=completion.interruptionResolutions??{};
@@ -54,16 +59,16 @@ function selectScope(directory,records,{seriesId,ids,completion}={}){
 }
 function evidenceFor(scope,secrets=[]){
  const counts=scope.summary;
- const runs=scope.records.map(r=>({id:r.id,caseId:r.spec.caseId,variant:r.spec.variant,effort:r.spec.effort,workflow:r.spec.workflow,stage:r.spec.stage,dataset:r.spec.dataset,seriesId:r.spec.seriesId,sourceHash:r.sourceHash,status:r.status,native:native(r),cleanExit:r.cleanExit??null,finalVerdict:r.monitor?.final?.verdict??null,elapsedMs:r.elapsedMs,formatCorrections:r.formatCorrections??0,executionCorrections:r.executionCorrections??0,error:r.error?.message??null}));
+ const runs=scope.records.map(r=>({id:r.id,caseId:r.spec.caseId,variant:r.spec.variant,effort:r.spec.effort,workflow:r.spec.workflow,stage:r.spec.stage,dataset:r.spec.dataset,seriesId:r.spec.seriesId,sourceHash:r.sourceHash,status:r.status,native:native(r),cleanExit:r.cleanExit??null,monitorMode:r.spec.monitor?.mode??'unknown',supervisorRequired:r.spec.monitor?.mode==='off'?false:r.spec.monitor?.mode?true:null,acceptance:{nativePassed:native(r)===true,cleanExit:r.cleanExit===true,completed:r.status==='completed'&&!r.error,supervisor:r.spec.monitor?.mode==='off'?'not-required':r.monitor?.final?.verdict??'unverified'},failureClass:failureClass(r),errorCode:r.error?.code??null,toolErrors:(r.events??[]).filter(e=>e.type==='tool-result'&&e.result?.isError).length,finalVerdict:r.monitor?.final?.verdict??null,elapsedMs:r.elapsedMs,formatCorrections:r.formatCorrections??0,executionCorrections:r.executionCorrections??0,error:r.error?.message??null}));
  const details=scope.records.map(r=>{
-  const events=r.events??[],interesting=events.map((e,index)=>({e,index})).filter(({e})=>['executed-step','format-feedback','practice-ui-feedback','verification','monitor-error','monitor-final-result','error'].includes(e.type));
+  const events=r.events??[],interesting=events.map((e,index)=>({e,index})).filter(({e})=>['tool-call','tool-result','blocker-diagnosis','executed-step','format-feedback','practice-ui-feedback','verification','monitor-error','monitor-final-result','error'].includes(e.type));
   const steps=interesting.filter(({e})=>e.type==='executed-step');
   const changes=(r.practiceResult?.steps??[]).filter(s=>s.kind==='set').map(s=>({field:s.field,previous:s.previous,actual:s.actual,expected:s.expected}));
   const issue=!!r.error||native(r)!==true||!!r.monitor?.final&&r.monitor.final.verdict!=='continue'||events.some(e=>e.type==='monitor-error');
   const timed=events.map((e,index)=>({e,index})).filter(({e})=>!['reasoning','answer','image'].includes(e.type)&&Number.isFinite(e.ms));const gaps=timed.slice(1).map((b,i)=>({fromIndex:timed[i].index,toIndex:b.index,fromType:timed[i].e.type,toType:b.e.type,ms:b.e.ms-timed[i].e.ms})).filter(g=>g.ms>30000).sort((a,b)=>b.ms-a.ms).slice(0,3);
   const recordedTask=events.find(e=>e.type==='start-context')?.user;let task=recordedTask?.includes('User task:\n')?recordedTask.split('User task:\n').slice(1).join('User task:\n'):recordedTask;if(!task)try{task=require('./ai-test-lab-cases.cjs').taskInstance(r.spec.caseId,r.spec.dataset).prompt;}catch{}
-  return {id:r.id,issue,task,plan:r.practicePlan,propertyChanges:changes,longEventGaps:gaps,firstObserved:steps[0]?.e.actual??null,verification:r.verification??null,
-   events:interesting.map(({e,index})=>({index,type:e.type,ms:e.ms,action:e.action,ok:e.ok,actual:e.actual?{objectCount:e.actual.objectCount,selection:e.actual.selection,objects:e.actual.objects?.slice(0,4).map(o=>({id:o.id,worldBounds:o.worldBounds,hidden:o.hidden,locked:o.locked}))}:undefined,error:e.error??e.message,assessment:e.assessment,judgment:e.judgment})),
+  return {id:r.id,issue,task,plan:r.practicePlan,propertyChanges:changes,longEventGaps:gaps,initialState:compactObservation(r.initialState),initialStateSource:r.initialState?'recorded-before-first-request':'not-recorded',firstObserved:compactObservation(steps[0]?.e.actual),verification:r.verification??null,
+   events:interesting.map(({e,index})=>({index,type:e.type,ms:e.ms,action:e.action,ok:e.ok,actual:compactObservation(e.actual),tool:e.tool,arguments:e.type==='tool-call'?e.arguments:undefined,diagnosis:e.type==='blocker-diagnosis'?e.text:undefined,result:e.type==='tool-result'?{isError:e.result?.isError??false,code:e.result?.code,error:e.result?.error,revision:e.result?.revision,previewId:e.result?.previewId}:undefined,error:e.error??e.message,assessment:e.assessment,judgment:e.judgment})),
    judgments:(r.monitor?.judgments??[]).filter(j=>j.verdict!=='continue'),final:r.monitor?.final??null};
  });
  const selected=details.filter(d=>d.issue),others=details.filter(d=>!d.issue);
@@ -71,7 +76,7 @@ function evidenceFor(scope,secrets=[]){
  const detailed=[];let chars=0;for(const d of [...selected,...others]){const size=JSON.stringify(d).length;if(chars+size>120000)continue;detailed.push(d);chars+=size;}
  const data=sanitize({format:'FormnaroLabReviewEvidence',version:1,counts,completion:scope.completion,runs,details:detailed,
   detailCoverage:{included:detailed.length,total:details.length,omittedRunIds:details.filter(d=>!detailed.some(x=>x.id===d.id)).map(d=>d.id)},
-  definitions:{resolvedInterruptions:'Interrupted raw attempts remain unchanged; a separately recorded completed replacement of the exact same condition resolves their pending state, not their native outcome.',nativeUnverified:'No independent native final result was recorded; not a negative geometry check.',fullyAccepted:'Native passed plus recorded clean exit and final continue (or explicitly disabled monitor).',shadow:'acted=false means a stop recommendation did not intervene.',sourceHashes:'Different source hashes are different builds; do not claim a paired performance gain across changed tasks/oracles.'}},secrets);
+  definitions:{initialState:'Recorded before the first request; null for historical runs without this evidence. firstObserved is an execution observation, never an inferred baseline.',objectsCoverage:'Only listed objects are shown; truncated=true means absence from this list does not prove absence from the model.',monitorMode:'off explicitly disables the supervisor; no verdict is required. unknown is not equivalent to off.',resolvedInterruptions:'Interrupted raw attempts remain unchanged; a separately recorded completed replacement of the exact same condition resolves their pending state, not their native outcome.',nativeUnverified:'No independent native final result was recorded; not a negative geometry check.',fullyAccepted:'Native passed plus recorded clean exit and final continue (or explicitly disabled monitor).',shadow:'acted=false means a stop recommendation did not intervene.',sourceHashes:'Different source hashes are different builds; do not claim a paired performance gain across changed tasks/oracles.'}},secrets);
  if(JSON.stringify(data).length>400000)throw Error('Zu viele Ergebnisdaten für eine Abschlussanalyse. Bitte einzelne Serien auswerten.');
  return data;
 }

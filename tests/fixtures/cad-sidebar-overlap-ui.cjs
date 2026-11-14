@@ -1,8 +1,8 @@
 const Module=require('node:module'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),load=Module._load;
 const root=path.resolve(__dirname,'../..');
 Module._load=function(request,parent,isMain){
- if(request==='./backend/maintenance-verification.cjs')return {verifyMaintenance:async win=>{
-  const dir=path.dirname(process.argv.find(v=>v.startsWith('--verify-maintenance=')).split('=').slice(1).join('=')),js=code=>win.webContents.executeJavaScript(code),checks=[],observations=[];
+ if(request==='./backend/ai-result-checks-verification.cjs')return {verifyAIResultChecks:async win=>{
+  const dir=path.dirname(process.argv.find(v=>v.startsWith('--verify-ai-result-checks=')).split('=').slice(1).join('=')),js=code=>win.webContents.executeJavaScript(code),checks=[],observations=[];
   await js(`(async()=>{const a=window.__cadTest,c=a.controller;await a.resetProject();await c.execute({kind:'create',recipe:{type:'box',size:[40,30,8]},options:{id:'body',name:'Grundplatte'}});await c.execute({kind:'tool',name:'previewDrill',options:{id:'body',resultId:'bore',reference:{ray:{origin:[0,0,30],direction:[0,0,-1]}},associative:true,diameter:4}});for(let i=0;i<13;i++)await c.execute({kind:'create',recipe:{type:'box',size:[10,10,5]},options:{id:'part-'+i,name:'Teil '+i}});await a.settled();window.__sidebarBefore=a.serialize();window.__sidebarUndo=a.undoDepth();})()`);
   for(const mode of ['solid','fusion','normal','solid','normal','solid']){
    await js(`document.querySelector('[data-workbench-mode=${mode}]').click()`);

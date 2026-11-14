@@ -11,7 +11,7 @@ import {createCadFinishNative,readCadEdgeDomainNative,cadEdgesCorrespondNative} 
 import {createCadPrecisionNative} from '../src/cad-precision-native.js';
 import {cadContoursFromSvgSubpaths,cadContoursFromFont} from '../src/cad-original-contours.js';
 import {buildCadContours} from '../src/cad-recipes.js';
-import {cadBounds,cadVolume,writeCadBrep,validateCadSolid,brepHasNoTriangulation} from '../src/cad-native-kernel.js';
+import {cadBounds,cadVolume,writeCadBrep,readCadBrep,transformCad,validateCadSolid,brepHasNoTriangulation} from '../src/cad-native-kernel.js';
 import {cadIdentity} from '../src/cad-affine.js';
 
 const moduleUrl=process.env.FORMNARO_CAD_MODULE?pathToFileURL(process.env.FORMNARO_CAD_MODULE):new URL('../cad-kernel-build/runtime/formnaro_cad.js',import.meta.url),loader=(await import(moduleUrl.href)).default,oc=await loader({print:()=>{},printErr:()=>{}});
@@ -33,7 +33,7 @@ test('Partial native circular edges retain the trimmed full domain and round wit
 });
 
 test('An actual STEP-imported affine NURBS body exposes exact edge domains and rounds with the default native finisher',async()=>{
-  const service=createCadService({oc,finish:createCadFinishNative({oc})});let shape;try{const source=service.nativeNode({type:'cylinder',size:[20,20,20]},{id:'source',transform:[1.2,.1,0,0,.2,1,0,0,0,0,1,0,0,0,0,1]});shape=service.worldShape(source);const stored=nativeRecord(shape,'native-affine'),imported=service.stepNode(service.exportStep(createCadProject({nodes:[stored]})),{id:'imported'});assert.equal(imported.source,'step');await finishDefault(service,imported,edge=>edge.curve.kind==='bspline'&&Math.abs(edge.curve.start[2]-10)<1e-6);
+  const service=createCadService({oc,finish:createCadFinishNative({oc})});let shape;try{const source=service.nativeNode({type:'cylinder',size:[20,20,20]},{id:'source',transform:[1.2,.1,0,0,.2,1,0,0,0,0,1,0,0,0,0,1]});const local=readCadBrep(oc,source.brep.data);try{shape=transformCad(oc,local,source.transform);}finally{local.delete();}const stored=nativeRecord(shape,'native-affine'),imported=service.stepNode(service.exportStep(createCadProject({nodes:[stored]})),{id:'imported'});assert.equal(imported.source,'step');await finishDefault(service,imported,edge=>edge.curve.kind==='bspline'&&Math.abs(edge.curve.start[2]-10)<1e-6);
   }finally{shape?.delete();service.dispose();}
 });
 

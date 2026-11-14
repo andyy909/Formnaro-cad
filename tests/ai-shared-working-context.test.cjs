@@ -1,13 +1,13 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const {completeModel,DEFAULT_CONFIG}=require('../backend/ai-provider.cjs'),{sharedAgentContext}=require('../backend/ai-working-rules.cjs');
-for(const protocol of ['responses','chat','messages'])for(const mode of ['modeling','practice'])test(mode+' context reaches the first '+protocol+' request without extending the user prompt',async()=>{
+for(const protocol of ['responses','chat','messages'])for(const mode of ['modeling','practice'])test(mode+' context reaches the first '+protocol+' request with only the Responses JSON-mode prefix',async()=>{
  const previous=global.fetch;let sent;const prompt='Wie richte ich zwei Teile aus?',shared=sharedAgentContext(mode),other=sharedAgentContext(mode==='practice'?'modeling':'practice');
  try{global.fetch=async(url,options)=>{sent=JSON.parse(options.body);return new Response(JSON.stringify(protocol==='chat'?{choices:[{message:{content:'{"message":"ok"}'}}]}:protocol==='messages'?{content:[{type:'text',text:'{"message":"ok"}'}]}:{output:[{type:'message',content:[{type:'output_text',text:'{"message":"ok"}'}]}]}));};
   await completeModel({...DEFAULT_CONFIG,protocol,baseUrl:'http://127.0.0.1:9999/v1',model:'local-fixture'},'',{system:'Existing protocol contract.',user:prompt,input:{history:[],images:[]},context:{practiceOnly:mode==='practice'}},undefined);
   const system=protocol==='responses'?sent.instructions:protocol==='messages'?sent.system:sent.messages[0].content;
   assert(system.includes(shared.instructions));assert.equal(system.split(shared.instructions).length,2);assert(system.includes('Existing protocol contract.'));
   assert(!system.includes(other.instructions));assert.equal(system.includes('Formnaro layout and native UI usage'),mode==='practice');
-  const user=protocol==='responses'?sent.input:sent.messages.at(-1).content;assert.equal(Array.isArray(user)?user.map(v=>v.text??'').join(''):user,prompt);
+  const user=protocol==='responses'?sent.input:sent.messages.at(-1).content;assert.equal(Array.isArray(user)?user.map(v=>v.text??'').join(''):user,(protocol==='responses'?'Return only the requested JSON object.\n':'')+prompt);
  }finally{global.fetch=previous;}
 });
 

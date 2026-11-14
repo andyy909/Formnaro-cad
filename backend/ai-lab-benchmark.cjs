@@ -24,7 +24,7 @@ function summarizeBenchmark(manifest,records){
  const classify=r=>{
   if(!r)return 'pending';
   const noPracticeResult=r.verificationSkipped==='no-practice-result'||r.verificationError==='Kein abgeschlossenes Übungsmodell verfügbar; Ausgangsmodell ist kein Endergebnis.';
-  if(r.failurePhase==='preparation'||r.error?.code==='AI_PROVIDER_QUOTA'||r.close?.forced||r.verificationFailure==='checker-error'||r.verificationError&&!noPracticeResult)return 'infrastructure';
+  if(require('./ai-lab-storage.cjs').failureClass(r)==='infrastructure'||r.failurePhase==='preparation'||r.error?.code==='AI_PROVIDER_QUOTA'||r.close?.forced||r.verificationFailure==='checker-error'||r.verificationError&&!noPracticeResult)return 'infrastructure';
   const usage=(r.events??[]).filter(e=>e.type==='usage'&&e.role!=='supervisor');
   if(!usage.length||usage.some(e=>!e.returnedModel||e.returnedModel!==r.requestedModel)||r.modelIdentity?.exactMatch!==true)return 'model-unverified';
   if(r.verification?.passed===false)return 'failed';

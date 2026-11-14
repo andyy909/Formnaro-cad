@@ -64,7 +64,7 @@ export function resolveAIResultTarget(scene,value,aliases={}){
  if(typeof address==='string')address={rootId:address,path:[]};
  target(address);
  const object=scene.objects.find(n=>n.target.rootId===address.rootId&&JSON.stringify(n.target.path)===JSON.stringify(address.path));
- if(!object)invalid('Prüfziel ist im berechneten Ergebnis nicht vorhanden.');
+ if(!object){const available=Object.entries(aliases).filter(([,a])=>!Array.isArray(a)&&scene.objects.some(o=>!o.suppressed&&(typeof a==='string'?o.target.rootId===a&&!o.target.path.length:o.target.rootId===a?.rootId&&JSON.stringify(o.target.path)===JSON.stringify(a?.path??[])))).map(([name])=>'$'+name);invalid('Prüfziel ist im berechneten Ergebnis nicht vorhanden. Verfügbare Ergebnisaliase: '+(available.slice(0,24).join(', ')||'keine')+(available.length>24?' (gekürzt)':'')+'. Nach dem Ersetzen eines Körpers den tatsächlichen Ergebnisalias verwenden; keine Quelle automatisch auswählen.');}
  if(object.suppressed||scene.objects.some(n=>n.suppressed&&n.target.rootId===object.target.rootId&&n.target.path.length<object.target.path.length&&n.target.path.every((id,k)=>object.target.path[k]===id)))invalid('Unterdrückte Quellen sind kein fertiges Prüfergebnis.');
  return object;
 }

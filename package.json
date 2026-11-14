@@ -1,7 +1,7 @@
 {
   "name": "formnaro",
   "productName": "Formnaro",
-  "version": "0.138.4",
+  "version": "0.139.0",
   "private": true,
   "author": "Andreas Klisch",
   "license": "MIT",
@@ -61,7 +61,7 @@
     "package": "node scripts/current-release.mjs package",
     "test": "node --test tests/geometry.test.mjs tests/anchored-size.test.mjs tests/parameters.test.mjs tests/workplane.test.mjs tests/organization.test.mjs tests/history.test.mjs tests/feature-transforms.test.mjs tests/preferences-plugins.test.mjs tests/automation.test.mjs tests/ai-backend.test.cjs tests/extensions.test.mjs tests/v09.test.mjs tests/files.test.cjs tests/cad.test.mjs tests/layout.test.mjs tests/layout-files.test.cjs tests/program-storage.test.cjs tests/program-storage-ipc.test.cjs tests/edit-menu.test.cjs tests/exchange-formats.test.mjs",
     "test:parameters": "electron tests/parameters-desktop.cjs",
-    "test:scene": "electron tests/scene-tools.test.cjs",
+    "test:scene": "node --test tests/scene-tools.test.cjs",
     "test:desktop": "electron tests/electron-smoke.cjs",
     "test:workplane": "electron tests/workplane-desktop.cjs",
     "test:history": "electron tests/history-desktop.cjs",

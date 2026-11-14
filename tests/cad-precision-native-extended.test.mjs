@@ -6,7 +6,7 @@ import {Matrix4} from 'three';
 import {createCadService} from '../src/cad-service.js';
 import {createCadProject,serializeCadProject} from '../src/cad-project.js';
 import {cadIdentity} from '../src/cad-affine.js';
-import {readCadBrep,cadVolume,brepHasNoTriangulation,validateCadSolid,writeCadBrep} from '../src/cad-native-kernel.js';
+import {readCadBrep,cadVolume,brepHasNoTriangulation,validateCadSolid,writeCadBrep,transformCad} from '../src/cad-native-kernel.js';
 import {buildCadContours} from '../src/cad-recipes.js';
 import {createCadPrecisionNative,boundedCadBezierPolyline} from '../src/cad-precision-native.js';
 import {createCadFinishNative} from '../src/cad-finish-native.js';
@@ -35,8 +35,8 @@ test('Native HLR SVG preserves analytic bore circles and y-down original Bézier
   }finally{service.dispose();}
 });
 
-test('Actual affine CAD B-spline projection uses native Bézier spans with a certified curve-wide SVG error bound',()=>{
-  const service=createCadService({oc});try{const node=service.nativeNode({type:'cylinder',size:[20,20,20]},{id:'cad',transform:[2,.2,0,0,.5,1,0,0,0,0,1,0,5,3,0,1]}),queries=createCadPrecisionNative({oc,service}),projection=queries.svgProjection({nodes:[node],tolerance:.002});assert.equal(projection.approximation,'bounded-native-curve-representation');assert.ok(projection.paths.some(path=>path.approximate));assert.ok(projection.paths.filter(path=>path.approximate).every(path=>path.proof==='positive-rational-bezier-control-hull'&&path.maxDeviation===.002));assert.ok(projection.svg.includes('data-max-deviation-mm="0.002"'));closeVector(projection.viewBox,[5-Math.hypot(20,5),-3-Math.hypot(2,10),2*Math.hypot(20,5),2*Math.hypot(2,10)],2e-6);
+test('Actual retained affine CAD B-spline projection uses native Bézier spans with a certified curve-wide SVG error bound',()=>{
+  const service=createCadService({oc});try{const node=service.nativeNode({type:'cylinder',size:[20,20,20]},{id:'cad',transform:[2,.2,0,0,.5,1,0,0,0,0,1,0,5,3,0,1]}),queries=createCadPrecisionNative({oc,service}),local=readCadBrep(oc,node.brep.data);let retained;try{retained=transformCad(oc,local,node.transform);}finally{local.delete();}let imported;try{imported=fromNativeShape(retained,'retained-affine');}finally{retained.delete();}const projection=queries.svgProjection({nodes:[imported],tolerance:.002});assert.equal(projection.approximation,'bounded-native-curve-representation');assert.ok(projection.paths.some(path=>path.approximate));assert.ok(projection.paths.filter(path=>path.approximate).every(path=>path.proof==='positive-rational-bezier-control-hull'&&path.maxDeviation===.002));assert.ok(projection.svg.includes('data-max-deviation-mm="0.002"'));closeVector(projection.viewBox,[5-Math.hypot(20,5),-3-Math.hypot(2,10),2*Math.hypot(20,5),2*Math.hypot(2,10)],2e-6);
   }finally{service.dispose();}
 });
 

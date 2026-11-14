@@ -15,9 +15,9 @@ function openDiagnosticChild({app,directory,executable=process.execPath}){
  function send(message){if(child.connected)child.send(message,()=>{});}
  function call(method,args={},timeout=180000){if(exited)return Promise.reject(Error('Testfenster beendet.'));return new Promise((resolve,reject)=>{const id=++seq,timer=setTimeout(()=>{pending.delete(id);reject(Error('Testfenster-Zeitlimit: '+method));},timeout);pending.set(id,{resolve,reject,timer,method});send({id,method,args});});}
  return {call,onPracticeActivity(callback){activityObservers.add(callback);return ()=>activityObservers.delete(callback);},onPracticeObservation(callback){observers.add(callback);return ()=>observers.delete(callback);},async close(){
-  if(exited)return exit;send({id:++seq,method:'close',args:{}});let timer;
-  const timeout=new Promise(resolve=>{timer=setTimeout(()=>{child.kill();resolve(null);},10000);});const normal=await Promise.race([exit,timeout]);clearTimeout(timer);if(normal)return normal;
-  const forced=await Promise.race([exit,new Promise(resolve=>{timer=setTimeout(()=>resolve({code:null,signal:'exit-unconfirmed'}),5000);})]);clearTimeout(timer);return {...forced,forced:true};
+  if(exited)return exit;const shutdownStarted=Date.now();send({id:++seq,method:'close',args:{}});let timer;
+  const timeout=new Promise(resolve=>{timer=setTimeout(()=>{child.kill();resolve(null);},30000);});const normal=await Promise.race([exit,timeout]);clearTimeout(timer);if(normal)return {...normal,shutdownMs:Date.now()-shutdownStarted};
+  const forced=await Promise.race([exit,new Promise(resolve=>{timer=setTimeout(()=>resolve({code:null,signal:'exit-unconfirmed'}),5000);})]);clearTimeout(timer);return {...forced,forced:true,shutdownMs:Date.now()-shutdownStarted};
  },cancel(){rejectPending(Object.assign(Error('Testberechnung abgebrochen.'),{name:'AbortError'}));if(!exited)send({id:++seq,method:'cancel',args:{}});}};
 }
 function installDiagnosticChild(win){

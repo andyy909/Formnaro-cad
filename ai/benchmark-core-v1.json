@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -66,7 +66,7 @@
     },
     {
       "path": "backend/ai-diagnostic-evaluate.cjs",
-      "sha256": "df969f58c8b16d0e8a57ebf0a8ce2ecd881551541f558dc09988fda2612a7cd5"
+      "sha256": "611ac2a6f2c43ed2579268dc9b4a3f8df159ae372304e717511d4b44473a6d76"
     },
     {
       "path": "backend/ai-diagnostic-assembly.cjs",
@@ -86,7 +86,7 @@
     },
     {
       "path": "ai/formnaro-tool-reference.mjs",
-      "sha256": "da5cfb9ad6d23ec3a3c5e7c8f7b4aa3bf2d46f329c71dd87f8b2635b59395cdc"
+      "sha256": "f3b372d0445daa7568828200e1af3b9f1e5b6aeb4184e25e3eb0773b38d3a12b"
     },
     {
       "path": "ai/practice-plan-feedback.mjs",
@@ -110,11 +110,11 @@
     },
     {
       "path": "backend/ai-lab-review-data.cjs",
-      "sha256": "20331957490cca341376d9f5c57a67aabb274bd3a2cb444804edb8bb4fa3e416"
+      "sha256": "3a358282058513f87f33a2c4474508445fce10c8d0c346e0675d5e37608cc301"
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "b5e1cb1dc47447823dc203c8b2f26e0daaa1448d33c80b24fdb704a3d0414d5b"
+      "sha256": "f7de68102cb9dd588303211b73bec6c91247b4f22723dfa9893b2bea9c55aad1"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -126,7 +126,7 @@
     },
     {
       "path": "backend/practice-runner.cjs",
-      "sha256": "ecbe8eb590697ebcd471e61a17f6bb7bfdbdd8332654bf11399e59bc34151617"
+      "sha256": "f47ee364735ff8a40254ee71090d924f8c401dd752ae7705b1c9860bd8db55cb"
     },
     {
       "path": "src/cad-agent-ui-policy.js",
@@ -135,7 +135,35 @@
     {
       "path": "backend/desktop-ai.cjs",
       "sha256": "65359bf66a559b50842fef5ccedec6ea9d2b60a6559d7454dbd52a7dc882e273"
+    },
+    {
+      "path": "backend/ai-lab-storage.cjs",
+      "sha256": "d55c2482acc689953c6fd94407f6fd2a0edd1b6f1f0dc18342990391456d1ee6"
+    },
+    {
+      "path": "backend/ai-task-atomic.cjs",
+      "sha256": "ee952e2437b68d0a7e0262613b0d1b51e69e38c97cf4aad1c2b04e20b276798f"
+    },
+    {
+      "path": "backend/ai-lab-response.cjs",
+      "sha256": "82a3389ae4412896a8eca0c78b2d4f1525177dfa79e7847868489255ac668eb9"
+    },
+    {
+      "path": "backend/ai-lab-reviewer.cjs",
+      "sha256": "e8f0db854572518bcbd96a661d86e8a80e10067ff7c516b976ca5e6913ee38aa"
+    },
+    {
+      "path": "backend/ai-diagnostic-child.cjs",
+      "sha256": "c44eab321a7ea63a81ab04b5c7827c96441c89abd3027731ba0d06d22757fd39"
+    },
+    {
+      "path": "src/cad-ai-analysis.js",
+      "sha256": "b05d5d8f4ad02cfdc2597c151aa4fe0dc05fd0936ffbff38d667d3444730c1de"
+    },
+    {
+      "path": "src/cad-ai-result-checks.js",
+      "sha256": "b2e71a222b73cda76370fa76d05be7e80130f8fa7b0a477db34a7f8382e25906"
     }
   ],
-  "revisionReason": "Forward the per-request credential resolver through the actual desktop lab adapter. Freeze that adapter as a suite dependency. No changes to tasks, prompts, fixtures, native predicates, model identities or model budgets."
+  "revisionReason": "Integrate durable logs, explicit agent completion, precise feedback, review evidence and bounded regular child shutdown. Tasks, native predicates and model budgets unchanged."
 }

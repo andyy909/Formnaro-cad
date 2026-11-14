@@ -1,7 +1,7 @@
 const Module=require('node:module'),path=require('node:path'),fs=require('node:fs'),assert=require('node:assert/strict'),original=Module._load;
 Module._load=function(request,parent,isMain){
- if(request==='./backend/maintenance-verification.cjs')return {verifyMaintenance:async win=>{
-  const js=code=>win.webContents.executeJavaScript(code),pause=ms=>new Promise(r=>setTimeout(r,ms)),checks=[],directory=path.dirname(process.argv.find(v=>v.startsWith('--verify-maintenance=')).split('=').slice(1).join('='));
+ if(request==='./backend/ai-result-checks-verification.cjs')return {verifyAIResultChecks:async win=>{
+  const js=code=>win.webContents.executeJavaScript(code),pause=ms=>new Promise(r=>setTimeout(r,ms)),checks=[],directory=path.dirname(process.argv.find(v=>v.startsWith('--verify-ai-result-checks=')).split('=').slice(1).join('='));
   async function until(code){for(let i=0;i<300;i++){if(await js(code))return;await pause(30);}throw Error('Timeout: '+code+'; '+await js("document.querySelector('[data-modeling-status]')?.textContent"));}
   async function clickWorld(point){await js("window.__cadTest.view.setView('top')");await js('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');const p=await js('window.__cadTest.view.projectPoint('+JSON.stringify(point)+')'),x=Math.round(p.x),y=Math.round(p.y);assert(await js('document.elementFromPoint('+x+','+y+')===window.__cadTest.view.canvas'),JSON.stringify({point,x,y,element:await js('document.elementFromPoint('+x+','+y+')?.outerHTML.slice(0,250)')}));for(const type of ['mouseMove','mouseDown','mouseUp'])win.webContents.sendInputEvent({type,x,y,button:'left',clickCount:1});await pause(120);}
   async function capture(name){await js('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');await pause(180);fs.writeFileSync(path.join(directory,name+'.png'),(await win.webContents.capturePage()).toPNG());}
