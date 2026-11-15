@@ -37,7 +37,7 @@ Vorher: 515 grüne Node-Dateien, 30 begründete Laufzeitfehler und ein nativer S
 
 `npm run test:desktop` scheiterte schon auf der Phase-1-Basis: ungebundenes exportModel im aktuellen Testhook, danach veraltete API des v0.9-Smokes. Der Hook bindet nun den bereits vorhandenen Export der Workflowfabrik; normales Produktverhalten bleibt gleich. Der Smoke prüft den aktuellen Einstieg mit isoliertem Profil: Palettenklick, echte native Geometrie, unveränderliche Vorschau, genau ein Undo bei Übernahme, Undo/Redo, native Platte mit vier Bohrungen (Volumen 13928.761101961532), aktiven Projekt-Roundtrip und STL/3MF/OBJ-Downloads. Null Rendererfehler/Netzwerkzugriffe und regulärer Fenster-/Prozessabschluss. Die alten Drag/SVG-Checks dieses nicht mehr funktionsfähigen Smokes werden nicht als ausgeführt behauptet; aktuelle Gesten/Importe besitzen separate vorhandene Prüfungen.
 
-Gezielte gemischte Suite 80/80, Standardtests 100/100, Build und neuer Desktop-Smoke bestanden. Vorher-/Nachher-Vollsuiten und endgültiger integrierter Nachweis werden in den PRs und der Abschlussübergabe ergänzt. Keine Installation ersetzt, keine Cloud-KI-Versuche, kein Merge und keine Veröffentlichung.
+Gezielte gemischte Suite 80/80, Standardtests 100/100, Build und neuer Desktop-Smoke bestanden. Vollständige Vorher-/Nachher-Quellprüfungen sind unten verlinkt. Lokale Paketprotokolle und deren genaue Zuordnung stehen in der Abschlussübergabe und PR #36. Keine Installation ersetzt, keine Cloud-KI-Versuche, kein Merge und keine Veröffentlichung.
 
 ## P2-3 – Historische Paketskripte
 
@@ -55,4 +55,19 @@ Widerspruch zur wörtlichen Anforderung: Bytegleiches Verschieben erhält in his
 
 ### Prüfumgebung
 
-Die ersten lokalen Sammelläufe verwendeten versehentlich das systemweite Node22.16.0 statt der in .node-version festgelegten22.23.4. Drei unveränderte Diagnosetestdateien scheiterten an der alten Loader-Hook-Implementierung; alle zwölf betreffenden Fälle bestanden unter22.23.4. Zusätzlich führte konkurrierende lokale Last zu einem Fonttest-Timeout. Diese abgebrochenen Vorläufe gelten nicht als Abnahme. Weitere Vollprüfungen nutzen die gepinnte Laufzeit; lokale Vollsuiten laufen nicht gleichzeitig. Die vollständigen CI-Läufe verwenden ebenfalls .node-version. Paket-Vorhervergleich nutzt den unveränderten P2-2b-Commit in einem eigenen Arbeitsbaum, Nachhervergleich den archivierten Endstand; beide auf Windows x64 mit22.23.4 und eigenen Ausgabeordnern. Es wird keine Nutzerinstallation gestartet oder ersetzt.
+Die ersten lokalen Sammelläufe verwendeten versehentlich das systemweite Node 22.16.0 statt der in .node-version festgelegten 22.23.4. Drei unveränderte Diagnosetestdateien scheiterten an der alten Loader-Hook-Implementierung; alle zwölf betreffenden Fälle bestanden unter 22.23.4. Zusätzlich trat unter konkurrierender lokaler Last ein Fonttest-Timeout auf. Diese abgebrochenen Vorläufe gelten nicht als Abnahme. Weitere Vollprüfungen nutzen die gepinnte Laufzeit; die beiden vollständigen Paketprüfungen laufen nacheinander. Die vollständigen CI-Läufe verwenden ebenfalls .node-version. Der Paket-Vorhervergleich nutzt den unveränderten P2-2b-Commit in einem eigenen Arbeitsbaum, der Nachhervergleich den archivierten Endstand; beide auf Windows x64 mit 22.23.4 und eigenen Ausgabeordnern. Es wird keine Nutzerinstallation gestartet oder ersetzt.
+
+### Vollständige CI-Nachweise
+
+Alle fünf Jobs jedes folgenden Laufs sind erfolgreich: Windows mit Build, Standardtests und vollständiger Manifestauswahl, beide Linux-Teilmengen sowie Mini und Mini-CAD mit ihren Tests und Builds. Die Windows-Zeiten beziehen sich nur auf test:all.
+
+| Schritt | Geprüfter Commit | Windows-Dateien | Dauer | CI-Lauf |
+| --- | --- | --- | --- | --- |
+| P2-1a | dd12c071e6fd3346383df1a9b5740f41f5dff978 | 516/516 | 22 min 46 s | [43734735129](https://github.com/andyy909/Formnaro-cad/actions/runs/43734735129) |
+| P2-2a | 29d783842888c9c5d6c9a90034495cce5c128480 | 516/516 | 23 min 57 s | [43734878001](https://github.com/andyy909/Formnaro-cad/actions/runs/43734878001) |
+| P2-2b | 2bcb131b262ac438b3f387852a00015a395f4393 | 513/513 | 18 min 27 s | [43735841690](https://github.com/andyy909/Formnaro-cad/actions/runs/43735841690) |
+| P2-3 | a72eb67f5831b02c07cfe947c0968c26dbb3279c | 514/514 | 17 min 15 s | [43736722215](https://github.com/andyy909/Formnaro-cad/actions/runs/43736722215) |
+
+Beim integrierten P2-3-Lauf bestanden unter Linux jeweils 257/257 Dateien (10 min 58 s und 11 min 1 s). Keine neuen Fehler oder Timeouts in der ausgewählten Quellsuite. Die begründeten 30 Laufzeitfehler und der eine native Schrift-Timeout bleiben im Manifest ausdrücklich außerhalb dieser Auswahl; die 19 Electron- und sechs Python-Dateien sind ebenfalls kein Bestandteil ihrer Pass-Zahl.
+
+Die Phase-2-Änderungen wurden auf zwei unabhängigen Reviewachsen geprüft. Der dabei gefundene externe Zwischenmodulfall im Graphen ist korrigiert und durch eine Regression geschützt. Nach dem Nachreview blieben keine offenen Codebefunde. Phase 3 beginnt erst nach einer neuen Entscheidung des Nutzers; die Entwürfe #33 bis #36 werden im Rahmen dieser Arbeit nicht zusammengeführt.
