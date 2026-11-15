@@ -1,12 +1,13 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),vm=require('node:vm'),{createRequire}=require('node:module'),{EventEmitter}=require('node:events');
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{EventEmitter}=require('node:events');
+const {loadDesktopTestModules}=require('./fixtures/load-desktop-test-modules.cjs');
 function desktopProvider(t){
  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-desktop-credential-'));t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));
- const file=path.resolve(__dirname,'../backend/desktop-ai.cjs'),local=createRequire(file),module={exports:{}},win=new EventEmitter();let provider;
+ const win=new EventEmitter();let provider;
  win.webContents=new EventEmitter();win.webContents.mainFrame={};win.webContents.send=()=>{};win.isDestroyed=()=>false;
  const electron={app:{getPath:()=>directory},ipcMain:{handle(){},on(){}},safeStorage:{isEncryptionAvailable:()=>false}};
- const diagnostic={createDiagnostics:options=>{provider=options.provider;return {cancel(){}};}};
- vm.runInNewContext(fs.readFileSync(file,'utf8'),{require:name=>name==='electron'?electron:name==='./ai-diagnostics.cjs'?diagnostic:local(name),module,Buffer,URL,AbortController,setTimeout,clearTimeout,process:{argv:[]}},{filename:file});
- module.exports.installDesktopAI(win,{settingsFile:directory+'/ai-settings.json'});t.after(()=>win.emit('closed'));return provider;
+ t.mock.method(require('../backend/ai-diagnostics.cjs'),'createDiagnostics',options=>{provider=options.provider;return {cancel(){}};});
+ loadDesktopTestModules(electron,{loadPreload:false}).installDesktopAI(win,{settingsFile:path.join(directory,'ai-settings.json')});
+ t.after(()=>win.emit('closed'));return provider;
 }
 const completed=()=>new Response('data: '+JSON.stringify({type:'response.completed',response:{status:'completed',model:'gpt-6.1-sol',output:[{type:'message',content:[{type:'output_text',text:'{"message":"Local fixture"}'}]}],usage:{input_tokens:1,output_tokens:1}}})+'\n\n');
 const config=()=>require('../backend/ai-provider.cjs').validateConfig({authMode:'chatgpt',protocol:'responses',model:'gpt-6.1-sol'});

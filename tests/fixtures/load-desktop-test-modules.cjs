@@ -8,7 +8,7 @@ const targets = new Set([preloadPath, desktopPath].map(file => pathToFileURL(fil
 const stubPath = join(__dirname, '.electron-test-module.cjs');
 const stubUrl = pathToFileURL(stubPath).href;
 
-function loadDesktopTestModules(electron) {
+function loadDesktopTestModules(electron, { loadPreload = true } = {}) {
   const cached = [preloadPath, desktopPath, stubPath].map(file => [file, require.cache[file]]);
   const stub = new Module(stubPath);
   stub.exports = electron;
@@ -25,7 +25,7 @@ function loadDesktopTestModules(electron) {
     delete require.cache[preloadPath];
     delete require.cache[desktopPath];
     require.cache[stubPath] = stub;
-    require(preloadPath);
+    if (loadPreload) require(preloadPath);
     return require(desktopPath);
   } finally {
     hooks.deregister();
