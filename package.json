@@ -5,7 +5,7 @@
   "private": true,
   "author": "Andreas Klisch",
   "license": "MIT",
-  "description": "Lokaler 3D-Editor fÃ¼r Modellbau und 3D-Druck",
+  "description": "Lokaler 3D-Editor für Modellbau und 3D-Druck",
   "type": "module",
   "main": "electron.cjs",
   "scripts": {
