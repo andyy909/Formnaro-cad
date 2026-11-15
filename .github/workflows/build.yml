@@ -35,6 +35,10 @@ jobs:
   linux-node-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -47,7 +51,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
-      - run: npm run test:all
+      - run: npm run test:all -- --shard=${{ matrix.shard }}/2
 
   mini-source:
     runs-on: windows-latest
