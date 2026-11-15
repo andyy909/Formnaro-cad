@@ -12,7 +12,9 @@ if (args.length && (args.length !== 1 || args[0] !== '--include-failing')) {
 const root = fileURLToPath(new URL('../', import.meta.url));
 const manifest = JSON.parse(readFileSync(root + 'tests/manifest.json', 'utf8'));
 const statuses = new Set(args.length ? ['pass', 'fail', 'timeout'] : ['pass']);
-const tests = manifest.filter(({ kind, status }) => kind === 'node' && statuses.has(status));
+const tests = manifest.filter(({ kind, status, os }) =>
+  kind === 'node' && statuses.has(status) && (os !== 'windows' || process.platform === 'win32'),
+);
 if (!tests.length) {
   console.error('No measured Node test files selected by tests/manifest.json.');
   process.exit(1);
