@@ -9,7 +9,7 @@ import {cadDisplayStretch,cadDisplayIsometry,cadDisplayDeflectionLevels} from '.
 import {cadConstructionStretch} from './cad-construction-scale.js';
 import {createCadAnnotationValidator} from './cad-annotations-native.js';
 import {buildCadRecipe,constructionTolerance,cadRecipeMinimumFeature,CAD_CONSTRUCTION_TOLERANCE} from './cad-recipes.js';
-import {cadBoolean,cadCutMany,cadFuseMany,cadBounds,validateCadSolid,writeCadBrep,readCadBrep,transformCad,cadDisplayMesh,cadExportMesh} from './cad-native-kernel.js';
+import {cadAffineVolume,cadBoolean,cadCutMany,cadFuseMany,cadBounds,validateCadSolid,writeCadBrep,readCadBrep,transformCad,cadDisplayMesh,cadExportMesh} from './cad-native-kernel.js';
 import {cadProjectSnapshot,validateAffineMatrix} from './cad-project.js';
 import {cadIdentity,multiplyCadMatrices,inverseCadMatrix,cadPoint} from './cad-affine.js';
 import {createCadCache} from './cad-worker-client.js';
@@ -159,17 +159,50 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     const original=metadata.metadata??{},notes=[original.notes?.slice(0,Math.max(0,3998-summary.length-repairNote.length)),summary,repairNote].filter(Boolean).join('\n');
     return {id,kind:'cad',name,solid,source:'step',transform:[...transform],...metadata,metadata:{...original,notes},...geometry};
   }
+  function cachedThread(node,world=node.transform){
+    if(node.source!=='native'||node.recipe?.type!=='thread')return;
+    const entry=cache.get(sourceKey(node,nodeTolerance(node,world)));
+    if(entry?.brep===node.brep.data)return entry;
+  }
+  function inspectThreadPlacement(node,world,linear){
+    if(node.source!=='native'||node.recipe?.type!=='thread'||!cadDisplayIsometry(linear))return;
+    const determinant=linear[0]*(linear[5]*linear[10]-linear[9]*linear[6])
+      -linear[4]*(linear[1]*linear[10]-linear[9]*linear[2])
+      +linear[8]*(linear[1]*linear[6]-linear[5]*linear[2]);
+    if(determinant<=0)return;
+    // A rigid placement preserves the solid's topology. Only reuse results
+    // proved by this worker for the same BRep. A saved or supplied BRep still
+    // goes through the native reader and solid validation on a cold cache.
+    const cached=cachedThread(node,world);
+    const local=cached?.shape??readCadBrep(oc,node.brep.data);
+    let transform,builder,placed;
+    try{
+      const {bounds,volume,solids}=cached?.stats??validateCadSolid(oc,local);
+      const {min,max}=bounds;
+      const localBounds={min,max,size:min.map((v,i)=>max[i]-v),center:min.map((v,i)=>(max[i]+v)/2)};
+      if(linear.every((value,index)=>value===(index%5===0?1:0)))return {localBounds,worldBounds:{...localBounds},volume,solids};
+      transform=new oc.gp_Trsf();
+      transform.SetValues(...[0,1,2].flatMap(row=>[linear[row],linear[4+row],linear[8+row],0]));
+      builder=new oc.BRepBuilderAPI_Transform(local,transform,false,false);
+      placed=builder.Shape();
+      return {localBounds,worldBounds:cadBounds(oc,placed),volume:cadAffineVolume(volume,linear),solids};
+    }finally{placed?.delete();builder?.delete();transform?.delete();if(!cached)local.delete();}
+  }
   function inspect(node,world=node.transform){
     if(isGeometryRef(node.brep))throw Object.assign(Error('Geometrie für native Prüfung zuerst laden.'),{code:'GEOMETRY_NOT_LOADED'});
     alive();cadNativeMemory(oc).check('inspection');world=validateAffineMatrix(world);
     // Translation preserves native topology, volume and exact extrema. Cache
-    // only proofs from actual BRep reads, keyed by its full bytes and linear
+    // only native proofs, keyed by the full BRep bytes and linear
     // map; caller-supplied stats never establish a geometry proof.
     const linear=[...world];linear[12]=linear[13]=linear[14]=0;
     const key=JSON.stringify([node.brep.data,linear]);let record=inspectionCache.get(key);
-    if(!record){const local=readCadBrep(oc,node.brep.data);let placed;
-      try{const localBounds=cadBounds(oc,local);placed=transformCad(oc,local,linear);const checked=validateCadSolid(oc,placed);record={localBounds,worldBounds:checked.bounds,volume:checked.volume,solids:checked.solids};inspectionCache.set(key,record,utf8.encode(key).length+512);}
-      finally{placed?.delete();local.delete();}
+    if(!record){
+      record=inspectThreadPlacement(node,world,linear);
+      if(!record){const local=readCadBrep(oc,node.brep.data);let placed;
+        try{const localBounds=cadBounds(oc,local);placed=transformCad(oc,local,linear);const checked=validateCadSolid(oc,placed);record={localBounds,worldBounds:checked.bounds,volume:checked.volume,solids:checked.solids};}
+        finally{placed?.delete();local.delete();}
+      }
+      inspectionCache.set(key,record,utf8.encode(key).length+512);
     }
     const result=structuredClone(record),bounds=result.worldBounds;
     bounds.min=bounds.min.map((v,k)=>v+world[12+k]);bounds.max=bounds.max.map((v,k)=>v+world[12+k]);bounds.center=bounds.center.map((v,k)=>v+world[12+k]);
@@ -281,7 +314,15 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
       let mesh=displayCache.get(key);
       if(!mesh&&finer!==undefined)mesh=displayCache.get(JSON.stringify([node.brep.data,{...localQuality,deflection:finer}]));
       record('cacheLookupMs',lookupStart);
-      if(!mesh){const readStart=mark(),shape=readCadBrep(oc,node.brep.data);record('brepReadMs',readStart);try{const tessStart=mark();mesh=cadDisplayMesh(oc,shape,localQuality);record('tessellationMs',tessStart);const bytes=utf8.encode(key).length+[mesh.vertices,mesh.normals,mesh.triangles,mesh.faceGroups].reduce((sum,values)=>sum+values.length*8,0);displayCache.set(key,mesh,Math.max(1,bytes));}finally{shape.delete();}}
+      if(!mesh){
+        const readStart=mark(),thread=cachedThread(node),shape=thread?.shape??readCadBrep(oc,node.brep.data);
+        record('brepReadMs',readStart);
+        try{
+          const tessStart=mark();mesh=cadDisplayMesh(oc,shape,localQuality);record('tessellationMs',tessStart);
+          const bytes=utf8.encode(key).length+[mesh.vertices,mesh.normals,mesh.triangles,mesh.faceGroups].reduce((n,values)=>n+values.length*8,0);
+          displayCache.set(key,mesh,Math.max(1,bytes));
+        }finally{if(!thread)shape.delete();}
+      }
       result.push({id:node.id,kind:'cad',transform:node.transform,...(partFaceColors(node).length?{faceColors:partFaceColors(node)}:{}),...displayEnvelope(mesh,known)});
     }
     return result;

@@ -47,7 +47,7 @@ export function createCadFusionUI({storage,controls,toolbar,header,tools,safe,t=
       const group=make('div',undefined,'fusion-command-group'),row=make('div',undefined,'fusion-group-tools'),shown=['assemble','construct','inspect'].includes(name)?1:2;
       const more=keys.length>shown?make('details',undefined,'fusion-group-menu'):null,list=more?make('div',undefined,'fusion-group-menu-panel'):null;
       keys.forEach((key,i)=>{const node=control(key);decorate(node,key);(i<shown?row:list).append(node);});group.append(row);
-      if(more){const summary=make('summary',label(name)+' ▾');more.append(summary,list);group.append(more);summary.setAttribute('aria-expanded','false');more.ontoggle=()=>{summary.setAttribute('aria-expanded',String(more.open));if(more.open){for(const other of ribbon.querySelectorAll('.fusion-group-menu'))if(other!==more)other.open=false;const r=summary.getBoundingClientRect();list.style.left=Math.max(6,Math.min(r.left,innerWidth-255))+'px';list.style.top=r.bottom+'px';list.style.maxHeight=Math.max(80,innerHeight-r.bottom-12)+'px';}};list.onclick=e=>{if(e.target.closest('button:not(:disabled)'))more.open=false;};}
+      if(more){const summary=make('summary',label(name)+' ▾');summary.id='fusion-group-'+key+'-'+name;more.dataset.fusionGroup=name;more.append(summary,list);group.append(more);summary.setAttribute('aria-expanded','false');more.ontoggle=()=>{summary.setAttribute('aria-expanded',String(more.open));if(more.open){for(const other of ribbon.querySelectorAll('.fusion-group-menu'))if(other!==more)other.open=false;const r=summary.getBoundingClientRect();list.style.left=Math.max(6,Math.min(r.left,innerWidth-255))+'px';list.style.top=r.bottom+'px';list.style.maxHeight=Math.max(80,innerHeight-r.bottom-12)+'px';}};list.onclick=e=>{if(e.target.closest('button:not(:disabled)'))more.open=false;};}
       else group.append(make('span',label(name),'fusion-group-title'));panel.append(group);
     }
     closePopup();window.dispatchEvent(new Event('resize'));
@@ -81,8 +81,13 @@ export function createCadFusionUI({storage,controls,toolbar,header,tools,safe,t=
   }
   function menu(key,entries){
     const details=make('details',undefined,'fusion-menu');details.dataset.fusionMenu=key;const summary=make('summary',label(key)),panel=make('div',undefined,'fusion-menu-panel');
+    summary.id='fusion-menu-'+key;
     summary.setAttribute('aria-expanded','false');details.append(summary,panel);menubar.append(details);
-    for(const [caption,fn]of entries)panel.append(button(caption,()=>{details.open=false;summary.setAttribute('aria-expanded','false');return fn();}));
+    for(const [caption,fn,command]of entries){
+      const item=button(caption,()=>{details.open=false;summary.setAttribute('aria-expanded','false');return fn();});
+      if(command){item.id='fusion-menu-item-'+command;item.dataset.fusionCommand=command;}
+      panel.append(item);
+    }
     details.addEventListener('toggle',()=>{summary.setAttribute('aria-expanded',String(details.open));if(details.open){for(const other of menubar.querySelectorAll('details'))if(other!==details)other.open=false;const r=summary.getBoundingClientRect();panel.style.left=Math.max(6,Math.min(r.left,innerWidth-250))+'px';panel.style.top=r.bottom+'px';panel.style.maxHeight=Math.max(80,innerHeight-r.bottom-10)+'px';}});
     summary.onkeydown=e=>{if(e.key==='ArrowDown'){e.preventDefault();details.open=true;panel.querySelector('button')?.focus();}};
     panel.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();details.open=false;summary.focus();}};
@@ -94,10 +99,10 @@ export function createCadFusionUI({storage,controls,toolbar,header,tools,safe,t=
     const act=key=>()=>{const b=controls.get(key)||document.querySelector(`[data-action="${key}"]`);if(b&&!b.disabled)b.click();},tab=key=>()=>selectTab(key);
     menu('file',[[t('Neues Projekt'),act('new')],[t('Öffnen'),act('open')],[t('Speichern'),act('save')],[t('Speichern unter …'),()=>executeCommand('save-as')],[t('Importieren'),act('import')],[t('Exportieren'),act('export')]]);
     menu('edit',[[t('Rückgängig'),act('undo')],[t('Wiederholen'),act('redo')],[t('Kopieren'),act('copy')],[t('Einfügen'),act('paste')],[t('Duplizieren'),act('duplicate')],[t('Entfernen'),act('delete')]]);
-    menu('view',[[label('orientation'),orientation],[word('Einpassen','Zoom to fit'),act('fit')],[word('Perspektive / Orthografisch','Perspective / Orthographic'),act('projection')],[t('Schnittansicht'),act('section')],[word('Modellbaum','Model tree'),()=>selectManager('model')],[t('Eigenschaften'),()=>selectManager('properties')]]);
+    menu('view',[[label('orientation'),orientation],[word('Einpassen','Zoom to fit'),act('fit')],[word('Perspektive / Orthografisch','Perspective / Orthographic'),act('projection')],[t('Schnittansicht'),act('section')],[word('Modellbaum','Model tree'),()=>selectManager('model')],[t('Eigenschaften'),()=>selectManager('properties'),'properties']]);
     menu('insert',[[label('extrude'),()=>executeCommand('extrude')],[label('cut'),()=>executeCommand('cut')],[label('sketch'),tab('sketch')],[label('mesh'),tab('mesh')],[t('Technische Zeichnung'),act('drawing')]]);
     const assigned=new Set([...Object.values(tabCommands).flatMap(groups=>groups.flatMap(([,keys])=>keys)),'new','open','save','save-as','projects','import','export','ai','photo-project-open','ai-feature-open','freecad-document-open','settings','help','undo','redo','copy','paste','duplicate','delete','projection','fit','coordinates','magnet','view-iso','view-top','view-front','view-right','mode-translate','mode-scale','mode-rotate']);
-    const remaining=[...controls].filter(([key,node])=>!assigned.has(key)&&node.matches('button')).map(([key,node])=>[node.title||node.textContent.trim(),act(key)]);
+    const remaining=[...controls].filter(([key,node])=>!assigned.has(key)&&node.matches('button')).map(([key,node])=>[node.title||node.textContent.trim(),act(key),key==='center'?key:undefined]);
     menu('extras',[[label('tools'),tab('tools')],[label('project-parameters'),act('project-parameters')],[label('options'),()=>{openSettings();$('settings-tab-fusion')?.click();}],[t('Einstellungen'),openSettings],[word('KI-Werkstatt','AI workshop'),act('ai')],[t('Projektfotos'),act('photo-project-open')],[t('KI-Merkmalsbezüge'),act('ai-feature-open')],[t('FreeCAD-Merkmale'),act('freecad-document-open')],...remaining]);
     menu('help',[[word('Fusion-Einstieg','Getting started with Fusion'),()=>selectManager('model')],[t('Hilfe'),act('help')],[word('Über Formnaro','About Formnaro'),openAbout]]);
     const modeNote=make('span',word('KONSTRUKTION','DESIGN'),'fusion-mode-note');menubar.append(modeNote);

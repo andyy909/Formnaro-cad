@@ -1,5 +1,34 @@
 const test=require('node:test'),assert=require('node:assert/strict');const {generate}=require('../backend/ai-provider.cjs');
 const practice={revision:'r1',assistant:{kind:'practice',plan:{version:1,title:'Lochplatte',actions:[{kind:'shape',type:'box',as:'base'},{kind:'shape',type:'cylinder',as:'hole'},{kind:'role',value:'hole'},{kind:'select',targets:['base','hole']},{kind:'group',as:'result'}]}},message:'Eine Übung im eigenen Fenster.'};
+test('practice sends the chosen workbench without eagerly sending any workbench paths',async()=>{
+ const {practiceSystem}=require('../backend/ai-practice-prompt.cjs');
+ const {reference}=require('../backend/ai-tool-reference.cjs');
+ const context={practiceOnly:true,agentUI:{targets:[{id:'tool:properties',label:'Eigenschaften',path:'HIDDEN_WORKBENCH_PATH'}]}};
+ for(const mode of [undefined,'normal','fusion','solid']){
+  const active={...context,practiceWorkbench:mode};
+  const system=practiceSystem(active);
+  assert.equal(system.includes('The practice window uses Solid.'),mode==='solid');
+  assert.equal(system.includes('The practice window uses Fusion.'),mode==='fusion');
+  assert.doesNotMatch(system,/HIDDEN_WORKBENCH_PATH|solid-manager-tab-|fusion-manager-tab-/);
+  const properties=await reference({tool:'tool:properties'},active);
+  assert.equal(properties.tool.revealVia,mode==='solid'?'ui:id:solid-manager-tab-properties':mode==='fusion'?'ui:id:fusion-menu-item-properties':undefined);
+  const thread=await reference({tool:'tool:trapezoidal-thread'},active);
+  assert.equal(thread.ok,['solid','fusion'].includes(mode));
+  if(mode==='fusion'){
+   assert.equal(thread.tool.revealVia,'ui:id:fusion-manager-tab-library');
+   const drill=await reference({tool:'tool:drill'},active);
+   assert.equal(drill.tool.revealVia,'ui:id:fusion-tab-solid');
+   assert.match(drill.tool.location,/Volumenkörper → Ändern → Bohrung/);
+  }
+  if(mode==='solid'){
+   assert.equal(thread.tool.practiceTarget,'ui:id:shape-preset-trapezoidal-thread');
+   assert.equal(thread.tool.revealVia,'ui:id:solid-manager-tab-library');
+   const joints=await reference({tool:'tool:joints'},active);
+   assert.equal(joints.tool.revealVia,'ui:id:solid-tab-assembly');
+   assert.doesNotMatch(JSON.stringify(joints),/Fusion|CAD-Werkzeuge|menu:cad/);
+  }
+ }
+});
 test('separate practice requests never reuse the main or an earlier practice provider conversation',async()=>{
  const ids=[],config={authMode:'mistral-vibe',baseUrl:'https://api.mistral.ai/v1',model:'fixture',protocol:'chat'},options={mistralComplete:async e=>{ids.push(e.conversationId);return {text:'{"message":"OK"}',usage:{input_tokens:1,output_tokens:1}};}};
  for(const practiceOnly of [true,true,false])await generate(config,'',{prompt:'Test',chat:true,conversationId:'same-main-chat',context:{practiceOnly},scene:{revision:'r1'}},undefined,options);

@@ -11,7 +11,7 @@ const vector={type:'array',minItems:3,maxItems:3,items:{type:'number',minimum:-1
 const positive={type:'number',exclusiveMinimum:0,maximum:10000};
 const partialVector=items=>({...vector,items:{anyOf:[items,{type:'null'}]},contains:{type:'number'}});
 const definitions={
- bore:{required:['from','to','diameter'],properties:{from:vector,to:vector,diameter:positive,minWall:positive,minBottom:positive}},
+ bore:{required:['from','to','diameter'],properties:{from:{...vector,description:'Exact start of the finished cylindrical bore, in world mm; not an extended cutter endpoint.'},to:{...vector,description:'Exact end of the finished cylindrical bore, in world mm; not an inset probe point.'},diameter:positive,minWall:{...positive,description:'Minimum continuous surrounding material ring, including the nearest outer edge.'},minBottom:{...positive,description:'Only for a blind bore: required material beyond its bottom. Omit for a through bore.'}}},
  size:{required:['space','expected'],properties:{space:{enum:['edit','worldAxes']},expected:partialVector(positive)}},
  bounds:{required:['edge','expected'],properties:{edge:{enum:['min','max','center','size']},expected:partialVector(vector.items)}},
  volume:{required:['expected'],properties:{expected:{type:'number',exclusiveMinimum:0,maximum:1e12}}},

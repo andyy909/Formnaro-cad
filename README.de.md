@@ -12,10 +12,10 @@
 
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
-| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.139.1-r1/Formnaro-v0.139.1-r1-Windows-x64.zip)** | **0.139.1-r1** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
-| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1) | **0.139.1-r1** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
+| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.142.0-r1/Formnaro-v0.142.0-r1-Windows-x64.zip)** | **0.142.0-r1** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
+| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1) | **0.142.0-r1** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
 
-**Neu:** Verbesserte Laborspeicherung, Werkzeugrückmeldungen und Prozess-/KI-Antwortbehandlung. Historische Benchmarks bleiben erhalten. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1).
+**Neu:** Übungen bleiben im gewählten Solid- oder Fusion-Modus. Eine neue native Grundform erzeugt Trapezgewinde mit Längeneingaben bis 3.000 mm. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1).
 
 ## Aktuelle Ausgabe: zuverlässigeres KI-Labor
 
@@ -29,7 +29,7 @@ GPT-6.1 Sol/high bestand alle sechzehn frischen Versuche auf der veröffentlicht
 
 [Sol-Beleg](docs/benchmarks/core-sol-01374-2026-11-08.json) · [Vergleichsdaten](docs/benchmarks/sol-deepseek-16-vergleich-2026-11-08.json) · [Alle Originalergebnisse](docs/benchmarks/README.md)
 
-[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.139.1-r1/Formnaro-Quellcode-v0.139.1-r1.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
+[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.142.0-r1/Formnaro-Quellcode-v0.142.0-r1.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
 
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
@@ -102,7 +102,13 @@ Zwei Stufen, vier Räder, **6:1 Untersetzung** – ein offenes Getriebekonzept e
 | Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
-## Veröffentlichungsstand: 0.139.1-r1
+## Veröffentlichungsstand: 0.142.0-r1
+
+Übungen bleiben im gewählten Solid- oder Fusion-Modus. Eine neue native Grundform erzeugt Trapezgewinde mit Längeneingaben bis 3.000 mm.
+
+[Release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1) · [Abnahme / acceptance](docs/VEROEFFENTLICHUNG-0.142.0-r1.md)
+
+## Frühere Ausgabe: 0.139.1-r1
 
 Die neue Ausgabe enthält die geprüften Verbesserungen aus 0.139.0 und die anschließenden Prozess-/JSON-Korrekturen. Die vier gezielten Live-Nachtests ersetzen keinen neuen Vollbenchmark. Weitere Testbedingungen und die genaue Ursache langsamen nativen Prozessabbaus bleiben offen.
 

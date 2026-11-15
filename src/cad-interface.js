@@ -5,7 +5,8 @@ import {cadShapeIcon as icon} from './cad-shape-icons.js';
 import {projectObjectType} from './project-objects.js';
 const objectTypeLabel=node=>({closedMesh:'Geschlossenes Netz',openMesh:'Offenes Netz',damagedMesh:'Netz mit Fehlerhinweisen',referenceMesh:'Ansichtsvorlage',cad:'CAD-Körper'})[projectObjectType(node)];
 import {cadShapeDimensions,cadShapeDimensionEdit} from './cad-shape-dimensions.js';
-import {CAD_SHAPES,cadFormParameters,cadSourceAtPath} from './cad-form-controls.js';
+import {cadFormParameters,cadSourceAtPath} from './cad-form-controls.js';
+import {CAD_PALETTE_SHAPES} from './cad-shapes.js';
 import {cadSelectionContext,cadFormLocalDimensions,cadFormOrientation,cadSetFormOrientation,cadFormPosition,cadSetFormPosition,cadResizeForm,cadAssignSource} from './cad-interface-state.js';
 import {createCadInterfaceLibrary} from './cad-interface-library.js';
 import {createCadInterfaceSettings} from './cad-interface-settings.js';
@@ -41,9 +42,11 @@ export function createCadInterface({controller,storage,fontLibrary,getPreference
 
   function renderLibrary(){
     const root=$('shape-library');if(!root||disposed)return;const term=($('shape-search')?.value||'').trim().toLocaleLowerCase();
-    const packages=getPlugins().filter(pack=>pack.enabled),signature=JSON.stringify([term,favoritesOnly,getPreferences().language,packages,CAD_SHAPES.map(shape=>library.isFavorite(shape.type)),packages.map(pack=>pack.manifest.shapes.map(shape=>library.isFavorite(pack.manifest.id+'/'+shape.id,'plugin')))]);if(signature===librarySignature)return;librarySignature=signature;root.replaceChildren();const count=CAD_SHAPES.length+packages.reduce((sum,pack)=>sum+pack.manifest.shapes.length,0);if($('shape-count'))$('shape-count').textContent=String(count);
-    for(const shape of CAD_SHAPES){if(favoritesOnly&&!library.isFavorite(shape.type)||![shape.name,t(shape.name)].some(name=>name.toLocaleLowerCase().includes(term)))continue;
-      const button=element('button',undefined,'shape-tile');button.draggable=true;button.dataset.type=shape.type;button.title=t(shape.name)+' · '+t('Rechtsklick: Favorit');button.innerHTML=icon(shape.type,shape.color);button.append(element('span',t(shape.name)));button.classList.toggle('favorite',library.isFavorite(shape.type));installCadLibraryDrag(button,{click:()=>safe(()=>onAddShape(shape.type)),drop:event=>safe(()=>onAddShape(shape.type,event))});button.oncontextmenu=event=>{event.preventDefault();safe(()=>library.toggleFavorite(shape.type));};root.append(button);
+    const packages=getPlugins().filter(pack=>pack.enabled),signature=JSON.stringify([term,favoritesOnly,getPreferences().language,packages,CAD_PALETTE_SHAPES.map(shape=>library.isFavorite(shape.paletteId??shape.type)),packages.map(pack=>pack.manifest.shapes.map(shape=>library.isFavorite(pack.manifest.id+'/'+shape.id,'plugin')))]);if(signature===librarySignature)return;librarySignature=signature;root.replaceChildren();const count=CAD_PALETTE_SHAPES.length+packages.reduce((sum,pack)=>sum+pack.manifest.shapes.length,0);if($('shape-count'))$('shape-count').textContent=String(count);
+    for(const shape of CAD_PALETTE_SHAPES){
+      const id=shape.paletteId??shape.type;
+      if(favoritesOnly&&!library.isFavorite(id)||![shape.name,t(shape.name)].some(name=>name.toLocaleLowerCase().includes(term)))continue;
+      const button=element('button',undefined,'shape-tile');if(shape.paletteId)button.id='shape-preset-'+id;button.draggable=true;button.dataset.type=id;button.title=t(shape.name)+' · '+t('Rechtsklick: Favorit');button.innerHTML=icon(shape.type,shape.color);button.append(element('span',t(shape.name)));button.classList.toggle('favorite',library.isFavorite(id));installCadLibraryDrag(button,{click:()=>safe(()=>onAddShape(id)),drop:event=>safe(()=>onAddShape(id,event))});button.oncontextmenu=event=>{event.preventDefault();safe(()=>library.toggleFavorite(id));};root.append(button);
     }
     for(const pack of packages)for(const shape of pack.manifest.shapes){const name=label(shape.name,getPreferences().language),key=pack.manifest.id+'/'+shape.id;if(favoritesOnly&&!library.isFavorite(key,'plugin')||!name.toLocaleLowerCase().includes(term)&&!label(pack.manifest.name,getPreferences().language).toLocaleLowerCase().includes(term))continue;
       const button=element('button',undefined,'shape-tile plugin-shape');button.dataset.plugin=pack.manifest.id;button.dataset.pluginShape=shape.id;button.draggable=true;button.title=name;button.innerHTML=icon(shape.nodes[0].type,shape.nodes[0].color||'#87b9ad');const text=element('span',name);text.dataset.noTranslate='';button.append(text);button.classList.toggle('favorite',library.isFavorite(key,'plugin'));installCadLibraryDrag(button,{click:()=>safe(()=>onAddPlugin(pack.manifest,shape.id)),drop:event=>safe(()=>onAddPlugin(pack.manifest,shape.id,event))});button.oncontextmenu=event=>{event.preventDefault();safe(()=>library.toggleFavorite(key,'plugin'));};root.append(button);
@@ -119,7 +122,20 @@ export function createCadInterface({controller,storage,fontLibrary,getPreference
       const basic=new Set(type==='gear'?['teeth','module','thickness','bore','backlash']:['kind','diameter','pitch','length','clearance','outerDiameter']),advanced=element('details',undefined,'advanced-parameters');advanced.id='shape-parameters-advanced';const summary=element('summary','Weitere Parameter');summary.id='shape-parameters-advanced-toggle';advanced.append(summary);if(data.schema.length>8)root.append(advanced);
       for(const field of data.schema){const row=element('label',undefined,'parameter-row');row.append(element('span',field.label+(field.unit?` (${field.unit})`:'')));const input=element(field.options?'select':'input');input.id='param-'+field.key;input.dataset.parameter=field.key;input.setAttribute('aria-label',field.label);
         if(field.options)for(const [v,name]of field.options)input.append(new Option(name,v));else{input.type='text';input.inputMode='decimal';input.title=`${field.min} bis ${field.max}${field.unit?' '+field.unit:''}`;input.onfocus=()=>input.select();}
-        input.onchange=()=>safe(async()=>{if(input.dataset.commitPending)return;input.dataset.commitPending='true';try{const current=cadFormParameters(one().node).params[field.key],next=field.options?input.value:preserveUiNumber(number(input),current);if(next===current)return;await form({params:{[field.key]:next}});}finally{delete input.dataset.commitPending;refreshInspector();}});input.onkeydown=event=>{if(event.key==='Enter')input.blur();if(event.key==='Escape'){const current=cadFormParameters(one().node).params[field.key];input.value=typeof current==='number'?display(current):String(current);input.blur();event.stopPropagation();}};if(!field.options)input.onblur=input.onchange;row.append(input);(data.schema.length>8&&!basic.has(field.key)?advanced:root).append(row);fields.set(field.key,{input,row});
+        input.onchange=()=>safe(async()=>{
+          if(input.dataset.commitPending)return;
+          input.dataset.commitPending='true';
+          try{
+            const params=cadFormParameters(one().node).params,current=params[field.key];
+            const next=field.options?input.value:preserveUiNumber(number(input),current);
+            if(next===current)return;
+            // Keep the spindle placement so axial stretching does not change
+            // the physical pitch or require another native body transformation.
+            const physicalLength=type==='thread'&&params.kind==='external'&&params.profile==='trapezoid'&&field.key==='length';
+            await form({params:{[field.key]:next}},physicalLength?{preserveBounds:false}:undefined);
+          }finally{delete input.dataset.commitPending;refreshInspector();}
+        });
+        input.onkeydown=event=>{if(event.key==='Enter')input.blur();if(event.key==='Escape'){const current=cadFormParameters(one().node).params[field.key];input.value=typeof current==='number'?display(current):String(current);input.blur();event.stopPropagation();}};if(!field.options)input.onblur=input.onchange;row.append(input);(data.schema.length>8&&!basic.has(field.key)?advanced:root).append(row);fields.set(field.key,{input,row});
       }
       root.append(element('p',undefined,'small-note'));const buttons=element('div',undefined,'two-buttons'),reset=element('button','Parameter zurücksetzen'),original=element('button','Originalgröße');reset.id='parameter-reset';original.id='parameter-original';reset.onclick=()=>safe(()=>{const params=defaults(type);delete params.edgeSteps;return form({params});});original.onclick=()=>safe(()=>selectedEdit(n=>{n.transform=cadResizeForm(n,n.stats.bounds.min.map((v,i)=>n.stats.bounds.max[i]-v)).transform;},'Originale CAD-Quellengröße'));buttons.append(reset,original);root.append(buttons);
     }

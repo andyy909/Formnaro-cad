@@ -616,6 +616,7 @@ Nutbreite (0 = ohne)|Keyway width (0 = none)
 Nuttiefe ab Bohrung|Keyway depth from bore
 Ausführung|Type
 Außengewinde|External thread
+Trapezgewinde|Trapezoidal thread
 Innengewinde / Mutter|Internal thread / nut
 Lochform für Innengewinde|Internal thread cutter
 Profil|Profile

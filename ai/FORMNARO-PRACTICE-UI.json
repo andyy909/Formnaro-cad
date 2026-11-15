@@ -824,7 +824,8 @@
                 "type": "number",
                 "minimum": -100000,
                 "maximum": 100000
-              }
+              },
+              "description": "Exact start of the finished cylindrical bore, in world mm; not an extended cutter endpoint."
             },
             "to": {
               "type": "array",
@@ -834,7 +835,8 @@
                 "type": "number",
                 "minimum": -100000,
                 "maximum": 100000
-              }
+              },
+              "description": "Exact end of the finished cylindrical bore, in world mm; not an inset probe point."
             },
             "diameter": {
               "type": "number",
@@ -844,12 +846,14 @@
             "minWall": {
               "type": "number",
               "exclusiveMinimum": 0,
-              "maximum": 10000
+              "maximum": 10000,
+              "description": "Minimum continuous surrounding material ring, including the nearest outer edge."
             },
             "minBottom": {
               "type": "number",
               "exclusiveMinimum": 0,
-              "maximum": 10000
+              "maximum": 10000,
+              "description": "Only for a blind bore: required material beyond its bottom. Omit for a through bore."
             },
             "tolerance": {
               "type": "number",

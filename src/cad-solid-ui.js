@@ -69,8 +69,13 @@ export function createCadSolidUI({storage,controls,toolbar,header,tools,safe,t=x
   }
   function menu(key,entries){
     const details=make('details',undefined,'solid-menu');details.dataset.solidMenu=key;const summary=make('summary',label(key)),panel=make('div',undefined,'solid-menu-panel');
+    summary.id='solid-menu-'+key;
     summary.setAttribute('aria-expanded','false');details.append(summary,panel);menubar.append(details);
-    for(const [caption,fn]of entries)panel.append(button(caption,()=>{details.open=false;summary.setAttribute('aria-expanded','false');return fn();}));
+    for(const [caption,fn,command]of entries){
+      const item=button(caption,()=>{details.open=false;summary.setAttribute('aria-expanded','false');return fn();});
+      if(command)item.dataset.solidCommand=command;
+      panel.append(item);
+    }
     details.addEventListener('toggle',()=>{summary.setAttribute('aria-expanded',String(details.open));if(details.open){for(const other of menubar.querySelectorAll('details'))if(other!==details)other.open=false;const r=summary.getBoundingClientRect();panel.style.left=Math.max(6,Math.min(r.left,innerWidth-250))+'px';panel.style.top=r.bottom+'px';panel.style.maxHeight=Math.max(80,innerHeight-r.bottom-10)+'px';}});
     summary.onkeydown=e=>{if(e.key==='ArrowDown'){e.preventDefault();details.open=true;panel.querySelector('button')?.focus();}};
     panel.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();details.open=false;summary.focus();}};
@@ -85,7 +90,7 @@ export function createCadSolidUI({storage,controls,toolbar,header,tools,safe,t=x
     menu('view',[[label('orientation'),orientation],[word('Einpassen','Zoom to fit'),act('fit')],[word('Perspektive / Orthografisch','Perspective / Orthographic'),act('projection')],[t('Schnittansicht'),act('section')],[word('Modellbaum','Model tree'),()=>selectManager('model')],[t('Eigenschaften'),()=>selectManager('properties')]]);
     menu('insert',[[label('extrude'),()=>executeCommand('extrude')],[label('cut'),()=>executeCommand('cut')],[label('features'),tab('features')],[label('sketch'),tab('sketch')],[label('assembly'),tab('assembly')],[t('Technische Zeichnung'),act('drawing')]]);
     const assigned=new Set([...Object.values(tabCommands).flat(2),'new','open','save','save-as','projects','import','export','ai','photo-project-open','ai-feature-open','freecad-document-open','settings','help','undo','redo','copy','paste','duplicate','delete','projection','fit','coordinates','magnet','view-iso','view-top','view-front','view-right','mode-translate','mode-scale','mode-rotate']);
-    const remaining=[...controls].filter(([key,node])=>!assigned.has(key)&&node.matches('button')).map(([key,node])=>[node.title||node.textContent.trim(),act(key)]);
+    const remaining=[...controls].filter(([key,node])=>!assigned.has(key)&&node.matches('button')).map(([key,node])=>[node.title||node.textContent.trim(),act(key),key==='center'?key:undefined]);
     menu('extras',[[label('evaluate'),tab('evaluate')],[label('project-parameters'),act('project-parameters')],[label('options'),()=>{openSettings();$('settings-tab-solid')?.click();}],[t('Einstellungen'),openSettings],[word('KI-Werkstatt','AI workshop'),act('ai')],[t('Projektfotos'),act('photo-project-open')],[t('KI-Merkmalsbezüge'),act('ai-feature-open')],[t('FreeCAD-Merkmale'),act('freecad-document-open')],...remaining]);
     menu('help',[[word('Solid-Einstieg','Getting started with Solid'),()=>selectManager('model')],[t('Hilfe'),act('help')],[word('Über Formnaro','About Formnaro'),openAbout]]);
     const modeNote=make('span',word('TEILE KONSTRUIEREN','PART DESIGN'),'solid-mode-note');menubar.append(modeNote);

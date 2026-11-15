@@ -58,7 +58,7 @@ export const SOURCE_REPAIR_PROJECT_VERSION=30;
 export const DRIVE_PROJECT_VERSION=31;
 export const INSPECTION_PROJECT_VERSION=32;
 export const CAD_PROJECT_FORMAT='OfflineCAD';
-export const CAD_PROJECT_LIMITS=Object.freeze({bytes:50*1024*1024,modelBytes:256*1024*1024,brepBytes:12*1024*1024,edgeDomainBytes:2*1024*1024,roots:500,nodes:5000,depth:12,meshVertices:1000000,meshTriangles:2000000});
+export const CAD_PROJECT_LIMITS=Object.freeze({bytes:50*1024*1024,modelBytes:256*1024*1024,brepBytes:12*1024*1024,nativeThreadBrepBytes:16*1024*1024,edgeDomainBytes:2*1024*1024,roots:500,nodes:5000,depth:12,meshVertices:1000000,meshTriangles:2000000});
 export const CAD_SHAPE_TYPES=Object.freeze(['box','cylinder','sphere','cone','pyramid','roof','wedge','hexagon','triangle','tube','torus','capsule','star','heart','gear','text','roundbox','halfSphere','thread','nut','countersink','shellbox','polygon','svg']);
 export const CAD_IDENTITY_MATRIX=Object.freeze([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
 
@@ -152,11 +152,11 @@ function recipe(value,path){
   else if(['contours','topologyCertified','sourceTopology'].some(k=>Object.hasOwn(value,k)))fail(path,'Originale Konturdaten sind nur für Text und SVG vorgesehen.');
   return out;
 }
-function brep(value,path){
+function brep(value,path,byteLimit=CAD_PROJECT_LIMITS.brepBytes){
   if(isGeometryRef(value))return validateGeometryRef(value,'brep');
   keys(value,['format','data','triangulation'],path);
   if(value.format!=='OpenCascade-BRep'||value.triangulation!==false)fail(path,'Ein BRep ohne eingebettete Triangulierung wird benötigt.');
-  const data=string(value.data,`${path}.data`,CAD_PROJECT_LIMITS.brepBytes);if(utf8.encode(data).byteLength>CAD_PROJECT_LIMITS.brepBytes)fail(path,'BRep ist zu groß.');
+  const data=string(value.data,`${path}.data`,byteLimit);if(utf8.encode(data).byteLength>byteLimit)fail(path,'BRep ist zu groß.');
   // The false flag is a writer contract, not proof about arbitrary BRep text.
   // The CAD reader/writer must independently verify its topology and content.
   return {format:value.format,data,triangulation:false};
@@ -238,8 +238,12 @@ function node(value,path,state,depth=0){
   if(Object.hasOwn(value,'mesh'))fail(path,'CAD-Körper dürfen kein Mesh als Konstruktionsdaten enthalten.');
   if(Object.hasOwn(value,'meshSource'))fail(path,'CAD-Körper dürfen keine Netzquelle als Konstruktion enthalten.');
   if(Object.hasOwn(value,'meshRole'))fail(path,'CAD-Körper verwenden ihre native Körper-/Lochrolle.');
-  out.solid=boolean(value.solid,`${path}.solid`);out.source=enumValue(value.source,['native','step','group','finish','partition','extraction','modeling'],`${path}.source`);out.brep=brep(value.brep,`${path}.brep`);out.stats=stats(value.stats,`${path}.stats`);
-  if(value.recipe!==undefined)out.recipe=recipe(value.recipe,`${path}.recipe`);
+  out.solid=boolean(value.solid,`${path}.solid`);out.source=enumValue(value.source,['native','step','group','finish','partition','extraction','modeling'],`${path}.source`);
+  const nativeRecipe=value.recipe===undefined?undefined:recipe(value.recipe,`${path}.recipe`);
+  // Joined screw surfaces retain explicit seam curves in the saved BRep.
+  const threadLimit=out.source==='native'&&nativeRecipe?.type==='thread'?CAD_PROJECT_LIMITS.nativeThreadBrepBytes:undefined;
+  out.brep=brep(value.brep,`${path}.brep`,threadLimit);out.stats=stats(value.stats,`${path}.stats`);
+  if(nativeRecipe)out.recipe=nativeRecipe;
   if(value.children!==undefined){if(!Array.isArray(value.children)||!value.children.length&&!value.drill||value.children.length>500)fail(path,'Ungültige CAD-Quellen.');out.children=value.children.map((v,i)=>node(v,`${path}.children[${i}]`,state,depth+1));}
   if(value.operation!==undefined){if(!out.children)fail(path,'Gruppenoperation braucht Quellen.');out.operation=enumValue(value.operation,['union','intersection'],`${path}.operation`);}
   if(value.drill!==undefined){

@@ -1,7 +1,48 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {createRequire} from 'node:module';
 import {validateAgentPracticePlan} from '../src/cad-agent-ui-policy.js';
 const {validatePracticePlan}=createRequire(import.meta.url)('../backend/practice-runner.cjs');
-import {practiceControl,practiceDialogState,installPracticeControlBridge} from '../src/cad-practice-controls.js';
+import {practiceControl,practiceDialogState,installPracticeControlBridge,practiceWorkbenchTarget,practiceWorkbenchPrerequisite} from '../src/cad-practice-controls.js';
+test('Solid practice opens the actual manager register before acting on a hidden control',()=>{
+ const library={id:'solid-manager-tab-library',getAttribute:()=> 'false'};
+ const properties={id:'solid-manager-tab-properties',getAttribute:()=> 'false'};
+ const area=name=>({getAttribute:()=>name});
+ const nodes=new Map([[library.id,library],[properties.id,properties],['param-length',{closest:()=>area('properties')}],['shape-preset-trapezoidal-thread',{closest:()=>area('library')}]]);
+ const document={getElementById:id=>nodes.get(id)};
+ assert.equal(practiceWorkbenchTarget('ui:menu:cad','solid'),'ui:id:solid-tab-features');
+ assert.equal(practiceWorkbenchTarget('ui:tool:drill','solid'),'ui:tool:drill');
+ assert.equal(practiceWorkbenchPrerequisite(document,'ui:id:shape-preset-trapezoidal-thread','solid'),library);
+ assert.equal(practiceWorkbenchPrerequisite(document,'ui:id:param-length','solid'),properties);
+ assert.equal(practiceWorkbenchPrerequisite(document,'shape:box','solid'),library);
+ assert.equal(practiceWorkbenchPrerequisite(document,'ui:id:param-length','normal'),null);
+ properties.getAttribute=()=> 'true';
+ assert.equal(practiceWorkbenchPrerequisite(document,'ui:id:param-length','solid'),null);
+});
+test('Fusion reveals the real properties menu and closed ribbon group',()=>{
+ const groupSummary={id:'fusion-group-solid-modify'};
+ const viewSummary={id:'fusion-menu-view'};
+ const group={querySelector:()=>groupSummary};
+ const viewMenu={querySelector:()=>viewSummary};
+ const entry={id:'fusion-menu-item-properties',closest:selector=>selector.startsWith('details')?viewMenu:null};
+ const properties={hidden:true,getAttribute:()=> 'properties'};
+ const length={closest:()=>properties};
+ const drill={dataset:{action:'drill'},closest:()=>group};
+ const nodes=new Map([[entry.id,entry],['param-length',length]]);
+ const document={getElementById:id=>nodes.get(id),querySelectorAll:()=>[drill]};
+ assert.equal(practiceWorkbenchTarget('ui:menu:cad','fusion'),'ui:id:fusion-tab-solid');
+ assert.equal(practiceWorkbenchPrerequisite(document,'ui:id:param-length','fusion'),entry);
+ assert.equal(practiceWorkbenchPrerequisite(document,'ui:id:fusion-menu-item-properties','fusion'),viewSummary);
+ assert.equal(practiceWorkbenchPrerequisite(document,'ui:tool:drill','fusion'),groupSummary);
+ const summary={id:'fusion-menu-view',closest:selector=>selector.startsWith('details')?viewMenu:null};viewMenu.querySelector=()=>summary;
+ nodes.set(summary.id,summary);
+ assert.equal(practiceWorkbenchPrerequisite(document,'ui:id:fusion-menu-view','fusion'),null);
+});
+test('a practice plan in Solid cannot switch the chosen workbench',t=>{
+ const old=globalThis.getComputedStyle;globalThis.getComputedStyle=()=>({visibility:'visible'});t.after(()=>globalThis.getComputedStyle=old);
+ const button={id:'mode-normal',tagName:'BUTTON',dataset:{workbenchMode:'normal'},getClientRects:()=>[{}],closest:()=>null,hasAttribute:()=>false};
+ const document={getElementById:()=>button};
+ assert.throws(()=>practiceControl(document,'ui:id:mode-normal',{workbench:'solid'}),/bleibt im Arbeitsmodus Solid/);
+ assert.equal(practiceControl(document,'ui:id:mode-normal'),button);
+});
 test('practice can click ordinary menu/dialog controls and visibly choose options or enter parameters',()=>{
  const plan={version:1,title:'Echte Menüs bedienen',actions:[{kind:'ui',action:'click',target:'ui:label:CAD-Werkzeuge'},{kind:'ui',action:'click',target:'ui:tool:joints'},{kind:'ui',action:'choose',target:'ui:id:joint-gear-a',value:'gear-a'},{kind:'ui',action:'set',target:'ui:label:Zähne erstes Rad',value:'20'}]};
  assert.deepEqual(validatePracticePlan(plan),plan);assert.deepEqual(validateAgentPracticePlan(plan),plan);

@@ -4,11 +4,12 @@ import {cadDrawingDimension} from './cad-drawing-data.js';
 import {installPracticeGearDrag} from './cad-practice-gear-drag.js';
 import {installPracticeEdge} from './cad-practice-edge.js';
 import {installPracticeFace,practiceReferenceMarker} from './cad-practice-face.js';
-import {practiceControl,practiceTarget,practiceDialogState,practiceOptionIndex,installPracticeControlBridge} from './cad-practice-controls.js';
+import {practiceControl,practiceTarget,practiceWorkbenchTarget,practiceWorkbenchPrerequisite,practiceDialogState,practiceOptionIndex,installPracticeControlBridge} from './cad-practice-controls.js';
 import {createPracticeModelUI} from './cad-practice-model-ui.js';
 import {createPracticePlayback} from './cad-practice-playback.js';
 import {CAD_SHAPES} from './cad-shapes.js';
 import {cadFormLocalDimensions,cadFormPosition} from './cad-interface-state.js';
+import {preserveUiNumber} from './ui-numbers.js';
 import {createPracticeFraming,practiceSceneExtent} from './cad-practice-framing.js';
 
 import {readPhotoDetail} from './cad-photo-detail.js';
@@ -17,7 +18,7 @@ import {checkPracticeResult,validatePracticeNativeCriteria} from './cad-practice
 
 // Runs only in the separately provisioned practice window. All edits go through
 // the visible product controls and the child process's bounded input bridge.
-export function installCadPracticeRunner({desktop,controller,access,getSelection,select,settled,view,getPreferences,getFacePickState=()=>null,getDrillState=()=>null,getEdgeState=()=>null,getInspectionState=()=>null,getAlignmentState=()=>null,openPracticeFile,getPracticeConverterState=()=>null,getSketchFeedback=()=>null,openSketchDraft,modelUIFactory=createPracticeModelUI}){
+export function installCadPracticeRunner({desktop,controller,access,getSelection,select,settled,view,setWorkbenchMode,frameConstruction,getPreferences,getFacePickState=()=>null,getDrillState=()=>null,getEdgeState=()=>null,getInspectionState=()=>null,getAlignmentState=()=>null,openPracticeFile,getPracticeConverterState=()=>null,getSketchFeedback=()=>null,openSketchDraft,modelUIFactory=createPracticeModelUI}){
  if(!desktop?.onPracticePlan||!desktop?.practiceInput||!desktop?.submitPracticeResult||!desktop?.practiceReady)return false;
  let running=false,waiting=false,stopped=false,closing=false,paused=false,unpause=null,expectedInput=null,captionBeforePause='',completedSteps=[],pauseError=null,statusQueue=Promise.resolve(),pauseGeneration=0,mainGeneration=0;
  window.__formnaroPracticeSketch=spec=>locatePracticeSketchGesture(document,spec);
@@ -28,7 +29,7 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
  overlay.innerHTML='<div id="practice-pointer" aria-hidden="true" style="position:fixed;left:0;top:0;width:30px;height:38px;filter:drop-shadow(1px 2px 2px #0008);transition:transform .65s ease;display:none"><svg width="30" height="38" viewBox="0 0 30 38"><path d="M2 2 L2 28 L9 22 L17 35 L22 32 L15 20 L27 19 Z" fill="white" stroke="#0075d3" stroke-width="3"/></svg></div><style>.practice-active-target{outline:3px solid #087fca!important;outline-offset:4px!important}</style><section style="pointer-events:auto;position:fixed;left:20px;bottom:54px;max-width:420px;background:white;border:2px solid #1686d6;border-radius:12px;box-shadow:0 4px 20px #0005;padding:12px;color:#15304a"><strong>Übungsmodus · eigenes Testprojekt</strong><strong id="practice-interaction-warning" role="note" aria-live="polite" style="display:block;margin:10px 0;padding:10px 12px;background:#fff0b3;border:2px solid #b87800;border-radius:7px;color:#503000;font-size:18px;font-weight:800;line-height:1.35">Vorführung läuft. Tempo, Pause und Stop kannst du jederzeit bedienen.</strong><span style="display:block;font-size:13px;font-weight:600">Wegklicken pausiert. Mit Weiter fortsetzen oder Übung beenden.</span><label style="display:block;margin:8px 0">Tempo <output id="practice-speed-output">50 %</output><input id="practice-speed" aria-label="Übungstempo in Prozent" type="range" min="10" max="300" step="5" value="50" style="display:block;width:100%;min-width:280px;padding:8px 0"><span style="display:flex;justify-content:space-between;font-size:12px"><span>10 % · langsam</span><span>300 % · schnell</span></span></label><div id="practice-caption" style="margin:7px 0"></div><button id="practice-pause" type="button">Pause</button> <button id="practice-stop" type="button">Übung beenden · Esc</button></section>';
  document.body.classList?.add('formnaro-practice');document.title='Formnaro · Übungsfenster';
  const sessionBar=document.createElement('aside');sessionBar.id='practice-session';sessionBar.style.cssText='position:fixed;left:12px;bottom:8px;z-index:2147482999;display:flex;gap:8px;align-items:center;background:white;color:#15304a;border:1px solid #1686d6;border-radius:8px;padding:6px 10px;font:13px system-ui';
- sessionBar.innerHTML='<style>body.formnaro-practice #ai-chat,body.formnaro-practice #ai-open,body.formnaro-practice [data-settings-tab="ai"],body.formnaro-practice [data-settings-page="ai"]{display:none!important}</style><strong>Eigenes Übungsfenster</strong><span>KI-Zugang und Chat bleiben im Hauptfenster.</span><button id="practice-main" type="button">Zum Hauptfenster</button><button id="practice-end" type="button">Übung beenden</button>';
+ sessionBar.innerHTML='<style>body.formnaro-practice #ai-chat,body.formnaro-practice #ai-open,body.formnaro-practice [data-settings-tab="ai"],body.formnaro-practice [data-settings-page="ai"]{display:none!important}body.formnaro-practice #toast{pointer-events:none}</style><strong>Eigenes Übungsfenster</strong><span>KI-Zugang und Chat bleiben im Hauptfenster.</span><button id="practice-main" type="button">Zum Hauptfenster</button><button id="practice-end" type="button">Übung beenden</button>';
  document.body.append(sessionBar);document.body.append(overlay);const pointer=overlay.querySelector('#practice-pointer'),caption=overlay.querySelector('#practice-caption'),pauseButton=overlay.querySelector('#practice-pause'),interactionWarning=overlay.querySelector('#practice-interaction-warning');
  function syncOverlayLayer(){
   if(!overlay.showPopover)return;
@@ -68,6 +69,17 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
  const project=()=>controller.readSnapshot(),revision=()=>controller.revision();
  const selected=()=>getSelection().filter(s=>!s.path.length).map(s=>s.rootId);
  const node=id=>project().nodes.find(n=>n.id===id);
+ let practiceWorkbench;
+ async function prepareTarget(target){
+  const resolved=practiceWorkbenchTarget(practiceTarget(target),practiceWorkbench);
+  for(let count=0;count<3;count++){
+   const prerequisite=practiceWorkbenchPrerequisite(document,resolved,practiceWorkbench);
+   if(!prerequisite)return resolved;
+   await input({target:'ui:id:'+prerequisite.id,action:'click'},'„'+prerequisite.textContent.replace(/\s*▾$/,'').trim()+'“ öffnen.');
+   await settled();
+  }
+  return resolved;
+ }
  function element(target,rootId){
   let list;if(target==='tree')list=[...document.querySelectorAll('#object-list [data-root-id]')].filter(e=>e.dataset.rootId===rootId&&e.dataset.path==='[]').map(row=>row.querySelector('.object-label')).filter(Boolean);
   else if(target.startsWith('shape:'))list=[...document.querySelectorAll('.shape-tile[data-type]')].filter(e=>e.dataset.type===target.slice(6)&&!e.dataset.plugin);
@@ -78,7 +90,7 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
  }
  function positionNotice(target){const panel=overlay.querySelector('section'),box=target.getBoundingClientRect(),overlaps=r=>r.left<box.right&&r.right>box.left&&r.top<box.bottom&&r.bottom>box.top;panel.style.left='20px';panel.style.right='auto';panel.style.bottom='54px';panel.style.top='auto';if(overlaps(panel.getBoundingClientRect())){panel.style.left='auto';panel.style.right='20px';if(overlaps(panel.getBoundingClientRect())){panel.style.top='20px';panel.style.bottom='auto';}}sessionBar.style.bottom='8px';sessionBar.style.top='auto';if(overlaps(sessionBar.getBoundingClientRect())){sessionBar.style.bottom='auto';sessionBar.style.top='8px';}}
  async function input(spec,text){
-  spec={...spec,target:practiceTarget(spec.target)};syncOverlayLayer();
+  spec={...spec,target:await prepareTarget(spec.target)};syncOverlayLayer();
   await checkpoint();const gearDrag=spec.target==='gear-mesh',faceClick=spec.target==='cad-face',edgeClick=spec.target==='cad-edge',sketch=spec.target==='sketch-board',canvasInput=gearDrag||faceClick||edgeClick||sketch,target=sketch?document.getElementById('sketch-board'):canvasInput?document.querySelector('#canvas-host canvas'):spec.target?.startsWith('ui:')?practiceControl(document,spec.target):element(spec.target,spec.rootId);if(!target)throw Error('Bedienelement im Übungsfenster nicht verfügbar: '+spec.target);
   if(spec.action==='choose'&&['joint-parent','joint-child'].includes(target.id)&&modelUI.rootAlias(spec.value))spec={...spec,value:modelUI.rootAlias(spec.value)};
   if(spec.action==='choose')practiceOptionIndex(target,spec.value);
@@ -93,7 +105,7 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
   let actual;expectedInput=hitTarget;try{actual=await desktop.practiceInput({...spec,tempo:playback.multiplier()});await pause(300);syncOverlayLayer();}finally{expectedInput=null;}await checkpoint();return actual;}finally{hitTarget.classList.remove('practice-active-target');pointer.style.transitionDuration=(.65*playback.multiplier())+'s';}
  }
  const playback=createPracticePlayback({checkpoint});const speed=overlay.querySelector('#practice-speed');speed.oninput=()=>{playback.setTempo(100/Number(speed.value));const out=overlay.querySelector('#practice-speed-output');if(out)out.textContent=speed.value+' %';pointer.style.transitionDuration=(.65*playback.multiplier())+'s';};speed.onchange=speed.oninput;pointer.style.transitionDuration='1.3s';
- const aliases=new Map(),modelUI=modelUIFactory({controller,access,input,waitFor,checkpoint,settled,document,aliases});
+ const aliases=new Map(),modelUI=modelUIFactory({controller,access,input,waitFor,checkpoint,settled,document,aliases,frameConstruction});
  const setFields=new Set(['size-0','size-1','size-2','pos-0','pos-1','pos-2']);
  const fileButtons=new Map(),photoAliases=new Map();
  let opening=null,failedAction=null,confirmedCount=0,waitingRevision=null,hasProjectCopy=false,lastSavedPhoto=null;
@@ -121,7 +133,7 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
  let reviewedPhotoMarks;
  async function reportExecuted(action,index,total,ok,error){const value=practiceStepObservation({action,index,total,revision:revision(),ok,error,scene:access.scene(),project:project(),selected:selected(),view:view?.viewState?.(),undo:controller.state().undo,visible:[...new Set((view?.groups?.bodies?.children??[]).filter(o=>o.visible).map(o=>o.userData.rootId))],aliases:modelUI.aliasState()});await desktop.practiceObservation(value);}
 
- async function run(plan,projectCopy,files=[],{continuing=false,recover=false,vision=false,observe=false,quality:initialQuality}={}){
+ async function run(plan,projectCopy,files=[],{continuing=false,recover=false,vision=false,observe=false,quality:initialQuality,workbench}={}){
   if(!continuing)reviewedPhotoMarks=undefined;
   if(running)throw Error('Übung läuft bereits.');
   if(continuing?(!waiting||revision()!==waitingRevision):project().nodes.length)throw Error('Übungszwischenstand ist nicht mehr verfügbar.');
@@ -132,6 +144,10 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
   qualityReport=null;
   const checks=[],framing=createPracticeFraming();completedSteps=checks;
   try{
+  if(!continuing){
+   practiceWorkbench=workbench;
+   if(practiceWorkbench)setWorkbenchMode(practiceWorkbench);
+  }
   for(const [index,file] of files.entries()){
    const button=document.createElement('button');
    button.id='practice-file-'+(index+1);button.type='button';
@@ -156,6 +172,10 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
     await settled();
     select(projectCopy.selection);
     projectCopy.selection.forEach(({rootId}, index) => aliases.set('existing-' + (index + 1), rootId));
+    if(projectCopy.selection.length&&plan.actions.some(action=>action.kind==='model'&&action.commands.some(command=>command.type==='thread'&&command.params?.profile==='trapezoid'))){
+     view?.setView?.('iso');
+     view?.fit?.();
+    }
     if(projectCopy.sketchDraft){
      await settled();
      await checkpoint();
@@ -178,8 +198,12 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
     if(!setFields.has(action.field)||!Number.isFinite(action.value)||Math.abs(action.value)>100000||action.field.startsWith('size-')&&action.value<=0)throw Error('Unzulässiger Wert im Übungsplan.');
     const ids=selected();if(ids.length!==1||!node(ids[0]))throw Error('Ein einzelnes Übungsteil auswählen.');const id=ids[0],axis=Number(action.field.slice(-1)),size=action.field.startsWith('size-');
     const measured=()=>size?cadFormLocalDimensions(node(id))[axis]:cadFormPosition(project(),{rootId:id,path:[]})[axis];
-    const before=measured(),unchanged=Math.abs(before-action.value)<1e-5;if(!unchanged)await input({target:action.field,action:'set',value:String(action.value)},prefix+(size?'Größe ':'Position ')+('XYZ'[axis])+' = '+action.value+' mm eingeben.');
-    await waitFor(()=>!!node(id)&&Math.abs(measured()-action.value)<1e-5,'Eingabewert');checks.push({kind:'set',field:action.field,expected:action.value,actual:measured(),previous:before,...(unchanged?{unchanged:true}: {})});
+    // The visible field keeps the exact source value when its displayed number
+    // is entered again. Confirm the value that the field actually commits.
+    const before=measured(),expected=preserveUiNumber(action.value,before),unchanged=expected===before;
+    if(!unchanged)await input({target:action.field,action:'set',value:String(action.value)},prefix+(size?'Größe ':'Position ')+('XYZ'[axis])+' = '+action.value+' mm eingeben.');
+    await waitFor(()=>!!node(id)&&Math.abs(measured()-expected)<1e-5,'Eingabewert');
+    checks.push({kind:'set',field:action.field,expected:action.value,actual:measured(),previous:before,...(expected!==action.value?{effectiveValue:expected}:{}),...(unchanged?{unchanged:true}:{})});
    }else if(action.kind==='role'){
     if(!['solid','hole'].includes(action.value))throw Error('Unzulässige Rolle.');const ids=selected();if(ids.length!==1)throw Error('Für die Rolle genau ein Teil auswählen.');const id=ids[0];
     await input({target:action.value==='hole'?'hole-btn':'solid-btn',action:'click'},prefix+(action.value==='hole'?'Als Lochform markieren.':'Als Körper markieren.'));
@@ -265,8 +289,9 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
       throw Error('Die CAD-Übernahme ist erst nach erfolgreicher Konvertierung verfügbar. Verwende im offenen STL-Konverter converter-run.');
     }
     let control;
+    const target=await prepareTarget(action.target);
     for(let opening=0;opening<3;opening++){
-     try{control=practiceControl(document,action.target);break;}
+     try{control=practiceControl(document,target,{workbench:practiceWorkbench});break;}
      catch(error){
       if(action.action!=='click'||!error.nextAction)throw error;
       await input(error.nextAction,'Werkzeugmenü für '+action.target+' sichtbar öffnen.');await settled();
@@ -285,7 +310,7 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
      }
     }
     const drawingSheetId=control.id==='drawing-apply'?document.getElementById('drawing-sheet')?.value:null;
-    await input({target:action.target,action:action.action==='point'?'locate':action.action,...(action.value===undefined?{}:{value:action.value})},action.text??prefix+'Formnaro-Bedienelement: '+action.target);await settled();
+    await input({target,action:action.action==='point'?'locate':action.action,...(action.value===undefined?{}:{value:action.value})},action.text??prefix+'Formnaro-Bedienelement: '+target);await settled();
     if(action.action==='click'&&control.id==='cad-ref-preview'&&getDrillState()){
      await waitFor(()=>!!getDrillState()?.preview&&!document.getElementById('cad-ref-apply')?.disabled||
       !!document.querySelector('#cad-ref-status.ai-error'),'Bohrvorschau');

@@ -106,3 +106,28 @@ test('A picked native face offset and a picked edge fillet retain their original
   const fillet=await cad.preview({kind:'featureEdits',references:{version:1,items:[edge]},edits:[{referenceId:edge.id,field:'edge.round',value:1}]});assert(fillet.project.nodes[0].stats.volume<body.stats.volume);assert.deepEqual(fillet.project.nodes[1],keep);assert.equal(cad.serialize(),before);cad.apply(fillet);cad.undo();assert.equal(cad.serialize(),before);
  }finally{cad.dispose();}
 });
+
+test('Direct feature selection distinguishes a bore from planar and outer cylinder faces',async()=>{
+ const cad=controller();
+ try{
+  const f=await fixture(cad);
+  const bore=await cad.query('featureReference',{action:'pick',kind:'auto',ids:f.ids,ray:f.ray});
+  assert.equal(bore.reference.kind,'bore');
+  assert.deepEqual(bore.reference.origin.target,f.target);
+  near(bore.reference.selector.surface.diameter,4);
+  const plane=await cad.query('featureReference',{action:'pick',kind:'auto',ids:f.ids,ray:{origin:[0,0,30],direction:[0,0,-1],far:100}});
+  assert.equal(plane.reference.kind,'face');
+  assert.equal(plane.reference.selector.surface.kind,'plane');
+  await cad.open(createCadProject());
+  const g=await fixture(cad,{coincident:true});
+  const ambiguous=await cad.query('featureReference',{action:'pick',kind:'auto',ids:g.ids,ray:g.ray});
+  assert.equal(ambiguous.reference.kind,'bore');
+  assert.equal(ambiguous.candidates.length,2);
+  assert.equal(ambiguous.reference.origin,undefined);
+  const cylinder=await cad.execute({kind:'batch',commands:[{op:'create',type:'cylinder',size:[10,10,10],pos:[160,0,0],as:'outer'}]});
+  const external=await cad.query('featureReference',{action:'pick',kind:'auto',ids:[cylinder.aliases.outer],ray:{origin:[190,0,0],direction:[-1,0,0],far:100}});
+  assert.equal(external.reference.kind,'face');
+  assert.equal(external.reference.selector.surface.kind,'cylinder');
+  assert.equal(external.reference.origin,undefined);
+ }finally{cad.dispose();}
+});

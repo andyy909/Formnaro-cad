@@ -30,12 +30,15 @@ function toolFeedback(tool,report,{isError,imageAttached,args,availableTools}){
    if(code==='INVALID_COMMAND_REFERENCE'&&tool==='offlinecad_command_info'){
     const command=typeof args?.command==='string'?args.command:null;
     const direct=command?.startsWith('offlinecad_')?command:command?'offlinecad_'+command:null;
-    failure.recovery=direct&&direct!==tool&&availableTools?.has(direct)
+    failure.recovery=['joints','jointCollision','motionRange'].includes(command)&&availableTools?.has('offlinecad_analyze')
+     ?{tool:'offlinecad_analyze',message:'This is a read-only app query: queries:[{id,engine:"app",kind:"'+command+'",options:{...}}], with the current revision. jointCollision options use leftId/rightId of finished root bodies and values:[{jointId,value}]; allowContact:true only for an intended contact. Read app/joints for actual joint IDs.'}
+     :direct&&direct!==tool&&availableTools?.has(direct)
      ?{tool:direct,message:'This is a tool, not a modelling command. Call it directly with its own arguments.'}
      :command==='cut'
       ?{tool,arguments:{command:'group'},message:'To subtract cutters from a newly created solid, see the group example.'}
       :{tool,arguments:{},message:'Read the modelling command index, then use an exact command key.'};
    }
+   if(code==='INVALID_COMMAND_REFERENCE'&&tool==='offlinecad_scene')failure.recovery={tool,message:'ids accepts finished root IDs only. For a nested source use targets:[{rootId,path:[sourceId,...]}], copying the complete path from scene records. Root children lists provide the next source IDs. Omit rootsOnly instead of passing false.'};
    envelope.failure=failure;
   }
  }

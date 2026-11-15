@@ -133,7 +133,12 @@ function createDiagnostics({app,directory,credentials,onEvent=()=>{},openChild=r
      record.status='completed';break;
     }
     if(spec.workflow!=='practice'){let kind;try{kind=validateAgentResponse(action);}catch(e){if(correctFormat(raw,e.message,round))continue;throw e;}if(kind!=='tool'){record.status=kind==='question'?'needs-input':'completed';record.finalMessage=action.message;break;}}
-    if(spec.workflow==='practice')throw Object.assign(Error('Im Übungsmodus ausschließlich sichtbare Übungspläne verwenden.'),{code:'PRACTICE_TOOL_FORBIDDEN'});
+    if(spec.workflow==='practice'){
+     // The practice contract explicitly permits a question or limitation as
+     // message-only JSON. Preserve it without pretending that a tool ran.
+     if(typeof action.message==='string'&&action.message.trim()&&action.message.length<=20000&&Object.keys(action).every(k=>['message','diagnosis'].includes(k))){record.status='needs-input';record.finalMessage=action.message;break;}
+     throw Object.assign(Error('Im Übungsmodus ausschließlich sichtbare Übungspläne verwenden.'),{code:'PRACTICE_TOOL_FORBIDDEN'});
+    }
     const method=String(action.tool??'').replace(/^offlinecad_/,''),args=action.arguments;
     if(!methods.includes(method)||!args||typeof args!=='object'||Array.isArray(args))throw Object.assign(Error('Unzulässige Werkzeuganfrage.'),{code:'INVALID_TOOL'});
     if(method==='preview')await monitor.inspectProposal(action,await require('./ai-diagnostic-schema.cjs').validateProposal(args,currentRevision,initial.validationContext));signal.throwIfAborted();
@@ -170,7 +175,7 @@ function createDiagnostics({app,directory,credentials,onEvent=()=>{},openChild=r
    if(record.persistenceError)monitor?.cancel();
    if(monitor&&spec.stage==='full'&&!record.persistenceError)await monitor.inspectFinal({status:record.status,error:record.error??null,revision:finalSnapshot?.scene?.revision??currentRevision,verification:record.verification??null,verificationError:record.verificationError??null,appliedCount,practiceCompleted:record.practiceResult?.ok??null,cleanExit:record.cleanExit,close:record.close??null,objects:finalSnapshot?.scene?.objects?.filter(o=>!o.target?.path?.length).slice(0,8).map(o=>({id:o.id,worldBounds:o.worldBounds,volume:o.volume}))});
    record.monitor=await monitor?.finish()??null;record.finalReview={completion:record.monitor?.final?.completion??(spec.monitor?.mode==='off'?require('./ai-test-lab-monitor.cjs').completionAssessment({status:record.status,error:record.error,verification:record.verification,cleanExit:record.cleanExit},{verdict:'continue'}):'unverified'),assessment:record.verification?.passed===true&&record.cleanExit?'native-passed':record.verification?.passed===false?'native-failed':'unverified',judgment:record.monitor?.final??null};record.formatCorrections=formatCorrections;signal.removeEventListener('abort',abort);record.elapsedMs=Date.now()-started;record.usage=record.events.filter(e=>e.type==='usage').reduce((a,e)=>({input:a.input+(e.usage?.input_tokens??0),output:a.output+(e.usage?.output_tokens??0),cached:a.cached+(e.usage?.input_tokens_details?.cached_tokens??0)}),{input:0,output:0,cached:0});if(spec.stage==='full')emit({type:'monitor-final-result',role:'supervisor',...record.finalReview});record.monitorRequests=record.events.filter(e=>e.type==='request'&&e.role==='supervisor').length;record.toolCalls=record.events.filter(e=>e.type==='tool-call').length;
-   emit({type:'finished',status:record.status,elapsedMs:record.elapsedMs,cleanExit:record.cleanExit});save(record);onEvent({type:'state',state:state()});
+   emit({type:'finished',status:record.status,elapsedMs:record.elapsedMs,cleanExit:record.cleanExit,...(record.close?{close:record.close}:{})});save(record);onEvent({type:'state',state:state()});
   }return record;
  }
  async function start(args={}){

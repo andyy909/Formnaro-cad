@@ -5584,3 +5584,6 @@ Private Abnahme:269 automatische Pruefungen bestanden (128Standard,112Labor/Desk
 
 
 2026-11-14: Uebungsdemo auf GitHub und DE/EN-Webseite auf Bohrung/Kreismuster in 0.139.1-r1 umgestellt. Aufnahme100Prozent/66.3s: unveraenderter Plan als lokale Wiedergabe,0neueKI-Tokens; echter OriginalauftragDeepSeekFlash/high1Anfrage13758Tokens,5/5nativeKriterien. Exakter66-Wort-Prompt und oeffentliche Belege unter docs/demos/muster-100.{md,json}; klar begrenzte USD/EUR-Tarifschaetzung mitQuellen/Kursdatum. Kein neuerBuild/Release/Benchmark; historischeZahnradmedien bleiben alsArchiv erhalten.
+
+
+Formnaro 0.142.0 führt längere native Trapezgewinde, die Auswahl eines lokalen CAD-Merkmals im KI-Chat und Projektübungen in Solid und Fusion zusammen. Die schnellen Gewinde verwenden kürzere native Perioden, erhalten die Platzierung beim Längenwechsel und bieten eine eigene Grundform. Die Projektübung setzt Bedienaktionen sichtbar im gestarteten Arbeitsmodus um. Die Werkzeugauskunft verwendet dabei die zugehörigen Register und Gruppen. Projektänderungen werden erst nach der Vorschau übernommen.

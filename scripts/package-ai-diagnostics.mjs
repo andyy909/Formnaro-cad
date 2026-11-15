@@ -23,7 +23,7 @@ fs.symlinkSync(path.join(root,'node_modules'),path.join(source,'node_modules'),'
 const result=spawnSync(process.execPath,[path.join(root,'node_modules/vite/bin/vite.js'),'build','--base','./'],{cwd:source,windowsHide:true,encoding:'utf8'});
 fs.writeFileSync(path.join(build,'build.log'),result.stdout+'\n'+result.stderr);if(result.status!==0)throw Error('Diagnose-Build fehlgeschlagen: '+build);
 extractAll(path.join(base,'resources/app.asar'),stage);
-for(const name of ['backend','ai'])fs.cpSync(path.join(root,name),path.join(stage,name),{recursive:true});
+for(const name of ['src','backend','ai','scripts','python-runtime','packaging','docs'])fs.cpSync(path.join(root,name),path.join(stage,name),{recursive:true,filter:p=>!p.split(path.sep).includes('__pycache__')});
 fs.cpSync(path.join(source,'dist'),path.join(stage,'dist'),{recursive:true});
 for(const name of ['electron.cjs','preload.cjs'])fs.copyFileSync(path.join(root,name),path.join(stage,name));
 fs.writeFileSync(path.join(stage,'package.json'),JSON.stringify(metadata,null,2));

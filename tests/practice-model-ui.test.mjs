@@ -26,6 +26,30 @@ test('fresh model roots visibly use Zur Mitte before exact requested offsets',as
  }
 });
 
+test('the trapezoid preset frames the part and restores the assembly after a confirmed edit or failure',async()=>{
+ for(const acceptsRetry of [true,false]){
+  const original={id:'assembly',kind:'cad',hidden:false};
+  const snapshot={nodes:[original],workplane:{origin:[0,0,0],orientation:[0,0,0,1]}};
+  const field={id:'param-length',tagName:'INPUT',value:'16',closest:()=>null};
+  const events=[];
+  const shaft=()=>snapshot.nodes.find(node=>node.id==='shaft');
+  const ui=createPracticeModelUI({controller:{readSnapshot:()=>snapshot},access:{},document:{getElementById:id=>id===field.id?field:null},checkpoint:async()=>{},settled:async()=>{},waitFor:async predicate=>assert(predicate()),
+   frameConstruction:id=>{assert.equal(id,'shaft');events.push('frame');return {refit:()=>events.push('refit'),restore:()=>events.push('restore')};},
+   input:async spec=>{
+   events.push(spec.target);
+   if(spec.target==='ui:id:shape-preset-trapezoidal-thread')snapshot.nodes.push({id:'shaft',recipe:{type:'thread',params:{profile:'trapezoid',diameter:16,pitch:4,length:16}},transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]});
+   if(spec.target==='ui:id:param-length'&&acceptsRetry&&events.filter(target=>target===spec.target).length===2)shaft().recipe.params.length=Number(spec.value);
+  }});
+  const run=()=>ui.run({commands:[{op:'create',type:'thread',params:{profile:'trapezoid',diameter:16,pitch:4,length:548},pos:[0,0,274]}]});
+  if(acceptsRetry){await run();assert.equal(shaft().recipe.params.length,548);assert(events.includes('refit'));}
+  else {await assert.rejects(run(),/Formparameter length/);assert(!events.includes('ui:tool:center'));}
+  assert.equal(events.filter(target=>target==='ui:id:param-length').length,2);
+  assert.equal(events[1],'frame');
+  assert.equal(events.at(-1),'restore');
+  assert.deepEqual(snapshot.nodes[0],{id:'assembly',kind:'cad',hidden:false});
+ }
+});
+
 function harness({aliases=new Map(),overshoot=7.5,ignoreNumber=false,ignoreCommit=false,coupled=false}={}){
  const snapshot={nodes:[{id:'body',name:'Teil'}],joints:{joints:[{id:'drive',childId:'body',value:0}],gears:[]}};
  let rev=0,commits=0;const events=[],previews=[];

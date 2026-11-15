@@ -14,17 +14,17 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));
 function installPracticeChild(win,{ipc=ipcMain,channel=process,audit=false}={}){
  if(typeof channel.send!=='function')throw Error('Übungsfenster benötigt die private Elternverbindung.');
  const observations=new Map();let observationSequence=0,observe=false;
- let nonce=null,ready=false,plan=null,projectCopy,files,recovery,quality,waitingForPlan=null,retries=0,delivered=false,cancelled=false,finished=false,inFlight=false,paused=false,generation=0,pauseVersion=0;const waiting=new Set();
+ let nonce=null,ready=false,plan=null,projectCopy,files,recovery,quality,workbench,waitingForPlan=null,retries=0,delivered=false,cancelled=false,finished=false,inFlight=false,paused=false,generation=0,pauseVersion=0;const waiting=new Set();
  const wake=()=>{for(const resolve of waiting)resolve();waiting.clear();};
  async function checkpoint(){while(paused&&!cancelled&&!finished)await new Promise(resolve=>waiting.add(resolve));if(cancelled||finished||win.isDestroyed())throw Error('Übung abgebrochen.');}
  const trusted=e=>e.sender===win.webContents&&e.senderFrame===win.webContents.mainFrame&&!win.isDestroyed();
  const reply=(fn)=>async(e,args)=>{try{if(!trusted(e))throw Error('Ungültiges Übungsfenster.');return {ok:true,value:await fn(args)};}catch(error){return {ok:false,error:String(error.message)};}};
  function focusPause(){if(!nonce||!ready||finished||cancelled||win.isDestroyed())return;paused=true;generation++;pauseVersion++;channel.send?.({type:'status',nonce,paused:true,reason:'focus-lost'});win.webContents.send('cad-practice:blur',{generation});}
- function deliver(){if(plan&&ready&&!finished&&!delivered){delivered=true;win.webContents.send('cad-practice:plan',plan,projectCopy,files,{observe,recover:!!recovery,vision:recovery==='image',quality});if(typeof win.isFocused==='function'&&!win.isFocused())focusPause();}}
+ function deliver(){if(plan&&ready&&!finished&&!delivered){delivered=true;win.webContents.send('cad-practice:plan',plan,projectCopy,files,{observe,recover:!!recovery,vision:recovery==='image',quality,workbench});if(typeof win.isFocused==='function'&&!win.isFocused())focusPause();}}
  channel.on('message',msg=>{
   if(!msg||typeof msg!=='object')return;
   if(msg.type==='observation-reply'&&msg.nonce===nonce){const p=observations.get(msg.id);if(p){observations.delete(msg.id);clearTimeout(p.timer);msg.error?p.reject(Error(msg.error)):p.resolve(true);}return;}
-  if(msg.type==='plan'&&!nonce&&/^[a-f0-9]{48}$/.test(msg.nonce??'')){try{projectCopy=validatePracticeProjectCopy(msg.projectCopy);files=validatePracticeFiles(msg.files);quality=validatePracticeQuality(msg.quality);recovery=['text','image'].includes(msg.recovery)?msg.recovery:undefined;plan=validatePracticePlan(msg.plan,projectCopy?.selection.length);observe=msg.observe===true;nonce=msg.nonce;deliver();}catch{channel.exitCode=1;win.close();}}
+  if(msg.type==='plan'&&!nonce&&/^[a-f0-9]{48}$/.test(msg.nonce??'')){try{projectCopy=validatePracticeProjectCopy(msg.projectCopy);files=validatePracticeFiles(msg.files);quality=validatePracticeQuality(msg.quality);if(msg.workbench!==undefined&&!['solid','fusion'].includes(msg.workbench))throw Error('Ungültiger Übungsarbeitsmodus.');workbench=msg.workbench;recovery=['text','image'].includes(msg.recovery)?msg.recovery:undefined;plan=validatePracticePlan(msg.plan,projectCopy?.selection.length);observe=msg.observe===true;nonce=msg.nonce;deliver();}catch{channel.exitCode=1;win.close();}}
   else if(msg.type==='continue'&&msg.nonce===nonce&&waitingForPlan&&!finished&&!cancelled){
    try{
     const accept=msg.accept===true;

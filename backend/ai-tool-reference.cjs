@@ -9,7 +9,7 @@ async function reference(request,context={}){
  }
  const practice=context.practiceOnly===true;
  const locked=practice?require('./ai-practice-context.cjs').lockPracticeContext(context):null;
- return shared.lookupToolReference(request,{practice,state:practice?undefined:context.programAssistant?.state,practicePanel:locked?.practicePanel});
+ return shared.lookupToolReference(request,{practice,state:practice?undefined:context.programAssistant?.state,practicePanel:locked?.practicePanel,practiceWorkbench:locked?.practiceWorkbench});
 }
 function compactToolContext(context){
  if(!context||typeof context!=='object')return context;

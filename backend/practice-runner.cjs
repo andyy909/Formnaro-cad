@@ -76,10 +76,12 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
  });
  ipcMain.handle('cad-practice:start',async(e,input)=>{try{
   if(!trusted(e))throw Error('Ungültiges Fenster.');if(active)throw Error('Eine Übung läuft bereits.');
-  const wrapped = exact(input, ['plan', 'projectCopy', 'files', 'recovery', 'quality']) && Object.hasOwn(input, 'plan');
+  const wrapped = exact(input, ['plan', 'projectCopy', 'files', 'recovery', 'quality', 'workbench']) && Object.hasOwn(input, 'plan');
   const projectCopy = wrapped ? validatePracticeProjectCopy(input.projectCopy) : undefined;
   const files = wrapped ? validatePracticeFiles(input.files) : [];
   const plan = validatePracticePlan(wrapped ? input.plan : input,projectCopy?.selection.length);
+  const workbench=wrapped?input.workbench:undefined;
+  if(workbench!==undefined&&!['solid','fusion'].includes(workbench))throw Error('Ungültiger Arbeitsmodus für die Übung.');
   const recovery=wrapped?input.recovery:undefined;
   const quality=wrapped?validatePracticeQuality(input.quality):undefined;
   if(recovery!==undefined&&!['text','image'].includes(recovery))throw Error('Ungültiger Übungsfortsetzungsmodus.');
@@ -141,7 +143,7 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
      finish(Error('Übungsfenster wurde vor dem Ergebnis geschlossen.'));
     }
    });
-   child.on('message',msg=>{if(!msg||typeof msg!=='object')return;if(msg.type==='ready'){if(active?.child!==child||active.ready)return;trace({state:'ready'});active.ready=true;child.send({type:'plan',nonce,plan,observe:observers.length>0,...(projectCopy?{projectCopy}:{}),...(files.length?{files}:{}),...(recovery?{recovery}:{}),...(quality?{quality}:{})});if(active.cancelRequested)child.send({type:'cancel',nonce});}else if(msg.type==='focus-parent'&&msg.nonce===nonce){if(!win.isDestroyed()){win.show?.();win.focus?.();}}else if(msg.type==='activity'&&msg.nonce===nonce&&['input-start','input-finished'].includes(msg.state)&&typeof msg.target==='string'&&msg.target.length<=240){trace({state:msg.state,target:msg.target});}else if(msg.type==='status'&&msg.nonce===nonce&&typeof msg.paused==='boolean'){trace({state:msg.paused?'paused':'resumed',reason:msg.reason==='focus-lost'?'focus-lost':'practice-status'});if(msg.paused)pauseClock();else resumeClock();}else if(msg.type==='observation'&&msg.nonce===nonce&&!finished&&active?.child===child){
+   child.on('message',msg=>{if(!msg||typeof msg!=='object')return;if(msg.type==='ready'){if(active?.child!==child||active.ready)return;trace({state:'ready'});active.ready=true;child.send({type:'plan',nonce,plan,observe:observers.length>0,...(workbench?{workbench}:{}),...(projectCopy?{projectCopy}:{}),...(files.length?{files}:{}),...(recovery?{recovery}:{}),...(quality?{quality}:{})});if(active.cancelRequested)child.send({type:'cancel',nonce});}else if(msg.type==='focus-parent'&&msg.nonce===nonce){if(!win.isDestroyed()){win.show?.();win.focus?.();}}else if(msg.type==='activity'&&msg.nonce===nonce&&['input-start','input-finished'].includes(msg.state)&&typeof msg.target==='string'&&msg.target.length<=240){trace({state:msg.state,target:msg.target});}else if(msg.type==='status'&&msg.nonce===nonce&&typeof msg.paused==='boolean'){trace({state:msg.paused?'paused':'resumed',reason:msg.reason==='focus-lost'?'focus-lost':'practice-status'});if(msg.paused)pauseClock();else resumeClock();}else if(msg.type==='observation'&&msg.nonce===nonce&&!finished&&active?.child===child){
     if(!observers.length||observationInFlight||!Number.isSafeInteger(msg.id)||msg.id!==lastObservationId+1)return;
     lastObservationId=msg.id;observationInFlight=true;
     Promise.resolve().then(async()=>{const value=require('./practice-observations.cjs').validateObservation(msg.value);for(const observer of observers)await observer(value);if(active?.child!==child||session.cancelRequested)throw Error('Übung abgebrochen.');child.send({type:'observation-reply',nonce,id:msg.id});}).catch(error=>{if(child.connected)child.send({type:'observation-reply',nonce,id:msg.id,error:String(error.message).slice(0,1500)});}).finally(()=>{observationInFlight=false;});

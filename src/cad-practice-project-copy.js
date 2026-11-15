@@ -52,7 +52,7 @@ function practiceMotion(project,selection){
   return {joints,screws};
 }
 
-export async function captureCadPracticeCopy(controller, getSelection, {allowEmpty=false,draft}={}) {
+export async function captureCadPracticeCopy(controller, getSelection, {allowEmpty=false,draft,getScene}={}) {
   const scope = controller.projectScope();
   const revision = controller.revision();
   const initialSelection = structuredClone(getSelection());
@@ -74,10 +74,16 @@ export async function captureCadPracticeCopy(controller, getSelection, {allowEmp
   };
   const project = await controller.transactions.materialize();
   assertCurrent();
+  const scene=getScene?.();
+  const byId=new Map(scene?.revision===revision
+    ? scene.objects.filter(object=>object.target?.path?.length===0).map(object=>[object.id,object])
+    : []);
   const objects = selection.map(({rootId}, index) => {
     const node = project.nodes.find(node => node.id === rootId);
     if (!node) throw Error('Ausgewähltes Bauteil fehlt in der Projektkopie.');
-    return {alias: 'existing-' + (index + 1), name: node.name.slice(0, 120), kind: node.kind};
+    const bounds=byId.get(rootId)?.worldBounds;
+    const facts=bounds&&{size:[...bounds.size],center:[...bounds.center],shape:node.recipe?.type};
+    return {alias: 'existing-' + (index + 1), name: node.name.slice(0, 120), kind: node.kind,...(facts?{facts}:{})};
   });
   const motion=draft?undefined:practiceMotion(project,selection);
   return {

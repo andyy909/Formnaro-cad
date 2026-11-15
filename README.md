@@ -21,7 +21,7 @@ Formnaro is portable on Windows x64. The modelling workspace works offline.
 
 | Build | Best for | Download |
 | --- | --- | --- |
-| **0.139.1-r1** · current release | Corrected CAD body selection, drilling references and sketch replacement; harder benchmarks | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.139.1-r1/Formnaro-v0.139.1-r1-Windows-x64.zip)** · [Verification and separate sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1) |
+| **0.142.0-r1** · current release | Solid and Fusion practice, native trapezoidal threads | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.142.0-r1/Formnaro-v0.142.0-r1-Windows-x64.zip)** · [Verification and separate sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1) |
 
 New: corrected body selection, planar drill references and sketch replacement/height feedback. Historical benchmarks and successful retests remain unchanged.
 
@@ -53,7 +53,7 @@ New in **0.138.2-r4**: exact planar drill references on scaled boxes, selection 
 
 *Actual application screenshots: Easy Tinker and Normal in dark mode from 0.117.0-r8; Solid with ATLAS-5 in light mode from 0.120.0-r4; Fusion in light mode from 0.119.0-r2. Click an image to enlarge it.*
 
-[Matching application sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.139.1-r1/Formnaro-Quellcode-v0.139.1-r1.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
+[Matching application sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.142.0-r1/Formnaro-Quellcode-v0.142.0-r1.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
 
 ## Quick start
 
@@ -116,7 +116,13 @@ Some detailed reference material is available in German.
 | Development | [Build instructions](docs/BUILD.md) · [Architecture](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
-## Publication status: 0.139.1-r1
+## Publication status: 0.142.0-r1
+
+Practice stays in the selected Solid or Fusion workbench. A new native trapezoidal thread primitive accepts lengths up to 3,000 mm.
+
+[Release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1) · [Abnahme / acceptance](docs/VEROEFFENTLICHUNG-0.142.0-r1.md)
+
+## Earlier release: 0.139.1-r1
 
 This release contains the verified 0.139.0 improvements and subsequent shutdown/JSON fixes. Four targeted live retests do not replace a fresh full benchmark. Additional campaign conditions and the native cause of slow process teardown remain open.
 

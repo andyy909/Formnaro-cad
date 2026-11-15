@@ -1,4 +1,4 @@
-import {PROGRAM_NAV,PROGRAM_TARGETS} from './cad-program-help.js';
+import {PROGRAM_NAV,PROGRAM_TARGETS,PROGRAM_TOOL_TABS,WORKBENCH_MENU_TABS} from './cad-program-help.js';
 import {PHOTO_SET_LABELS} from './cad-photo-multiview-data.js';
 export function practiceTarget(target){
  if(typeof target!=='string')return target;
@@ -7,6 +7,54 @@ export function practiceTarget(target){
   if(menu)target='ui:'+menu.id;
  }
  return /^(menu|tool|view):[A-Za-z][A-Za-z0-9_-]{0,199}$/.test(target)?'ui:'+target:target;
+}
+
+export function practiceWorkbenchTarget(target,mode){
+ const tabs=WORKBENCH_MENU_TABS[mode];
+ if(!tabs)return target;
+ const label=target?.startsWith('ui:label:')?target.slice(9):undefined;
+ const menu=label?PROGRAM_NAV.find(item=>item.id.startsWith('menu:')&&item.label===label)?.id.slice(5):target?.startsWith('ui:menu:')?target.slice(8):undefined;
+ if(!menu)return target;
+ if(Object.hasOwn(tabs,menu))return 'ui:id:'+mode+'-tab-'+tabs[menu];
+ if(['edit','extras'].includes(menu))return 'ui:id:'+mode+'-menu-'+menu;
+ return target;
+}
+
+export function practiceWorkbenchPrerequisite(document,target,mode){
+ if(!Object.hasOwn(WORKBENCH_MENU_TABS,mode)||typeof target!=='string')return null;
+ const id=target.startsWith('ui:id:')?target.slice(6):target;
+ const control=document.getElementById(id);
+ const panel=control?.closest('[data-'+mode+'-manager-panel]');
+ const manager=target==='tree'?'model':target.startsWith('shape:')?'library':panel?.getAttribute('data-'+mode+'-manager-panel');
+ if(mode==='fusion'&&manager==='properties'&&panel.hidden)return document.getElementById('fusion-menu-item-properties');
+ if(manager){
+  const tab=document.getElementById(mode+'-manager-tab-'+manager);
+  if(tab?.getAttribute('aria-selected')==='false')return tab;
+ }
+ const fusionMenu=node=>{
+  const summary=node?.closest('details[data-fusion-menu]:not([open]),details[data-fusion-group]:not([open])')?.querySelector(':scope > summary');
+  return summary===node?null:summary;
+ };
+ const closedMenu=mode==='fusion'?fusionMenu(control):null;
+ if(closedMenu)return closedMenu;
+ const tool=target.startsWith('ui:tool:')?target.slice(8):target;
+ if(tool==='center'){
+  const menu=document.getElementById(mode+'-menu-extras');
+  return menu&&!menu.parentElement.open?menu:null;
+ }
+ if(mode==='fusion'){
+  const buttons=[...document.querySelectorAll('.fusion-command-panel:not([hidden]) [data-fusion-group] button')];
+  const node=buttons.find(button=>[button.dataset.action,button.dataset.fusionCommand].includes(tool));
+  if(node&&!node.disabled)return fusionMenu(node)??null;
+ }
+ const tabs=PROGRAM_TOOL_TABS[mode];
+ if(!Object.hasOwn(tabs,tool))return null;
+ const tab=document.getElementById(mode+'-tab-'+tabs[tool]);
+ if(tab?.getAttribute('aria-selected')==='false'){
+  // A command can already be visible in another register.
+  try{practiceControl(document,'ui:tool:'+tool);return null;}catch{return tab;}
+ }
+ return null;
 }
 const outside=node=>/^(?:converter-(?:assistance|save-step|report)|stl-(?:save-edits|load-edits|repaired-3mf|repaired-stl|preview-save))$/.test(node.id)||!!node.closest('#converter-ai')||/^(?:ai-|script-|python-|function-|plugin-)|freecad.*(?:code|script)/i.test(node.id)||!!node.dataset.plugin||node.dataset.action==='functions'||['file','password','color','hidden'].includes(node.type)||node.tagName==='A'||/(?:login|sign.?in|open.?folder|open.?browser|subscription-open|provider-docs|context-folder|log-folder|layout-folder|project-folder|data-folder)/i.test(node.id)||node.hasAttribute('data-external')||node.hasAttribute('data-drawing-export')||['open','save','save-as','import'].includes(node.dataset.action);
 const visibleControl=node=>{if(!node?.getClientRects().length||getComputedStyle(node).visibility==='hidden')return false;for(let parent=node.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS'&&!parent.open&&!parent.querySelector(':scope > summary')?.contains(node))return false;return true;};
@@ -34,7 +82,7 @@ export function practiceDialogState(document){
 }
 // Semantic controls inside the current Formnaro document. No caller selectors,
 // coordinates, arbitrary keys, window handles or external navigation.
-export function practiceControl(document,target){
+export function practiceControl(document,target,{workbench}={}){
  target=practiceTarget(target);if(typeof target!=='string'||target.length>240||!/^ui:(id|label|tool|menu|view):[^\r\n\x00]+$/.test(target))throw Error('Ein benanntes Formnaro-Bedienelement wählen.');
  const [,kind,...rest]=target.split(':'),name=kind==='menu'?(PROGRAM_NAV.find(t=>t.id==='menu:'+rest.join(':'))?.label??rest.join(':')):rest.join(':'),normal=s=>String(s??'').replace(/[\s▾⌄]+/g,' ').trim();
  if(!['label','menu'].includes(kind)&&!/^[A-Za-z][A-Za-z0-9_-]{0,199}$/.test(name))throw Error('Ungültige Bedienelementkennung.');
@@ -64,6 +112,7 @@ export function practiceControl(document,target){
  if(kind==='id'&&name==='drawing-title'&&!candidates.length&&visible(document.getElementById('drawing-title-block')))throw Error('Titelblock geschlossen. Zuerst ui:id:drawing-title-block öffnen, dann ui:id:drawing-title setzen.');
  if(candidates.length!==1)throw Error('Formnaro-Bedienelement fehlt oder ist mehrdeutig: '+name);
  const node=candidates[0];if(node.disabled)throw Error('Formnaro-Bedienelement ist deaktiviert: '+name);
+ if(workbench&&node.dataset.workbenchMode&&node.dataset.workbenchMode!==workbench)throw Error('Diese Übung bleibt im Arbeitsmodus '+({solid:'Solid',fusion:'Fusion'}[workbench]??workbench)+'.');
  // These controls leave this document or address credentials rather than the
  // exercise. Ordinary menus, dialogs, modelling fields and mode controls have
  // no hand-written allowlist.

@@ -10,6 +10,12 @@ import {createCadProject} from '../src/cad-project.js';
 import {createCadAutomationAccess} from '../src/cad-automation-access.js';
 import {lidHousing} from './fixtures/mesh-lid-fixtures.mjs';
 const q=[{id:'bounds',engine:'app',kind:'bounds',options:{id:'part'}}],scene={revision:'r',selectionTargets:[]};
+test('External metadata analysis accepts the published 32000-character budget without starting native work or changing the project',async()=>{
+ const cad=createCadController({initial:createCadProject(),createWorker:()=>{throw Error('Unexpected CAD worker');},createMeshWorker:()=>{throw Error('Unexpected mesh worker');}});
+ const before=cad.serialize(),revision=cad.revision();const access=createCadAutomationAccess({controller:cad,getScene:()=>({revision,objects:[]}),refresh:async()=>{}});
+ try{const result=await access.dispatch('analysis',{revision,reportBudget:32000,queries:[{id:'joints',engine:'app',kind:'joints',options:{}}]});assert.equal(result.results[0].value.total,0);assert.equal(cad.serialize(),before);assert.equal(cad.revision(),revision);
+ await assert.rejects(access.dispatch('analysis',{revision,reportBudget:32001,queries:[{id:'joints',engine:'app',kind:'joints'}]}));}finally{cad.dispose();}
+});
 test('Read-only analysis feeds measured values into construction without intermediate previews or commits',async()=>{
  let calls=0,previews=0;const result=await runCadAIRequest({input:{prompt:'Build'},access:{scene:()=>scene,context:()=>({}),analyze:async r=>{assert.deepEqual(r,q);return {revision:'r',results:[{id:'bounds',value:{size:[40,30,20]}}]};},preview:async r=>{previews++;assert.equal(r.commands[0].size[0],40);return {previewId:'p'};}},generate:async input=>{if(!calls++)return {revision:'r',analysis:q};assert.equal(input.analysisResults[0].results[0].value.size[0],40);return {revision:'r',commands:[{op:'create',type:'box',size:[40,30,20]}]};}});assert.equal(calls,2);assert.equal(previews,1);assert.equal(result.analysisRounds,1);assert.equal(result.correctionAttempts,0);
 });

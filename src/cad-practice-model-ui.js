@@ -1,6 +1,6 @@
 import {isPracticeUICommand} from './cad-practice-ui-policy.js';
 import {cadFormLocalDimensions} from './cad-interface-state.js';
-import {CAD_SHAPES} from './cad-shapes.js';
+import {CAD_SHAPES,CAD_PALETTE_SHAPES} from './cad-shapes.js';
 // Task-locked practice construction uses real native UI input only.
 // No generic geometry/API fallback is available.
 export function practiceScrewEvidence(drives,values,selected){
@@ -12,7 +12,7 @@ export function practiceScrewEvidence(drives,values,selected){
  });
 }
 
-export function createPracticeModelUI({controller,access,input,waitFor,checkpoint,settled,document,aliases=new Map()}){
+export function createPracticeModelUI({controller,access,input,waitFor,checkpoint,settled,document,aliases=new Map(),frameConstruction}){
  const joints=new Map(),gears=new Map(),project=()=>controller.readSnapshot(),q=id=>document.getElementById(id);
  const ui=async(action,target,value,text)=>{await checkpoint();await input({target:'ui:id:'+target,action,...(value===undefined?{}:{value:String(value)})},text);await settled();};
  const click=(id,text)=>ui('click',id,undefined,text),choose=(id,value,text)=>ui('choose',id,value,text);
@@ -95,18 +95,44 @@ export function createPracticeModelUI({controller,access,input,waitFor,checkpoin
   }else throw Error('Unbekannter Gelenkbefehl.');
  }
  async function create(c){
-  await close();const before=new Set(project().nodes.map(n=>n.id));await input({target:'shape:'+c.type,action:'drag'},'Die Grundform '+(CAD_SHAPES.find(s=>s.type===c.type)?.name??c.type)+' aus der Formenleiste auf die Arbeitsfläche ziehen.');await waitFor(()=>project().nodes.some(n=>!before.has(n.id)),'Grundform einsetzen');
+  await close();
+  const before=new Set(project().nodes.map(n=>n.id));
+  const preset=c.type==='thread'&&c.params?.profile==='trapezoid'&&CAD_PALETTE_SHAPES.find(shape=>shape.paletteId==='trapezoidal-thread');
+  if(preset)await click('shape-preset-'+preset.paletteId,'Die Grundform '+preset.name+' einsetzen.');
+  else await input({target:'shape:'+c.type,action:'drag'},'Die Grundform '+(CAD_SHAPES.find(s=>s.type===c.type)?.name??c.type)+' aus der Formenleiste auf die Arbeitsfläche ziehen.');
+  await waitFor(()=>project().nodes.some(n=>!before.has(n.id)),'Grundform einsetzen');
   const added=project().nodes.filter(n=>!before.has(n.id));if(added.length!==1)throw Error('Neue Grundform nicht eindeutig.');if(c.as)aliases.set(c.as,added[0].id);
-  if(c.name)await set('object-name',c.name,'Das neue Teil benennen: '+c.name+'.');
-  for(const [key,value] of Object.entries(c.params??{})){const field=q('param-'+key);if(!field)throw Error('Formparameter fehlt: '+key);const d=field.closest('details');if(d&&!d.open)await click('shape-parameters-advanced-toggle','Weitere Formparameter aufklappen.');if(field.tagName==='SELECT')await choose(field.id,value,'Formparameter auswählen: '+key+'.');else await set(field.id,value,'Formparameter '+key+' = '+value+' eingeben.');await settled();}
-  if(['gear','thread','nut'].includes(c.type)){const n=project().nodes.find(n=>n.id===added[0].id);if([0,1,2].some(k=>Math.abs(Math.hypot(...n.transform.slice(4*k,4*k+3))-1)>1e-7))await click('parameter-original','Nach Zähnezahl oder Modul die Originalgröße herstellen. So entspricht der Teilkreis wirklich dem eingestellten Modul und die Zähne greifen ineinander.');}
-  if(c.size)for(let k=0;k<3;k++){await set('size-'+k,c.size[k],'Maß '+'XYZ'[k]+' = '+c.size[k]+' eingeben.');await settled();}
-  // A fresh library drop has an arbitrary pointer position. Teach the actual
-  // placement tool before entering only the requested remaining offsets.
-  await input({target:'ui:tool:center',action:'click'},'„Zur Mitte“ in der Werkzeugleiste: das neue Teil gemeinsam in X/Y zentrieren und auf Z=0 absetzen.');await settled();
-  for(const [kind,values]of [['pos',c.pos??[0,0,cadFormLocalDimensions(project().nodes.find(n=>n.id===added[0].id))[2]/2]],['rot',c.rot]])if(values)for(let k=0;k<3;k++){await set(kind+'-'+k,values[k],(kind==='pos'?'Gewünschter Weltversatz ':'Drehwinkel ')+['X','Y','Z'][k]+' = '+values[k]+' eingeben.');await settled();}
-  if(c.solid===false)await input({target:'hole-btn',action:'click'},'Das Teil als Lochform kennzeichnen.');
-  if(c.color)await set('object-color-hex',c.color,'Die gewünschte Farbe am Farbfeld einstellen.');await settled();
+  const framing=preset&&before.size>0?frameConstruction?.(added[0].id):undefined;
+  try{
+   if(c.name)await set('object-name',c.name,'Das neue Teil benennen: '+c.name+'.');
+   for(const [key,value] of Object.entries(c.params??{})){
+    const confirmed=()=>project().nodes.find(n=>n.id===added[0].id)?.recipe?.params?.[key];
+    const previous=preset?confirmed():undefined;
+    if(preset&&previous===value)continue;
+    const field=q('param-'+key);
+    if(!field)throw Error('Formparameter fehlt: '+key);
+    const details=field.closest('details');
+    if(details&&!details.open)await click('shape-parameters-advanced-toggle','Weitere Formparameter aufklappen.');
+    if(field.tagName==='SELECT')await choose(field.id,value,'Formparameter auswählen: '+key+'.');
+    else await set(field.id,value,'Formparameter '+key+' = '+value+' eingeben.');
+    await settled();
+    if(preset&&confirmed()===previous&&previous!==undefined){
+     // The native inspector can reject input while another calculation owns
+     // the project. Repeat only if that same parameter was left untouched.
+     await ui(field.tagName==='SELECT'?'choose':'set',field.id,value,'Noch einmal eingeben, nachdem die CAD-Berechnung fertig ist: '+key+'.');
+    }
+    if(preset&&confirmed()!==value)throw Error('Der Formparameter '+key+' wurde vom CAD-Werkzeug nicht bestätigt.');
+    framing?.refit();
+   }
+   if(['gear','thread','nut'].includes(c.type)){const n=project().nodes.find(n=>n.id===added[0].id);if([0,1,2].some(k=>Math.abs(Math.hypot(...n.transform.slice(4*k,4*k+3))-1)>1e-7))await click('parameter-original','Nach Zähnezahl oder Modul die Originalgröße herstellen. So entspricht der Teilkreis wirklich dem eingestellten Modul und die Zähne greifen ineinander.');framing?.refit();}
+   if(c.size)for(let k=0;k<3;k++){await set('size-'+k,c.size[k],'Maß '+'XYZ'[k]+' = '+c.size[k]+' eingeben.');await settled();framing?.refit();}
+   // A fresh library drop has an arbitrary pointer position. Teach the actual
+   // placement tool before entering only the requested remaining offsets.
+   await input({target:'ui:tool:center',action:'click'},'„Zur Mitte“: das neue Teil gemeinsam in X/Y zentrieren und auf Z=0 absetzen.');await settled();framing?.refit();
+   for(const [kind,values]of [['pos',c.pos??[0,0,cadFormLocalDimensions(project().nodes.find(n=>n.id===added[0].id))[2]/2]],['rot',c.rot]])if(values)for(let k=0;k<3;k++){await set(kind+'-'+k,values[k],(kind==='pos'?'Gewünschter Weltversatz ':'Drehwinkel ')+['X','Y','Z'][k]+' = '+values[k]+' eingeben.');await settled();framing?.refit();}
+   if(c.solid===false)await input({target:'hole-btn',action:'click'},'Das Teil als Lochform kennzeichnen.');
+   if(c.color)await set('object-color-hex',c.color,'Die gewünschte Farbe am Farbfeld einstellen.');await settled();
+  }finally{framing?.restore();}
  }
  async function run(action,{holdMotion=false}={}){
   if(!Array.isArray(action.commands)||!action.commands.length||action.commands.some(c=>!isPracticeUICommand(c)))throw Error('Übungsauftrag: kein direkter Modell- oder Skriptzugriff. Nur sichtbar bediente Grundformen und Gelenke sind freigegeben.');

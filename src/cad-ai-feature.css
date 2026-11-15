@@ -7,3 +7,7 @@
 .ai-feature-panel.repair-picking>:not(header):not([data-repair-feature]):not([data-repair-status]),.ai-feature-panel.repair-picking [data-repair-feature]>:not([data-repair-stop]){display:none!important}
 .ai-feature-panel.consumer-contour-picking{top:auto;bottom:12px;max-height:42%;width:min(390px,94%)}
 .consumer-contour-picking>label,.consumer-contour-picking>[data-consumer-contour-start]{display:none!important}
+
+.ai-feature-panel.chat-pick{top:auto;bottom:12px;max-height:42%;width:min(390px,94%)}
+.ai-feature-panel.chat-pick>:not(header):not([data-ref-status]):not([data-ref-candidate]),
+.ai-feature-panel.chat-pick [data-ref-save]{display:none!important}

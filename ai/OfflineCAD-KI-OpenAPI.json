@@ -203,6 +203,7 @@
                     "const": true
                   },
                   "ids": {
+                    "description": "Finished root IDs only; returns those root records. For source records use targets with the complete rootId/path.",
                     "type": "array",
                     "minItems": 1,
                     "maxItems": 500,
@@ -214,6 +215,7 @@
                     }
                   },
                   "targets": {
+                    "description": "Exact source addresses copied from scene target fields; path contains every nested source ID from the root.",
                     "type": "array",
                     "minItems": 1,
                     "maxItems": 500,
@@ -1953,7 +1955,8 @@
                                                   "type": "number",
                                                   "minimum": -100000,
                                                   "maximum": 100000
-                                                }
+                                                },
+                                                "description": "Exact start of the finished cylindrical bore, in world mm; not an extended cutter endpoint."
                                               },
                                               "to": {
                                                 "type": "array",
@@ -1963,7 +1966,8 @@
                                                   "type": "number",
                                                   "minimum": -100000,
                                                   "maximum": 100000
-                                                }
+                                                },
+                                                "description": "Exact end of the finished cylindrical bore, in world mm; not an inset probe point."
                                               },
                                               "diameter": {
                                                 "type": "number",
@@ -1973,12 +1977,14 @@
                                               "minWall": {
                                                 "type": "number",
                                                 "exclusiveMinimum": 0,
-                                                "maximum": 10000
+                                                "maximum": 10000,
+                                                "description": "Minimum continuous surrounding material ring, including the nearest outer edge."
                                               },
                                               "minBottom": {
                                                 "type": "number",
                                                 "exclusiveMinimum": 0,
-                                                "maximum": 10000
+                                                "maximum": 10000,
+                                                "description": "Only for a blind bore: required material beyond its bottom. Omit for a through bore."
                                               },
                                               "tolerance": {
                                                 "type": "number",
@@ -35618,7 +35624,8 @@
                                 "type": "number",
                                 "minimum": -100000,
                                 "maximum": 100000
-                              }
+                              },
+                              "description": "Exact start of the finished cylindrical bore, in world mm; not an extended cutter endpoint."
                             },
                             "to": {
                               "type": "array",
@@ -35628,7 +35635,8 @@
                                 "type": "number",
                                 "minimum": -100000,
                                 "maximum": 100000
-                              }
+                              },
+                              "description": "Exact end of the finished cylindrical bore, in world mm; not an inset probe point."
                             },
                             "diameter": {
                               "type": "number",
@@ -35638,12 +35646,14 @@
                             "minWall": {
                               "type": "number",
                               "exclusiveMinimum": 0,
-                              "maximum": 10000
+                              "maximum": 10000,
+                              "description": "Minimum continuous surrounding material ring, including the nearest outer edge."
                             },
                             "minBottom": {
                               "type": "number",
                               "exclusiveMinimum": 0,
-                              "maximum": 10000
+                              "maximum": 10000,
+                              "description": "Only for a blind bore: required material beyond its bottom. Omit for a through bore."
                             },
                             "tolerance": {
                               "type": "number",
@@ -36380,7 +36390,8 @@
                           "type": "string"
                         },
                         "options": {
-                          "type": "object"
+                          "type": "object",
+                          "description": "For app/jointCollision: leftId and rightId are finished root IDs; values:[{jointId,value}] selects one pose. Optional minimumDistance, allowContact and tolerance. app/joints returns the actual joint IDs. This is not a continuous motion proof."
                         },
                         "report": {
                           "type": "object"
@@ -36454,7 +36465,8 @@
                                 "type": "number",
                                 "minimum": -100000,
                                 "maximum": 100000
-                              }
+                              },
+                              "description": "Exact start of the finished cylindrical bore, in world mm; not an extended cutter endpoint."
                             },
                             "to": {
                               "type": "array",
@@ -36464,7 +36476,8 @@
                                 "type": "number",
                                 "minimum": -100000,
                                 "maximum": 100000
-                              }
+                              },
+                              "description": "Exact end of the finished cylindrical bore, in world mm; not an inset probe point."
                             },
                             "diameter": {
                               "type": "number",
@@ -36474,12 +36487,14 @@
                             "minWall": {
                               "type": "number",
                               "exclusiveMinimum": 0,
-                              "maximum": 10000
+                              "maximum": 10000,
+                              "description": "Minimum continuous surrounding material ring, including the nearest outer edge."
                             },
                             "minBottom": {
                               "type": "number",
                               "exclusiveMinimum": 0,
-                              "maximum": 10000
+                              "maximum": 10000,
+                              "description": "Only for a blind bore: required material beyond its bottom. Omit for a through bore."
                             },
                             "tolerance": {
                               "type": "number",
@@ -37099,6 +37114,11 @@
                     "required": [
                       "queries"
                     ],
+                    "properties": {
+                      "reportBudget": {
+                        "minimum": 2000
+                      }
+                    },
                     "not": {
                       "anyOf": [
                         {

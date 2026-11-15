@@ -590,7 +590,7 @@ export function createCadController({createWorker,createComparisonWorker,createM
   async function analyze(requests,{reportBudget=14000,signal}={}){
     if(runningAnalyses.size)throw Object.assign(Error("Eine lokale Berechnung läuft bereits."),{code:"BUSY"});
     if(workspaceRevision!==store.revision())beginAITask();
-    if(!Number.isInteger(reportBudget)||reportBudget<2000||reportBudget>14000)throw Object.assign(Error('Messbericht: verbleibendes Rückmeldebudget zu klein. Vorhandene Seiten verwenden.'),{code:'AI_ANALYSIS_INVALID'});
+    if(!Number.isInteger(reportBudget)||reportBudget<2000||reportBudget>32000)throw Object.assign(Error('Messberichtbudget muss zwischen 2000 und 32000 Zeichen liegen. Bei kleinem Restbudget vorhandene Seiten verwenden.'),{code:'AI_ANALYSIS_INVALID'});
     const revision=store.revision(),results=[],validated=validateAIAnalysis(requests),localAbort=new AbortController();signal=signal?AbortSignal.any([signal,localAbort.signal]):localAbort.signal;runningAnalyses.add(localAbort);onBusy(true);
     try{
     for(const q of validated){

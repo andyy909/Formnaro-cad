@@ -1,30 +1,65 @@
 const {spawn}=require('node:child_process'),path=require('node:path'),fs=require('node:fs');
+const {performance}=require('node:perf_hooks');
+
 function openDiagnosticChild({app,directory,executable=process.execPath}){
  fs.mkdirSync(directory,{recursive:true});const env={...process.env,FORMNARO_PRACTICE_DIRECTORY:directory};delete env.ELECTRON_RUN_AS_NODE;
  const child=spawn(executable,[...(app.isPackaged?[]:[app.getAppPath()]),'--formnaro-diagnostic-child'],{env,cwd:app.isPackaged?path.dirname(executable):app.getAppPath(),windowsHide:true,stdio:['ignore','ignore','ignore','ipc']});
- const observers=new Set(),activityObservers=new Set();const pending=new Map();let seq=0,exited=false,finish;
+ const observers=new Set(),activityObservers=new Set();const pending=new Map();let seq=0,exited=false,windowClose,processExitedAt,shutdownStarted,closing,finish;
  const exit=new Promise(resolve=>{finish=resolve;});
  function rejectPending(error){for(const p of pending.values()){clearTimeout(p.timer);p.reject(error);}pending.clear();}
  function ended(value){if(exited)return;exited=true;rejectPending(Error('Testfenster geschlossen.'));finish(value);}
- child.on('message',m=>{if(m?.type==='practice-activity'){if(pending.get(m.callId)?.method==='practice'&&m.value&&['spawned','ready','paused','resumed','input-start','input-finished','result','exit'].includes(m.value.phase)){const value={phase:m.value.phase,elapsedMs:m.value.elapsedMs,...(typeof m.value.target==='string'?{target:m.value.target.slice(0,240)}:{}),...(typeof m.value.reason==='string'?{reason:m.value.reason.slice(0,60)}:{})};for(const observer of activityObservers)observer(value);}return;}if(m?.type==='practice-observation'){
+ child.on('message',m=>{
+  if(m?.type==='window-closed'){
+   if(!windowClose){
+    const receivedAt=performance.now();
+    // New children timestamp BrowserWindow's event before sending it. Older
+    // children confirm the same event, with only the IPC receipt observable.
+    const messageAge=Number.isFinite(m.at)?Date.now()-m.at:NaN;
+    const eventAt=receivedAt-messageAge;
+    const measured=messageAge>=0&&eventAt>=(shutdownStarted??0);
+    windowClose={at:measured?eventAt:receivedAt,source:measured?'child-event':'ipc-received'};
+   }
+   return;
+  }
+  if(m?.type==='practice-activity'){if(pending.get(m.callId)?.method==='practice'&&m.value&&['spawned','ready','paused','resumed','input-start','input-finished','result','exit'].includes(m.value.phase)){const value={phase:m.value.phase,elapsedMs:m.value.elapsedMs,...(typeof m.value.target==='string'?{target:m.value.target.slice(0,240)}:{}),...(typeof m.value.reason==='string'?{reason:m.value.reason.slice(0,60)}:{})};for(const observer of activityObservers)observer(value);}return;}if(m?.type==='practice-observation'){
   if(pending.get(m.callId)?.method!=='practice')return;
   Promise.resolve().then(async()=>{const value=require('./practice-observations.cjs').validateObservation(m.value);for(const observer of observers)await observer(value);if(!pending.has(m.callId))throw Error('Übungsauftrag beendet.');send({type:'practice-observation-reply',callId:m.callId,observationId:m.observationId});}).catch(error=>send({type:'practice-observation-reply',callId:m.callId,observationId:m.observationId,error:String(error.message).slice(0,1500)}));return;
  }const p=pending.get(m?.id);if(!p)return;pending.delete(m.id);clearTimeout(p.timer);m.error?p.reject(Object.assign(Error(m.error),{code:m.code})):p.resolve(m.value);});
- child.once('exit',(code,signal)=>ended({code,signal}));
+ child.once('exit',(code,signal)=>{processExitedAt=performance.now();ended({code,signal});});
  child.once('error',e=>ended({code:null,signal:'spawn-error',error:e.message}));
  function send(message){if(child.connected)child.send(message,()=>{});}
  function call(method,args={},timeout=180000){if(exited)return Promise.reject(Error('Testfenster beendet.'));return new Promise((resolve,reject)=>{const id=++seq,timer=setTimeout(()=>{pending.delete(id);reject(Error('Testfenster-Zeitlimit: '+method));},timeout);pending.set(id,{resolve,reject,timer,method});send({id,method,args});});}
- return {call,onPracticeActivity(callback){activityObservers.add(callback);return ()=>activityObservers.delete(callback);},onPracticeObservation(callback){observers.add(callback);return ()=>observers.delete(callback);},async close(){
-  if(exited)return exit;const shutdownStarted=Date.now();send({id:++seq,method:'close',args:{}});let timer;
-  const wait=async ms=>{const value=await Promise.race([exit,new Promise(resolve=>{timer=setTimeout(()=>resolve(null),ms);})]);clearTimeout(timer);return value;};
-  const normal=await wait(30000);if(normal)return {...normal,shutdownMs:Date.now()-shutdownStarted};
+ async function close(){
+  if(exited)return exit;
+  shutdownStarted=performance.now();
+  send({id:++seq,method:'close',args:{}});
+  const wait=async ms=>{
+   let timer;
+   try{return await Promise.race([exit,new Promise(resolve=>{timer=setTimeout(()=>resolve(null),ms);})]);}
+   finally{clearTimeout(timer);}
+  };
+  const timing=result=>{
+   const observedEnd=processExitedAt??performance.now();
+   const shutdownMs=Math.round(observedEnd-shutdownStarted);
+   const confirmed=windowClose&&windowClose.at>=shutdownStarted&&windowClose.at<=observedEnd;
+   const windowCloseMs=confirmed?Math.round(windowClose.at-shutdownStarted):null;
+   const afterWindowCloseMs=confirmed&&processExitedAt!==undefined?shutdownMs-windowCloseMs:null;
+   return {...result,shutdownMs,windowCloseMs,afterWindowCloseMs,windowCloseSource:confirmed?windowClose.source:null};
+  };
+  const normal=await wait(30000);if(normal)return timing(normal);
   // IPC can already be closed while Electron's native teardown still owns the
   // process. Under parallel CAD load Windows can report exit only after 30 s.
   // Disconnection is progress, never proof of success: still require OS exit.
-  const nativeExitGrace=!child.connected;
-  if(nativeExitGrace){const late=await wait(Math.max(1,120000-(Date.now()-shutdownStarted)));if(late)return {...late,nativeExitGrace,shutdownMs:Date.now()-shutdownStarted};}
-  child.kill();const forced=await wait(5000)??{code:null,signal:'exit-unconfirmed'};return {...forced,forced:true,nativeExitGrace,shutdownMs:Date.now()-shutdownStarted};
- },cancel(){rejectPending(Object.assign(Error('Testberechnung abgebrochen.'),{name:'AbortError'}));if(!exited)send({id:++seq,method:'cancel',args:{}});}};
+  const nativeExitGrace=!!windowClose||!child.connected;
+  if(nativeExitGrace){
+   const late=await wait(Math.max(1,120000-(performance.now()-shutdownStarted)));
+   if(late)return timing({...late,nativeExitGrace});
+  }
+  child.kill();
+  const forced=await wait(5000)??{code:null,signal:'exit-unconfirmed'};
+  return timing({...forced,forced:true,nativeExitGrace});
+ }
+ return {call,onPracticeActivity(callback){activityObservers.add(callback);return ()=>activityObservers.delete(callback);},onPracticeObservation(callback){observers.add(callback);return ()=>observers.delete(callback);},close(){return closing??=close();},cancel(){rejectPending(Object.assign(Error('Testberechnung abgebrochen.'),{name:'AbortError'}));if(!exited)send({id:++seq,method:'cancel',args:{}});}};
 }
 function installDiagnosticChild(win){
  const js=code=>win.webContents.executeJavaScript(code,true);
@@ -36,7 +71,7 @@ function installDiagnosticChild(win){
   const id=++observationId,callId=practiceCallId,timer=setTimeout(()=>{stepReplies.delete(id);reject(Error('Diagnose-Schrittüberwachung antwortet nicht.'));},require('./ai-monitor-timing.cjs').DIAGNOSTIC_STEP_TIMEOUT_MS);stepReplies.set(id,{resolve,reject,timer,callId});process.send?.({type:'practice-observation',callId,observationId:id,value});
  }));
  const unsubscribeActivity=require('./practice-observations.cjs').observePracticeActivity(win,value=>{if(practiceCallId!==null)process.send?.({type:'practice-activity',callId:practiceCallId,value});});
- win.once('closed',()=>{unsubscribe();unsubscribeActivity();for(const p of stepReplies.values()){clearTimeout(p.timer);p.reject(Error('Testfenster geschlossen.'));}stepReplies.clear();});
+ win.once('closed',()=>{const at=Date.now();unsubscribe();unsubscribeActivity();for(const p of stepReplies.values()){clearTimeout(p.timer);p.reject(Error('Testfenster geschlossen.'));}stepReplies.clear();if(process.connected)process.send({type:'window-closed',at},()=>{if(process.connected)process.disconnect();});});
  process.on('disconnect',()=>{if(!win.isDestroyed())win.close();});
  process.on('message',async m=>{if(m?.type==='practice-observation-reply'){const p=stepReplies.get(m.observationId);if(p&&p.callId===m.callId){stepReplies.delete(m.observationId);clearTimeout(p.timer);m.error?p.reject(Error(m.error)):p.resolve(true);}return;}if(!m||!Number.isSafeInteger(m.id))return;try{
   if(m.method==='close'){process.send?.({id:m.id,value:true});win.close();return;}

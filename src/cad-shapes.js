@@ -14,3 +14,9 @@ const definitions=[
   ['polygon','Polygon','#b887ba',[20,20,10]],
 ];
 export const CAD_SHAPES=Object.freeze(definitions.map(([type,name,color,size])=>Object.freeze({type,name,color,defaultSize:Object.freeze([...size])})));
+const trapezoidalThread=Object.freeze({
+  paletteId:'trapezoidal-thread',type:'thread',name:'Trapezgewinde',color:'#7ca6a2',
+  defaultSize:Object.freeze([16,16,16]),
+  params:Object.freeze({profile:'trapezoid',diameter:16,pitch:4})
+});
+export const CAD_PALETTE_SHAPES=Object.freeze(CAD_SHAPES.flatMap(shape=>shape.type==='thread'?[shape,trapezoidalThread]:[shape]));

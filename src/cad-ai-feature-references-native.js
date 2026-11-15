@@ -38,14 +38,24 @@ export function createCadAIReferencesNative({oc,service}={}){
  }
  function source(project,options){only(options,['action','target','kind','id','name']);const reference=captureCadAISourceReference(project,options.target,options);return {reference,state:cadAIReferenceState(project,reference),catalog:cadAISourceReferenceCatalog(project,{rootIds:[reference.target.rootId]})};}
  function pick(project,options){
-  only(options,['action','kind','ray','ids','id','name']);if(!['face','bore'].includes(options.kind))fail('Fläche oder Bohrung wählen.');
+  only(options,['action','kind','ray','ids','id','name']);if(!['face','bore','auto'].includes(options.kind))fail('Fläche oder Bohrung wählen.');
   if(options.ids!==undefined&&(!Array.isArray(options.ids)||!options.ids.length||options.ids.length>1000||new Set(options.ids).size!==options.ids.length||options.ids.some(id=>typeof id!=='string')))fail('Eindeutige sichtbare CAD-Teile wählen.');
   const ids=service.productionNodes(project,{ids:options.ids}).filter(n=>n.kind==='cad').map(n=>n.id),hit=ids.length?createCadClickMeasureNative({oc,service}).pick({project,ray:options.ray,ids}):null;if(!hit)fail('Keine eindeutige CAD-Fläche getroffen.','AI_REFERENCE_NOT_HIT');
   const node=root(project,hit.objectId),shape=service.worldShape(node);let faces=[];
   try{faces=uniqueFaces(oc,shape);const face=faces[hit.faceIndex-1];if(!face)fail('Native CAD-Fläche fehlt.');const surface=surfaceInfo(oc,face),normal=unit(hit.normal),selector={kind:'face',signature:domainKey(oc,face),point:hit.point,normal,surface};
-   if(options.kind==='bore'){if(surface.kind!=='cylinder')fail('Keine native zylindrische Bohrungswand getroffen.');const delta=hit.point.map((v,k)=>v-surface.center[k]),along=delta.reduce((n,v,k)=>n+v*surface.axis[k],0),radial=delta.map((v,k)=>v-along*surface.axis[k]);if(radial.reduce((n,v,k)=>n+v*normal[k],0)>=-1e-7)fail('Außenmantel ist keine Bohrung. Eine innere Zylinderwand wählen.');}
-   const candidates=origins(project,node,selector,options.kind),unique=candidates.length===1&&!candidates[0].ambiguous?candidates[0]:null;
-   const reference=validateCadAIReference({version:1,id:options.id??'ref-'+crypto.randomUUID(),name:(options.name??(options.kind==='bore'?'Bohrung':'Fläche')+' · '+node.name).slice(0,160),kind:options.kind,target:{rootId:node.id,path:[]},rootDigest:projectObjectGeometryDigest(node),sourceDigest:projectObjectGeometryDigest(node),frameDigest:cadAIReferenceFrameDigest(node.transform),selector,...(options.kind==='bore'&&unique?{origin:{target:unique.target,sourceDigest:unique.sourceDigest}}:{})});
+   let innerCylinder=false;
+   if(surface.kind==='cylinder'){
+    const delta=hit.point.map((v,k)=>v-surface.center[k]);
+    const along=delta.reduce((n,v,k)=>n+v*surface.axis[k],0);
+    const radial=delta.map((v,k)=>v-along*surface.axis[k]);
+    innerCylinder=radial.reduce((n,v,k)=>n+v*normal[k],0)<-1e-7;
+   }
+   if(options.kind==='bore'&&!innerCylinder){
+    fail(surface.kind==='cylinder'?'Außenmantel ist keine Bohrung. Eine innere Zylinderwand wählen.':'Keine native zylindrische Bohrungswand getroffen.');
+   }
+   const kind=options.kind==='auto'?(innerCylinder?'bore':'face'):options.kind;
+   const candidates=origins(project,node,selector,kind),unique=candidates.length===1&&!candidates[0].ambiguous?candidates[0]:null;
+   const reference=validateCadAIReference({version:1,id:options.id??'ref-'+crypto.randomUUID(),name:(options.name??(kind==='bore'?'Bohrung':'Fläche')+' · '+node.name).slice(0,160),kind,target:{rootId:node.id,path:[]},rootDigest:projectObjectGeometryDigest(node),sourceDigest:projectObjectGeometryDigest(node),frameDigest:cadAIReferenceFrameDigest(node.transform),selector,...(kind==='bore'&&unique?{origin:{target:unique.target,sourceDigest:unique.sourceDigest}}:{})});
    // Duplicate exact domains are not a persistent identity. Reject here as
    // well as on reopening rather than retaining a transient face ordinal.
    if(faces.filter(f=>domainKey(oc,f)===selector.signature).length!==1)fail('Native Flächendomäne ist mehrdeutig. Eine eindeutige Fläche wählen.','AI_REFERENCE_AMBIGUOUS');

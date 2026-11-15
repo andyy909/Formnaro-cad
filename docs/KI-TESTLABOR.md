@@ -52,3 +52,10 @@ Quellstand193cd40 mit Testlabor-Oberfläche, sechs Kontextvarianten, speicherbar
 44 gezielte und128 Standardtests bestanden. Die gepackte Ausgabe hat native Bohrung/Szene/Bild und reguläres Kindprozessende bestanden. Die tatsächliche autonome Vorprüfung im privaten Paket bestand40/40 lokale Prüfungen einschließlich14 richtigen Referenzen, sechs falschen Gegenmodellen und Vorschau-/Revisions-/Verwerfen-/Undo-Ablauf. Zwei begrenzte unabhängige Quellreviews führten zu Korrekturen an aktuellen Revisionsbezügen, vollständiger begrenzter Artefaktbereinigung und strengeren Kontrollfällen für automatische aktive Überwachung.
 
 Private Windows-x64-Ausgabe: KI-Testlabor-0.129.0-r1/Formnaro-win32-x64/Formnaro.exe mit eigenem Testprofil. ASAR-SHA256251b8b8f33c9be90ea456dbc4f07074dd70a8e6608db02de56f2374cc34e6732. Der automatische Kampagnenlauf wurde gestartet; erste echte Antworten und Usage beider Rollen meldeten deepseek-flash und die Automatik wechselte selbstständig zum nächsten Versuch. Vollständige Kampagnenergebnisse und Kalibrierung sind zum Übergabezeitpunkt noch offen. Kampagnenstand, Serienmanifeste, Rohereignisse und Berichte bleiben lokal im Diagnoseordner. Kein Installationsersatz und keine Veröffentlichung.
+
+
+### Dauer beim Beenden eines Hintergrundversuchs
+
+Unter den Messwerten eines Versuchs stehen die Dauer bis zum bestätigten Fensterschluss und die anschließende Dauer bis zum beobachteten Prozessende. Das JSON-Protokoll enthält `close.windowCloseMs`, `close.afterWindowCloseMs` und die Gesamtdauer `close.shutdownMs`. Der Diagnose-Gesamtbericht zeigt die beiden Phasen pro Versuch.
+
+Ein fehlendes Ereignis ergibt einen fehlenden Messwert. `close.windowCloseSource` kennzeichnet den Zeitstempel des Fensterschlusses im Kind oder den Empfang seiner Bestätigung bei älteren Testkindern. Die Exit-Bestätigung und die Kennzeichnung erzwungener Abbrüche gelten für den gesamten Versuch.

@@ -13,6 +13,7 @@ const analysisLabels={bounds:['Abmessungen','Dimensions'],bore:['Bohrung','Bore'
 // One user request may repair failed output/previews; it never commits a model.
 export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,onUsage=()=>{},onActivity=()=>{},onCorrection=()=>{},onAnalysis=()=>{},onVisualReview=()=>{},onCandidate=async()=>{},visualReview=true,maxCorrections,maxSteps=7,requirements,purpose=requirements?.purpose??'technical',onProgress,resume,restoreOnly=false}){
  const practiceTask=access.practiceRequested===true,practiceContext=practiceTask?structuredClone(access.context()):null;
+ if(practiceContext&&access.practiceWorkbench)practiceContext.practiceWorkbench=access.practiceWorkbench;
  const storedPhotos=access.practiceCopy?.projectCopy?.project?.photos?.items??[];
  const practiceFiles=practiceTask?access.practiceFiles?.map(({name,kind,mimeType,base64,photoEvidence})=>{
   const descriptor={name,kind,photoEvidence};
@@ -159,7 +160,7 @@ export async function runCadAIRequest({input,generate,access,isCurrent=()=>true,
     }else{
      if(result.assistant.kind==='help'&&analysisRounds>=analysisLimit)throw Object.assign(Error('Hilfesuchlimit erreicht.'),{feedback:{retryable:false}});
      onActivity({de:result.assistant.kind==='help'?'Bedienhilfe nachschlagen …':'Bedienaktion ausführen …',en:result.assistant.kind==='help'?'Looking up program help …':'Running a program action …',showTools:result.assistant.kind==='guide'});
-     const report=await access.programAssistant.execute(result.assistant,{isCurrent,expectedProviderId:access.expectedProviderId,projectCopy:practiceTask?access.practiceCopy?.projectCopy:undefined,practiceFiles:practiceTask?access.practiceFiles?.map(({photoEvidence,...file})=>file):undefined,recovery:practiceTask?(access.practiceVision?'image':'text'):undefined,continuationId:practiceContinuation,quality:practiceTask?access.practiceQuality:undefined});current();
+     const report=await access.programAssistant.execute(result.assistant,{isCurrent,expectedProviderId:access.expectedProviderId,workbench:practiceTask?access.practiceWorkbench:undefined,projectCopy:practiceTask?access.practiceCopy?.projectCopy:undefined,practiceFiles:practiceTask?access.practiceFiles?.map(({photoEvidence,...file})=>file):undefined,recovery:practiceTask?(access.practiceVision?'image':'text'):undefined,continuationId:practiceContinuation,quality:practiceTask?access.practiceQuality:undefined});current();
      if(practiceTask&&report?.continuationId){
       const photoReview=report.report.checkpoint==='photo-review';
       const failureKey=JSON.stringify([report.reason,report.report.failedAction?.kind,report.report.failedAction?.target,report.report.confirmedCount]);

@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.12",
+  "version": "1.0.22",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -74,19 +74,23 @@
     },
     {
       "path": "backend/ai-practice-context.cjs",
-      "sha256": "ef2493637653974ac423537940948187706c4db1d522288aed1edf8f23351500"
+      "sha256": "e203ec4a385deeb06abc2c18483482a59c43e049e87b52c187435896b8a2ceaa"
     },
     {
       "path": "backend/ai-practice-prompt.cjs",
-      "sha256": "e64a00628424cc0784d1aaacd3505f6f06a3d6791893f4b1adbb943b1c8b3769"
+      "sha256": "f3666eef4124da4e429b08a2dab51ce14de1f31eb1f44f8c8063f766411f7c43"
     },
     {
       "path": "backend/practice-result-checks.cjs",
-      "sha256": "0b63b20ac35711c08fa6af7b0cab8d01998fd1999539d1a512b7272a4df1e991"
+      "sha256": "c3290e9a1dc2b45c80208cc6364343a6c7f59bf6d54d3dd7b2eb1c8b3d094be0"
     },
     {
       "path": "ai/formnaro-tool-reference.mjs",
-      "sha256": "f3b372d0445daa7568828200e1af3b9f1e5b6aeb4184e25e3eb0773b38d3a12b"
+      "sha256": "38de0ee9a1b1a43045e39345dd37440f2e3e4a5fb069a9b63485b0f01fa7cff7"
+    },
+    {
+      "path": "ai/formnaro-solid-labels.mjs",
+      "sha256": "4db013c5c35cf0875f0eb1af2d372d9f5f972c5de25a3a315e2c7e765e17acfc"
     },
     {
       "path": "ai/practice-plan-feedback.mjs",
@@ -94,7 +98,7 @@
     },
     {
       "path": "src/cad-service.js",
-      "sha256": "60a729a7b6bc282d32d43b87c144f86278ac879fba88da2742f5653b8d4346bb"
+      "sha256": "3949ce0a6eaa8aa9fff8cebbd2b883bc91eb0b0ee48a59d4ba1b0a86f54afd48"
     },
     {
       "path": "src/cad-drill-stock-native.js",
@@ -106,7 +110,7 @@
     },
     {
       "path": "src/cad-practice-model-ui.js",
-      "sha256": "cf63d3aab359daaca19ae439f734072054b47891b4efcce83745480c7f93c04c"
+      "sha256": "55d30ce556637d5e0726e99e925db25e5f0ae78ede320fd873fd61faf3df2f53"
     },
     {
       "path": "backend/ai-lab-review-data.cjs",
@@ -114,19 +118,19 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "0d4c09004f859713b394cf82dcbb5ae9680dfaf1db482c5c92bf156a23adc1a2"
+      "sha256": "299fa8e267b53cda263603aa77174aedf8fbb8513831512e291b05f3abde5004"
     },
     {
       "path": "src/cad-practice-controls.js",
-      "sha256": "548f0c9e0ad41ff2c30dc6f8eb824c86d52e1326fa5c639af9b160ff8735df30"
+      "sha256": "76172d1409fcf2935b201d66b2d557173b05f49adb1170222182f6c782c4463e"
     },
     {
       "path": "backend/practice-child.cjs",
-      "sha256": "87182da27e4c7a62161e9dcc8b19508d96a924dd46e29e51240fe8a46847e90e"
+      "sha256": "d878eaa3a8b9ff392408ba667115dfe5d1308ae13d085a625720dbc3ca545bfa"
     },
     {
       "path": "backend/practice-runner.cjs",
-      "sha256": "f47ee364735ff8a40254ee71090d924f8c401dd752ae7705b1c9860bd8db55cb"
+      "sha256": "134612e1f114b59b0cc8291ec6c9736780c9ab32829d2ea7c6e9a4ba4b009899"
     },
     {
       "path": "src/cad-agent-ui-policy.js",
@@ -154,7 +158,7 @@
     },
     {
       "path": "backend/ai-diagnostic-child.cjs",
-      "sha256": "b594bbdc5c86a3160ffb3cccd756df2aed1252fa8cd3f661cb15f103045c97d9"
+      "sha256": "1c3021e11bea9a99b2261ff490aa48bb04fa744b4ac656f6efd3bf7de74d4c85"
     },
     {
       "path": "src/cad-ai-analysis.js",
@@ -162,8 +166,12 @@
     },
     {
       "path": "src/cad-ai-result-checks.js",
-      "sha256": "b2e71a222b73cda76370fa76d05be7e80130f8fa7b0a477db34a7f8382e25906"
+      "sha256": "198fe355df644f360499d533ff1a465115f3dfaaa3c6c00d7866038a289e1645"
+    },
+    {
+      "path": "ai/formnaro-fusion-labels.mjs",
+      "sha256": "6f5021d8c0879156ca11022879c222248496a0b681322b8fb86199563833f038"
     }
   ],
-  "revisionReason": "Integrate durable logs, explicit agent completion, precise feedback, review evidence and bounded regular child shutdown. Tasks, native predicates and model budgets unchanged."
+  "revisionReason": "Use the selected Fusion workbench in the isolated practice window and resolve ribbon controls through its real sections. Benchmark tasks and native geometry predicates unchanged."
 }

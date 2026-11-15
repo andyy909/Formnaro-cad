@@ -39,6 +39,21 @@ test('reopening the same model invalidates an exercise approval even at the same
   assert.throws(copy.assertBase,{code:'STALE_REVISION'});
 });
 
+test('a copied exercise exposes measured geometry only for selected roots in the current scene',async()=>{
+  const base=fixture(),revision=cadProjectRevision(base.project);
+  const controller={projectScope:()=>1,revision:()=>revision,transactions:{materialize:async()=>base.project}};
+  const selected={id:'chosen',target:base.selection[0],worldBounds:{size:[548,16,16],center:[0,26,487]}};
+  const other={id:'unrelated',target:{rootId:'unrelated',path:[]},worldBounds:{size:[9,8,7],center:[6,5,4]}};
+  const scene={revision,objects:[selected,other]};
+  const capture=()=>captureCadPracticeCopy(controller,()=>base.selection,{getScene:()=>scene});
+  const {objects}=await capture();
+  assert.deepEqual(objects.map(({alias,facts})=>({alias,size:facts.size,center:facts.center})),[
+    {alias:'existing-1',size:[548,16,16],center:[0,26,487]}
+  ]);
+  scene.revision='an older revision';
+  assert.equal((await capture()).objects[0].facts,undefined);
+});
+
 test('a new sketch draft has no editable parent root and invalidates on draft changes',async()=>{
  const base=fixture();
  const controller={

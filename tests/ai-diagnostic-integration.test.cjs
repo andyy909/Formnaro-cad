@@ -1,10 +1,10 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {createDiagnostics}=require('../backend/ai-diagnostics.cjs');
 const revision='0123456789abcdef';
-function harness(t,completeModel,onEvent=()=>{}){
+function harness(t,completeModel,onEvent=()=>{},closeResult={code:0,signal:null}){
  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-diagnostic-test-'));t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));
  const calls=[];let closed=0,cancelled=0;
- const runner=createDiagnostics({app:{},directory,reviewerEnabled:false,credentials:()=>({key:'private-test-secret',config:{baseUrl:'https://api.deepseek.com',model:'deepseek-flash'}}),onEvent,provider:{testConnection:async()=>({models:['deepseek-flash']}),completeModel},openChild:()=>({call:async(method,args)=>{calls.push({method,args});if(method==='setup')return {scene:{revision,objects:[],selectionTargets:[]},context:{},validationContext:(await import('../src/cad-ai-context.js')).cadAIContext(),project:{nodes:[{id:'protected',name:'Unbeteiligtes Teil'}]}};if(method==='snapshot')return {scene:{revision,objects:[],selectionTargets:[]},project:{nodes:[{id:'protected',name:'Unbeteiligtes Teil'}]}};if(method==='providerScene')return {revision,objects:[],selectionTargets:[]};if(method==='capture')return 'data:image/png;base64,AAAA';if(method==='rpc'&&args.method==='screenshot')return {mimeType:'image/png',dataBase64:'AAAA'};return {};},cancel(){cancelled++;},async close(){closed++;return {code:0,signal:null};}})});
+ const runner=createDiagnostics({app:{},directory,reviewerEnabled:false,credentials:()=>({key:'private-test-secret',config:{baseUrl:'https://api.deepseek.com',model:'deepseek-flash'}}),onEvent,provider:{testConnection:async()=>({models:['deepseek-flash']}),completeModel},openChild:()=>({call:async(method,args)=>{calls.push({method,args});if(method==='setup')return {scene:{revision,objects:[],selectionTargets:[]},context:{},validationContext:(await import('../src/cad-ai-context.js')).cadAIContext(),project:{nodes:[{id:'protected',name:'Unbeteiligtes Teil'}]}};if(method==='snapshot')return {scene:{revision,objects:[],selectionTargets:[]},project:{nodes:[{id:'protected',name:'Unbeteiligtes Teil'}]}};if(method==='providerScene')return {revision,objects:[],selectionTargets:[]};if(method==='capture')return 'data:image/png;base64,AAAA';if(method==='rpc'&&args.method==='screenshot')return {mimeType:'image/png',dataBase64:'AAAA'};return {};},cancel(){cancelled++;},async close(){closed++;return closeResult;}})});
  return {runner,calls,directory,get closed(){return closed;},get cancelled(){return cancelled;}};
 }
 const spec={mode:'single',caseId:'drill',variant:'A',effort:'low',stage:'start'};
@@ -57,8 +57,11 @@ test('Requested screenshot is forwarded as an image, never base64 text',async t=
  const envelopes=[];let call=0;const h=harness(t,async(c,k,e)=>{envelopes.push(structuredClone({input:e.input,user:e.user}));return reply(++call===1?{tool:'offlinecad_screenshot',arguments:{}}:{status:'completed',message:'done'});});await h.runner.start(spec);assert.equal(envelopes[1].input.images.length,1);assert.ok(!envelopes[1].user.includes('AAAA'));
 });
 test('Total report exports all attempts, including failures, without credentials',async t=>{
- const h=harness(t,async()=>reply({tool:'offlinecad_preview',arguments:{revision,commands:[{op:'create',type:'box',size:[1,2,3]}]}}));await h.runner.start(spec);await h.runner.start(spec);
- const file=(await h.runner.exportAll('json')).path,r=JSON.parse(fs.readFileSync(file,'utf8'));assert.equal(r.runs.length,2);assert.equal(r.total.input,200);assert.equal(r.total.output,40);assert.equal(r.total.cached,140);assert.ok(!JSON.stringify(r).includes('private-test-secret'));const md=fs.readFileSync((await h.runner.exportAll('md')).path,'utf8');assert.ok(md.includes('2 Tests'));assert.ok(md.includes('keine Anbieterrechnung'));
+ const close={code:0,signal:null,shutdownMs:91231,windowCloseMs:203,afterWindowCloseMs:91028,windowCloseSource:'child-event'};
+ const h=harness(t,async()=>reply({tool:'offlinecad_preview',arguments:{revision,commands:[{op:'create',type:'box',size:[1,2,3]}]}}),undefined,close);await h.runner.start(spec);await h.runner.start(spec);
+ const file=(await h.runner.exportAll('json')).path,r=JSON.parse(fs.readFileSync(file,'utf8'));assert.equal(r.runs.length,2);assert.deepEqual(r.runs[0].close,close);assert.equal(r.total.input,200);assert.equal(r.total.output,40);assert.equal(r.total.cached,140);assert.ok(!JSON.stringify(r).includes('private-test-secret'));const md=fs.readFileSync((await h.runner.exportAll('md')).path,'utf8');assert.ok(md.includes('2 Tests'));assert.ok(md.includes('keine Anbieterrechnung'));assert.match(md,/0\.203 \| 91\.028 \| regul/);
+ const id=r.runs[0].id;assert.deepEqual(h.runner.read(id).events.at(-1).close,close);
+ assert.match(fs.readFileSync(h.runner.export(id,'md').path,'utf8'),/"afterWindowCloseMs": 91028/);
 });
 test('Total report preserves known cache subtotals and unknown-price flags across mixed usage',async t=>{
  const h=harness(t,async()=>reply({status:'completed',message:'done'}));await h.runner.start(spec);
@@ -79,6 +82,15 @@ test('Part-view supplement keeps the original matrix intact and covers real prac
 });
 test('Practice cannot silently execute direct geometry commands and exposes no scene objects',async t=>{
  let sent;const h=harness(t,async(c,k,e)=>{sent=e;return reply({tool:'offlinecad_preview',arguments:{revision,commands:[{op:'create',type:'box',size:[1,2,3]}]}});});await h.runner.start({...spec,workflow:'practice'});const r=h.runner.state().records[0];assert.equal(r.error.code,'PRACTICE_TOOL_FORBIDDEN');assert.equal(r.contextScope,'practice-selected-aliases');assert.equal(r.contextObjects,0);assert.match(sent.system,/VISIBLE USER INTERFACE/);assert.ok(!h.calls.some(c=>c.args?.method==='preview'));
+});
+
+test('A permitted practice limitation is retained as needs-input, never as a forbidden tool or successful construction',async t=>{
+ const message='Die benötigte freie Bohrposition fehlt im gewählten sichtbaren Werkzeug.';
+ const h=harness(t,async(_c,_k,e)=>{e.onDiagnostic({type:'request'});return reply({message});});
+ await h.runner.start({...spec,workflow:'practice'});const r=h.runner.read(h.runner.state().records[0].id);
+ assert.equal(r.status,'needs-input');assert.equal(r.finalMessage,message);assert.equal(r.error,undefined);
+ assert.notEqual(r.verification?.passed,true);assert(!h.calls.some(c=>['practice','loadResult'].includes(c.method)||c.args?.method==='preview'));
+ assert.equal(r.cleanExit,true);assert.notEqual(r.finalReview.completion,'met');
 });
 test('Practice reference keeps modeling information inside the visible UI contract',async t=>{
  const h=harness(t,async()=>reply({toolReference:{section:'modeling'}}));await h.runner.start({...spec,workflow:'practice'});

@@ -11,6 +11,14 @@ test('command lookup separates direct MCP tools from modeling command keys',()=>
  assert.deepEqual(lookup('unknown').arguments,{});
  assert.equal(lookup('unknown').tool,'offlinecad_command_info');
 });
+
+test('Read-only joint and source lookup failures explain actual argument fields without inventing targets or applying geometry',()=>{
+ const report=JSON.stringify({code:'INVALID_COMMAND_REFERENCE'}),availableTools=new Set(['offlinecad_command_info','offlinecad_analyze','offlinecad_scene']);
+ const joint=toolFeedback('offlinecad_command_info',report,{isError:true,args:{command:'jointCollision'},availableTools}).failure.recovery;
+ assert.equal(joint.tool,'offlinecad_analyze');assert.match(joint.message,/leftId\/rightId/);assert.equal(joint.arguments,undefined);
+ const source=toolFeedback('offlinecad_scene',report,{isError:true,args:{ids:['nested-source']},availableTools}).failure.recovery;
+ assert.equal(source.tool,'offlinecad_scene');assert.match(source.message,/rootId,path/);assert.equal(source.arguments,undefined);
+});
 test('native Responses uses call IDs, preserves reasoning items, and guards preview ownership',async()=>{
  const f=await fixture(),agent=createMCPAgent(f),original=global.fetch;
  const reasoning={type:'reasoning',id:'reasoning-1',content:[{type:'reasoning_text',text:'provider fixture'}]};

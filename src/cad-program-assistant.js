@@ -1,4 +1,4 @@
-import {PROGRAM_ASSISTANT_CONTRACT,PROGRAM_TARGETS,PROGRAM_TOOL_TABS,searchProgramHelp,validateAssistantAction,programQuestion} from './cad-program-help.js';
+import {PROGRAM_ASSISTANT_CONTRACT,PROGRAM_TARGETS,PROGRAM_TOOL_TABS,WORKBENCH_MENU_TABS,searchProgramHelp,validateAssistantAction,programQuestion} from './cad-program-help.js';
 import {createAssistantRecording} from './cad-assistant-recording.js';
 import {practiceDialogState} from './cad-practice-controls.js';
 import {lookupToolReference} from './cad-tool-reference.js';
@@ -17,7 +17,7 @@ export function createCadProgramAssistant({access,showPreview,clearPreview,cance
    const alias={'edit-feature':'cad-edit-modeling','mode-translate':'translate','mode-rotate':'rotate','mode-scale':'scale'}[key];
    selector=key.startsWith('mode-')?`[data-mode="${alias}"]`:`[data-action="${alias??key}"],[data-solid-command="${key}"],[data-fusion-command="${key}"]`;
   }else if(kind==='shape')selector=`.shape-tile[data-type="${key}"]:not([data-plugin])`;
-  else if(kind==='menu'){const solid={cad:'features',mesh:'mesh',convert:'mesh','view-tools':'evaluate',arrange:'assembly'}[key],fusion={cad:'solid',mesh:'mesh',convert:'mesh','view-tools':'tools',arrange:'tools'}[key];selector=`details[data-tool-category="${key}"] > summary,details[data-solid-menu="${key}"] > summary,details[data-fusion-menu="${key}"] > summary`+(solid?`,[data-solid-tab="${solid}"]`:'')+(fusion?`,[data-fusion-tab="${fusion}"]`:'');}
+  else if(kind==='menu'){const solid=WORKBENCH_MENU_TABS.solid[key],fusion=WORKBENCH_MENU_TABS.fusion[key];selector=`details[data-tool-category="${key}"] > summary,details[data-solid-menu="${key}"] > summary,details[data-fusion-menu="${key}"] > summary`+(solid?`,[data-solid-tab="${solid}"]`:'')+(fusion?`,[data-fusion-tab="${fusion}"]`:'');}
   else if(kind==='mode')selector=`[data-workbench-mode="${key}"]`;
   else if(id==='view:fit')selector='[data-action="fit"]';
   else if(kind==='view')selector=`[data-view="${key}"],[data-solid-view="${key}"]`;
@@ -64,13 +64,13 @@ export function createCadProgramAssistant({access,showPreview,clearPreview,cance
   }finally{practiceActive=waiting;}
  }
  const acceptPractice=(id,{isCurrent})=>practiceRound(()=>desktop.continuePractice({id,accept:true}),isCurrent);
- async function execute(value,{isCurrent=()=>true,expectedProviderId,projectCopy,practiceFiles,recovery,continuationId,quality}={}){
+ async function execute(value,{isCurrent=()=>true,expectedProviderId,projectCopy,practiceFiles,recovery,continuationId,quality,workbench}={}){
   value=validateAssistantAction(value);
   if(value.kind==='help')return {kind:'help',documentation:searchProgramHelp(value.query),toolReference:lookupToolReference(value.query.startsWith('tool:')?{tool:value.query}:{query:value.query},{state:state()}),ui:state(),scope:'Local program documentation and registered UI only; no model or filesystem mutation.'};
   if(value.kind==='practice'){
    if(!desktop?.startPractice)throw Error('Der Übungsmodus ist in dieser Ausgabe nicht verfügbar.');
    return practiceRound(()=>continuationId?desktop.continuePractice({id:continuationId,plan:value.plan}):
-    desktop.startPractice(projectCopy||practiceFiles?.length||recovery||quality?{plan:value.plan,projectCopy,files:practiceFiles,recovery,quality}:value.plan),isCurrent);
+    desktop.startPractice(projectCopy||practiceFiles?.length||recovery||quality||workbench?{plan:value.plan,projectCopy,files:practiceFiles,recovery,quality,...(workbench?{workbench}:{})}:value.plan),isCurrent);
   }
   if(value.kind==='note'){if(!desktop?.readAIContextNote||!desktop?.appendAIContextNote)throw Error('Kontextnotizen sind in dieser Ausgabe nicht verfügbar.');const previous=await desktop.readAIContextNote({providerId:expectedProviderId});if(!isCurrent())throw aborted();return desktop.appendAIContextNote({providerId:expectedProviderId,expectedRevision:previous.revision,text:value.text});}
   if(value.kind!=='guide')throw Error('Modellvorführungen über den Vorschauablauf ausführen.');

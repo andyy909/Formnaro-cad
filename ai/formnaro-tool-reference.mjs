@@ -1,4 +1,6 @@
 import catalogue from './FORMNARO-WERKZEUGKATALOG.json' with {type:'json'};
+import {solidLabel} from './formnaro-solid-labels.mjs';
+import {fusionLabel} from './formnaro-fusion-labels.mjs';
 const {tools:PROGRAM_TOOLS,tabs:PROGRAM_TOOL_TABS}=catalogue;
 
 export const TOOL_REFERENCE_CONTRACT=Object.freeze({version:1,readOnly:true,request:{toolReference:{tool:'tool:ID'}},search:{toolReference:{query:'name or purpose'}},modeling:{toolReference:{section:'modeling'}},mcpTool:'offlinecad_tool_info',scope:'Read local registered tool instructions, prerequisites and actual control names. No model, UI or file mutation. Tool availability depends on the current selection/mode. In an isolated practice task no parent-project UI state is returned.'});
@@ -77,14 +79,41 @@ const recipes={
 };
 const normal=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function toolReferenceIndex(){return PROGRAM_TOOLS.map(({id,label})=>({id,label}));}
-export function lookupToolReference(request,{state,practice=false,practicePanel}={}){
+const trapezoidalThread={id:'tool:trapezoidal-thread',key:'trapezoidal-thread',label:'Trapezgewinde',requirement:'CAD-Grundform',description:'Eine native Trapezgewindespindel mit Profil, Nenndurchmesser, Steigung und Länge einsetzen.'};
+function workbenchPracticeRoute(tool,mode){
+ const fusion=mode==='fusion',label=fusion?fusionLabel:solidLabel;
+ if(tool.key==='trapezoidal-thread')return {
+  location:label('library')+' → Trapezgewinde',
+  practiceTarget:'ui:id:shape-preset-trapezoidal-thread',
+  revealVia:'ui:id:'+mode+'-manager-tab-library',
+  steps:['Trapezgewinde einsetzen. Unter Eigenschaften Profil, Nenndurchmesser, Steigung und Länge einstellen sowie Position und Drehung festlegen.']
+ };
+ if(tool.key==='properties')return fusion?{location:'Ansicht → Eigenschaften',revealVia:'ui:id:fusion-menu-item-properties'}:{location:'Eigenschaften',revealVia:'ui:id:solid-manager-tab-properties'};
+ if(tool.key==='center')return {location:label('extras')+' → Auswahl in der Mitte der Grundebene absetzen',revealVia:'ui:id:'+mode+'-menu-extras'};
+ if(tool.key==='fit')return {location:'Ansichtssteuerung → Einpassen',steps:['ui:view:fit passt die Geometrie in die Ansicht ein. Die Lage des Modells bleibt erhalten.']};
+ const tabs=PROGRAM_TOOL_TABS[mode];
+ const tab=Object.hasOwn(tabs,tool.key)?tabs[tool.key]:null;
+ if(!tab)return {};
+ const group=fusion?{align:'assemble',joints:'assemble',drill:'modify','cad-shell':'modify','cad-face-offset':'modify',array:'insert'}[tool.key]:undefined;
+ const path=[label(tab),...(group?[label(group)]:[])],steps=recipes[tool.key]?.steps;
+ return {
+  location:[...path,label(tool.key)===tool.key?tool.label:label(tool.key)].join(' → '),
+  revealVia:'ui:id:'+mode+'-tab-'+tab,
+  ...(steps?{steps:steps.map(step=>step.replace(/menu:cad|menu:arrange|CAD-Werkzeuge/g,path.join(' → ')))}:{})
+ };
+}
+export function lookupToolReference(request,{state,practice=false,practicePanel,practiceWorkbench}={}){
  if(!request||typeof request!=='object'||Array.isArray(request)||Object.keys(request).length!==1||!['tool','query'].includes(Object.keys(request)[0]))throw Error('Werkzeugauskunft: genau tool oder query angeben. Gültige arguments: {"tool":"tool:drill"} oder {"query":"Bohrung"}; nicht kombinieren.');
  if(typeof (request.tool??request.query)!=='string'||(request.tool??request.query).length>300||/[\x00-\x1f]/.test(request.tool??request.query))throw Error('Werkzeugauskunft: kurzer Werkzeugname oder Suchtext erforderlich.');
- const describe=t=>{const detailed=!t.description.startsWith('Vorhandenes Formnaro-Werkzeug.'),recipe=recipes[t.key],current=!practice&&state?.targets?.find(s=>s.id===t.id);return {id:t.id,label:t.label,purpose:detailed?t.description:purposes[t.key]??'Für dieses registrierte Werkzeug liegt noch keine vertiefte Beschreibung vor.',documentationLevel:detailed||purposes[t.key]?'documented':'catalogue-only',prerequisites:t.requirement,location:t.key==='properties'?'Rechter Eigenschaftenbereich der Auswahl':t.path,...(t.key==='properties'?{practiceRegion:'region:properties'}:{practiceTarget:'ui:'+t.id}),...(recipe?Object.fromEntries(Object.entries(structuredClone(recipe)).filter(([k])=>!practice||k!=='modelExample')):{steps:['Die angegebene Werkzeuggruppe öffnen und das benannte Werkzeug wählen.','Die aktuell sichtbaren Felder und Optionen aus dem lokalen UI-Zustand lesen; fehlende Parameter nicht erfinden.']}),...(current?{availability:structuredClone(current),mode:state.mode,revealVia:PROGRAM_TOOL_TABS[state.mode]?.[t.key],
+ const workbench=practice&&['solid','fusion'].includes(practiceWorkbench)?practiceWorkbench:null;
+ const tools=workbench?[...PROGRAM_TOOLS,trapezoidalThread]:PROGRAM_TOOLS;
+ const describe=t=>{const detailed=!t.description.startsWith('Vorhandenes Formnaro-Werkzeug.'),recipe=recipes[t.key],current=!practice&&state?.targets?.find(s=>s.id===t.id);
+ const location=practice?t.path?.split(' / ').find(part=>!/^(Solid|Fusion)\s*→/.test(part)):t.path;
+ return {id:t.id,label:t.label,purpose:detailed?t.description:purposes[t.key]??'Für dieses registrierte Werkzeug liegt noch keine vertiefte Beschreibung vor.',documentationLevel:detailed||purposes[t.key]?'documented':'catalogue-only',prerequisites:t.requirement,location:t.key==='properties'?'Rechter Eigenschaftenbereich der Auswahl':location,...(t.key==='properties'?{practiceRegion:'region:properties'}:{practiceTarget:'ui:'+t.id}),...(recipe?Object.fromEntries(Object.entries(structuredClone(recipe)).filter(([k])=>!practice||k!=='modelExample')):{steps:['Die angegebene Werkzeuggruppe öffnen und das benannte Werkzeug wählen.','Die aktuell sichtbaren Felder und Optionen aus dem lokalen UI-Zustand lesen; fehlende Parameter nicht erfinden.']}),...(workbench?workbenchPracticeRoute(t,workbench):{}),...(current?{availability:structuredClone(current),mode:state.mode,revealVia:PROGRAM_TOOL_TABS[state.mode]?.[t.key],
  runtimeStatus:current.disabled?'disabled':current.visible?'visible':current.present?'hidden':'absent'}:{}),
  ...(practice&&practicePanel?{practicePanel:structuredClone(practicePanel)}:{}),
  ...(!practice&&state?.selection?{selection:structuredClone(state.selection)}:{}),...(!practice&&state?.dialog?{activePanel:structuredClone(state.dialog)}:{}),scope:practice?'Isolated practice only; no parent selection, fields or project state included.':'Reference information only; no action executed.'};};
- if(request.tool!==undefined){const key=request.tool.replace(/^ui:/,'').replace(/^tool:/,''),tool=PROGRAM_TOOLS.find(t=>t.key===key||normal(t.label)===normal(request.tool));if(!tool)return {ok:false,error:'Unbekanntes registriertes Werkzeug: '+request.tool,suggestions:lookupToolReference({query:request.tool},{practice}).matches};return {ok:true,tool:describe(tool)};}
- const words=normal(request.query).split(/[^a-z0-9-]+/).filter(Boolean);const matches=PROGRAM_TOOLS.map(t=>({t,score:words.reduce((n,w)=>n+(normal(t.id+' '+t.label).includes(w)?5:normal(t.description+' '+t.path+' '+(purposes[t.key]??'')).includes(w)?1:0),0)})).filter(r=>!words.length||r.score>0).sort((a,b)=>b.score-a.score).map(r=>r.t);
+ if(request.tool!==undefined){const key=request.tool.replace(/^ui:/,'').replace(/^tool:/,''),tool=tools.find(t=>t.key===key||normal(t.label)===normal(request.tool));if(!tool)return {ok:false,error:'Unbekanntes registriertes Werkzeug: '+request.tool,suggestions:lookupToolReference({query:request.tool},{practice,practicePanel,practiceWorkbench}).matches};return {ok:true,tool:describe(tool)};}
+ const words=normal(request.query).split(/[^a-z0-9-]+/).filter(Boolean);const matches=tools.map(t=>({t,score:words.reduce((n,w)=>n+(normal(t.id+' '+t.label).includes(w)?5:normal(t.description+' '+t.path+' '+(purposes[t.key]??'')).includes(w)?1:0),0)})).filter(r=>!words.length||r.score>0).sort((a,b)=>b.score-a.score).map(r=>r.t);
  return {ok:true,total:matches.length,truncated:matches.length>12,matches:matches.slice(0,12).map(describe)};
 }

@@ -5,10 +5,13 @@ import {constructionTolerance,CAD_CONSTRUCTION_TOLERANCE,cadRecipeVolume,buildCa
 import {defaults,threadDimensions,validParameters} from './parameters.js';
 import {cadNativeScope,cadNativeMemory} from './cad-native-memory.js';
 const TAU=2*Math.PI;
+// 3000 mm at the smallest 0.2 mm pitch plus end-trimming margins.
+// Individual surface sections, control-point and memory budgets stay bounded.
+const MAX_SCREW_SWEEP_TURNS=16000;
 function scope(){const objects=[];return {keep:o=>(objects.push(o),o),release:o=>(objects.splice(objects.indexOf(o),1),o),close:()=>{for(const o of objects.reverse())o?.delete?.();}};}
 function parameters(options={}) {
   const {pitch=2,starts=1,hand='right',thetaStart=0,thetaEnd=TAU,constructionBudget=CAD_CONSTRUCTION_TOLERANCE,intervalCount}=options;
-  if(!Number.isFinite(pitch)||pitch<=0||!Number.isInteger(starts)||starts<1||starts>4||!['right','left'].includes(hand)||!Number.isFinite(thetaStart)||!Number.isFinite(thetaEnd)||thetaEnd<=thetaStart||thetaEnd-thetaStart>TAU*240)throw Error('Ungültige Schraubflächenparameter.');
+  if(!Number.isFinite(pitch)||pitch<=0||!Number.isInteger(starts)||starts<1||starts>4||!['right','left'].includes(hand)||!Number.isFinite(thetaStart)||!Number.isFinite(thetaEnd)||thetaEnd<=thetaStart||thetaEnd-thetaStart>TAU*MAX_SCREW_SWEEP_TURNS)throw Error('Ungültige Schraubflächenparameter.');
   if(intervalCount!==undefined&&(!Number.isInteger(intervalCount)||intervalCount<1||intervalCount>16000))throw Error('Ungültiger gemeinsamer Schraubflächen-Knotensatz.');
   return {pitch,starts,hand,thetaStart,thetaEnd,constructionBudget,intervalCount,lead:(hand==='right'?1:-1)*pitch*starts};
 }
@@ -134,6 +137,14 @@ function threadHex(oc,s,r,h,z){
   const face=s.keep(s.keep(new oc.BRepBuilderAPI_MakeFace(s.keep(wire.Wire()),true)).Face());return s.keep(s.keep(new oc.BRepPrimAPI_MakePrism(face,s.keep(new oc.gp_Vec(0,0,h)),true,true)).Shape());
 }
 export function buildCadThread(oc,input,options={}) {
+  const definition=cadThreadDefinition(input,options);
+  const {p,d}=definition;
+  if(p.kind==='external'&&p.profile==='trapezoid'&&p.starts===1&&p.head==='none'&&p.bore===0&&p.length/d.lead>64&&p.leadIn<d.lead){
+    return buildLongExternalThread(oc,definition,options);
+  }
+  return buildThreadWithRefinement(oc,input,options);
+}
+function buildThreadWithRefinement(oc,input,options) {
   try{return buildCadThreadAttempt(oc,input,options,false);}
   catch(error){
     const toleranceFailure=error.code==='CAD_TOPOLOGY_TOLERANCE'&&['thread-final','nut-final'].includes(error.cadPhase);
@@ -146,6 +157,83 @@ export function buildCadThread(oc,input,options={}) {
     options.onPhase?.({phase:'thread-surface-refinement',cause:error.code??error.cadPhase});
     return buildCadThreadAttempt(oc,input,options,true);
   }
+}
+
+// Use one bounded Boolean for the periodic blank. Only its two end pieces
+// require trimming. Sewing joins the lateral faces into one shell without
+// running intersections between the core and every turn of the long thread.
+function buildLongExternalThread(oc,definition,options) {
+  const {p,d,major,tolerance}=definition;
+  const periodLength=8*d.lead, half=periodLength/2, start=-p.length/2;
+  const count=Math.ceil(p.length/periodLength);
+  const finalLength=p.length-(count-1)*periodLength;
+  // An arbitrarily short last piece cannot hold the end chamfer. Move that
+  // seam back by one full turn so the two neighbouring sections stay in phase.
+  const excessRadius=tolerance*2;
+  const borrow=finalLength<=p.leadIn+excessRadius?d.lead:0;
+  const seamTolerance=tolerance/4;
+  const s=cadNativeScope(oc,'long-thread');
+  const memory=cadNativeMemory(oc);
+  const report=(phase,shape)=>options.onPhase?.({phase,memory:memory.state(),...(shape?{maximumTolerance:assertCadRecipeTolerance(oc,shape,tolerance,{enforce:false})}:{})});
+  try{
+    const period=s.keep(buildThreadWithRefinement(oc,{...p,length:periodLength,leadIn:0},{...options,maxTurnsPerSection:1}));
+    memory.check('long-thread-period');
+    const sewing=s.keep(new oc.BRepBuilderAPI_Sewing(seamTolerance));
+    for(let i=0;i<count;i++){
+      const section=cadNativeScope(oc,'long-thread-section');
+      try{
+        const first=i===0, last=i===count-1;
+        const lower=-half;
+        const upper=last?finalLength+borrow-half:i===count-2?half-borrow:half;
+        let piece=period;
+        if(((first||last)&&p.leadIn>0)||upper<half){
+          const radius=major+excessRadius;
+          const lowChamfer=first?p.leadIn:0, highChamfer=last?p.leadIn:0;
+          const lowRamp=lowChamfer?lowChamfer+radius-major:0;
+          const highRamp=highChamfer?highChamfer+radius-major:0;
+          const envelope=threadRevolve(oc,section,[[0,lower],[lowChamfer?major-lowChamfer:radius,lower],[radius,lower+lowRamp],[radius,upper-highRamp],[highChamfer?major-highChamfer:radius,upper],[0,upper]]);
+          piece=threadBoolean(oc,section,'common',period,envelope);
+          report(first?'long-thread-first-end':last?'long-thread-last-end':'long-thread-short-section',piece);
+        }
+        const translation=section.keep(new oc.gp_Trsf());
+        translation.SetValues(1,0,0,0,0,1,0,0,0,0,1,start+i*periodLength+half-(last?borrow:0));
+        const faces=section.keep(new oc.TopExp_Explorer(piece,oc.TopAbs_ShapeEnum.TopAbs_FACE));
+        while(faces.More()){
+          const faceScope=cadNativeScope(oc,'long-thread-face');
+          try{
+            const face=faceScope.keep(oc.TopoDS.Face(faceScope.keep(faces.Current())));
+            const surface=faceScope.keep(new oc.BRepAdaptor_Surface(face,false));
+            let internalCap=false;
+            if(surface.GetType()===oc.GeomAbs_SurfaceType.GeomAbs_Plane){
+              const plane=faceScope.keep(surface.Plane()),axis=faceScope.keep(plane.Axis());
+              const direction=faceScope.keep(axis.Direction()),point=faceScope.keep(axis.Location());
+              if(Math.abs(direction.Z())>1-1e-10){
+                internalCap=(!first&&Math.abs(point.Z()-lower)<1e-8)||(!last&&Math.abs(point.Z()-upper)<1e-8);
+              }
+            }
+            if(!internalCap){
+              const moved=faceScope.keep(new oc.BRepBuilderAPI_Transform(face,translation,false,false));
+              sewing.Add(faceScope.keep(moved.Shape()));
+            }
+          }finally{faceScope.close();}
+          faces.Next();
+        }
+      }finally{section.close();}
+    }
+    memory.check('long-thread-sewing-begin');
+    report('long-thread-sewing-begin');
+    sewing.Perform();
+    memory.check('long-thread-sewing-end');
+    if(sewing.NbFreeEdges()||sewing.NbMultipleEdges())throw Error('Die Gewindeabschnitte ergeben keine geschlossene native Hülle.');
+    const sewed=s.keep(sewing.SewedShape());
+    const shell=s.keep(oc.TopoDS.Shell(sewed));
+    const maker=s.keep(new oc.BRepBuilderAPI_MakeSolid(shell)),solid=s.keep(maker.Solid());
+    if(!oc.BRepLib.OrientClosedSolid(solid)||!s.keep(new oc.BRepCheck_Analyzer(solid)).IsValid()||cadRecipeVolume(oc,solid)<=1e-9)throw Error('Das lange Gewinde ergibt keinen gültigen CAD-Volumenkörper.');
+    assertCadRecipeTolerance(oc,solid,tolerance);
+    memory.check('long-thread-final');
+    report('long-thread-final');
+    return s.release(solid);
+  }finally{s.close();}
 }
 function buildCadThreadAttempt(oc,input,options,refineSurfaces) {
   const definition=cadThreadDefinition(input,options),{p,d,major,minor,profile,phaseOffset,tolerance,internal}=definition,s=cadNativeScope(oc,'thread');
