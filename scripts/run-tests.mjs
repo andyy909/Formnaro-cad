@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runNodeTest } from './node-test-file.mjs';
 
@@ -15,6 +16,12 @@ const tests = manifest.filter(({ kind, status }) => kind === 'node' && statuses.
 if (!tests.length) {
   console.error('No measured Node test files selected by tests/manifest.json.');
   process.exit(1);
+}
+for (const { file } of tests) {
+  if (typeof file !== 'string' || !file.startsWith('tests/') || file.includes('\\')
+      || posix.normalize(file) !== file || !/\.test\.[cm]?js$/.test(file)) {
+    throw new Error(`Invalid Node test path in tests/manifest.json: ${JSON.stringify(file)}`);
+  }
 }
 
 const counts = { pass: 0, fail: 0, timeout: 0 };
