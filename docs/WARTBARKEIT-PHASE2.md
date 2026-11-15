@@ -2,6 +2,8 @@
 
 Basis: `25a324aca3ec85316d4b7c3eb6eeb1966cb390f8` (Phase 1), nicht main. Keine Phase-3-Arbeiten.
 
+**Abschlussstand:** Phase 2 einschließlich P2-3b vollständig geprüft; finale Nachweise am Ende. Die Diagnoseabschnitte dokumentieren historische Zwischenstände. Halt vor Phase 3.
+
 ## P2-1
 
 `npm run module:graph` parst Imports, Re-Exports, dynamische Literal-Imports, require und URL-Konstruktoren. Relative Pfade werden vom jeweiligen Importeur aufgelöst, Query/Fragment entfernt. Der Graph durchläuft auch Zwischenmodule außerhalb src/. Namensnennungen (einschließlich Dokumentation) und sonstige Pfadliterale sind getrennte Reviewhinweise, keine Erreichbarkeitskanten. Berechnete Pfade und nicht im Git-Inventar vorhandene Ziele bleiben sichtbar; er behauptet keine vollständige Auflösung beliebiger Laufzeitberechnungen.
@@ -88,7 +90,7 @@ Von 33 eindeutigen, in den eingefrorenen Benchmark-Suiten aufgeführten Abhängi
 
 Konkreter Vorschlag: Die in den beiden vorhandenen Suite-Manifesten geforderten Quelldateien bei der Paketvorbereitung bytegleich übernehmen und ihre erwarteten SHA256 prüfen. Keine Benchmarkaufgabe, kein Sollwert und keine geschützte Eingabedatei müsste geändert werden. Diese begrenzte Paketkorrektur wurde anschließend ausdrücklich freigegeben und in P2-3b umgesetzt: erst alle erwarteten SHA256 prüfen, dann ausschließlich die geforderten Quelldateien bytegleich kopieren. Die eingefrorenen Suiten bleiben unverändert.
 
-Separate Diagnoseaufrufe an derselben r205-EXE ergaben zusätzlich: Speech-Prüfung scheitert mit Renderer-Ausführungsfehler; Maintenance-Prüfung bestätigt die erwartete initiale Autosave-Fehlerinjektion nicht. Diese beiden Ursachen sind noch nicht abschließend untersucht. Es wurden keine Live-KI-Anfragen ausgeführt. Die fehlgeschlagenen Läufe bleiben erhalten; r203/r205 sind keine vollständigen Paketabnahmen. Der vollständige Nachherlauf ist noch offen, P2-3 daher **nicht vollständig abgenommen**. Kein Beginn von Phase 3.
+Separate Diagnoseaufrufe an derselben r205-EXE ergaben zusätzlich: Speech-Prüfung scheitert mit Renderer-Ausführungsfehler; Maintenance-Prüfung bestätigt die erwartete initiale Autosave-Fehlerinjektion nicht. Diese beiden Ursachen waren zu diesem Diagnosezeitpunkt noch nicht abschließend untersucht und wurden anschließend in P2-3b geklärt. Es wurden keine Live-KI-Anfragen ausgeführt. Die fehlgeschlagenen Läufe bleiben erhalten; r203/r205 sind keine vollständigen Paketabnahmen. Zu diesem historischen Zwischenstand war der vollständige Nachherlauf noch offen; der endgültige Abschluss ist unten dokumentiert. Kein Beginn von Phase 3.
 
 Unabhängig davon ist der Quellstand `959cb3cbdaf346ed281f7fa3b0986d202c3ba36d` vollständig CI-geprüft: [43741082021](https://github.com/andyy909/Formnaro-cad/actions/runs/43741082021), Windows 514/514 in 22 min 59 s, Linux jeweils 257/257 in 10 min 45 s beziehungsweise 6 min 35 s und beide Minis erfolgreich. Die späteren Ergänzungen dieses Abschnitts sind ausschließlich Dokumentation.
 
@@ -101,4 +103,31 @@ Die absichtliche Autosave-Fehlerinjektion darf im expliziten Maintenance-Prüfmo
 
 Zusätzlich ausdrücklich beauftragt: kompakter Windows-Diktatbutton direkt vor Senden (eigene Änderung e5ed066) und Reparatur einer reproduzierten Variablenüberschattung in der FNPACK-Autosicherung. Dort verdeckte eine spätere lokale Quellenliste die äußere Registry schon beim Lesen einer bestehenden Autosicherung. Zwei Zeilen benennen die lokale Liste eindeutig; das Workerformat bleibt gleich. Der neue Regressionstest scheiterte am Original und besteht nach der Korrektur einschließlich alter Sicherungsbytes, neuer Projektwerte und Freigabe des temporären Readers. Der echte Zweiprozess-Neustart bestand danach 41 Prüfungen, reguläre Exitcodes 0 und keine Konsolen-/Netzwerkfehler.
 
-Zwischenabnahme: Build, 100 Standardtests und 25 gezielte Tests bestanden. Alle verbleibenden Paketgruppen wurden isoliert erfolgreich geprüft, darunter 188 KI-Ergebnisprüfungen, 32 Fehlerrückblickprüfungen, 56 Foto-/64 perspektivische Fotoprüfungen, 46 Merkmalsbezüge, 19 Auftrags-UI-Prüfungen und 41 Neustartprüfungen. Diese getrennten Nachläufe ersetzen noch keinen vollständigen frischen Paketdurchlauf. Die vollständigen Vorher-/Nachherpakete und die abschließende CI werden auf dem finalen Korrekturstand geprüft. Phase 2 bleibt bis dahin offen; Phase 3, Merge, Installationsersetzung und Veröffentlichung sind nicht beauftragt.
+Zwischenabnahme: Build, 100 Standardtests und 25 gezielte Tests bestanden. Alle verbleibenden Paketgruppen wurden isoliert erfolgreich geprüft, darunter 188 KI-Ergebnisprüfungen, 32 Fehlerrückblickprüfungen, 56 Foto-/64 perspektivische Fotoprüfungen, 46 Merkmalsbezüge, 19 Auftrags-UI-Prüfungen und 41 Neustartprüfungen. Diese getrennten Nachläufe ersetzten keinen vollständigen frischen Paketdurchlauf. Die anschließend erfolgreich abgeschlossenen Vorher-/Nachherpakete und finale CI stehen im folgenden Abschnitt; Phase 3, Merge, Installationsersetzung und Veröffentlichung sind nicht beauftragt.
+
+### Vollständiger Abschluss der Phase 2
+
+Der finale Codecommit `10d52fa0d154c2313c7161299615a93b6663e6f0` ist vollständig geprüft. [CI 43750015650](https://github.com/andyy909/Formnaro-cad/actions/runs/43750015650): Windows 514/514 ohne Fehler oder Timeout in 25 min 31 s, Linux jeweils 257/257 in 8 min 59 s und 7 min 24 s; Mini und Mini-CAD erfolgreich. Laufzeiten jeweils vom ersten ausgewählten Dateitest bis zur Schlussbilanz.
+
+Die vollständigen regulären Windows-Paketbefehle liefen mit Node 22.23.4, ohne Unit-Baseline-Abkürzung oder Candidate-only-Modus:
+
+| Vergleich | Quellstand | Befehl | Native Tests | EXE-Abnahme | Abschluss |
+| --- | --- | --- | --- | --- | --- |
+| Vor Archivierung, identische Zusatzkorrekturen | efe83c179d3d6da449703d3718c9051b95031564 | npm run package -- r209 | 759/759, 20 min 43 s | 999 Prüfungen in 24 Ergebnisgruppen | ZIP vollständig zurückgelesen, Exit 0 |
+| Nach Archivierung und freigegebenen Ergänzungen | 10d52fa0d154c2313c7161299615a93b6663e6f0 | npm run package -- r208 | 759/759, 18 min 38 s | 999 Prüfungen in 24 Ergebnisgruppen | ZIP vollständig zurückgelesen, Exit 0 |
+
+Keine Fehler, abgebrochenen oder übersprungenen nativen Tests. Alle EXE-Berichte bestätigen isolierte Profile, keine unerwarteten Renderer-/Netzwerkfehler und dieselben EXE-/ASAR-Hashes; die Prozesse beendeten sich regulär. Die 24 Ergebnisgruppen enthalten beide Phasen des echten Neustarts separat. Alle ausgelieferten Laufzeitdateien sind im Vorher-/Nachhervergleich bytegleich. Im vorbereiteten App-Verzeichnis unterscheidet sich nur package.json durch entfernte Entwicklungsbefehle; diese Felder sind im ausgelieferten ASAR nicht enthalten.
+
+- EXE SHA256: `062b59432f9cc95b5509048ed7bf7d97b4ef6f07273c9c712765db5daa8f9b79`.
+- ASAR SHA256: `d967be653f1d351244b429e4d90472106c9e196868446050eae041054571ec5d`.
+- Vorher-ZIP SHA256: `215cc145e53d80e9631a0dd10966d796d1e02fc8760ec0083f0c95d808e75543`.
+- Nachher-ZIP SHA256: `3d9b118b44cae3aaddc7cf812f116d469f2be0279744d3cb2f2201c6c3cad6ac`.
+- Beide Windows-ZIPs: 672.946.989 Bytes, 15.799 Dateien und zwei Verzeichniseinträge; alle Dateiinhalte zurückgelesen und hashgeprüft.
+
+Der Mikrofonbutton wurde zusätzlich an genau der finalen r208-EXE geprüft: 15/15 Bedienprüfungen einschließlich echter Helfer-Selbstprüfung aus dem ASAR, Fokus/Cursor, Enter ohne automatisches Senden, Busy-Zustand, Fehlerfall, Modell-/Undo-Erhalt und hellem/dunklem Fenster; Exit 0. Erfolgreicher Start-IPC simuliert, keine echte Mikrofonaufnahme oder Cloud-Spracherkennung.
+
+Der zwischenzeitliche r207-Lauf bestand ebenfalls 759 native Tests und alle EXE-Gruppen, scheiterte aber beim ZIP an einer aus der lokalen Prüfvorbereitung übernommenen Konverter-Verknüpfung. Beide Prüf-Arbeitsbäume erhielten physische Laufzeitkopien mit jeweils 1.129 bytegleich geprüften Dateien; keine Produktcodeänderung und keine Veränderung ursprünglicher Konverterbytes. r207 bleibt als Gesamtpaketlauf fehlgeschlagen. Für neue Paket-Arbeitsbäume den Konverter physisch bereitstellen: eine Junction wird vom Kopierer übernommen und vom ZIP-Schutz korrekt abgewiesen.
+
+Belege: jeweiliges work/current-release/r209 beziehungsweise r208 mit unit.log, EXE-Ergebnisdateien und portable-zip.json; Abnahme.json neben dem jeweiligen Paket. Die lokale Abschlussübergabe nennt die absoluten Ablageorte, Rohlogs und den unabhängigen Dateivergleich. Beide unabhängigen Reviewachsen ohne offene Befunde. Abschlussdokumentation verändert keinen ausführbaren Code; die vorhandene vollständige CI wird dafür wiederverwendet.
+
+**P2-1 bis P2-3 einschließlich der freigegebenen Ergänzungen sind abgeschlossen. Halt vor Phase 3.** Entwürfe #33–37 bleiben ungemergt; keine Veröffentlichung und kein Austausch der bestehenden Installation. Die bekannten, im Quellmanifest ausgeschlossenen Fälle bleiben ausdrücklich gesondert.
