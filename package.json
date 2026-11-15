@@ -205,7 +205,8 @@
     "package:surfaces": "node scripts/package-surfaces.mjs",
     "test:surfaces": "node --test --test-concurrency=1 tests/cad-surfaces.test.mjs tests/freecad-surfaces.test.cjs tests/surfaces-release-config.test.mjs",
     "setup:windows-dictation": "node scripts/setup-windows-dictation.mjs",
-    "prebuild": "node scripts/setup-windows-dictation.mjs"
+    "prebuild": "node scripts/setup-windows-dictation.mjs",
+    "module:graph": "node scripts/module-graph.mjs"
   },
   "dependencies": {
     "fflate": "0.8.3",
@@ -218,6 +219,7 @@
     "electron": "44.10.0",
     "manifold-3d": "3.5.4",
     "replicad-opencascadejs": "1.1.0",
+    "rolldown": "1.2.13",
     "vite": "8.3.4"
   },
   "diagnosticEdition": false

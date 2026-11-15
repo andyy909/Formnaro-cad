@@ -484,6 +484,7 @@
   {"file":"tests/model-deviation-rendering.test.mjs","referencedBy":["scripts/package-sketch-mesh.mjs"],"kind":"node","status":"pass","seconds":0.495},
   {"file":"tests/model-deviation.test.mjs","referencedBy":["scripts/package-sketch-mesh.mjs"],"kind":"node","status":"pass","seconds":2.754},
   {"file":"tests/model-placement.test.mjs","referencedBy":["scripts/package-mesh-import.mjs","scripts/package-model-placement.mjs","scripts/package-step-thickness.mjs"],"kind":"node","status":"pass","seconds":0.198},
+  {"file":"tests/module-graph.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.101},
   {"file":"tests/navigation-guard.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.158},
   {"file":"tests/openai-cost-display.test.mjs","referencedBy":["scripts/package-ai-measurement-fix.mjs","scripts/package-ai-workspace.mjs","scripts/package-freecad-python.mjs","scripts/package-security.mjs"],"kind":"node","status":"pass","seconds":0.184},
   {"file":"tests/openai-cost.test.cjs","referencedBy":["scripts/package-ai-measurement-fix.mjs","scripts/package-ai-workspace.mjs","scripts/package-freecad-python.mjs","scripts/package-security.mjs"],"kind":"node","status":"pass","seconds":0.206},
