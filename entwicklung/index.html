@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Der aktuelle Stand von Formnaro und die Neuerungen von Version zu Version.">
+  <title>Entwicklung | Formnaro</title>
+  <link rel="canonical" href="https://formnaro.de/entwicklung/">
+  <link rel="alternate" hreflang="en" href="../en/development/">
+  <link rel="stylesheet" href="../style.css?v=12">
+</head>
+<body>
+  <header class="wrap top">
+    <a class="brand" href="../"><img src="../logo.png" alt="" width="38" height="38">Formnaro</a>
+    <nav aria-label="Sprache und Projekt">
+      <a href="../ki/">KI-Anbindung</a>
+      <a href="../ki-labor/">KI-Labor</a>
+      <a href="./" aria-current="page">Entwicklung</a>
+      <a href="../en/development/" lang="en" hreflang="en">English</a>
+    </nav>
+  </header>
+  <main class="wrap history-page">
+    <h1>Entwicklung</h1>
+    <p class="intro">Hier siehst du, wo Formnaro heute steht und was sich von Version zu Version geändert hat.</p>
+    <section class="release-current" id="update-01420" aria-labelledby="current">
+      <p class="eyebrow">Aktueller Stand · 0.142.0-r1 · <time datetime="2026-11-15">15.11.2026</time></p>
+      <h2 id="current">Übungsmodus in Solid und Fusion</h2>
+      <ul>
+        <li>Übungen führen Änderungen am geöffneten Modell im gewählten Bedienmodus vor. Die Schritte laufen in einer Projektkopie. Nach der Vorschau lässt sich das Ergebnis übernehmen.</li>
+        <li>Die KI erhält bei Bedarf die Bedienwege des gewählten Modus. Im KI-Chat lassen sich CAD-Merkmale über „Stelle anhängen“ als Bezug mitgeben.</li>
+        <li>Die neue Trapezgewinde-Grundform akzeptiert Längen bis 3.000 mm. Wiederverwendete Gewindeperioden beschleunigen die Berechnung langer eingängiger Außengewinde.</li>
+      </ul>
+      <p>Das portable Windows-x64-Paket wurde lokal geprüft. Ein durchgehendes Tr 16×4 über 548 mm wurde in Normal erstellt und über den Übungsmodus in Solid und Fusion erfolgreich aus der Projektkopie ins Modell übernommen.</p>
+      <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1">Windows-Download und vollständige Versionshinweise ↗</a><a href="../#uebung">Solid-Vorführung ansehen →</a></p>
+    </section>
+    <section aria-labelledby="history">
+      <h2 id="history">Versionsverlauf</h2>
+      <nav class="hero-links" aria-label="Zum Monat springen"><a href="#november">November 2026</a><a href="#october">Oktober 2026</a></nav>
+      <h3 class="release-month" id="november">November 2026</h3>
+      <ol class="release-list">
+        <li class="release-entry" id="update-01391">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1" aria-label="Versionshinweise zu 0.139.1-r1">0.139.1-r1</a><time datetime="2026-11-14">14.11.2026</time></div>
+          <div>
+            <h4>Ein zuverlässigeres KI-Labor</h4>
+            <p>Das Labor speichert Ergebnisse atomar. Eindeutigere Werkzeugrückmeldungen, kompatible ältere Skizzenkanten und Korrekturen bei KI-Antworten und Prozessabschluss.</p>
+            <p class="release-links"><a href="../benchmarks/lab-targeted-01391-2026-11-14.json">Gezielte Tests</a><a href="../benchmarks/lab-campaign-audit-2026-11-14.json">Kampagnenauswertung</a><a href="../demos/muster-100.md">Frühere Muster-Demo mit Prompt und Messdaten</a><a href="../practice-pattern-100.mp4">Muster-Video</a></p>
+          </div>
+        </li>
+        <li class="release-entry" id="update-01382">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.138.2-r4" aria-label="Versionshinweise zu 0.138.2-r4">0.138.2-r4</a><time datetime="2026-11-09">09.11.2026</time></div>
+          <div>
+            <h4>Nachtests zu den Aufbauaufgaben</h4>
+            <p>Korrigierte Körperauswahl, ebene Bohrflächen, Checkbox-Zustände und Rückmeldungen für Skizzenersatz und Höhe. Gezielte Nachtests bestätigten alle 16 ursprünglichen Bedingungen über mehrere Programmstände.</p>
+            <p>Der ursprüngliche DeepSeek-Aufbaubenchmark steht bei 5/16. Die späteren Ergebnisse sind gezielte Nachtests auf mehreren Programmständen.</p>
+            <p class="release-links"><a href="../benchmarks/advanced-deepseek-2026-11-09.json">Originalergebnis und getrennte Nachtests</a></p>
+          </div>
+        </li>
+        <li class="release-entry" id="benchmark-neu">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2" aria-label="Versionshinweise zu 0.137.4-r2">0.137.4-r2</a><time datetime="2026-11-08">08.11.2026</time></div>
+          <div>
+            <h4>Bohrablauf und Zugang erneuert</h4>
+            <p>Die Werkzeugauskunft führt durchs Bohren bis zum Übernehmen. Das Labor erneuert ablaufende ChatGPT-Zugänge vor weiteren Anfragen. Ein neuer vollständiger Sol-Benchmark ergab 16/16.</p>
+            <p>DeepSeeks früheres Ergebnis von 16/16 stammt von 0.137.0-r1. Frühere Sol-Läufe und gezielte Nachtests behalten ihre eigenen Ergebnisse.</p>
+            <p class="release-links"><a href="../ki/#vergleich">Sol-/DeepSeek-Vergleich</a></p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-137-3-r3">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.3-r3" aria-label="Versionshinweise zu 0.137.3-r3">0.137.3-r3</a><time datetime="2026-11-08">08.11.2026</time></div>
+          <div>
+            <h4>Zeichnungsschritte und Sol-Antworten</h4>
+            <p>Vollständige Zeichnungsfelder und Rückmeldung zum sichtbaren Dialogzustand. Zwei gezielte Sol-Zeichnungsnachtests bestanden.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-137-1-r1">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.1-r1" aria-label="Versionshinweise zu 0.137.1-r1">0.137.1-r1</a><time datetime="2026-11-08">08.11.2026</time></div>
+          <div>
+            <h4>Fester KI-Benchmark und sauberes Beenden</h4>
+            <p>Das KI-Labor trennt den Grundbenchmark mit 16 Versuchen von gezielten Nachtests. Reparaturen für Menüführung, Flächenauswahl, große Baugruppenberichte und das Schließen des Hauptfensters.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-136-0-r3">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3" aria-label="Versionshinweise zu 0.136.0-r3">0.136.0-r3</a><time datetime="2026-11-07">07.11.2026</time></div>
+          <div>
+            <h4>KI-Vergleiche in der Modellauswahl</h4>
+            <p>Testergebnisse und Diagramme stehen in der Modellauswahl. Modellierer, Überwacher und Abschlussprüfer lassen sich im Labor getrennt einstellen.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-127-0-r10">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10" aria-label="Versionshinweise zu 0.127.0-r10">0.127.0-r10</a><time datetime="2026-11-05">05.11.2026</time></div>
+          <div>
+            <h4>Nightly · STL-Nacharbeit und Symmetrie</h4>
+            <p>Der Konverter prüft zuerst einen lokalen STEP-Kandidaten. Geeignete Bereiche lassen sich gezielt nacharbeiten oder nach einer Symmetrieprüfung spiegeln.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-127-0-r9">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r9" aria-label="Versionshinweise zu 0.127.0-r9">0.127.0-r9</a><time datetime="2026-11-04">04.11.2026</time></div>
+          <div>
+            <h4>Nightly · KI-Chat und Projektübungen</h4>
+            <p>Kompakter KI-Chat mit auswählbarem Szenenkontext. Projektübungen laufen auf einer Kopie und bieten ihr Ergebnis zur Übernahme an.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-126-0-r2">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r2" aria-label="Versionshinweise zu 0.126.0-r2">0.126.0-r2</a><time datetime="2026-11-03">03.11.2026</time></div>
+          <div>
+            <h4>Nightly · Projektformat 32 wieder lesbar</h4>
+            <p>Stellt das Öffnen von Projekten und Autosaves im Format 32 wieder her. Enthält die Chat- und Bedienungsänderungen aus r1.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-126-0-r1">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r1" aria-label="Versionshinweise zu 0.126.0-r1">0.126.0-r1</a><time datetime="2026-11-03">03.11.2026</time></div>
+          <div>
+            <h4>Nightly · Chatfokus und Ansichten</h4>
+            <p>Größerer Chat, Aufgabenverlauf, Modellansichten für die KI und sichtbare Verschiebe- und Drehgriffe. Diese Revision wurde durch r2 abgelöst.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-125-0-r36">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36" aria-label="Versionshinweise zu 0.125.0-r36">0.125.0-r36</a><time datetime="2026-11-02">02.11.2026</time></div>
+          <div>
+            <h4>Vorschau · Modellierung, Kopplungen und Prüfstände</h4>
+            <p>Erweiterte native Modellierung, Fehler- und Speicherbehandlung, Schraub- und Kippkopplungen sowie gespeicherte Prüfstände.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-125-0-r35">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r35" aria-label="Versionshinweise zu 0.125.0-r35">0.125.0-r35</a><time datetime="2026-11-01">01.11.2026</time></div>
+          <div>
+            <h4>Vorschau · Gezielte Werkzeugauskunft</h4>
+            <p>Werkzeugauskunft bei Bedarf, klarere Bedienwege fürs Zentrieren, Ausrichten und für Muster sowie getrennte Übungsgespräche.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-125-0-r28">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r28" aria-label="Versionshinweise zu 0.125.0-r28">0.125.0-r28</a><time datetime="2026-11-01">01.11.2026</time></div>
+          <div>
+            <h4>Vorschau · Fehlerhafte Zwischenvorschauen</h4>
+            <p>Fehlerhafte Zwischenvorschauen blockieren spätere Aufträge nicht mehr. Die Übung bietet Tempo, Pause und Fortsetzen.</p>
+          </div>
+        </li>
+      </ol>
+      <h3 class="release-month" id="october">Oktober 2026</h3>
+      <ol class="release-list">
+        <li class="release-entry" id="v0-122-0-r3">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.122.0-r3" aria-label="Versionshinweise zu 0.122.0-r3">0.122.0-r3</a><time datetime="2026-10-31">31.10.2026</time></div>
+          <div>
+            <h4>Vorschau · Kleineres portables Paket</h4>
+            <p>Kompakteres Windows-Paket mit nötigen Laufzeiten und bearbeitbaren Beispielen. Offline-Sprache ist optional nachladbar.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-120-0-r4">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.120.0-r4" aria-label="Versionshinweise zu 0.120.0-r4">0.120.0-r4</a><time datetime="2026-10-31">31.10.2026</time></div>
+          <div>
+            <h4>Vorschau · ATLAS-5 und bewegte Zahnradträger</h4>
+            <p>Gekoppelte Zahnradgelenke folgen einem gemeinsam bewegten Träger. Das Beispiel ATLAS-5 zeigt fünf bewegliche Achsen.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-119-0-r3">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.119.0-r3" aria-label="Versionshinweise zu 0.119.0-r3">0.119.0-r3</a><time datetime="2026-10-30">30.10.2026</time></div>
+          <div>
+            <h4>Zahnradkopplung und KI-Bedienhilfe</h4>
+            <p>Übersetzungen für Zahnradpaare, ein bearbeitbares 6:1-Getriebe und wiederholbare Menüvorführungen in der KI-Bedienhilfe.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-117-0-r8">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.117.0-r8" aria-label="Versionshinweise zu 0.117.0-r8">0.117.0-r8</a><time datetime="2026-10-28">28.10.2026</time></div>
+          <div>
+            <h4>Material, Stücklisten und MIT-Lizenz</h4>
+            <p>Flächenfarben, Materialdichte, Masse und Schwerpunkt, CSV-Stücklisten und gespeicherte Explosionsansichten. Der eigene Anwendungscode steht unter MIT.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-114-0-r7">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7" aria-label="Versionshinweise zu 0.114.0-r7">0.114.0-r7</a><time datetime="2026-10-27">27.10.2026</time></div>
+          <div>
+            <h4>Integrierte CAD-Laufzeit</h4>
+            <p>FreeCAD und Python werden im portablen Paket mitgeliefert. Der Startordner macht Programm, Projekte und Bibliothek leichter auffindbar.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-113-1-r5">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.113.1-r5" aria-label="Versionshinweise zu 0.113.1-r5">0.113.1-r5</a><time datetime="2026-10-27">27.10.2026</time></div>
+          <div>
+            <h4>Kompaktere Oberfläche</h4>
+            <p>Neu angeordnete Menüleiste und Werkzeugregister, schmalere Seitenbereiche und mehr Platz für das Modell.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-111-0-r2">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.111.0-r2" aria-label="Versionshinweise zu 0.111.0-r2">0.111.0-r2</a><time datetime="2026-10-27">27.10.2026</time></div>
+          <div>
+            <h4>Gespeicherte KI-Aufträge</h4>
+            <p>KI-Aufträge speichern Zielmaße, Annahmen und Prüfbefunde. Unterbrochene Aufträge lassen sich nach einem Neustart fortsetzen.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-110-0-r1">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.110.0-r1" aria-label="Versionshinweise zu 0.110.0-r1">0.110.0-r1</a><time datetime="2026-10-27">27.10.2026</time></div>
+          <div>
+            <h4>FreeCAD-Merkmale und Projektparameter</h4>
+            <p>Gespeicherte FreeCAD-Konstruktionen lassen sich als Merkmalsbaum mit Eigenschaften und Abhängigkeiten anzeigen. Projektparameter stehen für gemeinsame Maße bereit.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-108-0">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.108.0" aria-label="Versionshinweise zu 0.108.0">0.108.0</a><time datetime="2026-10-27">27.10.2026</time></div>
+          <div>
+            <h4>Technische Fotoansichten</h4>
+            <p>Technische Fotoansichten für die Projektdokumentation und vier Bedienmodi vom Grundkörper bis zur detaillierten Konstruktion.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+  </main>
+  <footer class="wrap foot"><a href="../">Zur Formnaro-Startseite</a><a href="https://github.com/andyy909/Formnaro-cad/releases">Alle Ausgaben auf GitHub ↗</a><a href="../impressum/">Impressum</a></footer>
+</body>
+</html>

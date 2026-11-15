@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The current Formnaro release and a version-by-version history of changes and improvements.">
+  <title>Development | Formnaro</title>
+  <link rel="canonical" href="https://formnaro.de/en/development/">
+  <link rel="alternate" hreflang="de" href="../../entwicklung/">
+  <link rel="stylesheet" href="../../style.css?v=12">
+</head>
+<body>
+  <header class="wrap top">
+    <a class="brand" href="../"><img src="../../logo.png" alt="" width="38" height="38">Formnaro</a>
+    <nav aria-label="Language and project">
+      <a href="../ai/">AI connections</a>
+      <a href="../ai-lab/">AI lab</a>
+      <a href="./" aria-current="page">Development</a>
+      <a href="../../entwicklung/" lang="de" hreflang="de">Deutsch</a>
+    </nav>
+  </header>
+  <main class="wrap history-page">
+    <h1>Development</h1>
+    <p class="intro">See where Formnaro stands today and what changed in each public release.</p>
+    <section class="release-current" id="update-01420" aria-labelledby="current">
+      <p class="eyebrow">Current release · 0.142.0-r1 · <time datetime="2026-11-15">15 Nov 2026</time></p>
+      <h2 id="current">Practice mode in Solid and Fusion</h2>
+      <ul>
+        <li>Exercises show changes to the open model in the selected workbench using a separate project copy. You can apply the result after reviewing the preview.</li>
+        <li>The AI gets instructions for the selected workbench on demand. In the AI chat, you can attach a CAD feature as a reference.</li>
+        <li>The new trapezoidal thread shape accepts lengths up to 3,000 mm. Reusing short thread periods speeds up the calculation of long single-start external threads.</li>
+      </ul>
+      <p>The portable Windows x64 build was checked locally. A continuous 548 mm Tr 16×4 was created in Normal, demonstrated in Solid and Fusion, and successfully applied to a project copy.</p>
+      <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1">Windows download and full release notes ↗</a><a href="../#uebung">Watch the Solid demonstration →</a></p>
+    </section>
+    <section aria-labelledby="history">
+      <h2 id="history">Release history</h2>
+      <nav class="hero-links" aria-label="Jump to month"><a href="#november">November 2026</a><a href="#october">October 2026</a></nav>
+      <h3 class="release-month" id="november">November 2026</h3>
+      <ol class="release-list">
+        <li class="release-entry" id="update-01391">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1" aria-label="Release notes for 0.139.1-r1">0.139.1-r1</a><time datetime="2026-11-14">14 Nov 2026</time></div>
+          <div>
+            <h4>A more reliable AI lab</h4>
+            <p>Atomic lab results, clearer tool feedback, compatible older sketch edges, and fixes for AI replies and process shutdown.</p>
+            <p class="release-links"><a href="../../benchmarks/lab-targeted-01391-2026-11-14.json">Targeted tests</a><a href="../../benchmarks/lab-campaign-audit-2026-11-14.json">Campaign audit</a><a href="../../demos/muster-100.md">Previous pattern demo with prompt and measurements</a><a href="../../practice-pattern-100.mp4">Pattern video</a></p>
+          </div>
+        </li>
+        <li class="release-entry" id="update-01382">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.138.2-r4" aria-label="Release notes for 0.138.2-r4">0.138.2-r4</a><time datetime="2026-11-09">9 Nov 2026</time></div>
+          <div>
+            <h4>Advanced task retests</h4>
+            <p>Corrected body selection, planar drilling faces, checkbox states, and feedback for sketch replacement and height. Targeted retests covered all 16 original conditions across multiple builds.</p>
+            <p>The original advanced DeepSeek run scored 5/16. The later results are targeted retests on several builds.</p>
+            <p class="release-links"><a href="../../benchmarks/advanced-deepseek-2026-11-09.json">Original results and separate retests</a></p>
+          </div>
+        </li>
+        <li class="release-entry" id="benchmark-neu">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.4-r2" aria-label="Release notes for 0.137.4-r2">0.137.4-r2</a><time datetime="2026-11-08">8 Nov 2026</time></div>
+          <div>
+            <h4>Drilling workflow and access renewal</h4>
+            <p>Tool guidance covers drilling through to Apply. The lab refreshes expiring ChatGPT access before subsequent requests. A new full Sol benchmark scored 16/16.</p>
+            <p>DeepSeek’s earlier 16/16 result comes from 0.137.0-r1. Earlier Sol runs and targeted retests keep their own results.</p>
+            <p class="release-links"><a href="../ai/#vergleich">Sol and DeepSeek comparison</a></p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-137-3-r3">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.3-r3" aria-label="Release notes for 0.137.3-r3">0.137.3-r3</a><time datetime="2026-11-08">8 Nov 2026</time></div>
+          <div>
+            <h4>Drawing steps and Sol replies</h4>
+            <p>Restored drawing fields and feedback on visible dialog state. Two targeted Sol drawing retests passed.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-137-1-r1">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.137.1-r1" aria-label="Release notes for 0.137.1-r1">0.137.1-r1</a><time datetime="2026-11-08">8 Nov 2026</time></div>
+          <div>
+            <h4>Fixed AI benchmark and clean shutdown</h4>
+            <p>The lab separates the 16-trial core benchmark from targeted retests. Fixes cover menu navigation, face selection, large assembly reports, and closing the main window.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-136-0-r3">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.136.0-r3" aria-label="Release notes for 0.136.0-r3">0.136.0-r3</a><time datetime="2026-11-07">7 Nov 2026</time></div>
+          <div>
+            <h4>AI comparisons in the model picker</h4>
+            <p>Test results and charts appear in the model picker. The modeler, supervisor, and final reviewer can be configured independently.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-127-0-r10">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10" aria-label="Release notes for 0.127.0-r10">0.127.0-r10</a><time datetime="2026-11-05">5 Nov 2026</time></div>
+          <div>
+            <h4>Nightly · STL refinement and symmetry</h4>
+            <p>The converter first checks a local STEP candidate. Suitable regions can be refined or mirrored after a symmetry check.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-127-0-r9">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r9" aria-label="Release notes for 0.127.0-r9">0.127.0-r9</a><time datetime="2026-11-04">4 Nov 2026</time></div>
+          <div>
+            <h4>Nightly · AI chat and project exercises</h4>
+            <p>Compact AI chat with selectable scene context. Exercises run on a project copy and present the result for review and adoption.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-126-0-r2">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r2" aria-label="Release notes for 0.126.0-r2">0.126.0-r2</a><time datetime="2026-11-03">3 Nov 2026</time></div>
+          <div>
+            <h4>Nightly · Project format 32 restored</h4>
+            <p>Restores support for project files and autosaves in format 32. Includes the chat and interaction changes from r1.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-126-0-r1">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.126.0-r1" aria-label="Release notes for 0.126.0-r1">0.126.0-r1</a><time datetime="2026-11-03">3 Nov 2026</time></div>
+          <div>
+            <h4>Nightly · Chat focus and model views</h4>
+            <p>Larger chat, task history, model views for AI, and visible move and rotation controls. Superseded by r2.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-125-0-r36">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r36" aria-label="Release notes for 0.125.0-r36">0.125.0-r36</a><time datetime="2026-11-02">2 Nov 2026</time></div>
+          <div>
+            <h4>Preview · Modeling, couplings, and inspections</h4>
+            <p>Expanded native modeling, error and memory handling, screw and tilt couplings, and saved inspections.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-125-0-r35">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r35" aria-label="Release notes for 0.125.0-r35">0.125.0-r35</a><time datetime="2026-11-01">1 Nov 2026</time></div>
+          <div>
+            <h4>Preview · On-demand tool guidance</h4>
+            <p>On-demand tool guidance, clearer centering, alignment and pattern controls, and separate practice conversations.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-125-0-r28">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.125.0-r28" aria-label="Release notes for 0.125.0-r28">0.125.0-r28</a><time datetime="2026-11-01">1 Nov 2026</time></div>
+          <div>
+            <h4>Preview · Failed intermediate previews</h4>
+            <p>Failed intermediate previews no longer block later tasks. Exercises offer adjustable speed, pause, and resume.</p>
+          </div>
+        </li>
+      </ol>
+      <h3 class="release-month" id="october">October 2026</h3>
+      <ol class="release-list">
+        <li class="release-entry" id="v0-122-0-r3">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.122.0-r3" aria-label="Release notes for 0.122.0-r3">0.122.0-r3</a><time datetime="2026-10-31">31 Oct 2026</time></div>
+          <div>
+            <h4>Preview · Smaller portable package</h4>
+            <p>Smaller Windows package with required runtimes and editable example projects. Offline speech is an optional download.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-120-0-r4">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.120.0-r4" aria-label="Release notes for 0.120.0-r4">0.120.0-r4</a><time datetime="2026-10-31">31 Oct 2026</time></div>
+          <div>
+            <h4>Preview · ATLAS-5 and moving gear carriers</h4>
+            <p>Coupled gear joints follow a moving shared carrier. The ATLAS-5 example demonstrates five moving axes.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-119-0-r3">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.119.0-r3" aria-label="Release notes for 0.119.0-r3">0.119.0-r3</a><time datetime="2026-10-30">30 Oct 2026</time></div>
+          <div>
+            <h4>Gear coupling and guided AI help</h4>
+            <p>Gear ratios, an editable 6:1 gearbox, and replayable menu demonstrations in guided AI help.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-117-0-r8">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.117.0-r8" aria-label="Release notes for 0.117.0-r8">0.117.0-r8</a><time datetime="2026-10-28">28 Oct 2026</time></div>
+          <div>
+            <h4>Materials, bills of materials, and MIT license</h4>
+            <p>Face colors, material density, mass and center of gravity, CSV bills of materials, and saved exploded views. Formnaro’s own application code uses the MIT license.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-114-0-r7">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.114.0-r7" aria-label="Release notes for 0.114.0-r7">0.114.0-r7</a><time datetime="2026-10-27">27 Oct 2026</time></div>
+          <div>
+            <h4>Bundled CAD runtime</h4>
+            <p>The portable package bundles FreeCAD and Python. The launch folder makes the application, projects, and library easier to find.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-113-1-r5">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.113.1-r5" aria-label="Release notes for 0.113.1-r5">0.113.1-r5</a><time datetime="2026-10-27">27 Oct 2026</time></div>
+          <div>
+            <h4>A more compact interface</h4>
+            <p>Reorganized menu and toolbars, narrower side panels, and more room for the model.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-111-0-r2">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.111.0-r2" aria-label="Release notes for 0.111.0-r2">0.111.0-r2</a><time datetime="2026-10-27">27 Oct 2026</time></div>
+          <div>
+            <h4>Saved AI tasks</h4>
+            <p>AI tasks save target dimensions, assumptions, and check results. Interrupted tasks can resume after restarting.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-110-0-r1">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.110.0-r1" aria-label="Release notes for 0.110.0-r1">0.110.0-r1</a><time datetime="2026-10-27">27 Oct 2026</time></div>
+          <div>
+            <h4>FreeCAD features and project parameters</h4>
+            <p>Saved FreeCAD designs can be viewed as a feature tree with properties and dependencies. Project parameters make shared dimensions available.</p>
+          </div>
+        </li>
+        <li class="release-entry" id="v0-108-0">
+          <div class="release-meta"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.108.0" aria-label="Release notes for 0.108.0">0.108.0</a><time datetime="2026-10-27">27 Oct 2026</time></div>
+          <div>
+            <h4>Technical snapshots</h4>
+            <p>Technical snapshots for project documentation and four workbench modes, from basic shapes to detailed modeling.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+  </main>
+  <footer class="wrap foot"><a href="../">Formnaro home</a><a href="https://github.com/andyy909/Formnaro-cad/releases">All releases on GitHub ↗</a><a href="../legal-notice/">Legal notice</a></footer>
+</body>
+</html>
