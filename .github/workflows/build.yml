@@ -5,8 +5,8 @@ on:
   pull_request:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref_type == 'tag' && github.run_id || 'source' }}
-  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ (github.ref_type == 'tag' || github.run_attempt > 1) && github.run_id || 'first-attempt' }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' && github.run_attempt == 1 }}
 
 permissions:
   contents: read
