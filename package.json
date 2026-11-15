@@ -9,6 +9,8 @@
   "type": "module",
   "main": "electron.cjs",
   "scripts": {
+    "format": "prettier --write",
+    "format:check": "prettier --check",
     "test:inventory": "node scripts/test-inventory.mjs",
     "test:all": "node scripts/run-tests.mjs",
     "test:part-properties": "node --test --test-concurrency=1 tests/cad-part-properties.test.mjs tests/cad-part-properties-native.test.mjs tests/cad-workspace.test.mjs tests/cad-workspace-serialization.test.mjs tests/fnpack-data.test.mjs tests/fnpack-persistence.test.mjs tests/step-assembly.test.mjs tests/cad-mesh-formats.test.mjs",
@@ -163,6 +165,7 @@
     "@xmldom/xmldom": "0.9.12",
     "electron": "44.10.0",
     "manifold-3d": "3.5.4",
+    "prettier": "3.10.1",
     "replicad-opencascadejs": "1.1.0",
     "rolldown": "1.2.13",
     "vite": "8.3.4"
