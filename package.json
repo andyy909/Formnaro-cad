@@ -10,6 +10,7 @@
   "main": "electron.cjs",
   "scripts": {
     "test:inventory": "node scripts/test-inventory.mjs",
+    "test:all": "node scripts/run-tests.mjs",
     "test:part-properties": "node --test --test-concurrency=1 tests/cad-part-properties.test.mjs tests/cad-part-properties-native.test.mjs tests/cad-workspace.test.mjs tests/cad-workspace-serialization.test.mjs tests/fnpack-data.test.mjs tests/fnpack-persistence.test.mjs tests/step-assembly.test.mjs tests/cad-mesh-formats.test.mjs",
     "package:mesh-surgery": "node scripts/package-mesh-surgery.mjs",
     "test:mesh-surgery": "node --test --test-concurrency=1 tests/mesh-surgery.test.mjs tests/mesh-surgery-controller.test.mjs tests/mesh-surgery-ui.test.mjs tests/mesh-hole-fill.test.mjs tests/mesh-hole-fill-controller.test.mjs tests/mesh-hole-fill-ui.test.mjs tests/mesh-erase-fill.test.mjs tests/mesh-smooth.test.mjs tests/mesh-simple-repair.test.mjs tests/cad-ai-program.test.mjs",
