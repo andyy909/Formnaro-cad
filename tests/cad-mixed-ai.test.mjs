@@ -1,14 +1,3 @@
-import {cadAIRequestContext} from '../src/cad-ai-program-context.js';
-import {readModelCheckConfig} from '../src/ai-model-check-config.js';
-import {readAIModelStrictness,readAIModelChecksEnabled,readAIModelLivePreviewEnabled} from '../src/ai-model-strictness.js';
-import {appendAIFeatureEdits} from '../src/cad-ai-feature-report.js';
-import {trackedAIAnalysis} from '../src/cad-ai-analysis-access.js';
-import {createAIUsagePanel} from '../src/cad-ai-meter.js';
-import {compactAIRequestContext} from '../src/cad-ai-task-evidence.js';
-import {randomUUID} from 'node:crypto';
-import {generateDesktopAI} from '../src/ai-desktop-client.js';
-import {aiVerificationText,aiProposalWarning} from '../src/cad-ai-result-checks.js';
-import {appendAIVerification} from '../src/cad-ai-result-checks.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Worker} from 'node:worker_threads';
@@ -24,8 +13,7 @@ import {runCadAIRequest} from '../src/cad-ai-request.js';
 import {exportCadProjectSvg} from '../src/cad-svg-export.js';
 import {DOMParser,XMLSerializer} from '@xmldom/xmldom';
 import {createCadCommandRouter} from '../src/cad-command-router.js';
-import {readFileSync} from 'node:fs';
-import vm from 'node:vm';
+import {exerciseCadAIUI} from './fixtures/cad-ai-ui-harness.mjs';
 
 const cube=(id,x=0)=>({id,kind:'mesh',name:id,color:'#109ca9',opacity:.8,layerId:'default',folderId:null,transform:[1,0,0,0,0,1,0,0,0,0,1,0,x,0,0,1],mesh:{verts:[-10,-10,0,10,-10,0,10,10,0,-10,10,0,-10,-10,20,10,-10,20,10,10,20,-10,10,20],triangles:[0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,1,2,6,1,6,5,2,3,7,2,7,6,3,0,4,3,4,7]}});
 function factory(file,onPost=()=>{}){return ()=>{const w=new Worker(new URL(file,import.meta.url)),api={onmessage:null,onerror:null,postMessage:data=>{onPost(data);w.postMessage(data);},terminate:()=>w.terminate()};w.on('message',data=>api.onmessage?.({data}));w.on('error',error=>api.onerror?.(error));return api;};}
@@ -187,11 +175,35 @@ test('Internal native segments accept the bounded two-split-alias budget while p
 });
 
 test('The actual chat UI wrapper forwards bound scene preparation and its workshop accepts an unproven mesh volume',async()=>{
- // Execute the actual UI factory with a minimal document and intercepted chat
- // callbacks. Static imports/CSS are supplied explicitly by this Node harness;
- // the packaged-browser verification additionally exercises the bundled file.
- const node=tag=>({tag,children:[],dataset:{},classList:{toggle(){}},querySelector(){return node('button');},querySelectorAll(){return [];},textContent:'',before(){},append(...children){this.children.push(...children);},replaceChildren(...children){this.children=[...children];}}),root=node('result');let chatCallbacks,prepared=0,providerCalls=0;
- const scene={revision:'current',selectionTargets:[],objects:[]},proposal={previewId:'checked',revision:'current',label:'Gemischte Vorschau',changes:[{op:'mesh'}],warnings:[],after:[{id:'mesh',name:'Netzteil',kind:'mesh'}],scene:{objects:[{id:'mesh',worldBounds:{size:[20,20,20]}}]}},access={scene:()=>scene,context:()=>({}),sceneForAI(){assert.equal(this,access);prepared++;return {...scene,meshInspection:{ok:true},meshEdges:{geometryDigest:'a'.repeat(64),edges:[{id:'observed'}]}};},preview:async()=>proposal},desktop={getAISettings:async()=>({protocol:'responses',baseUrl:'http://127.0.0.1',model:'mock'}),generateAI:async args=>{providerCalls++;assert.equal(args.scene.meshInspection.ok,true);assert.equal(args.scene.meshEdges.edges[0].id,'observed');return {revision:'current',commands:[mesh('create',{type:'box'})]};}},context={structuredClone,readModelCheckConfig,readAIModelStrictness,readAIModelChecksEnabled,readAIModelLivePreviewEnabled,createAIAgentChat:()=>({dispose(){}}),mountAIDiagnostics:()=>({dispose(){}}),cadAIRequestContext,mountAITaskUI:()=>({requirements:prompt=>({purpose:'technical',objective:prompt,assumptions:[],checks:[],protectedTargets:[]}),setBusy(){},dispose(){}}),createAITaskJournal:()=>({begin:async()=>{},checkpoint:async()=>{},close:async()=>null,lastCheckpoint:()=>null}),appendAIFeatureEdits,createAIUsagePanel,compactAIRequestContext,crypto:{randomUUID},window:{offlinecadDesktop:desktop},document:{getElementById:id=>id==='ai-result'?root:id==='ai-chat-proposal'?node('div'):null,querySelector:()=>null,createElement:node},runCadAIRequest,trackedAIAnalysis,generateDesktopAI,aiVerificationText,aiProposalWarning,appendAIIndependentCheck:()=>{},appendPhotoComparison:()=>{},appendPythonResults:()=>{},appendMeshLidReports:()=>{},appendAIVerification:(...args)=>appendAIVerification(...args,context.document),aiContext:cadAIContext,formatAIUsage:()=>'',createCadAIChat:options=>{chatCallbacks=options;return {state:()=>({featureReferences:[]}),setBusy(){},setUsage(){},setProposal(){},status(){},open(){},dispose(){}};},access};
- const source=readFileSync(new URL('../src/cad-ai-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('export function createCadAIUI','function createCadAIUI');vm.runInNewContext(source+'\nui=createCadAIUI({access,language:()=>"de",showPreview:()=>{},clearPreview:()=>{}});',context);
- const answer=await chatCallbacks.onSend({prompt:'Netz erstellen'});assert.equal(answer.commands[0].op,'mesh');assert.equal(prepared,1);assert.equal(providerCalls,1);const texts=[];function collect(value){if(value?.textContent)texts.push(value.textContent);for(const child of value?.children??[])collect(child);}collect(root);assert.ok(texts.includes('Netzteil'));assert.ok(texts.includes('—'));assert.ok(root.children.some(child=>child.tag==='table'));
+ let prepared=0,providerCalls=0;
+ const scene={revision:'current',selectionTargets:[],objects:[]};
+ const proposal={previewId:'checked',revision:'current',label:'Gemischte Vorschau',changes:[{op:'mesh'}],warnings:[],after:[{id:'mesh',name:'Netzteil',kind:'mesh'}],scene:{objects:[{id:'mesh',worldBounds:{size:[20,20,20]}}]}};
+ const access={
+  scene:()=>scene,context:()=>({}),
+  sceneForAI(){
+   assert.equal(this,access);
+   prepared++;
+   return {...scene,meshInspection:{ok:true},meshEdges:{geometryDigest:'a'.repeat(64),edges:[{id:'observed'}]}};
+  },
+  preview:async()=>proposal,
+ };
+ const desktop={
+  getAISettings:async()=>({protocol:'responses',baseUrl:'http://127.0.0.1',model:'mock'}),
+  generateAI:async args=>{
+   providerCalls++;assert.equal(args.scene.meshInspection.ok,true);assert.equal(args.scene.meshEdges.edges[0].id,'observed');
+   return {revision:'current',commands:[mesh('create',{type:'box'})]};
+  },
+ };
+ await exerciseCadAIUI({access,desktop},async({send,result})=>{
+  const answer=await send({prompt:'Netz erstellen'});
+  assert.equal(answer.commands[0].op,'mesh');
+  assert.equal(prepared,1);
+  assert.equal(providerCalls,1);
+  const texts=[];
+  function collect(value){if(value?.textContent)texts.push(value.textContent);for(const child of value?.children??[])collect(child);}
+  collect(result);
+  assert.ok(texts.includes('Netzteil'));
+  assert.ok(texts.includes('—'));
+  assert.ok(result.children.some(child=>child.tag==='table'));
+ });
 });
