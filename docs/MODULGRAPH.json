@@ -82,6 +82,762 @@
       "target": "mini"
     },
     {
+      "file": "scripts/legacy/archive-step-thickness.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 5,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-ai-checks.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 6,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-ai-contract-release.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-ai-diagnostics.mjs",
+      "specifier": "../backend/freecad-runtime.cjs",
+      "kind": "dynamic-import",
+      "line": 35,
+      "target": "scripts/backend/freecad-runtime.cjs"
+    },
+    {
+      "file": "scripts/legacy/package-ai-diagnostics.mjs",
+      "specifier": "../backend/freecad-runtime.cjs",
+      "kind": "dynamic-import",
+      "line": 42,
+      "target": "scripts/backend/freecad-runtime.cjs"
+    },
+    {
+      "file": "scripts/legacy/package-ai-error-preview.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-ai-lid.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 6,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-ai-measurements.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-ai-precision.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-ai-program.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 6,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-ai-task-evidence.mjs",
+      "specifier": "./package-freecad-python.mjs",
+      "kind": "dynamic-import",
+      "line": 5,
+      "target": "scripts/legacy/package-freecad-python.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-ai-usage.mjs",
+      "specifier": "./package-freecad-python.mjs",
+      "kind": "dynamic-import",
+      "line": 7,
+      "target": "scripts/legacy/package-freecad-python.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-all-functions.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 6,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-all-functions.mjs",
+      "specifier": "./all-functions-catalog.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/all-functions-catalog.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-assembly-display.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-assembly-display.mjs",
+      "specifier": "./working-speed-report.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/working-speed-report.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-auto-dimensions.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-auto-dimensions.mjs",
+      "specifier": "./working-speed-report.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/working-speed-report.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-cad-mesh-copy.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-cad-mini-speed.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-cad-paket.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-converter-workspace.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-creation-domain.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-curved-remesh.mjs",
+      "specifier": "../backend/freecad-runtime.cjs",
+      "kind": "require",
+      "line": 37,
+      "target": "scripts/backend/freecad-runtime.cjs"
+    },
+    {
+      "file": "scripts/legacy/package-deepseek-release.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-drawings.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-drawings.mjs",
+      "specifier": "./working-speed-report.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/working-speed-report.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-easy-auto-repair.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 6,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-easy-domains.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 6,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-easy-performance.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-easy-tinker.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 6,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-easy-verified.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 6,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-exchange-release.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-feature-references.mjs",
+      "specifier": "./feature-release-config.mjs",
+      "kind": "import",
+      "line": 1,
+      "target": "scripts/legacy/feature-release-config.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-feature-references.mjs",
+      "specifier": "./package-freecad-python.mjs",
+      "kind": "dynamic-import",
+      "line": 3,
+      "target": "scripts/legacy/package-freecad-python.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-fnpack.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-fnpack.mjs",
+      "specifier": "./working-speed-report.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/working-speed-report.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-group-performance.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-hole-groups.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-inspection.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-integrated-cad.mjs",
+      "specifier": "../backend/freecad-runtime.cjs",
+      "kind": "require",
+      "line": 16,
+      "target": "scripts/backend/freecad-runtime.cjs"
+    },
+    {
+      "file": "scripts/legacy/package-integrated-cad.mjs",
+      "specifier": "../backend/freecad-runtime.cjs",
+      "kind": "require",
+      "line": 47,
+      "target": "scripts/backend/freecad-runtime.cjs"
+    },
+    {
+      "file": "scripts/legacy/package-joints.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-joints.mjs",
+      "specifier": "./working-speed-report.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/working-speed-report.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-linked-contours.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-linked-contours.mjs",
+      "specifier": "./working-speed-report.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/working-speed-report.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mechanism-tools.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 11,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mechanism-tools.mjs",
+      "specifier": "./speech-fixture.mjs",
+      "kind": "import",
+      "line": 12,
+      "target": "scripts/legacy/speech-fixture.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-connectors.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-display.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-erase-fill.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-erase-fill.mjs",
+      "specifier": "./mesh-erase-fill-temp.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/mesh-erase-fill-temp.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-features.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-hole-fill.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-hollow.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-hollow.mjs",
+      "specifier": "./mesh-hollow-temp.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/mesh-hollow-temp.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-import.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-inspector.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-integration.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-make-solid.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-make-solid.mjs",
+      "specifier": "./mesh-make-solid-temp.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/mesh-make-solid-temp.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-partition.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-reduce.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-remesh.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-sculpt.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-selection-advanced.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-selection.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-simple-repair.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-smooth.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-smooth.mjs",
+      "specifier": "./mesh-smooth-temp.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/mesh-smooth-temp.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-surgery.mjs",
+      "specifier": "../backend/freecad-runtime.cjs",
+      "kind": "require",
+      "line": 38,
+      "target": "scripts/backend/freecad-runtime.cjs"
+    },
+    {
+      "file": "scripts/legacy/package-mesh-to-cad.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-model-placement.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-modeling-assistance-patch.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-modeling-assistance.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-modeling-context.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-modeling.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-modeling.mjs",
+      "specifier": "./working-speed-report.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/working-speed-report.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-move-dimensions.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-native-core.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-number-display.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-photo-assistant.mjs",
+      "specifier": "./package-freecad-python.mjs",
+      "kind": "dynamic-import",
+      "line": 9,
+      "target": "scripts/legacy/package-freecad-python.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-photo-multiview.mjs",
+      "specifier": "./package-freecad-python.mjs",
+      "kind": "dynamic-import",
+      "line": 8,
+      "target": "scripts/legacy/package-freecad-python.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-photo-perspective.mjs",
+      "specifier": "./package-freecad-python.mjs",
+      "kind": "dynamic-import",
+      "line": 8,
+      "target": "scripts/legacy/package-freecad-python.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-program-assistant.mjs",
+      "specifier": "./package-freecad-python.mjs",
+      "kind": "dynamic-import",
+      "line": 8,
+      "target": "scripts/legacy/package-freecad-python.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-project-parameters.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-project-parameters.mjs",
+      "specifier": "./working-speed-report.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/working-speed-report.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-python-api.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-python-api.mjs",
+      "specifier": "./working-speed-report.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/working-speed-report.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-reconstruction-repair.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-reconstruction-tools.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-release-acceptance.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-rotation-ring.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-servo-performance.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-shared-ai.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-shared-workspace.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-sketch-constraints.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-sketch-constraints.mjs",
+      "specifier": "./working-speed-report.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/working-speed-report.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-sketch-mesh.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-step-thickness.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-stl-integration.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-stl-preview.mjs",
+      "specifier": "./cad-release-manifest.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/cad-release-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-tool-parity.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-unification-foundation.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-unified-workflows.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-view-toolbar.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-working-speed.mjs",
+      "specifier": "./stl-integration-manifest.mjs",
+      "kind": "import",
+      "line": 7,
+      "target": "scripts/legacy/stl-integration-manifest.mjs"
+    },
+    {
+      "file": "scripts/legacy/package-working-speed.mjs",
+      "specifier": "./working-speed-report.mjs",
+      "kind": "import",
+      "line": 8,
+      "target": "scripts/legacy/working-speed-report.mjs"
+    },
+    {
       "file": "scripts/module-graph.mjs",
       "specifier": "../",
       "kind": "url",
@@ -171,6 +927,13 @@
       "kind": "url",
       "line": 8,
       "target": "node_modules/manifold-3d/manifold.wasm"
+    },
+    {
+      "file": "tests/legacy-scripts.test.mjs",
+      "specifier": "../",
+      "kind": "url",
+      "line": 5,
+      "target": "./"
     },
     {
       "file": "tests/mesh-auto-repair.test.mjs",
@@ -336,19 +1099,19 @@
       "expression": "$.pathToFileURL(e).href"
     },
     {
-      "file": "scripts/package-final-expansion.mjs",
+      "file": "scripts/legacy/package-final-expansion.mjs",
       "line": 38,
       "kind": "require",
       "expression": "path.join(source,'backend/freecad-runtime.cjs')"
     },
     {
-      "file": "scripts/package-final-expansion.mjs",
+      "file": "scripts/legacy/package-final-expansion.mjs",
       "line": 52,
       "kind": "require",
       "expression": "path.join(source,'backend/freecad-runtime.cjs')"
     },
     {
-      "file": "scripts/package-mechanism-tools.mjs",
+      "file": "scripts/legacy/package-mechanism-tools.mjs",
       "line": 52,
       "kind": "require",
       "expression": "path.join(source,'backend/freecad-runtime.cjs')"
@@ -1392,7 +2155,7 @@
     {"file":"src/ai-feedback.js","current":true,"legacyOnly":false,"imports":[],"consumers":[{"file":"src/cad-ai-request.js","kind":"import","line":7},{"file":"src/cad-ai-task-evidence.js","kind":"import","line":1},{"file":"src/cad-ai-task-progress.js","kind":"import","line":2},{"file":"src/cad-ai-task-runtime.js","kind":"import","line":2},{"file":"src/cad-automation-access.js","kind":"import","line":5},{"file":"src/cad-command-router.js","kind":"import","line":21},{"file":"src/cad-controller.js","kind":"import","line":9},{"file":"src/cad-main.js","kind":"import","line":69},{"file":"src/cad-mixed-ai.js","kind":"import","line":6},{"file":"src/cad-worker-runtime.js","kind":"import","line":11},{"file":"tests/ai-design-freedom.test.mjs","kind":"import","line":11},{"file":"tests/ai-error-actions.test.mjs","kind":"import","line":2},{"file":"tests/ai-program-correction.test.mjs","kind":"import","line":5},{"file":"tests/ai-working-contract.test.mjs","kind":"import","line":4},{"file":"tests/ai-workspace.test.mjs","kind":"import","line":5},{"file":"tests/cad-ai-result-checks.test.mjs","kind":"import","line":9},{"file":"tests/cad-ai-task-evidence.test.mjs","kind":"import","line":4},{"file":"tests/cad-native-memory.test.mjs","kind":"import","line":4},{"file":"tests/cad-reconstruction-tools.test.mjs","kind":"import","line":6},{"file":"tests/mesh-radial-clearance.test.mjs","kind":"import","line":12}],"mentionedBy":["mini-cad/src/ai-core/cad-ai-request.js","mini-cad/src/ai-core/cad-command-router.js","mini-cad/src/ai-core/cad-mixed-ai.js","mini-cad/src/ai-core/cad-worker-runtime.js","mini-cad/src/ai-core/origin.json","mini/src/ai-core/cad-ai-request.js","tests/ai-design-freedom.test.mjs","tests/ai-error-actions.test.mjs","tests/ai-program-correction.test.mjs","tests/ai-working-contract.test.mjs","tests/ai-workspace.test.mjs","tests/cad-ai-result-checks.test.mjs","tests/cad-ai-task-evidence.test.mjs","tests/cad-native-memory.test.mjs","tests/cad-reconstruction-tools.test.mjs","tests/mesh-radial-clearance.test.mjs"]},
     {"file":"src/ai-model-check-config.js","current":true,"legacyOnly":false,"imports":[],"consumers":[{"file":"src/ai-model-check-settings.js","kind":"import","line":1},{"file":"src/ai-model-strictness.js","kind":"import","line":1},{"file":"src/cad-ai-request.js","kind":"import","line":1},{"file":"src/cad-ai-ui.js","kind":"import","line":3},{"file":"src/cad-automation-access.js","kind":"import","line":7},{"file":"src/cad-main.js","kind":"import","line":3},{"file":"tests/model-check-config.test.mjs","kind":"import","line":8}],"mentionedBy":["tests/model-check-config.test.mjs"]},
     {"file":"src/ai-model-check-settings.js","current":true,"legacyOnly":false,"imports":["src/ai-model-check-config.js"],"consumers":[{"file":"src/ai-model-strictness.js","kind":"import","line":2},{"file":"src/cad-ai-ui.js","kind":"import","line":2}],"mentionedBy":[]},
-    {"file":"src/ai-model-strictness.js","current":true,"legacyOnly":false,"imports":["src/ai-model-check-config.js","src/ai-model-check-settings.js"],"consumers":[{"file":"scripts/package-mechanism-tools.mjs","kind":"path-literal"},{"file":"src/cad-ai-chat.js","kind":"import","line":13},{"file":"src/cad-ai-request.js","kind":"import","line":2},{"file":"src/cad-ai-ui.js","kind":"import","line":31},{"file":"src/cad-automation-access.js","kind":"import","line":6},{"file":"src/cad-main.js","kind":"import","line":6},{"file":"tests/ai-design-freedom.test.mjs","kind":"import","line":9},{"file":"tests/ai-model-strictness.test.mjs","kind":"import","line":3}],"mentionedBy":["scripts/package-mechanism-tools.mjs","tests/ai-design-freedom.test.mjs","tests/ai-model-strictness.test.mjs"]},
+    {"file":"src/ai-model-strictness.js","current":true,"legacyOnly":false,"imports":["src/ai-model-check-config.js","src/ai-model-check-settings.js"],"consumers":[{"file":"scripts/legacy/package-mechanism-tools.mjs","kind":"path-literal"},{"file":"src/cad-ai-chat.js","kind":"import","line":13},{"file":"src/cad-ai-request.js","kind":"import","line":2},{"file":"src/cad-ai-ui.js","kind":"import","line":31},{"file":"src/cad-automation-access.js","kind":"import","line":6},{"file":"src/cad-main.js","kind":"import","line":6},{"file":"tests/ai-design-freedom.test.mjs","kind":"import","line":9},{"file":"tests/ai-model-strictness.test.mjs","kind":"import","line":3}],"mentionedBy":["scripts/legacy/package-mechanism-tools.mjs","tests/ai-design-freedom.test.mjs","tests/ai-model-strictness.test.mjs"]},
     {"file":"src/ai-provider-status.js","current":true,"legacyOnly":false,"imports":[],"consumers":[{"file":"src/cad-ai-agent.js","kind":"import","line":2},{"file":"src/cad-ai-model-picker.js","kind":"import","line":2},{"file":"src/cad-ai-ui.js","kind":"import","line":14}],"mentionedBy":[]},
     {"file":"src/ai-reasoning-ui.js","current":true,"legacyOnly":false,"imports":[],"consumers":[{"file":"src/cad-ai-agent.js","kind":"import","line":1},{"file":"src/cad-ai-model-picker.js","kind":"import","line":1},{"file":"src/cad-ai-ui.js","kind":"import","line":13}],"mentionedBy":[]},
     {"file":"src/ai-subscription-usage.js","current":true,"legacyOnly":false,"imports":["src/ai-currency.js"],"consumers":[{"file":"src/cad-ai-meter.js","kind":"import","line":2}],"mentionedBy":[]},
@@ -1575,7 +2338,7 @@
     {"file":"src/cad-functions-ui.js","current":true,"legacyOnly":false,"imports":["src/cad-controller.js","src/cad-function-plugins.js","src/cad-stl-converter.js","src/cad-stl-workbench.js","src/cad-worker.js"],"consumers":[{"file":"src/cad-main.js","kind":"import","line":120}],"mentionedBy":[]},
     {"file":"src/cad-fusion-state.js","current":true,"legacyOnly":false,"imports":["ai/formnaro-fusion-labels.mjs"],"consumers":[{"file":"src/cad-context-menu.js","kind":"import","line":2},{"file":"src/cad-fusion-ui.js","kind":"import","line":3},{"file":"tests/cad-fusion-state.test.mjs","kind":"import","line":6}],"mentionedBy":["tests/cad-fusion-state.test.mjs"]},
     {"file":"src/cad-fusion-ui.js","current":true,"legacyOnly":false,"imports":["src/cad-fusion-state.js","src/cad-solid-icons.js"],"consumers":[{"file":"src/cad-workbench-ui.js","kind":"import","line":4}],"mentionedBy":[]},
-    {"file":"src/cad-gear-couplings.js","current":true,"legacyOnly":false,"imports":["src/cad-affine.js"],"consumers":[{"file":"scripts/package-mechanism-tools.mjs","kind":"path-literal"},{"file":"src/cad-drive-couplings.js","kind":"import","line":2},{"file":"src/cad-joints-data.js","kind":"import","line":6}],"mentionedBy":["scripts/package-mechanism-tools.mjs"]},
+    {"file":"src/cad-gear-couplings.js","current":true,"legacyOnly":false,"imports":["src/cad-affine.js"],"consumers":[{"file":"scripts/legacy/package-mechanism-tools.mjs","kind":"path-literal"},{"file":"src/cad-drive-couplings.js","kind":"import","line":2},{"file":"src/cad-joints-data.js","kind":"import","line":6}],"mentionedBy":["scripts/legacy/package-mechanism-tools.mjs"]},
     {"file":"src/cad-gear-snap.js","current":true,"legacyOnly":false,"imports":["src/cad-affine.js","src/cad-joints-data.js","src/organization.js","src/parameters.js"],"consumers":[{"file":"src/cad-main.js","kind":"import","line":5},{"file":"src/cad-practice-gear-drag.js","kind":"import","line":3},{"file":"tests/cad-gear-snap.test.mjs","kind":"import","line":6}],"mentionedBy":["tests/cad-gear-snap.test.mjs"]},
     {"file":"src/cad-geometry-digest.js","current":true,"legacyOnly":false,"imports":["src/cad-geometry-ref.js"],"consumers":[{"file":"src/cad-ai-feature-edits-native.js","kind":"import","line":5},{"file":"src/cad-ai-feature-edits-native.js","kind":"import","line":11},{"file":"src/cad-ai-feature-reference-data.js","kind":"import","line":1},{"file":"src/cad-ai-feature-references-native.js","kind":"import","line":3},{"file":"src/cad-ai-feature-structure-native.js","kind":"import","line":4},{"file":"src/cad-ai-task-candidate.js","kind":"import","line":3},{"file":"src/cad-ai-task-progress.js","kind":"import","line":1},{"file":"src/cad-ai-task-requirements.js","kind":"import","line":3},{"file":"src/cad-ai-task-resume.js","kind":"import","line":1},{"file":"src/cad-annotations-native.js","kind":"import","line":3},{"file":"src/cad-command-router.js","kind":"import","line":41},{"file":"src/cad-drawing-data.js","kind":"import","line":1},{"file":"src/cad-drawing-native.js","kind":"import","line":6},{"file":"src/cad-drawing-ui.js","kind":"import","line":2},{"file":"src/cad-drill-conversion-native.js","kind":"import","line":5},{"file":"src/cad-drill-source-replacement-data.js","kind":"import","line":3},{"file":"src/cad-drill-source-replacement-native.js","kind":"import","line":2},{"file":"src/cad-extraction-native.js","kind":"import","line":2},{"file":"src/cad-face-correspondence-native.js","kind":"import","line":2},{"file":"src/cad-fnpack-data.js","kind":"import","line":2},{"file":"src/cad-freecad-node-native.js","kind":"import","line":3},{"file":"src/cad-freecad-parameter-data.js","kind":"import","line":2},{"file":"src/cad-freecad-parameters-native.js","kind":"import","line":3},{"file":"src/cad-freecad-source.js","kind":"import","line":1},{"file":"src/cad-freecad.js","kind":"import","line":3},{"file":"src/cad-inspection-state.js","kind":"import","line":1},{"file":"src/cad-linked-contours-data.js","kind":"import","line":2},{"file":"src/cad-linked-contours-native.js","kind":"import","line":3},{"file":"src/cad-linked-contours-native.js","kind":"import","line":7},{"file":"src/cad-linked-pattern-data.js","kind":"import","line":2},{"file":"src/cad-part-properties.js","kind":"import","line":2},{"file":"src/cad-photo-multiview-build.js","kind":"import","line":4},{"file":"src/cad-photo-multiview-data.js","kind":"import","line":3},{"file":"src/cad-photo-project.js","kind":"import","line":2},{"file":"src/cad-project-parameters-data.js","kind":"import","line":3},{"file":"src/cad-service.js","kind":"import","line":24},{"file":"src/cad-step-drill-verify.js","kind":"import","line":1},{"file":"src/cad-step-drill.js","kind":"import","line":3},{"file":"src/cad-tools-native.js","kind":"import","line":21},{"file":"src/mesh-engine-adapter.js","kind":"import","line":44},{"file":"src/mesh-features.js","kind":"import","line":3},{"file":"src/mesh-large-reduce.js","kind":"import","line":1},{"file":"src/mesh-lid.js","kind":"import","line":3},{"file":"src/mesh-section-contours.js","kind":"import","line":2},{"file":"src/mesh-selection-data.js","kind":"import","line":1},{"file":"src/mesh-technical.js","kind":"import","line":1},{"file":"src/mesh-workplane.js","kind":"import","line":2},{"file":"src/project-objects.js","kind":"import","line":1},{"file":"tests/cad-ai-task-progress-native.test.mjs","kind":"import","line":6},{"file":"tests/cad-associative-drill-native.test.mjs","kind":"import","line":16},{"file":"tests/cad-drawing-native.test.mjs","kind":"import","line":9},{"file":"tests/cad-extraction-native.test.mjs","kind":"import","line":14},{"file":"tests/cad-photo-multiview.test.mjs","kind":"import","line":7},{"file":"tests/cad-photo-project.test.mjs","kind":"import","line":6},{"file":"tests/expansion-fixtures.mjs","kind":"import","line":3},{"file":"tests/fnpack-data.test.mjs","kind":"import","line":5},{"file":"tests/photo-multiview-fixtures.mjs","kind":"import","line":2}],"mentionedBy":["mini-cad/src/ai-core/cad-annotations-native.js","mini-cad/src/ai-core/cad-extraction-native.js","mini-cad/src/ai-core/cad-service.js","mini-cad/src/ai-core/cad-tools-native.js","mini-cad/src/ai-core/mesh-features.js","mini-cad/src/ai-core/mesh-lid.js","mini-cad/src/ai-core/mesh-selection-data.js","mini-cad/src/ai-core/mesh-workplane.js","mini-cad/src/ai-core/origin.json","mini-cad/src/ai-core/project-objects.js","mini-cad/src/import-core/mesh-selection-data.js","mini-cad/src/import-core/provenance.json","mini/src/import-core/mesh-selection-data.js","mini/src/import-core/provenance.json","mini/src/repair-core/mesh-selection-data.js","mini/src/repair-core/origin.json","tests/cad-ai-task-progress-native.test.mjs","tests/cad-associative-drill-native.test.mjs","tests/cad-drawing-native.test.mjs","tests/cad-extraction-native.test.mjs","tests/cad-photo-multiview.test.mjs","tests/cad-photo-project.test.mjs","tests/expansion-fixtures.mjs","tests/fnpack-data.test.mjs","tests/photo-multiview-fixtures.mjs"]},
     {"file":"src/cad-geometry-ref.js","current":true,"legacyOnly":false,"imports":[],"consumers":[{"file":"src/cad-ai-task-basis.js","kind":"import","line":2},{"file":"src/cad-ai-task-candidate.js","kind":"import","line":2},{"file":"src/cad-ai-task-requirements.js","kind":"import","line":4},{"file":"src/cad-command-router.js","kind":"import","line":10},{"file":"src/cad-controller.js","kind":"import","line":24},{"file":"src/cad-fnpack-controller.js","kind":"import","line":5},{"file":"src/cad-fnpack-data.js","kind":"import","line":4},{"file":"src/cad-fnpack-files.js","kind":"import","line":2},{"file":"src/cad-fnpack-recovery.js","kind":"import","line":2},{"file":"src/cad-geometry-digest.js","kind":"import","line":1},{"file":"src/cad-inspection-state.js","kind":"import","line":2},{"file":"src/cad-interface-state.js","kind":"import","line":8},{"file":"src/cad-linked-pattern-data.js","kind":"import","line":3},{"file":"src/cad-main.js","kind":"import","line":27},{"file":"src/cad-part-properties.js","kind":"import","line":3},{"file":"src/cad-pattern-choice-controller.js","kind":"import","line":2},{"file":"src/cad-project.js","kind":"import","line":11},{"file":"src/cad-recovery-encoding.js","kind":"import","line":3},{"file":"src/cad-service.js","kind":"import","line":4},{"file":"src/cad-step-drill-verify.js","kind":"import","line":2},{"file":"src/cad-topology-native.js","kind":"import","line":1},{"file":"src/mesh-engine/mesh-partition-schema.js","kind":"import","line":1},{"file":"src/mesh-source-data.js","kind":"import","line":14},{"file":"src/mesh-workplane.js","kind":"import","line":4},{"file":"src/project-objects.js","kind":"import","line":2},{"file":"tests/cad-contour-freecad-source.test.mjs","kind":"import","line":16},{"file":"tests/cad-contour-profile-bindings.test.mjs","kind":"import","line":18},{"file":"tests/cad-contour-source-replacement.test.mjs","kind":"import","line":11},{"file":"tests/cad-drill-conversion-complex.test.mjs","kind":"import","line":22},{"file":"tests/cad-drill-pattern-contours.test.mjs","kind":"import","line":19},{"file":"tests/cad-drill-rebind-dependencies.test.mjs","kind":"import","line":17},{"file":"tests/cad-linked-pattern-contours.test.mjs","kind":"import","line":17},{"file":"tests/cad-linked-pattern-drawings.test.mjs","kind":"import","line":15},{"file":"tests/cad-parameter-pattern-contours.test.mjs","kind":"import","line":19},{"file":"tests/cad-pattern-consumers.test.mjs","kind":"import","line":28},{"file":"tests/cad-pattern-contour-height-bindings.test.mjs","kind":"import","line":22},{"file":"tests/cad-pattern-contour-nested.test.mjs","kind":"import","line":19},{"file":"tests/cad-reference-rebind.test.mjs","kind":"import","line":14},{"file":"tests/fnpack-controller.test.mjs","kind":"import","line":1},{"file":"tests/fnpack-data.test.mjs","kind":"import","line":7},{"file":"tests/fnpack-native.test.mjs","kind":"import","line":3},{"file":"tests/freecad-bound-rerun.test.mjs","kind":"import","line":2},{"file":"tests/freecad-document-followups.test.mjs","kind":"import","line":2},{"file":"tests/freecad-feature-followups.test.mjs","kind":"import","line":4},{"file":"tests/freecad-import.test.mjs","kind":"import","line":2}],"mentionedBy":["tests/cad-contour-freecad-source.test.mjs","tests/cad-contour-profile-bindings.test.mjs","tests/cad-contour-source-replacement.test.mjs","tests/cad-drill-conversion-complex.test.mjs","tests/cad-drill-pattern-contours.test.mjs","tests/cad-drill-rebind-dependencies.test.mjs","tests/cad-linked-pattern-contours.test.mjs","tests/cad-linked-pattern-drawings.test.mjs","tests/cad-parameter-pattern-contours.test.mjs","tests/cad-pattern-consumers.test.mjs","tests/cad-pattern-contour-height-bindings.test.mjs","tests/cad-pattern-contour-nested.test.mjs","tests/cad-reference-rebind.test.mjs","tests/fnpack-controller.test.mjs","tests/fnpack-data.test.mjs","tests/fnpack-native.test.mjs","tests/freecad-bound-rerun.test.mjs","tests/freecad-document-followups.test.mjs","tests/freecad-feature-followups.test.mjs","tests/freecad-import.test.mjs"]},
@@ -1816,7 +2579,7 @@
     {"file":"src/mesh-engine-worker.js","current":true,"legacyOnly":false,"imports":["src/mesh-engine-adapter.js","src/mesh-engine-runtime.js"],"consumers":[{"file":"src/cad-controller.js","kind":"url","line":74}],"mentionedBy":[]},
     {"file":"src/mesh-engine/coordinates.js","current":true,"legacyOnly":false,"imports":["src/mesh-engine/geometry.js"],"consumers":[{"file":"src/mesh-engine-adapter.js","kind":"import","line":42},{"file":"src/mesh-engine/project-data.js","kind":"import","line":1},{"file":"tests/mesh-workplane.test.mjs","kind":"import","line":9},{"file":"tests/workplane.test.mjs","kind":"import","line":7}],"mentionedBy":["tests/mesh-workplane.test.mjs","tests/workplane.test.mjs"]},
     {"file":"src/mesh-engine/exchange-formats.js","current":true,"legacyOnly":false,"imports":[],"consumers":[{"file":"src/mesh-engine/exports.js","kind":"import","line":5}],"mentionedBy":["mini-cad/src/ai-core/cad-mesh-formats.js","mini-cad/src/ai-core/origin.json","tests/cad-exchange.test.mjs","tests/exchange-formats.test.mjs","tests/freecad-import.test.mjs","tests/mixed-project.test.mjs"]},
-    {"file":"src/mesh-engine/exports.js","current":true,"legacyOnly":false,"imports":["src/mesh-engine/exchange-formats.js","src/mesh-engine/feature-transforms.js","src/mesh-engine/geometry.js"],"consumers":[{"file":"src/mesh-engine-adapter.js","kind":"import","line":33},{"file":"src/mesh-engine/render-data.js","kind":"import","line":3},{"file":"src/mesh-engine/section-geometry.js","kind":"import","line":2},{"file":"tests/audit-legacy-regressions.test.mjs","kind":"import","line":1},{"file":"tests/extensions.test.mjs","kind":"import","line":5}],"mentionedBy":["backend/ai-task-restart-verification.cjs","scripts/audit-assembly-display-release.mjs","scripts/audit-auto-dimensions-release.mjs","scripts/audit-drawing-release.mjs","scripts/audit-fnpack-release.mjs","scripts/audit-joints-release.mjs","scripts/audit-linked-contours-release.mjs","scripts/audit-project-parameters-release.mjs","scripts/audit-python-api-release.mjs","scripts/audit-sketch-constraints-release.mjs","scripts/package-model-placement.mjs","scripts/verify-ai-task-release.mjs","scripts/verify-drawing-exports.py","scripts/verify-inspection-exports.py","scripts/verify-placement-exports.py","tests/audit-legacy-regressions.test.mjs","tests/extensions.test.mjs"]},
+    {"file":"src/mesh-engine/exports.js","current":true,"legacyOnly":false,"imports":["src/mesh-engine/exchange-formats.js","src/mesh-engine/feature-transforms.js","src/mesh-engine/geometry.js"],"consumers":[{"file":"src/mesh-engine-adapter.js","kind":"import","line":33},{"file":"src/mesh-engine/render-data.js","kind":"import","line":3},{"file":"src/mesh-engine/section-geometry.js","kind":"import","line":2},{"file":"tests/audit-legacy-regressions.test.mjs","kind":"import","line":1},{"file":"tests/extensions.test.mjs","kind":"import","line":5}],"mentionedBy":["backend/ai-task-restart-verification.cjs","scripts/audit-assembly-display-release.mjs","scripts/audit-auto-dimensions-release.mjs","scripts/audit-drawing-release.mjs","scripts/audit-fnpack-release.mjs","scripts/audit-joints-release.mjs","scripts/audit-linked-contours-release.mjs","scripts/audit-project-parameters-release.mjs","scripts/audit-python-api-release.mjs","scripts/audit-sketch-constraints-release.mjs","scripts/legacy/package-model-placement.mjs","scripts/verify-ai-task-release.mjs","scripts/verify-drawing-exports.py","scripts/verify-inspection-exports.py","scripts/verify-placement-exports.py","tests/audit-legacy-regressions.test.mjs","tests/extensions.test.mjs"]},
     {"file":"src/mesh-engine/feature-transforms.js","current":true,"legacyOnly":false,"imports":["src/mesh-engine/geometry.js"],"consumers":[{"file":"src/mesh-engine/exports.js","kind":"import","line":4},{"file":"tests/feature-transforms.test.mjs","kind":"import","line":2}],"mentionedBy":["tests/feature-transforms.test.mjs"]},
     {"file":"src/mesh-engine/geometry.js","current":true,"legacyOnly":false,"imports":["src/cad-data.js","src/mesh-engine/mesh-marks.js","src/mesh-engine/mesh-partition-schema.js","src/mesh-engine/mesh-sketch.js","src/mesh-engine/parameters.js","src/mesh-engine/parametric-geometry.js"],"consumers":[{"file":"src/cad-stl-symmetry-worker.js","kind":"import","line":4},{"file":"src/cad-stl-symmetry.js","kind":"import","line":3},{"file":"src/mesh-connectors.js","kind":"import","line":3},{"file":"src/mesh-engine-adapter.js","kind":"import","line":30},{"file":"src/mesh-engine/coordinates.js","kind":"import","line":2},{"file":"src/mesh-engine/exports.js","kind":"import","line":3},{"file":"src/mesh-engine/feature-transforms.js","kind":"import","line":2},{"file":"src/mesh-engine/history.js","kind":"import","line":1},{"file":"src/mesh-engine/mesh-edge-finish.js","kind":"import","line":2},{"file":"src/mesh-engine/mesh-edge-topology.js","kind":"import","line":3},{"file":"src/mesh-engine/mesh-hole.js","kind":"import","line":2},{"file":"src/mesh-engine/mesh-partition-recipe.js","kind":"import","line":2},{"file":"src/mesh-engine/mesh-partition.js","kind":"import","line":3},{"file":"src/mesh-engine/model-analysis.js","kind":"import","line":1},{"file":"src/mesh-engine/render-data.js","kind":"import","line":1},{"file":"src/mesh-engine/section-geometry.js","kind":"import","line":1},{"file":"src/mesh-source-data.js","kind":"import","line":13},{"file":"tests/audit-geometry-regressions.test.mjs","kind":"import","line":3},{"file":"tests/cad-mixed-ai.test.mjs","kind":"import","line":11},{"file":"tests/converter-symmetry.test.mjs","kind":"import","line":6},{"file":"tests/extensions.test.mjs","kind":"import","line":4},{"file":"tests/feature-transforms.test.mjs","kind":"import","line":2},{"file":"tests/fixtures/mesh-reduce-fixtures.mjs","kind":"import","line":3},{"file":"tests/geometry.test.mjs","kind":"import","line":5},{"file":"tests/history.test.mjs","kind":"import","line":6},{"file":"tests/mesh-curved-reduce.test.mjs","kind":"import","line":4},{"file":"tests/mesh-curved-remesh-controller.test.mjs","kind":"import","line":9},{"file":"tests/mesh-curved-remesh.test.mjs","kind":"import","line":9},{"file":"tests/mesh-erase-fill.test.mjs","kind":"import","line":9},{"file":"tests/mesh-generated-output.test.mjs","kind":"import","line":7},{"file":"tests/mesh-hollow.test.mjs","kind":"import","line":7},{"file":"tests/mesh-make-solid.test.mjs","kind":"import","line":8},{"file":"tests/mesh-reduce.test.mjs","kind":"import","line":7},{"file":"tests/mesh-remesh.test.mjs","kind":"import","line":9},{"file":"tests/mesh-smooth.test.mjs","kind":"import","line":10},{"file":"tests/mesh-surgery.test.mjs","kind":"import","line":8},{"file":"tests/mesh-workplane.test.mjs","kind":"import","line":8},{"file":"tests/mixed-project.test.mjs","kind":"import","line":10},{"file":"tests/parameters.test.mjs","kind":"import","line":5},{"file":"tests/workplane.test.mjs","kind":"import","line":6}],"mentionedBy":["backend/practice-tool-verification.cjs","mini-cad/src/ai-core/mesh-connectors.js","mini-cad/src/ai-core/mesh-engine/geometry.js","mini-cad/src/ai-core/mesh-source-data.js","mini-cad/src/ai-core/origin.json","mini-cad/src/ai-native.js","mini-cad/src/engine/geometry.js","mini-cad/src/engine/origin.json","mini-cad/src/library-placement.js","mini-cad/src/manipulation.js","mini-cad/src/model.js","mini-cad/src/native/mesh-engine/geometry.js","mini-cad/src/operations.js","mini-cad/src/raw-mesh.js","mini-cad/src/renderer.js","mini-cad/src/transform-tools.js","mini-cad/tests/library-placement.test.mjs","mini-cad/tests/manipulation.test.mjs","mini-cad/tests/placement.test.mjs","mini-cad/tests/quick-tools.test.mjs","mini-cad/tests/transform-tools.test.mjs","mini/src/ai-tools.js","mini/src/engine/geometry.js","mini/src/engine/origin.json","mini/src/library-placement.js","mini/src/manipulation.js","mini/src/model.js","mini/src/operations.js","mini/src/raw-mesh.js","mini/src/renderer.js","mini/src/repair.js","mini/src/transform-tools.js","mini/tests/library-placement.test.mjs","mini/tests/manipulation.test.mjs","mini/tests/model.test.mjs","mini/tests/placement.test.mjs","mini/tests/quick-tools.test.mjs","mini/tests/repair.test.mjs","mini/tests/transform-tools.test.mjs","tests/audit-geometry-regressions.test.mjs","tests/cad-assembly-display.test.mjs","tests/cad-mixed-ai.test.mjs","tests/cad-renderer-picking.test.mjs","tests/converter-symmetry.test.mjs","tests/extensions.test.mjs","tests/feature-transforms.test.mjs","tests/fixtures/mesh-reduce-fixtures.mjs","tests/geometry.test.mjs","tests/history.test.mjs","tests/mesh-curved-reduce.test.mjs","tests/mesh-curved-remesh-controller.test.mjs","tests/mesh-curved-remesh.test.mjs","tests/mesh-display-geometry.test.mjs","tests/mesh-erase-fill.test.mjs","tests/mesh-generated-output.test.mjs","tests/mesh-hollow.test.mjs","tests/mesh-make-solid.test.mjs","tests/mesh-partition-review.test.mjs","tests/mesh-reduce.test.mjs","tests/mesh-remesh.test.mjs","tests/mesh-smooth.test.mjs","tests/mesh-surgery.test.mjs","tests/mesh-workplane.test.mjs","tests/mixed-project.test.mjs","tests/parameters.test.mjs","tests/workplane.test.mjs"]},
     {"file":"src/mesh-engine/history.js","current":true,"legacyOnly":false,"imports":["src/cad-data.js","src/mesh-engine/geometry.js","src/mesh-engine/mesh-partition-recipe.js","src/mesh-engine/mesh-project-json.js"],"consumers":[{"file":"src/mesh-engine-adapter.js","kind":"import","line":37},{"file":"tests/audit-geometry-regressions.test.mjs","kind":"dynamic-import","line":7},{"file":"tests/feature-transforms.test.mjs","kind":"import","line":2},{"file":"tests/history.test.mjs","kind":"import","line":7}],"mentionedBy":["tests/audit-geometry-regressions.test.mjs","tests/feature-transforms.test.mjs","tests/history.test.mjs"]},
@@ -1849,7 +2612,7 @@
     {"file":"src/mesh-import-limits.js","current":true,"legacyOnly":false,"imports":[],"consumers":[{"file":"src/cad-main.js","kind":"import","line":34},{"file":"src/mesh-import-core.js","kind":"import","line":5}],"mentionedBy":["mini-cad/src/import-core/mesh-import-core.js","mini-cad/src/import-core/provenance.json","mini-cad/src/import-dialog.js","mini/src/import-core/mesh-import-core.js","mini/src/import-core/provenance.json","mini/src/import-dialog.js"]},
     {"file":"src/mesh-import-worker.js","current":true,"legacyOnly":false,"imports":["src/mesh-import-core.js"],"consumers":[{"file":"src/cad-stl-workbench.js","kind":"url","line":42},{"file":"src/mesh-import-client.js","kind":"url","line":3}],"mentionedBy":["mini-cad/src/import-core/mesh-import-client.js","mini-cad/src/import-core/provenance.json","mini/src/import-core/mesh-import-client.js","mini/src/import-core/provenance.json"]},
     {"file":"src/mesh-inspector.js","current":true,"legacyOnly":false,"imports":[],"consumers":[{"file":"scripts/expansion-baseline.mjs","kind":"import","line":16},{"file":"src/cad-mesh-hole-fill-ui.js","kind":"import","line":5},{"file":"src/cad-mesh-inspector-rendering.js","kind":"import","line":2},{"file":"src/cad-mesh-inspector-ui.js","kind":"import","line":3},{"file":"src/cad-mesh-repair-ui.js","kind":"import","line":4},{"file":"src/mesh-curved-reduce.js","kind":"import","line":3},{"file":"src/mesh-curved-remesh.js","kind":"import","line":2},{"file":"src/mesh-engine-adapter.js","kind":"import","line":28},{"file":"src/mesh-erase-fill.js","kind":"import","line":2},{"file":"src/mesh-hollow.js","kind":"import","line":2},{"file":"src/mesh-make-solid.js","kind":"import","line":2},{"file":"src/mesh-reduce.js","kind":"import","line":2},{"file":"src/mesh-remesh.js","kind":"import","line":4},{"file":"src/mesh-selection-data.js","kind":"dynamic-import","line":178},{"file":"src/mesh-selection-worker.js","kind":"import","line":2},{"file":"src/mesh-smooth.js","kind":"import","line":2},{"file":"src/mesh-surgery.js","kind":"import","line":3},{"file":"src/thickness-worker.js","kind":"import","line":3},{"file":"tests/mesh-curved-remesh.test.mjs","kind":"import","line":7},{"file":"tests/mesh-erase-fill.test.mjs","kind":"import","line":7},{"file":"tests/mesh-generated-output.test.mjs","kind":"import","line":9},{"file":"tests/mesh-hole-fill.test.mjs","kind":"import","line":5},{"file":"tests/mesh-hollow.test.mjs","kind":"import","line":6},{"file":"tests/mesh-inspector.test.mjs","kind":"import","line":5},{"file":"tests/mesh-make-solid.test.mjs","kind":"import","line":7},{"file":"tests/mesh-reduce.test.mjs","kind":"import","line":6},{"file":"tests/mesh-remesh.test.mjs","kind":"import","line":7},{"file":"tests/mesh-sculpt.test.mjs","kind":"import","line":7},{"file":"tests/mesh-simple-repair-ui.test.mjs","kind":"import","line":3},{"file":"tests/mesh-simple-repair.test.mjs","kind":"import","line":5},{"file":"tests/mesh-smooth.test.mjs","kind":"import","line":7},{"file":"tests/thickness-native.test.mjs","kind":"import","line":11}],"mentionedBy":["mini-cad/src/ai-core/mesh-erase-fill.js","mini-cad/src/ai-core/mesh-hollow.js","mini-cad/src/ai-core/mesh-make-solid.js","mini-cad/src/ai-core/mesh-reduce.js","mini-cad/src/ai-core/mesh-remesh.js","mini-cad/src/ai-core/mesh-selection-data.js","mini-cad/src/ai-core/mesh-selection-worker.js","mini-cad/src/ai-core/mesh-smooth.js","mini-cad/src/ai-core/origin.json","mini/src/repair-core/origin.json","mini/src/repair.js","scripts/expansion-baseline.mjs","tests/mesh-curved-remesh.test.mjs","tests/mesh-erase-fill.test.mjs","tests/mesh-generated-output.test.mjs","tests/mesh-hole-fill.test.mjs","tests/mesh-hollow.test.mjs","tests/mesh-inspector.test.mjs","tests/mesh-make-solid.test.mjs","tests/mesh-reduce.test.mjs","tests/mesh-remesh.test.mjs","tests/mesh-sculpt.test.mjs","tests/mesh-simple-repair-ui.test.mjs","tests/mesh-simple-repair.test.mjs","tests/mesh-smooth.test.mjs","tests/thickness-native.test.mjs"]},
-    {"file":"src/mesh-large-reduce.js","current":true,"legacyOnly":false,"imports":["src/cad-affine.js","src/cad-geometry-digest.js","src/mesh-import-core.js","src/mesh-selection-data.js"],"consumers":[{"file":"scripts/package-mechanism-tools.mjs","kind":"path-literal"},{"file":"src/mesh-engine-adapter.js","kind":"import","line":18},{"file":"src/mesh-reduce.js","kind":"import","line":3},{"file":"tests/mesh-large-reduce-controller.test.mjs","kind":"import","line":6},{"file":"tests/mesh-large-reduce.test.mjs","kind":"import","line":3}],"mentionedBy":["scripts/package-mechanism-tools.mjs","tests/mesh-large-reduce-controller.test.mjs","tests/mesh-large-reduce.test.mjs"]},
+    {"file":"src/mesh-large-reduce.js","current":true,"legacyOnly":false,"imports":["src/cad-affine.js","src/cad-geometry-digest.js","src/mesh-import-core.js","src/mesh-selection-data.js"],"consumers":[{"file":"scripts/legacy/package-mechanism-tools.mjs","kind":"path-literal"},{"file":"src/mesh-engine-adapter.js","kind":"import","line":18},{"file":"src/mesh-reduce.js","kind":"import","line":3},{"file":"tests/mesh-large-reduce-controller.test.mjs","kind":"import","line":6},{"file":"tests/mesh-large-reduce.test.mjs","kind":"import","line":3}],"mentionedBy":["scripts/legacy/package-mechanism-tools.mjs","tests/mesh-large-reduce-controller.test.mjs","tests/mesh-large-reduce.test.mjs"]},
     {"file":"src/mesh-lid.js","current":true,"legacyOnly":false,"imports":["src/cad-geometry-digest.js","src/project-objects.js"],"consumers":[{"file":"src/mesh-counterpart.js","kind":"import","line":2},{"file":"src/mesh-engine-adapter.js","kind":"import","line":6},{"file":"src/mesh-features.js","kind":"import","line":2},{"file":"src/mesh-radial-clearance.js","kind":"import","line":3},{"file":"src/mesh-section-contours.js","kind":"import","line":1},{"file":"src/mesh-source-data.js","kind":"import","line":2},{"file":"tests/mesh-lid.test.mjs","kind":"import","line":5}],"mentionedBy":["mini-cad/src/ai-core/mesh-counterpart.js","mini-cad/src/ai-core/mesh-features.js","mini-cad/src/ai-core/mesh-source-data.js","mini-cad/src/ai-core/origin.json","tests/mesh-lid.test.mjs"]},
     {"file":"src/mesh-make-solid.js","current":true,"legacyOnly":false,"imports":["src/mesh-inspector.js","src/mesh-selection-data.js"],"consumers":[{"file":"src/cad-mesh-make-solid-ui.js","kind":"import","line":4},{"file":"src/mesh-engine-adapter.js","kind":"import","line":13},{"file":"src/mesh-source-data.js","kind":"import","line":5},{"file":"tests/mesh-hollow.test.mjs","kind":"import","line":10},{"file":"tests/mesh-make-solid.test.mjs","kind":"import","line":5}],"mentionedBy":["mini-cad/src/ai-core/mesh-source-data.js","mini-cad/src/ai-core/origin.json","tests/mesh-hollow.test.mjs","tests/mesh-make-solid.test.mjs"]},
     {"file":"src/mesh-part-properties.js","current":true,"legacyOnly":false,"imports":["src/cad-affine.js","src/mesh-surgery.js"],"consumers":[{"file":"src/mesh-engine-adapter.js","kind":"import","line":1}],"mentionedBy":[]},
@@ -1910,6 +2673,6 @@
     {"file":"src/thickness-map.js","current":true,"legacyOnly":false,"imports":["src/cad-affine.js"],"consumers":[{"file":"src/cad-renderer.js","kind":"import","line":8},{"file":"src/cad-thickness-ui.js","kind":"import","line":2},{"file":"src/thickness-worker.js","kind":"import","line":1},{"file":"tests/thickness-map.test.mjs","kind":"import","line":4},{"file":"tests/thickness-native.test.mjs","kind":"import","line":7}],"mentionedBy":["tests/thickness-map.test.mjs","tests/thickness-native.test.mjs"]},
     {"file":"src/thickness-worker.js","current":true,"legacyOnly":false,"imports":["src/mesh-inspector.js","src/mesh-selection-data.js","src/thickness-map.js"],"consumers":[{"file":"src/cad-thickness-ui.js","kind":"url","line":27}],"mentionedBy":[]},
     {"file":"src/ui-numbers.js","current":true,"legacyOnly":false,"imports":[],"consumers":[{"file":"src/cad-interface.js","kind":"import","line":2},{"file":"src/cad-main.js","kind":"import","line":31},{"file":"src/cad-practice-runner.js","kind":"import","line":12},{"file":"tests/ui-numbers.test.mjs","kind":"import","line":3}],"mentionedBy":["tests/ui-numbers.test.mjs"]},
-    {"file":"src/version.js","current":true,"legacyOnly":false,"imports":[],"consumers":[{"file":"scripts/package-ai-diagnostics.mjs","kind":"path-literal"},{"file":"scripts/package-ai-measurement-fix.mjs","kind":"path-literal"},{"file":"scripts/package-ai-workspace.mjs","kind":"path-literal"},{"file":"scripts/package-freecad-python.mjs","kind":"path-literal"},{"file":"scripts/package-freecad.mjs","kind":"path-literal"},{"file":"scripts/package-fusion.mjs","kind":"path-literal"},{"file":"scripts/package-security.mjs","kind":"path-literal"},{"file":"src/cad-about.js","kind":"import","line":4},{"file":"src/cad-ai-context.js","kind":"import","line":17},{"file":"src/cad-interface-settings.js","kind":"import","line":5},{"file":"src/cad-legal-ui.js","kind":"import","line":2},{"file":"src/cad-main.js","kind":"import","line":169},{"file":"tests/cad-ai-contract.test.mjs","kind":"import","line":7}],"mentionedBy":["mini-cad/src/ai-core/cad-ai-context.js","mini-cad/src/ai-core/origin.json","scripts/package-ai-diagnostics.mjs","scripts/package-ai-measurement-fix.mjs","scripts/package-ai-workspace.mjs","scripts/package-freecad-python.mjs","scripts/package-freecad.mjs","scripts/package-fusion.mjs","scripts/package-security.mjs","scripts/security-release-inputs.json","tests/cad-ai-contract.test.mjs"]}
+    {"file":"src/version.js","current":true,"legacyOnly":false,"imports":[],"consumers":[{"file":"scripts/legacy/package-ai-diagnostics.mjs","kind":"path-literal"},{"file":"scripts/legacy/package-ai-measurement-fix.mjs","kind":"path-literal"},{"file":"scripts/legacy/package-ai-workspace.mjs","kind":"path-literal"},{"file":"scripts/legacy/package-freecad.mjs","kind":"path-literal"},{"file":"scripts/legacy/package-fusion.mjs","kind":"path-literal"},{"file":"scripts/legacy/package-security.mjs","kind":"path-literal"},{"file":"scripts/package-freecad-python.mjs","kind":"path-literal"},{"file":"src/cad-about.js","kind":"import","line":4},{"file":"src/cad-ai-context.js","kind":"import","line":17},{"file":"src/cad-interface-settings.js","kind":"import","line":5},{"file":"src/cad-legal-ui.js","kind":"import","line":2},{"file":"src/cad-main.js","kind":"import","line":169},{"file":"tests/cad-ai-contract.test.mjs","kind":"import","line":7}],"mentionedBy":["mini-cad/src/ai-core/cad-ai-context.js","mini-cad/src/ai-core/origin.json","scripts/legacy/package-ai-diagnostics.mjs","scripts/legacy/package-ai-measurement-fix.mjs","scripts/legacy/package-ai-workspace.mjs","scripts/legacy/package-freecad.mjs","scripts/legacy/package-fusion.mjs","scripts/legacy/package-security.mjs","scripts/package-freecad-python.mjs","scripts/security-release-inputs.json","tests/cad-ai-contract.test.mjs"]}
   ]
 }
