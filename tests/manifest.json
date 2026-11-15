@@ -552,6 +552,7 @@
   {"file":"tests/sketch-templates.test.mjs","referencedBy":["scripts/legacy/package-sketch-mesh.mjs"],"kind":"node","status":"pass","seconds":3.293},
   {"file":"tests/sketch-tools.test.mjs","referencedBy":["scripts/legacy/package-sketch-mesh.mjs","scripts/package-freecad-python.mjs","test:sketch-upgrade"],"kind":"node","status":"pass","seconds":0.659},
   {"file":"tests/sketch-view-cache.test.mjs","referencedBy":["scripts/package-freecad-python.mjs","test:working-speed"],"kind":"node","status":"pass","seconds":0.243},
+  {"file":"tests/source-ci.test.mjs","referencedBy":[],"kind":"node","status":"pass"},
   {"file":"tests/speech-model.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.343},
   {"file":"tests/speech-online.test.cjs","referencedBy":["scripts/package-freecad-python.mjs"],"kind":"node","status":"pass","seconds":0.234},
   {"file":"tests/speech.test.mjs","referencedBy":["scripts/legacy/package-chatgpt.mjs","scripts/legacy/package-provider-context.mjs","scripts/legacy/package-solid.mjs","scripts/legacy/package-speech.mjs","scripts/package-freecad-python.mjs","test:speech"],"kind":"node","status":"pass","seconds":0.179},
