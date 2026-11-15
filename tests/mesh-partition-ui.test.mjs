@@ -1,13 +1,17 @@
-import test from 'node:test';
+import test,{beforeEach} from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
-import {readFileSync} from 'node:fs';
-import * as helpers from '../src/mesh-partition-review.js';
-const source=readFileSync(new URL('../src/cad-mesh-partition-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('export function createMeshPartitionUI','function createMeshPartitionUI');
+import {createMeshPartitionUI} from '../src/cad-mesh-partition-ui.js';
+import {installTestDocument} from './fixtures/renderer-test-support.mjs';
+const element=()=>({value:'',disabled:false,checked:false,hidden:false,children:[],textContent:'',dataset:{},style:{},append(...v){this.children.push(...v);},replaceChildren(...v){this.children=v;}});
+
+beforeEach(t=>{
+ t.after(installTestDocument({createElement:element}));
+});
+
 function harness({kind='split',display}={}){const controls=new Map(),messages=[],draws=[],node={id:'source',transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],mesh:{verts:[0,0,0,20,0,0,20,20,20,0,20,20],triangles:[0,1,2,0,2,3]}},session={kind,nodes:[node],busy:false,preview:null},project={workplane:{origin:[0,0,7],orientation:[0,0,0,1]}};let active=session,changes=0,shown=null,shift=null,restored=0,focused=null;
- const element=()=>({value:'',disabled:false,checked:false,hidden:false,children:[],textContent:'',dataset:{},style:{},append(...v){this.children.push(...v);},replaceChildren(...v){this.children=v;}}),panel={querySelector:s=>controls.get(s.slice(1))};for(const id of ['axis','normal-x','normal-y','normal-z','offset','cut-minus','cut-plus','cut-step','cut-center','cut-slider','cut-range','preview-gap','cut-highlight','custom-normal','partition-compare','partition-results','partition-checks','apply'])controls.set('mesh-'+id,element());
+ const panel={querySelector:s=>controls.get(s.slice(1))};for(const id of ['axis','normal-x','normal-y','normal-z','offset','cut-minus','cut-plus','cut-step','cut-center','cut-slider','cut-range','preview-gap','cut-highlight','custom-normal','partition-compare','partition-results','partition-checks','apply'])controls.set('mesh-'+id,element());
  for(const [id,v]of Object.entries({axis:'z','normal-x':'0','normal-y':'0','normal-z':'1',offset:'10','cut-step':'1','preview-gap':kind==='split'?'10':'0','partition-compare':'result'}))controls.get('mesh-'+id).value=v;controls.get('mesh-cut-highlight').checked=true;
- const context={...helpers,document:{createElement:element},Number,Error};vm.runInNewContext(source+'\ncreate=createMeshPartitionUI;',context);let ui;ui=context.create({panel,controller:{display:async()=>display?display():{meshes:[{id:'left',kind:'mesh',transform:node.transform,mesh:{vertices:node.mesh.verts,triangles:node.mesh.triangles}},{id:'right',kind:'mesh',transform:node.transform,mesh:{vertices:node.mesh.verts,triangles:node.mesh.triangles}}]}},view:{viewState:()=>({original:true}),restoreView:()=>restored++,setInteraction(){},clearPreview:()=>shown=null,setPreview:r=>{shown=r;draws.push(r);},offsetPreviewRoots:s=>shift=s,fit(){},focusWorldPoints:p=>focused=p},getSession:()=>active,getProject:()=>project,onChanged:()=>{changes++;session.preview=null;ui.reset();shown=null;},onAvailability(){},message:s=>messages.push(s)});ui.mount();
+ const ui=createMeshPartitionUI({panel,controller:{display:async()=>display?display():{meshes:[{id:'left',kind:'mesh',transform:node.transform,mesh:{vertices:node.mesh.verts,triangles:node.mesh.triangles}},{id:'right',kind:'mesh',transform:node.transform,mesh:{vertices:node.mesh.verts,triangles:node.mesh.triangles}}]}},view:{viewState:()=>({original:true}),restoreView:()=>restored++,setInteraction(){},clearPreview:()=>shown=null,setPreview:r=>{shown=r;draws.push(r);},offsetPreviewRoots:s=>shift=s,fit(){},focusWorldPoints:p=>focused=p},getSession:()=>active,getProject:()=>project,onChanged:()=>{changes++;session.preview=null;ui.reset();shown=null;},onAvailability(){},message:s=>messages.push(s)});ui.mount();
  const proposal={previewId:'p',project:{nodes:['left','right'].map(id=>({...node,id}))},report:{plane:{normal:[0,0,1],offset:10},cutArea:400,volumes:[4000,4000],sourceVolume:8000,resultVolume:8000,missingVolume:0,addedVolume:0,volumeTolerance:.16,review:{parts:['left','right'].map(id=>({id,triangleIds:[0],bounds:{min:[0,0,0],max:[20,20,20]},planeTolerance:.0001}))}}};
  return {ui,session,controls,proposal,messages,draws,prepare:async()=>{session.preview=proposal;return ui.preview(proposal,['left','right']);},setActive:v=>active=v,get changes(){return changes;},get shown(){return shown;},get shift(){return shift;},get restored(){return restored;},get focused(){return focused;}};
 }

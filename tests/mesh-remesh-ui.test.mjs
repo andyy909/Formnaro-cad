@@ -1,14 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
-import {readFileSync} from 'node:fs';
 import * as THREE from 'three';
-import {flags} from '../src/organization.js';
-import {validateMeshRemeshOptions} from '../src/mesh-remesh.js';
 import {defaultLayout,validateLayout,emptyLayouts,validateLayouts} from '../backend/layout-data.mjs';
 import {moveLayoutItem} from '../src/layout-preferences.js';
+import {importRendererModule,installTestDocument} from './fixtures/renderer-test-support.mjs';
 
-const source=readFileSync(new URL('../src/cad-mesh-remesh-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('export function createCadMeshRemeshUI','function createCadMeshRemeshUI');
+const {createCadMeshRemeshUI}=await importRendererModule(new URL('../src/cad-mesh-remesh-ui.js',import.meta.url));
 const digest='a'.repeat(64),quality={minQuality:.2,meanQuality:.6,edgeLengthCV:.4};
 const report={beforeTriangles:2,afterTriangles:4,qualityBefore:quality,qualityAfter:{minQuality:.4,meanQuality:.8,edgeLengthCV:.2},maximumSurfaceDeviationBound:0,numericalAllowance:1.5e-11,boundsDifference:0,sampledSurfaceDeviation:{maximum:1e-14,sampleCountBefore:12,sampleCountAfter:24},splitEdges:1,flippedEdges:1,relaxedVertices:1,protectedTriangles:1,unselectedGeometryExact:true,solidProven:false};
 function harness({catalogQuery,preview,showPreview,surface}={}){
@@ -18,8 +15,13 @@ function harness({catalogQuery,preview,showPreview,surface}={}){
  const make=(id,attrs='')=>({id,value:attrs.match(/value="([^"]*)"/)?.[1]??'',checked:attrs.includes('checked'),disabled:attrs.includes('disabled'),textContent:'',querySelector:()=>({disabled:false,textContent:''})});
  const panel={hidden:true,setAttribute(){},addEventListener(type,handler){this[type]=handler;},remove(){},querySelector:s=>controls.get(s.slice(1)),querySelectorAll:()=>[...controls.values()],set innerHTML(html){controls.clear();for(const match of html.matchAll(/<(input|select|button|p)([^>]*)>/g)){const id=match[2].match(/id="([^"]*)"/)?.[1];if(id)controls.set(id,make(id,match[2]));}controls.get('mesh-remesh-mode').value='remesh';controls.get('mesh-remesh-scope').value='all';controls.get('mesh-remesh-compare').value='result';}};
  const controller={readSnapshot:()=>project,revision:()=>revision,cancel:()=>cancels++,discard:id=>discarded.push(id),meshQuery:async(type,o)=>{calls.push({query:type,options:o});return catalogQuery?catalogQuery():{geometryDigest:digest,triangles:2,regions:[{name:'Anlage',triangles:1}]};},preview:async(o,opts)=>{calls.push({o,opts});return preview?preview(o,opts):{previewId:'p1',report};}};
- const context={document:{createElement:()=>panel},structuredClone,THREE,flags,validateMeshRemeshOptions:o=>validateMeshRemeshOptions(structuredClone(o))};vm.runInNewContext(source+'\ncreate=createCadMeshRemeshUI;',context);
- const ui=context.create({controller,view:{canvas:{parentElement:{append(){}}},scene,groups:{bodies,preview:resultGroup},allows:()=>true,setInteraction:callback=>interaction=callback,invalidate(){}},getSelection:()=>selection,getSurfaceSelection:()=>surface,select:s=>selection=s,showPreview:async p=>{if(showPreview)await showPreview(p);shown=p.previewId;resultGroup.clear();resultGroup.add(mesh.clone());},clearPreview:()=>{shown=null;resultGroup.clear();},applyProposal:async()=>{applied++;revision='applied';}});
+ const restoreDocument=installTestDocument({createElement:()=>panel});
+ let ui;
+ try{
+  ui=createCadMeshRemeshUI({controller,view:{canvas:{parentElement:{append(){}}},scene,groups:{bodies,preview:resultGroup},allows:()=>true,setInteraction:callback=>interaction=callback,invalidate(){}},getSelection:()=>selection,getSurfaceSelection:()=>surface,select:s=>selection=s,showPreview:async p=>{if(showPreview)await showPreview(p);shown=p.previewId;resultGroup.clear();resultGroup.add(mesh.clone());},clearPreview:()=>{shown=null;resultGroup.clear();},applyProposal:async()=>{applied++;revision='applied';}});
+ }finally{
+  restoreDocument();
+ }
  return {ui,node,project,controls,discarded,calls,panel,scene,bodies,setRevision:r=>revision=r,setSelection:s=>selection=s,get shown(){return shown;},get applied(){return applied;},get cancels(){return cancels;},get interaction(){return interaction;},dispose(){ui.dispose();geometry.dispose();mesh.material.dispose();}};
 }
 test('Remesh preview displays measured quality/deviation and never commits before Apply',async()=>{const h=harness();assert.equal(await h.ui.open(),true);assert.ok(h.interaction);assert.equal(await h.ui.preview(),true,h.controls.get('mesh-remesh-status').textContent);const call=h.calls.find(c=>c.o);assert.equal(call.o.type,'mesh-remesh');assert.equal(call.o.options.mode,'remesh');assert.equal(call.o.options.targetEdgeLength,2);assert.equal(h.applied,0);assert.match(h.controls.get('mesh-remesh-result').textContent,/Stichprobe allein ist keine flächendeckende Garantie/);assert.match(h.controls.get('mesh-remesh-result').textContent,/0,6.*0,2/);assert.match(h.controls.get('mesh-remesh-result').textContent,/Nachgewiesene geometrische Abweichungsgrenze: 0/);assert.match(h.controls.get('mesh-remesh-result').textContent,/Zusätzlicher numerischer Spielraum: 1,500e-11/);assert.equal(h.ui.state().overlayLines,1);assert.equal(await h.ui.apply(),true);assert.equal(h.applied,1);assert.equal(h.ui.state(),null);assert.equal(h.interaction,null);h.dispose();});

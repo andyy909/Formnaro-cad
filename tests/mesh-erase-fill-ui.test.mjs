@@ -1,14 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
-import {readFileSync} from 'node:fs';
 import * as THREE from 'three';
-import {flags} from '../src/organization.js';
-import {validateMeshEraseFillOptions} from '../src/mesh-erase-fill.js';
 import {defaultLayout,validateLayout,emptyLayouts,validateLayouts} from '../backend/layout-data.mjs';
 import {moveLayoutItem} from '../src/layout-preferences.js';
+import {importRendererModule,installTestDocument} from './fixtures/renderer-test-support.mjs';
 
-const source=readFileSync(new URL('../src/cad-mesh-erase-fill-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('export function createCadMeshEraseFillUI','function createCadMeshEraseFillUI');
+const {createCadMeshEraseFillUI}=await importRendererModule(new URL('../src/cad-mesh-erase-fill-ui.js',import.meta.url));
 const digest='a'.repeat(64),binding={objectId:'mesh',geometryDigest:digest,triangleIds:[0,1,2,3]},report={beforeTriangles:14,afterTriangles:12,removedTriangles:4,replacementTriangles:2,removedTriangleIds:[0,1,2,3],replacementTriangleIds:[10,11],boundaryEdges:4,maximumBoundaryPlanarityDeviation:0,relativePlanarityTolerance:1e-8,protectedTriangles:1,protectedGeometryExact:true,unselectedGeometryExact:true,coordinatesMoved:false,boundsDifference:1,boundsMeasure:'referenced-surface-vertices',removedArea:18,replacementArea:16,sampledSurfaceDeviation:{maximum:1,sampleCountBefore:28,sampleCountAfter:14,approximate:true},globalSurfaceDeviationBound:null,volumeBefore:null,volumeAfter:16,volumeDifference:null,sourceSolidProven:false,solidProven:true};
 function harness({catalogQuery,preview,showPreview,prepare=()=>{},surface=structuredClone(binding),outputReport=report}={}){
  const node={id:'mesh',kind:'mesh',name:'Synthetische Schadstelle',layerId:'default',folderId:null,transform:[1,0,0,0,0,1,0,0,0,0,1,0,10,20,30,1],mesh:{verts:[0,0,1,4,0,1,4,4,1,0,4,1,2,2,2,0,0,0,4,0,0,4,4,0,0,4,0],triangles:[0,1,4,1,2,4,2,3,4,3,0,4,5,7,6,5,8,7,5,6,1,5,1,0,6,7,2,6,2,1,7,8,3,7,3,2,8,5,0,8,0,3]}},project={nodes:[node],layers:[{id:'default',hidden:false,locked:false}],folders:[]},controls=new Map(),discarded=[],calls=[],scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();camera.position.set(23,-45,67);const resultNode=structuredClone(node);resultNode.mesh.triangles=[...node.mesh.triangles.slice(12),0,1,2,0,2,3];
@@ -16,8 +13,13 @@ function harness({catalogQuery,preview,showPreview,prepare=()=>{},surface=struct
  const make=(id,attrs='')=>({id,value:attrs.match(/value="([^"]*)"/)?.[1]??'',checked:attrs.includes('checked'),disabled:attrs.includes('disabled'),textContent:''});
  const panel={hidden:true,setAttribute(){},addEventListener(type,handler){this[type]=handler;},remove(){},querySelector:selector=>controls.get(selector.slice(1)),querySelectorAll:()=>[...controls.values()],set innerHTML(html){controls.clear();for(const match of html.matchAll(/<(input|select|button|p)([^>]*)>/g)){const id=match[2].match(/id="([^"]*)"/)?.[1];if(id)controls.set(id,make(id,match[2]));}controls.get('mesh-erase-fill-compare').value='result';}};
  const proposals=new Map(),controller={readSnapshot:()=>project,revision:()=>revision,cancel:()=>cancels++,discard:id=>{discarded.push(id);proposals.delete(id);},getPreview:id=>proposals.get(id),meshQuery:async(type,options)=>{calls.push({query:type,options});return catalogQuery?catalogQuery():{geometryDigest:digest,triangles:14,regions:[{name:'Anlage',triangles:1}]};},preview:async(o,opts)=>{calls.push({o,opts});const p=preview?await preview(o,opts):{previewId:'p1',report:outputReport,project:{...project,nodes:[resultNode]}};proposals.set(p.previewId,p);return p;}};
- const context={document:{createElement:()=>panel},structuredClone,THREE,flags,validateMeshEraseFillOptions:o=>validateMeshEraseFillOptions(structuredClone(o))};vm.runInNewContext(source+'\ncreate=createCadMeshEraseFillUI;',context);
- const ui=context.create({controller,view:{canvas:{parentElement:{append(){}}},scene,allows:()=>true,setInteraction:callback=>interaction=callback,invalidate(){}},getSelection:()=>selection,getSurfaceSelection:()=>surface,prepare,select:s=>selection=s,onSelectSurfaces:()=>selectionRequests++,showPreview:async p=>{if(showPreview)await showPreview(p);shown=p.previewId;},clearPreview:()=>shown=null,applyProposal:async()=>{applied++;revision='applied';}});
+ const restoreDocument=installTestDocument({createElement:()=>panel});
+ let ui;
+ try{
+  ui=createCadMeshEraseFillUI({controller,view:{canvas:{parentElement:{append(){}}},scene,allows:()=>true,setInteraction:callback=>interaction=callback,invalidate(){}},getSelection:()=>selection,getSurfaceSelection:()=>surface,prepare,select:s=>selection=s,onSelectSurfaces:()=>selectionRequests++,showPreview:async p=>{if(showPreview)await showPreview(p);shown=p.previewId;},clearPreview:()=>shown=null,applyProposal:async()=>{applied++;revision='applied';}});
+ }finally{
+  restoreDocument();
+ }
  return {ui,node,resultNode,project,controls,discarded,calls,panel,scene,camera,setRevision:r=>revision=r,setSelection:s=>selection=s,get shown(){return shown;},get applied(){return applied;},get cancels(){return cancels;},get interaction(){return interaction;},get selectionRequests(){return selectionRequests;},dispose(){ui.dispose();}};
 }
 test('Erase and Fill preview is explicitly selection-bound and only Apply commits',async()=>{const h=harness();assert.equal(await h.ui.open(),true);assert.equal(h.ui.state().selectionCount,4);assert.equal(h.ui.state().overlayRemovedTriangles,4);assert.ok(h.interaction);assert.equal(await h.ui.preview(),true,h.controls.get('mesh-erase-fill-status').textContent);const call=h.calls.find(c=>c.o);assert.equal(call.o.type,'mesh-erase-fill');assert.equal(call.o.options.method,'planar-replace-v1');assert.deepEqual(Object.keys(call.o.options).sort(),['geometryDigest','method','triangleIds']);assert.deepEqual([...call.o.options.triangleIds],[0,1,2,3]);assert.equal(h.applied,0);assert.equal(h.ui.state().overlayReplacementTriangles,2);const text=h.controls.get('mesh-erase-fill-result').textContent;assert.match(text,/4 ausdrücklich ausgewählte Dreiecke entfernt, 2 neue ebene Dreiecke/);assert.match(text,/nicht ausgewählten Flächen/);assert.match(text,/kein flächendeckender maximaler Abweichungsnachweis/);assert.equal(await h.ui.apply(),true);assert.equal(h.applied,1);assert.equal(h.ui.state(),null);assert.equal(h.interaction,null);h.dispose();});
