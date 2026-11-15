@@ -1,4 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path'),{createHash}=require('node:crypto'),{execFileSync}=require('node:child_process');
+const {pathToFileURL}=require('node:url');
 const {createWindowsDictation,installWindowsDictation}=require('../backend/windows-dictation.cjs');
 async function fixture(t,options={}){
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'formnaro-windows-dictation-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
@@ -34,13 +35,14 @@ test('Native focus/modifier failures return a useful manual shortcut without ret
  }
 });
 test('Only the exact main document IPC may request dictation, with no renderer-supplied arguments',async()=>{
- let handler,calls=0;const frame={url:'file:///C:/fixture/index.html'},contents={mainFrame:frame},win={webContents:contents};
- installWindowsDictation(win,{entry:'C:/fixture/index.html',ipcMain:{handle(name,fn){assert.equal(name,'cad-speech:windows-dictation');handler=fn;}},service:{async open(){calls++;return {requested:true};}}});
+ const entry=path.resolve(os.tmpdir(),'formnaro-dictation-fixture','index.html'),entryUrl=pathToFileURL(entry).href;
+ let handler,calls=0;const frame={url:entryUrl},contents={mainFrame:frame},win={webContents:contents};
+ installWindowsDictation(win,{entry,ipcMain:{handle(name,fn){assert.equal(name,'cad-speech:windows-dictation');handler=fn;}},service:{async open(){calls++;return {requested:true};}}});
  const own={sender:contents,senderFrame:frame};
  assert.equal((await handler({...own,senderFrame:{url:frame.url}})).ok,false);
  assert.equal((await handler({...own,sender:{}})).ok,false);
  assert.equal((await handler(own,{command:'anything'})).ok,false);
- frame.url='https://untrusted.invalid/';assert.equal((await handler(own)).ok,false);frame.url='file:///C:/fixture/index.html';
+ frame.url='https://untrusted.invalid/';assert.equal((await handler(own)).ok,false);frame.url=entryUrl;
  assert.equal((await handler(own)).ok,true);assert.equal(calls,1);
 });
 test('Built native helper validates its x64 INPUT layout and rejects invalid handles without input',{skip:process.platform!=='win32'},()=>{
