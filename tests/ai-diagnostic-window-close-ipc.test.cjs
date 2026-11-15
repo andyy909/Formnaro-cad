@@ -6,5 +6,17 @@ for(const mode of ['closed','parent-stale-connected','vetoed'])test('diagnostic 
  vm.runInNewContext(fs.readFileSync(backend,'utf8'),{module,exports:module.exports,process,Promise,Set,Map,Date,Error,clearTimeout,setTimeout:(fn,ms)=>setTimeout(fn,ms===30000?200:ms>30000&&ms<=120000?800:ms===5000?200:ms),require:name=>name==='node:child_process'?{spawn:(exe,args,options)=>{child=spawn(process.execPath,['-e',script,mode],{...options,cwd:os.tmpdir()});if(mode==='parent-stale-connected'){const proxy=new (require('node:events').EventEmitter)();Object.defineProperty(proxy,'connected',{get:()=>true});for(const event of ['message','exit','error'])child.on(event,(...args)=>proxy.emit(event,...args));proxy.send=(...args)=>{if(child.connected)child.send(...args);};proxy.kill=()=>child.kill();return proxy;}return child;}}:name==='node:fs'?{mkdirSync(){}}:load(name)});
  const control=module.exports.openDiagnosticChild({app:{isPackaged:true},directory:'unused',executable:process.execPath});let connectedAtRequest,disconnected=false;child.on('message',m=>{if(m.type==='close-request-seen')connectedAtRequest=m.connected;});child.on('disconnect',()=>disconnected=true);
  t.after(()=>{if(child.exitCode===null&&child.signalCode===null)child.kill();});await new Promise((resolve,reject)=>{child.on('message',m=>{if(m.type==='fixture-ready')resolve();});child.once('error',reject);});const result=await control.close();assert.equal(connectedAtRequest,true);
- if(mode!=='vetoed'){assert.equal(result.code,0);assert.equal(result.forced,undefined);assert.equal(result.nativeExitGrace,true);assert(disconnected);assert.equal(child.killed,false);assert.equal(result.windowCloseSource,'child-event');assert.ok(result.windowCloseMs>=30);assert.ok(result.afterWindowCloseMs>=350);assert.equal(result.windowCloseMs+result.afterWindowCloseMs,result.shutdownMs);}else{assert.equal(result.forced,true);assert.notEqual(result.code,0);assert.equal(result.windowCloseMs,null);assert.equal(result.afterWindowCloseMs,null);}
+ if(mode!=='vetoed'){
+  assert.equal(result.code,0);assert.equal(result.forced,undefined);assert.equal(result.nativeExitGrace,true);
+  assert(disconnected);assert.equal(child.killed,false);
+  assert.ok(['child-event','ipc-received'].includes(result.windowCloseSource));
+  assert.ok(result.windowCloseMs>=30);
+  // A fallback measurement starts at IPC receipt, which can lag actual close.
+  const minimumAfterClose=result.windowCloseSource==='child-event'?350:0;
+  assert.ok(result.afterWindowCloseMs>=minimumAfterClose);
+  assert.equal(result.windowCloseMs+result.afterWindowCloseMs,result.shutdownMs);
+ }else{
+  assert.equal(result.forced,true);assert.notEqual(result.code,0);
+  assert.equal(result.windowCloseMs,null);assert.equal(result.afterWindowCloseMs,null);
+ }
 });

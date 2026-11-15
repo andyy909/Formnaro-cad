@@ -55,10 +55,13 @@ test('multiple photos surface the native reconstruction route ahead of general s
  const multi=practiceSystem(lockPracticeContext(context));
  assert.match(multi,/local project copy and no selected body/);
  assert.doesNotMatch(multi,/practice window starts empty/);
- assert.doesNotMatch(multi,/generic scene object and selection lists are intentionally empty/);
+ const multiContract=JSON.parse(multi.split('\n').at(-1));
+ assert.equal(multiContract.practiceObjects,undefined);
+ assert.equal(multiContract.sceneVisibility,'parent-withheld; use practiceObjects and practiceState');
  const selected=practiceSystem({practiceFromProject:true,practiceObjects:[{name:'Halter',kind:'cad'}]});
- assert.match(selected,/generic scene object and selection lists are intentionally empty for privacy/);
- assert.match(selected,/Use practiceObjects as the selected CAD bodies already available/);
+ const selectedContract=JSON.parse(selected.split('\n').at(-1));
+ assert.equal(selectedContract.sceneVisibility,multiContract.sceneVisibility);
+ assert.deepEqual(selectedContract.practiceObjects,[{alias:'existing-1',name:'Halter',kind:'cad'}]);
  assert(multi.indexOf('Technische Ansichten verbinden')>=0);
  assert(multi.indexOf('Technische Ansichten verbinden')<multi.indexOf('Allowed actions'));
  assert.match(multi,/already calibrated views, open photo-project-open then photo-project-multiview directly/);
