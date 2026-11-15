@@ -57,6 +57,13 @@ jobs:
       - run: npm ci
       - name: Record tested commit and tree
         run: git log -1 --format="%H %T %P"
+      - name: Check formatting of completed files
+        if: matrix.shard == 1
+        run: |
+          $files = @(Get-Content .prettier-done.txt | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') })
+          if ($files.Count -eq 0) { throw 'No files listed for formatting' }
+          npm run format:check -- @files
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - if: matrix.shard == 1
         run: node cad-kernel-build/verify-runtime.mjs
       - if: matrix.shard == 1

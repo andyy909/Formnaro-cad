@@ -1,0 +1,5 @@
+src/version.js
+src/cad-ai-analysis-access.js
+src/cad-ai-model-samples.js
+src/mesh-engine-runtime.js
+src/ui-numbers.js
