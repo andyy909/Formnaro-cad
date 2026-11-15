@@ -40,3 +40,19 @@ test('parser ignores comments, regexes and quoted fake imports; flags missing ta
   assert.equal(resolveRelative('mini/src/main.js', './old.js'), 'mini/src/old.js');
   assert.equal(resolveRelative('src/main.js', './worker.js?worker#x'), 'src/worker.js');
 });
+
+test('reachability crosses backend and ai intermediates; documentation mentions remain separate', () => {
+  const sources = {
+    'src/cad-main.js': `import '../backend/shared.mjs';`,
+    'backend/shared.mjs': `export * from '../ai/bridge.mjs';`,
+    'ai/bridge.mjs': `import '../src/kept.js';`,
+    'src/main.js': `import './kept.js';`, 'src/kept.js': '',
+    'mini/README.md': 'kept.js is a historical filename.',
+  };
+  const graph = buildGraph(Object.keys(sources), (file) => sources[file]);
+  const kept = graph.modules.find(({ file }) => file === 'src/kept.js');
+  assert.equal(kept.current, true);
+  assert.equal(kept.legacyOnly, false);
+  assert.deepEqual(kept.mentionedBy, ['ai/bridge.mjs', 'mini/README.md']);
+  assert.deepEqual(graph.summary, { modules: 3, current: 2, legacyOnly: 1 });
+});

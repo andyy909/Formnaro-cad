@@ -67,8 +67,9 @@ export function reachable(entry, edges) {
 export function buildGraph(files, read) {
   const modules = files.filter((file) => file.startsWith('src/') && /\.m?js$/.test(file)).sort();
   const moduleSet = new Set(modules), fileSet = new Set(files);
-  const consumers = files.filter((file) => /^(?:src\/|tests\/|backend\/|mini\/|mini-cad\/|scripts\/|electron\.cjs$|preload\.cjs$)/.test(file)
-    && /\.(?:[cm]?js|json|html|py|ps1|sh)$/.test(file)).sort();
+  const consumers = files.filter((file) => codeFile.test(file) || (
+    /^(?:tests\/|backend\/|mini\/|mini-cad\/|scripts\/)/.test(file)
+    && /\.(?:json|html|py|ps1|sh|md|txt|css|ya?ml)$/.test(file))).sort();
   const edges = new Map(), uses = new Map(modules.map((file) => [file, []]));
   const mentions = new Map(modules.map((file) => [file, []]));
   const unresolved = [], dynamic = [];
@@ -84,8 +85,8 @@ export function buildGraph(files, read) {
     for (const ref of parsed.references) {
       const target = resolveRelative(file, ref.specifier);
       if (!fileSet.has(target)) unresolved.push({ file, ...ref, target });
+      if (fileSet.has(target) && codeFile.test(target)) dependencies.push(target);
       if (!moduleSet.has(target)) continue;
-      dependencies.push(target);
       uses.get(target).push({ file, kind: ref.kind, line: ref.line });
     }
     // File I/O and embedded test programs also use literal paths. These are
@@ -101,7 +102,7 @@ export function buildGraph(files, read) {
     schemaVersion: 1,
     entrypoints: { current: 'src/cad-main.js', legacy: 'src/main.js' },
     method: 'Parsed imports/exports, literal dynamic imports, require and import.meta.url URLs; exact relative paths including query stripping. Mentions and path literals require manual review, never imply an import. Computed paths are reported, not assumed absent.',
-    summary: { modules: modules.length, current: cad.size, legacyOnly: modules.filter((file) => legacy.has(file) && !cad.has(file)).length },
+    summary: { modules: modules.length, current: modules.filter((file) => cad.has(file)).length, legacyOnly: modules.filter((file) => legacy.has(file) && !cad.has(file)).length },
     unresolved, dynamic,
     modules: modules.map((file) => ({
       file, current: cad.has(file), legacyOnly: legacy.has(file) && !cad.has(file),
