@@ -1,7 +1,7 @@
 export function createWindowsDictationButton({before,prompt,desktop=window.offlinecadDesktop,language=()=> 'de',onStatus=()=>{}}){
  if(!desktop?.openWindowsDictation)return null;
  const button=document.createElement('button'),english=language()==='en';
- button.id='ai-chat-windows-dictation';button.type='button';button.textContent=english?'Windows dictation':'Windows-Diktat';
+ button.id='ai-chat-windows-dictation';button.type='button';button.innerHTML='<span aria-hidden="true">🎙</span>';button.setAttribute('aria-label',english?'Windows dictation':'Windows-Diktat');
  button.title=english?'Windows voice typing (Win+H). Requires internet; Microsoft processes the speech.':'Windows-Spracheingabe (Win+H). Benötigt Internet; Microsoft verarbeitet die Sprache.';
  before.before(button);
  let blocked=false,pending=false,active=false,disposed=false;

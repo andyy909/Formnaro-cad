@@ -11,7 +11,7 @@ exports.verifyWindowsDictation=async(win,{directory})=>{
  require('./windows-dictation.cjs').installWindowsDictation(win,{entry:path.join(app.getAppPath(),'dist/index.html'),service:{async open(){calls++;check(await run("document.activeElement===document.getElementById('ai-chat-prompt')"),'Real preload and main-frame IPC see the focused chat field');if(fail)throw Error('Synthetic Windows launcher failure. Please use Win+H.');return {requested:true};}}});
  await run('window.__cadTest.aiUI.chat.open()');await pause(250);
  const original=await run('window.__cadTest.serialize()'),undo=await run('window.__cadTest.undoDepth()'),speechBefore=await run('window.offlinecadDesktop.getOnlineSpeechStatus()');
- check(await run("!document.getElementById('ai-chat-tools').open&&!!document.getElementById('ai-chat-windows-dictation')&&document.getElementById('ai-chat-windows-dictation').getClientRects().length>0"),'Windows dictation is directly visible below the chat field with speech tools collapsed');
+ check(await run("!document.getElementById('ai-chat-options-dialog').open&&document.getElementById('ai-chat-windows-dictation').parentElement===document.getElementById('ai-chat-send').parentElement&&document.getElementById('ai-chat-windows-dictation').getClientRects().length>0&&document.getElementById('ai-chat-windows-dictation').getAttribute('aria-label')==='Windows-Diktat'"),'Compact, labelled Windows dictation button is beside Send while chat options are closed');
  check(await run("document.getElementById('ai-chat-windows-dictation').title.includes('Microsoft')&&document.getElementById('ai-chat-windows-dictation').title.includes('Internet')"),'Button explains Windows online speech processing without requiring a model or API key');
  await run("const p=document.getElementById('ai-chat-prompt');p.value='Vorhandener Entwurf, 8 mm.';p.focus();p.setSelectionRange(10,10);void 0");
  await click('ai-chat-windows-dictation');
@@ -22,7 +22,7 @@ exports.verifyWindowsDictation=async(win,{directory})=>{
  check(await run("document.getElementById('ai-chat-windows-dictation').disabled"),'Busy chat blocks the dictation launcher');
  await run("document.getElementById('ai-chat-windows-dictation').click();window.__cadTest.aiUI.chat.setBusy(false);void 0");
  check(calls===1,'Disabled dictation button starts no additional native request');
- await click('ai-chat-new');
+ await click('ai-chat-options');await click('ai-chat-new');
  check(await run('!window.__cadTest.aiUI.chat.state().windowsDictationActive'),'New chat resets Windows dictation manual-send mode');
  fail=true;await click('ai-chat-windows-dictation');
  check(calls===2&&await run("document.getElementById('ai-chat-status').textContent.includes('Win+H')&&!document.getElementById('ai-chat-windows-dictation').disabled&&!window.__cadTest.aiUI.chat.state().windowsDictationActive"),'Launcher failure offers Win+H and restores an enabled idle button');
