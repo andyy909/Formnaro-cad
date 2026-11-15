@@ -1062,7 +1062,7 @@ async function saveDrawingExport({format,sheet,signal}){
   }finally{release();}
 }
 
-const {exportModel,exportDialog}=createCadExportWorkflow({
+const {exportDialog}=createCadExportWorkflow({
  project,activeEasyKind,getEasyDomainRevision:()=>easyDomainRevision,quality,controller,download,
  prepareDialog:()=>{if((meshReduceUI?.state()||meshRemeshUI?.state()||(meshSmoothUI?.state()||meshSculptUI?.state())||meshEraseFillUI?.state()||meshMakeSolidUI?.state()||(meshHollowUI?.state()||meshFeaturesUI?.state())))readyForFile();},
  modal,$,workflowSettings,getModalSequence:()=>modalSequence,safe,selected,
