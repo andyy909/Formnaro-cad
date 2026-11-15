@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import Module from 'manifold-3d/manifold';
-import {setKernel,SHAPES,makeNode,localManifold,worldManifold,booleanManifold,groupNodes,meshData,normalizeMesh,stlBinary,validNode} from '../src/geometry.js';
+import {setKernel,SHAPES,makeNode,localManifold,worldManifold,booleanManifold,groupNodes,meshData,normalizeMesh,stlBinary,validNode} from '../src/mesh-engine/geometry.js';
 const kernel=await Module({wasmBinary:fs.readFileSync(new URL('../node_modules/manifold-3d/manifold.wasm',import.meta.url))});kernel.setup();setKernel(kernel);
 const close=(a,b,tolerance=1e-4)=>assert.ok(Math.abs(a-b)<tolerance,`${a} vs ${b}`);
 test('Every built-in solid is closed, nonempty and normalized to requested dimensions',()=>{
@@ -30,7 +30,7 @@ test('Open triangle meshes and invalid projects are rejected',()=>{
   assert.equal(validNode({...makeNode('box'),pos:[NaN,0,0]}),false);
   assert.equal(validNode({...makeNode('box'),mesh:{verts:[0,0,0],triangles:[0,1,2]}}),false);
 });
-test('An all-hole or disjoint intersection cannot create a bogus group',()=>{
-  const hole=makeNode('box',undefined,{solid:false});assert.throws(()=>groupNodes([hole]));
+test('Mesh hole groups remain subtractive and disjoint intersections are rejected',()=>{
+  const hole=makeNode('box',undefined,{solid:false});const group=groupNodes([hole]);assert.equal(group.solid,false);assert.ok(validNode(group));const solid=worldManifold(group);try{assert.ok(solid.volume()>0);}finally{solid.delete();}
   assert.throws(()=>groupNodes([makeNode('box',[0,0,0]),makeNode('box',[100,0,0])],'intersection'));
 });

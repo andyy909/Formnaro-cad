@@ -66,9 +66,12 @@ const entries = [...testsByFile.values()].map((entry) => {
   const old = previousByFile.get(entry.file);
   return old?.kind === entry.kind ? { ...old, ...entry } : entry;
 });
+// Retain explicit tombstones for removed legacy tests; never run missing files.
+entries.push(...previous.filter((entry) => entry.status === 'obsolete' && !testsByFile.has(entry.file)));
+entries.sort((a, b) => a.file.localeCompare(b.file));
 
 if (args[0] === '--run') {
-  const nodeTests = entries.filter(({ kind }) => kind === 'node');
+  const nodeTests = entries.filter(({ kind, status }) => kind === 'node' && status !== 'obsolete');
   const counts = { pass: 0, fail: 0, timeout: 0 };
   for (const [index, entry] of nodeTests.entries()) {
     console.log(`[${index + 1}/${nodeTests.length}] Running ${entry.file}`);
