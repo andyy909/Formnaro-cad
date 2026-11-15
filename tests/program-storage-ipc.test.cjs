@@ -1,11 +1,19 @@
-const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),vm=require('node:vm');
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {installProgramStorage}=require('../backend/program-storage.cjs');
+const {loadDesktopTestModules}=require('./fixtures/load-desktop-test-modules.cjs');
 
-test('The actual preload preserves portable data writes while successful IPC replies stay independent of model size',async()=>{
+function loadPortablePreload(t,electron){
+  const previousArgv=process.argv;
+  t.after(()=>{process.argv=previousArgv;});
+  process.argv=['--formnaro-portable-data'];
+  loadDesktopTestModules(electron,{loadDesktop:false});
+}
+
+test('The actual preload preserves portable data writes while successful IPC replies stay independent of model size',async t=>{
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-storage-ipc-')),on=new Map(),win={webContents:{}},replies=[];let desktop;
   try{
     const store=installProgramStorage(win,{directory:path.join(root,'Daten'),cadOnly:true,ipcMain:{on:(name,fn)=>on.set(name,fn),handle:()=>{}},shell:{openPath:async()=>''}}),electron={contextBridge:{exposeInMainWorld:(name,value)=>{assert.equal(name,'offlinecadDesktop');desktop=value;}},ipcRenderer:{sendSync:(name,args)=>{const event={sender:win.webContents};on.get(name)(event,args);if(name==='cad-data:change')replies.push(event.returnValue);return event.returnValue;}}};
-    vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..','preload.cjs'),'utf8'),{require:name=>{assert.equal(name,'electron');return electron;},process:{argv:['--formnaro-portable-data']}});
+    loadPortablePreload(t,electron);
     const {createProgramStorage}=await import('../src/program-storage.js'),storage=createProgramStorage({getItem:()=>null},desktop,{cadOnly:true}),key='offlinecad-autosave-v5',value=JSON.stringify({storageFixture:'日本語'+ 'x'.repeat(4*1024*1024)});
     storage.setItem(key,value);assert.equal(storage.getItem(key),value);assert.equal(store.read(key).value,value);
     assert.equal(replies.at(-1).ok,true);assert.deepEqual(Object.keys(replies.at(-1).value),['revision']);assert.ok(Buffer.byteLength(JSON.stringify(replies.at(-1)))<128);
@@ -22,7 +30,7 @@ test('The actual preload preserves portable data writes while successful IPC rep
   }finally{assert.equal(path.dirname(path.resolve(root)),path.resolve(os.tmpdir()));assert.ok(path.basename(root).startsWith('formnaro-storage-ipc-'));fs.rmSync(root,{recursive:true,force:true});}
 });
 
-test('Async recovery IPC writes and reads a large value while excluding concurrent writes to its key',async()=>{
+test('Async recovery IPC writes and reads a large value while excluding concurrent writes to its key',async t=>{
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-storage-ipc-'));
   const directory=path.join(root,'Daten'),on=new Map(),handles=new Map();
   const win={webContents:{mainFrame:{}}};
@@ -37,7 +45,7 @@ test('Async recovery IPC writes and reads a large value while excluding concurre
         invoke:(name,args)=>handles.get(name)(event(),args)
       }
     };
-    vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..','preload.cjs'),'utf8'),{require:()=>electron,process:{argv:['--formnaro-portable-data']}});
+    loadPortablePreload(t,electron);
     const {createProgramStorageAsync}=await import('../src/program-storage.js');
     const startup=createProgramStorageAsync({getItem:()=>null},desktop,{cadOnly:true});
     assert.equal(typeof startup.then,'function');
