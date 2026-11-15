@@ -7,8 +7,8 @@ exports.verifySpeech=async function(win,{directory}){
  const shot=async name=>{await run('window.__cadTest.view.renderReady()');await pause(200);fs.writeFileSync(path.join(directory,name+'.png'),(await win.webContents.capturePage()).toPNG());};
  try{
   await run('window.__cadTest.aiUI.chat.open()');await until("!document.getElementById('ai-chat-mic').disabled");
-  await click('#ai-chat-tools > summary');await until("document.getElementById('ai-chat-tools').open");await pause(200);
-  check(await run("document.getElementById('ai-chat-mic').getBoundingClientRect().width>0"),'Speech controls become visible through the images, references and speech category');
+  await click('#ai-chat-options');await until("document.getElementById('ai-chat-options-dialog').open");await pause(200);
+  check(await run("document.getElementById('ai-chat-mic').getBoundingClientRect().width>0"),'Speech controls become visible through the current chat options dialog');
   check(await run("!('getSpeechStatus' in window.offlinecadDesktop)&&!document.getElementById('ai-chat-speech-download')"),'Local speech and model download are absent');
   await run(`window.__speechBefore=window.__cadTest.serialize();window.__speechStreams=[];const get=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);navigator.mediaDevices.getUserMedia=async options=>{const s=await get(options);window.__speechStreams.push(s);return s;};document.getElementById('ai-chat-prompt').value='Vorhandener Auftrag.';`);
   const realFetch=global.fetch;let onlineCalls=0;
@@ -33,6 +33,7 @@ exports.verifySpeech=async function(win,{directory}){
   }finally{global.fetch=realFetch;}
   win.setSize(1000,680);await pause(300);
   for(const id of ['ai-chat-mic','ai-chat-speech-language','ai-chat-send']){
+   if(id==='ai-chat-send')await click('#ai-chat-options-dialog [data-close-options]');
    await run(`document.getElementById(${JSON.stringify(id)}).scrollIntoView({block:'nearest'})`);await pause(100);
    check(await run(`(()=>{const e=document.getElementById(${JSON.stringify(id)}),r=e.getBoundingClientRect();return r.width>0&&r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));})()`),'Minimum window: '+id+' is reachable through the chat scroll area');
   }

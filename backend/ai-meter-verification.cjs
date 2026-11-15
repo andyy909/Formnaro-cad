@@ -1,6 +1,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 exports.verifyAIMeter=async(win,{directory})=>{
  const run=s=>win.webContents.executeJavaScript(s),checks=[],check=(value,label)=>{assert(value,label);checks.push(label);},original=global.fetch,usage={input_tokens:10000,output_tokens:1000,input_tokens_details:{cached_tokens:8000},output_tokens_details:{reasoning_tokens:900}};
+ const initialRate=await run('window.offlinecadDesktop.getAIExchangeRate()'),refreshDate=new Date(Date.parse(initialRate.date+'T00:00:00Z')+86400000).toISOString().slice(0,10);
  let calls=0,exchangeCalls=0,badHelp=false;
  const until=async expr=>{const start=Date.now();while(Date.now()-start<60000){if(await run(expr))return;await new Promise(r=>setTimeout(r,30));}throw Error('AI meter timeout: '+expr);};
  async function capture(name){
@@ -14,7 +15,7 @@ exports.verifyAIMeter=async(win,{directory})=>{
  const ledgerFile=path.join(directory,'portable-data','KI-Verbrauch.json'),config={baseUrl:'https://api.openai.com/v1',model:'gpt-6.1-sol',authMode:'chatgpt'};
  require('./ai-usage-ledger.cjs').createAIUsageLedger({file:ledgerFile}).record({config,provider:'chatgpt',taskId:'isolated-subscription-fixture',args:{prompt:'Wo finde ich das Menü?'},usage:require('./ai-usage.cjs').aiUsage({usage},config,1)});
  global.fetch=async(url,options)=>{
-  if(String(url)==='https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'){exchangeCalls++;return new Response("<Cube><Cube time='2026-10-29'><Cube currency='USD' rate='1.2000'/></Cube></Cube>");}
+  if(String(url)==='https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'){exchangeCalls++;return new Response("<Cube><Cube time='"+refreshDate+"'><Cube currency='USD' rate='1.2000'/></Cube></Cube>");}
   if(!String(url).startsWith('https://api.deepseek.com/'))return original(url,options);
   if(String(url).endsWith('/models'))return new Response(JSON.stringify({data:[{id:'deepseek-flash',input_modalities:['text']}]}));
   calls++;const body=JSON.parse(options.body),raw=JSON.stringify(body);check(!raw.includes('usageTaskId'),'Statistics task metadata is not added to the provider prompt');
@@ -35,8 +36,8 @@ exports.verifyAIMeter=async(win,{directory})=>{
   check(stats.rows.reduce((s,r)=>s+r.api.outputTokens,0)===6000,'Reasoning is not added twice to output tokens');
   check(!fs.readFileSync(ledgerFile,'utf8').includes('isolated-meter-fixture')&&!fs.readFileSync(ledgerFile,'utf8').includes('Verschiebe'),'Portable statistics contain no prompts or credential');
   await run('window.__cadTest.ui.settings.open();document.querySelector(\'[data-settings-tab="ai"]\').click();void 0');await until("!!document.querySelector('#ai-usage-meter table tbody tr')");
-  const text=await run("document.getElementById('ai-usage-meter').textContent");check(text.includes('STL nachbauen')&&text.includes('Bedienhilfe')&&text.includes('60.000'),'Actual settings show category statistics and formatted reported input tokens');check(text.includes('EUR')&&text.includes('EZB')&&text.includes('2026-10-28'),'Actual costs show a dated approximate euro conversion');
-  check(exchangeCalls===0,'The ECB is not contacted before an explicit rate refresh');await run("document.getElementById('ai-meter-exchange-refresh').click();void 0");await until("document.getElementById('ai-usage-meter').textContent.includes('2026-10-29')");
+  const text=await run("document.getElementById('ai-usage-meter').textContent");check(text.includes('STL nachbauen')&&text.includes('Bedienhilfe')&&text.includes('60.000'),'Actual settings show category statistics and formatted reported input tokens');fs.writeFileSync(path.join(directory,'exchange-observation.json'),JSON.stringify({text,rate:await run('window.offlinecadDesktop.getAIExchangeRate()')},null,2));check(text.includes('EUR')&&text.includes('EZB')&&text.includes(initialRate.date)&&text.includes('≈'),'Actual costs show a dated approximate euro conversion');
+  check(exchangeCalls===0,'The ECB is not contacted before an explicit rate refresh');await run("document.getElementById('ai-meter-exchange-refresh').click();void 0");await until("document.getElementById('ai-usage-meter').textContent.includes("+JSON.stringify(refreshDate)+")");
   check(exchangeCalls===1&&(await run('window.offlinecadDesktop.getAIExchangeRate()')).usdPerEur===1.2,'Explicit refresh updates and saves the official-rate format');
   await run("document.getElementById('ai-meter-scope').value='all';document.getElementById('ai-meter-scope').dispatchEvent(new Event('change'));void 0");await until("document.getElementById('ai-meter-usage').textContent.includes('kein Abo-Kontostand und keine Rechnung')");await new Promise(r=>setTimeout(r,200));check(await run("document.getElementById('ai-meter-scope').value==='all'&&document.getElementById('ai-meter-usage').textContent.includes('kein Abo-Kontostand und keine Rechnung')"),'Subscription equivalent stays explicitly separate from API expenses after filtering');
   await run("document.getElementById('ai-usage-meter').scrollIntoView({block:'start'});void 0");await capture('meter-light');

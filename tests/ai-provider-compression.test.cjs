@@ -24,3 +24,20 @@ test('identical schemas share one alias while distinct request-only fields remai
 test('small and navigation-only contexts remain lossless and are not inflated',()=>{
  for(const value of [null,{version:1},{programHelpOnly:true,programAssistant:{reply:'Use menu targets.'}}])assert.deepEqual(providerContext(value),value);
 });
+
+
+test('external verification reads the first contract line and resolves repeated evidence and photo values',()=>{
+ const {readVerificationContract}=require('../backend/provider-contract-verification.cjs');
+ const shared={dimensions:[{mm:40,source:'measured'}],scale:{mm:40},note:'x'.repeat(150)};
+ const context={photoReferences:[shared,shared],taskEvidence:{failures:[{code:'AI_OUTPUT_INVALID',details:shared}]},schema:{$ref:'#/commandSchema'}};
+ const wire=providerContext(context),{contract}=readVerificationContract('Rules\nContract:\n'+JSON.stringify(wire)+'\nUser-selected policy: unchanged');
+ assert.deepEqual(contract.photoReferences,context.photoReferences);assert.deepEqual(contract.taskEvidence,context.taskEvidence);
+ assert.deepEqual(contract.schema,{$ref:'#/commandSchema'});
+});
+
+test('external verification rejects broken or cyclic provider definitions',()=>{
+ const {readVerificationContract}=require('../backend/provider-contract-verification.cjs');
+ for(const providerDefinitions of [{},{d1:{$ref:'#/providerDefinitions/d1'}}]){
+  assert.throws(()=>readVerificationContract('Contract:\n'+JSON.stringify({value:{$ref:'#/providerDefinitions/d1'},providerDefinitions})),/Missing|Cyclic/);
+ }
+});

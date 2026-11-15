@@ -41,8 +41,8 @@ function createFnpackStore({recoveryFile,sourceDirectory=path.join(path.dirname(
    await fs.mkdir(path.dirname(recoveryFile),{recursive:true});
    if(await fnpackPathStamp(recoveryFile)!==recoveryStamp)throw Error('Paket-Autosicherung wurde inzwischen geändert.');
    await preserve(recoveryFile,recoveryStamp);
-   const sources=sourceReaders(args.sourceIds).map(reader=>({file:reader.sourcePath(),identity:reader.identity,blocks:reader.index.blocks}));
-   const result=await runStorageWorker({kind:'fnpack',file:recoveryFile,sources,expected:recoveryStamp,args:{project:args.project,blocks:args.blocks}},{signal:args.signal});
+   const workerSources=sourceReaders(args.sourceIds).map(reader=>({file:reader.sourcePath(),identity:reader.identity,blocks:reader.index.blocks}));
+   const result=await runStorageWorker({kind:'fnpack',file:recoveryFile,sources:workerSources,expected:recoveryStamp,args:{project:args.project,blocks:args.blocks}},{signal:args.signal});
    recoveryStamp=result.stamp;
    return {saved:true};
   });
