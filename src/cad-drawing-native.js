@@ -24,7 +24,7 @@ export function cadDrawingViewFrame(view,section){
 
 // Convert a native B-spline to its original rational Bézier spans. This is an
 // exact basis change; its weights/poles are not sampled tessellation points.
-function splineSpans(oc,edge){
+export function splineSpans(oc,edge){
  let plane,maker,face,surface,location,envelope,adapter,spline,converter;
  try{
   plane=new oc.gp_Pln();maker=new oc.BRepBuilderAPI_MakeFace(plane);face=maker.Face();surface=oc.BRep_Tool.Surface(face);location=new oc.TopLoc_Location();
@@ -63,11 +63,19 @@ function planarCurves(oc,edge,dto=cadNativeCurveDto(oc,edge)){
 // Fragments, silhouettes and unsupported projections keep their legacy IDs;
 // they never acquire an inferred or nearest semantic edge correspondence.
 const referenceNear=(a,b)=>a.length===b.length&&a.every((v,k)=>Math.abs(v-b[k])<=1e-7);
-function referenceBucket(curve){const values=curve.kind==='line'?[...curve.a,...curve.b]:curve.kind==='circle'?[...curve.center,curve.radius]:null;return values?curve.kind+':'+values.map(v=>Math.round(v*1e6)).join(','):null;}
+export function referenceBucket(curve){const values=curve.kind==='line'?[...curve.a,...curve.b]:curve.kind==='circle'?[...curve.center,curve.radius]:null;return values?curve.kind+':'+values.map(v=>Math.round(v*1e6)).join(','):null;}
 // Search every coarse cell reached by the actual comparison tolerance. Making
 // the grid finer alone cannot fix matches that straddle a cell boundary.
 function referenceBucketsNear(curve){const values=curve.kind==='line'?[...curve.a,...curve.b]:curve.kind==='circle'?[...curve.center,curve.radius]:null;if(!values)return [];let keys=[curve.kind+':'];for(const value of values){const a=Math.round((value-1e-7)*1e6),b=Math.round((value+1e-7)*1e6),cells=a===b?[a]:[a,b];keys=keys.flatMap(key=>cells.map(cell=>key+cell+','));}return keys.map(key=>key.slice(0,-1));}
 function sameProjectedCurve(a,b){return a.kind===b.kind&&(a.kind==='line'?referenceNear(a.a,b.a)&&referenceNear(a.b,b.b):a.kind==='circle'&&referenceNear(a.center,b.center)&&Math.abs(a.radius-b.radius)<=1e-7);}
+export function createDrawingReferenceLookup(buckets,overflow){
+ return curve=>{
+  if(overflow)return undefined;
+  const candidates=referenceBucketsNear(curve).flatMap(key=>buckets.get(key)??[]).filter(item=>sameProjectedCurve(curve,item.curve));
+  const refs=[...new Map(candidates.map(item=>[JSON.stringify(item.ref),item.ref])).values()].sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
+  return refs.length&&refs.length<=8?refs:undefined;
+ };
+}
 function drawingSourceReferences(oc,nodes,inverse){
  const buckets=new Map();let count=0,overflow=false;
  function visit(node,target,parent){
@@ -83,7 +91,7 @@ function drawingSourceReferences(oc,nodes,inverse){
   }else if(!node.extraction&&!node.modeling?.sourceSignature)for(const child of node.children??[])visit(child,{rootId:target.rootId,path:[...target.path,child.id]},world);
  }
  for(const node of nodes)visit(node,{rootId:node.id,path:[]},cadIdentity());
- return curve=>{if(overflow)return undefined;const candidates=referenceBucketsNear(curve).flatMap(key=>buckets.get(key)??[]).filter(item=>sameProjectedCurve(curve,item.curve)),refs=[...new Map(candidates.map(item=>[JSON.stringify(item.ref),item.ref])).values()].sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));return refs.length&&refs.length<=8?refs:undefined;};
+ return createDrawingReferenceLookup(buckets,overflow);
 }
 
 /** Returns shared, exact 2D curve data for PDF/SVG/DXF. Native cancellation is
