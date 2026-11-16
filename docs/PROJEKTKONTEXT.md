@@ -1,5 +1,11 @@
 # Technischer Projektkontext
 
+P3-4b: backend/startup-options.cjs bündelt die Start- und Prüfoptionen
+für electron.cjs. Argumentprioritäten, Diagnose-/Übungskind-Erkennung,
+Berichtspfade und Sprachprüf-Schalter bleiben unverändert. Profilaufbau,
+Fenster, IPC und Prüfdispatch verbleiben in electron.cjs; der Parser
+gehört auch zum regulären portablen Programm.
+
 P3-5b: Die automatische Easy-Netzreparatur erkennt STL-Importe zusätzlich
 am vorhandenen importedFile.type-Marker. Bearbeitete, leere oder anders
 strukturierte Notizen heben den Schutz offener Importkonturen nicht auf.
