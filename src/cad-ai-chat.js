@@ -1,168 +1,954 @@
-import {appendAIFeatureEdits,aiFeatureApplyLabel} from './cad-ai-feature-report.js';
-import {createCadAIChatLayout} from './cad-ai-chat-layout.js';
-import {validateCadAIReference} from './cad-ai-feature-reference-data.js';
-import {cadAIReferenceState} from './cad-ai-feature-references.js';
-import {upsertProjectPhoto} from './cad-photo-project.js';
-import {showProjectPhotos} from './cad-photo-project-ui.js';
-import {editPhotoReference,appendPhotoComparison,showPhotoComparison} from './cad-photo-ui.js';
-import {createSpeechInput} from './cad-speech-input.js';
-import {createWindowsDictationButton} from './cad-windows-dictation.js';
-import {appendMeshLidReports} from './cad-ai-lid-report.js';
-import {appendAIIndependentCheck,appendAIVerification,aiVerificationText,aiProposalWarning} from './cad-ai-result-checks.js';
-import {CAD_AI_INPUT_LIMITS as limits,readCadAIImage,cadAIHistory} from './cad-ai-attachments.js';
-import {mountAIModelStrictness} from './ai-model-strictness.js';
-import {createCadAIModelPicker} from './cad-ai-model-picker.js';
-import {practicePhotoImages,readPracticeFiles} from './cad-practice-files.js';
-export function createCadAIChat({host,canPracticeFromProject=false,onSend,onCancel,onApply,onDiscard,onPreview,onWorkshop,onSettings,captureCanvas,download,language,photoStore,featureStore,getSelection=()=>[]}){
- const root=document.createElement('section');root.id='ai-chat';root.className='cad-ai-chat';root.setAttribute('aria-label','KI-Chat');
- root.innerHTML=`<div class="ai-chat-heading"><button id="ai-chat-toggle" aria-expanded="true" aria-controls="ai-chat-body"><span class="ai-chat-title">✦ KI-Chat</span><span class="ai-chat-caret" aria-hidden="true">⌄</span></button><button id="ai-chat-new" type="button">Neuer Chat</button><button id="ai-chat-settings" type="button">API-Einstellungen</button><button id="ai-chat-workshop" type="button">KI-Werkstatt</button></div><div id="ai-chat-body"><div id="ai-chat-log" role="log" aria-label="Chatverlauf" aria-live="polite"><p class="ai-chat-welcome">Beschreibe dein Teil, stelle Fragen zu Formnaro oder lass dir Werkzeuge und Menüs zeigen.</p></div><div id="ai-chat-proposal" hidden></div><form id="ai-chat-form"><div id="ai-chat-attachments"></div><div id="ai-chat-feature-references"></div><label class="ai-chat-input-label" for="ai-chat-prompt">Nachricht</label><textarea id="ai-chat-prompt" rows="2" maxlength="10000" placeholder="Nachricht an die KI …"></textarea><div class="ai-chat-actions"><button id="ai-chat-image" type="button" title="Bilder hinzufügen">＋ Bild</button><button id="ai-chat-project-photos" type="button">Projektfotos</button><button id="ai-chat-features" type="button">Merkmalsbezüge</button><button id="ai-chat-model-image" type="button">Modellbild anhängen</button><input id="ai-chat-files" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden><button id="ai-chat-cancel" type="button" hidden>Abbrechen</button><button id="ai-chat-send" type="submit" class="primary">Senden ↑</button></div><p id="ai-chat-status" role="status"></p><p id="ai-chat-usage" role="status" data-no-translate></p><p class="ai-chat-notice">Nachricht, Chatverlauf, Bilder, Modellkontext und automatische Vorschauansichten werden nach dem Senden an deinen KI-Anbieter übertragen.</p></form></div>`;host.append(root);
- const el=id=>root.querySelector('#'+id);let conversationId=crypto.randomUUID(),attachments=[],practiceFiles=[],featureReferences=[],history=[],busy=false,sending=false,loading=false,modelLoading=false,modelPicker,speech,windowsDictation,speechBusy=false,photoEditing=false,disposed=false,attachmentGeneration=0;const conversations=new Map(),referenceButtons=new WeakMap();let activeProvider=null;const noTranslate=el=>el.setAttribute('data-no-translate','');
- noTranslate(el('ai-chat-log'));noTranslate(el('ai-chat-attachments'));noTranslate(el('ai-chat-status'));if(language()==='en')el('ai-chat-log').querySelector('.ai-chat-welcome').textContent='Describe your part, ask about Formnaro, or have tools and menus demonstrated.';
- const practiceButton=document.createElement('button');practiceButton.id='ai-chat-practice';practiceButton.type='button';practiceButton.textContent='Übungsmodus';practiceButton.title='Eine Vorführung in einem getrennten Übungsfenster anfordern';el('ai-chat-cancel').before(practiceButton);
- practiceButton.onclick=()=>{const input=el('ai-chat-prompt');if(input.disabled)return;if(!/übungsmodus|uebungsmodus/i.test(input.value))input.value='Zeige im Übungsmodus: '+input.value;input.focus();};
- const projectPractice=document.createElement('input');projectPractice.type='checkbox';projectPractice.id='ai-chat-practice-from-project';
- const practiceFileButton=document.createElement('button'),practiceFileInput=document.createElement('input'),practiceFileList=document.createElement('div');
- if(canPracticeFromProject){
-  practiceFileButton.id='ai-chat-practice-files';practiceFileButton.type='button';practiceFileButton.textContent='Übungsdateien …';
-  practiceFileButton.title='Fotos oder eine STL für das getrennte Übungsfenster bereitstellen';
-  practiceFileInput.id='ai-chat-practice-file-input';practiceFileInput.type='file';practiceFileInput.multiple=true;practiceFileInput.hidden=true;practiceFileInput.accept='image/png,image/jpeg,image/webp,.stl';
-  practiceFileList.id='ai-chat-practice-file-list';practiceFileList.className='ai-feature-chips';noTranslate(practiceFileList);
-  el('ai-chat-cancel').before(practiceFileButton,practiceFileInput);el('ai-chat-prompt').before(practiceFileList);
-  practiceFileButton.onclick=()=>practiceFileInput.click();
-  practiceFileInput.onchange=()=>{const files=[...practiceFileInput.files];practiceFileInput.value='';if(files.length)void addPracticeFiles(files);};
-  const label=document.createElement('label');
-  label.append(projectPractice,document.createTextNode(language()==='en'?' Practice on a copy of the current project':' Übung auf Kopie des aktuellen Projekts'));
-  label.title='Die KI erhält Namen und Typ der ausgewählten Bauteile.';
-  el('ai-chat-form').append(label);
- }
- const pickFeature=document.createElement('button');
- pickFeature.id='ai-chat-pick-feature';pickFeature.type='button';
- pickFeature.textContent=language()==='en'?'Attach model feature':'Stelle anhängen';
- pickFeature.hidden=!featureStore?.pickForChat;
- el('ai-chat-send').before(pickFeature);
- const layout=createCadAIChatLayout(root,{language});
- const en=()=>language()==='en';
- const mode=document.createElement('select');mode.id='ai-chat-mode';mode.setAttribute('aria-label',en()?'Chat mode':'Chatmodus');noTranslate(mode);
- mode.add(new Option(en()?'AI chat':'KI-Chat','chat'));mode.add(new Option(en()?'Program help':'Bedienhilfe','help'));
- el('ai-chat-view-options').append(mode);
- mode.onchange=()=>{if(mode.value==='help')layout.clearFocus();el('ai-chat-prompt').placeholder=mode.value==='help'?(en()?'Ask about tools and menus …':'Frage nach Werkzeugen und Menüs …'):(en()?'Message the AI …':'Nachricht an die KI …');};
- const selectionDetails=document.createElement('details');
- selectionDetails.id='ai-chat-selection';
- selectionDetails.innerHTML=`<summary></summary><ul></ul><label><span>${en()?'Scene context':'Szenenkontext'}</span> <select><option value="">${en()?'Automatic (selection for large projects)':'Automatisch (bei großen Projekten die Auswahl)'}</option><option value="selection">${en()?'Selected parts':'Ausgewählte Teile'}</option><option value="project">${en()?'Entire project':'Gesamtes Projekt'}</option></select></label>`;
- const scopeSelect=selectionDetails.querySelector('select');
- el('ai-chat-prompt').before(selectionDetails);
- function refreshSelection(){
-  const names=getSelection();
-  selectionDetails.hidden=!names.length||mode.value==='help';
-  selectionDetails.querySelector('summary').textContent=en()?'Selected parts ('+names.length+')':'Ausgewählte Teile ('+names.length+')';
-  selectionDetails.querySelector('ul').replaceChildren(...names.map(name=>{
-   const item=document.createElement('li');item.textContent=name;noTranslate(item);return item;
-  }));
- }
- mode.addEventListener('change',refreshSelection);
- refreshSelection();
- const activity=document.createElement('details');activity.id='ai-chat-activity';activity.hidden=true;noTranslate(activity);
- const activitySummary=document.createElement('summary'),activityLog=document.createElement('ol');activitySummary.setAttribute('aria-live','polite');activity.append(activitySummary,activityLog);el('ai-chat-log').before(activity);
- function reportActivity(message){if(!message||activitySummary.textContent===message)return;activity.hidden=false;activitySummary.textContent=message;const row=document.createElement('li');row.textContent=message;activityLog.append(row);while(activityLog.children.length>24)activityLog.firstChild.remove();}
-const strictness=mountAIModelStrictness(el('ai-chat-model-options')??el('ai-chat-form'),{language});
- function status(text,error=false){el('ai-chat-status').textContent=text;el('ai-chat-status').classList.toggle('ai-error',error);}
- function setBusy(value){busy=value;mode.disabled=busy;scopeSelect.disabled=busy;if(!busy)layout.setWorking(false);strictness?.setBusy(busy||loading||modelLoading);const blocked=busy||speechBusy||photoEditing;el('ai-chat-send').disabled=blocked||loading||modelLoading;practiceButton.disabled=blocked||loading||modelLoading;projectPractice.disabled=practiceFileButton.disabled=practiceButton.disabled;el('ai-chat-image').disabled=blocked||loading;el('ai-chat-project-photos').disabled=blocked||loading||!photoStore;el('ai-chat-features').disabled=blocked||loading||!featureStore;pickFeature.disabled=blocked||loading||modelLoading||!featureStore?.pickForChat;el('ai-chat-model-image').disabled=blocked||loading||!captureCanvas;el('ai-chat-new').disabled=blocked||loading;el('ai-chat-prompt').disabled=blocked;el('ai-chat-cancel').hidden=!busy;root.querySelectorAll('#ai-chat-attachments button,#ai-chat-practice-file-list button,#ai-chat-proposal button,#ai-chat-feature-references button,#ai-chat-log [data-ai-feature-ref]').forEach(b=>b.disabled=blocked||loading||modelLoading);modelPicker?.setBusy(blocked||loading);speech?.setBusy(busy||loading||modelLoading);windowsDictation?.setBusy(blocked||loading||modelLoading);}
- async function open(){await window.formnaroOpenChatSidebar?.();root.classList.remove('collapsed');el('ai-chat-toggle').setAttribute('aria-expanded','true');el('ai-chat-body').hidden=false;el('ai-chat-prompt').focus();}
- function collapse(){layout.close();layout.clearFocus();layout.setExpanded(false);if(speech?.isBusy())void speech.cancel();root.classList.add('collapsed');el('ai-chat-toggle').setAttribute('aria-expanded','false');el('ai-chat-body').hidden=true;el('ai-chat-toggle').focus();}
- function append(role,text,images=[],references=[]){const log=el('ai-chat-log');log.querySelector('.ai-chat-welcome')?.remove();const row=document.createElement('article');row.className='ai-chat-message '+role;const label=document.createElement('strong');label.textContent=role==='user'?(language()==='en'?'You':'Du'):role==='assistant'?'KI':'Formnaro';const body=document.createElement('p');body.textContent=text;row.append(label,body);
-  for(const image of images){const img=document.createElement('img');img.src=image.thumbnail;img.alt=image.name;row.append(img);}for(const reference of references){const button=document.createElement('button');button.type='button';button.className='ai-feature-chip';button.dataset.aiFeatureRef=reference.id;referenceButtons.set(button,reference);button.textContent=reference.name;button.onclick=()=>{if(!busy)void Promise.resolve(featureStore?.highlight(reference)).catch(e=>feedback(e.message,true));};row.append(button);}log.append(row);while(log.children.length>24)log.firstChild.remove();log.scrollTop=log.scrollHeight;
- }
- function replyText(result){return result.question||result.message||result.label||'Vorschlag erstellt.';}
- function replyHistory(result){const text=result.commands?JSON.stringify({revision:result.revision,label:result.label,commands:result.commands,...(result.checks!==undefined?{checks:result.checks}:{}),...(result.message?{message:result.message}:{})}):replyText(result),suffix='\n[Formnaro: proposal text truncated; use the current scene.]';return text.length>limits.maxText?text.slice(0,limits.maxText-suffix.length)+suffix:text;}
- function feedback(text,error=false){if(disposed)return;append(error?'error':'application',text);history=cadAIHistory([...history,{role:'user',text:('[Formnaro application feedback]\n'+text).slice(0,limits.maxText)}]);if(error)status(text,true);}
- function renderAttachments(){const container=el('ai-chat-attachments');container.replaceChildren();attachments.forEach((image,index)=>{const item=document.createElement('div'),img=document.createElement('img'),remove=document.createElement('button');img.src=image.thumbnail;img.alt=image.name;item.title=image.name;remove.type='button';remove.textContent='×';remove.setAttribute('aria-label','Bild entfernen: '+image.name);remove.onclick=()=>{attachments.splice(index,1);attachmentGeneration++;renderAttachments();};const measure=document.createElement('button');measure.type='button';measure.className='photo-measure-button';measure.textContent=image.photo?'Messungen ändern':'Foto vermessen';measure.onclick=async()=>{if(busy||photoEditing)return;photoEditing=true;setBusy(busy);const generation=attachmentGeneration;try{const value=await editPhotoReference(image);if(!disposed&&generation===attachmentGeneration&&attachments.includes(image)&&value){image.photo=value;status('Fotomaße gespeichert. Sie werden mit dem nächsten Auftrag gesendet.');}}catch(e){status(e.message,true);}finally{photoEditing=false;if(!disposed)renderAttachments();}};item.append(img);if(image.imageId)item.append(measure);if(photoStore&&image.photo){const save=document.createElement('button');save.type='button';save.className='photo-project-save photo-measure-button';save.textContent='Im Projekt speichern';save.onclick=async()=>{if(busy||photoEditing)return;photoEditing=true;setBusy(busy);try{const state=photoStore.read(),next=upsertProjectPhoto(state.photos,image);await photoStore.save(next,{revision:state.revision});status('Originalfoto und Messungen im Projekt gespeichert. Rückgängig setzt diese Änderung zurück.');}catch(e){status(e.message,true);}finally{photoEditing=false;if(!disposed)setBusy(busy);}};item.append(save);}item.append(remove);container.append(item);});setBusy(busy);}
- async function addImages(files){if(busy||speechBusy||loading||photoEditing)return;const values=[...files];if(!values.length)return;if(attachments.length+values.length>limits.maxAttachments)return status('Bis zu vier Bilder pro Nachricht.',true);loading=true;setBusy(busy);const generation=attachmentGeneration;
-  try{const additions=[];let bytes=attachments.reduce((sum,a)=>sum+a.bytes,0);for(const file of values){bytes+=file.size;if(bytes>limits.maxAttachmentBytes)throw Error('Die Bildanhänge dürfen zusammen höchstens 12 MB groß sein.');additions.push(await readCadAIImage(file));}if(!disposed&&generation===attachmentGeneration){attachments.push(...additions);renderAttachments();status('Bilder angehängt. Sie werden mit deiner nächsten Nachricht gesendet.');}}
-  catch(error){if(!disposed)status(error.message,true);}finally{loading=false;if(!disposed)setBusy(busy);}
- }
- function renderPracticeFiles(){
-  practiceFileList.replaceChildren();
-  for(const file of practiceFiles){
-   const remove=document.createElement('button');remove.type='button';remove.className='ai-feature-chip';remove.textContent=file.name+' ×';remove.setAttribute('aria-label','Übungsdatei entfernen: '+file.name);
-   remove.onclick=()=>{practiceFiles=practiceFiles.filter(item=>item!==file);renderPracticeFiles();};
-   practiceFileList.append(remove);
+import { appendAIFeatureEdits, aiFeatureApplyLabel } from './cad-ai-feature-report.js';
+import { createCadAIChatLayout } from './cad-ai-chat-layout.js';
+import { validateCadAIReference } from './cad-ai-feature-reference-data.js';
+import { cadAIReferenceState } from './cad-ai-feature-references.js';
+import { upsertProjectPhoto } from './cad-photo-project.js';
+import { showProjectPhotos } from './cad-photo-project-ui.js';
+import { editPhotoReference, appendPhotoComparison, showPhotoComparison } from './cad-photo-ui.js';
+import { createSpeechInput } from './cad-speech-input.js';
+import { createWindowsDictationButton } from './cad-windows-dictation.js';
+import { appendMeshLidReports } from './cad-ai-lid-report.js';
+import {
+  appendAIIndependentCheck,
+  appendAIVerification,
+  aiVerificationText,
+  aiProposalWarning,
+} from './cad-ai-result-checks.js';
+import { CAD_AI_INPUT_LIMITS as limits, readCadAIImage, cadAIHistory } from './cad-ai-attachments.js';
+import { mountAIModelStrictness } from './ai-model-strictness.js';
+import { createCadAIModelPicker } from './cad-ai-model-picker.js';
+import { practicePhotoImages, readPracticeFiles } from './cad-practice-files.js';
+export function createCadAIChat({
+  host,
+  canPracticeFromProject = false,
+  onSend,
+  onCancel,
+  onApply,
+  onDiscard,
+  onPreview,
+  onWorkshop,
+  onSettings,
+  captureCanvas,
+  download,
+  language,
+  photoStore,
+  featureStore,
+  getSelection = () => [],
+}) {
+  const root = document.createElement('section');
+  root.id = 'ai-chat';
+  root.className = 'cad-ai-chat';
+  root.setAttribute('aria-label', 'KI-Chat');
+  root.innerHTML = `<div class="ai-chat-heading"><button id="ai-chat-toggle" aria-expanded="true" aria-controls="ai-chat-body"><span class="ai-chat-title">✦ KI-Chat</span><span class="ai-chat-caret" aria-hidden="true">⌄</span></button><button id="ai-chat-new" type="button">Neuer Chat</button><button id="ai-chat-settings" type="button">API-Einstellungen</button><button id="ai-chat-workshop" type="button">KI-Werkstatt</button></div><div id="ai-chat-body"><div id="ai-chat-log" role="log" aria-label="Chatverlauf" aria-live="polite"><p class="ai-chat-welcome">Beschreibe dein Teil, stelle Fragen zu Formnaro oder lass dir Werkzeuge und Menüs zeigen.</p></div><div id="ai-chat-proposal" hidden></div><form id="ai-chat-form"><div id="ai-chat-attachments"></div><div id="ai-chat-feature-references"></div><label class="ai-chat-input-label" for="ai-chat-prompt">Nachricht</label><textarea id="ai-chat-prompt" rows="2" maxlength="10000" placeholder="Nachricht an die KI …"></textarea><div class="ai-chat-actions"><button id="ai-chat-image" type="button" title="Bilder hinzufügen">＋ Bild</button><button id="ai-chat-project-photos" type="button">Projektfotos</button><button id="ai-chat-features" type="button">Merkmalsbezüge</button><button id="ai-chat-model-image" type="button">Modellbild anhängen</button><input id="ai-chat-files" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden><button id="ai-chat-cancel" type="button" hidden>Abbrechen</button><button id="ai-chat-send" type="submit" class="primary">Senden ↑</button></div><p id="ai-chat-status" role="status"></p><p id="ai-chat-usage" role="status" data-no-translate></p><p class="ai-chat-notice">Nachricht, Chatverlauf, Bilder, Modellkontext und automatische Vorschauansichten werden nach dem Senden an deinen KI-Anbieter übertragen.</p></form></div>`;
+  host.append(root);
+  const el = (id) => root.querySelector('#' + id);
+  let conversationId = crypto.randomUUID(),
+    attachments = [],
+    practiceFiles = [],
+    featureReferences = [],
+    history = [],
+    busy = false,
+    sending = false,
+    loading = false,
+    modelLoading = false,
+    modelPicker,
+    speech,
+    windowsDictation,
+    speechBusy = false,
+    photoEditing = false,
+    disposed = false,
+    attachmentGeneration = 0;
+  const conversations = new Map(),
+    referenceButtons = new WeakMap();
+  let activeProvider = null;
+  const noTranslate = (el) => el.setAttribute('data-no-translate', '');
+  noTranslate(el('ai-chat-log'));
+  noTranslate(el('ai-chat-attachments'));
+  noTranslate(el('ai-chat-status'));
+  if (language() === 'en')
+    el('ai-chat-log').querySelector('.ai-chat-welcome').textContent =
+      'Describe your part, ask about Formnaro, or have tools and menus demonstrated.';
+  const practiceButton = document.createElement('button');
+  practiceButton.id = 'ai-chat-practice';
+  practiceButton.type = 'button';
+  practiceButton.textContent = 'Übungsmodus';
+  practiceButton.title = 'Eine Vorführung in einem getrennten Übungsfenster anfordern';
+  el('ai-chat-cancel').before(practiceButton);
+  practiceButton.onclick = () => {
+    const input = el('ai-chat-prompt');
+    if (input.disabled) return;
+    if (!/übungsmodus|uebungsmodus/i.test(input.value)) input.value = 'Zeige im Übungsmodus: ' + input.value;
+    input.focus();
+  };
+  const projectPractice = document.createElement('input');
+  projectPractice.type = 'checkbox';
+  projectPractice.id = 'ai-chat-practice-from-project';
+  const practiceFileButton = document.createElement('button'),
+    practiceFileInput = document.createElement('input'),
+    practiceFileList = document.createElement('div');
+  if (canPracticeFromProject) {
+    practiceFileButton.id = 'ai-chat-practice-files';
+    practiceFileButton.type = 'button';
+    practiceFileButton.textContent = 'Übungsdateien …';
+    practiceFileButton.title = 'Fotos oder eine STL für das getrennte Übungsfenster bereitstellen';
+    practiceFileInput.id = 'ai-chat-practice-file-input';
+    practiceFileInput.type = 'file';
+    practiceFileInput.multiple = true;
+    practiceFileInput.hidden = true;
+    practiceFileInput.accept = 'image/png,image/jpeg,image/webp,.stl';
+    practiceFileList.id = 'ai-chat-practice-file-list';
+    practiceFileList.className = 'ai-feature-chips';
+    noTranslate(practiceFileList);
+    el('ai-chat-cancel').before(practiceFileButton, practiceFileInput);
+    el('ai-chat-prompt').before(practiceFileList);
+    practiceFileButton.onclick = () => practiceFileInput.click();
+    practiceFileInput.onchange = () => {
+      const files = [...practiceFileInput.files];
+      practiceFileInput.value = '';
+      if (files.length) void addPracticeFiles(files);
+    };
+    const label = document.createElement('label');
+    label.append(
+      projectPractice,
+      document.createTextNode(
+        language() === 'en' ? ' Practice on a copy of the current project' : ' Übung auf Kopie des aktuellen Projekts',
+      ),
+    );
+    label.title = 'Die KI erhält Namen und Typ der ausgewählten Bauteile.';
+    el('ai-chat-form').append(label);
   }
-  setBusy(busy);
- }
- async function addPracticeFiles(files){
-  if(busy||loading||modelLoading||speechBusy||photoEditing)return;
-  loading=true;setBusy(busy);
-  try{
-   const next=await readPracticeFiles(files);
-   if(disposed)return;
-   practiceFiles=next;renderPracticeFiles();
-   status('Dateien für die nächste Übung bereitgestellt. Übungsfotos werden an die KI gesendet, STL-Daten bleiben lokal.');
-  }catch(error){if(!disposed)status(error.message,true);}
-  finally{loading=false;if(!disposed)setBusy(busy);}
- }
- function renderFeatureReferences(){for(const button of root.querySelectorAll('#ai-chat-log [data-ai-feature-ref]')){const reference=referenceButtons.get(button);if(!reference||!featureStore)continue;const state=cadAIReferenceState(featureStore.project(),reference,{stored:true});button.classList.toggle('stale',state.status!=='current');button.textContent=reference.name+(state.status==='current'?'':' · Bezug prüfen');button.title=state.message??reference.name;}const container=el('ai-chat-feature-references');container.replaceChildren();container.className='ai-feature-chips';for(const reference of featureReferences){const state=featureStore?cadAIReferenceState(featureStore.project(),reference,{stored:true}):{status:'missing'},chip=document.createElement('span'),show=document.createElement('button'),remove=document.createElement('button');chip.className='ai-feature-chip'+(state.status==='current'?'':' stale');show.type=remove.type='button';show.dataset.aiFeatureRef=reference.id;show.textContent=reference.name+(state.status==='current'?'':' · Bezug prüfen');show.onclick=()=>Promise.resolve(featureStore?.highlight(reference)).catch(e=>feedback(e.message,true));remove.textContent='×';remove.setAttribute('aria-label','Merkmalsbezug entfernen: '+reference.name);remove.onclick=()=>{featureReferences=featureReferences.filter(r=>r.id!==reference.id);renderFeatureReferences();featureStore?.clearHighlight?.();};chip.append(show,remove);container.append(chip);}if(featureReferences.length){const note=document.createElement('p');note.className='ai-feature-scope-note';note.textContent='Änderungen sind auf diese Bezüge und ausdrücklich bestätigte Abhängigkeiten begrenzt.';container.append(note);}setBusy(busy);}
- async function addFeatureReference(value){if(busy||sending)throw Error('Laufenden KI-Auftrag zuerst abschließen.');const reference=validateCadAIReference(value),index=featureReferences.findIndex(r=>r.id===reference.id);if(index<0){if(featureReferences.length>=32)throw Error('Höchstens 32 Merkmalsbezüge pro Nachricht.');featureReferences.push(reference);}else featureReferences[index]=reference;renderFeatureReferences();await open();status('Merkmalsbezug angehängt. Er wird mit der nächsten Nachricht verwendet.');}
- function highlightFeatureReference(id){for(const element of root.querySelectorAll('[data-ai-feature-ref]')){const hit=element.dataset.aiFeatureRef===id;element.classList.toggle('highlighted',hit);if(hit)element.scrollIntoView({block:'nearest'});}}
- async function send(event){
-  event?.preventDefault();
-  if(busy||speechBusy||photoEditing||sending||loading||modelLoading)return;
-  const prompt=el('ai-chat-prompt').value.trim();
-  if(!prompt&&!attachments.length&&!featureReferences.length&&!practiceFiles.length)return;
-  const images=attachments.map(({name,mimeType,dataUrl})=>({name,mimeType,dataUrl}));
-  const thumbnails=attachments.map(({name,thumbnail})=>({name,thumbnail}));
-  const requestImages=[...images,...practicePhotoImages(practiceFiles)];
-  const ordinaryBytes=attachments.reduce((sum,image)=>sum+image.bytes,0);
-  const exerciseBytes=practiceFiles.filter(file=>file.kind==='photo').reduce((sum,{base64})=>{
-   const padding=base64.length-base64.replace(/=+$/,'').length;
-   return sum+base64.length*.75-padding;
-  },0);
-  if(requestImages.length>limits.maxAttachments||ordinaryBytes+exerciseBytes>limits.maxAttachmentBytes)
-   return status('Bis zu vier Bilder und insgesamt höchstens 12 MiB pro Nachricht.',true);
-  const previous=cadAIHistory(history,requestImages);
-  if(modelPicker?.hasImagesSupport()===false&&(requestImages.length||previous.some(t=>t.images?.length)))
-   return status('Dieses Modell kann keine Bilder sehen. Wähle ein bildfähiges Modell oder starte einen neuen Chat ohne Bilder.',true);
-  windowsDictation?.finish();sending=true;activity.hidden=true;activity.open=false;activitySummary.textContent='';
-  activityLog.replaceChildren();setBusy(true);append('user',prompt||'Referenzen besprechen',thumbnails,featureReferences);status('KI antwortet …');
-  try{const result=await onSend({prompt,images:requestImages,...(practiceFiles.length?{practiceFiles}:{}),conversationId,history:previous,chat:true,chatMode:mode.value,...(!selectionDetails.hidden&&scopeSelect.value?{sceneScope:scopeSelect.value}:{}),...(projectPractice.checked?{practiceFromProject:true}:{}),featureReferences:structuredClone(featureReferences),photoReferences:attachments.filter(a=>a.photo).map(a=>structuredClone(a.photo))});if(disposed)return;if(!activity.hidden)reportActivity(en()?'Request completed':'Anfrage abgeschlossen');append('assistant',replyText(result));history=cadAIHistory([...history,{role:'user',text:prompt||'Bild als Vorlage',images},{role:'assistant',text:replyHistory(result)}]);if(result.commands)feedback((language()==='en'?'Proposal checked. It has not been applied; Apply changes the model. ':'Vorschlag geprüft. Noch nicht übernommen; erst Übernehmen ändert dein Modell. ')+aiVerificationText(result.verification,language()));attachments=[];practiceFiles=[];featureReferences=[];attachmentGeneration++;renderAttachments();renderPracticeFiles();renderFeatureReferences();el('ai-chat-prompt').value='';projectPractice.checked=false;status(result.commands?'Vorschlag geprüft. Übernehmen ändert dein Modell.':'');}
-  catch(error){if(!disposed){history=cadAIHistory([...history,{role:'user',text:prompt||'Bild als Vorlage',images}]);if(error.aiResponse){append('assistant',replyText(error.aiResponse));history=cadAIHistory([...history,{role:'assistant',text:replyHistory(error.aiResponse)}]);}feedback((language()==='en'?'Request or proposal failed; no change applied. ':'Anfrage oder Vorschlag fehlgeschlagen; keine Änderung übernommen. ')+error.message,true);}}
-  finally{sending=false;if(!disposed){setBusy(false);el('ai-chat-prompt').focus();}}
- }
- function switchProvider(id){
-  if(id===activeProvider)return;
-  if(activeProvider===null){activeProvider=id;return;}
-  if(activeProvider!==null)conversations.set(activeProvider,{conversationId,history,attachments,featureReferences,prompt:el('ai-chat-prompt').value,rows:[...el('ai-chat-log').childNodes],usage:el('ai-chat-usage').textContent,usageSummary:el('ai-chat-usage-summary').textContent});
-  projectPractice.checked=false;practiceFiles=[];renderPracticeFiles();activeProvider=id;const saved=conversations.get(id);conversationId=saved?.conversationId??crypto.randomUUID();history=saved?.history??[];attachments=saved?.attachments??[];featureReferences=saved?.featureReferences??[];attachmentGeneration++;
-  el('ai-chat-log').replaceChildren(...(saved?.rows??[]));
-  if(!el('ai-chat-log').childNodes.length){const welcome=document.createElement('p');welcome.className='ai-chat-welcome';welcome.textContent=language()==='en'?'This provider has its own conversation. Describe your part.':'Dieser Anbieter hat seinen eigenen Verlauf. Beschreibe dein Teil.';el('ai-chat-log').append(welcome);}
-  el('ai-chat-prompt').value=saved?.prompt??'';layout.setUsage(saved?.usage??'',saved?.usageSummary??'');setProposal(null);renderAttachments();renderFeatureReferences();featureStore?.clearHighlight?.();
- }
- function setProposal(result){const box=el('ai-chat-proposal');box.replaceChildren();box.hidden=!result;box.classList.toggle('has-feature-dependencies',!!result?.report?.featureDependencies?.requiresAcceptance);if(!result)return;const label=document.createElement('strong'),note=document.createElement('p'),actions=document.createElement('div'),copy=document.createElement('div');copy.className='ai-chat-proposal-copy';label.textContent=result.label;noTranslate(label);note.textContent=result.verification?.skipped?(language()==='en'?'UNCHECKED TRIAL · model unchanged':'UNGEPRÜFTE PROBE · Modell unverändert'):(language()==='en'?'Checked proposal · model unchanged':'Geprüfter Vorschlag · Modell unverändert');copy.append(label,note);if(result.practiceDelta){
-  const list=document.createElement('ul');
-  const labels={added:'Neu',removed:'Entfernt',changed:'Geändert'};
-  for(const item of result.practiceDelta.parts){const row=document.createElement('li');row.textContent=labels[item.status]+' · '+item.name;list.append(row);}
-  for(const section of result.practiceDelta.sections){const row=document.createElement('li');row.textContent='Geändert · '+section;list.append(row);}
-  copy.append(list);
- }appendAIFeatureEdits(copy,result.report);appendAIVerification(copy,result.verification,result.scene,language());appendAIIndependentCheck(copy,result,language());if(result.visualReview){const visual=document.createElement('p');visual.textContent=result.visualReview.status==='reviewed'?(language()==='en'?'Four preview views reviewed by AI. Dimensions are verified separately.':'Vier Vorschauansichten durch die KI geprüft. Maße werden separat geprüft.'):(language()==='en'?'Visual review unavailable: ':'Bildprüfung nicht abgeschlossen: ')+(result.visualReview.reason??result.visualReview.status);copy.append(visual);}appendPhotoComparison(copy,result.photoComparison);appendMeshLidReports(copy,result.report,language());if(result.correctionError){const error=document.createElement('p');error.className='ai-error';error.textContent=(language()==='en'?'Last correction: ':'Letzte Korrektur: ')+result.correctionError.message;noTranslate(error);copy.append(error);}if(result.warnings?.length){const warning=document.createElement('p');warning.className='ai-error';warning.textContent=result.warnings.join(' · ');noTranslate(warning);copy.append(warning);}box.append(copy);actions.className='ai-chat-proposal-actions';
-  for(const [id,text,action]of [['ai-chat-preview','Ansehen',onPreview],['ai-chat-apply',result.report?.featureDependencies?.requiresAcceptance?aiFeatureApplyLabel(result,language()):result.verification?.passed===false?(language()==='en'?'Apply with errors':'Mit Fehlern übernehmen'):aiProposalWarning(result)?(language()==='en'?'Apply with warning':'Mit Warnung übernehmen'):'Übernehmen',async()=>{setBusy(true);try{if(await onApply())setProposal(null);}finally{setBusy(false);}}],['ai-chat-discard','Verwerfen',onDiscard]]){const button=document.createElement('button');button.type='button';button.id=id;button.textContent=text;button.onclick=()=>Promise.resolve(action()).catch(error=>feedback(error.message,true));if(id==='ai-chat-apply')button.className='primary';actions.append(button);}if(result.photoComparison?.length){const button=document.createElement('button');button.type='button';button.id='ai-chat-photo-compare';button.textContent='Fotovergleich';button.onclick=()=>showPhotoComparison(result.photoComparison,download);actions.append(button);}box.append(actions);setBusy(busy);
- }
- el('ai-chat-toggle').onclick=()=>root.classList.contains('collapsed')?open():collapse();el('ai-chat-settings').onclick=onSettings;el('ai-chat-workshop').onclick=onWorkshop;
- el('ai-chat-new').onclick=()=>{if(busy||speechBusy||loading)return;projectPractice.checked=false;practiceFiles=[];renderPracticeFiles();windowsDictation?.finish();void onDiscard({keepTask:true});conversationId=crypto.randomUUID();history=[];attachments=[];featureReferences=[];featureStore?.clearHighlight?.();attachmentGeneration++;const welcome=document.createElement('p');welcome.className='ai-chat-welcome';welcome.textContent=language()==='en'?'Describe your part, ask about Formnaro, or have tools and menus demonstrated.':'Beschreibe dein Teil, stelle Fragen zu Formnaro oder lass dir Werkzeuge und Menüs zeigen.';el('ai-chat-log').replaceChildren(welcome);el('ai-chat-prompt').value='';renderAttachments();renderFeatureReferences();setProposal(null);layout.setUsage('');status('Neuer Chat.');};
- el('ai-chat-model-image').onclick=()=>Promise.resolve().then(async()=>{if(busy||speechBusy||loading||!captureCanvas)return;if(attachments.length>=limits.maxAttachments)return status(language()==='en'?'Up to four images per message.':'Bis zu vier Bilder pro Nachricht.',true);const generation=attachmentGeneration,file=await captureCanvas();if(disposed||generation!==attachmentGeneration)return;await addImages([file]);await open();}).catch(error=>status(error.message,true));
- async function openProjectPhotos(){if(busy||photoEditing||!photoStore)return;photoEditing=true;setBusy(busy);try{await showProjectPhotos(photoStore,{onAttach:async image=>{if(attachments.length>=limits.maxAttachments)throw Error('Bis zu vier Bilder pro Nachricht.');if(attachments.some(a=>a.imageId===image.imageId))throw Error('Dieses Projektfoto ist bereits angehängt.');if(attachments.reduce((n,a)=>n+a.bytes,0)+image.bytes>limits.maxAttachmentBytes)throw Error('Die Bildanhänge dürfen zusammen höchstens 12 MB groß sein.');attachments.push(image);attachmentGeneration++;renderAttachments();}});}catch(e){status(e.message,true);}finally{photoEditing=false;if(!disposed)setBusy(busy);}}
- pickFeature.onclick=async()=>{
-  try{
-   layout.close();layout.setExpanded(false);
-   await featureStore.pickForChat();
-   mode.value='chat';mode.dispatchEvent(new Event('change'));
-  }catch(error){status(error.message,true);}
- };
- el('ai-chat-project-photos').onclick=openProjectPhotos;el('ai-chat-features').onclick=()=>Promise.resolve(featureStore?.open()).catch(e=>status(e.message,true));
- el('ai-chat-form').onsubmit=send;el('ai-chat-image').onclick=()=>el('ai-chat-files').click();el('ai-chat-files').onchange=()=>{void addImages(el('ai-chat-files').files);el('ai-chat-files').value='';};el('ai-chat-cancel').onclick=()=>Promise.resolve(onCancel()).catch(error=>status(error.message,true));
- root.addEventListener('keydown',event=>{event.stopPropagation();if(event.target===el('ai-chat-prompt')&&event.key==='Enter'&&!event.shiftKey&&!event.isComposing&&!windowsDictation?.isActive()){event.preventDefault();void send();}if(event.key==='Escape'&&!layout.dialog.open){event.preventDefault();if(root.classList.contains('chat-focus'))layout.clearFocus();else if(root.classList.contains('chat-expanded'))layout.setExpanded(false);else collapse();}});
- root.addEventListener('paste',event=>{const images=[...event.clipboardData.items].filter(item=>item.kind==='file'&&item.type.startsWith('image/')).map(item=>item.getAsFile()).filter(Boolean);if(images.length){event.preventDefault();event.stopPropagation();void addImages(images);}});
- root.addEventListener('dragover',event=>{event.preventDefault();event.stopPropagation();root.classList.add('drag-over');});root.addEventListener('dragleave',event=>{if(!root.contains(event.relatedTarget))root.classList.remove('drag-over');});root.addEventListener('drop',event=>{event.preventDefault();event.stopPropagation();root.classList.remove('drag-over');void addImages(event.dataTransfer.files);});
- speech=createSpeechInput({host:layout.tools,prompt:el('ai-chat-prompt'),desktop:window.offlinecadDesktop,language,onBusy:value=>{speechBusy=value;if(!disposed)setBusy(busy);}});
- windowsDictation=createWindowsDictationButton({before:el('ai-chat-send'),prompt:el('ai-chat-prompt'),desktop:window.offlinecadDesktop,language,onStatus:status});
- modelPicker=createCadAIModelPicker({host:el('ai-chat-model-picker-host'),desktop:window.offlinecadDesktop,language,onBusy:value=>{modelLoading=value;setBusy(busy);},onChange:onDiscard,onProviderChange:switchProvider,onStatus:status,onSettings:()=>{layout.close();onSettings?.();}});
- return {open,refreshSelection,openProjectPhotos,reportActivity,focusWhileWorking:()=>layout.setWorking(!root.classList.contains('collapsed')&&mode.value==='chat'),showTools:layout.clearFocus,addFeatureReference,highlightFeatureReference,refreshFeatureReferences:renderFeatureReferences,setBusy,setProposal,status,feedback,addImages,setUsage:(text,compact)=>{if(!disposed)layout.setUsage(text,compact);},state:()=>({featureReferences:structuredClone(featureReferences),attachmentCount:attachments.length,attachments:attachments.map(({name,mimeType,bytes})=>({name,mimeType,bytes})),historyCount:history.length,providerId:activeProvider,busy,loading,speechBusy,windowsDictationActive:windowsDictation?.isActive()??false,photoEditing,photoReferences:attachments.filter(a=>a.photo).map(a=>structuredClone(a.photo))}),refreshModels:()=>modelPicker.refresh(),dispose(){disposed=true;layout.dispose();speech?.dispose();windowsDictation?.dispose();attachmentGeneration++;attachments=[];practiceFiles=[];featureReferences=[];history=[];conversations.clear();modelPicker.dispose();root.remove();}};
+  const pickFeature = document.createElement('button');
+  pickFeature.id = 'ai-chat-pick-feature';
+  pickFeature.type = 'button';
+  pickFeature.textContent = language() === 'en' ? 'Attach model feature' : 'Stelle anhängen';
+  pickFeature.hidden = !featureStore?.pickForChat;
+  el('ai-chat-send').before(pickFeature);
+  const layout = createCadAIChatLayout(root, { language });
+  const en = () => language() === 'en';
+  const mode = document.createElement('select');
+  mode.id = 'ai-chat-mode';
+  mode.setAttribute('aria-label', en() ? 'Chat mode' : 'Chatmodus');
+  noTranslate(mode);
+  mode.add(new Option(en() ? 'AI chat' : 'KI-Chat', 'chat'));
+  mode.add(new Option(en() ? 'Program help' : 'Bedienhilfe', 'help'));
+  el('ai-chat-view-options').append(mode);
+  mode.onchange = () => {
+    if (mode.value === 'help') layout.clearFocus();
+    el('ai-chat-prompt').placeholder =
+      mode.value === 'help'
+        ? en()
+          ? 'Ask about tools and menus …'
+          : 'Frage nach Werkzeugen und Menüs …'
+        : en()
+          ? 'Message the AI …'
+          : 'Nachricht an die KI …';
+  };
+  const selectionDetails = document.createElement('details');
+  selectionDetails.id = 'ai-chat-selection';
+  selectionDetails.innerHTML = `<summary></summary><ul></ul><label><span>${en() ? 'Scene context' : 'Szenenkontext'}</span> <select><option value="">${en() ? 'Automatic (selection for large projects)' : 'Automatisch (bei großen Projekten die Auswahl)'}</option><option value="selection">${en() ? 'Selected parts' : 'Ausgewählte Teile'}</option><option value="project">${en() ? 'Entire project' : 'Gesamtes Projekt'}</option></select></label>`;
+  const scopeSelect = selectionDetails.querySelector('select');
+  el('ai-chat-prompt').before(selectionDetails);
+  function refreshSelection() {
+    const names = getSelection();
+    selectionDetails.hidden = !names.length || mode.value === 'help';
+    selectionDetails.querySelector('summary').textContent = en()
+      ? 'Selected parts (' + names.length + ')'
+      : 'Ausgewählte Teile (' + names.length + ')';
+    selectionDetails.querySelector('ul').replaceChildren(
+      ...names.map((name) => {
+        const item = document.createElement('li');
+        item.textContent = name;
+        noTranslate(item);
+        return item;
+      }),
+    );
+  }
+  mode.addEventListener('change', refreshSelection);
+  refreshSelection();
+  const activity = document.createElement('details');
+  activity.id = 'ai-chat-activity';
+  activity.hidden = true;
+  noTranslate(activity);
+  const activitySummary = document.createElement('summary'),
+    activityLog = document.createElement('ol');
+  activitySummary.setAttribute('aria-live', 'polite');
+  activity.append(activitySummary, activityLog);
+  el('ai-chat-log').before(activity);
+  function reportActivity(message) {
+    if (!message || activitySummary.textContent === message) return;
+    activity.hidden = false;
+    activitySummary.textContent = message;
+    const row = document.createElement('li');
+    row.textContent = message;
+    activityLog.append(row);
+    while (activityLog.children.length > 24) activityLog.firstChild.remove();
+  }
+  const strictness = mountAIModelStrictness(el('ai-chat-model-options') ?? el('ai-chat-form'), { language });
+  function status(text, error = false) {
+    el('ai-chat-status').textContent = text;
+    el('ai-chat-status').classList.toggle('ai-error', error);
+  }
+  function setBusy(value) {
+    busy = value;
+    mode.disabled = busy;
+    scopeSelect.disabled = busy;
+    if (!busy) layout.setWorking(false);
+    strictness?.setBusy(busy || loading || modelLoading);
+    const blocked = busy || speechBusy || photoEditing;
+    el('ai-chat-send').disabled = blocked || loading || modelLoading;
+    practiceButton.disabled = blocked || loading || modelLoading;
+    projectPractice.disabled = practiceFileButton.disabled = practiceButton.disabled;
+    el('ai-chat-image').disabled = blocked || loading;
+    el('ai-chat-project-photos').disabled = blocked || loading || !photoStore;
+    el('ai-chat-features').disabled = blocked || loading || !featureStore;
+    pickFeature.disabled = blocked || loading || modelLoading || !featureStore?.pickForChat;
+    el('ai-chat-model-image').disabled = blocked || loading || !captureCanvas;
+    el('ai-chat-new').disabled = blocked || loading;
+    el('ai-chat-prompt').disabled = blocked;
+    el('ai-chat-cancel').hidden = !busy;
+    root
+      .querySelectorAll(
+        '#ai-chat-attachments button,#ai-chat-practice-file-list button,#ai-chat-proposal button,#ai-chat-feature-references button,#ai-chat-log [data-ai-feature-ref]',
+      )
+      .forEach((b) => (b.disabled = blocked || loading || modelLoading));
+    modelPicker?.setBusy(blocked || loading);
+    speech?.setBusy(busy || loading || modelLoading);
+    windowsDictation?.setBusy(blocked || loading || modelLoading);
+  }
+  async function open() {
+    await window.formnaroOpenChatSidebar?.();
+    root.classList.remove('collapsed');
+    el('ai-chat-toggle').setAttribute('aria-expanded', 'true');
+    el('ai-chat-body').hidden = false;
+    el('ai-chat-prompt').focus();
+  }
+  function collapse() {
+    layout.close();
+    layout.clearFocus();
+    layout.setExpanded(false);
+    if (speech?.isBusy()) void speech.cancel();
+    root.classList.add('collapsed');
+    el('ai-chat-toggle').setAttribute('aria-expanded', 'false');
+    el('ai-chat-body').hidden = true;
+    el('ai-chat-toggle').focus();
+  }
+  function append(role, text, images = [], references = []) {
+    const log = el('ai-chat-log');
+    log.querySelector('.ai-chat-welcome')?.remove();
+    const row = document.createElement('article');
+    row.className = 'ai-chat-message ' + role;
+    const label = document.createElement('strong');
+    label.textContent =
+      role === 'user' ? (language() === 'en' ? 'You' : 'Du') : role === 'assistant' ? 'KI' : 'Formnaro';
+    const body = document.createElement('p');
+    body.textContent = text;
+    row.append(label, body);
+    for (const image of images) {
+      const img = document.createElement('img');
+      img.src = image.thumbnail;
+      img.alt = image.name;
+      row.append(img);
+    }
+    for (const reference of references) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'ai-feature-chip';
+      button.dataset.aiFeatureRef = reference.id;
+      referenceButtons.set(button, reference);
+      button.textContent = reference.name;
+      button.onclick = () => {
+        if (!busy) void Promise.resolve(featureStore?.highlight(reference)).catch((e) => feedback(e.message, true));
+      };
+      row.append(button);
+    }
+    log.append(row);
+    while (log.children.length > 24) log.firstChild.remove();
+    log.scrollTop = log.scrollHeight;
+  }
+  function replyText(result) {
+    return result.question || result.message || result.label || 'Vorschlag erstellt.';
+  }
+  function replyHistory(result) {
+    const text = result.commands
+        ? JSON.stringify({
+            revision: result.revision,
+            label: result.label,
+            commands: result.commands,
+            ...(result.checks !== undefined ? { checks: result.checks } : {}),
+            ...(result.message ? { message: result.message } : {}),
+          })
+        : replyText(result),
+      suffix = '\n[Formnaro: proposal text truncated; use the current scene.]';
+    return text.length > limits.maxText ? text.slice(0, limits.maxText - suffix.length) + suffix : text;
+  }
+  function feedback(text, error = false) {
+    if (disposed) return;
+    append(error ? 'error' : 'application', text);
+    history = cadAIHistory([
+      ...history,
+      { role: 'user', text: ('[Formnaro application feedback]\n' + text).slice(0, limits.maxText) },
+    ]);
+    if (error) status(text, true);
+  }
+  function renderAttachments() {
+    const container = el('ai-chat-attachments');
+    container.replaceChildren();
+    attachments.forEach((image, index) => {
+      const item = document.createElement('div'),
+        img = document.createElement('img'),
+        remove = document.createElement('button');
+      img.src = image.thumbnail;
+      img.alt = image.name;
+      item.title = image.name;
+      remove.type = 'button';
+      remove.textContent = '×';
+      remove.setAttribute('aria-label', 'Bild entfernen: ' + image.name);
+      remove.onclick = () => {
+        attachments.splice(index, 1);
+        attachmentGeneration++;
+        renderAttachments();
+      };
+      const measure = document.createElement('button');
+      measure.type = 'button';
+      measure.className = 'photo-measure-button';
+      measure.textContent = image.photo ? 'Messungen ändern' : 'Foto vermessen';
+      measure.onclick = async () => {
+        if (busy || photoEditing) return;
+        photoEditing = true;
+        setBusy(busy);
+        const generation = attachmentGeneration;
+        try {
+          const value = await editPhotoReference(image);
+          if (!disposed && generation === attachmentGeneration && attachments.includes(image) && value) {
+            image.photo = value;
+            status('Fotomaße gespeichert. Sie werden mit dem nächsten Auftrag gesendet.');
+          }
+        } catch (e) {
+          status(e.message, true);
+        } finally {
+          photoEditing = false;
+          if (!disposed) renderAttachments();
+        }
+      };
+      item.append(img);
+      if (image.imageId) item.append(measure);
+      if (photoStore && image.photo) {
+        const save = document.createElement('button');
+        save.type = 'button';
+        save.className = 'photo-project-save photo-measure-button';
+        save.textContent = 'Im Projekt speichern';
+        save.onclick = async () => {
+          if (busy || photoEditing) return;
+          photoEditing = true;
+          setBusy(busy);
+          try {
+            const state = photoStore.read(),
+              next = upsertProjectPhoto(state.photos, image);
+            await photoStore.save(next, { revision: state.revision });
+            status('Originalfoto und Messungen im Projekt gespeichert. Rückgängig setzt diese Änderung zurück.');
+          } catch (e) {
+            status(e.message, true);
+          } finally {
+            photoEditing = false;
+            if (!disposed) setBusy(busy);
+          }
+        };
+        item.append(save);
+      }
+      item.append(remove);
+      container.append(item);
+    });
+    setBusy(busy);
+  }
+  async function addImages(files) {
+    if (busy || speechBusy || loading || photoEditing) return;
+    const values = [...files];
+    if (!values.length) return;
+    if (attachments.length + values.length > limits.maxAttachments)
+      return status('Bis zu vier Bilder pro Nachricht.', true);
+    loading = true;
+    setBusy(busy);
+    const generation = attachmentGeneration;
+    try {
+      const additions = [];
+      let bytes = attachments.reduce((sum, a) => sum + a.bytes, 0);
+      for (const file of values) {
+        bytes += file.size;
+        if (bytes > limits.maxAttachmentBytes)
+          throw Error('Die Bildanhänge dürfen zusammen höchstens 12 MB groß sein.');
+        additions.push(await readCadAIImage(file));
+      }
+      if (!disposed && generation === attachmentGeneration) {
+        attachments.push(...additions);
+        renderAttachments();
+        status('Bilder angehängt. Sie werden mit deiner nächsten Nachricht gesendet.');
+      }
+    } catch (error) {
+      if (!disposed) status(error.message, true);
+    } finally {
+      loading = false;
+      if (!disposed) setBusy(busy);
+    }
+  }
+  function renderPracticeFiles() {
+    practiceFileList.replaceChildren();
+    for (const file of practiceFiles) {
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'ai-feature-chip';
+      remove.textContent = file.name + ' ×';
+      remove.setAttribute('aria-label', 'Übungsdatei entfernen: ' + file.name);
+      remove.onclick = () => {
+        practiceFiles = practiceFiles.filter((item) => item !== file);
+        renderPracticeFiles();
+      };
+      practiceFileList.append(remove);
+    }
+    setBusy(busy);
+  }
+  async function addPracticeFiles(files) {
+    if (busy || loading || modelLoading || speechBusy || photoEditing) return;
+    loading = true;
+    setBusy(busy);
+    try {
+      const next = await readPracticeFiles(files);
+      if (disposed) return;
+      practiceFiles = next;
+      renderPracticeFiles();
+      status(
+        'Dateien für die nächste Übung bereitgestellt. Übungsfotos werden an die KI gesendet, STL-Daten bleiben lokal.',
+      );
+    } catch (error) {
+      if (!disposed) status(error.message, true);
+    } finally {
+      loading = false;
+      if (!disposed) setBusy(busy);
+    }
+  }
+  function renderFeatureReferences() {
+    for (const button of root.querySelectorAll('#ai-chat-log [data-ai-feature-ref]')) {
+      const reference = referenceButtons.get(button);
+      if (!reference || !featureStore) continue;
+      const state = cadAIReferenceState(featureStore.project(), reference, { stored: true });
+      button.classList.toggle('stale', state.status !== 'current');
+      button.textContent = reference.name + (state.status === 'current' ? '' : ' · Bezug prüfen');
+      button.title = state.message ?? reference.name;
+    }
+    const container = el('ai-chat-feature-references');
+    container.replaceChildren();
+    container.className = 'ai-feature-chips';
+    for (const reference of featureReferences) {
+      const state = featureStore
+          ? cadAIReferenceState(featureStore.project(), reference, { stored: true })
+          : { status: 'missing' },
+        chip = document.createElement('span'),
+        show = document.createElement('button'),
+        remove = document.createElement('button');
+      chip.className = 'ai-feature-chip' + (state.status === 'current' ? '' : ' stale');
+      show.type = remove.type = 'button';
+      show.dataset.aiFeatureRef = reference.id;
+      show.textContent = reference.name + (state.status === 'current' ? '' : ' · Bezug prüfen');
+      show.onclick = () => Promise.resolve(featureStore?.highlight(reference)).catch((e) => feedback(e.message, true));
+      remove.textContent = '×';
+      remove.setAttribute('aria-label', 'Merkmalsbezug entfernen: ' + reference.name);
+      remove.onclick = () => {
+        featureReferences = featureReferences.filter((r) => r.id !== reference.id);
+        renderFeatureReferences();
+        featureStore?.clearHighlight?.();
+      };
+      chip.append(show, remove);
+      container.append(chip);
+    }
+    if (featureReferences.length) {
+      const note = document.createElement('p');
+      note.className = 'ai-feature-scope-note';
+      note.textContent = 'Änderungen sind auf diese Bezüge und ausdrücklich bestätigte Abhängigkeiten begrenzt.';
+      container.append(note);
+    }
+    setBusy(busy);
+  }
+  async function addFeatureReference(value) {
+    if (busy || sending) throw Error('Laufenden KI-Auftrag zuerst abschließen.');
+    const reference = validateCadAIReference(value),
+      index = featureReferences.findIndex((r) => r.id === reference.id);
+    if (index < 0) {
+      if (featureReferences.length >= 32) throw Error('Höchstens 32 Merkmalsbezüge pro Nachricht.');
+      featureReferences.push(reference);
+    } else featureReferences[index] = reference;
+    renderFeatureReferences();
+    await open();
+    status('Merkmalsbezug angehängt. Er wird mit der nächsten Nachricht verwendet.');
+  }
+  function highlightFeatureReference(id) {
+    for (const element of root.querySelectorAll('[data-ai-feature-ref]')) {
+      const hit = element.dataset.aiFeatureRef === id;
+      element.classList.toggle('highlighted', hit);
+      if (hit) element.scrollIntoView({ block: 'nearest' });
+    }
+  }
+  async function send(event) {
+    event?.preventDefault();
+    if (busy || speechBusy || photoEditing || sending || loading || modelLoading) return;
+    const prompt = el('ai-chat-prompt').value.trim();
+    if (!prompt && !attachments.length && !featureReferences.length && !practiceFiles.length) return;
+    const images = attachments.map(({ name, mimeType, dataUrl }) => ({ name, mimeType, dataUrl }));
+    const thumbnails = attachments.map(({ name, thumbnail }) => ({ name, thumbnail }));
+    const requestImages = [...images, ...practicePhotoImages(practiceFiles)];
+    const ordinaryBytes = attachments.reduce((sum, image) => sum + image.bytes, 0);
+    const exerciseBytes = practiceFiles
+      .filter((file) => file.kind === 'photo')
+      .reduce((sum, { base64 }) => {
+        const padding = base64.length - base64.replace(/=+$/, '').length;
+        return sum + base64.length * 0.75 - padding;
+      }, 0);
+    if (requestImages.length > limits.maxAttachments || ordinaryBytes + exerciseBytes > limits.maxAttachmentBytes)
+      return status('Bis zu vier Bilder und insgesamt höchstens 12 MiB pro Nachricht.', true);
+    const previous = cadAIHistory(history, requestImages);
+    if (modelPicker?.hasImagesSupport() === false && (requestImages.length || previous.some((t) => t.images?.length)))
+      return status(
+        'Dieses Modell kann keine Bilder sehen. Wähle ein bildfähiges Modell oder starte einen neuen Chat ohne Bilder.',
+        true,
+      );
+    windowsDictation?.finish();
+    sending = true;
+    activity.hidden = true;
+    activity.open = false;
+    activitySummary.textContent = '';
+    activityLog.replaceChildren();
+    setBusy(true);
+    append('user', prompt || 'Referenzen besprechen', thumbnails, featureReferences);
+    status('KI antwortet …');
+    try {
+      const result = await onSend({
+        prompt,
+        images: requestImages,
+        ...(practiceFiles.length ? { practiceFiles } : {}),
+        conversationId,
+        history: previous,
+        chat: true,
+        chatMode: mode.value,
+        ...(!selectionDetails.hidden && scopeSelect.value ? { sceneScope: scopeSelect.value } : {}),
+        ...(projectPractice.checked ? { practiceFromProject: true } : {}),
+        featureReferences: structuredClone(featureReferences),
+        photoReferences: attachments.filter((a) => a.photo).map((a) => structuredClone(a.photo)),
+      });
+      if (disposed) return;
+      if (!activity.hidden) reportActivity(en() ? 'Request completed' : 'Anfrage abgeschlossen');
+      append('assistant', replyText(result));
+      history = cadAIHistory([
+        ...history,
+        { role: 'user', text: prompt || 'Bild als Vorlage', images },
+        { role: 'assistant', text: replyHistory(result) },
+      ]);
+      if (result.commands)
+        feedback(
+          (language() === 'en'
+            ? 'Proposal checked. It has not been applied; Apply changes the model. '
+            : 'Vorschlag geprüft. Noch nicht übernommen; erst Übernehmen ändert dein Modell. ') +
+            aiVerificationText(result.verification, language()),
+        );
+      attachments = [];
+      practiceFiles = [];
+      featureReferences = [];
+      attachmentGeneration++;
+      renderAttachments();
+      renderPracticeFiles();
+      renderFeatureReferences();
+      el('ai-chat-prompt').value = '';
+      projectPractice.checked = false;
+      status(result.commands ? 'Vorschlag geprüft. Übernehmen ändert dein Modell.' : '');
+    } catch (error) {
+      if (!disposed) {
+        history = cadAIHistory([...history, { role: 'user', text: prompt || 'Bild als Vorlage', images }]);
+        if (error.aiResponse) {
+          append('assistant', replyText(error.aiResponse));
+          history = cadAIHistory([...history, { role: 'assistant', text: replyHistory(error.aiResponse) }]);
+        }
+        feedback(
+          (language() === 'en'
+            ? 'Request or proposal failed; no change applied. '
+            : 'Anfrage oder Vorschlag fehlgeschlagen; keine Änderung übernommen. ') + error.message,
+          true,
+        );
+      }
+    } finally {
+      sending = false;
+      if (!disposed) {
+        setBusy(false);
+        el('ai-chat-prompt').focus();
+      }
+    }
+  }
+  function switchProvider(id) {
+    if (id === activeProvider) return;
+    if (activeProvider === null) {
+      activeProvider = id;
+      return;
+    }
+    if (activeProvider !== null)
+      conversations.set(activeProvider, {
+        conversationId,
+        history,
+        attachments,
+        featureReferences,
+        prompt: el('ai-chat-prompt').value,
+        rows: [...el('ai-chat-log').childNodes],
+        usage: el('ai-chat-usage').textContent,
+        usageSummary: el('ai-chat-usage-summary').textContent,
+      });
+    projectPractice.checked = false;
+    practiceFiles = [];
+    renderPracticeFiles();
+    activeProvider = id;
+    const saved = conversations.get(id);
+    conversationId = saved?.conversationId ?? crypto.randomUUID();
+    history = saved?.history ?? [];
+    attachments = saved?.attachments ?? [];
+    featureReferences = saved?.featureReferences ?? [];
+    attachmentGeneration++;
+    el('ai-chat-log').replaceChildren(...(saved?.rows ?? []));
+    if (!el('ai-chat-log').childNodes.length) {
+      const welcome = document.createElement('p');
+      welcome.className = 'ai-chat-welcome';
+      welcome.textContent =
+        language() === 'en'
+          ? 'This provider has its own conversation. Describe your part.'
+          : 'Dieser Anbieter hat seinen eigenen Verlauf. Beschreibe dein Teil.';
+      el('ai-chat-log').append(welcome);
+    }
+    el('ai-chat-prompt').value = saved?.prompt ?? '';
+    layout.setUsage(saved?.usage ?? '', saved?.usageSummary ?? '');
+    setProposal(null);
+    renderAttachments();
+    renderFeatureReferences();
+    featureStore?.clearHighlight?.();
+  }
+  function setProposal(result) {
+    const box = el('ai-chat-proposal');
+    box.replaceChildren();
+    box.hidden = !result;
+    box.classList.toggle('has-feature-dependencies', !!result?.report?.featureDependencies?.requiresAcceptance);
+    if (!result) return;
+    const label = document.createElement('strong'),
+      note = document.createElement('p'),
+      actions = document.createElement('div'),
+      copy = document.createElement('div');
+    copy.className = 'ai-chat-proposal-copy';
+    label.textContent = result.label;
+    noTranslate(label);
+    note.textContent = result.verification?.skipped
+      ? language() === 'en'
+        ? 'UNCHECKED TRIAL · model unchanged'
+        : 'UNGEPRÜFTE PROBE · Modell unverändert'
+      : language() === 'en'
+        ? 'Checked proposal · model unchanged'
+        : 'Geprüfter Vorschlag · Modell unverändert';
+    copy.append(label, note);
+    if (result.practiceDelta) {
+      const list = document.createElement('ul');
+      const labels = { added: 'Neu', removed: 'Entfernt', changed: 'Geändert' };
+      for (const item of result.practiceDelta.parts) {
+        const row = document.createElement('li');
+        row.textContent = labels[item.status] + ' · ' + item.name;
+        list.append(row);
+      }
+      for (const section of result.practiceDelta.sections) {
+        const row = document.createElement('li');
+        row.textContent = 'Geändert · ' + section;
+        list.append(row);
+      }
+      copy.append(list);
+    }
+    appendAIFeatureEdits(copy, result.report);
+    appendAIVerification(copy, result.verification, result.scene, language());
+    appendAIIndependentCheck(copy, result, language());
+    if (result.visualReview) {
+      const visual = document.createElement('p');
+      visual.textContent =
+        result.visualReview.status === 'reviewed'
+          ? language() === 'en'
+            ? 'Four preview views reviewed by AI. Dimensions are verified separately.'
+            : 'Vier Vorschauansichten durch die KI geprüft. Maße werden separat geprüft.'
+          : (language() === 'en' ? 'Visual review unavailable: ' : 'Bildprüfung nicht abgeschlossen: ') +
+            (result.visualReview.reason ?? result.visualReview.status);
+      copy.append(visual);
+    }
+    appendPhotoComparison(copy, result.photoComparison);
+    appendMeshLidReports(copy, result.report, language());
+    if (result.correctionError) {
+      const error = document.createElement('p');
+      error.className = 'ai-error';
+      error.textContent =
+        (language() === 'en' ? 'Last correction: ' : 'Letzte Korrektur: ') + result.correctionError.message;
+      noTranslate(error);
+      copy.append(error);
+    }
+    if (result.warnings?.length) {
+      const warning = document.createElement('p');
+      warning.className = 'ai-error';
+      warning.textContent = result.warnings.join(' · ');
+      noTranslate(warning);
+      copy.append(warning);
+    }
+    box.append(copy);
+    actions.className = 'ai-chat-proposal-actions';
+    for (const [id, text, action] of [
+      ['ai-chat-preview', 'Ansehen', onPreview],
+      [
+        'ai-chat-apply',
+        result.report?.featureDependencies?.requiresAcceptance
+          ? aiFeatureApplyLabel(result, language())
+          : result.verification?.passed === false
+            ? language() === 'en'
+              ? 'Apply with errors'
+              : 'Mit Fehlern übernehmen'
+            : aiProposalWarning(result)
+              ? language() === 'en'
+                ? 'Apply with warning'
+                : 'Mit Warnung übernehmen'
+              : 'Übernehmen',
+        async () => {
+          setBusy(true);
+          try {
+            if (await onApply()) setProposal(null);
+          } finally {
+            setBusy(false);
+          }
+        },
+      ],
+      ['ai-chat-discard', 'Verwerfen', onDiscard],
+    ]) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = id;
+      button.textContent = text;
+      button.onclick = () => Promise.resolve(action()).catch((error) => feedback(error.message, true));
+      if (id === 'ai-chat-apply') button.className = 'primary';
+      actions.append(button);
+    }
+    if (result.photoComparison?.length) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'ai-chat-photo-compare';
+      button.textContent = 'Fotovergleich';
+      button.onclick = () => showPhotoComparison(result.photoComparison, download);
+      actions.append(button);
+    }
+    box.append(actions);
+    setBusy(busy);
+  }
+  el('ai-chat-toggle').onclick = () => (root.classList.contains('collapsed') ? open() : collapse());
+  el('ai-chat-settings').onclick = onSettings;
+  el('ai-chat-workshop').onclick = onWorkshop;
+  el('ai-chat-new').onclick = () => {
+    if (busy || speechBusy || loading) return;
+    projectPractice.checked = false;
+    practiceFiles = [];
+    renderPracticeFiles();
+    windowsDictation?.finish();
+    void onDiscard({ keepTask: true });
+    conversationId = crypto.randomUUID();
+    history = [];
+    attachments = [];
+    featureReferences = [];
+    featureStore?.clearHighlight?.();
+    attachmentGeneration++;
+    const welcome = document.createElement('p');
+    welcome.className = 'ai-chat-welcome';
+    welcome.textContent =
+      language() === 'en'
+        ? 'Describe your part, ask about Formnaro, or have tools and menus demonstrated.'
+        : 'Beschreibe dein Teil, stelle Fragen zu Formnaro oder lass dir Werkzeuge und Menüs zeigen.';
+    el('ai-chat-log').replaceChildren(welcome);
+    el('ai-chat-prompt').value = '';
+    renderAttachments();
+    renderFeatureReferences();
+    setProposal(null);
+    layout.setUsage('');
+    status('Neuer Chat.');
+  };
+  el('ai-chat-model-image').onclick = () =>
+    Promise.resolve()
+      .then(async () => {
+        if (busy || speechBusy || loading || !captureCanvas) return;
+        if (attachments.length >= limits.maxAttachments)
+          return status(
+            language() === 'en' ? 'Up to four images per message.' : 'Bis zu vier Bilder pro Nachricht.',
+            true,
+          );
+        const generation = attachmentGeneration,
+          file = await captureCanvas();
+        if (disposed || generation !== attachmentGeneration) return;
+        await addImages([file]);
+        await open();
+      })
+      .catch((error) => status(error.message, true));
+  async function openProjectPhotos() {
+    if (busy || photoEditing || !photoStore) return;
+    photoEditing = true;
+    setBusy(busy);
+    try {
+      await showProjectPhotos(photoStore, {
+        onAttach: async (image) => {
+          if (attachments.length >= limits.maxAttachments) throw Error('Bis zu vier Bilder pro Nachricht.');
+          if (attachments.some((a) => a.imageId === image.imageId))
+            throw Error('Dieses Projektfoto ist bereits angehängt.');
+          if (attachments.reduce((n, a) => n + a.bytes, 0) + image.bytes > limits.maxAttachmentBytes)
+            throw Error('Die Bildanhänge dürfen zusammen höchstens 12 MB groß sein.');
+          attachments.push(image);
+          attachmentGeneration++;
+          renderAttachments();
+        },
+      });
+    } catch (e) {
+      status(e.message, true);
+    } finally {
+      photoEditing = false;
+      if (!disposed) setBusy(busy);
+    }
+  }
+  pickFeature.onclick = async () => {
+    try {
+      layout.close();
+      layout.setExpanded(false);
+      await featureStore.pickForChat();
+      mode.value = 'chat';
+      mode.dispatchEvent(new Event('change'));
+    } catch (error) {
+      status(error.message, true);
+    }
+  };
+  el('ai-chat-project-photos').onclick = openProjectPhotos;
+  el('ai-chat-features').onclick = () => Promise.resolve(featureStore?.open()).catch((e) => status(e.message, true));
+  el('ai-chat-form').onsubmit = send;
+  el('ai-chat-image').onclick = () => el('ai-chat-files').click();
+  el('ai-chat-files').onchange = () => {
+    void addImages(el('ai-chat-files').files);
+    el('ai-chat-files').value = '';
+  };
+  el('ai-chat-cancel').onclick = () => Promise.resolve(onCancel()).catch((error) => status(error.message, true));
+  root.addEventListener('keydown', (event) => {
+    event.stopPropagation();
+    if (
+      event.target === el('ai-chat-prompt') &&
+      event.key === 'Enter' &&
+      !event.shiftKey &&
+      !event.isComposing &&
+      !windowsDictation?.isActive()
+    ) {
+      event.preventDefault();
+      void send();
+    }
+    if (event.key === 'Escape' && !layout.dialog.open) {
+      event.preventDefault();
+      if (root.classList.contains('chat-focus')) layout.clearFocus();
+      else if (root.classList.contains('chat-expanded')) layout.setExpanded(false);
+      else collapse();
+    }
+  });
+  root.addEventListener('paste', (event) => {
+    const images = [...event.clipboardData.items]
+      .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
+      .map((item) => item.getAsFile())
+      .filter(Boolean);
+    if (images.length) {
+      event.preventDefault();
+      event.stopPropagation();
+      void addImages(images);
+    }
+  });
+  root.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    root.classList.add('drag-over');
+  });
+  root.addEventListener('dragleave', (event) => {
+    if (!root.contains(event.relatedTarget)) root.classList.remove('drag-over');
+  });
+  root.addEventListener('drop', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    root.classList.remove('drag-over');
+    void addImages(event.dataTransfer.files);
+  });
+  speech = createSpeechInput({
+    host: layout.tools,
+    prompt: el('ai-chat-prompt'),
+    desktop: window.offlinecadDesktop,
+    language,
+    onBusy: (value) => {
+      speechBusy = value;
+      if (!disposed) setBusy(busy);
+    },
+  });
+  windowsDictation = createWindowsDictationButton({
+    before: el('ai-chat-send'),
+    prompt: el('ai-chat-prompt'),
+    desktop: window.offlinecadDesktop,
+    language,
+    onStatus: status,
+  });
+  modelPicker = createCadAIModelPicker({
+    host: el('ai-chat-model-picker-host'),
+    desktop: window.offlinecadDesktop,
+    language,
+    onBusy: (value) => {
+      modelLoading = value;
+      setBusy(busy);
+    },
+    onChange: onDiscard,
+    onProviderChange: switchProvider,
+    onStatus: status,
+    onSettings: () => {
+      layout.close();
+      onSettings?.();
+    },
+  });
+  return {
+    open,
+    refreshSelection,
+    openProjectPhotos,
+    reportActivity,
+    focusWhileWorking: () => layout.setWorking(!root.classList.contains('collapsed') && mode.value === 'chat'),
+    showTools: layout.clearFocus,
+    addFeatureReference,
+    highlightFeatureReference,
+    refreshFeatureReferences: renderFeatureReferences,
+    setBusy,
+    setProposal,
+    status,
+    feedback,
+    addImages,
+    setUsage: (text, compact) => {
+      if (!disposed) layout.setUsage(text, compact);
+    },
+    state: () => ({
+      featureReferences: structuredClone(featureReferences),
+      attachmentCount: attachments.length,
+      attachments: attachments.map(({ name, mimeType, bytes }) => ({ name, mimeType, bytes })),
+      historyCount: history.length,
+      providerId: activeProvider,
+      busy,
+      loading,
+      speechBusy,
+      windowsDictationActive: windowsDictation?.isActive() ?? false,
+      photoEditing,
+      photoReferences: attachments.filter((a) => a.photo).map((a) => structuredClone(a.photo)),
+    }),
+    refreshModels: () => modelPicker.refresh(),
+    dispose() {
+      disposed = true;
+      layout.dispose();
+      speech?.dispose();
+      windowsDictation?.dispose();
+      attachmentGeneration++;
+      attachments = [];
+      practiceFiles = [];
+      featureReferences = [];
+      history = [];
+      conversations.clear();
+      modelPicker.dispose();
+      root.remove();
+    },
+  };
 }

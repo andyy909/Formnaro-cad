@@ -1,188 +1,1483 @@
-import {installCadLibraryDrag} from './cad-library-drag.js';
-import {formatUiNumber,preserveUiNumber} from './ui-numbers.js';
-import {meshColorsEnabled,setMeshColors} from './mesh-appearance.js';
-import {cadShapeIcon as icon} from './cad-shape-icons.js';
-import {projectObjectType} from './project-objects.js';
-const objectTypeLabel=node=>({closedMesh:'Geschlossenes Netz',openMesh:'Offenes Netz',damagedMesh:'Netz mit Fehlerhinweisen',referenceMesh:'Ansichtsvorlage',cad:'CAD-Körper'})[projectObjectType(node)];
-import {cadShapeDimensions,cadShapeDimensionEdit} from './cad-shape-dimensions.js';
-import {cadFormParameters,cadSourceAtPath} from './cad-form-controls.js';
-import {CAD_PALETTE_SHAPES} from './cad-shapes.js';
-import {cadSelectionContext,cadFormLocalDimensions,cadFormOrientation,cadSetFormOrientation,cadFormPosition,cadSetFormPosition,cadResizeForm,cadAssignSource} from './cad-interface-state.js';
-import {createCadInterfaceLibrary} from './cad-interface-library.js';
-import {createCadInterfaceSettings} from './cad-interface-settings.js';
-import {defaults} from './parameters.js';
-import {label} from './cad-plugin-manifest.js';
-import {removeContainer} from './organization.js';
-import {translateText} from './i18n.js';
-import {createCadFontUI} from './cad-font-ui.js';
-import {meshSourceTree,meshSourceTreeMetadata} from './cad-mesh-source-tree.js';
-const sameTarget=(a,b)=>a.rootId===b.rootId&&a.path.join('/')===b.path.join('/');
-const $=id=>document.getElementById(id);
-function element(tag,text,className){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;}
-function number(input){const value=Number(input.value.trim().replace(',','.'));if(!input.value.trim()||!Number.isFinite(value))throw Error('Bitte einen gültigen Zahlenwert eingeben.');return value;}
+import { installCadLibraryDrag } from './cad-library-drag.js';
+import { formatUiNumber, preserveUiNumber } from './ui-numbers.js';
+import { meshColorsEnabled, setMeshColors } from './mesh-appearance.js';
+import { cadShapeIcon as icon } from './cad-shape-icons.js';
+import { projectObjectType } from './project-objects.js';
+const objectTypeLabel = (node) =>
+  ({
+    closedMesh: 'Geschlossenes Netz',
+    openMesh: 'Offenes Netz',
+    damagedMesh: 'Netz mit Fehlerhinweisen',
+    referenceMesh: 'Ansichtsvorlage',
+    cad: 'CAD-Körper',
+  })[projectObjectType(node)];
+import { cadShapeDimensions, cadShapeDimensionEdit } from './cad-shape-dimensions.js';
+import { cadFormParameters, cadSourceAtPath } from './cad-form-controls.js';
+import { CAD_PALETTE_SHAPES } from './cad-shapes.js';
+import {
+  cadSelectionContext,
+  cadFormLocalDimensions,
+  cadFormOrientation,
+  cadSetFormOrientation,
+  cadFormPosition,
+  cadSetFormPosition,
+  cadResizeForm,
+  cadAssignSource,
+} from './cad-interface-state.js';
+import { createCadInterfaceLibrary } from './cad-interface-library.js';
+import { createCadInterfaceSettings } from './cad-interface-settings.js';
+import { defaults } from './parameters.js';
+import { label } from './cad-plugin-manifest.js';
+import { removeContainer } from './organization.js';
+import { translateText } from './i18n.js';
+import { createCadFontUI } from './cad-font-ui.js';
+import { meshSourceTree, meshSourceTreeMetadata } from './cad-mesh-source-tree.js';
+const sameTarget = (a, b) => a.rootId === b.rootId && a.path.join('/') === b.path.join('/');
+const $ = (id) => document.getElementById(id);
+function element(tag, text, className) {
+  const node = document.createElement(tag);
+  if (text !== undefined) node.textContent = text;
+  if (className) node.className = className;
+  return node;
+}
+function number(input) {
+  const value = Number(input.value.trim().replace(',', '.'));
+  if (!input.value.trim() || !Number.isFinite(value)) throw Error('Bitte einen gültigen Zahlenwert eingeben.');
+  return value;
+}
 /** Existing DOM ids and layout nodes remain in place. Every constructive edit
  * goes through native worker validation before replacing confirmed state. */
-export function createCadInterface({controller,storage,fontLibrary,getPreferences,setPreferences,getPlugins,setPlugins,functionPlugins,getSelection,select,getScene,execute,mutate,modal,safe,toast,download,fit,onAddShape,onAddPlugin,onMeshSource,onSketchTemplate,mountAI,mountLayout,mountSolid,mountFusion,mountContext,getQuality,setQuality,workflowSettings,getLayout,setLayout}){
-  if(!controller||typeof getSelection!=='function'||typeof execute!=='function'||typeof mutate!=='function')throw Error('CAD-Oberflächensteuerung fehlt.');
-  let favoritesOnly=false,parameterSignature='',librarySignature=null,treeSignature=null,disposed=false;const listeners=[],fields=new Map(),expanded=new Set();
-  const fonts=fontLibrary?createCadFontUI({host:$('text-panel'),library:fontLibrary,controller,language:()=>getPreferences().language,onRefresh:()=>refresh(),modal}):null;
+export function createCadInterface({
+  controller,
+  storage,
+  fontLibrary,
+  getPreferences,
+  setPreferences,
+  getPlugins,
+  setPlugins,
+  functionPlugins,
+  getSelection,
+  select,
+  getScene,
+  execute,
+  mutate,
+  modal,
+  safe,
+  toast,
+  download,
+  fit,
+  onAddShape,
+  onAddPlugin,
+  onMeshSource,
+  onSketchTemplate,
+  mountAI,
+  mountLayout,
+  mountSolid,
+  mountFusion,
+  mountContext,
+  getQuality,
+  setQuality,
+  workflowSettings,
+  getLayout,
+  setLayout,
+}) {
+  if (
+    !controller ||
+    typeof getSelection !== 'function' ||
+    typeof execute !== 'function' ||
+    typeof mutate !== 'function'
+  )
+    throw Error('CAD-Oberflächensteuerung fehlt.');
+  let favoritesOnly = false,
+    parameterSignature = '',
+    librarySignature = null,
+    treeSignature = null,
+    disposed = false;
+  const listeners = [],
+    fields = new Map(),
+    expanded = new Set();
+  const fonts = fontLibrary
+    ? createCadFontUI({
+        host: $('text-panel'),
+        library: fontLibrary,
+        controller,
+        language: () => getPreferences().language,
+        onRefresh: () => refresh(),
+        modal,
+      })
+    : null;
   // Alignment applies to several roots, so it must be outside the single-form inspector.
-  if($('align-panel')&&$('inspector')){$('align-panel').dataset.cadAlign='';$('inspector').before($('align-panel'));}
-  const display=n=>formatUiNumber(n,getPreferences().language),t=text=>translateText(text,getPreferences().language),project=()=>controller.readSnapshot?.()??controller.snapshot(),selected=()=>{const p=project();return getSelection().flatMap(target=>{try{return [cadSelectionContext(p,target)];}catch{return [];}});};
-  const bound=(node,event,fn)=>{if(!node)return;node.addEventListener(event,fn);listeners.push(()=>node.removeEventListener(event,fn));};
-  function bind(id,event,fn){bound($(id),event,event=>safe(()=>fn(event)));}
-  async function edited(fn,text){return mutate(fn,text);}
-  async function command(operation,text){return execute(operation,{label:text});}
-  function one(){const list=selected();if(list.length!==1)throw Error('Eine einzelne Form oder Gruppenquelle auswählen.');if(list[0].locked)throw Error('Objekt, Quelle oder Container ist gesperrt.');return list[0];}
-  async function form(patch,options={}){const context=one();if(context.node.kind!=='cad')throw Error('Netzreferenzen besitzen keine CAD-Formparameter.');return command({kind:'form',target:context.target,patch,...options},'CAD-Formparameter bearbeiten');}
-  function selectedEdit(fn,text){const context=one();return edited(draft=>{const fresh=cadSelectionContext(draft,context.target);if(fresh.locked)throw Error('Die CAD-Quelle ist gesperrt.');fn(fresh.node,draft,fresh);},text);}
-  const library=createCadInterfaceLibrary({controller,storage,getSelection,modal,safe,toast,download,fit,onSketchTemplate,refresh:()=>renderLibrary()});
-  const validatePlugin=async manifest=>{for(const shape of manifest.shapes){const proposal=await controller.preview({kind:'plugin',manifest,shapeId:shape.id},{project:{...project(),nodes:[],workplane:{...project().workplane,reference:null}},label:'CAD-Formvorlage prüfen'});controller.discard(proposal.previewId);}};
-  const settings=createCadInterfaceSettings({controller,storage,getPreferences,setPreferences,getPlugins,setPlugins,functionPlugins,modal,safe,toast,download,mountAI,mountLayout,mountSolid,mountFusion,mountContext,getQuality,setQuality,validatePlugin,workflowSettings,getLayout,setLayout});
-
-  function renderLibrary(){
-    const root=$('shape-library');if(!root||disposed)return;const term=($('shape-search')?.value||'').trim().toLocaleLowerCase();
-    const packages=getPlugins().filter(pack=>pack.enabled),signature=JSON.stringify([term,favoritesOnly,getPreferences().language,packages,CAD_PALETTE_SHAPES.map(shape=>library.isFavorite(shape.paletteId??shape.type)),packages.map(pack=>pack.manifest.shapes.map(shape=>library.isFavorite(pack.manifest.id+'/'+shape.id,'plugin')))]);if(signature===librarySignature)return;librarySignature=signature;root.replaceChildren();const count=CAD_PALETTE_SHAPES.length+packages.reduce((sum,pack)=>sum+pack.manifest.shapes.length,0);if($('shape-count'))$('shape-count').textContent=String(count);
-    for(const shape of CAD_PALETTE_SHAPES){
-      const id=shape.paletteId??shape.type;
-      if(favoritesOnly&&!library.isFavorite(id)||![shape.name,t(shape.name)].some(name=>name.toLocaleLowerCase().includes(term)))continue;
-      const button=element('button',undefined,'shape-tile');if(shape.paletteId)button.id='shape-preset-'+id;button.draggable=true;button.dataset.type=id;button.title=t(shape.name)+' · '+t('Rechtsklick: Favorit');button.innerHTML=icon(shape.type,shape.color);button.append(element('span',t(shape.name)));button.classList.toggle('favorite',library.isFavorite(id));installCadLibraryDrag(button,{click:()=>safe(()=>onAddShape(id)),drop:event=>safe(()=>onAddShape(id,event))});button.oncontextmenu=event=>{event.preventDefault();safe(()=>library.toggleFavorite(id));};root.append(button);
-    }
-    for(const pack of packages)for(const shape of pack.manifest.shapes){const name=label(shape.name,getPreferences().language),key=pack.manifest.id+'/'+shape.id;if(favoritesOnly&&!library.isFavorite(key,'plugin')||!name.toLocaleLowerCase().includes(term)&&!label(pack.manifest.name,getPreferences().language).toLocaleLowerCase().includes(term))continue;
-      const button=element('button',undefined,'shape-tile plugin-shape');button.dataset.plugin=pack.manifest.id;button.dataset.pluginShape=shape.id;button.draggable=true;button.title=name;button.innerHTML=icon(shape.nodes[0].type,shape.nodes[0].color||'#87b9ad');const text=element('span',name);text.dataset.noTranslate='';button.append(text);button.classList.toggle('favorite',library.isFavorite(key,'plugin'));installCadLibraryDrag(button,{click:()=>safe(()=>onAddPlugin(pack.manifest,shape.id)),drop:event=>safe(()=>onAddPlugin(pack.manifest,shape.id,event))});button.oncontextmenu=event=>{event.preventDefault();safe(()=>library.toggleFavorite(key,'plugin'));};root.append(button);
-    }
+  if ($('align-panel') && $('inspector')) {
+    $('align-panel').dataset.cadAlign = '';
+    $('inspector').before($('align-panel'));
   }
-  function selectTarget(target,event){select([target],!!event?.shiftKey);}
-  function smallButton(text,title,fn){const button=element('button',text);button.type='button';button.title=t(title);button.onclick=event=>{event.stopPropagation();safe(fn);};return button;}
-  const treeKey=(kind,rootId,path)=>JSON.stringify([kind,rootId,path]);
-  function validTreeEntries(){
-    const entries=new Map();
-    function visit(node,rootId,path){if(node.children?.length||node.kind==='mesh'&&node.meshSource)entries.set(treeKey('object',rootId,path),{kind:'object',rootId,path});for(const child of node.children??[])visit(child,rootId,[...path,child.id]);}
-    for(const node of project().nodes){visit(node,node.id,[]);if(node.kind==='mesh')for(const source of meshSourceTree(node,{geometry:false}))if(source.children.length)entries.set(treeKey('meshSource',node.id,source.path),{kind:'meshSource',rootId:node.id,path:source.path});}
+  const display = (n) => formatUiNumber(n, getPreferences().language),
+    t = (text) => translateText(text, getPreferences().language),
+    project = () => controller.readSnapshot?.() ?? controller.snapshot(),
+    selected = () => {
+      const p = project();
+      return getSelection().flatMap((target) => {
+        try {
+          return [cadSelectionContext(p, target)];
+        } catch {
+          return [];
+        }
+      });
+    };
+  const bound = (node, event, fn) => {
+    if (!node) return;
+    node.addEventListener(event, fn);
+    listeners.push(() => node.removeEventListener(event, fn));
+  };
+  function bind(id, event, fn) {
+    bound($(id), event, (event) => safe(() => fn(event)));
+  }
+  async function edited(fn, text) {
+    return mutate(fn, text);
+  }
+  async function command(operation, text) {
+    return execute(operation, { label: text });
+  }
+  function one() {
+    const list = selected();
+    if (list.length !== 1) throw Error('Eine einzelne Form oder Gruppenquelle auswählen.');
+    if (list[0].locked) throw Error('Objekt, Quelle oder Container ist gesperrt.');
+    return list[0];
+  }
+  async function form(patch, options = {}) {
+    const context = one();
+    if (context.node.kind !== 'cad') throw Error('Netzreferenzen besitzen keine CAD-Formparameter.');
+    return command({ kind: 'form', target: context.target, patch, ...options }, 'CAD-Formparameter bearbeiten');
+  }
+  function selectedEdit(fn, text) {
+    const context = one();
+    return edited((draft) => {
+      const fresh = cadSelectionContext(draft, context.target);
+      if (fresh.locked) throw Error('Die CAD-Quelle ist gesperrt.');
+      fn(fresh.node, draft, fresh);
+    }, text);
+  }
+  const library = createCadInterfaceLibrary({
+    controller,
+    storage,
+    getSelection,
+    modal,
+    safe,
+    toast,
+    download,
+    fit,
+    onSketchTemplate,
+    refresh: () => renderLibrary(),
+  });
+  const validatePlugin = async (manifest) => {
+    for (const shape of manifest.shapes) {
+      const proposal = await controller.preview(
+        { kind: 'plugin', manifest, shapeId: shape.id },
+        {
+          project: { ...project(), nodes: [], workplane: { ...project().workplane, reference: null } },
+          label: 'CAD-Formvorlage prüfen',
+        },
+      );
+      controller.discard(proposal.previewId);
+    }
+  };
+  const settings = createCadInterfaceSettings({
+    controller,
+    storage,
+    getPreferences,
+    setPreferences,
+    getPlugins,
+    setPlugins,
+    functionPlugins,
+    modal,
+    safe,
+    toast,
+    download,
+    mountAI,
+    mountLayout,
+    mountSolid,
+    mountFusion,
+    mountContext,
+    getQuality,
+    setQuality,
+    validatePlugin,
+    workflowSettings,
+    getLayout,
+    setLayout,
+  });
+
+  function renderLibrary() {
+    const root = $('shape-library');
+    if (!root || disposed) return;
+    const term = ($('shape-search')?.value || '').trim().toLocaleLowerCase();
+    const packages = getPlugins().filter((pack) => pack.enabled),
+      signature = JSON.stringify([
+        term,
+        favoritesOnly,
+        getPreferences().language,
+        packages,
+        CAD_PALETTE_SHAPES.map((shape) => library.isFavorite(shape.paletteId ?? shape.type)),
+        packages.map((pack) =>
+          pack.manifest.shapes.map((shape) => library.isFavorite(pack.manifest.id + '/' + shape.id, 'plugin')),
+        ),
+      ]);
+    if (signature === librarySignature) return;
+    librarySignature = signature;
+    root.replaceChildren();
+    const count = CAD_PALETTE_SHAPES.length + packages.reduce((sum, pack) => sum + pack.manifest.shapes.length, 0);
+    if ($('shape-count')) $('shape-count').textContent = String(count);
+    for (const shape of CAD_PALETTE_SHAPES) {
+      const id = shape.paletteId ?? shape.type;
+      if (
+        (favoritesOnly && !library.isFavorite(id)) ||
+        ![shape.name, t(shape.name)].some((name) => name.toLocaleLowerCase().includes(term))
+      )
+        continue;
+      const button = element('button', undefined, 'shape-tile');
+      if (shape.paletteId) button.id = 'shape-preset-' + id;
+      button.draggable = true;
+      button.dataset.type = id;
+      button.title = t(shape.name) + ' · ' + t('Rechtsklick: Favorit');
+      button.innerHTML = icon(shape.type, shape.color);
+      button.append(element('span', t(shape.name)));
+      button.classList.toggle('favorite', library.isFavorite(id));
+      installCadLibraryDrag(button, {
+        click: () => safe(() => onAddShape(id)),
+        drop: (event) => safe(() => onAddShape(id, event)),
+      });
+      button.oncontextmenu = (event) => {
+        event.preventDefault();
+        safe(() => library.toggleFavorite(id));
+      };
+      root.append(button);
+    }
+    for (const pack of packages)
+      for (const shape of pack.manifest.shapes) {
+        const name = label(shape.name, getPreferences().language),
+          key = pack.manifest.id + '/' + shape.id;
+        if (
+          (favoritesOnly && !library.isFavorite(key, 'plugin')) ||
+          (!name.toLocaleLowerCase().includes(term) &&
+            !label(pack.manifest.name, getPreferences().language).toLocaleLowerCase().includes(term))
+        )
+          continue;
+        const button = element('button', undefined, 'shape-tile plugin-shape');
+        button.dataset.plugin = pack.manifest.id;
+        button.dataset.pluginShape = shape.id;
+        button.draggable = true;
+        button.title = name;
+        button.innerHTML = icon(shape.nodes[0].type, shape.nodes[0].color || '#87b9ad');
+        const text = element('span', name);
+        text.dataset.noTranslate = '';
+        button.append(text);
+        button.classList.toggle('favorite', library.isFavorite(key, 'plugin'));
+        installCadLibraryDrag(button, {
+          click: () => safe(() => onAddPlugin(pack.manifest, shape.id)),
+          drop: (event) => safe(() => onAddPlugin(pack.manifest, shape.id, event)),
+        });
+        button.oncontextmenu = (event) => {
+          event.preventDefault();
+          safe(() => library.toggleFavorite(key, 'plugin'));
+        };
+        root.append(button);
+      }
+  }
+  function selectTarget(target, event) {
+    select([target], !!event?.shiftKey);
+  }
+  function smallButton(text, title, fn) {
+    const button = element('button', text);
+    button.type = 'button';
+    button.title = t(title);
+    button.onclick = (event) => {
+      event.stopPropagation();
+      safe(fn);
+    };
+    return button;
+  }
+  const treeKey = (kind, rootId, path) => JSON.stringify([kind, rootId, path]);
+  function validTreeEntries() {
+    const entries = new Map();
+    function visit(node, rootId, path) {
+      if (node.children?.length || (node.kind === 'mesh' && node.meshSource))
+        entries.set(treeKey('object', rootId, path), { kind: 'object', rootId, path });
+      for (const child of node.children ?? []) visit(child, rootId, [...path, child.id]);
+    }
+    for (const node of project().nodes) {
+      visit(node, node.id, []);
+      if (node.kind === 'mesh')
+        for (const source of meshSourceTree(node, { geometry: false }))
+          if (source.children.length)
+            entries.set(treeKey('meshSource', node.id, source.path), {
+              kind: 'meshSource',
+              rootId: node.id,
+              path: source.path,
+            });
+    }
     return entries;
   }
-  function getTreeState(){if(!expanded.size)return {expanded:[]};const valid=validTreeEntries();return {expanded:[...expanded].flatMap(key=>valid.has(key)?[structuredClone(valid.get(key))]:[])};}
-  function restoreTreeState(state){
-    const values=state?.expanded??[];
-    if(!Array.isArray(values)||values.length>5000||values.some(value=>!value||!['object','meshSource'].includes(value.kind)||typeof value.rootId!=='string'||!value.rootId.length||value.rootId.length>200||!Array.isArray(value.path)||value.path.length>40||value.path.some(id=>typeof id!=='string'||!id.length||id.length>200)))throw Error('Ungültiger gespeicherter Objektbaum.');
-    const valid=validTreeEntries();expanded.clear();for(const value of values){const key=treeKey(value.kind,value.rootId,value.path);if(valid.has(key))expanded.add(key);}treeSignature=null;objectTree();return getTreeState();
+  function getTreeState() {
+    if (!expanded.size) return { expanded: [] };
+    const valid = validTreeEntries();
+    return { expanded: [...expanded].flatMap((key) => (valid.has(key) ? [structuredClone(valid.get(key))] : [])) };
   }
-  function objectTree(){
-    const root=$('object-list');if(!root)return;const p=project(),selection=getSelection();
+  function restoreTreeState(state) {
+    const values = state?.expanded ?? [];
+    if (
+      !Array.isArray(values) ||
+      values.length > 5000 ||
+      values.some(
+        (value) =>
+          !value ||
+          !['object', 'meshSource'].includes(value.kind) ||
+          typeof value.rootId !== 'string' ||
+          !value.rootId.length ||
+          value.rootId.length > 200 ||
+          !Array.isArray(value.path) ||
+          value.path.length > 40 ||
+          value.path.some((id) => typeof id !== 'string' || !id.length || id.length > 200),
+      )
+    )
+      throw Error('Ungültiger gespeicherter Objektbaum.');
+    const valid = validTreeEntries();
+    expanded.clear();
+    for (const value of values) {
+      const key = treeKey(value.kind, value.rootId, value.path);
+      if (valid.has(key)) expanded.add(key);
+    }
+    treeSignature = null;
+    objectTree();
+    return getTreeState();
+  }
+  function objectTree() {
+    const root = $('object-list');
+    if (!root) return;
+    const p = project(),
+      selection = getSelection();
     // Geometry and placement never affect tree rows. Keep focus and handlers
     // when only selection or a CAD parameter has changed.
-    const metadata=node=>[node.id,node.name,node.kind,node.solid,node.meshRole,!!node.hidden,!!node.locked,!!node.suppressed,node.layerId,node.folderId,node.children?.map(metadata),node.kind==='mesh'?meshSourceTreeMetadata(node):null],signature=JSON.stringify([p.nodes.map(metadata),p.layers,p.folders,p.activeLayerId,p.activeFolderId,[...expanded],getPreferences().language]);
-    if(signature===treeSignature){const keys=new Set(selection.map(v=>v.rootId+'/'+v.path.join('/')));for(const row of root.querySelectorAll('[data-root-id]')){const chosen=keys.has(row.dataset.rootId+'/'+JSON.parse(row.dataset.path).join('/'));row.classList.toggle('selected',chosen);row.setAttribute('aria-selected',String(chosen));}return;}
-    const focused=document.activeElement?.closest('[data-tree-key]')?.dataset.treeKey;treeSignature=signature;root.replaceChildren();root.setAttribute('role','tree');root.setAttribute('aria-label',t('Objekte und Quellen'));if($('object-count'))$('object-count').textContent=String(p.nodes.length);
-    const layer=p.layers.find(layer=>layer.id===p.activeLayerId),folder=p.folders.find(folder=>folder.id===p.activeFolderId);if($('active-container'))$('active-container').textContent=(layer?.name||'')+(folder?' › '+folder.name:'');
-    function accessible(row,depth,key){row.tabIndex=0;row.dataset.treeKey=key;row.setAttribute('role','treeitem');row.setAttribute('aria-level',String(depth+1));row.setAttribute('aria-selected',String(row.classList.contains('selected')));row.onkeydown=event=>{if(event.target!==row)return;if(['Enter',' '].includes(event.key)){event.preventDefault();event.stopPropagation();row.click();}else if(['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();event.stopPropagation();const toggle=row.querySelector('[data-tree-toggle]');if(toggle&&toggle.getAttribute('aria-expanded')===String(event.key==='ArrowLeft'))toggle.click();}else if(['ArrowUp','ArrowDown','Home','End'].includes(event.key)){event.preventDefault();event.stopPropagation();const rows=[...root.querySelectorAll('[role="treeitem"]')],index=rows.indexOf(row);rows[event.key==='Home'?0:event.key==='End'?rows.length-1:Math.max(0,Math.min(rows.length-1,index+(event.key==='ArrowUp'?-1:1)))]?.focus();}};}
-    function expansion(row,key){const open=expanded.has(key),button=smallButton(open?'▾':'▸',open?'Quellen zuklappen':'Quellen aufklappen',()=>{if(!open&&getTreeState().expanded.length>=5000){toast('Höchstens 5.000 aufgeklappte Einträge im Objektbaum.');return;}if(open)expanded.delete(key);else expanded.add(key);objectTree();});button.dataset.treeToggle='';button.setAttribute('aria-expanded',String(open));row.setAttribute('aria-expanded',String(open));row.append(button);return open;}
-    function meshSource(entry,rootNode,context,depth){const key=treeKey('meshSource',rootNode.id,entry.path),row=element('div',undefined,'object-item feature-item mesh-source-item');row.style.marginLeft=depth*12+'px';row.dataset.meshSourceRoot=rootNode.id;row.dataset.meshSourcePath=JSON.stringify(entry.path);row.classList.toggle('hidden',context.hidden||entry.hidden||entry.suppressed);accessible(row,depth,key);const open=entry.children.length?expansion(row,key):false;row.append(element('span',entry.suppressed?'⊘':entry.node.solid===false?'◯':'◆','feature-icon'));const name=element('span',entry.node.name,'object-label');name.title=entry.node.name;row.append(name,element('span',t('Netzquelle'),'small-note'));if(context.locked||entry.locked)row.append(element('span','🔒','small-note'));row.title=t('Gespeicherte Netzquelle')+' · '+t(entry.node.solid===false?'Lochform':'Körper')+' · '+t('Das fertige Netzteil bleibt ausgewählt.');row.onclick=()=>safe(async()=>{if(typeof onMeshSource==='function')return onMeshSource(rootNode.id,[...entry.path]);select([{rootId:rootNode.id,path:[]}]);toast('Netzquelle über Netz-Werkzeuge → Quellen bearbeiten öffnen.');});root.append(row);if(open)for(const child of entry.children)meshSource(child,rootNode,context,depth+1);}
-    function object(node,rootId,path,depth){const value={rootId,path},context=cadSelectionContext(p,value),row=element('div',undefined,'object-item'+(path.length?' feature-item':''));row.style.marginLeft=depth*12+'px';row.dataset.rootId=rootId;row.dataset.path=JSON.stringify(path);row.classList.toggle('selected',selection.some(selected=>sameTarget(selected,value)));row.classList.toggle('hidden',context.hidden||!!node.suppressed);accessible(row,depth,treeKey('object',rootId,path));row.onclick=event=>selectTarget(value,event);
-      const sources=node.kind==='mesh'?meshSourceTree(node,{geometry:false}).filter(entry=>entry.parentPath===null):[],hasChildren=!!node.children?.length||sources.length>0,key=treeKey('object',rootId,path),open=hasChildren?expansion(row,key):false;
-      row.append(element('span',node.kind!=='cad'?'△':node.solid?'■':'▧','feature-icon'));const name=element('span',node.name,'object-label');name.title=node.name;row.append(name);if(node.kind==='mesh'&&node.meshRole==='hole')row.append(element('span',t('Lochform'),'small-note'));if(node.annotations?.length){const badge=element('span','✦ '+node.annotations.length,'small-note');badge.title=node.annotations.map(a=>(a.status==='stale'?t('Veraltet')+': ':'')+a.note).join('\n');row.append(badge);}
-      row.append(smallButton(node.hidden?'◌':'◉',node.hidden?'Einblenden':'Ausblenden',()=>edited(draft=>{cadSourceAtPath(draft,rootId,path).hidden=!node.hidden;},'CAD-Sichtbarkeit ändern')));
-      row.append(smallButton(node.locked?'🔒':'○',node.locked?'Entsperren':'Sperren',()=>toggleLock(value)));root.append(row);if(open){for(const child of node.children??[])object(child,rootId,[...path,child.id],depth+1);for(const source of sources)meshSource(source,node,context,depth+1);}
-    }
-    function container(value,depth,folder){const row=element('div',undefined,'object-item container-item');row.style.marginLeft=depth*12+'px';row.classList.toggle('active-container',folder?p.activeFolderId===value.id:p.activeLayerId===value.id&&p.activeFolderId===null);row.dataset.containerId=value.id;accessible(row,depth,JSON.stringify(['container',value.id]));row.append(element('span',folder?'▱':'▰'),element('span',value.name,'object-label'));row.onclick=()=>safe(()=>edited(draft=>{draft.activeLayerId=folder?value.layerId:value.id;draft.activeFolderId=folder?value.id:null;},'Aktiven Container wählen'));
-      for(const [field,on,off]of [['hidden','◌','◉'],['locked','🔒','○']])row.append(smallButton(value[field]?on:off,field==='hidden'?'Sichtbarkeit ändern':'Sperrung ändern',()=>edited(draft=>{const entry=[...draft.layers,...draft.folders].find(entry=>entry.id===value.id);entry[field]=!entry[field];},'Containerstatus ändern')));root.append(row);
-      if(folder){for(const child of p.folders.filter(entry=>entry.parentId===value.id))container(child,depth+1,true);for(const node of p.nodes.filter(node=>node.folderId===value.id))object(node,node.id,[],depth+1);}
-      else{for(const child of p.folders.filter(entry=>entry.layerId===value.id&&entry.parentId===null))container(child,depth+1,true);for(const node of p.nodes.filter(node=>node.layerId===value.id&&node.folderId===null))object(node,node.id,[],depth+1);}
-    }
-    for(const layer of p.layers)container(layer,0,false);
-    if(focused)[...root.querySelectorAll('[data-tree-key]')].find(row=>row.dataset.treeKey===focused)?.focus({preventScroll:true});
-  }
-  function value(id,value){const input=$(id);if(input&&document.activeElement!==input)input.value=String(value??'');}
-  let dimensionSignature='',dimensionFields=new Map();
-  function dimensionControls(node,locked,force=false){
-    let root=$('shape-dimensions');if(!root){root=element('div');root.id='shape-dimensions';$('shape-parameters').before(root);}
-    const data=cadShapeDimensions(node);root.hidden=!data.length;if(root.hidden)return;
-    const signature=node.id+':'+node.recipe.type;
-    if(signature!==dimensionSignature){dimensionSignature=signature;dimensionFields.clear();root.replaceChildren();root.append(element('div',t('Formmaße'),'section-title'));
-      for(const field of data){const label=element('label',undefined,'shape-dimension-row');label.append(element('span',t(field.label)+' (mm)'));const controls=element('div',undefined,'shape-dimension-inputs'),input=element('input'),slider=element('input');input.type='text';input.inputMode='decimal';input.id='dimension-'+field.key;input.setAttribute('aria-label',t(field.label));input.onfocus=()=>input.select();slider.type='range';slider.id='dimension-slider-'+field.key;slider.min=field.min;slider.step='.01';slider.setAttribute('aria-label',t(field.label)+' · '+t('Schieber'));controls.append(input,slider);label.append(controls);root.append(label);
-        async function commit(raw){if(input.dataset.commitPending)return;input.dataset.commitPending='true';try{const context=one(),next=raw===undefined?number(input):Number(raw),current=cadShapeDimensions(context.node).find(item=>item.key===field.key).value;const edited=preserveUiNumber(next,current);if(edited===current)return;const edit=cadShapeDimensionEdit(context.node,field.key,edited);await command({kind:'form',target:context.target,...edit},'CAD-Formmaße ändern');}finally{delete input.dataset.commitPending;dimensionControls(one().node,!!controller.state?.().busy||one().locked,true);}}
-        input.onchange=()=>safe(()=>commit());input.onblur=input.onchange;input.onkeydown=event=>{if(event.key==='Enter')input.blur();if(event.key==='Escape'){input.value=display(cadShapeDimensions(one().node).find(item=>item.key===field.key).value);input.blur();event.stopPropagation();}};
-        let rangeCancelled=false;slider.onpointerdown=()=>{rangeCancelled=false;};slider.oninput=()=>{input.value=display(Number(slider.value));slider.style.setProperty('--range-fill',100*(Number(slider.value)-Number(slider.min))/(Number(slider.max)-Number(slider.min))+'%');};slider.onchange=()=>{if(rangeCancelled){rangeCancelled=false;dimensionControls(one().node,one().locked,true);return;}safe(()=>commit(slider.value));};slider.onkeydown=event=>{if(event.key==='Escape'){rangeCancelled=true;event.preventDefault();event.stopPropagation();dimensionControls(one().node,one().locked,true);}else rangeCancelled=false;};slider.addEventListener('pointercancel',()=>{rangeCancelled=true;dimensionControls(one().node,one().locked,true);});dimensionFields.set(field.key,{input,slider});
+    const metadata = (node) => [
+        node.id,
+        node.name,
+        node.kind,
+        node.solid,
+        node.meshRole,
+        !!node.hidden,
+        !!node.locked,
+        !!node.suppressed,
+        node.layerId,
+        node.folderId,
+        node.children?.map(metadata),
+        node.kind === 'mesh' ? meshSourceTreeMetadata(node) : null,
+      ],
+      signature = JSON.stringify([
+        p.nodes.map(metadata),
+        p.layers,
+        p.folders,
+        p.activeLayerId,
+        p.activeFolderId,
+        [...expanded],
+        getPreferences().language,
+      ]);
+    if (signature === treeSignature) {
+      const keys = new Set(selection.map((v) => v.rootId + '/' + v.path.join('/')));
+      for (const row of root.querySelectorAll('[data-root-id]')) {
+        const chosen = keys.has(row.dataset.rootId + '/' + JSON.parse(row.dataset.path).join('/'));
+        row.classList.toggle('selected', chosen);
+        row.setAttribute('aria-selected', String(chosen));
       }
-      root.append(element('p',t(node.recipe.type==='sphere'?'Der Radius setzt alle drei Durchmesser gleich.':node.recipe.type==='halfSphere'?'Der Radius setzt Durchmesser und Halbkugelhöhe.':node.recipe.type==='torus'?'Ringradius: bis zur Rohrmitte. Rohrradius: halbe Rohrdicke. Radiale Maße setzen X/Y gleich; Rohrradius setzt auch die Profilhöhe.':'Radiale Maße setzen X/Y gleich. Die Höhe ist separat einstellbar.'),'small-note'));
+      return;
     }
-    const v=Object.fromEntries(data.map(field=>[field.key,field.value])),type=node.recipe.type;
-    for(const field of data){const {input,slider}=dimensionFields.get(field.key);input.disabled=slider.disabled=locked;input.title=`${field.min} – ${field.max} mm`;if(force||document.activeElement!==input)input.value=display(field.value);if(force||document.activeElement!==slider){let min=field.min,max=Math.min(field.max,Math.max(20,Math.ceil(field.value*2)));
-      if(type==='torus'){if(field.key==='tubeRadius')max=Math.min(max,v.ringRadius-.01);if(field.key==='ringRadius')min=v.tubeRadius+.01;if(field.key==='outerDiameter')min=4*v.tubeRadius+.02;}
-      if(type==='tube'){if(field.key==='wall')max=Math.min(max,v.outerDiameter/2-.01);if(field.key==='innerDiameter')max=Math.min(max,v.outerDiameter-.02);if(field.key==='outerDiameter')min=2*v.wall+.02;}
-      if(type==='cone'){if(field.key==='topDiameter')max=v.diameter;if(field.key==='radius')min=Math.max(min,v.topDiameter/2);if(field.key==='diameter')min=Math.max(min,v.topDiameter);}
-      slider.min=min;slider.max=Math.max(min+.01,max);slider.value=field.value;slider.style.setProperty('--range-fill',100*(Number(slider.value)-min)/(Number(slider.max)-min)+'%');}}
-  }
-  {const color=$('object-color');if(color&&!$('object-color-hex')){const text=document.createElement('input');text.id='object-color-hex';text.type='text';text.maxLength=7;text.setAttribute('aria-label','Farbe als Hexwert');text.onkeydown=e=>{if(e.key==='Enter')text.blur();};text.onchange=()=>{if(!/^#[0-9a-f]{6}$/i.test(text.value))return;color.value=text.value;color.dispatchEvent(new Event('change',{bubbles:true}));};color.after(text);}}
-  function parameterFields(node,locked){
-    const root=$('shape-parameters'),native=node.source==='native'&&node.recipe,type=node.recipe?.type;root.hidden=!native||['torus','cone'].includes(type)||!(cadFormParameters(node).schema.length);if(root.hidden)return;
-    const data=cadFormParameters(node),signature=node.id+':'+type;
-    if(signature!==parameterSignature){parameterSignature=signature;fields.clear();root.replaceChildren();root.append(element('div','Formparameter','section-title'));
-      if(['thread','nut'].includes(type)){const select=element('select');select.id='thread-preset';select.setAttribute('aria-label','Metrische Gewindevorlage');select.append(new Option('Metrische Vorlage wählen …',''));for(const [diameter,pitch]of [[3,.5],[4,.7],[5,.8],[6,1],[8,1.25],[10,1.5],[12,1.75],[16,2],[20,2.5],[24,3]])select.append(new Option(`M${diameter} × ${pitch}`,`${diameter}:${pitch}`));select.onchange=()=>safe(async()=>{if(!select.value)return;const [diameter,pitch]=select.value.split(':').map(Number);await form({params:{diameter,pitch,profile:'metric',depth:0,crest:.125,outerDiameter:diameter*1.9,headDiameter:diameter*1.65}});select.value='';});root.append(select);}
-      const basic=new Set(type==='gear'?['teeth','module','thickness','bore','backlash']:['kind','diameter','pitch','length','clearance','outerDiameter']),advanced=element('details',undefined,'advanced-parameters');advanced.id='shape-parameters-advanced';const summary=element('summary','Weitere Parameter');summary.id='shape-parameters-advanced-toggle';advanced.append(summary);if(data.schema.length>8)root.append(advanced);
-      for(const field of data.schema){const row=element('label',undefined,'parameter-row');row.append(element('span',field.label+(field.unit?` (${field.unit})`:'')));const input=element(field.options?'select':'input');input.id='param-'+field.key;input.dataset.parameter=field.key;input.setAttribute('aria-label',field.label);
-        if(field.options)for(const [v,name]of field.options)input.append(new Option(name,v));else{input.type='text';input.inputMode='decimal';input.title=`${field.min} bis ${field.max}${field.unit?' '+field.unit:''}`;input.onfocus=()=>input.select();}
-        input.onchange=()=>safe(async()=>{
-          if(input.dataset.commitPending)return;
-          input.dataset.commitPending='true';
-          try{
-            const params=cadFormParameters(one().node).params,current=params[field.key];
-            const next=field.options?input.value:preserveUiNumber(number(input),current);
-            if(next===current)return;
-            // Keep the spindle placement so axial stretching does not change
-            // the physical pitch or require another native body transformation.
-            const physicalLength=type==='thread'&&params.kind==='external'&&params.profile==='trapezoid'&&field.key==='length';
-            await form({params:{[field.key]:next}},physicalLength?{preserveBounds:false}:undefined);
-          }finally{delete input.dataset.commitPending;refreshInspector();}
+    const focused = document.activeElement?.closest('[data-tree-key]')?.dataset.treeKey;
+    treeSignature = signature;
+    root.replaceChildren();
+    root.setAttribute('role', 'tree');
+    root.setAttribute('aria-label', t('Objekte und Quellen'));
+    if ($('object-count')) $('object-count').textContent = String(p.nodes.length);
+    const layer = p.layers.find((layer) => layer.id === p.activeLayerId),
+      folder = p.folders.find((folder) => folder.id === p.activeFolderId);
+    if ($('active-container'))
+      $('active-container').textContent = (layer?.name || '') + (folder ? ' › ' + folder.name : '');
+    function accessible(row, depth, key) {
+      row.tabIndex = 0;
+      row.dataset.treeKey = key;
+      row.setAttribute('role', 'treeitem');
+      row.setAttribute('aria-level', String(depth + 1));
+      row.setAttribute('aria-selected', String(row.classList.contains('selected')));
+      row.onkeydown = (event) => {
+        if (event.target !== row) return;
+        if (['Enter', ' '].includes(event.key)) {
+          event.preventDefault();
+          event.stopPropagation();
+          row.click();
+        } else if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+          event.preventDefault();
+          event.stopPropagation();
+          const toggle = row.querySelector('[data-tree-toggle]');
+          if (toggle && toggle.getAttribute('aria-expanded') === String(event.key === 'ArrowLeft')) toggle.click();
+        } else if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
+          event.preventDefault();
+          event.stopPropagation();
+          const rows = [...root.querySelectorAll('[role="treeitem"]')],
+            index = rows.indexOf(row);
+          rows[
+            event.key === 'Home'
+              ? 0
+              : event.key === 'End'
+                ? rows.length - 1
+                : Math.max(0, Math.min(rows.length - 1, index + (event.key === 'ArrowUp' ? -1 : 1)))
+          ]?.focus();
+        }
+      };
+    }
+    function expansion(row, key) {
+      const open = expanded.has(key),
+        button = smallButton(open ? '▾' : '▸', open ? 'Quellen zuklappen' : 'Quellen aufklappen', () => {
+          if (!open && getTreeState().expanded.length >= 5000) {
+            toast('Höchstens 5.000 aufgeklappte Einträge im Objektbaum.');
+            return;
+          }
+          if (open) expanded.delete(key);
+          else expanded.add(key);
+          objectTree();
         });
-        input.onkeydown=event=>{if(event.key==='Enter')input.blur();if(event.key==='Escape'){const current=cadFormParameters(one().node).params[field.key];input.value=typeof current==='number'?display(current):String(current);input.blur();event.stopPropagation();}};if(!field.options)input.onblur=input.onchange;row.append(input);(data.schema.length>8&&!basic.has(field.key)?advanced:root).append(row);fields.set(field.key,{input,row});
-      }
-      root.append(element('p',undefined,'small-note'));const buttons=element('div',undefined,'two-buttons'),reset=element('button','Parameter zurücksetzen'),original=element('button','Originalgröße');reset.id='parameter-reset';original.id='parameter-original';reset.onclick=()=>safe(()=>{const params=defaults(type);delete params.edgeSteps;return form({params});});original.onclick=()=>safe(()=>selectedEdit(n=>{n.transform=cadResizeForm(n,n.stats.bounds.min.map((v,i)=>n.stats.bounds.max[i]-v)).transform;},'Originale CAD-Quellengröße'));buttons.append(reset,original);root.append(buttons);
+      button.dataset.treeToggle = '';
+      button.setAttribute('aria-expanded', String(open));
+      row.setAttribute('aria-expanded', String(open));
+      row.append(button);
+      return open;
     }
-    const p=data.params;for(const [key,{input,row}]of fields){if(document.activeElement!==input)input.value=typeof p[key]==='number'?display(p[key]):String(p[key]);input.disabled=locked||key==='flankAngle'&&p.profile!=='custom';row.hidden=(type==='tube'&&key==='wall')||(['edgeSize','edgeScope'].includes(key)&&p.edgeStyle==='none')||(['outerShape','outerDiameter'].includes(key)&&p.kind!=='nut')||(['head','bore'].includes(key)&&['thread','nut'].includes(type)&&p.kind!=='external')||(['headDiameter','headHeight'].includes(key)&&(p.kind!=='external'||p.head==='none'));}
-    root.querySelector('p').textContent=data.note;root.querySelectorAll('button').forEach(button=>button.disabled=locked);if($('thread-preset'))$('thread-preset').disabled=locked;$('parameter-original').hidden=!data.generator;
+    function meshSource(entry, rootNode, context, depth) {
+      const key = treeKey('meshSource', rootNode.id, entry.path),
+        row = element('div', undefined, 'object-item feature-item mesh-source-item');
+      row.style.marginLeft = depth * 12 + 'px';
+      row.dataset.meshSourceRoot = rootNode.id;
+      row.dataset.meshSourcePath = JSON.stringify(entry.path);
+      row.classList.toggle('hidden', context.hidden || entry.hidden || entry.suppressed);
+      accessible(row, depth, key);
+      const open = entry.children.length ? expansion(row, key) : false;
+      row.append(element('span', entry.suppressed ? '⊘' : entry.node.solid === false ? '◯' : '◆', 'feature-icon'));
+      const name = element('span', entry.node.name, 'object-label');
+      name.title = entry.node.name;
+      row.append(name, element('span', t('Netzquelle'), 'small-note'));
+      if (context.locked || entry.locked) row.append(element('span', '🔒', 'small-note'));
+      row.title =
+        t('Gespeicherte Netzquelle') +
+        ' · ' +
+        t(entry.node.solid === false ? 'Lochform' : 'Körper') +
+        ' · ' +
+        t('Das fertige Netzteil bleibt ausgewählt.');
+      row.onclick = () =>
+        safe(async () => {
+          if (typeof onMeshSource === 'function') return onMeshSource(rootNode.id, [...entry.path]);
+          select([{ rootId: rootNode.id, path: [] }]);
+          toast('Netzquelle über Netz-Werkzeuge → Quellen bearbeiten öffnen.');
+        });
+      root.append(row);
+      if (open) for (const child of entry.children) meshSource(child, rootNode, context, depth + 1);
+    }
+    function object(node, rootId, path, depth) {
+      const value = { rootId, path },
+        context = cadSelectionContext(p, value),
+        row = element('div', undefined, 'object-item' + (path.length ? ' feature-item' : ''));
+      row.style.marginLeft = depth * 12 + 'px';
+      row.dataset.rootId = rootId;
+      row.dataset.path = JSON.stringify(path);
+      row.classList.toggle(
+        'selected',
+        selection.some((selected) => sameTarget(selected, value)),
+      );
+      row.classList.toggle('hidden', context.hidden || !!node.suppressed);
+      accessible(row, depth, treeKey('object', rootId, path));
+      row.onclick = (event) => selectTarget(value, event);
+      const sources =
+          node.kind === 'mesh'
+            ? meshSourceTree(node, { geometry: false }).filter((entry) => entry.parentPath === null)
+            : [],
+        hasChildren = !!node.children?.length || sources.length > 0,
+        key = treeKey('object', rootId, path),
+        open = hasChildren ? expansion(row, key) : false;
+      row.append(element('span', node.kind !== 'cad' ? '△' : node.solid ? '■' : '▧', 'feature-icon'));
+      const name = element('span', node.name, 'object-label');
+      name.title = node.name;
+      row.append(name);
+      if (node.kind === 'mesh' && node.meshRole === 'hole') row.append(element('span', t('Lochform'), 'small-note'));
+      if (node.annotations?.length) {
+        const badge = element('span', '✦ ' + node.annotations.length, 'small-note');
+        badge.title = node.annotations
+          .map((a) => (a.status === 'stale' ? t('Veraltet') + ': ' : '') + a.note)
+          .join('\n');
+        row.append(badge);
+      }
+      row.append(
+        smallButton(node.hidden ? '◌' : '◉', node.hidden ? 'Einblenden' : 'Ausblenden', () =>
+          edited((draft) => {
+            cadSourceAtPath(draft, rootId, path).hidden = !node.hidden;
+          }, 'CAD-Sichtbarkeit ändern'),
+        ),
+      );
+      row.append(
+        smallButton(node.locked ? '🔒' : '○', node.locked ? 'Entsperren' : 'Sperren', () => toggleLock(value)),
+      );
+      root.append(row);
+      if (open) {
+        for (const child of node.children ?? []) object(child, rootId, [...path, child.id], depth + 1);
+        for (const source of sources) meshSource(source, node, context, depth + 1);
+      }
+    }
+    function container(value, depth, folder) {
+      const row = element('div', undefined, 'object-item container-item');
+      row.style.marginLeft = depth * 12 + 'px';
+      row.classList.toggle(
+        'active-container',
+        folder ? p.activeFolderId === value.id : p.activeLayerId === value.id && p.activeFolderId === null,
+      );
+      row.dataset.containerId = value.id;
+      accessible(row, depth, JSON.stringify(['container', value.id]));
+      row.append(element('span', folder ? '▱' : '▰'), element('span', value.name, 'object-label'));
+      row.onclick = () =>
+        safe(() =>
+          edited((draft) => {
+            draft.activeLayerId = folder ? value.layerId : value.id;
+            draft.activeFolderId = folder ? value.id : null;
+          }, 'Aktiven Container wählen'),
+        );
+      for (const [field, on, off] of [
+        ['hidden', '◌', '◉'],
+        ['locked', '🔒', '○'],
+      ])
+        row.append(
+          smallButton(value[field] ? on : off, field === 'hidden' ? 'Sichtbarkeit ändern' : 'Sperrung ändern', () =>
+            edited((draft) => {
+              const entry = [...draft.layers, ...draft.folders].find((entry) => entry.id === value.id);
+              entry[field] = !entry[field];
+            }, 'Containerstatus ändern'),
+          ),
+        );
+      root.append(row);
+      if (folder) {
+        for (const child of p.folders.filter((entry) => entry.parentId === value.id)) container(child, depth + 1, true);
+        for (const node of p.nodes.filter((node) => node.folderId === value.id)) object(node, node.id, [], depth + 1);
+      } else {
+        for (const child of p.folders.filter((entry) => entry.layerId === value.id && entry.parentId === null))
+          container(child, depth + 1, true);
+        for (const node of p.nodes.filter((node) => node.layerId === value.id && node.folderId === null))
+          object(node, node.id, [], depth + 1);
+      }
+    }
+    for (const layer of p.layers) container(layer, 0, false);
+    if (focused)
+      [...root.querySelectorAll('[data-tree-key]')]
+        .find((row) => row.dataset.treeKey === focused)
+        ?.focus({ preventScroll: true });
   }
-  function history(context){
-    let root=$('history-panel');if(!root){root=element('div');root.id='history-panel';root.append(element('p',undefined));root.firstChild.id='history-path';const done=element('button','Zur fertigen Gruppe');done.id='history-done';done.onclick=()=>{select([{rootId:context.target.rootId,path:[]}]);refresh();};root.append(done);const operation=element('label','Gruppenoperation');operation.id='history-operation-row';const select=element('select');select.id='history-operation';select.append(new Option('Vereinigung','union'),new Option('Schnittmenge','intersection'));select.onchange=()=>safe(()=>selectedEdit(node=>{node.operation=select.value;},'CAD-Gruppenoperation ändern'));operation.append(select);root.append(operation);const suppress=element('label','Quelle unterdrücken');suppress.id='history-suppress-row';suppress.className='check-line';const input=element('input');input.type='checkbox';input.id='history-suppress';input.onchange=()=>safe(()=>selectedEdit(node=>{node.suppressed=input.checked;},'CAD-Quelle unterdrücken'));suppress.prepend(input);root.append(suppress);$('inspector').prepend(root);}
-    let drillInfo=$('history-drill');if(!drillInfo){drillInfo=element('div');drillInfo.id='history-drill';const title=element('div');title.className='section-title';const note=element('p',undefined,'small-note');const edit=element('button');edit.id='history-drill-edit';edit.type='button';edit.dataset.action='drill-edit';drillInfo.append(title,note,edit);root.prepend(drillInfo);}drillInfo.hidden=!context.node.drill;drillInfo.children[0].textContent=t('Mitwachsende Bohrung');drillInfo.children[1].textContent=t('Die Bohrungen werden aus der erhaltenen Originalquelle berechnet. „Gruppe auflösen“ würde die Bohrungen entfernen. Nutze „Bohrung bearbeiten“ für Maße und Muster.');$('history-drill-edit').textContent=t('Bohrung bearbeiten');$('history-drill-edit').hidden=!!context.target.path.length;$('history-drill-edit').disabled=context.locked||!!controller.state?.().busy;
-    let partitionInfo=$('history-partition');if(!partitionInfo){partitionInfo=element('p',undefined,'small-note');partitionInfo.id='history-partition';root.prepend(partitionInfo);}const partition=context.node.partition;partitionInfo.hidden=!partition;if(partition)partitionInfo.textContent=t('Native Teilung')+' · '+t(partition.side==='positive'?'Seite +':'Seite −')+' · '+t('Lokale Ebene')+': '+partition.origin.map(v=>Number(v.toPrecision(8))).join(', ')+' mm · N '+partition.normal.map(v=>Number(v.toPrecision(6))).join(', ');
-    let marksInfo=$('history-annotations');if(!marksInfo){marksInfo=element('p',undefined,'small-note');marksInfo.id='history-annotations';marksInfo.dataset.noTranslate='';root.prepend(marksInfo);}marksInfo.hidden=!context.node.annotations?.length;marksInfo.textContent=(context.node.annotations??[]).map(a=>(a.status==='stale'?t('Veraltet')+': ':'')+a.note).join(' · ');
-    let extractedInfo=$('history-extraction');if(!extractedInfo){extractedInfo=element('p',undefined,'small-note');extractedInfo.id='history-extraction';root.prepend(extractedInfo);}extractedInfo.hidden=!context.root.extraction;extractedInfo.textContent=t('Gesicherte Originalgeometrie. Zum Ändern die Originalquelle kopieren, als eigenes Teil einfügen und erneut herauslösen.');
-    root.hidden=!context.node.children?.length&&!context.target.path.length&&!context.node.annotations?.length;$('history-path').textContent=context.chain.map(node=>node.name).join(' › ');$('history-done').hidden=!context.target.path.length;$('history-done').onclick=()=>{select([{rootId:context.target.rootId,path:[]}]);refresh();};$('history-operation-row').hidden=!context.node.operation;$('history-operation').value=context.node.operation||'union';$('history-operation').disabled=context.locked;$('history-suppress-row').hidden=!context.target.path.length;$('history-suppress-row').style.display=context.target.path.length?'':'none';$('history-suppress').checked=!!context.node.suppressed;$('history-suppress').disabled=context.locked;
-    if(context.node.drill)$('history-operation-row').hidden=true;
+  function value(id, value) {
+    const input = $(id);
+    if (input && document.activeElement !== input) input.value = String(value ?? '');
   }
-  function refreshInspector(){
-    const list=selected(),single=list.length===1,context=list[0],node=context?.node;if($('selected-count'))$('selected-count').textContent=list.length||'';if($('inspector-empty'))$('inspector-empty').hidden=single||$('align-panel')?.hidden===false;if($('inspector'))$('inspector').hidden=!single;if(!single)return;
-    const native=node.kind==='cad',locked=context.locked||!!controller.state?.().busy;let sketchButton=$('edit-sketch-source');if(!sketchButton){sketchButton=element('button');sketchButton.id='edit-sketch-source';sketchButton.dataset.action='edit-sketch';$('shape-parameters').before(sketchButton);}sketchButton.textContent=t('Skizze bearbeiten');sketchButton.hidden=node.recipe?.type!=='sketch'&&node.meshSource?.node.type!=='sketch';sketchButton.disabled=locked||context.sourceGeometryReadonly;let modelingButton=$('edit-modeling-source');if(!modelingButton){modelingButton=element('button');modelingButton.id='edit-modeling-source';modelingButton.dataset.action='cad-edit-modeling';$('shape-parameters').before(modelingButton);}modelingButton.textContent=t('CAD-Bearbeitung ändern …');modelingButton.hidden=!!context.target.path.length||node.source!=='modeling'||!['face-offset','shell','sweep'].includes(node.modeling?.kind);modelingButton.disabled=locked||context.sourceGeometryReadonly;value('object-name',node.name);value('object-color',node.color||'#ef6948');value('object-color-hex',node.color||'#ef6948');value('object-opacity',Math.round((node.opacity??1)*100));value('object-notes',node.metadata?.notes||'');$('object-multicolor').checked=node.kind==='mesh'?meshColorsEnabled(node):!!node.multicolor;
-    for(const id of ['object-name','object-color','object-color-hex','object-opacity','object-notes','object-multicolor','solid-btn','hole-btn','shape-text','text-font','segments'])if($(id))$(id).disabled=locked;
-    $('solid-btn').classList.toggle('active',native?!!node.solid:node.kind==='mesh'&&node.meshRole!=='hole');$('hole-btn').classList.toggle('active',native?!node.solid:node.kind==='mesh'&&node.meshRole==='hole');$('solid-btn').disabled||=node.kind==='referenceMesh';$('hole-btn').disabled||=node.kind==='referenceMesh';$('object-multicolor').disabled||=!(node.children?.length||node.kind==='mesh'&&(node.meshSource?.node.children?.length||node.meshSource?.sources?.length>1));
-    if($('lock-btn'))$('lock-btn').textContent=node.locked?'Entsperren':'Sperren';
-    const p=project(),data={size:cadFormLocalDimensions(node),pos:cadFormPosition(p,context.target),rot:cadFormOrientation(node)};for(const key of Object.keys(data))for(let i=0;i<3;i++){value(`${key}-${i}`,display(data[key][i]));const input=$(`${key}-${i}`);if(input)input.disabled=locked||context.sourceGeometryReadonly||key==='size'&&data.size[i]===0;}
-    dimensionControls(node,locked||context.sourceGeometryReadonly);if(native){history(context);parameterFields(node,locked||context.sourceGeometryReadonly);}else{if($('shape-parameters'))$('shape-parameters').hidden=true;if($('history-panel'))$('history-panel').hidden=true;}
-    if(context.sourceGeometryReadonly){for(const id of ['solid-btn','hole-btn','shape-text','text-font','segments','history-operation','history-suppress'])if($(id))$(id).disabled=true;}
-    $('text-panel').hidden=!(node.source==='native'&&node.recipe?.type==='text');value('shape-text',node.recipe?.text||'TEXT');value('text-font',node.recipe?.font||'regular');if(node.recipe?.type==='text')fonts?.refresh(node.recipe.font||'regular',node.recipe.text||'TEXT',locked||context.sourceGeometryReadonly);$('resolution-panel').hidden=!(node.source==='native'&&node.recipe?.type==='polygon');value('segments',node.recipe?.params?.sides||8);
-    if($('position-space'))$('position-space').textContent=context.target.path.length?'Elterngruppe · Mittelpunkt · mm':project().coordinateMode==='plane'?'Arbeitsebene · Mittelpunkt · mm':'Weltachsen · Mittelpunkt · mm';if($('dimension-space'))$('dimension-space').textContent='Lokale Formachsen · mm';
-    const record=getScene?.()?.objects?.find(record=>sameTarget(record.target,context.target)),bounds=record?.worldBounds;value('selection-info','');if($('selection-info'))$('selection-info').textContent=native?`${node.source==='group'?'CAD-Gruppe':node.source==='step'?(node.metadata?.importedFile?.type==='stl'?'Rekonstruierter CAD-Körper':'STEP-Körper'):'CAD-Quelle'} · ${node.stats.solids} Körper · ${display(record?.volume??node.stats.volume)} mm³`:objectTypeLabel(node);if(bounds&&$('measure-label'))$('measure-label').textContent=`Weltgrenzen: ${bounds.size.map(display).join(' × ')} mm`;
+  let dimensionSignature = '',
+    dimensionFields = new Map();
+  function dimensionControls(node, locked, force = false) {
+    let root = $('shape-dimensions');
+    if (!root) {
+      root = element('div');
+      root.id = 'shape-dimensions';
+      $('shape-parameters').before(root);
+    }
+    const data = cadShapeDimensions(node);
+    root.hidden = !data.length;
+    if (root.hidden) return;
+    const signature = node.id + ':' + node.recipe.type;
+    if (signature !== dimensionSignature) {
+      dimensionSignature = signature;
+      dimensionFields.clear();
+      root.replaceChildren();
+      root.append(element('div', t('Formmaße'), 'section-title'));
+      for (const field of data) {
+        const label = element('label', undefined, 'shape-dimension-row');
+        label.append(element('span', t(field.label) + ' (mm)'));
+        const controls = element('div', undefined, 'shape-dimension-inputs'),
+          input = element('input'),
+          slider = element('input');
+        input.type = 'text';
+        input.inputMode = 'decimal';
+        input.id = 'dimension-' + field.key;
+        input.setAttribute('aria-label', t(field.label));
+        input.onfocus = () => input.select();
+        slider.type = 'range';
+        slider.id = 'dimension-slider-' + field.key;
+        slider.min = field.min;
+        slider.step = '.01';
+        slider.setAttribute('aria-label', t(field.label) + ' · ' + t('Schieber'));
+        controls.append(input, slider);
+        label.append(controls);
+        root.append(label);
+        async function commit(raw) {
+          if (input.dataset.commitPending) return;
+          input.dataset.commitPending = 'true';
+          try {
+            const context = one(),
+              next = raw === undefined ? number(input) : Number(raw),
+              current = cadShapeDimensions(context.node).find((item) => item.key === field.key).value;
+            const edited = preserveUiNumber(next, current);
+            if (edited === current) return;
+            const edit = cadShapeDimensionEdit(context.node, field.key, edited);
+            await command({ kind: 'form', target: context.target, ...edit }, 'CAD-Formmaße ändern');
+          } finally {
+            delete input.dataset.commitPending;
+            dimensionControls(one().node, !!controller.state?.().busy || one().locked, true);
+          }
+        }
+        input.onchange = () => safe(() => commit());
+        input.onblur = input.onchange;
+        input.onkeydown = (event) => {
+          if (event.key === 'Enter') input.blur();
+          if (event.key === 'Escape') {
+            input.value = display(cadShapeDimensions(one().node).find((item) => item.key === field.key).value);
+            input.blur();
+            event.stopPropagation();
+          }
+        };
+        let rangeCancelled = false;
+        slider.onpointerdown = () => {
+          rangeCancelled = false;
+        };
+        slider.oninput = () => {
+          input.value = display(Number(slider.value));
+          slider.style.setProperty(
+            '--range-fill',
+            (100 * (Number(slider.value) - Number(slider.min))) / (Number(slider.max) - Number(slider.min)) + '%',
+          );
+        };
+        slider.onchange = () => {
+          if (rangeCancelled) {
+            rangeCancelled = false;
+            dimensionControls(one().node, one().locked, true);
+            return;
+          }
+          safe(() => commit(slider.value));
+        };
+        slider.onkeydown = (event) => {
+          if (event.key === 'Escape') {
+            rangeCancelled = true;
+            event.preventDefault();
+            event.stopPropagation();
+            dimensionControls(one().node, one().locked, true);
+          } else rangeCancelled = false;
+        };
+        slider.addEventListener('pointercancel', () => {
+          rangeCancelled = true;
+          dimensionControls(one().node, one().locked, true);
+        });
+        dimensionFields.set(field.key, { input, slider });
+      }
+      root.append(
+        element(
+          'p',
+          t(
+            node.recipe.type === 'sphere'
+              ? 'Der Radius setzt alle drei Durchmesser gleich.'
+              : node.recipe.type === 'halfSphere'
+                ? 'Der Radius setzt Durchmesser und Halbkugelhöhe.'
+                : node.recipe.type === 'torus'
+                  ? 'Ringradius: bis zur Rohrmitte. Rohrradius: halbe Rohrdicke. Radiale Maße setzen X/Y gleich; Rohrradius setzt auch die Profilhöhe.'
+                  : 'Radiale Maße setzen X/Y gleich. Die Höhe ist separat einstellbar.',
+          ),
+          'small-note',
+        ),
+      );
+    }
+    const v = Object.fromEntries(data.map((field) => [field.key, field.value])),
+      type = node.recipe.type;
+    for (const field of data) {
+      const { input, slider } = dimensionFields.get(field.key);
+      input.disabled = slider.disabled = locked;
+      input.title = `${field.min} – ${field.max} mm`;
+      if (force || document.activeElement !== input) input.value = display(field.value);
+      if (force || document.activeElement !== slider) {
+        let min = field.min,
+          max = Math.min(field.max, Math.max(20, Math.ceil(field.value * 2)));
+        if (type === 'torus') {
+          if (field.key === 'tubeRadius') max = Math.min(max, v.ringRadius - 0.01);
+          if (field.key === 'ringRadius') min = v.tubeRadius + 0.01;
+          if (field.key === 'outerDiameter') min = 4 * v.tubeRadius + 0.02;
+        }
+        if (type === 'tube') {
+          if (field.key === 'wall') max = Math.min(max, v.outerDiameter / 2 - 0.01);
+          if (field.key === 'innerDiameter') max = Math.min(max, v.outerDiameter - 0.02);
+          if (field.key === 'outerDiameter') min = 2 * v.wall + 0.02;
+        }
+        if (type === 'cone') {
+          if (field.key === 'topDiameter') max = v.diameter;
+          if (field.key === 'radius') min = Math.max(min, v.topDiameter / 2);
+          if (field.key === 'diameter') min = Math.max(min, v.topDiameter);
+        }
+        slider.min = min;
+        slider.max = Math.max(min + 0.01, max);
+        slider.value = field.value;
+        slider.style.setProperty(
+          '--range-fill',
+          (100 * (Number(slider.value) - min)) / (Number(slider.max) - min) + '%',
+        );
+      }
+    }
   }
-  function containerDialog(kind,{assignSelected=false}={}){const targets=assignSelected?selected().map(context=>context.target):[];if(assignSelected&&(!targets.length||targets.some(target=>target.path.length)))throw Error('Fertige CAD-Teile zum Bündeln auswählen.');modal(kind==='layer'?'Layer hinzufügen':'Ordner hinzufügen','<label class="dialog-label">Name<input id="container-name" maxlength="200"></label><div class="modal-actions"><button id="container-confirm" class="primary">Hinzufügen</button></div>');$('container-confirm').onclick=()=>safe(async()=>{const name=$('container-name').value.trim();if(!name)throw Error('Containername eingeben.');await edited(draft=>{const id=crypto.randomUUID();if(kind==='layer'){draft.layers.push({id,name,hidden:false,locked:false});draft.activeLayerId=id;draft.activeFolderId=null;}else{draft.folders.push({id,name,hidden:false,locked:false,layerId:draft.activeLayerId,parentId:draft.activeFolderId});draft.activeFolderId=id;for(const target of targets){const context=cadSelectionContext(draft,target);if(context.locked)throw Error('Das ausgewählte Teil ist gesperrt.');context.node.layerId=draft.activeLayerId;context.node.folderId=id;}}},'CAD-Container hinzufügen');$('modal').close();});}
-  function active(p){return [...p.layers,...p.folders].find(container=>container.id===(p.activeFolderId||p.activeLayerId));}
-  function renameContainer(){const container=active(project());modal('Container umbenennen','<label class="dialog-label">Name<input id="container-name" maxlength="200"></label><div class="modal-actions"><button id="container-confirm" class="primary">Speichern</button></div>');$('container-name').value=container.name;$('container-confirm').onclick=()=>safe(async()=>{const name=$('container-name').value.trim();if(!name)throw Error('Containername eingeben.');await edited(draft=>{active(draft).name=name;},'CAD-Container umbenennen');$('modal').close();});}
-  function assignContainer(){const list=selected();if(!list.length||list.some(context=>context.target.path.length))throw Error('Fertige CAD-Teile für die Zuordnung auswählen.');return edited(draft=>{const container=active(draft);if(container.locked)throw Error('Der Zielcontainer ist gesperrt.');for(const context of list){if(context.locked)throw Error('Das ausgewählte Teil ist gesperrt.');const node=cadSourceAtPath(draft,context.target.rootId);node.layerId=draft.activeLayerId;node.folderId=draft.activeFolderId;}},'CAD-Auswahl zuordnen');}
-  function toggleLock(target){const context=cadSelectionContext(project(),target),own=!!context.node.locked;if(context.locked&&!own)throw Error('Sperrung der übergeordneten Gruppe oder des Containers zuerst aufheben.');return edited(draft=>{cadSourceAtPath(draft,target.rootId,target.path).locked=!own;},'CAD-Sperrung ändern');}
-  function refresh(){if(disposed)return;renderLibrary();objectTree();refreshInspector();const p=project();value('bed-width',p.bed[0]);value('bed-depth',p.bed[1]);value('workplane',p.workplane.origin[2]);value('coordinate-mode',p.coordinateMode);value('project-name',p.name);value('snap',getPreferences().snap);if($('plane-info')){const ref=p.workplane.reference,node=ref&&p.nodes.find(node=>node.id===ref.objectId);$('plane-info').textContent=t(ref?ref.kind==='mesh'?(node?.kind==='referenceMesh'?'Bezugsfläche einer Ansichtsvorlage':'Netz-Bezugsfläche'):'CAD-Bezugsfläche':'Freie Arbeitsebene');$('plane-info').dataset.referenceKind=ref?.kind??(ref?'cad':'free');$('plane-info').title=ref?(node?.name??''):'Die Arbeitsebene ist nicht an eine Objektfläche gebunden.';}}
+  {
+    const color = $('object-color');
+    if (color && !$('object-color-hex')) {
+      const text = document.createElement('input');
+      text.id = 'object-color-hex';
+      text.type = 'text';
+      text.maxLength = 7;
+      text.setAttribute('aria-label', 'Farbe als Hexwert');
+      text.onkeydown = (e) => {
+        if (e.key === 'Enter') text.blur();
+      };
+      text.onchange = () => {
+        if (!/^#[0-9a-f]{6}$/i.test(text.value)) return;
+        color.value = text.value;
+        color.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      color.after(text);
+    }
+  }
+  function parameterFields(node, locked) {
+    const root = $('shape-parameters'),
+      native = node.source === 'native' && node.recipe,
+      type = node.recipe?.type;
+    root.hidden = !native || ['torus', 'cone'].includes(type) || !cadFormParameters(node).schema.length;
+    if (root.hidden) return;
+    const data = cadFormParameters(node),
+      signature = node.id + ':' + type;
+    if (signature !== parameterSignature) {
+      parameterSignature = signature;
+      fields.clear();
+      root.replaceChildren();
+      root.append(element('div', 'Formparameter', 'section-title'));
+      if (['thread', 'nut'].includes(type)) {
+        const select = element('select');
+        select.id = 'thread-preset';
+        select.setAttribute('aria-label', 'Metrische Gewindevorlage');
+        select.append(new Option('Metrische Vorlage wählen …', ''));
+        for (const [diameter, pitch] of [
+          [3, 0.5],
+          [4, 0.7],
+          [5, 0.8],
+          [6, 1],
+          [8, 1.25],
+          [10, 1.5],
+          [12, 1.75],
+          [16, 2],
+          [20, 2.5],
+          [24, 3],
+        ])
+          select.append(new Option(`M${diameter} × ${pitch}`, `${diameter}:${pitch}`));
+        select.onchange = () =>
+          safe(async () => {
+            if (!select.value) return;
+            const [diameter, pitch] = select.value.split(':').map(Number);
+            await form({
+              params: {
+                diameter,
+                pitch,
+                profile: 'metric',
+                depth: 0,
+                crest: 0.125,
+                outerDiameter: diameter * 1.9,
+                headDiameter: diameter * 1.65,
+              },
+            });
+            select.value = '';
+          });
+        root.append(select);
+      }
+      const basic = new Set(
+          type === 'gear'
+            ? ['teeth', 'module', 'thickness', 'bore', 'backlash']
+            : ['kind', 'diameter', 'pitch', 'length', 'clearance', 'outerDiameter'],
+        ),
+        advanced = element('details', undefined, 'advanced-parameters');
+      advanced.id = 'shape-parameters-advanced';
+      const summary = element('summary', 'Weitere Parameter');
+      summary.id = 'shape-parameters-advanced-toggle';
+      advanced.append(summary);
+      if (data.schema.length > 8) root.append(advanced);
+      for (const field of data.schema) {
+        const row = element('label', undefined, 'parameter-row');
+        row.append(element('span', field.label + (field.unit ? ` (${field.unit})` : '')));
+        const input = element(field.options ? 'select' : 'input');
+        input.id = 'param-' + field.key;
+        input.dataset.parameter = field.key;
+        input.setAttribute('aria-label', field.label);
+        if (field.options) for (const [v, name] of field.options) input.append(new Option(name, v));
+        else {
+          input.type = 'text';
+          input.inputMode = 'decimal';
+          input.title = `${field.min} bis ${field.max}${field.unit ? ' ' + field.unit : ''}`;
+          input.onfocus = () => input.select();
+        }
+        input.onchange = () =>
+          safe(async () => {
+            if (input.dataset.commitPending) return;
+            input.dataset.commitPending = 'true';
+            try {
+              const params = cadFormParameters(one().node).params,
+                current = params[field.key];
+              const next = field.options ? input.value : preserveUiNumber(number(input), current);
+              if (next === current) return;
+              // Keep the spindle placement so axial stretching does not change
+              // the physical pitch or require another native body transformation.
+              const physicalLength =
+                type === 'thread' &&
+                params.kind === 'external' &&
+                params.profile === 'trapezoid' &&
+                field.key === 'length';
+              await form({ params: { [field.key]: next } }, physicalLength ? { preserveBounds: false } : undefined);
+            } finally {
+              delete input.dataset.commitPending;
+              refreshInspector();
+            }
+          });
+        input.onkeydown = (event) => {
+          if (event.key === 'Enter') input.blur();
+          if (event.key === 'Escape') {
+            const current = cadFormParameters(one().node).params[field.key];
+            input.value = typeof current === 'number' ? display(current) : String(current);
+            input.blur();
+            event.stopPropagation();
+          }
+        };
+        if (!field.options) input.onblur = input.onchange;
+        row.append(input);
+        (data.schema.length > 8 && !basic.has(field.key) ? advanced : root).append(row);
+        fields.set(field.key, { input, row });
+      }
+      root.append(element('p', undefined, 'small-note'));
+      const buttons = element('div', undefined, 'two-buttons'),
+        reset = element('button', 'Parameter zurücksetzen'),
+        original = element('button', 'Originalgröße');
+      reset.id = 'parameter-reset';
+      original.id = 'parameter-original';
+      reset.onclick = () =>
+        safe(() => {
+          const params = defaults(type);
+          delete params.edgeSteps;
+          return form({ params });
+        });
+      original.onclick = () =>
+        safe(() =>
+          selectedEdit((n) => {
+            n.transform = cadResizeForm(
+              n,
+              n.stats.bounds.min.map((v, i) => n.stats.bounds.max[i] - v),
+            ).transform;
+          }, 'Originale CAD-Quellengröße'),
+        );
+      buttons.append(reset, original);
+      root.append(buttons);
+    }
+    const p = data.params;
+    for (const [key, { input, row }] of fields) {
+      if (document.activeElement !== input) input.value = typeof p[key] === 'number' ? display(p[key]) : String(p[key]);
+      input.disabled = locked || (key === 'flankAngle' && p.profile !== 'custom');
+      row.hidden =
+        (type === 'tube' && key === 'wall') ||
+        (['edgeSize', 'edgeScope'].includes(key) && p.edgeStyle === 'none') ||
+        (['outerShape', 'outerDiameter'].includes(key) && p.kind !== 'nut') ||
+        (['head', 'bore'].includes(key) && ['thread', 'nut'].includes(type) && p.kind !== 'external') ||
+        (['headDiameter', 'headHeight'].includes(key) && (p.kind !== 'external' || p.head === 'none'));
+    }
+    root.querySelector('p').textContent = data.note;
+    root.querySelectorAll('button').forEach((button) => (button.disabled = locked));
+    if ($('thread-preset')) $('thread-preset').disabled = locked;
+    $('parameter-original').hidden = !data.generator;
+  }
+  function history(context) {
+    let root = $('history-panel');
+    if (!root) {
+      root = element('div');
+      root.id = 'history-panel';
+      root.append(element('p', undefined));
+      root.firstChild.id = 'history-path';
+      const done = element('button', 'Zur fertigen Gruppe');
+      done.id = 'history-done';
+      done.onclick = () => {
+        select([{ rootId: context.target.rootId, path: [] }]);
+        refresh();
+      };
+      root.append(done);
+      const operation = element('label', 'Gruppenoperation');
+      operation.id = 'history-operation-row';
+      const select = element('select');
+      select.id = 'history-operation';
+      select.append(new Option('Vereinigung', 'union'), new Option('Schnittmenge', 'intersection'));
+      select.onchange = () =>
+        safe(() =>
+          selectedEdit((node) => {
+            node.operation = select.value;
+          }, 'CAD-Gruppenoperation ändern'),
+        );
+      operation.append(select);
+      root.append(operation);
+      const suppress = element('label', 'Quelle unterdrücken');
+      suppress.id = 'history-suppress-row';
+      suppress.className = 'check-line';
+      const input = element('input');
+      input.type = 'checkbox';
+      input.id = 'history-suppress';
+      input.onchange = () =>
+        safe(() =>
+          selectedEdit((node) => {
+            node.suppressed = input.checked;
+          }, 'CAD-Quelle unterdrücken'),
+        );
+      suppress.prepend(input);
+      root.append(suppress);
+      $('inspector').prepend(root);
+    }
+    let drillInfo = $('history-drill');
+    if (!drillInfo) {
+      drillInfo = element('div');
+      drillInfo.id = 'history-drill';
+      const title = element('div');
+      title.className = 'section-title';
+      const note = element('p', undefined, 'small-note');
+      const edit = element('button');
+      edit.id = 'history-drill-edit';
+      edit.type = 'button';
+      edit.dataset.action = 'drill-edit';
+      drillInfo.append(title, note, edit);
+      root.prepend(drillInfo);
+    }
+    drillInfo.hidden = !context.node.drill;
+    drillInfo.children[0].textContent = t('Mitwachsende Bohrung');
+    drillInfo.children[1].textContent = t(
+      'Die Bohrungen werden aus der erhaltenen Originalquelle berechnet. „Gruppe auflösen“ würde die Bohrungen entfernen. Nutze „Bohrung bearbeiten“ für Maße und Muster.',
+    );
+    $('history-drill-edit').textContent = t('Bohrung bearbeiten');
+    $('history-drill-edit').hidden = !!context.target.path.length;
+    $('history-drill-edit').disabled = context.locked || !!controller.state?.().busy;
+    let partitionInfo = $('history-partition');
+    if (!partitionInfo) {
+      partitionInfo = element('p', undefined, 'small-note');
+      partitionInfo.id = 'history-partition';
+      root.prepend(partitionInfo);
+    }
+    const partition = context.node.partition;
+    partitionInfo.hidden = !partition;
+    if (partition)
+      partitionInfo.textContent =
+        t('Native Teilung') +
+        ' · ' +
+        t(partition.side === 'positive' ? 'Seite +' : 'Seite −') +
+        ' · ' +
+        t('Lokale Ebene') +
+        ': ' +
+        partition.origin.map((v) => Number(v.toPrecision(8))).join(', ') +
+        ' mm · N ' +
+        partition.normal.map((v) => Number(v.toPrecision(6))).join(', ');
+    let marksInfo = $('history-annotations');
+    if (!marksInfo) {
+      marksInfo = element('p', undefined, 'small-note');
+      marksInfo.id = 'history-annotations';
+      marksInfo.dataset.noTranslate = '';
+      root.prepend(marksInfo);
+    }
+    marksInfo.hidden = !context.node.annotations?.length;
+    marksInfo.textContent = (context.node.annotations ?? [])
+      .map((a) => (a.status === 'stale' ? t('Veraltet') + ': ' : '') + a.note)
+      .join(' · ');
+    let extractedInfo = $('history-extraction');
+    if (!extractedInfo) {
+      extractedInfo = element('p', undefined, 'small-note');
+      extractedInfo.id = 'history-extraction';
+      root.prepend(extractedInfo);
+    }
+    extractedInfo.hidden = !context.root.extraction;
+    extractedInfo.textContent = t(
+      'Gesicherte Originalgeometrie. Zum Ändern die Originalquelle kopieren, als eigenes Teil einfügen und erneut herauslösen.',
+    );
+    root.hidden = !context.node.children?.length && !context.target.path.length && !context.node.annotations?.length;
+    $('history-path').textContent = context.chain.map((node) => node.name).join(' › ');
+    $('history-done').hidden = !context.target.path.length;
+    $('history-done').onclick = () => {
+      select([{ rootId: context.target.rootId, path: [] }]);
+      refresh();
+    };
+    $('history-operation-row').hidden = !context.node.operation;
+    $('history-operation').value = context.node.operation || 'union';
+    $('history-operation').disabled = context.locked;
+    $('history-suppress-row').hidden = !context.target.path.length;
+    $('history-suppress-row').style.display = context.target.path.length ? '' : 'none';
+    $('history-suppress').checked = !!context.node.suppressed;
+    $('history-suppress').disabled = context.locked;
+    if (context.node.drill) $('history-operation-row').hidden = true;
+  }
+  function refreshInspector() {
+    const list = selected(),
+      single = list.length === 1,
+      context = list[0],
+      node = context?.node;
+    if ($('selected-count')) $('selected-count').textContent = list.length || '';
+    if ($('inspector-empty')) $('inspector-empty').hidden = single || $('align-panel')?.hidden === false;
+    if ($('inspector')) $('inspector').hidden = !single;
+    if (!single) return;
+    const native = node.kind === 'cad',
+      locked = context.locked || !!controller.state?.().busy;
+    let sketchButton = $('edit-sketch-source');
+    if (!sketchButton) {
+      sketchButton = element('button');
+      sketchButton.id = 'edit-sketch-source';
+      sketchButton.dataset.action = 'edit-sketch';
+      $('shape-parameters').before(sketchButton);
+    }
+    sketchButton.textContent = t('Skizze bearbeiten');
+    sketchButton.hidden = node.recipe?.type !== 'sketch' && node.meshSource?.node.type !== 'sketch';
+    sketchButton.disabled = locked || context.sourceGeometryReadonly;
+    let modelingButton = $('edit-modeling-source');
+    if (!modelingButton) {
+      modelingButton = element('button');
+      modelingButton.id = 'edit-modeling-source';
+      modelingButton.dataset.action = 'cad-edit-modeling';
+      $('shape-parameters').before(modelingButton);
+    }
+    modelingButton.textContent = t('CAD-Bearbeitung ändern …');
+    modelingButton.hidden =
+      !!context.target.path.length ||
+      node.source !== 'modeling' ||
+      !['face-offset', 'shell', 'sweep'].includes(node.modeling?.kind);
+    modelingButton.disabled = locked || context.sourceGeometryReadonly;
+    value('object-name', node.name);
+    value('object-color', node.color || '#ef6948');
+    value('object-color-hex', node.color || '#ef6948');
+    value('object-opacity', Math.round((node.opacity ?? 1) * 100));
+    value('object-notes', node.metadata?.notes || '');
+    $('object-multicolor').checked = node.kind === 'mesh' ? meshColorsEnabled(node) : !!node.multicolor;
+    for (const id of [
+      'object-name',
+      'object-color',
+      'object-color-hex',
+      'object-opacity',
+      'object-notes',
+      'object-multicolor',
+      'solid-btn',
+      'hole-btn',
+      'shape-text',
+      'text-font',
+      'segments',
+    ])
+      if ($(id)) $(id).disabled = locked;
+    $('solid-btn').classList.toggle('active', native ? !!node.solid : node.kind === 'mesh' && node.meshRole !== 'hole');
+    $('hole-btn').classList.toggle('active', native ? !node.solid : node.kind === 'mesh' && node.meshRole === 'hole');
+    $('solid-btn').disabled ||= node.kind === 'referenceMesh';
+    $('hole-btn').disabled ||= node.kind === 'referenceMesh';
+    $('object-multicolor').disabled ||= !(
+      node.children?.length ||
+      (node.kind === 'mesh' && (node.meshSource?.node.children?.length || node.meshSource?.sources?.length > 1))
+    );
+    if ($('lock-btn')) $('lock-btn').textContent = node.locked ? 'Entsperren' : 'Sperren';
+    const p = project(),
+      data = {
+        size: cadFormLocalDimensions(node),
+        pos: cadFormPosition(p, context.target),
+        rot: cadFormOrientation(node),
+      };
+    for (const key of Object.keys(data))
+      for (let i = 0; i < 3; i++) {
+        value(`${key}-${i}`, display(data[key][i]));
+        const input = $(`${key}-${i}`);
+        if (input) input.disabled = locked || context.sourceGeometryReadonly || (key === 'size' && data.size[i] === 0);
+      }
+    dimensionControls(node, locked || context.sourceGeometryReadonly);
+    if (native) {
+      history(context);
+      parameterFields(node, locked || context.sourceGeometryReadonly);
+    } else {
+      if ($('shape-parameters')) $('shape-parameters').hidden = true;
+      if ($('history-panel')) $('history-panel').hidden = true;
+    }
+    if (context.sourceGeometryReadonly) {
+      for (const id of [
+        'solid-btn',
+        'hole-btn',
+        'shape-text',
+        'text-font',
+        'segments',
+        'history-operation',
+        'history-suppress',
+      ])
+        if ($(id)) $(id).disabled = true;
+    }
+    $('text-panel').hidden = !(node.source === 'native' && node.recipe?.type === 'text');
+    value('shape-text', node.recipe?.text || 'TEXT');
+    value('text-font', node.recipe?.font || 'regular');
+    if (node.recipe?.type === 'text')
+      fonts?.refresh(
+        node.recipe.font || 'regular',
+        node.recipe.text || 'TEXT',
+        locked || context.sourceGeometryReadonly,
+      );
+    $('resolution-panel').hidden = !(node.source === 'native' && node.recipe?.type === 'polygon');
+    value('segments', node.recipe?.params?.sides || 8);
+    if ($('position-space'))
+      $('position-space').textContent = context.target.path.length
+        ? 'Elterngruppe · Mittelpunkt · mm'
+        : project().coordinateMode === 'plane'
+          ? 'Arbeitsebene · Mittelpunkt · mm'
+          : 'Weltachsen · Mittelpunkt · mm';
+    if ($('dimension-space')) $('dimension-space').textContent = 'Lokale Formachsen · mm';
+    const record = getScene?.()?.objects?.find((record) => sameTarget(record.target, context.target)),
+      bounds = record?.worldBounds;
+    value('selection-info', '');
+    if ($('selection-info'))
+      $('selection-info').textContent = native
+        ? `${node.source === 'group' ? 'CAD-Gruppe' : node.source === 'step' ? (node.metadata?.importedFile?.type === 'stl' ? 'Rekonstruierter CAD-Körper' : 'STEP-Körper') : 'CAD-Quelle'} · ${node.stats.solids} Körper · ${display(record?.volume ?? node.stats.volume)} mm³`
+        : objectTypeLabel(node);
+    if (bounds && $('measure-label'))
+      $('measure-label').textContent = `Weltgrenzen: ${bounds.size.map(display).join(' × ')} mm`;
+  }
+  function containerDialog(kind, { assignSelected = false } = {}) {
+    const targets = assignSelected ? selected().map((context) => context.target) : [];
+    if (assignSelected && (!targets.length || targets.some((target) => target.path.length)))
+      throw Error('Fertige CAD-Teile zum Bündeln auswählen.');
+    modal(
+      kind === 'layer' ? 'Layer hinzufügen' : 'Ordner hinzufügen',
+      '<label class="dialog-label">Name<input id="container-name" maxlength="200"></label><div class="modal-actions"><button id="container-confirm" class="primary">Hinzufügen</button></div>',
+    );
+    $('container-confirm').onclick = () =>
+      safe(async () => {
+        const name = $('container-name').value.trim();
+        if (!name) throw Error('Containername eingeben.');
+        await edited((draft) => {
+          const id = crypto.randomUUID();
+          if (kind === 'layer') {
+            draft.layers.push({ id, name, hidden: false, locked: false });
+            draft.activeLayerId = id;
+            draft.activeFolderId = null;
+          } else {
+            draft.folders.push({
+              id,
+              name,
+              hidden: false,
+              locked: false,
+              layerId: draft.activeLayerId,
+              parentId: draft.activeFolderId,
+            });
+            draft.activeFolderId = id;
+            for (const target of targets) {
+              const context = cadSelectionContext(draft, target);
+              if (context.locked) throw Error('Das ausgewählte Teil ist gesperrt.');
+              context.node.layerId = draft.activeLayerId;
+              context.node.folderId = id;
+            }
+          }
+        }, 'CAD-Container hinzufügen');
+        $('modal').close();
+      });
+  }
+  function active(p) {
+    return [...p.layers, ...p.folders].find((container) => container.id === (p.activeFolderId || p.activeLayerId));
+  }
+  function renameContainer() {
+    const container = active(project());
+    modal(
+      'Container umbenennen',
+      '<label class="dialog-label">Name<input id="container-name" maxlength="200"></label><div class="modal-actions"><button id="container-confirm" class="primary">Speichern</button></div>',
+    );
+    $('container-name').value = container.name;
+    $('container-confirm').onclick = () =>
+      safe(async () => {
+        const name = $('container-name').value.trim();
+        if (!name) throw Error('Containername eingeben.');
+        await edited((draft) => {
+          active(draft).name = name;
+        }, 'CAD-Container umbenennen');
+        $('modal').close();
+      });
+  }
+  function assignContainer() {
+    const list = selected();
+    if (!list.length || list.some((context) => context.target.path.length))
+      throw Error('Fertige CAD-Teile für die Zuordnung auswählen.');
+    return edited((draft) => {
+      const container = active(draft);
+      if (container.locked) throw Error('Der Zielcontainer ist gesperrt.');
+      for (const context of list) {
+        if (context.locked) throw Error('Das ausgewählte Teil ist gesperrt.');
+        const node = cadSourceAtPath(draft, context.target.rootId);
+        node.layerId = draft.activeLayerId;
+        node.folderId = draft.activeFolderId;
+      }
+    }, 'CAD-Auswahl zuordnen');
+  }
+  function toggleLock(target) {
+    const context = cadSelectionContext(project(), target),
+      own = !!context.node.locked;
+    if (context.locked && !own) throw Error('Sperrung der übergeordneten Gruppe oder des Containers zuerst aufheben.');
+    return edited((draft) => {
+      cadSourceAtPath(draft, target.rootId, target.path).locked = !own;
+    }, 'CAD-Sperrung ändern');
+  }
+  function refresh() {
+    if (disposed) return;
+    renderLibrary();
+    objectTree();
+    refreshInspector();
+    const p = project();
+    value('bed-width', p.bed[0]);
+    value('bed-depth', p.bed[1]);
+    value('workplane', p.workplane.origin[2]);
+    value('coordinate-mode', p.coordinateMode);
+    value('project-name', p.name);
+    value('snap', getPreferences().snap);
+    if ($('plane-info')) {
+      const ref = p.workplane.reference,
+        node = ref && p.nodes.find((node) => node.id === ref.objectId);
+      $('plane-info').textContent = t(
+        ref
+          ? ref.kind === 'mesh'
+            ? node?.kind === 'referenceMesh'
+              ? 'Bezugsfläche einer Ansichtsvorlage'
+              : 'Netz-Bezugsfläche'
+            : 'CAD-Bezugsfläche'
+          : 'Freie Arbeitsebene',
+      );
+      $('plane-info').dataset.referenceKind = ref?.kind ?? (ref ? 'cad' : 'free');
+      $('plane-info').title = ref ? (node?.name ?? '') : 'Die Arbeitsebene ist nicht an eine Objektfläche gebunden.';
+    }
+  }
 
-  if($('size-fields')){const label=element('label','Größenanker','dialog-label'),select=element('select');select.id='size-anchor';select.add(new Option('Bisherige Ecke (Standard)','legacy'));select.add(new Option('Mittelpunkt festhalten','center'));for(let i=0;i<8;i++){const corner=[0,1,2].map(k=>i&(1<<k)?1:-1);select.add(new Option('Ecke '+corner.map((v,k)=>'XYZ'[k]+(v===1?' max':' min')).join(' / '),JSON.stringify({corner})));}label.append(select);$('size-fields').after(label);}
-  for(const key of ['size','pos','rot']){const root=$(`${key}-fields`);if(!root)continue;root.replaceChildren();for(let axis=0;axis<3;axis++){const input=element('input');input.type='text';input.inputMode='decimal';input.id=`${key}-${axis}`;input.setAttribute('aria-label',`${key==='size'?'Größe':key==='pos'?'Position':'Drehung'} ${'XYZ'[axis]}`);input.onfocus=()=>input.select();input.onclick=()=>input.select();root.append(input);
-      const commit=async()=>{if(input.dataset.commitPending)return;input.dataset.commitPending='true';try{const next=number(input),context=one(),p=project(),values=key==='size'?cadFormLocalDimensions(context.node):key==='pos'?cadFormPosition(p,context.target):cadFormOrientation(context.node);const editedValue=preserveUiNumber(next,values[axis]);if(editedValue===values[axis])return;values[axis]=editedValue;await edited(draft=>{const fresh=cadSelectionContext(draft,context.target),replacement=key==='size'?cadResizeForm(fresh.node,values,{proportions:$('proportions').checked,axis,anchor:['legacy','center'].includes($('size-anchor').value)?$('size-anchor').value:JSON.parse($('size-anchor').value)}):key==='pos'?cadSetFormPosition(draft,context.target,values):cadSetFormOrientation(fresh.node,values);cadAssignSource(draft,context.target,replacement);},key==='size'?'CAD-Maße ändern':key==='pos'?'CAD-Position ändern':'CAD-Drehung ändern');}finally{delete input.dataset.commitPending;refreshInspector();}};
-      input.onchange=()=>safe(commit);input.onblur=input.onchange;input.onkeydown=event=>{if(event.key==='Enter')input.blur();if(event.key==='Escape'){const context=one(),values=key==='size'?cadFormLocalDimensions(context.node):key==='pos'?cadFormPosition(project(),context.target):cadFormOrientation(context.node);input.value=display(values[axis]);input.blur();event.stopPropagation();}};
-  }}
-  bind('shape-search','input',renderLibrary);bind('favorites-only','click',()=>{favoritesOnly=!favoritesOnly;$('favorites-only').setAttribute('aria-pressed',String(favoritesOnly));renderLibrary();});bind('settings-open','click',()=>settings.open());
-  bind('object-name','change',()=>selectedEdit(node=>{const name=$('object-name').value.trim();if(!name)throw Error('Objektname eingeben.');node.name=name;},'CAD-Objekt benennen'));bind('object-color','change',()=>selectedEdit(node=>{node.color=$('object-color').value;},'CAD-Farbe ändern'));bind('object-opacity','change',()=>selectedEdit(node=>{node.opacity=number($('object-opacity'))/100;},'CAD-Deckkraft ändern'));bind('object-multicolor','change',()=>selectedEdit(node=>{if(node.kind==='mesh')setMeshColors(node,$('object-multicolor').checked);else node.multicolor=$('object-multicolor').checked;},'CAD-Quellenfarben ändern'));bind('object-notes','change',()=>selectedEdit(node=>{node.metadata={...node.metadata,notes:$('object-notes').value};},'CAD-Modellnotiz ändern'));
-  for(const [id,solid]of [['solid-btn',true],['hole-btn',false]])bind(id,'click',()=>selectedEdit(node=>{if(node.kind==='cad')node.solid=solid;else if(node.kind==='mesh')node.meshRole=solid?'solid':'hole';else throw Error('Eine bearbeitbare Form auswählen.');},solid?'Körperrolle':'Lochrolle'));
-  bind('shape-text','change',()=>form({text:$('shape-text').value}));bind('text-font','change',()=>form({font:$('text-font').value}));bind('segments','change',()=>form({sides:Number($('segments').value)}));if($('segments')){$('segments').replaceChildren(...Array.from({length:30},(_,i)=>new Option(String(i+3),String(i+3))));$('resolution-panel').querySelector('.section-title').textContent='Polygonseiten';}
-  bind('layer-add','click',()=>containerDialog('layer'));bind('folder-add','click',()=>containerDialog('folder'));bind('container-rename','click',renameContainer);bind('container-delete','click',()=>edited(draft=>removeContainer(active(draft).id,draft,draft.nodes),'CAD-Container entfernen'));bind('container-assign','click',assignContainer);
-  for(const [id,axis]of [['bed-width',0],['bed-depth',1]])bind(id,'change',()=>edited(draft=>{draft.bed[axis]=number($(id));},'CAD-Arbeitsfläche ändern'));
-  bind('workplane','change',()=>edited(draft=>{draft.workplane={origin:[0,0,number($('workplane'))],orientation:[0,0,0,1],reference:null};},'Horizontale Arbeitsebene ändern'));bind('coordinate-mode','change',()=>edited(draft=>{draft.coordinateMode=$('coordinate-mode').value;},'CAD-Koordinatensystem ändern'));bind('project-name','change',()=>edited(draft=>{draft.name=$('project-name').value;},'CAD-Projekt benennen'));bind('snap','change',()=>setPreferences({...getPreferences(),snap:Number($('snap').value)}));
-  const actions={library:()=>library.open(),'show-all':()=>edited(draft=>{const visit=node=>{node.hidden=false;node.children?.forEach(visit);};draft.nodes.forEach(visit);[...draft.layers,...draft.folders].forEach(container=>container.hidden=false);},'CAD-Objekte einblenden'),hide:()=>{const list=selected();return edited(draft=>{for(const context of list){if(context.locked)throw Error('Die CAD-Quelle ist gesperrt.');cadSourceAtPath(draft,context.target.rootId,context.target.path).hidden=true;}},'CAD-Auswahl ausblenden');},lock:()=>{const list=selected(),locked=!list.every(context=>context.node.locked);return edited(draft=>{for(const context of list){if(context.locked&&!context.node.locked)throw Error('Sperrung der übergeordneten Gruppe oder des Containers zuerst aufheben.');cadSourceAtPath(draft,context.target.rootId,context.target.path).locked=locked;}},'CAD-Sperrung ändern');},bundle:()=>containerDialog('folder',{assignSelected:true})};
-  refresh();return {refresh,renderLibrary,getTreeState,restoreTreeState,openLibrary:()=>library.open(),settings,library,actions,changeParameter:(key,value)=>form({params:{[key]:value}}),dispose:()=>{disposed=true;listeners.forEach(remove=>remove());fonts?.dispose();library.dispose();settings.dispose?.();}};
+  if ($('size-fields')) {
+    const label = element('label', 'Größenanker', 'dialog-label'),
+      select = element('select');
+    select.id = 'size-anchor';
+    select.add(new Option('Bisherige Ecke (Standard)', 'legacy'));
+    select.add(new Option('Mittelpunkt festhalten', 'center'));
+    for (let i = 0; i < 8; i++) {
+      const corner = [0, 1, 2].map((k) => (i & (1 << k) ? 1 : -1));
+      select.add(
+        new Option(
+          'Ecke ' + corner.map((v, k) => 'XYZ'[k] + (v === 1 ? ' max' : ' min')).join(' / '),
+          JSON.stringify({ corner }),
+        ),
+      );
+    }
+    label.append(select);
+    $('size-fields').after(label);
+  }
+  for (const key of ['size', 'pos', 'rot']) {
+    const root = $(`${key}-fields`);
+    if (!root) continue;
+    root.replaceChildren();
+    for (let axis = 0; axis < 3; axis++) {
+      const input = element('input');
+      input.type = 'text';
+      input.inputMode = 'decimal';
+      input.id = `${key}-${axis}`;
+      input.setAttribute(
+        'aria-label',
+        `${key === 'size' ? 'Größe' : key === 'pos' ? 'Position' : 'Drehung'} ${'XYZ'[axis]}`,
+      );
+      input.onfocus = () => input.select();
+      input.onclick = () => input.select();
+      root.append(input);
+      const commit = async () => {
+        if (input.dataset.commitPending) return;
+        input.dataset.commitPending = 'true';
+        try {
+          const next = number(input),
+            context = one(),
+            p = project(),
+            values =
+              key === 'size'
+                ? cadFormLocalDimensions(context.node)
+                : key === 'pos'
+                  ? cadFormPosition(p, context.target)
+                  : cadFormOrientation(context.node);
+          const editedValue = preserveUiNumber(next, values[axis]);
+          if (editedValue === values[axis]) return;
+          values[axis] = editedValue;
+          await edited(
+            (draft) => {
+              const fresh = cadSelectionContext(draft, context.target),
+                replacement =
+                  key === 'size'
+                    ? cadResizeForm(fresh.node, values, {
+                        proportions: $('proportions').checked,
+                        axis,
+                        anchor: ['legacy', 'center'].includes($('size-anchor').value)
+                          ? $('size-anchor').value
+                          : JSON.parse($('size-anchor').value),
+                      })
+                    : key === 'pos'
+                      ? cadSetFormPosition(draft, context.target, values)
+                      : cadSetFormOrientation(fresh.node, values);
+              cadAssignSource(draft, context.target, replacement);
+            },
+            key === 'size' ? 'CAD-Maße ändern' : key === 'pos' ? 'CAD-Position ändern' : 'CAD-Drehung ändern',
+          );
+        } finally {
+          delete input.dataset.commitPending;
+          refreshInspector();
+        }
+      };
+      input.onchange = () => safe(commit);
+      input.onblur = input.onchange;
+      input.onkeydown = (event) => {
+        if (event.key === 'Enter') input.blur();
+        if (event.key === 'Escape') {
+          const context = one(),
+            values =
+              key === 'size'
+                ? cadFormLocalDimensions(context.node)
+                : key === 'pos'
+                  ? cadFormPosition(project(), context.target)
+                  : cadFormOrientation(context.node);
+          input.value = display(values[axis]);
+          input.blur();
+          event.stopPropagation();
+        }
+      };
+    }
+  }
+  bind('shape-search', 'input', renderLibrary);
+  bind('favorites-only', 'click', () => {
+    favoritesOnly = !favoritesOnly;
+    $('favorites-only').setAttribute('aria-pressed', String(favoritesOnly));
+    renderLibrary();
+  });
+  bind('settings-open', 'click', () => settings.open());
+  bind('object-name', 'change', () =>
+    selectedEdit((node) => {
+      const name = $('object-name').value.trim();
+      if (!name) throw Error('Objektname eingeben.');
+      node.name = name;
+    }, 'CAD-Objekt benennen'),
+  );
+  bind('object-color', 'change', () =>
+    selectedEdit((node) => {
+      node.color = $('object-color').value;
+    }, 'CAD-Farbe ändern'),
+  );
+  bind('object-opacity', 'change', () =>
+    selectedEdit((node) => {
+      node.opacity = number($('object-opacity')) / 100;
+    }, 'CAD-Deckkraft ändern'),
+  );
+  bind('object-multicolor', 'change', () =>
+    selectedEdit((node) => {
+      if (node.kind === 'mesh') setMeshColors(node, $('object-multicolor').checked);
+      else node.multicolor = $('object-multicolor').checked;
+    }, 'CAD-Quellenfarben ändern'),
+  );
+  bind('object-notes', 'change', () =>
+    selectedEdit((node) => {
+      node.metadata = { ...node.metadata, notes: $('object-notes').value };
+    }, 'CAD-Modellnotiz ändern'),
+  );
+  for (const [id, solid] of [
+    ['solid-btn', true],
+    ['hole-btn', false],
+  ])
+    bind(id, 'click', () =>
+      selectedEdit(
+        (node) => {
+          if (node.kind === 'cad') node.solid = solid;
+          else if (node.kind === 'mesh') node.meshRole = solid ? 'solid' : 'hole';
+          else throw Error('Eine bearbeitbare Form auswählen.');
+        },
+        solid ? 'Körperrolle' : 'Lochrolle',
+      ),
+    );
+  bind('shape-text', 'change', () => form({ text: $('shape-text').value }));
+  bind('text-font', 'change', () => form({ font: $('text-font').value }));
+  bind('segments', 'change', () => form({ sides: Number($('segments').value) }));
+  if ($('segments')) {
+    $('segments').replaceChildren(...Array.from({ length: 30 }, (_, i) => new Option(String(i + 3), String(i + 3))));
+    $('resolution-panel').querySelector('.section-title').textContent = 'Polygonseiten';
+  }
+  bind('layer-add', 'click', () => containerDialog('layer'));
+  bind('folder-add', 'click', () => containerDialog('folder'));
+  bind('container-rename', 'click', renameContainer);
+  bind('container-delete', 'click', () =>
+    edited((draft) => removeContainer(active(draft).id, draft, draft.nodes), 'CAD-Container entfernen'),
+  );
+  bind('container-assign', 'click', assignContainer);
+  for (const [id, axis] of [
+    ['bed-width', 0],
+    ['bed-depth', 1],
+  ])
+    bind(id, 'change', () =>
+      edited((draft) => {
+        draft.bed[axis] = number($(id));
+      }, 'CAD-Arbeitsfläche ändern'),
+    );
+  bind('workplane', 'change', () =>
+    edited((draft) => {
+      draft.workplane = { origin: [0, 0, number($('workplane'))], orientation: [0, 0, 0, 1], reference: null };
+    }, 'Horizontale Arbeitsebene ändern'),
+  );
+  bind('coordinate-mode', 'change', () =>
+    edited((draft) => {
+      draft.coordinateMode = $('coordinate-mode').value;
+    }, 'CAD-Koordinatensystem ändern'),
+  );
+  bind('project-name', 'change', () =>
+    edited((draft) => {
+      draft.name = $('project-name').value;
+    }, 'CAD-Projekt benennen'),
+  );
+  bind('snap', 'change', () => setPreferences({ ...getPreferences(), snap: Number($('snap').value) }));
+  const actions = {
+    library: () => library.open(),
+    'show-all': () =>
+      edited((draft) => {
+        const visit = (node) => {
+          node.hidden = false;
+          node.children?.forEach(visit);
+        };
+        draft.nodes.forEach(visit);
+        [...draft.layers, ...draft.folders].forEach((container) => (container.hidden = false));
+      }, 'CAD-Objekte einblenden'),
+    hide: () => {
+      const list = selected();
+      return edited((draft) => {
+        for (const context of list) {
+          if (context.locked) throw Error('Die CAD-Quelle ist gesperrt.');
+          cadSourceAtPath(draft, context.target.rootId, context.target.path).hidden = true;
+        }
+      }, 'CAD-Auswahl ausblenden');
+    },
+    lock: () => {
+      const list = selected(),
+        locked = !list.every((context) => context.node.locked);
+      return edited((draft) => {
+        for (const context of list) {
+          if (context.locked && !context.node.locked)
+            throw Error('Sperrung der übergeordneten Gruppe oder des Containers zuerst aufheben.');
+          cadSourceAtPath(draft, context.target.rootId, context.target.path).locked = locked;
+        }
+      }, 'CAD-Sperrung ändern');
+    },
+    bundle: () => containerDialog('folder', { assignSelected: true }),
+  };
+  refresh();
+  return {
+    refresh,
+    renderLibrary,
+    getTreeState,
+    restoreTreeState,
+    openLibrary: () => library.open(),
+    settings,
+    library,
+    actions,
+    changeParameter: (key, value) => form({ params: { [key]: value } }),
+    dispose: () => {
+      disposed = true;
+      listeners.forEach((remove) => remove());
+      fonts?.dispose();
+      library.dispose();
+      settings.dispose?.();
+    },
+  };
 }
