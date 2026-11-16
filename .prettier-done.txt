@@ -497,3 +497,4 @@ src/cad-ai-context.js
 src/mesh-engine-adapter.js
 src/ai-feedback.js
 src/cad-recipes.js
+src/cad-controller.js
