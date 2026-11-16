@@ -1,5 +1,12 @@
 # Technischer Projektkontext
 
+P3-4f2: Der KI-Task-Helfer in `src/cad-controller-ai-task.js` übernimmt
+auch die Analyse- und Motion-Abfrageabläufe. Analyse, Kollision und
+Bewegungsbereich verwenden dieselben Analyse-Owner wie die Vorschauprüfung.
+Der Controller liefert weiterhin Szenenbeschreibung, Geometrie und
+fachliche Abfragen. Analyseberichte und die Freigabe der Owner behalten
+ihre bisherige Reihenfolge.
+
 P3-4f1: Der KI-Task-Zustand eines CAD-Controllers liegt in
 `src/cad-controller-ai-task.js`: ein Arbeitsbereich, die Konvertersperren,
 die gebundene Modellrevision und die laufenden Analyse-Owner samt ihren

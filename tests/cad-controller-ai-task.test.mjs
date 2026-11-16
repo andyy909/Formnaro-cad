@@ -345,6 +345,42 @@ test('A running analysis blocks preview, capture, restore and begin until the ru
   assert.equal(cad.state().busy, false);
 });
 
+test('Analyze calls the controller callbacks without assigning a receiver', async (t) => {
+  const events = [];
+  const cad = controller(t, {
+    onBusy: function (value) {
+      events.push({ callback: 'busy', receiver: this, value });
+    },
+    resolveGeometry: async function (project, _progress, { signal }) {
+      events.push({ callback: 'geometry', receiver: this, value: project.nodes[0].id });
+      assert.equal(signal.aborted, false);
+      return project;
+    },
+    getProgramResources: function () {
+      events.push({ callback: 'resources', receiver: this });
+      return { fixture: 'local' };
+    },
+    runScript: async ({ call }) => {
+      const model = await call('model');
+      return { firstId: model.objects[0].id };
+    },
+  });
+
+  const result = await cad.analyze([
+    { id: 'model', engine: 'javascript', kind: 'run', options: { code: 'return {};' } },
+    { id: 'catalog', engine: 'app', kind: 'resources' },
+  ]);
+
+  assert.equal(result.results[0].value.firstId, 'source');
+  assert.equal(result.results[1].value.fixture, 'local');
+  assert.deepEqual(events, [
+    { callback: 'busy', receiver: undefined, value: true },
+    { callback: 'geometry', receiver: undefined, value: 'source' },
+    { callback: 'resources', receiver: undefined },
+    { callback: 'busy', receiver: undefined, value: false },
+  ]);
+});
+
 test('Cancel aborts the open runner signal while its owner stays registered until the finally release', async (t) => {
   const opened = abortableRunner();
   const cad = controller(t, { runScript: opened.runner });

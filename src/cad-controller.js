@@ -1,4 +1,3 @@
-import { cadScopedScene } from './cad-scoped-scene.js';
 import { editInspection, inspectionStatus, inspectionBasis } from './cad-inspection-state.js';
 import { checkCadMotionRange } from './cad-motion-range.js';
 import { createCadPreviewPublisher } from './cad-preview-publisher.js';
@@ -54,9 +53,7 @@ import { runMixedCadAIBatch } from './cad-mixed-ai.js';
 import { runCadPython } from './cad-python.js';
 import { runFreeCADPlan } from './cad-freecad.js';
 import { runCadAIScript } from './cad-ai-sandbox.js';
-import { AI_PROGRAM_TOOLS } from './cad-ai-program.js';
 import { runModelConversion, queryProgramResources } from './cad-ai-local-tools.js';
-import { validateAIAnalysis, compactAIAnalysisResult, localAIAnalysisResult } from './cad-ai-analysis.js';
 import { validateAIResultChecks, resolveAIResultTarget, aiCheckFailure } from './cad-ai-result-checks.js';
 import { projectObjectGeometryDigest } from './project-objects.js';
 import { prepareCadTranslationView } from './cad-translation-view.js';
@@ -1123,7 +1120,27 @@ export function createCadController({
   };
   // The AI task state is created after the store and the lifecycle guard. The
   // transaction build callback closes over it and only calls it at runtime.
-  const aiTask = createCadControllerAITask({ store, alive, runScript, runPython, convertModel });
+  const aiTask = createCadControllerAITask({
+    store,
+    alive,
+    runScript,
+    runPython,
+    convertModel,
+    analysis: {
+      resolveGeometry,
+      getFonts,
+      getProgramResources,
+      onBusy,
+      freecadOperation,
+      query,
+      modelComparison,
+      meshQuery,
+      checkJointCollision,
+      checkMotionRange,
+      describe,
+      assertPreviewStart,
+    },
+  });
   function assertPreviewStart(revision, analysisOwner) {
     alive();
     assertWritable();
@@ -1718,31 +1735,11 @@ export function createCadController({
   async function previewInspection(request, options = {}) {
     return preview({ kind: 'inspection', request }, options);
   }
-  async function motionQuery(revision, signal, owner, run) {
-    assertPreviewStart(revision, owner);
-    const owned = !aiTask.owns(owner),
-      abort = owned ? new AbortController() : owner;
-    if (owned) {
-      aiTask.track(abort);
-      onBusy(true);
-    }
-    const activeSignal = signal ? AbortSignal.any([signal, abort.signal]) : abort.signal;
-    try {
-      if (activeSignal.aborted)
-        throw Object.assign(Error('Messauftrag abgebrochen.'), { name: 'AbortError', code: 'ABORTED' });
-      return await run(activeSignal, abort);
-    } finally {
-      if (owned) {
-        aiTask.untrack(abort);
-        onBusy(store.state().busy || aiTask.busy());
-      }
-    }
-  }
   async function checkJointCollision(
     request,
     { revision = store.revision(), signal, analysisOwner, record = true } = {},
   ) {
-    return motionQuery(revision, signal, analysisOwner, async (signal) => {
+    return aiTask.motionQuery(revision, signal, analysisOwner, async (signal) => {
       if (
         !request ||
         Object.keys(request).some(
@@ -1907,7 +1904,7 @@ export function createCadController({
     });
   }
   async function checkMotionRange(request, { revision = store.revision(), signal, analysisOwner } = {}) {
-    return motionQuery(revision, signal, analysisOwner, async (signal, owner) =>
+    return aiTask.motionQuery(revision, signal, analysisOwner, async (signal, owner) =>
       rememberInspection(
         'motionRange',
         await checkCadMotionRange({
@@ -2397,168 +2394,6 @@ export function createCadController({
         'STEP-Export unabhängig mit FreeCAD gelesen. Geometriegültigkeit; keine Maßhaltigkeits- oder Fertigungsfreigabe.',
     };
   }
-  async function analyze(requests, { reportBudget = 14000, signal } = {}) {
-    if (aiTask.busy()) throw Object.assign(Error('Eine lokale Berechnung läuft bereits.'), { code: 'BUSY' });
-    aiTask.ensureCurrent();
-    if (!Number.isInteger(reportBudget) || reportBudget < 2000 || reportBudget > 32000)
-      throw Object.assign(
-        Error(
-          'Messberichtbudget muss zwischen 2000 und 32000 Zeichen liegen. Bei kleinem Restbudget vorhandene Seiten verwenden.',
-        ),
-        { code: 'AI_ANALYSIS_INVALID' },
-      );
-    const revision = store.revision(),
-      results = [],
-      validated = validateAIAnalysis(requests),
-      localAbort = new AbortController();
-    signal = signal ? AbortSignal.any([signal, localAbort.signal]) : localAbort.signal;
-    aiTask.track(localAbort);
-    onBusy(true);
-    try {
-      for (const q of validated) {
-        if (signal.aborted) throw Object.assign(Error('Lokale Berechnung abgebrochen.'), { code: 'ABORTED' });
-        const options = q.options ?? {};
-        let value;
-        if (q.engine === 'workspace') value = await aiTask.workspaceQuery(q.kind, options);
-        else if (['python', 'javascript'].includes(q.engine)) {
-          const project = await resolveGeometry(store.readSnapshot(), null, { signal });
-          value = await aiTask.runIsolated(q.engine === 'python' ? 'python' : 'javascript', {
-            ...options,
-            signal,
-            timeoutMs: 300000,
-            call: async (method, args) => {
-              if (signal?.aborted) throw Object.assign(Error('Berechnung abgebrochen.'), { code: 'ABORTED' });
-              if (store.revision() !== revision)
-                throw Object.assign(Error('Modell während der Berechnung geändert.'), { code: 'STALE_REVISION' });
-              if (method === 'model') {
-                const snapshot = cadProjectSnapshot(project);
-                return { ...snapshot, objects: snapshot.nodes };
-              }
-              if (
-                method !== 'query' ||
-                !args ||
-                !Object.hasOwn(AI_PROGRAM_TOOLS.queries, args.engine) ||
-                !AI_PROGRAM_TOOLS.queries[args.engine].includes(args.kind)
-              )
-                throw Object.assign(Error('Analyse darf nur messen; Modelländerungen gehören in eine Vorschau.'), {
-                  code: 'AI_ANALYSIS_READ_ONLY',
-                });
-              const o = args.options ?? {};
-              if (args.engine === 'workspace') return aiTask.workspaceQuery(args.kind, o);
-              if (args.engine === 'freecad') return freecadOperation(project, { ...o, kind: 'inspect' }, signal);
-              if (args.engine === 'cad') return query(args.kind, o, { signal });
-              if (args.engine === 'app' && args.kind === 'modelComparison')
-                return modelComparison(o, { signal, project });
-              if (args.engine === 'app' && ['jointCollision', 'motionRange'].includes(args.kind))
-                throw Error('Gelenkkollision separat als Messauftrag ausführen.');
-              if (args.engine === 'app')
-                return queryProgramResources({
-                  project,
-                  kind: args.kind,
-                  options: o,
-                  getFonts,
-                  getResources: getProgramResources,
-                  signal,
-                });
-              if (args.engine === 'converter')
-                return aiTask.convertModel({
-                  project,
-                  action: 'analyze',
-                  target: typeof o.target === 'string' ? { rootId: o.target, path: [] } : o.target,
-                  options: o.options,
-                  edits: o.edits,
-                  commands: o.commands,
-                  signal,
-                });
-              const target = o.id ?? o.nodeId ?? o.target,
-                id = typeof target === 'string' ? target : target?.path?.length === 0 ? target.rootId : null;
-              return meshQuery(
-                ['inspectSolid', 'analyzeEdges'].includes(args.kind) ? args.kind : 'toolsQuery',
-                {
-                  ...o,
-                  id,
-                  ...(['inspectSolid', 'analyzeEdges'].includes(args.kind)
-                    ? {}
-                    : { kind: args.kind === 'toolsQuery' ? o.kind : args.kind }),
-                },
-                { signal },
-              );
-            },
-          });
-        } else if (q.engine === 'freecad')
-          value = await freecadOperation(store.readSnapshot(), { ...options, kind: 'inspect' }, signal);
-        else if (q.engine === 'cad') value = await query(q.kind, options, { signal });
-        else if (q.engine === 'app' && q.kind === 'sceneScope') {
-          if (!Object.keys(options).length) throw Error('Gezielte Szene: ids, targets oder rootsOnly angeben.');
-          const project = store.readSnapshot();
-          value = cadScopedScene(await describe(project), project, options);
-        } else if (q.engine === 'app' && q.kind === 'modelComparison')
-          value = await modelComparison(options, { signal });
-        else if (q.engine === 'app' && q.kind === 'jointCollision')
-          value = await checkJointCollision(options, { revision, signal, analysisOwner: localAbort });
-        else if (q.engine === 'app' && q.kind === 'motionRange')
-          value = await checkMotionRange(options, { revision, signal, analysisOwner: localAbort });
-        else if (q.engine === 'app')
-          value = await queryProgramResources({
-            project: store.readSnapshot(),
-            kind: q.kind,
-            options,
-            getFonts,
-            getResources: getProgramResources,
-            signal,
-          });
-        else {
-          const target = options.id ?? options.nodeId ?? options.target,
-            id =
-              typeof target === 'string'
-                ? target
-                : Array.isArray(target?.path) && !target.path.length
-                  ? target.rootId
-                  : null;
-          if (typeof id !== 'string') throw Error('Ein vollständiges Netzteil für die Messung wählen.');
-          value = await meshQuery(
-            q.kind === 'inspectSolid' ? 'inspectSolid' : 'toolsQuery',
-            { id, ...(q.kind === 'inspectSolid' ? {} : { kind: q.kind, options: options.options }) },
-            { signal },
-          );
-        }
-        if (store.revision() !== revision)
-          throw Object.assign(Error('Modell während der Messung geändert.'), { code: 'STALE_REVISION' });
-        const computation = ['python', 'javascript'].includes(q.engine) || (q.engine === 'freecad' && !!options.script),
-          token = crypto.randomUUID(),
-          artifacts = {};
-        let program;
-        if (computation) {
-          const path = 'analysis-programs/' + token + (q.engine === 'javascript' ? '.js' : '.py'),
-            bundlePath = 'analysis-programs/' + token + '.program.json';
-          artifacts[path] = options.script?.code ?? options.code;
-          artifacts[bundlePath] = JSON.stringify({ version: 1, engine: q.engine, kind: q.kind, options });
-          program = {
-            name: options.script?.name ?? options.name ?? q.id,
-            language: q.engine === 'freecad' ? 'freecad-python' : q.engine,
-            path,
-            bundlePath,
-          };
-        }
-        const reported = localAIAnalysisResult(value, {
-          report: q.report,
-          budget: Math.floor((reportBudget - 1200) / validated.length),
-          atomic: computation,
-          save: (text) => {
-            const path = 'analysis-results/' + token + '.json';
-            artifacts[path] = text;
-            return path;
-          },
-        });
-        if (Object.keys(artifacts).length) aiTask.archiveArtifacts(artifacts);
-        results.push({ id: q.id, engine: q.engine, kind: q.kind, ...(program ? { program } : {}), value: reported });
-      }
-      return compactAIAnalysisResult({ revision, results });
-    } finally {
-      aiTask.untrack(localAbort);
-      onBusy(store.state().busy);
-    }
-  }
   function discard(previewId) {
     previews.delete(previewId);
     replacementPreviews.delete(previewId);
@@ -2628,7 +2463,7 @@ export function createCadController({
     execute,
     apply,
     query,
-    analyze,
+    analyze: aiTask.analyze,
     checkPreview,
     inspectFreeCADPreview,
     display,
