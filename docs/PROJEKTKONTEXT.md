@@ -9,7 +9,7 @@ ausstehende Tests stehen bei den betroffenen Dateien. Mit
 Timeouts für eine lokale Diagnose einbeziehen.
 
 Die CI verteilt die Manifest-Auswahl mit `--balance-by-duration=ci` je auf
-zwei Windows- und Linux-Runner. `scripts/ci-test-durations.json` enthält
+zwei Windows- und Linux-Runner. `tests/ci-test-durations.json` enthält
 plattformspezifische Medianwerte aus vollständigen PR-Läufen und die
 gemessene Zusatzlast des ersten Windows-Jobs. Neue Manifestdateien gehen
 mit ihrer Manifestdauer oder der bisherigen Sekunde als Schätzwert ein.

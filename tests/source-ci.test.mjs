@@ -5,7 +5,7 @@ import { selectNodeTests } from '../scripts/select-node-tests.mjs';
 import { findPullRequestRun } from '../scripts/source-ci-trigger.mjs';
 
 const manifest = JSON.parse(readFileSync(new URL('./manifest.json', import.meta.url), 'utf8'));
-const durationProfile = JSON.parse(readFileSync(new URL('../scripts/ci-test-durations.json', import.meta.url), 'utf8'));
+const durationProfile = JSON.parse(readFileSync(new URL('./ci-test-durations.json', import.meta.url), 'utf8'));
 const nodeTest = (name, options) => ({ file: `tests/${name}.test.mjs`, kind: 'node', status: 'pass', ...options });
 const windowsShard = (entries, shard, extra) => selectNodeTests(entries, {
   platform: 'win32', shard, shardCount: 2, balanceByDuration: true, ...extra,

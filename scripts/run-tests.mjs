@@ -21,7 +21,7 @@ if (args.size || !Number.isSafeInteger(shard) || !Number.isSafeInteger(shardCoun
 const root = fileURLToPath(new URL('../', import.meta.url));
 const manifest = JSON.parse(readFileSync(root + 'tests/manifest.json', 'utf8'));
 const durationProfile = useCiDurations && shardCount > 1
-  ? JSON.parse(readFileSync(new URL('./ci-test-durations.json', import.meta.url), 'utf8'))
+  ? JSON.parse(readFileSync(new URL('../tests/ci-test-durations.json', import.meta.url), 'utf8'))
   : undefined;
 const { tests, selectedCount, estimatedSeconds } = selectNodeTests(manifest, {
   platform: process.platform, includeFailing, shard, shardCount, balanceByDuration, durationProfile,
