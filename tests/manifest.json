@@ -72,6 +72,7 @@
   {"file":"tests/app-recovery.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.135},
   {"file":"tests/app-startup.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.118},
   {"file":"tests/app-ui-helpers.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.12},
+  {"file":"tests/app-window.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.252},
   {"file":"tests/app-workspace-io.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.211},
   {"file":"tests/audit-ai-regressions.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.576},
   {"file":"tests/audit-assembly-display-release.test.mjs","referencedBy":["test:assembly-display"],"kind":"node","status":"pass","seconds":0.2},

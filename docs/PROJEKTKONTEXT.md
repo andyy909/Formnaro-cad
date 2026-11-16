@@ -1,5 +1,11 @@
 # Technischer Projektkontext
 
+P3-4d: `backend/app-window.cjs` installiert Popup-Sperre, Navigationswächter
+und Autosicherungs-Wrapper für Neuladen und Schließen. Die ausstehenden
+Aktionen und die Freigabe zum Schließen gehören zum jeweiligen Fenster.
+Die Renderer-Wiederherstellung bindet weiterhin vor dieser Installation
+den ursprünglichen Reload.
+
 P3-4g: `exportModel` und `assertExportReady` liegen in
 `src/cad-controller-export.js`. Der Controller übergibt die vorhandene
 Lebensdauerprüfung, den Transaktionsstore, beide Worker sowie die Rückmeldungen

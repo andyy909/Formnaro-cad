@@ -74,26 +74,7 @@ app.whenReady().then(async () => {
   let quittingSources=false,sourceCleanupDone=false;app.on('before-quit',event=>{if(!win.isDestroyed()||!projectStore.hasPackageSources()||sourceCleanupDone)return;event.preventDefault();if(quittingSources)return;quittingSources=true;projectStore.close().catch(error=>console.error('Private package source cleanup: '+error.message)).finally(()=>{sourceCleanupDone=true;app.quit();});});
   const {installLayouts,layoutDirectory}=require('./backend/layouts.cjs');
   installLayouts(win,{directory:layoutDirectory(app,{verificationPath:verifyPath})});
-  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-  const reloadWindow=win.reload.bind(win);let reloadPending=false;
-  win.reload=()=>{
-    if(reloadPending||win.isDestroyed())return;
-    reloadPending=true;
-    void win.webContents.executeJavaScript('window.__formnaroFlushRecovery?.() ?? true').then(saved=>{
-      if(saved===true&&!win.isDestroyed())reloadWindow();
-    }).catch(error=>console.error('Autosicherung beim Neuladen: '+error.message)).finally(()=>{reloadPending=false;});
-  };
-  let closeApproved=false,closePending=false;
-  win.on('close',event=>{
-    if(closeApproved||win.webContents.isLoadingMainFrame())return;
-    event.preventDefault();
-    if(closePending)return;
-    closePending=true;
-    win.webContents.executeJavaScript('window.__formnaroFlushRecovery?.() ?? true').then(saved=>{
-      if(saved===true&&!win.isDestroyed()){closeApproved=true;win.close();}
-    }).catch(error=>console.error('Autosicherung beim Schließen: '+error.message)).finally(()=>{closePending=false;});
-  });
-  require('./backend/navigation-guard.cjs').installNavigationGuard(win,{entry:path.join(__dirname,'dist','index.html'),query:verifyPath?{test:'1'}:undefined});
+  require('./backend/app-window.cjs').installAppWindow(win,{entry:path.join(__dirname,'dist','index.html'),query:verifyPath?{test:'1'}:undefined});
   if(verifyPath)win.webContents.on('console-message',e=>{if(e.level==='error'&&!/WebGL.*CONTEXT_LOST/.test(e.message))toolVerificationErrors.push(e.message);});
   // Only isolated acceptance instances enter this teardown. Stop both worker
   // families and the converter before destroying their hidden test window.
