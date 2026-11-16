@@ -522,6 +522,7 @@
   {"file":"tests/practice-native-verification-checks.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.253},
   {"file":"tests/practice-overlay.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":3.031},
   {"file":"tests/practice-parent.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.575},
+  {"file":"tests/practice-photo-verification.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.651,"textCoupled":true,"note":"Checks dispatch gates and source placement alongside the unscaled result and portable copy filter."},
   {"file":"tests/practice-playback.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.181},
   {"file":"tests/practice-provider.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.364},
   {"file":"tests/practice-quality.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.194},
