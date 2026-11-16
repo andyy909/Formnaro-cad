@@ -1,5 +1,12 @@
 # Technischer Projektkontext
 
+P3-5f: Die native Workspace-Verifikation aktiviert für ihre Rekonstruktions-
+Vorschau ausdrücklich die benötigten Körper- und Volumenprüfungen über den
+vorhandenen Einstellungsdialog. Anschließend stellt sie im `finally` die
+vorherige Prüfkonfiguration wieder her. Der zusätzliche Verifikationsbericht
+enthält die tatsächlich ausgeführten Messungen; Produktdefaults und die
+ursprünglichen Geometrie-, Undo- und Abbruchprüfungen bleiben unverändert.
+
 P3-4f2: Der KI-Task-Helfer in `src/cad-controller-ai-task.js` übernimmt
 auch die Analyse- und Motion-Abfrageabläufe. Analyse, Kollision und
 Bewegungsbereich verwenden dieselben Analyse-Owner wie die Vorschauprüfung.

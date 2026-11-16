@@ -76,7 +76,13 @@ result={'diameter':tool.diameter(np.c_[6*np.cos(t),6*np.sin(t)]),'files':await w
   const selectedValue=selected.results[0].value.value;check(selectedValue.count===4000&&selectedValue.last[1]===3999*3999&&selectedValue.textLength===36000&&selectedValue.sourceComplete,'A later real Python worker reads the entire original result and complete source without truncation or remeasurement');
   check(await run('window.__cadTest.serialize()')===base&&await run('window.__cadTest.undoDepth()')===undo,'Oversized result persistence and targeted summaries leave the open original and Undo unchanged');
   const code="from formnaro import model, workspace\nd=await workspace.read_json('measured.json')\np=model.box(*d['size'],origin=d['minimum'])\nh=model.cylinder(2,22,origin=(90,0,-1),hole=True)\nmodel.cut(p,h,alias='result')";
-  const preview=await run(`window.__cadTest.access.preview({revision:window.__cadTest.access.scene().revision,commands:[{op:'python',name:'Gemessene CAD-Kopie',code:${JSON.stringify(code)}}],checks:[{kind:'solids',target:'$result',expected:1},{kind:'volume',target:'$result',expected:${8000-80*Math.PI},tolerance:.001}]})`);
+  // Enable this fixture's required checks only for its preview, then restore the caller's configuration.
+  const checkConfig=await run("window.__cadTest.storage.getItem('formnaro-model-checks-v1')");let preview;
+  try{
+   await run("document.getElementById('ai-model-strictness-settings').click();document.getElementById('ai-check-mode').value='checked';document.getElementById('ai-check-mode').dispatchEvent(new Event('change'));document.querySelector('[data-check-key=solids]').checked=true;document.querySelector('[data-check-key=volume]').checked=true;document.getElementById('ai-check-save').click();void 0");
+   preview=await run(`window.__cadTest.access.preview({revision:window.__cadTest.access.scene().revision,commands:[{op:'python',name:'Gemessene CAD-Kopie',code:${JSON.stringify(code)}}],checks:[{kind:'solids',target:'$result',expected:1},{kind:'volume',target:'$result',expected:${8000-80*Math.PI},tolerance:.001}]})`);
+  }finally{await run(`(()=>{const s=window.__cadTest.storage,key='formnaro-model-checks-v1',value=${JSON.stringify(checkConfig)};if(value===null)s.removeItem(key);else s.setItem(key,value);})()`);}
+  fs.writeFileSync(path.join(directory,'analysis-preview-verification.json'),JSON.stringify(preview.verification,null,2));
   check(preview.verification.passed!==false&&preview.verification.checks.length===2,'Persisted measured dimensions drive real native CAD construction with independent volume and solid checks');
   check(await run('window.__cadTest.serialize()')===base,'Measured reconstruction remains an uncommitted preview');
   await run(`window.__cadTest.access.apply({previewId:${JSON.stringify(preview.previewId)},revision:${JSON.stringify(preview.revision)}})`);await run('window.__cadTest.settled()');
