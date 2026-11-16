@@ -1,5 +1,9 @@
 # Technischer Projektkontext
 
+P3-3b: Die gemeinsamen UI-Helfer für Meldungen, Fehlerbehandlung, Dialoge,
+Dateiexport und Busy-Anzeige liegen in `src/app/ui-helpers.js`. Der CAD-Einstieg
+behält die Dialog-Aufräumfolge und den gemeinsam genutzten Busy-Zustand.
+
 Die Quellenprüfung verwendet `npm run test:inventory` für die Testübersicht
 und `npm run test:all` für die gemessenen grünen Node-Dateien unter Windows
 und Linux. Das Inventar in `tests/manifest.json` hält Electron- und
