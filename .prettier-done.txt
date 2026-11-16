@@ -319,3 +319,4 @@ src/cad-ai-request.js
 src/cad-persistence.js
 src/cad-reference-tools-ui.js
 src/cad-joints-automation.js
+src/i18n.js
