@@ -1,5 +1,10 @@
 # Technischer Projektkontext
 
+P3-4e: Die vier reinen Controller-Helfer für Modellschlüssel und das
+Zusammenführen von Zeichnungsberichten liegen in
+src/cad-controller-model-keys.js. Die bisherigen Feldfilter, Reihenfolgen
+und Berichtswerte bleiben unverändert; der Controller importiert die Helfer.
+
 P3-4a: Elf Electron-Prüfmodi schreiben ihre JSON-Erfolgsberichte über
 backend/verification-report.cjs. Der jeweilige Prüfzweig baut den Inhalt
 wie bisher. Das Hilfsmodul wird nur im Prüfmodus geladen und fällt beim

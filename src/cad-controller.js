@@ -2,6 +2,12 @@ import { cadScopedScene } from './cad-scoped-scene.js';
 import { editInspection, inspectionStatus, inspectionBasis } from './cad-inspection-state.js';
 import { checkCadMotionRange } from './cad-motion-range.js';
 import { createCadPreviewPublisher } from './cad-preview-publisher.js';
+import {
+  drawingModelKey,
+  parameterModelKey,
+  contourModelKey,
+  mergeDrawingUpdateReports,
+} from './cad-controller-model-keys.js';
 import { cadContourProfileBindingChangeIds } from './cad-contour-profile-bindings.js';
 import { hasCurrentPartSurfaceGroups } from './cad-part-properties.js';
 import { taskConversionKey, validateAITaskRuntime } from './cad-ai-task-runtime.js';
@@ -79,50 +85,6 @@ import { planCadDrillRebind } from './cad-drill-rebind-plan.js';
 import { cadDrillSourceProblems, assertCadDrillSourcesReady } from './cad-drill-source-data.js';
 import { cadDependencyAffected, cadDependencyNodeId } from './cad-dependency-graph.js';
 import { validateCadContourRequest } from './cad-linked-contours-automation.js';
-
-// Drawing edits own no geometry. Compare every other persisted field before
-// reusing a native proof; the caller cannot smuggle an unbuilt body into it.
-function drawingModelKey(project) {
-  return JSON.stringify(
-    Object.fromEntries(Object.entries(project).filter(([key]) => !['drawings', 'version'].includes(key))),
-  );
-}
-function parameterModelKey(project) {
-  return JSON.stringify(
-    Object.fromEntries(Object.entries(project).filter(([key]) => !['projectParameters', 'version'].includes(key))),
-  );
-}
-function contourModelKey(project) {
-  return JSON.stringify(
-    Object.fromEntries(Object.entries(project).filter(([key]) => !['contourLinks', 'version'].includes(key))),
-  );
-}
-function mergeDrawingUpdateReports(before, after) {
-  if (!before) return after;
-  if (!after) return before;
-  const out = { ...before, ...after };
-  for (const key of [
-    'affectedIds',
-    'stateChangedIds',
-    'rebuiltIds',
-    'constructedIds',
-    'updatedLinkIds',
-    'removedLinkIds',
-    'updatedSheetIds',
-    'updatedViewIds',
-  ])
-    if (before[key] || after[key]) out[key] = [...new Set([...(before[key] ?? []), ...(after[key] ?? [])])];
-  if (before.counts || after.counts)
-    out.counts = Object.fromEntries(
-      [...new Set([...Object.keys(before.counts ?? {}), ...Object.keys(after.counts ?? {})])].map((id) => [
-        id,
-        (before.counts?.[id] ?? 0) + (after.counts?.[id] ?? 0),
-      ]),
-    );
-  if (before.metadataOnly !== undefined || after.metadataOnly !== undefined)
-    out.metadataOnly = before.metadataOnly === true && after.metadataOnly === true;
-  return out;
-}
 
 /** The renderer and local automation share one confirmed CAD store and worker.
  * Commands, display buffers and gestures remain outside persisted model state. */
