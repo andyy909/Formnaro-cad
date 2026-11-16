@@ -1,5 +1,10 @@
 # Technischer Projektkontext
 
+P3-4c1: `backend/verification-native-cad.cjs` führt die nativen CAD-
+Prüfschritte für die lokale Verifikation in ihrer bisherigen Reihenfolge aus.
+`electron.cjs` behält die Fehlerprüfung, die Berichtsausgabe und das Beenden
+des Prüfprozesses. Der portable Prüflader lädt den Helfer aus dem Quellbaum.
+
 P3-5d: Die CAD-Oberfläche entsorgt Controller, Werkzeuge und Autosave-Timer
 erst beim tatsächlichen Verlassen der Seite. Der vorbereitende
 Autosicherungs-Hook bleibt an `beforeunload` gebunden. Nach blockierter
