@@ -499,3 +499,4 @@ src/ai-feedback.js
 src/cad-recipes.js
 src/cad-controller.js
 src/cad-controller-model-keys.js
+eslint.config.mjs

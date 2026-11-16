@@ -9,6 +9,7 @@
   "type": "module",
   "main": "electron.cjs",
   "scripts": {
+    "lint": "eslint \"src/**/*.js\" \"backend/**/*.{js,mjs,cjs}\" \"ai/*.mjs\" electron.cjs preload.cjs vite.config.js",
     "format": "prettier --write",
     "format:check": "prettier --check",
     "test:inventory": "node scripts/test-inventory.mjs",
@@ -164,6 +165,8 @@
     "@electron/packager": "20.3.0",
     "@xmldom/xmldom": "0.9.12",
     "electron": "44.10.0",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
     "manifold-3d": "3.5.4",
     "prettier": "3.10.1",
     "replicad-opencascadejs": "1.1.0",

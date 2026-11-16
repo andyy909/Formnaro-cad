@@ -1,5 +1,12 @@
 # Technischer Projektkontext
 
+P3-5a: `npm run lint` prüft den JavaScript-Anwendungscode des Hauptprogramms
+mit genau vier Warnregeln: no-undef, no-unused-vars, no-empty und no-dupe-keys.
+Browser, Worker und Node erhalten getrennte Umgebungen. Fremdlaufzeiten,
+Mini-Projekte, Tests und Hilfsskripte bleiben außerhalb dieses Lint-Schritts.
+Vorhandene Warnungen werden sichtbar; Syntaxfehler bleiben Fehler. Die
+Prüfung läuft einmal im ersten Windows-Quelltest-Teillauf der CI.
+
 P3-4i: backend/practice-native-verification-checks.cjs kapselt die native
 Freiraumprüfung der mittigen Plattenöffnung für den Übungsprüfer. Die
 Prüfkandidaten, Toleranzen, Ergebnisprüfung und Freigabe der Vorschau bleiben
