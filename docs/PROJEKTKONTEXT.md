@@ -32,6 +32,13 @@ fehlende Ziele mit Zeilennummer und verwendet Exitcode 1 bei Funden.
 Externe Ziele und reine Fragmente werden übersprungen. Die Prüfung läuft
 im ersten Windows-Quelltest-Teillauf der CI.
 
+P5-1: `docs/README.md` ist der deutsche Wegweiser über alle versionierten
+Markdown-Dateien direkt unter `docs/`. Die vier Abschnitte Benutzen,
+Entwickeln, KI-Schnittstelle und Archiv ordnen jede Datei einschließlich der
+Übersicht selbst genau einmal ein; Versions- und Abnahmebelege bleiben im
+Archiv. Zusätzlich verlinkt der Einstieg die vorhandenen Hinweise im
+Repository-Stamm.
+
 Auf der Startseite folgen bis zu drei zuletzt verwendete Modelle auf die drei Beispielkarten. Der normale Neustart beginnt mit leerem Arbeitsbereich. Eine vorhandene Autosicherung kann über ihre eigene Aktion geladen werden.
 
 P3-3f: `src/app/workspace-io.js` erfasst und restauriert den Arbeitsbereich
