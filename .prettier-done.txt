@@ -269,3 +269,10 @@ src/cad-dependency-graph.js
 src/cad-form-controls.js
 src/cad-worker-client.js
 src/mesh-source-data.js
+src/cad-face-correspondence-native.js
+src/cad-mesh-partition-ui.js
+src/cad-mesh-inspector-ui.js
+src/cad-project-parameters-automation.js
+src/cad-topology-native.js
+src/cad-pattern-consumers-native.js
+src/cad-drill-conversion-native.js
