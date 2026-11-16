@@ -8,6 +8,7 @@ import {
   contourModelKey,
   mergeDrawingUpdateReports,
 } from './cad-controller-model-keys.js';
+import { createCadControllerExport } from './cad-controller-export.js';
 import { cadContourProfileBindingChangeIds } from './cad-contour-profile-bindings.js';
 import { hasCurrentPartSurfaceGroups } from './cad-part-properties.js';
 import { taskConversionKey, validateAITaskRuntime } from './cad-ai-task-runtime.js';
@@ -67,22 +68,19 @@ import {
   applyCadProjectParameterStates,
   cadProjectParameterTarget,
 } from './cad-project-parameters-data.js';
-import { cadProjectParameterExportProblems } from './cad-project-parameters-export.js';
 import {
   createCadContourLinks,
   validateCadContourLinks,
   validateCadContourTarget,
   cadContourLinkId,
-  cadContourLinkProblems,
   planCadContourLinks,
 } from './cad-linked-contours-data.js';
-import { assertCadLinkedPatternExportReady } from './cad-linked-pattern-data.js';
 import { planCadParameterPatterns } from './cad-linked-pattern-update-data.js';
 import { planCadPatternConsumers } from './cad-pattern-consumers-data.js';
 import { createCadPatternChoiceController } from './cad-pattern-choice-controller.js';
 import { planCadAssociativeFreeCAD } from './cad-associative-freecad-plan.js';
 import { planCadDrillRebind } from './cad-drill-rebind-plan.js';
-import { cadDrillSourceProblems, assertCadDrillSourcesReady } from './cad-drill-source-data.js';
+import { cadDrillSourceProblems } from './cad-drill-source-data.js';
 import { cadDependencyAffected, cadDependencyNodeId } from './cad-dependency-graph.js';
 import { validateCadContourRequest } from './cad-linked-contours-automation.js';
 
@@ -2344,72 +2342,14 @@ export function createCadController({
     );
     return result.project;
   }
-  async function exportModel(options) {
-    alive();
-    assertExportReady(options);
-    const project = store.readSnapshot(),
-      revision = store.revision();
-    onBusy(true);
-    try {
-      let meshColorParts;
-      if (['obj', '3mf', 'gltf', 'glb'].includes(options.format)) {
-        const ids = project.nodes
-          .filter(
-            (n) =>
-              n.kind === 'mesh' &&
-              !hasCurrentPartSurfaceGroups(n) &&
-              meshColorsEnabled(n) &&
-              n.meshRole !== 'hole' &&
-              !flags(n, project).hidden &&
-              (!options.ids || options.ids.includes(n.id)),
-          )
-          .map((n) => n.id);
-        if (ids.length)
-          meshColorParts = await meshWorker.run(
-            { job: 'toolsQuery', kind: 'colors', ids, project },
-            { revision, progress },
-          );
-      }
-      if (store.revision() !== revision)
-        throw Object.assign(Error('Projekt während des Exports geändert.'), { code: 'STALE_REVISION' });
-      const result = await worker.run(
-        { job: 'exportModel', project, options: { ...options, meshColorParts } },
-        { revision, progress },
-      );
-      if (store.revision() !== revision)
-        throw Object.assign(Error('Projekt während des Exports geändert. Erneut exportieren.'), {
-          code: 'STALE_REVISION',
-        });
-      return result;
-    } finally {
-      onBusy(store.state().busy);
-    }
-  }
-  function assertExportReady(options = {}) {
-    alive();
-    const current = store.readSnapshot();
-    assertCadDrillSourcesReady(current, options);
-    assertCadLinkedPatternExportReady(current, options);
-    const problems = cadProjectParameterExportProblems(current, options);
-    if (problems.length)
-      throw Object.assign(
-        Error(
-          'Betroffene Projektparameter oder Varianten zuerst aktualisieren oder den verlorenen Bezug ausdrücklich lösen. ' +
-            problems[0].message,
-        ),
-        { code: 'PARAMETERS_UPDATE_REQUIRED', problems },
-      );
-    const contours = cadContourLinkProblems(current, current.contourLinks, options);
-    if (contours.length)
-      throw Object.assign(
-        Error(
-          'Betroffene Konturverknüpfungen zuerst aktualisieren, neu zuordnen oder ausdrücklich lösen. ' +
-            contours[0].message,
-        ),
-        { code: 'CONTOUR_UPDATE_REQUIRED', problems: contours },
-      );
-    return true;
-  }
+  const { exportModel, assertExportReady } = createCadControllerExport({
+    alive,
+    store,
+    worker,
+    meshWorker,
+    onBusy,
+    progress,
+  });
   async function open(value, { label = 'CAD-Projekt öffnen', revision = store.revision() } = {}) {
     const prepared = await readProject(value);
     const result = await preview(undefined, { project: prepared.project, revision, label, replaceProject: true });

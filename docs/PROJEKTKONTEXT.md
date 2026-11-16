@@ -1,5 +1,11 @@
 # Technischer Projektkontext
 
+P3-4g: `exportModel` und `assertExportReady` liegen in
+`src/cad-controller-export.js`. Der Controller übergibt die vorhandene
+Lebensdauerprüfung, den Transaktionsstore, beide Worker sowie die Rückmeldungen
+für Auslastung und Fortschritt. Beide Methoden verwenden beim Aufruf den
+aktuellen Projektzustand und behalten ihre Export- und Fehlerverträge.
+
 P3-4j: backend/practice-stl-verification.cjs kapselt den STL-Prüfblock des
 Übungsverifiers. Fixture-Bytes, Varianten, Plan, Prompt-Texte, Qualitätskriterien,
 Assertions, Prüfreihenfolge und Rückgabefelder bleiben unverändert; die

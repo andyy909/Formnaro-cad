@@ -500,3 +500,5 @@ src/cad-recipes.js
 src/cad-controller.js
 src/cad-controller-model-keys.js
 eslint.config.mjs
+src/cad-controller-export.js
+tests/cad-controller-export.test.mjs
