@@ -3,6 +3,8 @@
 P3-5e: Der native CAD-Prüfer wartet bei der Format-5-Autosicherung auf
 die Bestätigung des regulären periodischen CAD7-Schreibvorgangs. Nach
 zehn Sekunden gilt eine fehlende oder abweichende Sicherung als Prüffehler.
+Der Prüfer gleicht die im CAD-Kontext genannten Endpunkte mit den
+tatsächlich registrierten lokalen API-Routen ab.
 
 P3-4c1: `backend/verification-native-cad.cjs` führt die nativen CAD-
 Prüfschritte für die lokale Verifikation in ihrer bisherigen Reihenfolge aus.

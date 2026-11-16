@@ -59,7 +59,10 @@ async function verifyNativeCad(win,app,outputPath,{python='python',adapterPath=p
     assert(savedVersion===5,'Ordinary format5 project in CAD7 autosave missing');
     a.select([{rootId:group.id,path:[]}]);await a.settled();
     const context=await window.offlinecadAutomation.context(),scene=await window.offlinecadAutomation.scene();
-    assert(context.projectVersion===32&&context.supportedProjectVersions.includes(5)&&context.supportedProjectVersions.includes(8)&&context.version===${JSON.stringify(app.getVersion())}&&context.requestSchema&&context.exportSchema&&Object.keys(context.endpoints).length===21,'Native context/schema/routes missing');
+    assert(context.projectVersion===32&&context.supportedProjectVersions.includes(5)&&context.supportedProjectVersions.includes(8)&&context.version===${JSON.stringify(app.getVersion())}&&context.requestSchema&&context.exportSchema,'Native context/schema/routes missing');
+    const expectedRoutes=${JSON.stringify(Object.keys(require('./api-bridge.cjs').routes).sort())};
+    const actualRoutes=Object.keys(context.endpoints).sort();
+    assert(actualRoutes.length===expectedRoutes.length&&actualRoutes.every((route,index)=>route===expectedRoutes[index]),'Native context/schema/routes missing');
     assert(scene.revision===a.controller.revision()&&!JSON.stringify(scene).includes('triangles'),'Compact native scene contains display arrays or stale revision');
     assert(typeof a.actions.edges==='function'&&typeof a.actions['general-fit']==='function'&&typeof a.actions.section==='function'&&typeof a.actions.inspect==='function','Native tool actions missing');
     assert(scene.objects.filter(o=>o.kind==='cad').every(o=>o.measures?.editSize?.length===3&&o.measures.worldAxisSize.every(Number.isFinite)&&o.sizeToWorldAxisFactors.every(v=>v>0)&&o.worldAxisDirections.length===3),'Prepared native axis measures missing');
