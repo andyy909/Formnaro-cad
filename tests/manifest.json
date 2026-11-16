@@ -67,6 +67,7 @@
   {"file":"tests/api-bridge-ephemeral-port.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.245},
   {"file":"tests/app-alignment.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.285},
   {"file":"tests/app-clipboard.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.227},
+  {"file":"tests/app-isolation.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.139},
   {"file":"tests/app-startup.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.118},
   {"file":"tests/app-ui-helpers.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.12},
   {"file":"tests/audit-ai-regressions.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.576},

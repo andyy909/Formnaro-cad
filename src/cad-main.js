@@ -1,5 +1,6 @@
 import { createAlignment } from './app/alignment.js';
 import { createClipboard } from './app/clipboard.js';
+import { createIsolation } from './app/isolation.js';
 import { createUiHelpers } from './app/ui-helpers.js';
 import {showCadAbout} from './cad-about.js';
 import {mountCadWelcome} from './cad-welcome.js';
@@ -426,11 +427,11 @@ const isolationText=document.createElement('span'),isolationEnd=document.createE
 
 const isolationButton=document.createElement('button');isolationButton.dataset.action='isolate';isolationButton.textContent='Auswahl isolieren';document.querySelector('[data-action="hide"]').after(isolationButton);
 
-function updateIsolation(){const kind=activeEasyKind();view.setIsolation(kind?project().nodes.filter(node=>easyDomainAllows(node,kind)&&isolation.allows(node.id)).map(node=>node.id):isolation.state());marksView?.visibilityChanged();isolationNotice.hidden=!isolation.state();}
-
-function endIsolation(){escape();isolation.end();updateIsolation();}
-
-function isolateSelection(){readyForFile();const targets=getSelection();escape();isolation.start(project(),targets);updateIsolation();view.setSelection(selection,nativeScene);ui?.refresh();}
+const { updateIsolation, endIsolation, isolateSelection } = createIsolation({
+  isolation, isolationNotice, view, project, activeEasyKind, readyForFile, getSelection, escape,
+  getLiveSelection: () => selection, getScene,
+  refreshMarkerVisibility: () => marksView?.visibilityChanged(), refreshUi: () => ui?.refresh(),
+});
 
 function framePracticeConstruction(rootId){
  const targets=[{rootId,path:[]}],priorIds=isolation.state(),priorView=view.viewState(),scope=controller.projectScope();

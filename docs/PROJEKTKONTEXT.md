@@ -1,5 +1,9 @@
 # Technischer Projektkontext
 
+P3-3e: Die Isolationsaktionen in `src/app/isolation.js` verbinden die
+Auswahl mit Renderer, Markierungen und Statushinweis. Der CAD-Einstieg teilt
+dieselbe temporäre `createCadIsolation`-Instanz mit den übrigen Aufrufern.
+
 P3-3d: Kopieren, Einfügen und Duplizieren liegen in `src/app/clipboard.js`.
 Die Fabrik hält die Projektauswahl der Zwischenablage und die laufende
 Erfassung für dieselbe Renderer-Sitzung.
