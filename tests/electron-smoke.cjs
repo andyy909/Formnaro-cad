@@ -1,5 +1,6 @@
 const {app,BrowserWindow,session}=require('electron');
 const assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs'),os=require('node:os');
+const {once}=require('node:events'),{installNavigationGuard}=require('../backend/navigation-guard.cjs');
 const output=process.env.OFFLINECAD_TEST_OUTPUT||fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-smoke-'));
 fs.mkdirSync(output,{recursive:true});
 const profile=fs.mkdtempSync(path.join(output,'profile-'));
@@ -19,19 +20,29 @@ app.whenReady().then(async()=>{
   const win=new BrowserWindow({show:false,width:1500,height:950,webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
   win.webContents.on('console-message',details=>{if(details.level==='error')errors.push(details.message);});
   try{
-    await win.loadFile(path.resolve(__dirname,'../dist/index.html'),{query:{test:'1'}});
+    const entry=path.resolve(__dirname,'../dist/index.html'),query={test:'1'};
+    installNavigationGuard(win,{entry,query});
+    await win.loadFile(entry,{query});
     await win.webContents.executeJavaScript(`new Promise((resolve,reject)=>{
       const start=performance.now(),timer=setInterval(()=>{
         if(window.__cadError||performance.now()-start>60000){clearInterval(timer);reject(Error(window.__cadError||'Startup timeout'));}
         else if(window.__cadReady&&window.__cadTest){clearInterval(timer);resolve();}
       },20);
     })`);
+    await win.webContents.executeJavaScript('window.__cadTest.resetProject()');
+    const current=win.webContents.getURL(),target=new URL(current);
+    target.searchParams.set('blocked','1');
+    const willNavigate=once(win.webContents,'will-navigate');
+    await win.webContents.executeJavaScript('location.assign('+JSON.stringify(target.href)+')');
+    const [navigation,url]=await willNavigate;
+    assert.equal(url??navigation.url,target.href);
+    assert.equal(navigation.defaultPrevented,true);
+    assert.equal(win.webContents.getURL(),current);
     const result=await win.webContents.executeJavaScript(`(async()=>{
       const api=window.__cadTest,check=(value,message)=>{if(!value)throw Error(message);};
-      await api.resetProject();
       document.querySelector('.shape-tile[data-type="box"]').click();
       await api.settled();
-      check(api.getModel().nodes.length===1,'Palette creates one native box');
+      check(api.getModel().nodes.length===1,'Palette creates one native box after blocked navigation');
       const box=api.getModel().nodes[0];check(box.kind==='cad'&&box.brep.data,'Native source and BRep');
       const before=api.serialize(),depth=api.undoDepth();
       const proposal=await api.access.preview({revision:api.controller.revision(),commands:[{op:'create',type:'sphere',size:[10,10,10],as:'sphere'}]});

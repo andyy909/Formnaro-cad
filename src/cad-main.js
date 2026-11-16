@@ -913,7 +913,11 @@ window.offlinecadDesktop?.onAutomation(async(method,args,id)=>{try{if(!window.__
 recoveryActions.startAutosave();
 window.__formnaroFlushRecovery=recoveryActions.flushOnClose;
 
-window.addEventListener('beforeunload',()=>{easyRepair?.invalidate();recoveryActions.stopAutosave();recoveryActions.saveOnUnload();meshHoleFillUI?.dispose();meshRepairUI?.dispose();meshReduceUI?.dispose();meshRemeshUI?.dispose();meshSmoothUI?.dispose();meshSculptUI?.dispose();meshEraseFillUI?.dispose();meshMakeSolidUI?.dispose();meshHollowUI?.dispose();meshFeaturesUI?.dispose();meshInspectorUI?.dispose();meshSelectionUI?.dispose();inspectionUI?.dispose();thicknessUI?.dispose();functionsUI?.dispose();advancedFreeCADUI?.close();modelingUI?.dispose();sketchUI?.close();aiUI?.dispose();featureUI?.dispose();freecadDocumentReader?.dispose();freecadImportReader?.dispose();meshTools?.close();meshExtras?.dispose();meshCopyUI?.dispose();workplaneUI?.dispose();recoveryEncoder?.dispose();controller.dispose();view.dispose();});
+window.addEventListener('beforeunload',recoveryActions.saveOnUnload);
+// A navigation can be rejected after beforeunload while this renderer stays active.
+window.addEventListener('pagehide',event=>{
+ if(event.persisted)return;
+ easyRepair?.invalidate();recoveryActions.stopAutosave();meshHoleFillUI?.dispose();meshRepairUI?.dispose();meshReduceUI?.dispose();meshRemeshUI?.dispose();meshSmoothUI?.dispose();meshSculptUI?.dispose();meshEraseFillUI?.dispose();meshMakeSolidUI?.dispose();meshHollowUI?.dispose();meshFeaturesUI?.dispose();meshInspectorUI?.dispose();meshSelectionUI?.dispose();inspectionUI?.dispose();thicknessUI?.dispose();functionsUI?.dispose();advancedFreeCADUI?.close();modelingUI?.dispose();sketchUI?.close();aiUI?.dispose();featureUI?.dispose();freecadDocumentReader?.dispose();freecadImportReader?.dispose();meshTools?.close();meshExtras?.dispose();meshCopyUI?.dispose();workplaneUI?.dispose();recoveryEncoder?.dispose();controller.dispose();view.dispose();});
 
 const assemblyNotice=document.createElement('div');assemblyNotice.id='cad-assembly-notice';assemblyNotice.className='cad-assembly-notice';assemblyNotice.hidden=true;assemblyNotice.setAttribute('role','status');$('viewport').append(assemblyNotice);
 function updateAssemblyNotice(){const state=assemblyDisplay.state(project());if(state.loadSet===null){if(!assemblyNotice.hidden)assemblyNotice.hidden=true;return;}assemblyNotice.hidden=false;assemblyNotice.textContent=state.loaded+' von '+state.total+' Teilen vollständig dargestellt · übrige sichtbare Teile als Rahmen';}

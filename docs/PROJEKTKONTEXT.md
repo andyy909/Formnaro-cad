@@ -1,5 +1,10 @@
 # Technischer Projektkontext
 
+P3-5d: Die CAD-Oberfläche entsorgt Controller, Werkzeuge und Autosave-Timer
+erst beim tatsächlichen Verlassen der Seite. Der vorbereitende
+Autosicherungs-Hook bleibt an `beforeunload` gebunden. Nach blockierter
+Navigation bleibt die laufende Oberfläche deshalb benutzbar.
+
 P3-4d: `backend/app-window.cjs` installiert Popup-Sperre, Navigationswächter
 und Autosicherungs-Wrapper für Neuladen und Schließen. Die ausstehenden
 Aktionen und die Freigabe zum Schließen gehören zum jeweiligen Fenster.
