@@ -297,6 +297,8 @@ Speichern unter …|Save as …
 Projekt öffnen …|Open project …
 Projektordner öffnen|Open project folder
 Zuletzt verwendet|Recently used
+Zuletzt verwendete Modelle|Recently used models
+Autosicherung wiederherstellen|Restore autosave
 Im Projektordner|In the project folder
 Das Projekt enthält alle Teile, Quellen, Layer, Notizen und die aktuelle Ansicht.|The project includes all parts, sources, layers, notes and the current view.
 Noch keine Projekte gespeichert oder geöffnet.|No projects saved or opened yet.

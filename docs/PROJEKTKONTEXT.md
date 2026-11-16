@@ -1,5 +1,7 @@
 # Technischer Projektkontext
 
+Auf der Startseite folgen bis zu drei zuletzt verwendete Modelle auf die drei Beispielkarten. Der normale Neustart beginnt mit leerem Arbeitsbereich. Eine vorhandene Autosicherung kann über ihre eigene Aktion geladen werden.
+
 P3-3f: `src/app/workspace-io.js` erfasst und restauriert den Arbeitsbereich
 und koordiniert Speichern und Öffnen über die bestehende OCAD- und
 FNPACK-Persistenz. Der CAD-Einstieg teilt seine Dateisitzung mit der Fabrik und

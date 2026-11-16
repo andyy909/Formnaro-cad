@@ -41,7 +41,40 @@ app.whenReady().then(async()=>{
   }
   checks.push('View, source selection, mode, snap, quality and layout changes protect New/Open; Cancel preserves workspace and native model without Undo');
   await run('window.__cadTest.setMode("rotate")');await click('[data-action="projects"]');await until('!!document.querySelector("#projects-recent .project-file")');await click('#projects-recent .project-file');await until('document.getElementById("modal").open&&!!document.getElementById("project-change-save")');await click('#project-change-save');await until('!document.getElementById("modal").open&&window.__cadTest.workspace().mode==="rotate"');assert.equal(JSON.parse(fs.readFileSync(projectFile,'utf8')).workspace.mode,'rotate');assert.equal(await run('document.getElementById("save-state").textContent'),'Gespeichert · lokal');checks.push('Save-and-switch writes a workspace-only change and restores that exact saved state');
-  await run('window.__cadTest.view.setView("top")');await pause(2200);await new Promise(resolve=>{win.webContents.once('did-finish-load',resolve);win.reload();});await until('!!window.__cadTest');await run('window.__cadTest.layoutUI.ready()');assert.equal(await run('window.__cadTest.view.viewState().projection'),'orthographic');assert.equal(await run('window.__cadTest.selection().length'),1);await click('[data-action="projects"]');await until('!!document.querySelector("#projects-recent .project-file")');checks.push('Real reload restores view-only autosave changes and recent projects from portable disk');
+  const recentNames=['Modell B.ocad','Modell C.ocad','Modell D.ocad'];
+  const savedBytes=fs.readFileSync(projectFile),recentPaths=recentNames.map(name=>path.join(directory,name));
+  for(const file of recentPaths)fs.writeFileSync(file,savedBytes);
+  fs.writeFileSync(path.join(directory,'.letzte-projekte.json'),JSON.stringify({version:1,items:
+    [projectFile,path.join(directory,'Fehlt.ocad'),...recentPaths].map((file,index)=>({path:file,usedAt:1000-index}))
+  }));
+  await run('window.__cadTest.requestRecovery()');
+  async function restartEmpty(){
+   await new Promise(resolve=>{win.webContents.once('did-finish-load',resolve);win.reload();});
+   await until('!!window.__cadTest&&!document.getElementById("empty-hint").hidden');
+   await run('window.__cadTest.settled()');
+   assert.equal(await run('window.__cadTest.getModel().nodes.length'),0);
+   assert.equal(await run('window.__cadTest.activeProjectFile()'),null);
+  }
+  await restartEmpty();
+  await until('!!document.querySelector("[data-recent-project]")');
+  assert.deepEqual(await run('[...document.querySelectorAll("[data-example]")].map(card=>card.dataset.example)'),['atlas','vise','gears']);
+  assert.deepEqual(await run('[...document.querySelectorAll("[data-recent-project] strong")].map(name=>name.textContent)'),
+    [path.basename(projectFile),...recentNames.slice(0,2)]);
+  assert(await run('Boolean(document.querySelector("[data-example]").compareDocumentPosition(document.querySelector("[data-recent-project]")) & Node.DOCUMENT_POSITION_FOLLOWING)'));
+  assert(await run('!document.querySelector("[data-restore-autosave]").hidden'));
+  await screenshot('startseite.png');
+  checks.push('Empty restart offers the three examples and the three latest existing models, with autosave as a separate action');
+  await click('[data-recent-project]');
+  await until('window.__cadTest.activeProjectFile()?.name==="Gehäuse ä.ocad"&&!document.querySelector("#empty-hint:not([hidden])")');
+  assert.equal(await run('window.__cadTest.getModel().name'),'Gehäuse ä');
+  checks.push('Click opens the most recent saved model');
+  await run('(async()=>{const a=window.__cadTest;await a.mutate(p=>{p.name="Nur aus der Autosicherung";});a.view.setView("top");await a.requestRecovery();})()');
+  await restartEmpty();
+  await until('!document.querySelector("[data-restore-autosave]").hidden');
+  await click('[data-restore-autosave]');
+  await until('window.__cadTest.getModel().name==="Nur aus der Autosicherung"');
+  assert.equal(await run('window.__cadTest.view.viewState().projection'),'orthographic');
+  checks.push('The explicit autosave action restores the unsaved model and its view');
   await click('#modal-close');await run(`(async()=>{const a=window.__cadTest,p=a.getModel();delete p.workspace;await a.openFile(new File([JSON.stringify(p)],'existing.ocad'));await a.settled();})()`);checks.push('Existing format-5 projects without workspace still open');
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);fs.writeFileSync(path.join(output,'result.json'),JSON.stringify({ok:true,checks,saveDialogs,openDialogs,errors,external},null,2));console.log(JSON.stringify({ok:true,checks:checks.length,saveDialogs,openDialogs}));clearTimeout(timer);app.exit(0);
  }catch(e){await screenshot('failed.png');fs.writeFileSync(path.join(output,'result.json'),JSON.stringify({ok:false,error:e.message,checks,errors,external},null,2));console.error(e.stack);clearTimeout(timer);app.exit(1);}

@@ -1067,17 +1067,17 @@ const sourceEdit=document.createElement('button');sourceEdit.id='easy-edit-sourc
 async function welcomeHistory(recovered,recoveryFormat){
  const desktop=window.offlinecadDesktop,entries=[];
  if(recovered&&(recovered.nodes.length||recovered.drawings?.sheets?.length)){
-  entries.push({id:'recovery',name:t('Letzte Autosicherung'),open:async()=>{
+  welcome.setRecovery(async()=>{
    readyForFile();if(!await confirmProjectChange())return false;
    fileBusy=true;try{
     await openEncoded(JSON.stringify(recovered),null,{allowCatalog:recoveryFormat==='fnpack'});
     recoveredProject=true;preferredProjectFormat=recoveryFormat;updateState();return true;
    }finally{fileBusy=false;}
-  },thumbnail:signal=>projectThumbnail(JSON.stringify(recovered),signal)});
+  });
  }
  try{
   const data=await desktop?.listProjects?.();
-  for(const file of (data?.recent??[]).filter(file=>file.exists).slice(0,3-entries.length)){
+  for(const file of (data?.recent??[]).filter(file=>file.exists).slice(0,3)){
    entries.push({id:file.id,name:file.name,open:()=>openProject(file.id),thumbnail:async signal=>{
     const result=await desktop.projectThumbnail({id:file.id});
     if(result.image)return result.image;

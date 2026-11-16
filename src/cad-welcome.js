@@ -74,6 +74,28 @@ export function mountCadWelcome({ root, open, safe, t = (v) => v }) {
   const history = document.createElement('div');
   history.className = 'welcome-examples';
   recent.append(heading, history);
+  const recovery = document.createElement('button');
+  recovery.type = 'button';
+  recovery.dataset.restoreAutosave = '';
+  recovery.textContent = t('Autosicherung wiederherstellen');
+  recovery.hidden = true;
+
+  function setRecovery(restore) {
+    recovery.hidden = false;
+    recovery.onclick = () =>
+      safe(async () => {
+        if (loading || !ready) return;
+        loading = true;
+        recovery.disabled = true;
+        try {
+          if (await restore()) dismiss();
+        } finally {
+          loading = false;
+          recovery.disabled = false;
+        }
+      });
+  }
+
   function showRecent(entries) {
     history.replaceChildren();
     let queue = Promise.resolve();
@@ -120,10 +142,11 @@ export function mountCadWelcome({ root, open, safe, t = (v) => v }) {
     recent.hidden = !history.children.length;
   }
   root.querySelector('[data-action="demo"]')?.remove();
-  root.append(recent, list);
+  root.append(list, recent, recovery);
   return {
     dismiss,
     showRecent,
+    setRecovery,
     setReady() {
       ready = true;
       for (const b of list.children) b.disabled = loading;
