@@ -62,8 +62,11 @@ jobs:
         run: |
           $files = @(Get-Content .prettier-done.txt | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') })
           if ($files.Count -eq 0) { throw 'No files listed for formatting' }
-          npm run format:check -- @files
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          for ($i = 0; $i -lt $files.Count; $i += 64) {
+            $chunk = $files[$i..([Math]::Min($i + 63, $files.Count - 1))]
+            npm run format:check -- @chunk
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
       - if: matrix.shard == 1
         run: node cad-kernel-build/verify-runtime.mjs
       - if: matrix.shard == 1
