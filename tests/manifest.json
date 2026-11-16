@@ -519,6 +519,7 @@
   {"file":"tests/practice-interruption.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":1.94},
   {"file":"tests/practice-live-ui-regressions.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.213},
   {"file":"tests/practice-model-ui.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.385},
+  {"file":"tests/practice-native-verification-checks.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.253},
   {"file":"tests/practice-overlay.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":3.031},
   {"file":"tests/practice-parent.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.575},
   {"file":"tests/practice-playback.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.181},

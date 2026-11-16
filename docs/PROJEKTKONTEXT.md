@@ -1,5 +1,10 @@
 # Technischer Projektkontext
 
+P3-4i: backend/practice-native-verification-checks.cjs kapselt die native
+Freiraumprüfung der mittigen Plattenöffnung für den Übungsprüfer. Die
+Prüfkandidaten, Toleranzen, Ergebnisprüfung und Freigabe der Vorschau bleiben
+unverändert; beide bisherigen Skizzenprüfungen verwenden denselben Helfer.
+
 P3-4e: Die vier reinen Controller-Helfer für Modellschlüssel und das
 Zusammenführen von Zeichnungsberichten liegen in
 src/cad-controller-model-keys.js. Die bisherigen Feldfilter, Reihenfolgen
