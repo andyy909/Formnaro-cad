@@ -1,5 +1,10 @@
 # Technischer Projektkontext
 
+P3-4a: Elf Electron-Prüfmodi schreiben ihre JSON-Erfolgsberichte über
+backend/verification-report.cjs. Der jeweilige Prüfzweig baut den Inhalt
+wie bisher. Das Hilfsmodul wird nur im Prüfmodus geladen und fällt beim
+Bau des portablen Programms unter den bestehenden Paketfilter.
+
 P3-3h: Die Renderer-Fabrik in src/app/recovery.js kapselt den Status der
 Autosicherung, die verzögerte Auslösung und das bestätigte Schreiben beim
 Schließen. Sie verwendet weiter den bestehenden OCAD-/FNPACK-Speicher.
