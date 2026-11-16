@@ -64,7 +64,9 @@ export function verifyAITaskProtection(project, protectedSources) {
     let current;
     try {
       current = signature(project, saved.target);
-    } catch {}
+    } catch {
+      // An unavailable signature must fail the protection check below.
+    }
     if (current !== saved.signature)
       throw error(
         'Der Entwurf würde ein geschütztes Teil, seine Quelle oder seine Lage ändern: ' + saved.target.rootId,

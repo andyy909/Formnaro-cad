@@ -111,7 +111,9 @@ export function createAITaskJournal({ request, access, isCurrent = () => true } 
         try {
           await request({ action: 'release', ...args() });
           lease = null;
-        } catch {}
+        } catch {
+          // Preserve the original close error and keep the local lease for another attempt.
+        }
         throw error;
       }
     },
