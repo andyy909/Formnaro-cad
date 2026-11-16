@@ -1,5 +1,10 @@
 # Technischer Projektkontext
 
+P3-3g: src/app/import-export.js verbindet die Importdialoge und den
+Zeichnungsexport mit dem bestehenden Modell-Exportworkflow. Der Renderer
+hält die gemeinsamen Dialog-, Arbeitsbereichs- und Konvertierungsdaten
+weiterhin für dieselbe Sitzung.
+
 P5-2: `node scripts/check-links.mjs` prüft relative Markdown-Ziele in
 `README*.md` und `docs/*.md` gegen das Git-Dateiinventar. Der Prüfer meldet
 fehlende Ziele mit Zeilennummer und verwendet Exitcode 1 bei Funden.
