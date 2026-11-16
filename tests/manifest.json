@@ -65,6 +65,7 @@
   {"file":"tests/all-functions-runner.test.mjs","referencedBy":["scripts/package-freecad-python.mjs","scripts/release-test-scope.mjs"],"kind":"node","status":"pass","seconds":0.546,"textCoupled":true,"note":"Catalog coverage extracts verification flags from electron.cjs. A shared verification entry registry would provide a runtime seam."},
   {"file":"tests/anchored-size.test.mjs","referencedBy":[],"kind":"node","status":"obsolete","seconds":0.295,"note":"P2-2b: exclusively tested removed v0.9 modules; active CAD/mesh geometry, history, parameters, project loading and transactions retain separate coverage."},
   {"file":"tests/api-bridge-ephemeral-port.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.245},
+  {"file":"tests/app-alignment.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.285},
   {"file":"tests/app-startup.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.118},
   {"file":"tests/app-ui-helpers.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.12},
   {"file":"tests/audit-ai-regressions.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.576},

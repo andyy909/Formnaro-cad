@@ -1,5 +1,9 @@
 # Technischer Projektkontext
 
+P3-3c: Spiegeln, Ausrichten und Zentrieren liegen in
+`src/app/alignment.js`. Der CAD-Einstieg hält die gemeinsam genutzte
+Ausrichtungssession, ihren laufenden Task und das Ticket.
+
 P3-3b: Die gemeinsamen UI-Helfer für Meldungen, Fehlerbehandlung, Dialoge,
 Dateiexport und Busy-Anzeige liegen in `src/app/ui-helpers.js`. Der CAD-Einstieg
 behält die Dialog-Aufräumfolge und den gemeinsam genutzten Busy-Zustand.
