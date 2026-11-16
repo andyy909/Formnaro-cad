@@ -7,6 +7,8 @@ Der Prüfer gleicht die im CAD-Kontext genannten Endpunkte mit den
 tatsächlich registrierten lokalen API-Routen ab.
 Der Skizzenprüfer erwartet beim Neustart eine leere Szene und prüft die
 Wiederherstellung der erhaltenen CAD5-Sicherung über die Startseite.
+Der Annotationsprüfer fügt Modellbilder über den Chat-Optionsdialog an
+und prüft dabei weiterhin Entwurf, Anhangsgrenze und Modellzustand.
 
 P3-4c1: `backend/verification-native-cad.cjs` führt die nativen CAD-
 Prüfschritte für die lokale Verifikation in ihrer bisherigen Reihenfolge aus.
