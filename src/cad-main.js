@@ -26,7 +26,7 @@ import {createFnpackRecovery,PACK_RECOVERY_KIND} from './cad-fnpack-recovery.js'
 import {createThemeBinding} from './theme.js';
 import {createCadRecoveryEncoder} from './cad-recovery-encoder.js';
 import {runCadAIScript} from './cad-ai-sandbox.js';
-import {hasGeometryRefs,isGeometryRef} from './cad-geometry-ref.js';
+import {isGeometryRef} from './cad-geometry-ref.js';
 import './cad-assembly-display.css';
 import {createCadAssemblyDisplay} from './cad-assembly-display.js';
 import {createCadJointsUI} from './cad-joints-ui.js';
@@ -104,7 +104,7 @@ import {createCadAutomationAccess} from './cad-automation-access.js';
 
 import {createCadAIUI} from './cad-ai-ui.js';
 
-import {cadProjectNeedsPackage,createCadProject,CAD_PROJECT_LIMITS,parseCadProject,createCadWorkspaceSerializer} from './cad-project.js';
+import {cadProjectNeedsPackage,createCadProject,CAD_PROJECT_LIMITS,parseCadProject} from './cad-project.js';
 
 import {readExchangeFile,exchangeMainFile,exchangeImportSummary} from './exchange-formats.js';
 
@@ -114,7 +114,7 @@ import {createCadIsolation,cadPermanentlyVisible} from './cad-isolation.js';
 
 import {renderCadProjectThumbnail} from './cad-project-thumbnail.js';
 
-import {validateCadWorkspace,cadWorkspaceStoredProjectVersion} from './cad-workspace.js';
+import { createWorkspaceIO } from './app/workspace-io.js';
 
 import {createFunctionPlugins} from './cad-function-plugins.js';
 
@@ -232,6 +232,39 @@ let recoveryWritten=null,recoveryPending=null,recoveryFailure=null;
 
 const project=()=>controller.readSnapshot(),getSelection=()=>copy(selection),getScene=()=>nativeScene;
 const {duplicate,copySelection,paste,isPasteDisabled}=createClipboard({controller,project,selected,activeEasyKind,execute,mutate,select,updateState,toast});
+const { workspace, workspaceSignature, serializeWorkspace, save, saveFromAutomation, openEncoded, openFile, openProject, openWelcomeExample } = createWorkspaceIO({
+  window, fetch: (...args) => fetch(...args), $, t, controller, project, getSelection, quality, assemblyDisplay, packFiles,
+  readyForFile, confirmProjectChange, cacheWelcomePackageThumbnail, download, toast, updateState,
+  scheduleRefresh, updateIsolation: () => updateIsolation(), setQuality, setPreferences, setMode, select, activeEasyKind,
+  // The entry, file actions and autosave all share the same live session.
+  runtime: {
+    get view() { return view; },
+    get partPropertiesUI() { return partPropertiesUI; },
+    get inspectionUI() { return inspectionUI; },
+    get meshExtras() { return meshExtras; },
+    get meshSelectionUI() { return meshSelectionUI; },
+    get ui() { return ui; },
+    get preferences() { return preferences; },
+    get layoutUI() { return layoutUI; },
+    get isolation() { return isolation; },
+    get workbenchUI() { return workbenchUI; },
+    get refreshTask() { return refreshTask; },
+    get preferredProjectFormat() { return preferredProjectFormat; }, set preferredProjectFormat(value) { preferredProjectFormat = value; },
+    get fileBusy() { return fileBusy; }, set fileBusy(value) { fileBusy = value; },
+    get activeProjectFile() { return activeProjectFile; }, set activeProjectFile(value) { activeProjectFile = value; },
+    get savedRevision() { return savedRevision; }, set savedRevision(value) { savedRevision = value; },
+    get cleanRevision() { return cleanRevision; }, set cleanRevision(value) { cleanRevision = value; },
+    get savedWorkspaceSignature() { return savedWorkspaceSignature; }, set savedWorkspaceSignature(value) { savedWorkspaceSignature = value; },
+    get cleanWorkspaceSignature() { return cleanWorkspaceSignature; }, set cleanWorkspaceSignature(value) { cleanWorkspaceSignature = value; },
+    get recoveredProject() { return recoveredProject; }, set recoveredProject(value) { recoveredProject = value; },
+    get assemblyOpening() { return assemblyOpening; }, set assemblyOpening(value) { assemblyOpening = value; },
+    get assemblyScope() { return assemblyScope; }, set assemblyScope(value) { assemblyScope = value; },
+    get assemblyKnownIds() { return assemblyKnownIds; }, set assemblyKnownIds(value) { assemblyKnownIds = value; },
+    get nextImportIndex() { return nextImportIndex; }, set nextImportIndex(value) { nextImportIndex = value; },
+    get lastDisplayed() { return lastDisplayed; }, set lastDisplayed(value) { lastDisplayed = value; },
+    get preparedDisplay() { return preparedDisplay; }, set preparedDisplay(value) { preparedDisplay = value; },
+  },
+});
 const welcome=mountCadWelcome({root:$('empty-hint'),open:openWelcomeExample,safe,t});
 if(window.offlinecadDesktop?.practiceReady)welcome.dismiss();
 
@@ -650,78 +683,10 @@ function setMode(mode){escape();view.setMode(mode);document.querySelectorAll('[d
 
 async function loadDemo(){if(activeEasyKind())throw Error('Beispiele im normalen Modus laden.');isolation.end();updateIsolation();const proposal=await controller.preview({kind:'batch',commands:[{op:'create',type:'box',name:'Platte',size:[60,40,6],pos:[0,0,3],as:'plate'},...[[-22,-12],[22,-12],[-22,12],[22,12]].map(([x,y],index)=>({op:'create',type:'cylinder',name:'Bohrung '+(index+1),size:[5,5,10],pos:[x,y,3],solid:false,as:'hole'+index})),{op:'group',targets:['$plate','$hole0','$hole1','$hole2','$hole3'],as:'result',name:'Platte mit vier Bohrungen'}]},{project:createCadProject(),label:'CAD-Beispiel laden'});await applyProposal(proposal);select([{rootId:proposal.aliases.result,path:[]}]);view.fit();}
 
-function workspace(){const explosion=partPropertiesUI?.storedExplosion()??null,loadSet=assemblyDisplay.ids(project()),common=project().version>=8||loadSet!==null||explosion!==null,section=common?(inspectionUI?.storedSection()??meshExtras?.storedSection()):null,meshSelection=common?meshSelectionUI?.snapshot():null;return {version:explosion!==null?6:loadSet!==null?5:common?(meshSelection?4:section?3:2):1,...(explosion!==null?{explosion}:{}),...(loadSet!==null||explosion!==null?{loadSet}:{}),...(common?{tree:ui?.getTreeState()??{expanded:[]},...(section?{section}:{}),...(meshSelection?{meshSelection}:{})}:{}),view:view.viewState(),selection:getSelection(),mode:view.getMode(),snap:preferences.snap,quality:quality.get(),layout:layoutUI.state()};}
-
-function workspaceSignature(state=workspace()){
-
-  const checked=validateCadWorkspace(state);
-
-  // OrbitControls can change idle camera coordinates at floating-point precision.
-
-  // Ignore sub-nanometre view noise only for dirty detection; files retain full precision.
-
-  for(const field of ['position','target','up'])checked.view[field]=checked.view[field].map(value=>Number(value.toFixed(9)));
-
-  checked.view.zoom=Number(checked.view.zoom.toPrecision(14));
-
-  return JSON.stringify(checked);
-
-}
-
-function serializeWorkspace(state=workspace()){return controller.serializeWorkspace(state);}
 function recoveryData(state=workspace()){return recovery.packageMode()?{...project(),workspace:state}:serializeWorkspace(state);}
 
 function meshPartitionDraft(){return ['split','bodies','connectors'].includes(meshTools?.state()?.kind);}
 function readyForFile(){if(!window.__cadReady)throw Error('Projektstart wird noch abgeschlossen.');if(partPropertiesUI?.editing()||partPropertiesUI?.state()?.hasPreview||partPropertiesUI?.state()?.busy||featureUI?.state()||referenceRebindUI?.state()||jointsUI?.state()||projectParametersUI?.state()||drawingUI?.state()||busy||meshPartitionDraft()||meshHoleFillUI?.state()||meshRepairUI?.state()||(meshReduceUI?.state()||meshRemeshUI?.state()||(meshSmoothUI?.state()||meshSculptUI?.state())||meshEraseFillUI?.state()||meshMakeSolidUI?.state()||(meshHollowUI?.state()||meshFeaturesUI?.state()))||meshSelectionUI?.state()||meshSelectionUI?.isChecking()||activePreview||meshCopyUI?.state()||tools?.state()?.preview||modelingUI?.state()||advancedFreeCADUI?.state()||sketchUI?.state()||meshExtras?.state()||workplaneUI?.state()||view.isEditing()||layoutUI.isActive()||layoutUI.isSaving())throw Error('Bearbeitung zuerst abschließen oder abbrechen.');if(fileBusy)throw Error('Ein Projekt wird bereits gespeichert oder geöffnet.');}
-
-async function saveProjectOnDesktop(args){
-  const desktop=window.offlinecadDesktop;if(!desktop.saveProjectReply)return desktop.saveProject(args);
-  const reply=await desktop.saveProjectReply(args);if(!reply?.ok)throw Object.assign(Error(reply?.error??'Projekt nicht gespeichert.'),{code:reply?.code??'PROJECT_SAVE_FAILED',feedback:reply?.feedback});return reply.value;
-}
-
-async function save({saveAs=false,format,automation=false,expectedRevision,filename:requestedFilename}={}){
-  readyForFile();const release=automation?controller.holdRevision(expectedRevision,{message:'Projekt wird gespeichert.'}):()=>{};fileBusy=true;
-  try{
-    const revision=controller.revision(),state=workspace(),signature=workspaceSignature(state),pack=format==='fnpack'||format===undefined&&(preferredProjectFormat==='fnpack'||cadProjectNeedsPackage(project())),base=(project().name.trim()||'Unbenanntes Modell').replace(/[<>:"/\\|?*\x00-\x1f]/g,'_');let result,storedVersion;
-    if(pack){if(!packFiles.available())throw Error('Geometriepakete in der portablen Anwendung speichern.');const encoded=packFiles.encode(project(),state);storedVersion=encoded.project.version;result=await saveProjectOnDesktop({filename:requestedFilename??base+'.fnpack',automation,...encoded,id:activeProjectFile?.id,saveAs:saveAs||!!requestedFilename||preferredProjectFormat!=='fnpack'});}
-    else{storedVersion=cadWorkspaceStoredProjectVersion(project().version,state);const encoded=hasGeometryRefs(project())?createCadWorkspaceSerializer(await controller.materialize())(state):serializeWorkspace(state),filename=requestedFilename??base+'.ocad';result=window.offlinecadDesktop?.saveProject?await saveProjectOnDesktop({filename,automation,bytes:new TextEncoder().encode(encoded),id:activeProjectFile?.id,saveAs:saveAs||!!requestedFilename||preferredProjectFormat==='fnpack'||storedVersion>=8&&(activeProjectFile?.projectVersion??project().version)<storedVersion}):await download(encoded,filename,'application/json');}
-    if(result?.saved){packFiles.register(result.fnpack);preferredProjectFormat=pack?'fnpack':'ocad';savedRevision=revision;cleanRevision=revision;recoveredProject=false;savedWorkspaceSignature=signature;cleanWorkspaceSignature=signature;activeProjectFile=result.file?{...result.file,projectVersion:storedVersion}:null;toast(result.warning??'Projekt gespeichert.');if(pack&&result.file)cacheWelcomePackageThumbnail(result.file);}updateState();return result;
-  }finally{fileBusy=false;release();}
-}
-
-async function saveFromAutomation(request){
-  const extension=request.filename?.split('.').at(-1).toLowerCase(),format=request.format??extension;
-  if(extension&&request.format&&extension!==request.format)throw Error('Dateiendung und Projektformat stimmen nicht überein.');
-  const result=await save({automation:true,expectedRevision:request.revision,filename:request.filename,format});
-  return {saved:result?.saved===true,revision:request.revision,currentRevision:controller.revision(),...(result?.file?{path:result.file.path,format:result.file.path.toLowerCase().endsWith('.fnpack')?'fnpack':'ocad',bytes:result.file.size}:{}),...(result?.warning?{warning:result.warning}:{})};
-}
-
-async function restoreWorkspace(state){partPropertiesUI?.restoreExplosion(null);const previousSet=assemblyDisplay.ids(project());assemblyDisplay.restore(state?.loadSet??null,project());if(JSON.stringify(previousSet)!==JSON.stringify(assemblyDisplay.ids(project()))){controller.invalidateDisplayView();lastDisplayed=null;preparedDisplay=null;await scheduleRefresh();}if(!state){await meshSelectionUI?.restore(null);ui?.restoreTreeState({expanded:[]});select([]);view.fit();return;}await setQuality(state.quality);setPreferences({...preferences,snap:state.snap});await layoutUI.restore(state.layout);setMode(state.mode);ui?.restoreTreeState(state.tree??{expanded:[]});view.restoreView(state.view);$('projection').textContent=t(state.view.projection==='perspective'?'Perspektive':'Orthografisch');select(state.selection);await meshExtras?.restoreSection(state.section);await meshSelectionUI?.restore(state.meshSelection??null);partPropertiesUI?.restoreExplosion(state.explosion??null);}
-
-async function openEncoded(encoded,file=null,{allowCatalog=false}={}){partPropertiesUI?.close();partPropertiesUI?.suspendExplosion();const prepared=await controller.readProject(encoded),checked=prepared.project,state=checked.workspace;if(hasGeometryRefs(checked)&&!allowCatalog)throw Error('Geometrieverweise benötigen ein vollständiges .fnpack-Paket.');delete checked.workspace;const oldLoadSet=assemblyDisplay.ids(project());assemblyOpening=true;assemblyDisplay.restore(state?.loadSet??null,checked);const assemblySetChanged=JSON.stringify(oldLoadSet)!==JSON.stringify(assemblyDisplay.ids(checked));if(assemblySetChanged)controller.invalidateDisplayView();try{await controller.open(checked);}catch(error){assemblyDisplay.restore(oldLoadSet,project());throw error;}finally{assemblyOpening=false;}assemblyScope=controller.projectScope();assemblyKnownIds=new Set(project().nodes.map(n=>n.id));nextImportIndex=0;isolation.end();updateIsolation();if(assemblySetChanged){lastDisplayed=null;await scheduleRefresh();}else await refreshTask;activeProjectFile=prepared.migration?null:file?{...file,projectVersion:checked.version}:null;if(prepared.warnings.length)toast(prepared.warnings.join(' '));savedRevision=controller.revision();cleanRevision=savedRevision;recoveredProject=false;await restoreWorkspace(state);savedWorkspaceSignature=workspaceSignature();cleanWorkspaceSignature=savedWorkspaceSignature;updateState();}
-
-async function openFile(file){if(file.name.toLowerCase().endsWith('.fnpack'))throw Error('Geometriepakete über Projekt öffnen in der portablen Anwendung laden.');if(file.size>CAD_PROJECT_LIMITS.bytes)throw Error('Projektdatei ist größer als 50 MB.');await openEncoded(new Uint8Array(await file.arrayBuffer()));}
-
-async function openProject(id){
-
-  readyForFile();if(!await confirmProjectChange())return;
-
-  if(!window.offlinecadDesktop?.openProject){$('modal').close();$('open-file').click();return;}
-
-  fileBusy=true;try{const result=await window.offlinecadDesktop.openProject(id?{id}:{});if(result.opened){packFiles.register(result.fnpack);const beforeFormat=preferredProjectFormat;try{await openEncoded(result.bytes??result.project,result.file,{allowCatalog:!!result.fnpack});preferredProjectFormat=result.fnpack?'fnpack':'ocad';}catch(error){preferredProjectFormat=beforeFormat;throw error;}$('modal').close();if(result.warning)toast(result.warning);if(result.fnpack)cacheWelcomePackageThumbnail(result.file);return true;}}finally{fileBusy=false;}
-
-}
-
-async function openWelcomeExample(example){
-  readyForFile();if(!await confirmProjectChange())return false;
-  if(activeEasyKind())workbenchUI.setMode('normal');
-  fileBusy=true;
-  try{
-    const response=await fetch(example.url);if(!response.ok)throw Error('Beispielprojekt konnte nicht geladen werden.');
-    const encoded=await response.text();await openEncoded(encoded);preferredProjectFormat='ocad';
-    view.fit();toast('Beispiel geladen. Änderungen als eigenes Projekt speichern.');return true;
-  }finally{fileBusy=false;}
-}
 
 function confirmProjectChange(){
 

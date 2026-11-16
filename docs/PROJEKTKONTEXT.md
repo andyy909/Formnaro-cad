@@ -1,5 +1,12 @@
 # Technischer Projektkontext
 
+P3-3f: `src/app/workspace-io.js` erfasst und restauriert den Arbeitsbereich
+und koordiniert Speichern und Öffnen über die bestehende OCAD- und
+FNPACK-Persistenz. Der CAD-Einstieg teilt seine Dateisitzung mit der Fabrik und
+der Autosicherung. Dieselbe Signaturfunktion erfasst den gespeicherten und
+den aktuellen Arbeitsbereich für die Änderungserkennung. Nur diese Signatur
+rundet Kamerawerte. Die Projektdateien behalten ihre volle Genauigkeit.
+
 P3-3e: Die Isolationsaktionen in `src/app/isolation.js` verbinden die
 Auswahl mit Renderer, Markierungen und Statushinweis. Der CAD-Einstieg teilt
 dieselbe temporäre `createCadIsolation`-Instanz mit den übrigen Aufrufern.
