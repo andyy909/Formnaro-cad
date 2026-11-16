@@ -1,5 +1,12 @@
 # Technischer Projektkontext
 
+P3-4l: `backend/practice-quality-verification.cjs` führt die sieben
+Qualitätsvarianten des Übungsprüfers aus. Der Dispatcher behält die
+Variantenauswahl und übergibt den Elternzustand und den vorhandenen
+Live-Prüfhelfer. Prüfwerte, Berichte und die Wiederherstellung von
+`global.fetch` bleiben erhalten. Der portable Paketfilter lässt das
+Prüfmodul aus.
+
 P3-5e: Der native CAD-Prüfer wartet bei der Format-5-Autosicherung auf
 die Bestätigung des regulären periodischen CAD7-Schreibvorgangs. Nach
 zehn Sekunden gilt eine fehlende oder abweichende Sicherung als Prüffehler.
