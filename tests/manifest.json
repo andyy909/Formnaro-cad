@@ -577,7 +577,7 @@
   {"file":"tests/tool-parity.test.mjs","referencedBy":["test:tool-parity"],"kind":"node","status":"pass","seconds":1.111},
   {"file":"tests/ui-numbers.test.mjs","referencedBy":["scripts/legacy/package-group-performance.mjs","scripts/legacy/package-move-dimensions.mjs","scripts/legacy/package-number-display.mjs","scripts/legacy/package-rotation-ring.mjs","scripts/legacy/package-servo-performance.mjs","scripts/legacy/package-sketch-mesh.mjs"],"kind":"node","status":"pass","seconds":0.187},
   {"file":"tests/v09.test.mjs","referencedBy":[],"kind":"node","status":"obsolete","seconds":4.688,"note":"P2-2b: exclusively tested removed v0.9 modules; active CAD/mesh geometry, history, parameters, project loading and transactions retain separate coverage."},
-  {"file":"tests/verification-report.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.283},
+  {"file":"tests/verification-report.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.283,"textCoupled":true,"note":"Checks report-writer call sites in electron.cjs in addition to byte and error behavior."},
   {"file":"tests/web-research-common.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.212},
   {"file":"tests/web-research-permission.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.368},
   {"file":"tests/windows-dictation.test.cjs","referencedBy":["ci"],"kind":"node","status":"pass","seconds":0.779},
