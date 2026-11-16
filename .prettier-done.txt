@@ -316,3 +316,6 @@ src/cad-project-parameters-data.js
 src/cad-automation-access.js
 src/cad-project-parameters-ui.js
 src/cad-ai-request.js
+src/cad-persistence.js
+src/cad-reference-tools-ui.js
+src/cad-joints-automation.js
