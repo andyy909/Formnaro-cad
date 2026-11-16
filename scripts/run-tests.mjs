@@ -5,7 +5,8 @@ import { selectNodeTests } from './select-node-tests.mjs';
 
 const args = new Set(process.argv.slice(2));
 const includeFailing = args.delete('--include-failing');
-const balanceByDuration = args.delete('--balance-by-duration');
+const useCiDurations = args.delete('--balance-by-duration=ci');
+const balanceByDuration = args.delete('--balance-by-duration') || useCiDurations;
 const list = args.delete('--list');
 const shardOption = [...args].find((arg) => arg.startsWith('--shard='));
 if (shardOption) args.delete(shardOption);
@@ -13,14 +14,17 @@ const shardMatch = /^--shard=([1-9]\d*)\/([1-9]\d*)$/.exec(shardOption ?? '--sha
 const shard = Number(shardMatch?.[1]);
 const shardCount = Number(shardMatch?.[2]);
 if (args.size || !Number.isSafeInteger(shard) || !Number.isSafeInteger(shardCount) || shard > shardCount) {
-  console.error('Usage: node scripts/run-tests.mjs [--include-failing] [--shard=<index>/<count>] [--balance-by-duration] [--list]');
+  console.error('Usage: node scripts/run-tests.mjs [--include-failing] [--shard=<index>/<count>] [--balance-by-duration[=ci]] [--list]');
   process.exit(2);
 }
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const manifest = JSON.parse(readFileSync(root + 'tests/manifest.json', 'utf8'));
+const durationProfile = useCiDurations && shardCount > 1
+  ? JSON.parse(readFileSync(new URL('./ci-test-durations.json', import.meta.url), 'utf8'))
+  : undefined;
 const { tests, selectedCount, estimatedSeconds } = selectNodeTests(manifest, {
-  platform: process.platform, includeFailing, shard, shardCount, balanceByDuration,
+  platform: process.platform, includeFailing, shard, shardCount, balanceByDuration, durationProfile,
 });
 if (!tests.length) {
   console.error('No measured Node test files selected by tests/manifest.json.');

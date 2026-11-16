@@ -73,7 +73,7 @@ jobs:
         run: npm run build
       - if: matrix.shard == 1
         run: npm test
-      - run: npm run test:all -- --shard=${{ matrix.shard }}/2 --balance-by-duration
+      - run: npm run test:all -- --shard=${{ matrix.shard }}/2 --balance-by-duration=ci
       - run: node --test tests/windows-dictation.test.cjs tests/renderer-recovery-lifecycle.test.cjs tests/desktop-ai-lifecycle.test.cjs tests/ai-model-benchmarks.test.cjs tests/ai-lab-benchmark.test.cjs tests/ai-advanced-benchmark.test.cjs tests/ai-drawing-reference.test.cjs tests/ai-tool-reference.test.cjs tests/ai-responses-json-input.test.cjs tests/ai-drill-completion.test.cjs tests/ai-lab-token-renewal.test.cjs tests/chatgpt-login.test.cjs
         if: matrix.shard == 1
       - name: Verify laboratory storage, credentials and process shutdown
@@ -125,7 +125,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
-      - run: npm run test:all -- --shard=${{ matrix.shard }}/2
+      - run: npm run test:all -- --shard=${{ matrix.shard }}/2 --balance-by-duration=ci
 
   mini-source:
     name: mini-source (${{ matrix.directory }})${{ github.event_name == 'push' && ' [push]' || '' }}

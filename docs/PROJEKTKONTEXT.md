@@ -8,6 +8,12 @@ ausstehende Tests stehen bei den betroffenen Dateien. Mit
 `npm run test:all -- --include-failing` lassen sich dokumentierte Fehler und
 Timeouts für eine lokale Diagnose einbeziehen.
 
+Die CI verteilt die Manifest-Auswahl mit `--balance-by-duration=ci` je auf
+zwei Windows- und Linux-Runner. `scripts/ci-test-durations.json` enthält
+plattformspezifische Medianwerte aus vollständigen PR-Läufen und die
+gemessene Zusatzlast des ersten Windows-Jobs. Neue Manifestdateien gehen
+mit ihrer Manifestdauer oder der bisherigen Sekunde als Schätzwert ein.
+
 Übungsmodus, Entwicklung 04.11.2026: Im KI-Chat startet die ausdrückliche Option „Übung auf Kopie des aktuellen Projekts“ eine Übung für ein bis acht ausgewählte vollständige Bauteile. Der Anbieter erhält kompakte Bezüge mit Übungsalias, Name und Typ. Die Anwendung materialisiert Geometrie, Quellen und weitere Projektdaten lokal und gibt die Kopie mit Ausgangsrevision und Auswahl getrennt vom Anbieterplan an das Übungsfenster. Das Fenster lädt die Kopie über den regulären CAD-Projektpfad und stellt die Auswahl vor dem ersten Bedienungsschritt wieder her. Bei Änderung von Projektidentität, Revision oder Auswahl wird ein veralteter Auftrag abgewiesen.
 
 Eine erfolgreiche Projektübung liefert dem Chat eine lokale Referenz auf das Ergebnis. „Änderungen ansehen“ prüft die Ergebnisrevision und den Schutz unbeteiligter beziehungsweise gesperrter Teile. Anschließend baut die reguläre CAD-Vorschau die Geometrie erneut auf und zeigt betroffene Teile und Projektbereiche. Übernehmen erfordert eine unveränderte Ausgangsrevision und Projektidentität und erzeugt genau einen Undo-Schritt. Bereits bestehende Teile müssen vor der Übung ausgewählt sein, wenn sie sich im Ergebnis ändern sollen. Die erweiterte Gesamtprüfung folgt im weiteren Ausbau.

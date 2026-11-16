@@ -5,6 +5,7 @@ import { selectNodeTests } from '../scripts/select-node-tests.mjs';
 import { findPullRequestRun } from '../scripts/source-ci-trigger.mjs';
 
 const manifest = JSON.parse(readFileSync(new URL('./manifest.json', import.meta.url), 'utf8'));
+const durationProfile = JSON.parse(readFileSync(new URL('../scripts/ci-test-durations.json', import.meta.url), 'utf8'));
 const nodeTest = (name, options) => ({ file: `tests/${name}.test.mjs`, kind: 'node', status: 'pass', ...options });
 const windowsShard = (entries, shard, extra) => selectNodeTests(entries, {
   platform: 'win32', shard, shardCount: 2, balanceByDuration: true, ...extra,
@@ -38,6 +39,40 @@ test('duplicate selected files are rejected before either shard can run', () => 
   for (const shard of [1, 2]) {
     assert.throws(() => windowsShard([nodeTest('a'), nodeTest('A')], shard), /Duplicate Node test path/);
   }
+});
+
+test('the CI duration profile preserves each platform selection and gives deterministic shards', () => {
+  for (const platform of ['win32', 'linux']) {
+    const options = { platform, shard: 1, shardCount: 1 };
+    const expected = files(selectNodeTests(manifest, options));
+    const newEntry = nodeTest('new-ci-test');
+    const entries = [...manifest, newEntry];
+    const assigned = [1, 2].map((shard) => {
+      const ci = { ...options, shard, shardCount: 2, balanceByDuration: true, durationProfile };
+      const actual = files(selectNodeTests(entries, ci));
+      assert.deepEqual(files(selectNodeTests(entries.toReversed(), ci)).sort(), [...actual].sort());
+      return actual;
+    });
+    assert.deepEqual(assigned.flat().sort(), [...expected, newEntry.file].sort());
+  }
+});
+
+test('CI estimates use the operating system and account for work on the first Windows shard', () => {
+  const entries = [nodeTest('a'), nodeTest('b'), nodeTest('new'), nodeTest('fallback', { seconds: 2 })];
+  const profile = {
+    platforms: ['win32', 'linux'],
+    firstShardExtraMs: { win32: 10000 },
+    files: { 'tests/a.test.mjs': [10000, 3000], 'tests/b.test.mjs': [3000, 10000] },
+  };
+  const windows = windowsShard(entries, 1, { durationProfile: profile });
+  const linux = windowsShard(entries, 1, { platform: 'linux', durationProfile: profile });
+  assert.deepEqual(files(windows), ['tests/b.test.mjs']);
+  assert.equal(windows.estimatedSeconds, 3);
+  assert.equal(windowsShard(entries, 2, { durationProfile: profile }).estimatedSeconds, 13);
+  assert.deepEqual(files(linux), ['tests/b.test.mjs']);
+  assert.equal(linux.estimatedSeconds, 10);
+  assert.deepEqual(files(windowsShard(entries.slice(2), 1, { durationProfile: profile })), ['tests/new.test.mjs']);
+  assert.deepEqual(files(windowsShard(entries.slice(2), 2, { durationProfile: profile })), ['tests/fallback.test.mjs']);
 });
 
 const repository = 'example/cad';
