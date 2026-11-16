@@ -131,7 +131,7 @@ import {originalCadSubpath} from './cad-original-contours.js';
 
 import {loadPlugins} from './cad-plugin-manifest.js';
 
-import {createProgramStorageAsync} from './program-storage.js';
+import {createStartup} from './app/startup.js';
 
 import {createErrorReporter} from './error-log.js';
 
@@ -178,30 +178,8 @@ const $=id=>document.getElementById(id),copy=value=>structuredClone(value),targe
 
 const translate=point=>new THREE.Matrix4().makeTranslation(...point).toArray();
 
-let storage;
-
-const startupLabels={
- 'load-data':['Lokale Daten werden geladen …','Loading local data …'],
- 'mount-ui':['Arbeitsfläche wird vorbereitet …','Preparing the workspace …'],
- 'read-recovery':['Autosicherung wird gelesen …','Reading autosave …'],
- 'validate-project':['Projekt wird geprüft …','Validating project …'],
- 'build-view':['Geometrie und Anzeige werden aufgebaut …','Preparing geometry and display …'],
- 'restore-workspace':['Arbeitsbereich wird wiederhergestellt …','Restoring workspace …'],
-};
-const startupPhases=[];
-let startupPhase=null;
-function setStartupPhase(name,message){
- const now=performance.now();
- if(startupPhase)startupPhases.push({...startupPhase,finishedMs:now,durationMs:now-startupPhase.startedMs});
- startupPhase=name==='ready'?null:{name,startedMs:now};
- const status=$('startup-phase');
- status.dataset.phase=name;status.hidden=name==='ready';
- status.textContent=message??startupLabels[name]?.[document.documentElement.lang==='en'?1:0]??'';
-}
-setStartupPhase('load-data');
-try{storage=await createProgramStorageAsync(localStorage,window.offlinecadDesktop,{cadOnly:true});}
-catch(error){window.__cadError=error.message;setStartupPhase('failed','Start fehlgeschlagen: '+error.message);$('status').textContent='Start fehlgeschlagen: '+error.message;throw error;}
-setStartupPhase('mount-ui');
+const startup=createStartup({document,window,performance});
+const storage=await startup.openStorage();
 
 configureModelCheckStorage(storage);
 if(!storage.getItem(MODEL_CHECK_CONFIG_KEY))saveModelCheckConfig(readModelCheckConfig());
@@ -1253,15 +1231,15 @@ async function start(){
  const recoveryFormat=storage.getItem(PACK_RECOVERY_KIND)==='fnpack'?'fnpack':'ocad';
  let recovered=null;
  if(!window.offlinecadDesktop?.practiceReady){
-  setStartupPhase('read-recovery');
-  try{recovered=await recovery.load(value=>{setStartupPhase('validate-project');return controller.verify(value);});}
+  startup.setStartupPhase('read-recovery');
+  try{recovered=await recovery.load(value=>{startup.setStartupPhase('validate-project');return controller.verify(value);});}
   catch(error){startupRecoveryFailed=true;toast('CAD-Autosicherung konnte nicht gelesen werden: '+error.message);}
  }
- await refreshTask;if(!nativeScene){setStartupPhase('build-view');await scheduleRefresh();}
+ await refreshTask;if(!nativeScene){startup.setStartupPhase('build-view');await scheduleRefresh();}
  cleanRevision=controller.revision();startupEmptyRevision=cleanRevision;cleanWorkspaceSignature=workspaceSignature();
- setStartupPhase('ready');window.__cadReady=true;welcome.setReady();
+ startup.setStartupPhase('ready');window.__cadReady=true;welcome.setReady();
  if(!welcome.dismissed())void welcomeHistory(recovered,recoveryFormat);
- for(const warning of storage.info?.().warnings??[])toast(warning);if(Object.keys(storage.info?.().unavailable??{}).length)toast('Einige gespeicherte Dateien konnten nicht geladen werden. Sie bleiben unverändert und schreibgeschützt; bitte den Datenordner prüfen.');easyRepair?.schedule();if(new URLSearchParams(location.search).has('test'))window.__cadTest={externalAutomation,setPracticeQuality:value=>{practiceVerificationQuality=structuredClone(value);},startupPhases:()=>startupPhases.map(phase=>({...phase})),recoveryEncodingStats:()=>recoveryEncoder?.stats(),requestRecovery:()=>writeConfirmedRecovery(workspace()),flushRecoveryOnClose:window.__formnaroFlushRecovery,partPropertiesUI,runLocalScript:runCadAIScript,sourceDisplayState:()=>({key:sourceDisplayKey,expected:sourceViewKey(),sceneRevision:nativeScene?.revision,revision:controller.revision(),canEdit:!busy&&nativeScene?.revision===controller.revision()&&(!selection.some(target=>target.path.length)||sourceDisplayKey===sourceViewKey())}),packFiles,programAssistant,assemblyDisplay,changeAssemblyDisplay,jointsUI,linkedContoursUI:modelingUI,workbenchUI,contextMenuUI,easyRepair,controller,view,inspectionUI,thicknessUI,marksView,aiUI,featureUI,activePreview:()=>activePreview?{previewId:activePreview.previewId,revision:activePreview.revision}:null,showPreview,clearPreview,ui,tools,meshTools,meshExtras,meshCopyUI,meshSelectionUI,meshInspectorUI,meshRepairUI,meshReduceUI,meshRemeshUI,meshSmoothUI,meshSculptUI,meshEraseFillUI,meshMakeSolidUI,meshHollowUI,meshFeaturesUI,meshHoleFillUI,workplaneUI,sketchUI,modelingUI,advancedFreeCADUI,drawingUI,projectParametersUI,recovery,access,storage,layoutUI,referenceRebindUI,actions,execute,mutate,refresh:scheduleRefresh,settled:async()=>{await refreshTask;while(controller.state().busy||controller.state().worker.running||controller.state().meshWorker.running)await new Promise(resolve=>setTimeout(resolve,20));await refreshTask;await alignmentTask;},selection:getSelection,select,getScene,getModel:()=>controller.snapshot(),snapshot:()=>controller.snapshot(),isolation,projectsUI,serialize:()=>controller.serialize(),resetProject:async()=>{const pending=actions.new();document.getElementById('project-change-discard')?.click();return pending;},serializeWorkspace,workspace,openProject,functionsUI,functionPlugins,activeProjectFile:()=>copy(activeProjectFile),addShape,addPlugin,group,ungroup,mirror,drop,centerSelection,duplicate,loadDemo,importFile,importDialog,workflowSettings,openFile,exportModel,save,download,changeParameter:ui.changeParameter,setMode,projectPoint:view.projectPoint,getHandles:()=>view.groups.handles.children.filter(handle=>handle.userData.corner&&!handle.userData.height).map(handle=>({kind:handle.userData.kind,axes:handle.userData.scaleAxes,corner:handle.userData.corner,point:handle.position.toArray(),target:handle.userData.target})),getHeightHandle:()=>{const h=view.groups.handles.children.find(h=>h.userData.height);return h?{corner:h.userData.corner,kind:h.userData.kind,axes:h.userData.scaleAxes,point:h.position.toArray(),target:h.userData.target}:null;},getLiftHandle:()=>{const handle=view.groups.handles.children.find(handle=>handle.userData.lift);return handle?{point:handle.position.toArray(),axis:handle.userData.axis,target:handle.userData.target}:null;},sectionState:()=>inspectionUI.sectionState()??tools.sectionState(),renderCacheState:view.cacheState,getSettings:()=>copy(preferences),getQuality:()=>quality.get(),setQuality,cancel:escape,undoDepth:()=>controller.state().undo,bridge:access.dispatch};}
+ for(const warning of storage.info?.().warnings??[])toast(warning);if(Object.keys(storage.info?.().unavailable??{}).length)toast('Einige gespeicherte Dateien konnten nicht geladen werden. Sie bleiben unverändert und schreibgeschützt; bitte den Datenordner prüfen.');easyRepair?.schedule();if(new URLSearchParams(location.search).has('test'))window.__cadTest={externalAutomation,setPracticeQuality:value=>{practiceVerificationQuality=structuredClone(value);},startupPhases:startup.startupPhases,recoveryEncodingStats:()=>recoveryEncoder?.stats(),requestRecovery:()=>writeConfirmedRecovery(workspace()),flushRecoveryOnClose:window.__formnaroFlushRecovery,partPropertiesUI,runLocalScript:runCadAIScript,sourceDisplayState:()=>({key:sourceDisplayKey,expected:sourceViewKey(),sceneRevision:nativeScene?.revision,revision:controller.revision(),canEdit:!busy&&nativeScene?.revision===controller.revision()&&(!selection.some(target=>target.path.length)||sourceDisplayKey===sourceViewKey())}),packFiles,programAssistant,assemblyDisplay,changeAssemblyDisplay,jointsUI,linkedContoursUI:modelingUI,workbenchUI,contextMenuUI,easyRepair,controller,view,inspectionUI,thicknessUI,marksView,aiUI,featureUI,activePreview:()=>activePreview?{previewId:activePreview.previewId,revision:activePreview.revision}:null,showPreview,clearPreview,ui,tools,meshTools,meshExtras,meshCopyUI,meshSelectionUI,meshInspectorUI,meshRepairUI,meshReduceUI,meshRemeshUI,meshSmoothUI,meshSculptUI,meshEraseFillUI,meshMakeSolidUI,meshHollowUI,meshFeaturesUI,meshHoleFillUI,workplaneUI,sketchUI,modelingUI,advancedFreeCADUI,drawingUI,projectParametersUI,recovery,access,storage,layoutUI,referenceRebindUI,actions,execute,mutate,refresh:scheduleRefresh,settled:async()=>{await refreshTask;while(controller.state().busy||controller.state().worker.running||controller.state().meshWorker.running)await new Promise(resolve=>setTimeout(resolve,20));await refreshTask;await alignmentTask;},selection:getSelection,select,getScene,getModel:()=>controller.snapshot(),snapshot:()=>controller.snapshot(),isolation,projectsUI,serialize:()=>controller.serialize(),resetProject:async()=>{const pending=actions.new();document.getElementById('project-change-discard')?.click();return pending;},serializeWorkspace,workspace,openProject,functionsUI,functionPlugins,activeProjectFile:()=>copy(activeProjectFile),addShape,addPlugin,group,ungroup,mirror,drop,centerSelection,duplicate,loadDemo,importFile,importDialog,workflowSettings,openFile,exportModel,save,download,changeParameter:ui.changeParameter,setMode,projectPoint:view.projectPoint,getHandles:()=>view.groups.handles.children.filter(handle=>handle.userData.corner&&!handle.userData.height).map(handle=>({kind:handle.userData.kind,axes:handle.userData.scaleAxes,corner:handle.userData.corner,point:handle.position.toArray(),target:handle.userData.target})),getHeightHandle:()=>{const h=view.groups.handles.children.find(h=>h.userData.height);return h?{corner:h.userData.corner,kind:h.userData.kind,axes:h.userData.scaleAxes,point:h.position.toArray(),target:h.userData.target}:null;},getLiftHandle:()=>{const handle=view.groups.handles.children.find(handle=>handle.userData.lift);return handle?{point:handle.position.toArray(),axis:handle.userData.axis,target:handle.userData.target}:null;},sectionState:()=>inspectionUI.sectionState()??tools.sectionState(),renderCacheState:view.cacheState,getSettings:()=>copy(preferences),getQuality:()=>quality.get(),setQuality,cancel:escape,undoDepth:()=>controller.state().undo,bridge:access.dispatch};}
 
 start().then(()=>{if(typeof window.offlinecadDesktop?.onPracticePlan==='function')practicePlayback=installCadPracticeRunner({desktop:window.offlinecadDesktop,controller,access,getSelection,select,view,setWorkbenchMode:workbenchUI.setMode,frameConstruction:framePracticeConstruction,getPracticeConverterState:()=>functionsUI.state(),getSketchFeedback:()=>sketchUI.practiceFeedback(),openSketchDraft:draft=>sketchUI.openPracticeDraft(draft),openPracticeFile:data=>{readyForFile();const file=practiceFileObject(data);return data.kind==='photo'?measurePracticePhoto(file,controller):functionsUI.converter(file,{intent:'import'});},getAlignmentState:()=>alignment?{ids:[...alignment.ids],referenceId:alignment.referenceId,revision:controller.revision()}:null,getEdgeState:()=>tools.practiceEdgeState(),getInspectionState:()=>inspectionUI.state(),getFacePickState:()=>modelingUI.state(),getDrillState:()=>tools.referenceUI.practiceDrillState(),getPreferences:()=>preferences,settled:async()=>{await refreshTask;while(controller.state().busy||controller.state().worker.running||controller.state().meshWorker.running)await new Promise(resolve=>setTimeout(resolve,20));await refreshTask;await alignmentTask;}});}).catch(error=>{window.__cadError=error.message;console.error(error);$('status').textContent='CAD-Start fehlgeschlagen: '+error.message;toast(error.message);});
 
