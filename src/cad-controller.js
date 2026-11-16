@@ -9,9 +9,9 @@ import {
   mergeDrawingUpdateReports,
 } from './cad-controller-model-keys.js';
 import { createCadControllerExport } from './cad-controller-export.js';
+import { createCadControllerAITask } from './cad-controller-ai-task.js';
 import { cadContourProfileBindingChangeIds } from './cad-contour-profile-bindings.js';
 import { hasCurrentPartSurfaceGroups } from './cad-part-properties.js';
-import { taskConversionKey, validateAITaskRuntime } from './cad-ai-task-runtime.js';
 import { taskCandidateModelKey, validateTaskCandidate } from './cad-ai-task-candidate.js';
 import { aiFeedback } from './ai-feedback.js';
 import { planCadAIScalarFeatureOperation } from './cad-ai-feature-plan.js';
@@ -54,7 +54,6 @@ import { runMixedCadAIBatch } from './cad-mixed-ai.js';
 import { runCadPython } from './cad-python.js';
 import { runFreeCADPlan } from './cad-freecad.js';
 import { runCadAIScript } from './cad-ai-sandbox.js';
-import { createAIWorkspace } from './cad-ai-workspace.js';
 import { AI_PROGRAM_TOOLS } from './cad-ai-program.js';
 import { runModelConversion, queryProgramResources } from './cad-ai-local-tools.js';
 import { validateAIAnalysis, compactAIAnalysisResult, localAIAnalysisResult } from './cad-ai-analysis.js';
@@ -130,60 +129,6 @@ export function createCadController({
     viewQueries = new Map(),
     replacementPreviews = new Set(),
     drawingProofs = new Map();
-  const aiWorkspace = createAIWorkspace(),
-    blockedConversions = new Map(),
-    runningAnalyses = new Set();
-  let workspaceRevision;
-  const originalConvertModel = convertModel;
-  convertModel = async (args) => {
-    const key = taskConversionKey(cadProjectRevision(args.project), args.target);
-    if (args.action === 'convert' && blockedConversions.has(key)) throw blockedConversions.get(key);
-    try {
-      return await originalConvertModel(args);
-    } catch (error) {
-      if (error.feedback?.toolFailure?.scope === 'converter-only') blockedConversions.set(key, error);
-      throw error;
-    }
-  };
-  function beginAITask() {
-    if (runningAnalyses.size) throw Object.assign(Error('Eine lokale Berechnung läuft bereits.'), { code: 'BUSY' });
-    aiWorkspace.clear();
-    blockedConversions.clear();
-    workspaceRevision = store.revision();
-    return { revision: workspaceRevision };
-  }
-  function captureAITaskRuntime() {
-    alive();
-    if (runningAnalyses.size || store.state().busy)
-      throw Object.assign(Error('Eine lokale Berechnung läuft noch.'), { code: 'BUSY' });
-    if (workspaceRevision !== store.revision())
-      throw Object.assign(Error('Der KI-Arbeitsbereich gehört zu einer anderen Modellrevision.'), {
-        code: 'STALE_REVISION',
-      });
-    const snapshot = {
-      version: 1,
-      revision: workspaceRevision,
-      files: aiWorkspace.request({ action: 'snapshot' }),
-      blockedConversions: [...blockedConversions].map(([key, error]) => ({ key, error: aiFeedback(error) })),
-    };
-    validateAITaskRuntime(snapshot, store.revision());
-    return snapshot;
-  }
-  function restoreAITaskRuntime(snapshot) {
-    alive();
-    if (runningAnalyses.size || store.state().busy)
-      throw Object.assign(Error('Eine lokale Berechnung läuft noch.'), { code: 'BUSY' });
-    const checked = validateAITaskRuntime(snapshot, store.revision());
-    aiWorkspace.request({ action: 'replace', files: checked.workspace.request({ action: 'snapshot' }) });
-    blockedConversions.clear();
-    for (const [key, error] of checked.blocked) blockedConversions.set(key, error);
-    workspaceRevision = store.revision();
-    return {
-      revision: workspaceRevision,
-      files: Object.keys(snapshot.files).length,
-      blockedConversions: blockedConversions.size,
-    };
-  }
   async function materializeAITaskCandidate(previewId) {
     const proposal = previews.get(previewId),
       revision = store.revision();
@@ -193,56 +138,6 @@ export function createCadController({
     if (store.revision() !== revision || previews.get(previewId) !== proposal)
       throw Object.assign(Error('Vorschau während der Sicherung geändert.'), { code: 'STALE_REVISION' });
     return cadProjectSnapshot(project);
-  }
-  async function workspaceQuery(kind, options) {
-    if (workspaceRevision !== store.revision()) beginAITask();
-    if (kind === 'files') {
-      if (
-        options?.action === 'replace' ||
-        (['write', 'remove'].includes(options?.action) &&
-          /^(analysis-programs|analysis-results)(\/|$)/.test(options.path ?? ''))
-      )
-        throw Object.assign(
-          Error(
-            'Gespeicherte Analyseprogramme und Messergebnisse sind Anwendungsbelege und bleiben unverändert. Eigene Dateien in einem anderen relativen Ordner speichern.',
-          ),
-          { code: 'AI_WORKSPACE_READONLY', feedback: { retryable: false } },
-        );
-      return aiWorkspace.request(options);
-    }
-    if (kind === 'tools') {
-      if (typeof globalThis.offlinecadDesktop?.aiToolLibrary !== 'function')
-        throw Object.assign(Error('Die dauerhafte Werkzeugbibliothek benötigt Formnaro Desktop.'), {
-          code: 'AI_TOOL_LIBRARY_UNAVAILABLE',
-        });
-      if (globalThis.offlinecadDesktop.aiToolLibraryReply) {
-        const reply = await globalThis.offlinecadDesktop.aiToolLibraryReply(options);
-        if (!reply?.ok)
-          throw Object.assign(Error(reply?.error ?? 'Werkzeugbibliothek nicht verfügbar.'), {
-            code: reply?.code ?? 'AI_TOOL_LIBRARY_UNAVAILABLE',
-            feedback: reply?.feedback,
-          });
-        return reply.value;
-      }
-      return globalThis.offlinecadDesktop.aiToolLibrary(options);
-    }
-    throw Error('Unbekanntes Arbeitswerkzeug.');
-  }
-  async function runIsolated(language, runner, args) {
-    let archive;
-    if (typeof globalThis.offlinecadDesktop?.aiToolLibrary === 'function')
-      archive = await workspaceQuery('tools', {
-        action: 'save',
-        tool: {
-          name: (args.name || 'KI-' + language + '-Berechnung').slice(0, 160),
-          language,
-          code: args.code,
-          ...(args.modules ? { modules: args.modules } : {}),
-          description: 'Vollständiger Quelltext aus einer lokalen Berechnung. Für neue Teile erneut prüfen.',
-          tags: ['Berechnungsverlauf'],
-        },
-      });
-    return runner(args);
   }
   // A drawing-only proposal inherits the private geometry generation proved
   // below. Undo/Redo can then retain its display without comparing or hashing
@@ -1000,18 +895,18 @@ export function createCadController({
                 ),
               runScript: async (args) => {
                 try {
-                  return await runIsolated('javascript', runScript, args);
+                  return await aiTask.runIsolated('javascript', args);
                 } catch (error) {
                   worker.cancel();
                   meshWorker.cancel();
                   throw error;
                 }
               },
-              convertModel,
+              convertModel: aiTask.convertModel,
               runFreeCAD: ({ project, operation, signal }) => freecadOperation(project, operation, signal),
               runPython: async (args) => {
                 try {
-                  return await runIsolated('python', runPython, args);
+                  return await aiTask.runIsolated('python', args);
                 } catch (error) {
                   worker.cancel();
                   meshWorker.cancel();
@@ -1019,7 +914,7 @@ export function createCadController({
                 }
               },
               query: ({ project, engine, kind, options, signal }) => {
-                if (engine === 'workspace') return workspaceQuery(kind, options);
+                if (engine === 'workspace') return aiTask.workspaceQuery(kind, options);
                 if (engine === 'freecad' && kind === 'inspect')
                   return freecadOperation(project, { ...options, kind: 'inspect' }, signal);
                 if (engine === 'app' && kind === 'modelComparison')
@@ -1038,7 +933,7 @@ export function createCadController({
                     throw Error('Nur Modelldaten und Regionsoptionen an den Konverter übergeben.');
                   const target =
                     typeof options.target === 'string' ? { rootId: options.target, path: [] } : options.target;
-                  return convertModel({
+                  return aiTask.convertModel({
                     project,
                     action: 'analyze',
                     target,
@@ -1226,15 +1121,15 @@ export function createCadController({
   const alive = () => {
     if (closed) throw Error('CAD-Anwendung wurde geschlossen.');
   };
+  // The AI task state is created after the store and the lifecycle guard. The
+  // transaction build callback closes over it and only calls it at runtime.
+  const aiTask = createCadControllerAITask({ store, alive, runScript, runPython, convertModel });
   function assertPreviewStart(revision, analysisOwner) {
     alive();
     assertWritable();
     if (revision !== store.revision())
       throw Object.assign(Error('Das CAD-Modell wurde geändert. Vorschau neu berechnen.'), { code: 'STALE_REVISION' });
-    if (
-      store.state().busy ||
-      (runningAnalyses.size && !(runningAnalyses.size === 1 && runningAnalyses.has(analysisOwner)))
-    )
+    if (store.state().busy || !aiTask.allowsPreview(analysisOwner))
       throw Object.assign(Error('Eine CAD-Berechnung läuft bereits.'), { code: 'BUSY' });
   }
   function previewAbort(signal, revision) {
@@ -1791,7 +1686,7 @@ export function createCadController({
     }
   }
   function cancel() {
-    for (const abort of runningAnalyses) abort.abort();
+    aiTask.abortAll();
     const running = !!worker.state().running || !!meshWorker.state().running || comparisonService.active() > 0,
       active = store.cancel();
     patternChoices.cancel();
@@ -1825,10 +1720,10 @@ export function createCadController({
   }
   async function motionQuery(revision, signal, owner, run) {
     assertPreviewStart(revision, owner);
-    const owned = !runningAnalyses.has(owner),
+    const owned = !aiTask.owns(owner),
       abort = owned ? new AbortController() : owner;
     if (owned) {
-      runningAnalyses.add(abort);
+      aiTask.track(abort);
       onBusy(true);
     }
     const activeSignal = signal ? AbortSignal.any([signal, abort.signal]) : abort.signal;
@@ -1838,8 +1733,8 @@ export function createCadController({
       return await run(activeSignal, abort);
     } finally {
       if (owned) {
-        runningAnalyses.delete(abort);
-        onBusy(store.state().busy || runningAnalyses.size > 0);
+        aiTask.untrack(abort);
+        onBusy(store.state().busy || aiTask.busy());
       }
     }
   }
@@ -2417,7 +2312,7 @@ export function createCadController({
   const inspectMeshSolid = (node) => meshQuery('inspectSolid', { node });
   async function freecadOperation(project, operation, signal) {
     if (operation.script && typeof globalThis.offlinecadDesktop?.aiToolLibrary === 'function')
-      await workspaceQuery('tools', {
+      await aiTask.workspaceQuery('tools', {
         action: 'save',
         tool: {
           name: (operation.script.name ?? 'FreeCAD-Python').slice(0, 160),
@@ -2503,8 +2398,8 @@ export function createCadController({
     };
   }
   async function analyze(requests, { reportBudget = 14000, signal } = {}) {
-    if (runningAnalyses.size) throw Object.assign(Error('Eine lokale Berechnung läuft bereits.'), { code: 'BUSY' });
-    if (workspaceRevision !== store.revision()) beginAITask();
+    if (aiTask.busy()) throw Object.assign(Error('Eine lokale Berechnung läuft bereits.'), { code: 'BUSY' });
+    aiTask.ensureCurrent();
     if (!Number.isInteger(reportBudget) || reportBudget < 2000 || reportBudget > 32000)
       throw Object.assign(
         Error(
@@ -2517,18 +2412,17 @@ export function createCadController({
       validated = validateAIAnalysis(requests),
       localAbort = new AbortController();
     signal = signal ? AbortSignal.any([signal, localAbort.signal]) : localAbort.signal;
-    runningAnalyses.add(localAbort);
+    aiTask.track(localAbort);
     onBusy(true);
     try {
       for (const q of validated) {
         if (signal.aborted) throw Object.assign(Error('Lokale Berechnung abgebrochen.'), { code: 'ABORTED' });
         const options = q.options ?? {};
         let value;
-        if (q.engine === 'workspace') value = await workspaceQuery(q.kind, options);
+        if (q.engine === 'workspace') value = await aiTask.workspaceQuery(q.kind, options);
         else if (['python', 'javascript'].includes(q.engine)) {
           const project = await resolveGeometry(store.readSnapshot(), null, { signal });
-          const runner = q.engine === 'python' ? runPython : runScript;
-          value = await runIsolated(q.engine === 'python' ? 'python' : 'javascript', runner, {
+          value = await aiTask.runIsolated(q.engine === 'python' ? 'python' : 'javascript', {
             ...options,
             signal,
             timeoutMs: 300000,
@@ -2550,7 +2444,7 @@ export function createCadController({
                   code: 'AI_ANALYSIS_READ_ONLY',
                 });
               const o = args.options ?? {};
-              if (args.engine === 'workspace') return workspaceQuery(args.kind, o);
+              if (args.engine === 'workspace') return aiTask.workspaceQuery(args.kind, o);
               if (args.engine === 'freecad') return freecadOperation(project, { ...o, kind: 'inspect' }, signal);
               if (args.engine === 'cad') return query(args.kind, o, { signal });
               if (args.engine === 'app' && args.kind === 'modelComparison')
@@ -2567,7 +2461,7 @@ export function createCadController({
                   signal,
                 });
               if (args.engine === 'converter')
-                return convertModel({
+                return aiTask.convertModel({
                   project,
                   action: 'analyze',
                   target: typeof o.target === 'string' ? { rootId: o.target, path: [] } : o.target,
@@ -2656,16 +2550,12 @@ export function createCadController({
             return path;
           },
         });
-        if (Object.keys(artifacts).length)
-          aiWorkspace.request({
-            action: 'replace',
-            files: { ...aiWorkspace.request({ action: 'snapshot' }), ...artifacts },
-          });
+        if (Object.keys(artifacts).length) aiTask.archiveArtifacts(artifacts);
         results.push({ id: q.id, engine: q.engine, kind: q.kind, ...(program ? { program } : {}), value: reported });
       }
       return compactAIAnalysisResult({ revision, results });
     } finally {
-      runningAnalyses.delete(localAbort);
+      aiTask.untrack(localAbort);
       onBusy(store.state().busy);
     }
   }
@@ -2698,7 +2588,7 @@ export function createCadController({
     projectScope: () => projectScope,
     state: () => ({
       ...store.state(),
-      busy: store.state().busy || !!meshWorker.state().running || revisionHolds.size > 0 || runningAnalyses.size > 0,
+      busy: store.state().busy || !!meshWorker.state().running || revisionHolds.size > 0 || aiTask.busy(),
       worker: worker.state(),
       meshWorker: meshWorker.state(),
     }),
@@ -2773,9 +2663,9 @@ export function createCadController({
       return result ? structuredClone(result) : undefined;
     },
     materialize: (ids = null, options = {}) => resolveGeometry(store.readSnapshot(), ids, options),
-    beginAITask,
-    captureAITaskRuntime,
-    restoreAITaskRuntime,
+    beginAITask: aiTask.begin,
+    captureAITaskRuntime: aiTask.capture,
+    restoreAITaskRuntime: aiTask.restore,
     restoreAITaskCandidate,
     materializeAITaskCandidate,
     serialize: () => store.serialize(),
@@ -2792,7 +2682,7 @@ export function createCadController({
       displayQuality = { ...quality };
     },
     dispose: () => {
-      for (const abort of runningAnalyses) abort.abort();
+      aiTask.dispose();
       patternChoices.dispose();
       closed = true;
       confirmedView = null;

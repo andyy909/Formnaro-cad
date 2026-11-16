@@ -1,5 +1,15 @@
 # Technischer Projektkontext
 
+P3-4f1: Der KI-Task-Zustand eines CAD-Controllers liegt in
+`src/cad-controller-ai-task.js`: ein Arbeitsbereich, die Konvertersperren,
+die gebundene Modellrevision und die laufenden Analyse-Owner samt ihren
+unmittelbaren Operationen, dem Konverter-Wrapper, der Workspace-Abfrage, der
+isolierten Ausführung und dem Owner-Gate. Der Controller verdrahtet Build,
+FreeCAD, Analyse, Motion, Vorschau und Abbruch mit derselben Instanz;
+öffentliche Methoden, Snapshot-Felder, Fehlercodes und Reihenfolgen bleiben
+unverändert. `analyze` und `motionQuery` bleiben Controller-Clients, die
+Kandidatenmaterialisierung bleibt beim Vorschau-/Zeichnungsblock.
+
 P3-4l: `backend/practice-quality-verification.cjs` führt die sieben
 Qualitätsvarianten des Übungsprüfers aus. Der Dispatcher behält die
 Variantenauswahl und übergibt den Elternzustand und den vorhandenen

@@ -152,6 +152,7 @@
   {"file":"tests/cad-contour-source-replacement-ui.test.cjs","referencedBy":[],"kind":"electron"},
   {"file":"tests/cad-contour-source-replacement.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":8.839},
   {"file":"tests/cad-contours-review.test.mjs","referencedBy":["test:cad-foundation"],"kind":"node","status":"pass","seconds":1.633},
+  {"file":"tests/cad-controller-ai-task.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":4.02},
   {"file":"tests/cad-controller-export.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.268},
   {"file":"tests/cad-controller-model-keys.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.146},
   {"file":"tests/cad-controller.test.mjs","referencedBy":["scripts/legacy/package-cad-mini-speed.mjs","scripts/legacy/package-hole-groups.mjs","scripts/legacy/package-inspection.mjs","scripts/legacy/package-mesh-sculpt.mjs","scripts/legacy/package-model-placement.mjs","scripts/legacy/package-sketch-mesh.mjs","scripts/legacy/package-step-thickness.mjs","scripts/verify-ai-checks-release.mjs","test:cad-foundation"],"kind":"node","status":"pass","seconds":10.439},

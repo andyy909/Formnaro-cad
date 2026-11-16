@@ -502,3 +502,5 @@ src/cad-controller-model-keys.js
 eslint.config.mjs
 src/cad-controller-export.js
 tests/cad-controller-export.test.mjs
+src/cad-controller-ai-task.js
+tests/cad-controller-ai-task.test.mjs
