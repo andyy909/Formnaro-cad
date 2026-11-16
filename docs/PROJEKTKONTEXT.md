@@ -1,5 +1,9 @@
 # Technischer Projektkontext
 
+P3-3d: Kopieren, Einfügen und Duplizieren liegen in `src/app/clipboard.js`.
+Die Fabrik hält die Projektauswahl der Zwischenablage und die laufende
+Erfassung für dieselbe Renderer-Sitzung.
+
 P3-3c: Spiegeln, Ausrichten und Zentrieren liegen in
 `src/app/alignment.js`. Der CAD-Einstieg hält die gemeinsam genutzte
 Ausrichtungssession, ihren laufenden Task und das Ticket.
