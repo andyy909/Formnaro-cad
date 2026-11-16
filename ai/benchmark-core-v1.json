@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.22",
+  "version": "1.0.25",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -118,7 +118,7 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "299fa8e267b53cda263603aa77174aedf8fbb8513831512e291b05f3abde5004"
+      "sha256": "371e396db46ad75cb4958a4ab144157580d3be535976d04154dd842270a10db7"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -173,5 +173,5 @@
       "sha256": "6f5021d8c0879156ca11022879c222248496a0b681322b8fb86199563833f038"
     }
   ],
-  "revisionReason": "Use the selected Fusion workbench in the isolated practice window and resolve ribbon controls through its real sections. Benchmark tasks and native geometry predicates unchanged."
+  "revisionReason": "R4: store and compare transmitted native measurements in replay. Tasks and native predicates unchanged."
 }
