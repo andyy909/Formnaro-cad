@@ -1,5 +1,13 @@
 # Technischer Projektkontext
 
+P3-4m1: `backend/practice-files-verification.cjs` führt den vollständigen
+Files-Chat-Zweig des Übungsprüfers für die Varianten `1`, `adopt` und
+`recover` aus. Der Dispatcher behält das Gate an derselben Stelle und übergibt
+den effektiven Variantenwert, den vorhandenen Beobachter, den Elternzustand und
+den Snapshot-Ausdruck. Lokale Fixtures, der Provider-Ersatz, die
+Recover-Korrektur und die Wiederherstellung von `global.fetch` bleiben
+erhalten. Der portable Paketfilter lässt das Prüfmodul aus.
+
 P3-5f: Die native Workspace-Verifikation aktiviert für ihre Rekonstruktions-
 Vorschau ausdrücklich die benötigten Körper- und Volumenprüfungen über den
 vorhandenen Einstellungsdialog. Anschließend stellt sie im `finally` die

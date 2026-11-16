@@ -515,6 +515,7 @@
   {"file":"tests/practice-edge.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.515},
   {"file":"tests/practice-face-live-regressions.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.346},
   {"file":"tests/practice-face.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.197},
+  {"file":"tests/practice-files-verification.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.21,"textCoupled":true,"note":"Checks the extracted files-chat helper, all three variants, real fetch replies and restoration, failure probes, and the portable copy filter."},
   {"file":"tests/practice-files.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.3,"note":"Asserts the structured provider context instead of obsolete wording about selection privacy."},
   {"file":"tests/practice-flash-verification.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.253},
   {"file":"tests/practice-framing.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.179},
