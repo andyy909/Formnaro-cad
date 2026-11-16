@@ -530,6 +530,7 @@
   {"file":"tests/practice-runner.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.505},
   {"file":"tests/practice-security-audit.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.181},
   {"file":"tests/practice-sketch.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.169},
+  {"file":"tests/practice-stl-verification.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.2,"textCoupled":true,"note":"Checks the STL dispatcher and plan placement in the source alongside behavior and the portable copy filter."},
   {"file":"tests/practice-title-feedback.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.222},
   {"file":"tests/practice-window-boundary.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.213},
   {"file":"tests/preferences-plugins.test.mjs","referencedBy":["npm test","scripts/legacy/package-ai-measurement-fix.mjs","scripts/legacy/package-ai-workspace.mjs","scripts/legacy/package-fusion.mjs","scripts/legacy/package-mesh-contours.mjs","scripts/legacy/package-security.mjs","scripts/legacy/package-solid.mjs","scripts/package-freecad-python.mjs"],"kind":"node","status":"pass","seconds":0.273},

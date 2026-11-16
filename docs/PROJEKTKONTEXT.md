@@ -1,5 +1,12 @@
 # Technischer Projektkontext
 
+P3-4j: backend/practice-stl-verification.cjs kapselt den STL-Prüfblock des
+Übungsverifiers. Fixture-Bytes, Varianten, Plan, Prompt-Texte, Qualitätskriterien,
+Assertions, Prüfreihenfolge und Rückgabefelder bleiben unverändert; die
+Hauptdatei reicht `livePractice` und `comparisonPolicy` weiter. Das Modul trägt
+wie die übrigen Prüfmodule „verification“ im Namen und fällt aus dem portablen
+Paket.
+
 P3-4b: backend/startup-options.cjs bündelt die Start- und Prüfoptionen
 für electron.cjs. Argumentprioritäten, Diagnose-/Übungskind-Erkennung,
 Berichtspfade und Sprachprüf-Schalter bleiben unverändert. Profilaufbau,
