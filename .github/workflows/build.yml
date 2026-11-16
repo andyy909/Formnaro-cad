@@ -54,6 +54,9 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
+      - name: Verify relative documentation links
+        if: matrix.shard == 1
+        run: node scripts/check-links.mjs
       - run: npm ci
       - name: Record tested commit and tree
         run: git log -1 --format="%H %T %P"

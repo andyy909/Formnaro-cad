@@ -1,5 +1,11 @@
 # Technischer Projektkontext
 
+P5-2: `node scripts/check-links.mjs` prüft relative Markdown-Ziele in
+`README*.md` und `docs/*.md` gegen das Git-Dateiinventar. Der Prüfer meldet
+fehlende Ziele mit Zeilennummer und verwendet Exitcode 1 bei Funden.
+Externe Ziele und reine Fragmente werden übersprungen. Die Prüfung läuft
+im ersten Windows-Quelltest-Teillauf der CI.
+
 Auf der Startseite folgen bis zu drei zuletzt verwendete Modelle auf die drei Beispielkarten. Der normale Neustart beginnt mit leerem Arbeitsbereich. Eine vorhandene Autosicherung kann über ihre eigene Aktion geladen werden.
 
 P3-3f: `src/app/workspace-io.js` erfasst und restauriert den Arbeitsbereich
