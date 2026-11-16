@@ -1,5 +1,9 @@
 # Technischer Projektkontext
 
+P3-5e: Der native CAD-Prüfer wartet bei der Format-5-Autosicherung auf
+die Bestätigung des regulären periodischen CAD7-Schreibvorgangs. Nach
+zehn Sekunden gilt eine fehlende oder abweichende Sicherung als Prüffehler.
+
 P3-4c1: `backend/verification-native-cad.cjs` führt die nativen CAD-
 Prüfschritte für die lokale Verifikation in ihrer bisherigen Reihenfolge aus.
 `electron.cjs` behält die Fehlerprüfung, die Berichtsausgabe und das Beenden
