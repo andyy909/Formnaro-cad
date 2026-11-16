@@ -838,10 +838,12 @@ export function createMeshEngineAdapter({ kernel } = {}) {
     }
     // The tolerant importer has deliberately preserved every open contour.
     // Easy's legacy background fallback must not silently cap it afterwards.
-    let tolerantImport = false;
+    let tolerantImport = node.metadata?.importedFile?.type === 'stl';
     try {
-      tolerantImport = JSON.parse(node.metadata?.notes ?? 'null')?.format === 'FormnaroMeshImport';
-    } catch {}
+      tolerantImport ||= JSON.parse(node.metadata?.notes ?? 'null')?.format === 'FormnaroMeshImport';
+    } catch {
+      // Bewusst ignoriert: Freitextnotizen sind kein Importbericht; der Herkunftsmarker bleibt erhalten.
+    }
     if (tolerantImport)
       return {
         status: 'unrepairable',

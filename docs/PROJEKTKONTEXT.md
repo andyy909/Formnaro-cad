@@ -1,5 +1,11 @@
 # Technischer Projektkontext
 
+P3-5b: Die automatische Easy-Netzreparatur erkennt STL-Importe zusätzlich
+am vorhandenen importedFile.type-Marker. Bearbeitete, leere oder anders
+strukturierte Notizen heben den Schutz offener Importkonturen nicht auf.
+Alte Importberichte bleiben erkannt; die ausdrückliche Lochreparatur und
+die automatische Reparatur gewöhnlicher Netze behalten ihr Verhalten.
+
 P3-5a: `npm run lint` prüft den JavaScript-Anwendungscode des Hauptprogramms
 mit genau vier Warnregeln: no-undef, no-unused-vars, no-empty und no-dupe-keys.
 Browser, Worker und Node erhalten getrennte Umgebungen. Fremdlaufzeiten,
