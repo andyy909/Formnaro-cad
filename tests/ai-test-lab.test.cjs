@@ -45,3 +45,23 @@ test('Quick plans cover the validated 3, 15, 30 and 45 independent development c
  assert.equal(engine.verifySuite().cases.length,8);
  assert.equal(engine.verifySuite(undefined,'advanced').cases.length,8);
 });
+
+test('Development check escalates native mismatches, excludes looking at the wrong model or a broken checker',()=>{
+ const {developmentOutcome,escalationCases}=require('../backend/ai-lab-development.cjs');
+ const terminal={status:'completed',cleanExit:true,modelIdentity:{exactMatch:true},verification:{passed:false},events:[{type:'finished'}]};
+ const attempts=[
+  {spec:{caseId:'failed'},...terminal},
+  {spec:{caseId:'passed'},...terminal,verification:{passed:true}},
+  {spec:{caseId:'input'},...terminal,status:'needs-input'},
+  {spec:{caseId:'checker'},...terminal,verification:{passed:false,checks:[{name:'Native Gegenprüfung ausführbar',passed:false}]}},
+  {spec:{caseId:'different'},...terminal,modelIdentity:{exactMatch:false}},
+  {spec:{caseId:'runtime'},...terminal,cleanExit:false},
+  {spec:{caseId:'interrupted'},...terminal,status:'interrupted'},
+  {spec:{caseId:'missing'},...terminal,verification:null},
+  {spec:{caseId:'later'},...terminal},
+ ];
+ assert.deepEqual(escalationCases(['later','input','passed','checker','different','runtime','interrupted','missing','unseen','failed'],attempts),['later','failed']);
+ assert.deepEqual(developmentOutcome(attempts[3]),{status:'blocked',reason:'checker-error'});
+ assert.equal(developmentOutcome(attempts[1]).status,'passed');
+ assert.equal(developmentOutcome().status,'open');
+});
