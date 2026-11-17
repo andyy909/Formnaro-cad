@@ -29,6 +29,7 @@ test('Incomplete benchmark summary keeps progress/open conditions and no interva
 test('Report divides all request costs including the reviewer by two confirmed successes',async t=>{
  const directory=temp(t),m=manifest();fs.writeFileSync(path.join(directory,'Benchmark-'+m.id+'.json'),JSON.stringify(m));
  const rows=[record(m,m.rows[0]),record(m,m.rows[1])];
+ for(const row of rows){row.rates=row.events[1].rates;delete row.events[1].rates;}
  const review={seriesIds:[m.id],requestCount:1,unsettledRequests:0,usageEvents:[{role:'reviewer',usage:{input_tokens:100,output_tokens:10},rates:{input:1,output:2,cached:1},at:'2026-11-17T10:00:00Z'}]};
  const manager=createBenchmarks({directory,getRecords:()=>rows,getRoles:()=>roleSelection,getSource:()=>({hash:'source'}),runSeries:async()=>{},review:async()=>{},reviewEnabled:()=>false,getReviews:()=>[review]});
  const report=await manager.report({id:m.id}),data=JSON.parse(fs.readFileSync(report.path,'utf8'));
