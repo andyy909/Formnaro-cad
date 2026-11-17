@@ -8,6 +8,25 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+P3-4h2: Die beiden KI-Entwurfsabläufe des CAD-Controllers liegen in
+`src/cad-controller-task-candidate.js`: Materialisierung eines
+Auftragsvorschlags und Wiederherstellung eines gespeicherten Kandidaten. Der
+Helfer erhält Store, H1-Vorschau-Registry, Geometrieauflösung, Vorschau-Gate,
+Vorschau und Netzprüfung; Build-Zwischenwerte, Anzeige und Publisher bleiben im
+Controller. Gate-Reihenfolge, Identitätsprüfung über `await`,
+Modellschlüsselvergleich, frischer Körpernachweis, private
+Feature-Abhängigkeit, Fehlercodes und Aufräumreihenfolge bleiben unverändert.
+Die beiden öffentlichen Bindungen und Standardargumente bleiben gleich; F2
+wird nicht umgeordnet.
+
+P3-4h1: Der ID-gebundene Vorschau-Zustand des CAD-Controllers liegt in
+`src/cad-preview-registry.js`: Vorschläge, Ersatzmarker, Zeichnungs-,
+Fotorekonstruktions- und Merkmalsabhängigkeitsbelege. Registrierung,
+Eviction, Apply-Erfolg, spezielle Ablehnungen, öffentliches Discard und
+Dispose behalten Reihenfolge, Grenzen und Identität; der Controller behält
+Fach-Gates, Store, Scope und öffentliche Methoden. H2
+(Kandidatenmaterialisierung/-restore) und die Anzeige bleiben unverändert.
+
 P3-4m1: `backend/practice-files-verification.cjs` führt den vollständigen
 Files-Chat-Zweig des Übungsprüfers für die Varianten `1`, `adopt` und
 `recover` aus. Der Dispatcher behält das Gate an derselben Stelle und übergibt
