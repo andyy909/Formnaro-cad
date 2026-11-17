@@ -58,6 +58,7 @@ app.whenReady().then(async () => {
   const flashProfile=verifyPath&&aiResultChecksVerifyArg&&process.env.FORMNARO_VERIFY_PRACTICE_ONLY==='1'&&process.env.FORMNARO_VERIFY_PRACTICE_FLASH_PROFILE;
   const initialSettings=flashProfile?require('./backend/practice-flash-verification.cjs').flashProfile(flashProfile):undefined;
   require('./backend/desktop-ai.cjs').installDesktopAI(win,{settingsFile:path.join(dataPath,'ai-settings.json'),toolLibraryStatus:()=>toolLibrary.status(),fallbackFile:fs.existsSync(path.join(dataPath,'profil.json'))?undefined:legacyAIFile,initialSettings});
+  if(!practiceChild) require('./backend/ai-lab-development-evidence.cjs').installDevelopmentEvidence(win,path.join(dataPath,'KI-Diagnose'));
   const speechService=require('./backend/speech.cjs').installSpeech(win,{settingsDirectory:dataPath});
   let speechQuitting=false;app.on('before-quit',event=>{if(!speechService.hasActive())return;event.preventDefault();if(speechQuitting)return;speechQuitting=true;speechService.dispose().finally(()=>app.quit());});
   require('./backend/speech-permissions.cjs').installSpeechPermissions(win,{entry:path.join(__dirname,'dist','index.html')});
