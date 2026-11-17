@@ -52,6 +52,7 @@ $zipFile = [IO.File]::Open($zipPath,[IO.FileMode]::Open,[IO.FileAccess]::Read,[I
 $archive = $null
 $stage = $null
 $lock = $null
+$temporaryBackup = $null
 try {
   $digest = [Security.Cryptography.SHA256]::Create()
   try { $zipHash = [BitConverter]::ToString($digest.ComputeHash($zipFile)).Replace('-','') }
@@ -112,9 +113,11 @@ try {
   if ($Mode -eq 'Apply' -and !(Test-Path -LiteralPath $backup)) {
     [IO.File]::Replace($stage,$asar,$backup)
   } else {
-    [IO.File]::Replace($stage,$asar,$null)
+    $temporaryBackup = Join-Path $resources ('app.asar.replaced-' + [guid]::NewGuid())
+    [IO.File]::Replace($stage,$asar,$temporaryBackup)
   }
   Confirm-Identity $asar $after
+  if ($temporaryBackup) { Remove-Item -LiteralPath $temporaryBackup }
   [pscustomobject]@{mode=$Mode;archiveSha256=$after.sha256;sourceCommit=$manifest.sourceCommit}
 } finally {
   if ($lock) { $lock.Dispose() }
