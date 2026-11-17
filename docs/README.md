@@ -15,7 +15,7 @@ Anwenderdokumentation für die portable Windows-Ausgabe: Bedienwege, Werkzeuge, 
 
 | Dokument | Einordnung |
 | --- | --- |
-| [AKTUELLER-STAND.md](AKTUELLER-STAND.md) | Kurzstatus der öffentlichen Ausgabe 0.142.0-r1 mit Download- und Quellverweisen. |
+| [AKTUELLER-STAND.md](AKTUELLER-STAND.md) | Aktuelle öffentliche Ausgabe mit Download, Prüfsummen, Quellen und Abnahme. |
 | [ARBEITSGESCHWINDIGKEIT.md](ARBEITSGESCHWINDIGKEIT.md) | Bedienhinweise zu den Geschwindigkeitsverbesserungen ab 0.80.0 bei Skizzen, Netzauswahl und Ansicht. |
 | [AUSHOEHLEN.md](AUSHOEHLEN.md) | Aushöhlen geschlossener Netzkörper mit Wandstärke, Auflösung und Ablauföffnungen (Paket 26). |
 | [AUSTAUSCHFORMATE-3MF-GLB-GLTF.md](AUSTAUSCHFORMATE-3MF-GLB-GLTF.md) | Import und Weitergabe von 3MF, GLB und glTF mit Farben, Einheiten und Anordnung. |
@@ -46,7 +46,7 @@ Anwenderdokumentation für die portable Windows-Ausgabe: Bedienwege, Werkzeuge, 
 | [GELENKE-BEWEGUNG.md](GELENKE-BEWEGUNG.md) | Gelenke und geführte Bewegung zwischen CAD-Materialteilen. |
 | [GEMEINSAME-ARBEITSFLAECHE.md](GEMEINSAME-ARBEITSFLAECHE.md) | Gemeinsame Auswahl, Kamera, Objektbaum und Historie für CAD und Netz (Paket 7). |
 | [GEMEINSAME-DATEIEN-EINSTELLUNGEN-KI.md](GEMEINSAME-DATEIEN-EINSTELLUNGEN-KI.md) | Vorgaben für Dateien, Einstellungen und KI der gemeinsamen Arbeitsfläche (Paket 12). |
-| [GEMEINSAMER-KONVERTER.md](GEMEINSAMER-KONVERTER.md) | STL-zu-STEP-Konverter im gemeinsamen Programm (Paket 9). |
+| [GEMEINSAMER-KONVERTER.md](GEMEINSAMER-KONVERTER.md) | Deutscher Einstieg in STL-zu-CAD und Hintergrund zur Einführung mit Paket 9. |
 | [GROSSE-NETZE-UND-ZAHNRAEDER.md](GROSSE-NETZE-UND-ZAHNRAEDER.md) | Zahnradkopplungen, Großnetzrezepte und KI-Modellstrenge ab 0.118.0. |
 | [GRUPPIEREN-TEMPO.md](GRUPPIEREN-TEMPO.md) | Schnellere Gruppenvereinigung über einen ausgewogenen Baum (0.78.0). |
 | [IMPORTMITTE-UND-EXPORTNUMMERN.md](IMPORTMITTE-UND-EXPORTNUMMERN.md) | Importmitte, Versatz weiterer Importe und laufende Exportnummern (0.60.0). |
@@ -80,7 +80,7 @@ Anwenderdokumentation für die portable Windows-Ausgabe: Bedienwege, Werkzeuge, 
 | [STEP-BAUGRUPPEN-UND-WANDDICKEN.md](STEP-BAUGRUPPEN-UND-WANDDICKEN.md) | STEP-Baugruppen und Wanddickenkarte, vollständig lokal berechnet (0.61.0). |
 | [STL-ANSICHT.md](STL-ANSICHT.md) | Sechs Varianten der STL-Ansicht in den Einstellungen (0.94.1). |
 | [STL-REPARATUR.md](STL-REPARATUR.md) | Netzreparatur im STL-Importdialog und optionales Trimesh-Werkzeug. |
-| [STL-TO-CAD.md](STL-TO-CAD.md) | Englischer Kurzeinstieg zu STL-zu-CAD (0.127.0 Nightly r10). |
+| [STL-TO-CAD.md](STL-TO-CAD.md) | Englische Anleitung zu STL-zu-CAD mit lokaler und KI-gestützter Verfeinerung, Symmetrie und Grenzen. |
 | [TECHNISCHE-ZEICHNUNGEN.md](TECHNISCHE-ZEICHNUNGEN.md) | Technische Zeichnungen mit automatischer Bemaßung ab 0.89.0. |
 | [TEILE-MATERIAL-BAUGRUPPEN.md](TEILE-MATERIAL-BAUGRUPPEN.md) | Teile, Material und Baugruppen (Paket 10, abgenommen in 0.117.0-r7). |
 | [USER-GUIDE.md](USER-GUIDE.md) | Englische Bedienanleitung der portablen Windows-Ausgabe. |

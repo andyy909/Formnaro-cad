@@ -21,17 +21,17 @@ Formnaro is portable on Windows x64. The modelling workspace works offline.
 
 | Build | Best for | Download |
 | --- | --- | --- |
-| **0.142.0-r1** · current release | Solid and Fusion practice, native trapezoidal threads | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.142.0-r1/Formnaro-v0.142.0-r1-Windows-x64.zip)** · [Verification and separate sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1) |
+| **0.143.0-r2** · current release | Welcome screen and maintenance | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/Formnaro-v0.143.0-r2-Windows-x64.zip)** · [Separate sources and release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.143.0-r2) · [SHA-256 checksums](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/SHA256SUMS.txt) |
 
-New: corrected body selection, planar drill references and sketch replacement/height feedback. Historical benchmarks and successful retests remain unchanged.
+Formnaro starts with an empty workspace. The welcome screen shows three bundled examples, up to three recent projects and a restore button when an autosave is available. [Current release and verification](docs/AKTUELLER-STAND.md)
 
-Extract the whole application ZIP into its own folder and start **Formnaro.exe**. FreeCAD and Python are bundled. Source archives are separate downloads. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
+Extract the whole application ZIP into a writable folder and open the **Formnaro starten** shortcut. FreeCAD and Python are bundled. Source archives are separate downloads. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
-## Current release: more reliable AI laboratory
+## AI laboratory updates in 0.139.1-r1
 
 **0.139.1-r1** integrates atomic result storage, clearer tool and reviewer feedback, legacy sketch-edge compatibility and the shutdown/rejected-response fixes. 128 standard tests, 152 focused regressions and four targeted live trials passed. One live trial needed a successful format correction. Broader campaign coverage and the cause of long native teardown remain open; this is not a new full benchmark. [Release report](docs/VEROEFFENTLICHUNG-0.139.1-r1.md) · [Versioned evidence](docs/benchmarks/lab-targeted-01391-2026-11-14.json).
 
-## New complete Sol benchmark: 16/16
+## Sol benchmark on 0.137.4-r2
 
 GPT-6.1 Sol/high passed all sixteen fresh trials on the published **0.137.4-r2 / suite 1.0.4** build (eight fixed CAD tasks, two trials each; supervisor off). DeepSeek’s original **16/16 on 0.137.0-r1 / suite 1.0.2** is unchanged. Different program, tool-reference and prompt states are shown explicitly; this is not a controlled same-build model ranking. Sol’s previous 14/16 and 15/16 and the separate successful drawing 2/2 and drilling 1/1 retests remain intact.
 
@@ -41,7 +41,7 @@ GPT-6.1 Sol/high passed all sixteen fresh trials on the published **0.137.4-r2 /
 
 ## Advanced benchmark and targeted repairs
 
-New in **0.138.2-r4**: exact planar drill references on scaled boxes, selection aliases following their edited bodies, reliable checkbox states, and explicit sketch replacement and height feedback. The original advanced DeepSeek run stays **5/16 on 0.138.0-r1**. Targeted retests now confirm all 16 original conditions across builds; this is not a new complete 16/16 run. The final A07 repeat on the new EXE passed 8/8 native criteria in 144.199s. [Versioned results and separate retests](docs/benchmarks/advanced-deepseek-2026-11-09.json).
+**0.138.2-r4** improved planar drill references on scaled boxes, kept selection aliases attached to edited bodies, made checkbox states reliable and clarified feedback about sketch replacement and height. The original advanced DeepSeek run stays **5/16 on 0.138.0-r1**. Targeted retests now confirm all 16 original conditions across builds; this is not a new complete 16/16 run. The final A07 repeat on the new EXE passed 8/8 native criteria in 144.199s. [Versioned results and separate retests](docs/benchmarks/advanced-deepseek-2026-11-09.json).
 
 ## A look inside Formnaro
 
@@ -53,13 +53,13 @@ New in **0.138.2-r4**: exact planar drill references on scaled boxes, selection 
 
 *Actual application screenshots: Easy Tinker and Normal in dark mode from 0.117.0-r8; Solid with ATLAS-5 in light mode from 0.120.0-r4; Fusion in light mode from 0.119.0-r2. Click an image to enlarge it.*
 
-[Matching application sources](https://github.com/andyy909/Formnaro-cad/releases/download/v0.142.0-r1/Formnaro-Quellcode-v0.142.0-r1.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
+[Application sources for 0.143.0-r2](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/Formnaro-Quellcode-v0.143.0-r2.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
 
 ## Quick start
 
 1. Download the Windows ZIP and extract it completely into its own folder.
-2. Keep all subfolders together and double-click **Formnaro.exe**.
-3. Create a new project or open an existing model.
+2. Keep all subfolders together and open **Formnaro starten**.
+3. Open an example from the welcome screen or use **Open** to load an existing project.
 
 See the [user guide](docs/USER-GUIDE.md) for project files, workspace modes and portable updates. Speech options depend on the build. See the [speech guide](docs/SPRACHEINGABE.md) for the current source branch.
 
@@ -116,7 +116,7 @@ Some detailed reference material is available in German.
 | Development | [Build instructions](docs/BUILD.md) · [Architecture](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
-## Publication status: 0.142.0-r1
+## Earlier release 0.142.0-r1
 
 Practice stays in the selected Solid or Fusion workbench. A new native trapezoidal thread primitive accepts lengths up to 3,000 mm.
 
