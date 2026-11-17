@@ -32,32 +32,43 @@ export function previewDevelopment(modeler,supported,withMax){
  return {modeler:{...modeler},levels:withMax?['low','high','max']:['low','high'],initial:developmentCaseIds.length,maximum:developmentCaseIds.length*(withMax?3:2)};
 }
 
-export async function runDevelopment({setup,id,startStage,signal,onPhase=()=>{}}){
+export async function runDevelopment({setup,id,startStage,signal,previous,readStage=async()=>[],onPhase=()=>{}}){
  let caseIds=[...developmentCaseIds];
- const phases=[];
- const report={id,model:setup.modeler.model,phases,status:'running'};
+ const report=previous?structuredClone(previous):{id,model:setup.modeler.model,setup,phases:[]};
+ const phases=report.phases;
+ report.status='running';
+ delete report.error;
  let remaining=setup.maximum*20;
- for(const effort of setup.levels){
+ const requests=records=>records.reduce((count,record)=>count+(record.events??[]).filter(event=>event.type==='request').length,0);
+ for(const [index,effort] of setup.levels.entries()){
   if(!caseIds.length||signal.aborted||remaining<1)break;
+  const oldPhase=phases[index];
+  const phase=oldPhase??{effort,caseIds,outcomes:[]};
+  if(!oldPhase)phases.push(phase);
+  caseIds=phase.caseIds;
   const plan=quickPlan('development',setup.modeler,effort);
   plan.name='Entwicklungscheck · '+id+' · '+effort;
-  plan.caseIds=caseIds;
-  plan.limits.requestBudget=remaining;
-  // The existing dispatcher resolves a reviewer connection whenever that preference
-  // is enabled. Reuse the selected model connection and defer reviewer execution.
+  const recorded=oldPhase?await readStage(plan.name):[];
+  const started=new Set(recorded.map(record=>record.spec.caseId));
+  plan.caseIds=caseIds.filter(caseId=>!started.has(caseId));
+  plan.limits.requestBudget=Math.max(1,remaining-requests(recorded));
+  // Legacy diagnostics resolves a reviewer connection whenever enabled.
+  // Reuse the frozen model connection and defer reviewer execution.
   plan.roles.reviewer={...plan.roles.modeler,effort:'high'};
-  const phase={effort,caseIds,outcomes:[]};
-  phases.push(phase);
   await onPhase(report);
-  const {records,error}=await startStage(plan);
+  if(signal.aborted)break;
+  const {records,error}=plan.caseIds.length&&remaining>requests(recorded)
+   ?await startStage(plan)
+   :{records:recorded};
   const byCase=new Map(records.map(record=>[record.spec.caseId,record]));
   phase.outcomes=caseIds.map(caseId=>({caseId,runId:byCase.get(caseId)?.id,...developmentOutcome(byCase.get(caseId))}));
-  remaining-=records.reduce((count,record)=>count+(record.events??[]).filter(event=>event.type==='request').length,0);
+  remaining-=requests(records);
   if(error)report.error=error;
-  if(error||signal.aborted||records.length!==caseIds.length||phase.outcomes.some(o=>o.reason==='interrupted'))break;
+  await onPhase(report);
+  if(error||signal.aborted||byCase.size!==caseIds.length||phase.outcomes.some(o=>o.reason==='interrupted'&&!started.has(o.caseId)))break;
   caseIds=escalationCases(caseIds,records);
  }
- const finished=phases.length>0&&phases.every(phase=>phase.outcomes.length===phase.caseIds.length&&!phase.outcomes.some(o=>o.status==='open'||o.reason==='interrupted'));
+ const finished=phases.length>0&&phases.every(phase=>phase.outcomes.length===phase.caseIds.length&&!phase.outcomes.some(o=>o.status==='open'));
  const last=phases.at(-1);
  const more=last&&last.effort!==setup.levels.at(-1)&&last.outcomes.some(o=>o.status==='failed');
  report.status=signal.aborted?'interrupted':report.error||!finished||more?'incomplete':'completed';

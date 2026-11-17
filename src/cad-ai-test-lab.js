@@ -149,7 +149,22 @@ export function mountAITestLab({host,desktop}){
   const rows=report.phases[0]?.caseIds??[];
   const outcomes=caseId=>report.phases.flatMap(phase=>phase.outcomes.filter(cell=>cell.caseId===caseId).map(cell=>({...cell,effort:phase.effort})));
   const labels={passed:'Bestanden',failed:'Durchgefallen',blocked:'Offen',open:'Ausstehend'};
-  host.replaceChildren(node('h3','Entwicklungscheck · '+report.model),table(
+  const heading=node('h3','Entwicklungscheck · '+report.model);
+  const actions=node('div');
+  if(!developmentController&&report.status!=='completed'&&report.compatible!==false){
+   const resume=node('button','Entwicklungscheck fortsetzen');
+   resume.onclick=()=>startDevelopment(report);
+   actions.append(resume);
+  }
+  if(!developmentController&&report.phases.some(phase=>phase.outcomes.some(entry=>entry.runId))&&desktop.developmentEvidence){
+   const exportButton=node('button','Entwicklungscheck exportieren');
+   exportButton.onclick=async()=>{try{
+    const result=await desktop.developmentEvidence({action:'export',id:report.id});
+    status('Externes Datenpaket gespeichert: '+result.path);
+   }catch(error){status(error.message);}};
+   actions.append(exportButton);
+  }
+  host.replaceChildren(heading,actions,table(
    ['Aufgabe','Versuche','Erste bestandene Stufe'],
    rows.map(caseId=>{
     const history=outcomes(caseId);
@@ -163,25 +178,35 @@ export function mountAITestLab({host,desktop}){
    })
   ));
  }
- async function startDevelopment(){
-  if(!developmentPreview||state?.busy||starting||developmentController)return;
-  const setup=developmentPreview,controller=new AbortController();
+ async function stageRecords(name){
+  const current=await api({action:'state'});
+  return Promise.all(current.records.filter(record=>record.spec.seriesName===name).map(record=>api({action:'read',id:record.id})));
+ }
+ async function startDevelopment(previous){
+  if((!previous&&!developmentPreview)||previous?.compatible===false||state?.busy||starting||developmentController)return;
+  const controller=new AbortController();
   developmentController=controller;
   controls();
   try{
    tab('live');
-   const id=crypto.randomUUID();
-   const result=await runDevelopment({setup,id,signal:controller.signal,
-    onPhase:report=>{showDevelopment(report);status('Entwicklungscheck · '+(report.phases.at(-1)?.effort??'Low'));},
+   const id=previous?.id??crypto.randomUUID();
+   const setup=structuredClone(previous?.setup??developmentPreview);
+   const catalog=await api({action:'labRoleCatalog',providerId:setup.modeler.providerId});
+   const detail=catalog.models.find(model=>model.id===setup.modeler.model);
+   previewDevelopment(setup.modeler,detail?.reasoningEfforts??[],setup.levels.includes('max'));
+   if(!previous&&catalog.providerId)setup.modeler.providerId=catalog.providerId;
+   const result=await runDevelopment({setup,id,previous,readStage:stageRecords,signal:controller.signal,
+    onPhase:async report=>{
+     showDevelopment(report);status('Entwicklungscheck · '+(report.phases.at(-1)?.effort??'Low'));
+     if(desktop.developmentEvidence)await desktop.developmentEvidence({action:'save',report});
+    },
     startStage:async plan=>{
      let error;
      try{await api({action:'start',mode:'lab',plan,deferReview:true});}catch(cause){error=cause.message;}
-     const current=await api({action:'state'});
-     const rows=current.records.filter(record=>record.spec.seriesName===plan.name);
-     const records=await Promise.all(rows.map(record=>api({action:'read',id:record.id})));
-     return {records,error};
+     return {records:await stageRecords(plan.name),error};
     }
    });
+   developmentController=null;showDevelopment(result);
    status(result.error??(result.status==='completed'?'Entwicklungscheck abgeschlossen.':'Entwicklungscheck unterbrochen.'));
    tab('results');
   }catch(error){status(error.message);}
@@ -222,7 +247,7 @@ export function mountAITestLab({host,desktop}){
  el('repeat').onclick=async()=>{try{if(!selected)throw Error('Zuerst einen Versuch auswählen.');const r=await api({action:'read',id:selected}),s=r.spec;const p=structuredClone(state.lab.presets[0].plan);Object.assign(p,{name:'Wiederholung '+s.caseId,caseIds:[s.caseId],variants:[s.variant],efforts:[s.effort],workflow:s.workflow??'agent',stage:s.stage,dataset:s.dataset??'development',scopes:[s.sceneScope??'full'],images:[s.imageMode??(s.startImage?'overview':'none')],monitor:s.monitor??p.monitor,limits:s.limits??p.limits,customContext:s.customContext??''});await runPlan(p);}catch(e){status(e.message);}};
  el('clear').onclick=async()=>{try{render(await api({action:'clear'}));selected=null;reset();status('Testaufzeichnungen gelöscht.');}catch(e){status(e.message);}};
  el('preflight').onclick=async()=>{try{el('preflight').disabled=true;el('preflight-result').textContent='Lokale native Prüfung läuft …';const r=await api({action:'labPreflight'});el('preflight-result').textContent=JSON.stringify(r,null,2);status(r.passed?'Lokale Prüfer und Vorschau bestanden.':'Lokale Prüfung zeigt Abweichungen.');}catch(e){el('preflight-result').textContent=e.message;status(e.message);}finally{controls();}};
- open.onclick=async e=>{e?.stopPropagation();if(!root.open)root.showModal();try{render(await api({action:'state'}));}catch(error){status(error.message);}};el('close').onclick=()=>root.close();metrics();
+ open.onclick=async e=>{e?.stopPropagation();if(!root.open)root.showModal();try{render(await api({action:'state'}));if(desktop.developmentEvidence&&!developmentController){const report=await desktop.developmentEvidence({action:'recent'});if(report)showDevelopment(report);}}catch(error){status(error.message);}};el('close').onclick=()=>root.close();metrics();
  if(new URLSearchParams(location.search).has('diagnosticHost'))setTimeout(()=>open.onclick(),1800);
  return {open:()=>open.onclick(),dispose(){unsubscribe?.();usage.dispose();Object.values(rolePickers).forEach(p=>p.dispose());root.remove();open.remove();}};
 }
