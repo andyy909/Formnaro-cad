@@ -46,8 +46,8 @@ test('Quick plans cover the validated 3, 15, 30 and 45 independent development c
  assert.equal(engine.verifySuite(undefined,'advanced').cases.length,8);
 });
 
-test('Development check escalates native mismatches, excludes looking at the wrong model or a broken checker',()=>{
- const {developmentOutcome,escalationCases}=require('../backend/ai-lab-development.cjs');
+test('Development check escalates native mismatches, excludes looking at the wrong model or a broken checker',async()=>{
+ const {developmentOutcome,escalationCases}=await import('../ai/lab-development-sequence.mjs');
  const terminal={status:'completed',cleanExit:true,modelIdentity:{exactMatch:true},verification:{passed:false},events:[{type:'finished'}]};
  const attempts=[
   {spec:{caseId:'failed'},...terminal},
@@ -64,4 +64,40 @@ test('Development check escalates native mismatches, excludes looking at the wro
  assert.deepEqual(developmentOutcome(attempts[3]),{status:'blocked',reason:'checker-error'});
  assert.equal(developmentOutcome(attempts[1]).status,'passed');
  assert.equal(developmentOutcome().status,'open');
+});
+
+test('Development check schedules Low, only scoped High failures, and optional Max',async()=>{
+ const {previewDevelopment,runDevelopment}=await import('../ai/lab-development-sequence.mjs');
+ const modeler={providerId:'current',model:'fixture',effort:'series'};
+ const setup=previewDevelopment(modeler,['low','high','max'],true);
+ const calls=[];
+ const result=await runDevelopment({setup,id:'fixture',signal:new AbortController().signal,startStage:async plan=>{
+  const effort=plan.efforts[0];
+  calls.push([effort,plan.caseIds]);
+  return {records:plan.caseIds.map((caseId,index)=>({
+   id:effort+'-'+caseId,spec:{caseId,effort},status:effort==='low'&&index===2?'needs-input':'completed',
+   cleanExit:true,modelIdentity:{exactMatch:true},events:[{type:'finished'}],
+   verification:{passed:effort==='max'||(effort==='high'?index>0:index>2)},
+  }))};
+ }});
+ assert.equal(calls[0][1].length,15);
+ assert.deepEqual(calls.slice(1),[['high',['thread','drill']],['max',['thread']]]);
+ assert.equal(result.status,'completed');
+ assert.equal(result.phases[0].outcomes[2].reason,'needs-input');
+ assert.throws(()=>previewDevelopment(modeler,['low'],false),/Low und High/);
+ assert.throws(()=>previewDevelopment(modeler,['low','high'],true),/Max/);
+});
+
+test('A stop after the Low checkpoint does not dispatch High',async()=>{
+ const {previewDevelopment,runDevelopment}=await import('../ai/lab-development-sequence.mjs');
+ const abort=new AbortController();
+ const setup=previewDevelopment({model:'fixture'},['low','high'],false);
+ let calls=0;
+ const result=await runDevelopment({setup,id:'stop',signal:abort.signal,startStage:async()=>{
+  calls++;
+  abort.abort();
+  return {records:[]};
+ }});
+ assert.equal(calls,1);
+ assert.equal(result.status,'interrupted');
 });
