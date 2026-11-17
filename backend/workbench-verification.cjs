@@ -37,10 +37,10 @@ exports.verifyWorkbench=async function(win,{directory:output,dataPath}){
   await click('[data-workbench-mode="easy"]');const beforeReload=await run('window.__cadTest.serialize()');await run(`window.__cadTest.getSettings()`);await new Promise(r=>setTimeout(r,1800));await new Promise(r=>{win.webContents.once('did-finish-load',r);win.reload();});await until('!!window.__cadTest');await run('window.__cadTest.layoutUI.ready()');await run('window.__cadTest.settled()');await pause();assert.equal(await run('window.__cadTest.workbenchUI.mode()'),'easy');assert.deepEqual(await run('window.__cadTest.layoutUI.state()'),customized);
   // Startup offers the autosave on the welcome page; opening it is explicit.
   assert.equal(await run('window.__cadTest.getModel().nodes.length'),0);
-  await until(`!!document.querySelector('[data-recent-project="recovery"]')`);
-  await click('[data-recent-project="recovery"]');
+  await until(`(()=>{const button=document.querySelector('[data-restore-autosave]');return !!(button&&!button.hidden&&!button.disabled&&button.getClientRects().length);})()`);
+  await click('[data-restore-autosave]');
   await until(`document.getElementById('empty-hint').hidden`);
-  await until(`document.querySelector('[data-recent-project="recovery"]').disabled===false`);
+  await until(`document.querySelector('[data-restore-autosave]').disabled===false`);
   await run('window.__cadTest.settled()');
   assert.equal(await run('window.__cadTest.workbenchUI.mode()'),'easy');
   assert.deepEqual(await run('window.__cadTest.layoutUI.state()'),customized);
