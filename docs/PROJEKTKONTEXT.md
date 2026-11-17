@@ -1,5 +1,12 @@
 # Technischer Projektkontext
 
+P3-4n2: `backend/practice-sketch-verification.cjs` führt zusätzlich den
+vollständigen Repair-/Midpoint-Zweig des Übungsprüfers für `repair`,
+`midpoint`, `repair-live` und `midpoint-live` aus. Der Dispatcher behält Gate,
+gemeinsame Vorbereitung, Elternsnapshot und Checkliste und übergibt die
+Variante einmal an die ausgelagerte Funktion. N1-Block, N1-Renderer, N3-Grenze,
+Checkzahlen (5/3/5/3) und der portable Paketfilter bleiben unverändert.
+
 P3-4n1: `backend/practice-sketch-verification.cjs` führt die
 Draft-/Draft-Edit-Varianten des Übungsprüfers aus. Der Dispatcher behält
 Weiche, gemeinsame Vorbereitung, Elternsnapshot und Checkliste; die
