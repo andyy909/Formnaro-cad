@@ -80,6 +80,11 @@ export function copyPortableApp(source,stage){
  for(const n of ['backend','ai','licenses','dist','electron.cjs','preload.cjs','package.json','LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.cpSync(path.join(source,n),path.join(stage,n),{recursive:true,filter:file=>n!=='backend'||!(/verification|fixture|^all-functions|^\./.test(path.basename(file))||file.endsWith('.cs'))});
  for(const n of docs){const input=path.join(source,'docs',n);if(fs.existsSync(input)){fs.mkdirSync(path.join(stage,'docs'),{recursive:true});fs.copyFileSync(input,path.join(stage,'docs',n));}}
  copyBenchmarkSources(source,stage);
+ // Both the Electron main process and the renderer check the same CAD parameter schema.
+ if(fs.existsSync(path.join(stage,'backend','practice-ui-policy.cjs'))){
+  fs.mkdirSync(path.join(stage,'src'),{recursive:true});
+  fs.copyFileSync(path.join(source,'src','parameters.js'),path.join(stage,'src','parameters.js'));
+ }
  // The lab ZIP export runs in Electron's main process, outside the renderer bundle.
  const require=createRequire(import.meta.url);
  const fflate=path.dirname(require.resolve('fflate/package.json'));

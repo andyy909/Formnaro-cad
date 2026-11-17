@@ -10,6 +10,20 @@ test('practice plan is bounded, uses only valid visible actions and cannot selec
  assert.throws(()=>validatePracticePlan({...plan(),actions:[...plan().actions,shape('block')]}));
  assert.throws(()=>validatePracticePlan({version:1,title:'x',actions:Array(51).fill(shape('x'))}));
 });
+test('thread and nut parameters are checked before either practice entry point starts playback',async()=>{
+ const {validateAgentPracticePlan}=await import('../src/cad-agent-ui-policy.js');
+ for(const validate of [validatePracticePlan,validateAgentPracticePlan]){
+  for(const type of ['thread','nut']){
+   const create={op:'create',type,as:'fastener'};
+   const withCommand=command=>({...plan(),actions:[shape('first'),{kind:'model',commands:[command]}]});
+   assert.doesNotThrow(()=>validate(withCommand(create)));
+   assert.doesNotThrow(()=>validate(withCommand({...create,params:{profile:'trapezoid',hand:'right',pitch:3}})));
+   for(const params of [{handedness:'right'},{threadType:'trapezoid'},{external:true},{hand:'links'},{pitch:0},null]){
+    assert.throws(()=>validate(withCommand({...create,params})),/Im Übungsauftrag/);
+   }
+  }
+ }
+});
 test('sketch gestures accept local millimetres and reject pixel coordinates or targets outside their contract',async()=>{
  const {validateAgentPracticePlan}=await import('../src/cad-agent-ui-policy.js');
  const valid={kind:'sketch-gesture',point:[0,0],to:[4,0]};

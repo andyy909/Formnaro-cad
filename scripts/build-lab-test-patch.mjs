@@ -10,7 +10,11 @@ import {copyPortableApp} from './portable-runtime-policy.mjs';
 const [runtimeArg,outputArg,baseCommit]=process.argv.slice(2);
 assert(runtimeArg&&outputArg&&/^[a-f0-9]{40}$/.test(baseCommit??''),'Usage: node scripts/build-lab-test-patch.mjs <portable-program-folder> <output.zip> <base-source-commit>');
 const root=process.cwd(),runtime=path.resolve(runtimeArg),output=path.resolve(outputArg);
-const verifiedBase={commit:'ff65726b44b334cffa1a0ea6b21d3648383b192f',exe:'d571ddd2b3db4f2246b4778a8b8db7601d2d6414584c3788d79159c1f2498dcc',asar:'c3b344e1dd8563db489dd22264a91b81a109a221178e2db924b2c34d66c8bfed'};
+const verifiedExe='d571ddd2b3db4f2246b4778a8b8db7601d2d6414584c3788d79159c1f2498dcc';
+const verifiedArchives=new Map([
+ ['ff65726b44b334cffa1a0ea6b21d3648383b192f','c3b344e1dd8563db489dd22264a91b81a109a221178e2db924b2c34d66c8bfed'],
+ ['7c20d6797dc3237f1d79a79fab5defaecacec19f','26a2f8295032d65cd722b1f85cacbb02df7b8a044686382050cacc490f47d476'],
+]);
 assert.equal(path.extname(output).toLowerCase(),'.zip');
 assert(!fs.existsSync(output),'Choose a new ZIP name.');
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8'}).trim();
@@ -26,7 +30,7 @@ const sha=buffer=>createHash('sha256').update(buffer).digest('hex');
 const identify=file=>{const bytes=fs.readFileSync(file);return {bytes:bytes.length,sha256:sha(bytes)};};
 const base=path.join(runtime,'resources','app.asar');
 const baseExe=identify(path.join(runtime,'Formnaro.exe')),baseArchive=identify(base);
-assert.deepEqual([baseCommit,baseExe.sha256,baseArchive.sha256],[verifiedBase.commit,verifiedBase.exe,verifiedBase.asar],'The patch builder requires the verified 0.143.0-r4 test base.');
+assert.deepEqual([baseExe.sha256,baseArchive.sha256],[verifiedExe,verifiedArchives.get(baseCommit)],'The patch builder requires a verified 0.143.0-r4 test base.');
 const work=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-lab-patch-'));
 function files(archive){
  return listPackage(archive).map(file=>file.replace(/^[\\/]+/,'').replaceAll('\\','/'))

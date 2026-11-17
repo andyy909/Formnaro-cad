@@ -1,6 +1,9 @@
 import policy from '../ai/FORMNARO-PRACTICE-UI.json' with { type: 'json' };
+import { validParameters } from './parameters.js';
 export function isPracticeUICommand(c) {
   if (!c || typeof c !== 'object' || Array.isArray(c)) return false;
+  if (c.op === 'create' && (c.type === 'thread' || c.type === 'nut') && c.params !== undefined && !validParameters(c))
+    return false;
   const schema = policy.commands.find(
     (s) => s.properties.op.const === c.op && (c.op !== 'joint' || s.properties.action.const === c.action),
   );
