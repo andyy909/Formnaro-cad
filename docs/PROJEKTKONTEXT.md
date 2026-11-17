@@ -1,5 +1,12 @@
 # Technischer Projektkontext
 
+P3-4m2: `backend/practice-drawing-verification.cjs` führt die
+Zeichnungsvarianten des Übungsprüfers einschließlich der lokalen
+Ausführung und der beiden Live-Aufrufpfade aus. Der Dispatcher behält
+Variantenauswahl und Elternvorbereitung. Maßbindungen, native
+Projektionsprüfungen und Elternschutz bleiben erhalten. Der portable
+Paketfilter lässt das Prüfmodul aus.
+
 P3-4m1: `backend/practice-files-verification.cjs` führt den vollständigen
 Files-Chat-Zweig des Übungsprüfers für die Varianten `1`, `adopt` und
 `recover` aus. Der Dispatcher behält das Gate an derselben Stelle und übergibt
