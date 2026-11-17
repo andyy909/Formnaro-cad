@@ -24,6 +24,11 @@ app.whenReady().then(async()=>{let win;try{
  const js=s=>win.webContents.executeJavaScript(s),until=async(fn,label)=>{for(let i=0;i<120;i++){if(await fn())return;await pause(100);}throw Error('Timeout: '+label);};
  await js("document.querySelector('#ai-diagnostic-open').click()");await until(()=>js("document.querySelectorAll('[data-lab-role] select').length===9&&!document.querySelector('[data-run]').disabled"),'role controls ready');
  const hasValidPractice=()=>js("!document.querySelector('[data-run]').disabled && document.querySelector('[data-plan-count]').textContent.includes('isolierte Versuche')");
+ assert.equal(await js("document.querySelector('[data-pane=plan]').dataset.labView"),'simple');
+ assert.equal(await js("document.querySelectorAll('[data-quick-plans] button').length"),4);
+ await js("document.querySelector('[data-advanced-view]').click()");
+ await js("Array.from(document.querySelectorAll('[data-presets] button')).find(b=>b.textContent==='Kleiner Pilot').click()");
+ await until(hasValidPractice,'advanced pilot ready');
  await js("document.querySelector('[data-cases] input[value=practice-01]').click()");
  await until(()=>js("document.querySelector('[data-plan-count]').textContent.includes('Funktionstests benötigen')"),'incompatible practice task rejected');
  const campaignState=runner.state();

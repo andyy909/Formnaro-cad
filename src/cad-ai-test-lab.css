@@ -12,3 +12,14 @@
 @media(max-width:1120px){.lab-grid{grid-template-columns:1fr}.lab-live-grid{grid-template-columns:1fr 1fr}.lab-live-grid>.lab-preview-card{grid-column:1/-1}.lab-preview-card .lab-image{max-height:180px}.lab-metrics{grid-template-columns:repeat(2,1fr)}.lab-body{padding:14px}.lab-header,.lab-nav,.lab-footer{padding-left:16px;padding-right:16px}}
 
 .lab-benchmark-chart{--model-accent:#117d72;--model-surface:#fff;--model-soft:#52677a;--model-border:#cad5e1;margin:16px 0}.lab-benchmark-chart .ai-benchmark-plot{width:100%}.lab-benchmark-chart .ai-benchmark-column{flex-basis:120px}
+
+.lab-view-card { margin-bottom: 14px; }
+.lab-view-switch { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.lab-view-switch button[aria-pressed='true'] { background: #dcefe9; color: #075a50; }
+[data-lab-view='simple'] [data-lab-advanced],
+[data-lab-view='advanced'] [data-lab-simple] { display: none; }
+[data-lab-view='simple'] .lab-grid { grid-template-columns: minmax(0, 1fr); }
+[data-lab-view='simple'] [data-lab-role='modeler'] {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 165px), 1fr));
+}
+[data-lab-view='simple'] [data-lab-role='modeler'] .lab-field { grid-column: auto; }
