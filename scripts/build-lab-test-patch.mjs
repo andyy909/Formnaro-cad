@@ -10,10 +10,11 @@ import {copyPortableApp} from './portable-runtime-policy.mjs';
 const [runtimeArg,outputArg,baseCommit]=process.argv.slice(2);
 assert(runtimeArg&&outputArg&&/^[a-f0-9]{40}$/.test(baseCommit??''),'Usage: node scripts/build-lab-test-patch.mjs <portable-program-folder> <output.zip> <base-source-commit>');
 const root=process.cwd(),runtime=path.resolve(runtimeArg),output=path.resolve(outputArg);
+const verifiedBase={commit:'ff65726b44b334cffa1a0ea6b21d3648383b192f',exe:'d571ddd2b3db4f2246b4778a8b8db7601d2d6414584c3788d79159c1f2498dcc',asar:'c3b344e1dd8563db489dd22264a91b81a109a221178e2db924b2c34d66c8bfed'};
 assert.equal(path.extname(output).toLowerCase(),'.zip');
 assert(!fs.existsSync(output),'Choose a new ZIP name.');
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8'}).trim();
-assert.equal(git('status','--porcelain','--untracked-files=no'),'','Commit the candidate sources first.');
+assert.equal(git('status','--porcelain','--untracked-files=all'),'','Commit the candidate sources first.');
 assert.equal(git('rev-parse',baseCommit),baseCommit);
 assert.equal(git('merge-base',baseCommit,'HEAD'),baseCommit);
 const sourceCommit=git('rev-parse','HEAD');
@@ -25,6 +26,7 @@ const sha=buffer=>createHash('sha256').update(buffer).digest('hex');
 const identify=file=>{const bytes=fs.readFileSync(file);return {bytes:bytes.length,sha256:sha(bytes)};};
 const base=path.join(runtime,'resources','app.asar');
 const baseExe=identify(path.join(runtime,'Formnaro.exe')),baseArchive=identify(base);
+assert.deepEqual([baseCommit,baseExe.sha256,baseArchive.sha256],[verifiedBase.commit,verifiedBase.exe,verifiedBase.asar],'The patch builder requires the verified 0.143.0-r4 test base.');
 const work=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-lab-patch-'));
 function files(archive){
  return listPackage(archive).map(file=>file.replace(/^[\\/]+/,'').replaceAll('\\','/'))
@@ -58,5 +60,6 @@ try{
  {env:{...process.env,FORMNARO_PATCH_CONTENTS:contents,FORMNARO_PATCH_ZIP:output},stdio:'inherit'});
  console.log('ZIP SHA-256 '+identify(output).sha256);
 }finally{
+ assert.equal(path.dirname(fs.realpathSync(work)),fs.realpathSync(os.tmpdir()));
  fs.rmSync(work,{recursive:true,force:true});
 }
