@@ -504,3 +504,4 @@ src/cad-controller-export.js
 tests/cad-controller-export.test.mjs
 src/cad-controller-ai-task.js
 tests/cad-controller-ai-task.test.mjs
+src/cad-preview-registry.js

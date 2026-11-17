@@ -1,5 +1,13 @@
 # Technischer Projektkontext
 
+P3-4h1: Der ID-gebundene Vorschau-Zustand des CAD-Controllers liegt in
+`src/cad-preview-registry.js`: Vorschläge, Ersatzmarker, Zeichnungs-,
+Fotorekonstruktions- und Merkmalsabhängigkeitsbelege. Registrierung,
+Eviction, Apply-Erfolg, spezielle Ablehnungen, öffentliches Discard und
+Dispose behalten Reihenfolge, Grenzen und Identität; der Controller behält
+Fach-Gates, Store, Scope und öffentliche Methoden. H2
+(Kandidatenmaterialisierung/-restore) und die Anzeige bleiben unverändert.
+
 P3-4m1: `backend/practice-files-verification.cjs` führt den vollständigen
 Files-Chat-Zweig des Übungsprüfers für die Varianten `1`, `adopt` und
 `recover` aus. Der Dispatcher behält das Gate an derselben Stelle und übergibt

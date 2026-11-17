@@ -1,6 +1,7 @@
 import { editInspection, inspectionStatus, inspectionBasis } from './cad-inspection-state.js';
 import { checkCadMotionRange } from './cad-motion-range.js';
 import { createCadPreviewPublisher } from './cad-preview-publisher.js';
+import { createCadPreviewRegistry } from './cad-preview-registry.js';
 import {
   drawingModelKey,
   parameterModelKey,
@@ -121,18 +122,16 @@ export function createCadController({
     confirmedView = null,
     pendingDrawingProof = null,
     projectScope = globalThis.crypto.randomUUID();
-  const previews = new Map(),
+  const previewRegistry = createCadPreviewRegistry(),
     candidateViews = new Map(),
-    viewQueries = new Map(),
-    replacementPreviews = new Set(),
-    drawingProofs = new Map();
+    viewQueries = new Map();
   async function materializeAITaskCandidate(previewId) {
-    const proposal = previews.get(previewId),
+    const proposal = previewRegistry.getPreview(previewId),
       revision = store.revision();
     if (!proposal || proposal.revision !== revision)
       throw Object.assign(Error('Auftragsvorschau fehlt oder ist veraltet.'), { code: 'STALE_REVISION' });
     const project = await resolveGeometry(proposal.project, null);
-    if (store.revision() !== revision || previews.get(previewId) !== proposal)
+    if (store.revision() !== revision || previewRegistry.getPreview(previewId) !== proposal)
       throw Object.assign(Error('Vorschau während der Sicherung geändert.'), { code: 'STALE_REVISION' });
     return cadProjectSnapshot(project);
   }
@@ -518,7 +517,7 @@ export function createCadController({
         return candidate;
       }
       if (context.operation?.kind === 'drawingRefreshProof') {
-        const proof = drawingProofs.get(context.operation.previewId);
+        const proof = previewRegistry.getDrawingProof(context.operation.previewId);
         if (
           Object.keys(context.operation).some(
             (key) => !['kind', 'previewId', 'drawingSheetIds', 'drawingsDraft'].includes(key),
@@ -540,7 +539,7 @@ export function createCadController({
         };
       }
       if (context.operation?.kind === 'drawingProposal') {
-        const proof = drawingProofs.get(context.operation.previewId);
+        const proof = previewRegistry.getDrawingProof(context.operation.previewId);
         if (
           Object.keys(context.operation).some((key) => !['kind', 'previewId'].includes(key)) ||
           !proof ||
@@ -1084,7 +1083,7 @@ export function createCadController({
       if (ticket === previewSequence && nativeOperation?.kind === 'associativeUpdate') {
         const prior =
           context.operation?.kind === 'drawingRefreshProof'
-            ? drawingProofs.get(context.operation.previewId)?.metadata
+            ? previewRegistry.getDrawingProof(context.operation.previewId)?.metadata
             : undefined;
         metadata.contourReport = mergeDrawingUpdateReports(prior?.contourReport, result.contourReport ?? result.report);
         metadata.parameterReport = mergeDrawingUpdateReports(prior?.parameterReport, result.parameterReport);
@@ -1197,34 +1196,21 @@ export function createCadController({
           ...metadata,
         };
       result.warnings = [...new Set([...(result.warnings ?? []), ...synchronized.warnings])];
-      previews.set(result.previewId, result);
-      if (
-        ((operation?.kind === 'projectParameters' ||
-          operation?.kind === 'linkedPattern' ||
-          operation?.kind === 'associativeUpdate' ||
-          (operation?.kind === 'tool' && operation.name === 'previewRebindDrills')) &&
-          result.report?.requiresFreeCADAcceptance) ||
-        (operation?.kind === 'batch' && result.report?.meshOperations?.some((r) => r.requiresFreeCADAcceptance)) ||
-        (operation?.kind === 'featureEdits' && result.report?.featureDependencies?.requiresAcceptance) ||
-        (['freecadDocumentEdit', 'freecadRerun'].includes(operation?.kind) &&
-          result.report?.freecadDependencies?.requiresAcceptance)
-      )
-        featureDependencyProofs.add(result.previewId);
-      if (result.photoReconstructionReport)
-        photoReconstructionProofs.set(result.previewId, { revision, passed: false });
-      if (pendingDrawingProof) {
-        drawingProofs.set(result.previewId, pendingDrawingProof);
-        while (drawingProofs.size > 10) drawingProofs.delete(drawingProofs.keys().next().value);
-      }
-      if (replaceProject) replacementPreviews.add(result.previewId);
-      while (previews.size > 10) {
-        const first = previews.keys().next().value;
-        previews.delete(first);
-        replacementPreviews.delete(first);
-        drawingProofs.delete(first);
-        photoReconstructionProofs.delete(first);
-        featureDependencyProofs.delete(first);
-      }
+      previewRegistry.registerPreview(result, {
+        featureDependency: () =>
+          ((operation?.kind === 'projectParameters' ||
+            operation?.kind === 'linkedPattern' ||
+            operation?.kind === 'associativeUpdate' ||
+            (operation?.kind === 'tool' && operation.name === 'previewRebindDrills')) &&
+            result.report?.requiresFreeCADAcceptance) ||
+          (operation?.kind === 'batch' && result.report?.meshOperations?.some((r) => r.requiresFreeCADAcceptance)) ||
+          (operation?.kind === 'featureEdits' && result.report?.featureDependencies?.requiresAcceptance) ||
+          (['freecadDocumentEdit', 'freecadRerun'].includes(operation?.kind) &&
+            result.report?.freecadDependencies?.requiresAcceptance),
+        revision,
+        readDrawingProof: () => pendingDrawingProof,
+        replacement: replaceProject,
+      });
       return result;
     } catch (error) {
       if (buildPreview?.ticket === ticket) {
@@ -1241,26 +1227,25 @@ export function createCadController({
     alive();
     assertWritable();
     const before = store.readSnapshot(),
-      proposal = previews.get(request.previewId);
-    if (featureDependencyProofs.has(request.previewId) && request.acceptFeatureDependencies !== true)
+      proposal = previewRegistry.getPreview(request.previewId);
+    if (previewRegistry.hasFeatureDependency(request.previewId) && request.acceptFeatureDependencies !== true)
       throw Object.assign(
         Error('Notwendige Parameter-, Quellen- und Konturfolgeänderungen ausdrücklich mit übernehmen.'),
         { code: 'AI_FEATURE_DEPENDENCY_ACCEPTANCE_REQUIRED' },
       );
-    if (photoReconstructionProofs.has(request.previewId) && !photoReconstructionProofs.get(request.previewId).passed)
+    const photoReconstructionProof = previewRegistry.getPhotoReconstructionProof(request.previewId);
+    if (photoReconstructionProof && !photoReconstructionProof.passed)
       throw Object.assign(
         Error('Fotorekonstruktion erst nach erfolgreicher nativer Maß- und vollständiger Ansichtsprüfung übernehmen.'),
         { code: 'PHOTO_RECONSTRUCTION_UNCHECKED' },
       );
     const result = store.apply(request),
-      replaced = replacementPreviews.delete(request.previewId) && !result.alreadyApplied;
-    photoReconstructionProofs.delete(request.previewId);
-    featureDependencyProofs.delete(request.previewId);
+      replaced = previewRegistry.acceptApplied(request.previewId, {
+        alreadyApplied: result.alreadyApplied,
+      });
     if (replaced) projectScope = globalThis.crypto.randomUUID();
     projectScopes.set(store.readSnapshot(), projectScope);
-    previews.delete(request.previewId);
-    if (result.changed || replaced) drawingProofs.clear();
-    else drawingProofs.delete(request.previewId);
+    previewRegistry.finishApplied(request.previewId, { changed: result.changed, replaced });
     let updateError;
     try {
       changed(result, before, { replacement: replaced });
@@ -1308,7 +1293,7 @@ export function createCadController({
               code: 'AI_TASK_CANDIDATE_INVALID',
             });
         }
-      if (store.revision() !== revision || !previews.has(proposal.previewId))
+      if (store.revision() !== revision || !previewRegistry.hasPreview(proposal.previewId))
         throw Object.assign(Error('Modell während der Wiederherstellung geändert.'), { code: 'STALE_REVISION' });
       const sources = changed
           .filter((node) => before.nodes.some((old) => old.id === node.id))
@@ -1324,12 +1309,11 @@ export function createCadController({
         restoredTaskCandidate: true,
         featureDependencies: { requiresAcceptance, parameters: [], sources, contours: [], drawingViews: [] },
       };
-      if (requiresAcceptance) featureDependencyProofs.add(proposal.previewId);
+      if (requiresAcceptance) previewRegistry.addFeatureDependency(proposal.previewId);
       return structuredClone(proposal);
     } catch (error) {
       if (proposal) {
-        previews.delete(proposal.previewId);
-        featureDependencyProofs.delete(proposal.previewId);
+        previewRegistry.rejectRestoredPreview(proposal.previewId);
         store.discard(proposal.previewId);
       }
       throw error;
@@ -1425,15 +1409,13 @@ export function createCadController({
       cleanup();
     }
   }
-  const photoReconstructionProofs = new Map(),
-    featureDependencyProofs = new Set();
   async function previewPhotoReconstruction(value, { revision = store.revision(), signal, review } = {}) {
     const plan = validatePhotoSet(value),
       cleanup = previewAbort(signal, revision);
     let proposal;
     const current = () => {
       if (signal?.aborted) throw Object.assign(Error('Fotorekonstruktion abgebrochen.'), { code: 'ABORTED' });
-      if (proposal && !previews.has(proposal.previewId))
+      if (proposal && !previewRegistry.hasPreview(proposal.previewId))
         throw Object.assign(Error('Fotorekonstruktionsvorschau verworfen oder abgelaufen.'), {
           code: 'PHOTO_RECONSTRUCTION_EXPIRED',
         });
@@ -1491,12 +1473,15 @@ export function createCadController({
           nativeExtras.passed === true &&
           reports.every((r) => r.matches === true && !r.unavailable),
         proof = { revision, planDigest: photoSetDigest(plan), native, solids, nativeExtras, passed, views: reports };
-      photoReconstructionProofs.set(proposal.previewId, { revision, planDigest: proof.planDigest, passed });
+      previewRegistry.setPhotoReconstructionProof(proposal.previewId, {
+        revision,
+        planDigest: proof.planDigest,
+        passed,
+      });
       return { ...proposal, photoReconstructionReview: proof };
     } catch (error) {
       if (proposal) {
-        photoReconstructionProofs.delete(proposal.previewId);
-        previews.delete(proposal.previewId);
+        previewRegistry.rejectPhotoReconstruction(proposal.previewId);
         store.discard(proposal.previewId);
       }
       throw error;
@@ -1522,7 +1507,7 @@ export function createCadController({
       sheetIds.some((id) => !data.sheets.some((sheet) => sheet.id === id))
     )
       throw Error('Vorhandene eindeutige Blattkennungen wählen.');
-    const proof = basePreviewId === undefined ? undefined : drawingProofs.get(basePreviewId);
+    const proof = basePreviewId === undefined ? undefined : previewRegistry.getDrawingProof(basePreviewId);
     if (basePreviewId !== undefined && (!proof || proof.revision !== revision))
       throw Object.assign(Error('Die berechnete Blattvorschau fehlt oder ist veraltet.'), { code: 'STALE_REVISION' });
     if (signal?.aborted)
@@ -1546,7 +1531,7 @@ export function createCadController({
     drawings,
     { previewId, revision = store.revision(), label = 'Zeichnungsblätter ändern' } = {},
   ) {
-    const proof = drawingProofs.get(previewId);
+    const proof = previewRegistry.getDrawingProof(previewId);
     if (!proof) throw Object.assign(Error('Die berechnete Blattvorschau fehlt.'), { code: 'UNKNOWN_PREVIEW' });
     const project = cadProjectSnapshot(proof.project);
     project.drawings = validateCadDrawings(drawings);
@@ -1685,9 +1670,7 @@ export function createCadController({
             const old = project.contourLinks.links.find((link) => link.id === id),
               next = result.project.contourLinks.links.find((link) => link.id === id);
             if (JSON.stringify(old) !== JSON.stringify(next)) {
-              previews.delete(result.previewId);
-              drawingProofs.delete(result.previewId);
-              featureDependencyProofs.delete(result.previewId);
+              previewRegistry.rejectContourRebind(result.previewId);
               store.discard(result.previewId);
               throw Object.assign(
                 Error(
@@ -1939,7 +1922,7 @@ export function createCadController({
   }
   async function checkPreview(previewId, checks, { collectFailures = false } = {}) {
     if (collectFailures) {
-      const original = previews.get(previewId),
+      const original = previewRegistry.getPreview(previewId),
         revision = store.revision();
       // Preserve the strict API and its fast batched successful path. Only a
       // rejected measurement needs individual reports for the review screen.
@@ -1955,7 +1938,7 @@ export function createCadController({
           reports.push((await checkPreview(previewId, [check])).checks[0]);
         } catch (error) {
           if (!/^AI_(RESULT_MISMATCH|CHECK_)/.test(error.code ?? '')) throw error;
-          const proposal = previews.get(previewId);
+          const proposal = previewRegistry.getPreview(previewId);
           if (!proposal) throw Object.assign(Error('Die CAD-Vorschau fehlt.'), { code: 'UNKNOWN_PREVIEW' });
           let target = check.target;
           try {
@@ -1978,7 +1961,7 @@ export function createCadController({
           });
         }
       }
-      if (store.revision() !== revision || previews.get(previewId) !== original)
+      if (store.revision() !== revision || previewRegistry.getPreview(previewId) !== original)
         throw Object.assign(Error('Die CAD-Vorschau wurde während der Ergebnisprüfung geändert.'), {
           code: 'STALE_REVISION',
         });
@@ -1991,7 +1974,7 @@ export function createCadController({
       };
     }
     alive();
-    const proposal = previews.get(previewId),
+    const proposal = previewRegistry.getPreview(previewId),
       revision = store.revision();
     if (!proposal) throw Object.assign(Error('Die CAD-Vorschau fehlt.'), { code: 'UNKNOWN_PREVIEW' });
     if (proposal.revision !== revision)
@@ -2044,7 +2027,7 @@ export function createCadController({
               },
               { project: proposal.project, quality: { deflection: 0.01, angleDegrees: 5 } },
             );
-            if (store.revision() !== revision || previews.get(previewId) !== proposal)
+            if (store.revision() !== revision || previewRegistry.getPreview(previewId) !== proposal)
               throw Object.assign(Error('Die CAD-Vorschau wurde während des Vergleichs geändert.'), {
                 code: 'STALE_REVISION',
               });
@@ -2087,7 +2070,7 @@ export function createCadController({
       scope:
         'Only listed requirements were measured. Evidence distinguishes native BRep, source bounds and verified mesh-kernel results. Clearance proves a finite corridor with the reported radial allowance; physical fit remains untested.',
     };
-    if (store.revision() !== revision || previews.get(previewId) !== proposal)
+    if (store.revision() !== revision || previewRegistry.getPreview(previewId) !== proposal)
       throw Object.assign(Error('Die CAD-Vorschau wurde während der Ergebnisprüfung geändert.'), {
         code: 'STALE_REVISION',
       });
@@ -2336,7 +2319,7 @@ export function createCadController({
     });
   }
   async function inspectFreeCADPreview(previewId, { targetId, signal } = {}) {
-    const proposal = previews.get(previewId),
+    const proposal = previewRegistry.getPreview(previewId),
       revision = store.revision();
     if (!proposal || proposal.revision !== revision)
       throw Object.assign(Error('FreeCAD-Prüfvorschau ist veraltet.'), { code: 'STALE_REVISION' });
@@ -2381,7 +2364,7 @@ export function createCadController({
         );
       },
     });
-    if (store.revision() !== revision || previews.get(previewId) !== proposal)
+    if (store.revision() !== revision || previewRegistry.getPreview(previewId) !== proposal)
       throw Object.assign(Error('FreeCAD-Prüfvorschau wurde geändert.'), { code: 'STALE_REVISION' });
     const g = checked.geometry;
     return {
@@ -2395,11 +2378,7 @@ export function createCadController({
     };
   }
   function discard(previewId) {
-    previews.delete(previewId);
-    replacementPreviews.delete(previewId);
-    drawingProofs.delete(previewId);
-    photoReconstructionProofs.delete(previewId);
-    featureDependencyProofs.delete(previewId);
+    previewRegistry.discardPreview(previewId);
     return store.discard(previewId);
   }
   const transactions = {
@@ -2494,7 +2473,7 @@ export function createCadController({
     hasBuildPreview: () => !!buildPreview,
     getBuildPreview: () => (buildPreview ? structuredClone(buildPreview) : null),
     getPreview: (previewId) => {
-      const result = previews.get(previewId);
+      const result = previewRegistry.getPreview(previewId);
       return result ? structuredClone(result) : undefined;
     },
     materialize: (ids = null, options = {}) => resolveGeometry(store.readSnapshot(), ids, options),
@@ -2527,11 +2506,7 @@ export function createCadController({
       store.cancel();
       worker.dispose();
       meshWorker.dispose();
-      previews.clear();
-      replacementPreviews.clear();
-      drawingProofs.clear();
-      photoReconstructionProofs.clear();
-      featureDependencyProofs.clear();
+      previewRegistry.dispose();
       pendingDrawingProof = null;
     },
   };
