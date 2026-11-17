@@ -4,7 +4,7 @@ import {installCadPracticeRunner} from '../src/cad-practice-runner.js';
 
 // Exercise the real runner's lifecycle without CAD work or native input.
 function harness(t,{nested=false}={}){
- const elements=new Map(['practice-pointer','practice-caption','practice-pause','practice-stop','practice-interaction-warning','practice-speed','practice-end','practice-main'].map(id=>[id,{style:{},textContent:'',disabled:false}]));
+ const elements=new Map(['practice-pointer','practice-caption','practice-pause','practice-stop','practice-interaction-warning','practice-speed','practice-speed-output','practice-tempo-note','practice-end','practice-main'].map(id=>[id,{style:{},textContent:'',disabled:false,...(id==='practice-speed'?{value:'50'}:{})}]));
  const sessionBar={style:{},contains:()=>false,querySelector:s=>elements.get(s.slice(1))};const overlay={style:{},hidden:false,querySelector:s=>elements.get(s.slice(1)),contains:()=>false};
  const listeners=new Map();let plan,cancel,resolveReport,releasePreview,cancelled=0,applies=0;
  const report=new Promise(resolve=>{resolveReport=resolve;});

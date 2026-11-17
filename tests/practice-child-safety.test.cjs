@@ -132,3 +132,28 @@ test('Step observation requires trusted frame and explicit host observer, then a
  h.channel.emit('message',{type:'observation-reply',nonce:'a'.repeat(48),id:m.id});assert.equal((await pending).ok,true);
  assert.equal((await handler(h.event,{...value,revision:'stale'})).ok,false);
 });
+
+test('the trusted speed control keeps the selected tempo for the next practice window',async t=>{
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-tempo-'));
+ t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));
+ const {installPracticeTempo}=require('../backend/practice-tempo.cjs');
+ const connect=()=>{
+  const window=harness([]).win;
+  let invoke;
+  installPracticeTempo(window,{directory,ipcMain:{handle:(channel,handler)=>{
+   assert.equal(channel,'cad-practice:tempo');invoke=handler;
+  }}});
+  const own={sender:window.webContents,senderFrame:window.webContents.mainFrame};
+  return {read:()=>invoke(own),set:value=>invoke(own,value),untrusted:value=>invoke({...own,senderFrame:{}},value)};
+ };
+ const first=connect();
+ assert.deepEqual(await first.read(),{ok:true,value:50});
+ assert.equal((await first.untrusted(250)).ok,false);
+ assert.equal((await first.set(350)).ok,false);
+ assert.deepEqual(await first.set(180),{ok:true,value:180});
+ const next=connect();
+ assert.deepEqual(await next.read(),{ok:true,value:180});
+ assert.deepEqual(await next.set(300),{ok:true,value:300});
+ assert.deepEqual(await first.read(),{ok:true,value:300});
+});
