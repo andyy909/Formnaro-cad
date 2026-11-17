@@ -66,6 +66,12 @@ export function copyBenchmarkSources(source,stage){
   if(createHash('sha256').update(bytes).digest('hex')!==sha256)throw Error('Benchmark source changed: '+file);
   return {file,bytes};
  });
+ // The Advanced Lab drawing oracle imports plain modules in Electron's main process.
+ // Keep this runtime closure separate from the frozen benchmark source pins.
+ for(const name of ['cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref']){
+  const file='src/'+name+'.js';
+  if(!required.has(file))checked.push({file,bytes:fs.readFileSync(path.join(source,file))});
+ }
  for(const {file,bytes} of checked){const target=path.join(stage,file);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,bytes);}
  return checked.map(({file})=>file);
 }
