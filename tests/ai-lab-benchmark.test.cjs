@@ -120,6 +120,7 @@ test('Markdown report keeps no successes separate from unknown costs and uses th
  const text=fs.readFileSync((await manager.report({id:m.id,format:'md'})).path,'utf8');
  assert.match(text,/0\/4 vollständig bestätigt/);
  assert.match(text,/Wilson-Bereich für diese Aufgaben: 0\.0–49\.0 % \(95 %, geplanter Nenner 4\)/);
+ assert.match(text,/- B01 .*: 0\/1 richtig \(1\/1 beendet\)/);
  assert.match(text,/Kosten gesamt: [\d.]+–[\d.]+ USD \(Tarifschätzung\)/);
  assert.match(text,/Kosten je Erfolg: nicht berechenbar \(Nenner 0; Tarifschätzung, USD\)/);
  assert.doesNotMatch(text,/keine bestätigten Erfolge/);
