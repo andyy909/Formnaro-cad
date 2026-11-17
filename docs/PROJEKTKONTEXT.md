@@ -1,5 +1,13 @@
 # Technischer Projektkontext
 
+Die Quell-CI läuft bei Pull Requests zu allen Zielbranches und bei Pushes
+auf `main` oder Tags. `npm run test:all -- --verify-coverage` gleicht
+Testdateien und Manifest ab und prüft die Dateizuordnung zu beiden Gruppen
+pro Plattform. Die CI gleicht zusätzlich die tatsächlich erfolgreichen
+Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
+Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
+ausgewiesen.
+
 P3-4m1: `backend/practice-files-verification.cjs` führt den vollständigen
 Files-Chat-Zweig des Übungsprüfers für die Varianten `1`, `adopt` und
 `recover` aus. Der Dispatcher behält das Gate an derselben Stelle und übergibt

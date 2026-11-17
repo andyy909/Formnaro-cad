@@ -9,7 +9,7 @@ test('inventory preserves obsolete records and measures only existing tests', (t
   const root = mkdtempSync(join(tmpdir(), 'formnaro-inventory-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   for (const directory of ['scripts', 'tests', '.github/workflows']) mkdirSync(join(root, directory), { recursive: true });
-  for (const file of ['test-inventory.mjs', 'node-test-file.mjs']) copyFileSync(new URL('../scripts/' + file, import.meta.url), join(root, 'scripts', file));
+  for (const file of ['test-inventory.mjs', 'node-test-file.mjs', 'test-discovery.mjs']) copyFileSync(new URL('../scripts/' + file, import.meta.url), join(root, 'scripts', file));
   writeFileSync(join(root, 'package.json'), JSON.stringify({ scripts: {} }));
   writeFileSync(join(root, '.github/workflows/build.yml'), '');
   writeFileSync(join(root, 'tests/current.test.mjs'), "import test from 'node:test';import {writeFileSync} from 'node:fs';test('current',()=>writeFileSync('executed','yes'));");

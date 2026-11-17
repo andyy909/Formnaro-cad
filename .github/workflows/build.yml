@@ -2,6 +2,8 @@ name: Build and test
 
 on:
   push:
+    branches: [main]
+    tags: ['**']
   pull_request:
 
 concurrency:
@@ -12,31 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  source-trigger:
-    if: ${{ github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name != github.event.repository.default_branch }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    permissions:
-      contents: read
-      actions: read
-      pull-requests: read
-    outputs:
-      skip: ${{ steps.select.outputs.skip }}
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version-file: .node-version
-      - id: select
-        run: node scripts/source-ci-trigger.mjs
-        env:
-          GH_TOKEN: ${{ github.token }}
-
   windows-source-tests:
-    needs: source-trigger
-    if: ${{ !cancelled() && needs.source-trigger.outputs.skip != 'true' }}
     runs-on: windows-latest
     timeout-minutes: 35
     outputs:
@@ -57,6 +35,9 @@ jobs:
       - name: Verify relative documentation links
         if: matrix.shard == 1
         run: node scripts/check-links.mjs
+      - name: Check Node test inventory and coverage on both platforms
+        if: matrix.shard == 1
+        run: node scripts/run-tests.mjs --verify-coverage
       - run: npm ci
       - name: Lint main program with four warning rules
         if: matrix.shard == 1
@@ -79,7 +60,7 @@ jobs:
         run: npm run build
       - if: matrix.shard == 1
         run: npm test
-      - run: npm run test:all -- --shard=${{ matrix.shard }}/2 --balance-by-duration=ci
+      - run: npm run test:all -- --shard=${{ matrix.shard }}/2 --balance-by-duration=ci --verify-coverage
       - run: node --test tests/windows-dictation.test.cjs tests/renderer-recovery-lifecycle.test.cjs tests/desktop-ai-lifecycle.test.cjs tests/ai-model-benchmarks.test.cjs tests/ai-lab-benchmark.test.cjs tests/ai-advanced-benchmark.test.cjs tests/ai-drawing-reference.test.cjs tests/ai-tool-reference.test.cjs tests/ai-responses-json-input.test.cjs tests/ai-drill-completion.test.cjs tests/ai-lab-token-renewal.test.cjs tests/chatgpt-login.test.cjs
         if: matrix.shard == 1
       - name: Verify laboratory storage, credentials and process shutdown
@@ -95,8 +76,8 @@ jobs:
 
   windows-source:
     name: ${{ github.event_name == 'pull_request' && 'windows-source' || 'windows-source [push]' }}
-    needs: [source-trigger, windows-source-tests]
-    if: ${{ always() && needs.source-trigger.outputs.skip != 'true' }}
+    needs: windows-source-tests
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -111,8 +92,6 @@ jobs:
 
   linux-node-tests:
     name: linux-node-tests (${{ matrix.shard }})${{ github.event_name == 'push' && ' [push]' || '' }}
-    needs: source-trigger
-    if: ${{ !cancelled() && needs.source-trigger.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -131,12 +110,10 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
-      - run: npm run test:all -- --shard=${{ matrix.shard }}/2 --balance-by-duration=ci
+      - run: npm run test:all -- --shard=${{ matrix.shard }}/2 --balance-by-duration=ci --verify-coverage
 
   mini-source:
     name: mini-source (${{ matrix.directory }})${{ github.event_name == 'push' && ' [push]' || '' }}
-    needs: source-trigger
-    if: ${{ !cancelled() && needs.source-trigger.outputs.skip != 'true' }}
     runs-on: windows-latest
     timeout-minutes: 15
     strategy:
