@@ -1,7 +1,7 @@
-import { existsSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { basename } from 'node:path';
+import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { runNodeTest } from './node-test-file.mjs';
+import { discoverTests } from './test-discovery.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const read = (file) => readFileSync(root + file, 'utf8');
@@ -12,62 +12,17 @@ if (args.length && (args.length !== 1 || args[0] !== '--run')) {
   process.exit(2);
 }
 
-function listFiles(directory) {
-  return readdirSync(root + directory, { withFileTypes: true }).flatMap((entry) => {
-    const file = directory + '/' + entry.name;
-    if (entry.isDirectory()) return listFiles(file);
-    return entry.isFile() ? [file] : [];
-  }).sort();
-}
-
-const tests = listFiles('tests').filter((file) => basename(file).includes('.test.'));
-const testsByFile = new Map();
-const testsByName = new Map();
-for (const file of tests) {
-  const kind = file.endsWith('.py') ? 'python' : 'node';
-  const entry = { file, referencedBy: [], kind };
-  testsByFile.set(file, entry);
-  const name = basename(file);
-  testsByName.set(name, testsByName.has(name) ? null : entry);
-  if (/\brequire\s*\(\s*['"]electron['"]\s*\)|\bfrom\s*['"]electron['"]/.test(read(file))) {
-    if (kind === 'node') entry.kind = 'electron';
-  }
-}
-
-const npmScripts = JSON.parse(read('package.json')).scripts;
-const sources = [
-  ...Object.entries(npmScripts).map(([name, command]) => [name === 'test' ? 'npm test' : name, command]),
-  ['ci', read('.github/workflows/build.yml')],
-  ...listFiles('scripts').map((file) => [file, read(file)]),
-];
-
-// Count explicit references, including bare names in script arrays. Dynamic
-// discovery by an existing harness does not imply a literal file reference.
-const testReference = /(?<![\w./-])(?:[\w.-]+\/)*[\w.-]+\.test\.[\w]+(?![\w.-])/g;
-const electronCommand = /(?:^|[\s'"\x60/])electron(?:\.exe)?[ \t]+(?:--[\w=-]+[ \t]+)*['"]?$/i;
-for (const [label, source] of sources) {
-  for (const line of source.replaceAll('\\', '/').split(/\r?\n/)) {
-    for (const match of line.matchAll(testReference)) {
-      const file = match[0].replace(/^(?:\.\.?\/)+/, '');
-      const entry = testsByFile.get(file) ?? testsByName.get(file);
-      if (!entry) continue;
-      if (!entry.referencedBy.includes(label)) entry.referencedBy.push(label);
-      if (entry.kind === 'node' && electronCommand.test(line.slice(0, match.index))) {
-        entry.kind = 'electron';
-      }
-    }
-  }
-}
-
 const previous = existsSync(root + manifestFile) ? JSON.parse(read(manifestFile)) : [];
 const previousByFile = new Map(previous.map((entry) => [entry.file, entry]));
-const entries = [...testsByFile.values()].map((entry) => {
+const discovered = discoverTests(root);
+const present = new Set(discovered.map(({ file }) => file));
+const entries = discovered.map((entry) => {
   entry.referencedBy.sort();
   const old = previousByFile.get(entry.file);
   return old?.kind === entry.kind ? { ...old, ...entry } : entry;
 });
 // Retain explicit tombstones for removed legacy tests; never run missing files.
-entries.push(...previous.filter((entry) => entry.status === 'obsolete' && !testsByFile.has(entry.file)));
+entries.push(...previous.filter((entry) => entry.status === 'obsolete' && !present.has(entry.file)));
 entries.sort((a, b) => a.file.localeCompare(b.file));
 
 if (args[0] === '--run') {
