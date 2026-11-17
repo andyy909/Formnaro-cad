@@ -31,6 +31,12 @@ P3-4a2: Die Erfolgsberichte der Zeichnungs- und automatischen
 Bemaßungsprüfung verwenden denselben synchronen Berichtsschreiber.
 Prüfungen, Berichtsfelder und Fehlerbehandlung bleiben beim Aufrufer.
 
+P3-4n3: Der Sketch-Prüfhelfer führt auch die Varianten `1` und
+`mode-recovery` aus. Der Dispatcher übergibt die gewählte Variante und den
+gemeinsamen Elternzustand. Der Helfer prüft die nativen Skizzengesten, die
+mittige Durchgangsöffnung und bei Wiederaufnahme zwei abgewiesene Aktionen
+auf derselben Revision. Die vorhandene Live-Funktion wird übergeben.
+
 P3-4n2: `backend/practice-sketch-verification.cjs` führt zusätzlich den
 vollständigen Repair-/Midpoint-Zweig des Übungsprüfers für `repair`,
 `midpoint`, `repair-live` und `midpoint-live` aus. Der Dispatcher behält Gate,
