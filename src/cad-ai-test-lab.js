@@ -4,6 +4,7 @@ import {mountLabRolePicker} from './cad-ai-lab-roles.js';
 import {mountDiagnosticUsage} from './cad-ai-diagnostic-usage.js';
 import {summarizeLab} from '../ai/test-lab-summary.mjs';
 import {quickPlans,quickPlan} from '../ai/lab-quick-plans.mjs';
+import {previewDevelopment,runDevelopment} from '../ai/lab-development-sequence.mjs';
 const labels={running:'Läuft',completed:'Beendet',proposal:'Vorschlag',failed:'Fehler',timeout:'Zeitlimit',cancelled:'Abgebrochen','monitor-stopped':'Vom Überwacher gestoppt','read-limit':'Auskunftslimit',truncated:'Ausgabelimit','step-limit':'Schrittlimit',interrupted:'Unterbrochen'};
 const seconds=n=>Number.isFinite(n)?(n/1000).toFixed(1)+' s':'—';
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -13,7 +14,7 @@ export function mountAITestLab({host,desktop}){
  const root=node('dialog');root.id='ai-diagnostics';root.setAttribute('aria-label','Formnaro KI-Testlabor');
  root.innerHTML=`<div class="lab-shell"><header class="lab-header"><div class="lab-mark" aria-hidden="true">◈</div><div class="lab-heading"><h2>KI-Testlabor</h2><small>Kontexte verstehen. Ergebnisse prüfen. Gemeinsam live verfolgen.</small></div><span class="lab-top-status" data-top-status>Bereit</span><button data-close>Schließen</button></header>
  <nav class="lab-nav" aria-label="Testlabor"><button data-tab="plan" aria-selected="true">Versuchsplan</button><button data-tab="live" aria-selected="false">Zwei Agenten · live</button><button data-tab="results" aria-selected="false">Ergebnisse</button><button data-tab="benchmark" aria-selected="false">Benchmark</button><button data-tab="review" aria-selected="false">Abschlussauswertung</button><button data-tab="methods" aria-selected="false">Methodik</button><span class="lab-spacer"></span><label class="lab-subtle"><input data-follow type="checkbox" checked>Live mitfolgen</label></nav>
- <main class="lab-body"><section class="lab-pane" data-pane="plan" data-lab-view="simple"><div class="lab-card lab-view-card"><div class="lab-view-switch" role="group" aria-label="Ansicht des Versuchsplans"><button type="button" data-simple-view aria-pressed="true">Einfach</button><button type="button" data-advanced-view aria-pressed="false">Erweitert</button></div><div data-lab-simple><div class="lab-presets" data-quick-plans></div><p class="lab-subtle" data-quick-details aria-live="polite"></p></div></div><div class="lab-grid"><div data-lab-advanced>
+ <main class="lab-body"><section class="lab-pane" data-pane="plan" data-lab-view="simple"><div class="lab-card lab-view-card"><div class="lab-view-switch" role="group" aria-label="Ansicht des Versuchsplans"><button type="button" data-simple-view aria-pressed="true">Einfach</button><button type="button" data-advanced-view aria-pressed="false">Erweitert</button></div><div data-lab-simple><div class="lab-presets" data-quick-plans></div><label data-development-options hidden><input type="checkbox" data-development-max> Falls weiterhin durchgefallen, einmal auf Max prüfen</label><p class="lab-subtle" data-quick-details aria-live="polite"></p></div></div><div class="lab-grid"><div data-lab-advanced>
  <div class="lab-card"><div class="lab-card-title"><h3>Mit einer Vorlage beginnen</h3><span class="lab-subtle">Gleiche Aufgaben. Vergleichbare Bedingungen.</span></div><div class="lab-presets" data-presets></div>
  <div class="lab-controls"><label class="lab-field lab-wide">Name des Vergleichs<input data-name value="Kleiner Pilot" maxlength="120"></label><label class="lab-field">Testtiefe<select data-stage><option value="start">Kurzer Start · Werkzeugwahl</option><option value="full">Vollständige Modellierung</option></select></label><label class="lab-field">Aufgabenstand<select data-dataset><option value="development">Bekannte Entwicklungsfälle</option><option value="holdout">Neue Bestätigungsfälle</option></select></label><label class="lab-field">Arbeitsweise<select data-workflow><option value="agent">API-Modellieragent</option><option value="practice">Sichtbarer Übungsmodus</option><option value="both">Beide, getrennt auswerten</option></select></label><label class="lab-field">Wiederholungen<input data-repeats type="number" min="1" max="8" value="1"></label><div class="lab-field lab-wide">Aufgaben<div data-cases class="lab-checks"></div></div><div class="lab-field">Denkstufen<div data-efforts class="lab-checks"></div></div><div class="lab-field">Textkontext<div data-scopes class="lab-checks"></div></div><div class="lab-field lab-wide">Startbild<div data-images class="lab-checks"></div></div></div></div>
  <div class="lab-card"><div class="lab-card-title"><h3>Startkontexte</h3><span class="lab-subtle">Der vollständige Katalog bleibt erreichbar.</span></div><div data-variants class="lab-variants"></div><details><summary>Eigenen Entwicklungskontext ergänzen</summary><p class="lab-subtle">Gilt für alle gewählten Varianten dieses Plans. Für eigene A/B-Vergleiche Pläne getrennt speichern. In Bestätigungsfällen deaktiviert.</p><textarea data-custom maxlength="6000" placeholder="Kurze Zusatzinformation oder eine zu untersuchende Anweisung …"></textarea></details></div>
@@ -23,7 +24,7 @@ export function mountAITestLab({host,desktop}){
  <section class="lab-pane" data-pane="live" hidden><div class="lab-metrics" data-live-metrics></div><div class="lab-live-grid"><div class="lab-card lab-preview-card"><div class="lab-card-title"><h3>Isoliertes Modell</h3><span class="lab-tag" data-trial-status>Wartet</span></div><img data-image class="lab-image" alt="Tatsächliche Modellansicht des isolierten Testprojekts" hidden><p data-trial-label class="lab-subtle">Noch kein Versuch gestartet.</p><details class="lab-context"><summary>Tatsächlich gesendeter Startkontext</summary><pre data-context></pre></details><details><summary>Alle Ereignisse und Rohdaten</summary><pre data-raw class="lab-raw"></pre></details></div>
  <div class="lab-card"><div class="lab-agent-head"><span class="lab-dot"></span><div><h3>Modellieragent</h3><small class="lab-subtle">Anbietertext und reale Werkzeugrückmeldungen</small></div></div><div data-model-log class="lab-log" role="log" aria-label="Modellieragent Liveverlauf"></div></div>
  <div class="lab-card"><div class="lab-agent-head"><span class="lab-dot supervisor"></span><div><h3>Versuchsleiter</h3><small class="lab-subtle">Unabhängiges Urteil · ohne Modellierzugriff</small></div></div><div data-decision class="lab-decision">Wartet auf den festgelegten Prüfzeitpunkt.</div><div data-supervisor-log class="lab-log" role="log" aria-label="Versuchsleiter Liveverlauf"></div><details class="lab-context"><summary>Was der Überwacher tatsächlich gesehen hat</summary><pre data-monitor-context></pre></details></div></div><p class="lab-subtle">Denktext ist vom Anbieter ausgegebener Text; er ist kein vollständiger Einblick in interne Modellvorgänge.</p><div class="lab-costs" data-costs></div></section>
- <section class="lab-pane" data-pane="results" hidden><div class="lab-card"><div class="lab-card-title"><h3>Vergleiche und unabhängige Prüfung</h3><select data-series aria-label="Serie filtern"><option value="">Alle Serien getrennt</option></select></div><div data-summary></div><div style="display:flex;gap:7px;margin:14px 0"><button data-report-json>Gesamtbericht JSON</button><button data-report-md>Lesbarer Bericht</button><button data-report-csv>Vergleich CSV</button></div><div class="lab-info">Schema und Werkzeugwahl sind Startdiagnosen. Erst die unabhängigen nativen Pflichtprüfungen belegen ein richtiges Modell. Ungeprüfte oder gestoppte Läufe bleiben sichtbar.</div></div><div class="lab-card"><div class="lab-card-title"><h3>Alle Versuche</h3><div><button data-export-json>Auswahl JSON</button> <button data-export-md>Auswahl Markdown</button> <button data-repeat>Erneut ausführen</button></div></div><div data-runs class="lab-table-wrap"></div></div><details><summary>Lokale Aufzeichnungen verwalten</summary><p class="lab-subtle">Löschen entfernt auch die Modelle und Berichte. Gespeicherte Versuchspläne bleiben erhalten.</p><button data-clear>Testaufzeichnungen löschen</button></details></section>
+ <section class="lab-pane" data-pane="results" hidden><div class="lab-card" data-development-results hidden></div><div class="lab-card"><div class="lab-card-title"><h3>Vergleiche und unabhängige Prüfung</h3><select data-series aria-label="Serie filtern"><option value="">Alle Serien getrennt</option></select></div><div data-summary></div><div style="display:flex;gap:7px;margin:14px 0"><button data-report-json>Gesamtbericht JSON</button><button data-report-md>Lesbarer Bericht</button><button data-report-csv>Vergleich CSV</button></div><div class="lab-info">Schema und Werkzeugwahl sind Startdiagnosen. Erst die unabhängigen nativen Pflichtprüfungen belegen ein richtiges Modell. Ungeprüfte oder gestoppte Läufe bleiben sichtbar.</div></div><div class="lab-card"><div class="lab-card-title"><h3>Alle Versuche</h3><div><button data-export-json>Auswahl JSON</button> <button data-export-md>Auswahl Markdown</button> <button data-repeat>Erneut ausführen</button></div></div><div data-runs class="lab-table-wrap"></div></div><details><summary>Lokale Aufzeichnungen verwalten</summary><p class="lab-subtle">Löschen entfernt auch die Modelle und Berichte. Gespeicherte Versuchspläne bleiben erhalten.</p><button data-clear>Testaufzeichnungen löschen</button></details></section>
  <section class="lab-pane" data-pane="benchmark" hidden></section>
  <section class="lab-pane" data-pane="review" hidden><div class="lab-card"><h3>Dritter Agent · Abschlussauswerter</h3><p class="lab-subtle">Liest die fertigen Ergebnisse in einer eigenen Sitzung und schlägt konkrete Verbesserungen mit Versuchsnachweisen und gezielten Nachtests vor. Ausstehende Versuche bleiben offen. Änderungen werden als Vorschläge gespeichert.</p><label class="lab-subtle"><input data-review-enabled type="checkbox" checked>Nach allen Prüfungen des Plans automatisch auswerten</label><div style="display:flex;gap:7px;margin:14px 0;flex-wrap:wrap"><button data-review-run>Fertige Ergebnisse auswerten</button><button data-review-export>Datenpaket für externen Agenten</button></div><p data-review-status role="status">Wartet auf abgeschlossene Prüfungen.</p><p data-review-scope class="lab-subtle"></p><pre data-review-result class="lab-raw" style="white-space:pre-wrap"></pre></div></section>
  <section class="lab-pane lab-methods" data-pane="methods" hidden><div class="lab-card"><h3>Erst die Prüfer prüfen</h3><p>Korrekte Referenzmodelle und gezielt falsche Gegenmodelle testen die Messlogik. Richtige Außenmaße allein dürfen eine versetzte Bohrung oder verschobene Wellenmitte nicht verdecken.</p><h3>Kontextqualität getrennt untersuchen</h3><p>A/B/C vergleichen kompakten Einstieg, Wegweiser und sofortige Werkzeugdetails. D ergänzt gemessene Auswahlfakten. E setzt auf gezieltes Nachladen. F hebt neutrale Syntaxbeispiele hervor. Werkzeuge und Schutz bleiben gleich. Bilder, Textauswahl und Übungsmodus bilden eigene Faktoren.</p><h3>Neue Aufgaben zur Bestätigung</h3><p>Die Bestätigung nutzt neue Maße und Positionen derselben Aufgabenfamilien. Varianten vorher auswählen und einfrieren. Mehrere Wiederholungen derselben Aufgabe sind keine neuen unabhängigen Aufgaben.</p><h3>Den Überwacher selbst bewerten</h3><p>Beobachtend läuft der Versuch trotz Stopempfehlung weiter. Ein später erfolgreiches natives Ergebnis zeigt einen falschen Stop. Für aktiv abgebrochene Läufe fehlt dieses Gegenergebnis. Lange Denktexte oder einzelne verworfene Ideen sind kein zuverlässiges Abbruchkriterium.</p><h3>Richtig, schnell und wirtschaftlich</h3><p>Zuerst vollständig richtige Ergebnisse und unveränderte unbeteiligte Teile. Dann Zeit bis zur gültigen Vorschau und zum richtigen Ergebnis, sämtliche Tokens, Cache und Kosten aller drei Agenten. Fehlgeschlagene Anfragen zählen mit. Fehlende Usage bleibt unbekannt.</p><p class="lab-info">Grundlagen: CADTests (Mai 2026), Parametric CAD Bench v3 (November 2026), Autodesk neuralCAD-Edit und Agenten-Evaluationsmethodik. Die genaue Recherche und Grenzen stehen im mitgelieferten Projektdokument KI-CAD-EVAL-QUELLEN-2026-11-05.md.</p></div></section>
@@ -34,15 +35,18 @@ export function mountAITestLab({host,desktop}){
  const rolePickers=Object.fromEntries(['modeler','supervisor','reviewer'].map(role=>[role,mountLabRolePicker({host:el('role-picker-'+role),role,api,onError:status,onBusy:delta=>{rolePending+=delta;controls();if(rolePending===0&&plan)void previewPlan();},onChange:()=>{if(!plan)return;syncModelerEfforts();void previewPlan();}})]));
  const benchmark=mountBenchmark({host:root.querySelector('[data-pane=benchmark]'),api,status,refresh:async()=>render(await api({action:'state'})),getModeler:()=>({...rolePickers.modeler.read(),selected:rolePickers.modeler.selected()})});
  const planPane=root.querySelector('[data-pane=plan]');
+ let quickChoice=null,developmentPreview=null,developmentController=null;
+ const selectedDevelopment=()=>planPane.dataset.labView==='simple'&&quickChoice==='development';
  function chooseView(view){
   planPane.dataset.labView=view;
   el('simple-view').setAttribute('aria-pressed',String(view==='simple'));
   el('advanced-view').setAttribute('aria-pressed',String(view==='advanced'));
-  controls();
+  void previewPlan();
  }
  el('simple-view').onclick=()=>chooseView('simple');
  el('advanced-view').onclick=()=>chooseView('advanced');
  function loadQuick(id){
+  quickChoice=id;el('development-max').checked=false;
   const selected=state.lab.roles?.selections;
   const modeler=plan?rolePickers.modeler.read():selected?.modeler;
   const supported=rolePickers.modeler.selected()?.reasoningEfforts??[];
@@ -58,7 +62,7 @@ export function mountAITestLab({host,desktop}){
   el('status').textContent=(planOpen&&planError)||actionStatus;
  }
  function status(text){actionStatus=text;updateStatus();}
- function tab(name){for(const k of ['run','campaign'])el(k).hidden=name==='benchmark';for(const b of root.querySelectorAll('[data-tab]'))b.setAttribute('aria-selected',String(b.dataset.tab===name));for(const p of root.querySelectorAll('[data-pane]'))p.hidden=p.dataset.pane!==name;updateStatus();}
+ function tab(name){el('run').hidden=name==='benchmark';el('campaign').hidden=name==='benchmark'||planPane.dataset.labView==='simple';for(const b of root.querySelectorAll('[data-tab]'))b.setAttribute('aria-selected',String(b.dataset.tab===name));for(const p of root.querySelectorAll('[data-pane]'))p.hidden=p.dataset.pane!==name;updateStatus();}
  root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
  function checks(key,items,chosen){el(key).replaceChildren(...items.map(([value,label])=>{const l=node('label'),i=node('input');i.type='checkbox';i.value=value;i.checked=chosen.includes(value);l.append(i,node('span',label));return l;}));}
  const picked=key=>[...el(key).querySelectorAll('input:checked')].map(i=>i.value);
@@ -70,10 +74,19 @@ export function mountAITestLab({host,desktop}){
  function table(headers,rows){const t=node('table',undefined,'lab-table'),head=node('tr');headers.forEach(h=>head.append(node('th',h)));const thead=node('thead');thead.append(head);t.append(thead);const body=node('tbody');for(const row of rows){const tr=node('tr');row.forEach(value=>{const td=node('td');td.append(typeof value==='object'?value:document.createTextNode(String(value??'—')));tr.append(td);});body.append(tr);}t.append(body);return t;}
  async function previewPlan(){
   const ticket=++reading;
-  preview=null;
+  preview=null;developmentPreview=null;
   controls();
   if(!plan||rolePending)return;
   try{
+   if(selectedDevelopment()){
+    const supported=rolePickers.modeler.selected()?.reasoningEfforts??[];
+    const option=el('development-max');
+    if(!supported.includes('max'))option.checked=false;
+    developmentPreview=previewDevelopment(rolePickers.modeler.read(),supported,option.checked);
+    planError='';
+    el('quick-details').textContent=developmentPreview.modeler.model+' · '+developmentPreview.initial+' auf Low · höchstens '+developmentPreview.maximum+' Versuche insgesamt';
+    return;
+   }
    const p=await api({action:'labPreview',plan:collect()});
    if(ticket!==reading)return;
    preview=p;
@@ -94,14 +107,20 @@ export function mountAITestLab({host,desktop}){
   }
  }
  function controls(){
-  benchmark.update({...state,busy:!!state?.busy||rolePending>0});
-  const busy=!!state?.busy;
+  benchmark.update({...state,busy:!!state?.busy||!!developmentController||rolePending>0});
+  const busy=!!state?.busy||!!developmentController;
   for(const picker of Object.values(rolePickers))picker.setBusy(busy);
   for(const key of ['campaign','save','repeat','clear','preflight','review-run','review-export','review-enabled'])el(key).disabled=busy||rolePending>0;
   const requiredRoles=['modeler'];
   if(el('monitor-mode').value!=='off')requiredRoles.push('supervisor');
   if(state?.lab?.reviewer?.enabled)requiredRoles.push('reviewer');
-  el('run').disabled=!preview||busy||starting||rolePending>0||requiredRoles.some(role=>!rolePickers[role].ready());
+  const supported=rolePickers.modeler.selected()?.reasoningEfforts??[];
+  el('development-options').hidden=!selectedDevelopment();
+  el('development-max').disabled=busy||!supported.includes('max');
+  el('campaign').hidden=root.querySelector('[data-pane=benchmark]').hidden===false||planPane.dataset.labView==='simple';
+  el('run').disabled=busy||starting||rolePending>0||(selectedDevelopment()
+   ?!developmentPreview||!rolePickers.modeler.ready()
+   :!preview||requiredRoles.some(role=>!rolePickers[role].ready()));
   for(const button of el('quick-plans').querySelectorAll('button'))button.disabled=busy||rolePending>0;
   el('cancel').disabled=!busy;
   el('skip').disabled=!busy||!!state?.lab?.reviewer?.busy;
@@ -115,7 +134,7 @@ export function mountAITestLab({host,desktop}){
   el('live-metrics').replaceChildren(...values.map(([v,label])=>{const m=node('div',undefined,'lab-metric');m.append(node('strong',v),node('span',label));return m;}));}
  function summary(){const selectedSeries=el('series').value;const rows=state.records.filter(r=>!selectedSeries||r.spec.seriesId===selectedSeries),s=summarizeLab(rows);el('summary').replaceChildren(table(['Kontext / Denken','Faktoren','Nativ richtig / beendet','Schema gültig','Median','Falsche Stopps / unklar'],s.groups.map(g=>[g.variant+' · '+g.effort,[g.dataset,g.workflow,g.sceneScope,g.imageMode].join(' · '),g.nativePassed+' / '+g.finished,g.schemaValid,seconds(g.medianMs),g.falseStops+' / '+g.unknownStops])));el('runs').replaceChildren(table(['Aufgabe / Serie','Kontext','Denken','Modus / Bild','Status','Native Prüfung','Zeit'],[...rows].reverse().map(r=>{const button=node('button',r.spec.caseId+' · '+(r.spec.seriesName??r.spec.seriesMode??'Voruntersuchung'));button.onclick=()=>read(r.id);return [button,r.spec.variant,r.spec.effort,(r.spec.workflow??'agent')+' · '+(r.spec.imageMode??(r.spec.startImage?'Bild':'ohne Bild')),labels[r.status]??r.status,r.verification?r.verification.passed?'✓ bestanden':'✕ abweichend':'—',seconds(r.elapsedMs)];})));}
  function render(value){state=value;controls();renderReview();const c=state.lab.campaign;const nextCampaignText=c?'Automatik: '+c.phase+' · '+c.phases.filter(p=>p.status==='completed').length+' Phasen beendet'+(c.error?' · '+c.error:''):'';
- if(nextCampaignText!==campaignText){campaignText=nextCampaignText;if(campaignText)status(campaignText);}const oldSeries=el('series').value;el('series').replaceChildren(new Option('Alle Serien getrennt',''),...state.lab.series.map(s=>new Option(s.id.slice(0,8)+' · '+s.runs+' Versuche',s.id)));el('series').value=oldSeries;el('saved').replaceChildren(new Option('Gespeicherter Plan …',''),...state.lab.plans.map(p=>new Option(p.plan.name,p.id)));summary();if(!plan){el('presets').replaceChildren(...state.lab.presets.map(p=>{const b=node('button',p.name);b.title=p.description;b.onclick=()=>load(p.plan);return b;}));el('quick-plans').replaceChildren(...quickPlans.map(p=>{const b=node('button',p.label+' · '+p.caseIds.length);b.type='button';b.onclick=()=>loadQuick(p.id);return b;}));loadQuick('basic');}if(selected)metrics(state.records.find(r=>r.id===selected));}
+ if(nextCampaignText!==campaignText){campaignText=nextCampaignText;if(campaignText)status(campaignText);}const oldSeries=el('series').value;el('series').replaceChildren(new Option('Alle Serien getrennt',''),...state.lab.series.map(s=>new Option(s.id.slice(0,8)+' · '+s.runs+' Versuche',s.id)));el('series').value=oldSeries;el('saved').replaceChildren(new Option('Gespeicherter Plan …',''),...state.lab.plans.map(p=>new Option(p.plan.name,p.id)));summary();if(!plan){el('presets').replaceChildren(...state.lab.presets.map(p=>{const b=node('button',p.name);b.title=p.description;b.onclick=()=>{quickChoice=null;load(p.plan);};return b;}));el('quick-plans').replaceChildren(...quickPlans.map(p=>{const b=node('button',p.label+' · '+p.caseIds.length);b.type='button';b.onclick=()=>loadQuick(p.id);return b;}));loadQuick('basic');}if(selected)metrics(state.records.find(r=>r.id===selected));}
  function renderReview(){const review=state?.lab?.reviewer;if(!review)return;el('review-enabled').checked=review.enabled;el('review-scope').textContent=el('series').value?'Gewählte Ergebnisserie: '+el('series').value:'Alle aufgezeichneten Prüfungen';if(review.busy&&el('follow').checked&&root.querySelector('[data-pane=benchmark]').hidden)tab('review');const r=review.reviews.at(-1);el('review-status').textContent=review.busy?'Abschlussauswerter prüft die gesammelten Ergebnisse …':r?'Letzte Auswertung: '+(labels[r.status]??r.status)+' · '+r.scope.finished+'/'+r.scope.planned+' Versuche'+(r.error?' · '+r.error:''):'Wartet auf abgeschlossene Prüfungen.';el('review-result').textContent=r?.result?r.result.summary+'\n\n'+r.result.findings.map((f,i)=>(i+1)+'. '+f.title+' · '+(f.certainty==='observed'?'Beobachtet':'Vermutung')+'\n'+f.observation+'\nVorschlag: '+f.suggestedChange+'\nNachtest: '+f.validation+'\nVersuche: '+f.runIds.join(', ')).join('\n\n')+'\n\nNächste Prüfungen:\n'+r.result.nextChecks.map(v=>'• '+v).join('\n'):'';}
  function reset(){streamNodes.clear();el('model-log').replaceChildren();el('supervisor-log').replaceChildren();el('context').textContent='';el('monitor-context').textContent='';el('raw').textContent='';el('image').hidden=true;el('decision').textContent='Wartet auf den festgelegten Prüfzeitpunkt.';}
  function event(e){const role=e.role??'modeler',log=el(role==='supervisor'?'supervisor-log':'model-log');if(e.type==='start-context'){el('context').textContent=e.system+'\n\n'+e.user;return;}if(e.type==='image'||e.type==='start-image'){el('image').src=e.image;el('image').hidden=false;return;}if(e.type==='monitor-start'){el('monitor-context').textContent=e.system+'\n\n'+e.user;el('decision').textContent='Prüft '+({'first-proposal':'den Vorschlag','reasoning-prefix':'den frühen Denktext','practice-step':'den ausgeführten Übungsschritt','tool-result':'die tatsächliche Werkzeugrückmeldung','final-result':'das Endergebnis'}[e.trigger]??e.trigger)+' …';return;}if(e.type==='monitor-final-result'){el('decision').textContent='Abnahme: '+({met:'erfüllt','not-met':'nicht erfüllt',unverified:'nicht vollständig geprüft'}[e.completion]??'offen')+' · '+({'native-passed':'native Pflichtprüfungen bestanden','native-failed':'native Pflichtprüfungen nicht bestanden',unverified:'nicht vollständig geprüft'}[e.assessment]??e.assessment)+' · Fortsetzungsempfehlung: '+(e.judgment?.verdict??'kein gültiges Endurteil');}if(e.type==='request')return;
@@ -124,8 +143,56 @@ export function mountAITestLab({host,desktop}){
   const key=role+':'+e.type+':'+e.round;let p=['reasoning','answer'].includes(e.type)?streamNodes.get(key):null;if(!p){p=node('div',undefined,'lab-event');p.append(node('small',seconds(e.ms)+' · '+heading),node('div'));log.append(p);if(['reasoning','answer'].includes(e.type))streamNodes.set(key,p);}const body=p.lastElementChild;if(e.snapshot)body.textContent=text;else body.textContent+=text??JSON.stringify(e,null,2);if(el('follow').checked)log.scrollTop=log.scrollHeight;
  }
  async function read(id){try{const r=await api({action:'read',id});selected=id;reset();r.events.forEach(event);el('raw').textContent=JSON.stringify(r,(k,v)=>typeof v==='string'&&v.startsWith('data:image/')?'[Bilddaten im JSON-Export]':v,2);el('trial-label').textContent=[r.spec.caseId,r.requestedModel,r.spec.variant,r.spec.effort,r.spec.workflow,r.spec.dataset].filter(Boolean).join(' · ');el('trial-status').textContent=labels[r.status]??r.status;metrics(r);tab('live');}catch(e){status(e.message);}}
+ function showDevelopment(report){
+  const host=el('development-results');
+  host.hidden=false;
+  const rows=report.phases[0]?.caseIds??[];
+  const outcomes=caseId=>report.phases.flatMap(phase=>phase.outcomes.filter(cell=>cell.caseId===caseId).map(cell=>({...cell,effort:phase.effort})));
+  const labels={passed:'Bestanden',failed:'Durchgefallen',blocked:'Offen',open:'Ausstehend'};
+  host.replaceChildren(node('h3','Entwicklungscheck · '+report.model),table(
+   ['Aufgabe','Versuche','Erste bestandene Stufe'],
+   rows.map(caseId=>{
+    const history=outcomes(caseId);
+    const links=node('div');
+    for(const entry of history){
+     const description=entry.effort+' · '+labels[entry.status]+(entry.reason?' ('+entry.reason+')':'');
+     if(entry.runId){const button=node('button',description);button.onclick=()=>read(entry.runId);links.append(button);}
+     else links.append(node('span',description));
+    }
+    return [caseId,links,history.find(entry=>entry.status==='passed')?.effort];
+   })
+  ));
+ }
+ async function startDevelopment(){
+  if(!developmentPreview||state?.busy||starting||developmentController)return;
+  const setup=developmentPreview,controller=new AbortController();
+  developmentController=controller;
+  controls();
+  try{
+   tab('live');
+   const id=crypto.randomUUID();
+   const result=await runDevelopment({setup,id,signal:controller.signal,
+    onPhase:report=>{showDevelopment(report);status('Entwicklungscheck · '+(report.phases.at(-1)?.effort??'Low'));},
+    startStage:async plan=>{
+     let error;
+     try{await api({action:'start',mode:'lab',plan,deferReview:true});}catch(cause){error=cause.message;}
+     const current=await api({action:'state'});
+     const rows=current.records.filter(record=>record.spec.seriesName===plan.name);
+     const records=await Promise.all(rows.map(record=>api({action:'read',id:record.id})));
+     return {records,error};
+    }
+   });
+   status(result.error??(result.status==='completed'?'Entwicklungscheck abgeschlossen.':'Entwicklungscheck unterbrochen.'));
+   tab('results');
+  }catch(error){status(error.message);}
+  finally{
+   developmentController=null;
+   try{render(await api({action:'state'}));}catch(error){status(error.message);}
+   controls();
+  }
+ }
  async function runPlan(p){
-  if(starting||state?.busy||rolePending)return;
+  if(starting||state?.busy||developmentController||rolePending)return;
   starting=true;
   controls();
   try{
@@ -144,11 +211,11 @@ export function mountAITestLab({host,desktop}){
   }
  }
  const unsubscribe=desktop.onDiagnosticEvent(message=>{if(message.type==='state'){render(message.state);return;}if(!message.event)return;if(message.event.role==='reviewer'){if(message.event.type==='review-finished')void api({action:'state'}).then(render);return;}if(liveId!==message.runId){liveId=message.runId;if(el('follow').checked){selected=liveId;reset();}}if(selected!==message.runId)return;event(message.event);if(message.event.type==='status'){el('trial-label').textContent=message.event.text;el('trial-status').textContent='Läuft';status(message.event.text);}if(message.event.type==='finished'){el('trial-status').textContent=labels[message.event.status]??message.event.status;void api({action:'read',id:selected}).then(r=>{metrics(r);el('raw').textContent=JSON.stringify(r,(k,v)=>typeof v==='string'&&v.startsWith('data:image/')?'[Bilddaten]':v,2);});}});
- el('campaign').onclick=async()=>{try{tab('live');status('Automatischer Ablauf wird vorbereitet ...');await api({action:'labCampaign'});}catch(e){status(e.message);}finally{render(await api({action:'state'}));}};el('run').onclick=()=>runPlan(collect());el('check-plan').onclick=previewPlan;root.querySelector('[data-pane="plan"]').addEventListener('change',e=>{if(e.target!==el('saved')&&e.target!==el('plan-json'))void previewPlan();});
+ el('campaign').onclick=async()=>{try{tab('live');status('Automatischer Ablauf wird vorbereitet ...');await api({action:'labCampaign'});}catch(e){status(e.message);}finally{render(await api({action:'state'}));}};el('run').onclick=()=>selectedDevelopment()?startDevelopment():runPlan(collect());el('check-plan').onclick=previewPlan;root.querySelector('[data-pane="plan"]').addEventListener('change',e=>{if(e.target!==el('saved')&&e.target!==el('plan-json'))void previewPlan();});
  el('save').onclick=async()=>{try{await api({action:'labSave',plan:collect()});render(await api({action:'state'}));status('Versuchsplan gespeichert.');}catch(e){status(e.message);}};
- el('saved').onchange=()=>{const p=state.lab.plans.find(p=>p.id===el('saved').value);if(p)load(p.plan);};
- el('import-plan').onclick=async()=>{try{const p=await api({action:'labPreview',plan:JSON.parse(el('plan-json').value)});load(p.plan);}catch(e){status(e.message);}};
- el('cancel').onclick=()=>api({action:'cancel'}).then(()=>status('Abbruch angefordert; aktive Agenten und die lokale Berechnung werden beendet.')).catch(e=>status(e.message));el('skip').onclick=()=>api({action:'skip'}).then(()=>status('Versuch wird gestoppt; danach folgt die nächste Bedingung.')).catch(e=>status(e.message));
+ el('saved').onchange=()=>{const p=state.lab.plans.find(p=>p.id===el('saved').value);if(p){quickChoice=null;load(p.plan);}};
+ el('import-plan').onclick=async()=>{try{const p=await api({action:'labPreview',plan:JSON.parse(el('plan-json').value)});quickChoice=null;load(p.plan);}catch(e){status(e.message);}};
+ el('cancel').onclick=()=>{developmentController?.abort();return api({action:'cancel'}).then(()=>status('Abbruch angefordert; aktive Agenten und die lokale Berechnung werden beendet.')).catch(e=>status(e.message));};el('skip').onclick=()=>api({action:'skip'}).then(()=>status('Versuch wird gestoppt; danach folgt die nächste Bedingung.')).catch(e=>status(e.message));
  el('review-enabled').onchange=async()=>{try{await api({action:'labReviewerSettings',enabled:el('review-enabled').checked});render(await api({action:'state'}));}catch(e){status(e.message);}};el('review-run').onclick=async()=>{try{status('Abschlussauswerter wird gestartet …');await api({action:'labReview',seriesId:el('series').value||undefined});render(await api({action:'state'}));}catch(e){status(e.message);el('review-status').textContent=e.message;}};el('review-export').onclick=async()=>{try{const r=await api({action:'labExportPackage',seriesId:el('series').value||undefined});status('Externes Datenpaket gespeichert: '+r.path);el('review-status').textContent=r.summary.finished+'/'+r.summary.planned+' Versuche beendet · Datenpaket: '+r.path;}catch(e){status(e.message);}};
  el('series').onchange=()=>{summary();renderReview();};for(const format of ['json','md','csv'])el('report-'+format).onclick=async()=>{try{const r=await api({action:'labReport',format,seriesId:el('series').value||undefined});status('Bericht gespeichert: '+r.path);}catch(e){status(e.message);}};
  for(const format of ['json','md'])el('export-'+format).onclick=async()=>{try{if(!selected)throw Error('Zuerst einen Versuch auswählen.');const r=await api({action:'export',format,id:selected});status('Protokoll gespeichert: '+r.path);}catch(e){status(e.message);}};

@@ -11,7 +11,7 @@ export function developmentOutcome(record){
  if(record.cleanExit!==true||record.close?.forced||record.failureClass==='infrastructure'){
   return {status:'blocked',reason:record.error?.code??'infrastructure'};
  }
- if(record.modelIdentity?.exactMatch!==true)return {status:'blocked',reason:'model-identity'};
+ if(record.modelIdentity?.exactMatch!==true||record.events.some(event=>event.type==='usage'&&(event.role??'modeler')==='modeler'&&event.returnedModel!==record.modelIdentity.requested))return {status:'blocked',reason:'model-identity'};
  if(record.status==='needs-input')return {status:'blocked',reason:'needs-input'};
  if(record.status!=='completed'||record.error||typeof record.verification?.passed!=='boolean'){
   return {status:'blocked',reason:record.error?.code??record.verificationSkipped??record.status??'unverified'};

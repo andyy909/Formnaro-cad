@@ -17,8 +17,20 @@ app.whenReady().then(async()=>{let win;try{
   const result=role==='modeler'?{tool:'offlinecad_preview',arguments:{revision,commands:[{op:'create',type:'box',size:[1,2,3]}]}}:role==='supervisor'?{verdict:'continue',reasonCode:'none',confidence:.8,explanation:'Vorschlag formal gültig.',evidence:'Lokales Schema'}:{summary:'Drei getrennte Rollen erfolgreich geprüft.',findings:[],nextChecks:['Echten Modellvergleich gesondert ausführen.']};
   return {text:JSON.stringify(result),data:{model:c.model,usage:{input_tokens:100,output_tokens:10,input_tokens_details:{cached_tokens:0}}}};
  }},openChild:()=>({call:async(method)=>{if(method==='setup')return {scene:{revision,objects:[],selectionTargets:[]},context:{},validationContext:(await import('../src/cad-ai-context.js')).cadAIContext(),project:{nodes:[]}};if(method==='capture')return 'data:image/png;base64,AQID';return {};},cancel(){},close:async()=>({code:0,signal:null})})});
+ const developmentCalls=[],developmentRecords=[];
+ const uiState=()=>{const result=runner.state();return {...result,records:[...result.records,...developmentRecords]};};
  ipcMain.removeHandler('cad-ai:diagnostics');ipcMain.handle('cad-ai:diagnostics',async(_event,args)=>{
-  const methods={state:()=>runner.state(),read:()=>runner.read(args.id),labPreview:()=>runner.labPreview(args.plan),labRoleCatalog:()=>runner.labRoleCatalog(args),labRoleSave:()=>runner.labRoleSave(args),labReview:()=>runner.labReview(args),labReviewerSettings:()=>runner.labReviewerSettings(args.enabled),start:()=>runner.start(args)};
+  if(args.action==='start'&&args.plan.name.startsWith('Entwicklungscheck · ')){
+   const {plan}=args,effort=plan.efforts[0];
+   developmentCalls.push({effort,ids:plan.caseIds,model:plan.roles.modeler.model,deferReview:args.deferReview,monitor:plan.monitor.mode});
+   for(const [index,caseId] of plan.caseIds.entries()){
+    const passed=effort==='max'||(effort==='high'?index>0:index>2);
+    developmentRecords.push({id:effort+'-'+caseId,spec:{caseId,effort,seriesName:plan.name,workflow:'practice'},status:effort==='low'&&index===2?'needs-input':'completed',cleanExit:true,
+     modelIdentity:{exactMatch:true,requested:plan.roles.modeler.model},events:[{type:'usage',returnedModel:plan.roles.modeler.model},{type:'finished'}],verification:{passed}});
+   }
+   return {ok:true,value:uiState()};
+  }
+  const methods={state:uiState,read:()=>developmentRecords.find(r=>r.id===args.id)??runner.read(args.id),labPreview:()=>runner.labPreview(args.plan),labRoleCatalog:()=>runner.labRoleCatalog(args),labRoleSave:()=>runner.labRoleSave(args),labReview:()=>runner.labReview(args),labReviewerSettings:()=>runner.labReviewerSettings(args.enabled),start:()=>runner.start(args)};
   if(!methods[args.action])throw Error('Unexpected action '+args.action);try{return {ok:true,value:await methods[args.action]()};}catch(e){return {ok:false,error:e.message};}
  });
  const js=s=>win.webContents.executeJavaScript(s),until=async(fn,label)=>{for(let i=0;i<120;i++){if(await fn())return;await pause(100);}throw Error('Timeout: '+label);};
@@ -26,6 +38,21 @@ app.whenReady().then(async()=>{let win;try{
  const hasValidPractice=()=>js("!document.querySelector('[data-run]').disabled && document.querySelector('[data-plan-count]').textContent.includes('isolierte Versuche')");
  assert.equal(await js("document.querySelector('[data-pane=plan]').dataset.labView"),'simple');
  assert.equal(await js("document.querySelectorAll('[data-quick-plans] button').length"),4);
+ await js("Array.from(document.querySelectorAll('[data-quick-plans] button')).find(b=>b.textContent.startsWith('Entwicklungscheck')).click()");
+ await until(()=>js("document.querySelector('[data-quick-details]').textContent.includes('15 auf Low')&&!document.querySelector('[data-run]').disabled"),'development check ready');
+ assert.equal(developmentCalls.length,0);
+ assert.equal(await js("document.querySelector('[data-campaign]').hidden"),true);
+ assert.equal(await js("document.querySelector('[data-development-max]').checked"),false);
+ await js("document.querySelector('[data-development-max]').click()");
+ await js("document.querySelector('[data-run]').click()");
+ await until(()=>js("!document.querySelector('[data-pane=results]').hidden&&document.querySelector('[data-development-results]').textContent.includes('Erste bestandene Stufe')"),'development results');
+ assert.deepEqual(developmentCalls.map(call=>[call.effort,call.ids.length]),[['low',15],['high',2],['max',1]]);
+ assert.deepEqual(developmentCalls.slice(1).map(call=>call.ids),[['thread','drill'],['thread']]);
+ assert.ok(developmentCalls.every(call=>call.model==='deepseek-flash'&&call.deferReview&&call.monitor==='off'));
+ assert.equal(runner.state().lab.reviewer.enabled,true);
+ developmentRecords.splice(0);
+ await js("document.querySelector('[data-tab=plan]').click()");
+
  await js("document.querySelector('[data-advanced-view]').click()");
  await js("Array.from(document.querySelectorAll('[data-presets] button')).find(b=>b.textContent==='Kleiner Pilot').click()");
  await until(hasValidPractice,'advanced pilot ready');
