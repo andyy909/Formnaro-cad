@@ -74,8 +74,8 @@ app.whenReady().then(async()=>{let win;try{
  await choose('supervisor','provider',C);await choose('supervisor','effort','low');
  await choose('reviewer','provider',A);await choose('reviewer','model','deepseek-v4-pro');await choose('reviewer','effort','high');
  const selections=runner.state().lab.roles.selections;assert.equal(selections.modeler.model,'gpt-6.1-sol');assert.equal(selections.modeler.effort,'medium');assert.equal(selections.supervisor.providerId,C);assert.equal(selections.reviewer.model,'deepseek-v4-pro');assert.equal(profiles[A].config.model,'deepseek-flash');assert.equal(calls.length,0);
- const p=require(asar+'/backend/ai-test-lab-plan.cjs').preset();Object.assign(p,{caseIds:['drill'],variants:['A'],roles:selections});
- await js(`document.querySelector('[data-plan-json]').value=${JSON.stringify(JSON.stringify(p))};document.querySelector('[data-import-plan]').click()`);await until(()=>js("!document.querySelector('[data-run]').disabled"),'plan ready');
+ const p=require(asar+'/backend/ai-test-lab-plan.cjs').preset();Object.assign(p,{name:'Rollenprüfung',caseIds:['drill'],variants:['A'],roles:selections});
+ await js(`document.querySelector('[data-plan-json]').value=${JSON.stringify(JSON.stringify(p))};document.querySelector('[data-import-plan]').click()`);await until(()=>js("!document.querySelector('[data-run]').disabled && document.querySelector('[data-name]').value==='Rollenprüfung' && document.querySelector('[data-plan-count]').textContent.startsWith('1 isolierte')"),'imported plan ready');
  await js("document.querySelector('[data-run]').click()");await until(()=>runner.state().lab.reviewer.reviews.some(r=>r.status==='completed'),'review complete');await pause(500);
  assert.deepEqual(calls.map(c=>[c.role,c.model,c.key]),[['modeler','gpt-6.1-sol','fixture-api'],['supervisor','gpt-6.1-sol','fixture-account'],['reviewer','deepseek-v4-pro','fixture-modeler']]);
  assert.equal(runner.state().records.length,1);assert.equal(runner.state().records[0].spec.effort,'medium');

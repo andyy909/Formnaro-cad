@@ -260,7 +260,17 @@ export function mountAITestLab({host,desktop}){
  el('campaign').onclick=async()=>{try{tab('live');status('Automatischer Ablauf wird vorbereitet ...');await api({action:'labCampaign'});}catch(e){status(e.message);}finally{render(await api({action:'state'}));}};el('run').onclick=()=>selectedDevelopment()?startDevelopment():runPlan(collect());el('check-plan').onclick=previewPlan;root.querySelector('[data-pane="plan"]').addEventListener('change',e=>{if(e.target!==el('saved')&&e.target!==el('plan-json'))void previewPlan();});
  el('save').onclick=async()=>{try{await api({action:'labSave',plan:collect()});render(await api({action:'state'}));status('Versuchsplan gespeichert.');}catch(e){status(e.message);}};
  el('saved').onchange=()=>{const p=state.lab.plans.find(p=>p.id===el('saved').value);if(p){quickChoice=null;load(p.plan);}};
- el('import-plan').onclick=async()=>{try{const p=await api({action:'labPreview',plan:JSON.parse(el('plan-json').value)});quickChoice=null;load(p.plan);}catch(e){status(e.message);}};
+ el('import-plan').onclick=async()=>{
+  const ticket=++reading;
+  preview=null;developmentPreview=null;planError='';
+  controls();
+  try{
+   const p=await api({action:'labPreview',plan:JSON.parse(el('plan-json').value)});
+   if(ticket!==reading)return;
+   quickChoice=null;
+   load(p.plan);
+  }catch(e){if(ticket===reading){planError=e.message;controls();}}
+ };
  el('cancel').onclick=()=>{developmentController?.abort();return api({action:'cancel'}).then(()=>status('Abbruch angefordert; aktive Agenten und die lokale Berechnung werden beendet.')).catch(e=>status(e.message));};el('skip').onclick=()=>api({action:'skip'}).then(()=>status('Versuch wird gestoppt; danach folgt die nächste Bedingung.')).catch(e=>status(e.message));
  el('review-enabled').onchange=async()=>{try{await api({action:'labReviewerSettings',enabled:el('review-enabled').checked});render(await api({action:'state'}));}catch(e){status(e.message);}};el('review-run').onclick=async()=>{try{status('Abschlussauswerter wird gestartet …');await api({action:'labReview',seriesId:el('series').value||undefined});render(await api({action:'state'}));}catch(e){status(e.message);el('review-status').textContent=e.message;}};el('review-export').onclick=async()=>{try{const r=await api({action:'labExportPackage',seriesId:el('series').value||undefined});status('Externes Datenpaket gespeichert: '+r.path);el('review-status').textContent=r.summary.finished+'/'+r.summary.planned+' Versuche beendet · Datenpaket: '+r.path;}catch(e){status(e.message);}};
  el('series').onchange=()=>{summary();renderReview();};for(const format of ['json','md','csv'])el('report-'+format).onclick=async()=>{try{const r=await api({action:'labReport',format,seriesId:el('series').value||undefined});status('Bericht gespeichert: '+r.path);}catch(e){status(e.message);}};
