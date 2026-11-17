@@ -34,3 +34,14 @@ test('Active supervisor can stop only on a validated high-confidence violation',
 test('Supervisor errors and cancellation never fabricate judgments',async t=>{
  const h=monitor(t,{completeModel:async(c,k,e,signal)=>new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}))});h.instance.observeReasoning('x'.repeat(400));h.controller.abort();assert.equal(await h.instance.finish(),null);assert.equal(h.events.at(-1).type,'monitor-error');assert.equal(h.stops.length,0);
 });
+
+test('Quick plans cover the validated 3, 15, 30 and 45 independent development cases',async()=>{
+ const {quickPlans,quickPlan,developmentCaseIds}=await import('../ai/lab-quick-plans.mjs');
+ const actual=quickPlans.map(({id})=>expandPlan(quickPlan(id,{providerId:'current',model:'deepseek-flash'})));
+ assert.deepEqual(actual.map(plan=>plan.trials),[3,15,30,45]);
+ assert.deepEqual(actual[1].plan.caseIds,developmentCaseIds);
+ assert.ok(actual.flatMap(plan=>plan.rows).every(row=>row.effort==='low'&&row.workflow==='practice'&&row.stage==='full'&&row.monitor.mode==='off'));
+ const engine=require('../backend/ai-lab-benchmark.cjs');
+ assert.equal(engine.verifySuite().cases.length,8);
+ assert.equal(engine.verifySuite(undefined,'advanced').cases.length,8);
+});
