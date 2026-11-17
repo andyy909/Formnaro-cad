@@ -7,3 +7,19 @@ test('Plane-on-top is a horizontal plane at the measured top height, without a r
 test('Mirror reference supplies its documented prerequisite tools',async()=>{const t=functionTask('practice-06'),r=await practiceEntry({variant:'C',prompt:t.prompt,toolIds:t.toolIds});assert.ok(r.references.some(r=>r.toolReference.tool==='tool:duplicate'));});
 test('Grouped L-body starting facts identify the finished body rather than a same-named source',()=>{const t=functionTask('practice-06');assert.ok(t.prompt.includes('Weltmitte (15,10,4)'));assert.ok(!t.prompt.includes('Aufgabenteil (box'));});
 test('Properties reference describes the actual input region, without inventing a clickable tool',async()=>{const {lookupToolReference}=await import('../ai/formnaro-tool-reference.mjs'),r=lookupToolReference({tool:'tool:properties'},{practice:true}).tool;assert.equal(r.practiceTarget,undefined);assert.equal(r.practiceRegion,'region:properties');assert.ok(r.controls.some(c=>c.target==='ui:id:size-0'));});
+
+test('Development fixtures give the four failed cases the necessary starting data and registered controls',async()=>{
+ const {taskInstance}=require('../backend/ai-test-lab-cases.cjs');
+ for(const [id,tool] of [['thread','tool:properties'],['pattern','tool:array'],['shell','tool:cad-shell'],['drawing','tool:drawing']]){
+  const task=taskInstance(id),entry=await practiceEntry({variant:'C',prompt:task.prompt,objects:[],toolIds:task.toolIds});
+  assert.equal(entry.references[0].toolReference.tool,tool,id);
+ }
+ const pattern=taskInstance('pattern');
+ assert.deepEqual(pattern.fixture[0].size,[6,6,10]);
+ assert.deepEqual(pattern.fixture[0].pos,[20,0,5]);
+ assert.match(pattern.prompt,/Ø6 mm, Höhe10 mm, Weltmitte \(20,0,5\)/);
+ assert.match(taskInstance('thread').prompt,/params\.kind=external, params\.profile=trapezoid, params\.hand=right/);
+ const engine=require('../backend/ai-lab-benchmark.cjs');
+ assert.equal(engine.verifySuite().planned,16);
+ assert.equal(engine.verifySuite(undefined,'advanced').planned,16);
+});
