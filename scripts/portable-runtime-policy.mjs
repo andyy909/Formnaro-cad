@@ -68,7 +68,7 @@ export function copyBenchmarkSources(source,stage){
  });
  // The Advanced Lab drawing oracle imports plain modules in Electron's main process.
  // Keep this runtime closure separate from the frozen benchmark source pins.
- for(const name of ['cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref']){
+ if(fs.existsSync(path.join(source,'backend','ai-benchmark-advanced-evaluate.cjs'))) for(const name of ['cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref']){
   const file='src/'+name+'.js';
   if(!required.has(file))checked.push({file,bytes:fs.readFileSync(path.join(source,file))});
  }
