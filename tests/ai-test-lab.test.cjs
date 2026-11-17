@@ -101,3 +101,59 @@ test('A stop after the Low checkpoint does not dispatch High',async()=>{
  assert.equal(calls,1);
  assert.equal(result.status,'interrupted');
 });
+
+test('A resumed check reads existing attempts, keeps an interrupted case open, and starts only untouched conditions',async()=>{
+ const {previewDevelopment,runDevelopment}=await import('../ai/lab-development-sequence.mjs');
+ const {developmentCaseIds}=await import('../ai/lab-quick-plans.mjs');
+ const setup=previewDevelopment({providerId:'current',model:'fixture'},['low','high'],false);
+ const passed=id=>({id,spec:{caseId:id},modelIdentity:{exactMatch:true},status:'completed',cleanExit:true,verification:{passed:true},events:[{type:'finished'}]});
+ const recorded=[passed('thread'),{...passed('drill'),status:'interrupted'}];
+ const previous={id:'resume',model:'fixture',setup,status:'interrupted',phases:[{effort:'low',caseIds:[...developmentCaseIds],outcomes:[]}]};
+ let calls=0;
+ const result=await runDevelopment({setup,id:'resume',previous,signal:new AbortController().signal,readStage:async()=>recorded,startStage:async plan=>{
+  calls++;
+  assert.deepEqual(plan.caseIds,developmentCaseIds.slice(2));
+  return {records:[...recorded,...plan.caseIds.map(passed)]};
+ }});
+ assert.equal(calls,1);
+ assert.equal(result.status,'completed');
+ assert.equal(result.phases[0].outcomes[1].reason,'interrupted');
+});
+
+test('A clean fifteen-case development check makes no High dispatch',async()=>{
+ const {previewDevelopment,runDevelopment}=await import('../ai/lab-development-sequence.mjs');
+ const setup=previewDevelopment({model:'fixture'},['low','high'],false);
+ let calls=0;
+ const result=await runDevelopment({setup,id:'good',signal:new AbortController().signal,startStage:async plan=>{
+  calls++;
+  return {records:plan.caseIds.map(caseId=>({spec:{caseId},status:'completed',cleanExit:true,
+   modelIdentity:{exactMatch:true},events:[{type:'finished'}],verification:{passed:true}}))};
+ }});
+ assert.equal(calls,1);
+ assert.equal(result.status,'completed');
+ assert.equal(result.phases[0].outcomes.length,15);
+});
+
+test('Development evidence links only its own attempts and rejects a changed source on save',t=>{
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
+ const {unzipSync,strFromU8}=require('fflate');
+ const {createDevelopmentEvidence}=require('../backend/ai-lab-development-evidence.cjs');
+ const folder=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-dev-evidence-'));
+ t.after(()=>{assert.equal(path.dirname(fs.realpathSync(folder)),fs.realpathSync(os.tmpdir()));fs.rmSync(folder,{recursive:true,force:true});});
+ const id=crypto.randomUUID(),runId=crypto.randomUUID(),seriesId=crypto.randomUUID();
+ let source='one';
+ const store=createDevelopmentEvidence(folder,()=>source);
+ const report={id,setup:{modeler:{providerId:'current',model:'fixture'}},status:'completed',
+  phases:[{effort:'low',caseIds:['thread'],outcomes:[{caseId:'thread',runId,status:'passed'}]}]};
+ store.save(report);
+ const spec={caseId:'thread',effort:'low',seriesName:'Entwicklungscheck · '+id+' · low',seriesId,monitor:{mode:'off'}};
+ fs.writeFileSync(path.join(folder,'Serie-'+seriesId+'.json'),JSON.stringify({id:seriesId,plan:{},rows:[spec]}));
+ fs.writeFileSync(path.join(folder,'run-'+runId+'.json'),JSON.stringify({id:runId,spec,events:[{type:'finished'}],status:'completed',verification:{passed:true},cleanExit:true}));
+ const entries=unzipSync(fs.readFileSync(store.exportReport(id).path));
+ const series=JSON.parse(strFromU8(entries['Serienplaene.json']));
+ assert.equal(series[0].developmentCheck.id,id);
+ assert.deepEqual(JSON.parse(strFromU8(entries['Manifest.json'])).runs,[runId]);
+ source='two';
+ assert.equal(store.recent().compatible,false);
+ assert.throws(()=>store.save(report),/denselben Programmstand/);
+});
