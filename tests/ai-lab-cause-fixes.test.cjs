@@ -14,6 +14,9 @@ test('Development fixtures give the four failed cases the necessary starting dat
   const task=taskInstance(id),entry=await practiceEntry({variant:'C',prompt:task.prompt,objects:[],toolIds:task.toolIds});
   assert.equal(entry.references[0].toolReference.tool,tool,id);
  }
+ const shell=taskInstance('shell');
+ assert.equal(shell.fixture[0].name,'Gehäuse');
+ assert.match(shell.prompt,/Gehäuse existing-1 aus practiceObjects/);
  const pattern=taskInstance('pattern');
  assert.deepEqual(pattern.fixture[0].size,[6,6,10]);
  assert.deepEqual(pattern.fixture[0].pos,[20,0,5]);
