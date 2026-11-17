@@ -27,6 +27,10 @@ Dispose behalten Reihenfolge, Grenzen und Identität; der Controller behält
 Fach-Gates, Store, Scope und öffentliche Methoden. H2
 (Kandidatenmaterialisierung/-restore) und die Anzeige bleiben unverändert.
 
+P3-4a2: Die Erfolgsberichte der Zeichnungs- und automatischen
+Bemaßungsprüfung verwenden denselben synchronen Berichtsschreiber.
+Prüfungen, Berichtsfelder und Fehlerbehandlung bleiben beim Aufrufer.
+
 P3-4m1: `backend/practice-files-verification.cjs` führt den vollständigen
 Files-Chat-Zweig des Übungsprüfers für die Varianten `1`, `adopt` und
 `recover` aus. Der Dispatcher behält das Gate an derselben Stelle und übergibt
