@@ -36,7 +36,8 @@ export function mountAITestLab({host,desktop}){
  const benchmark=mountBenchmark({host:root.querySelector('[data-pane=benchmark]'),api,status,refresh:async()=>render(await api({action:'state'})),getModeler:()=>({...rolePickers.modeler.read(),selected:rolePickers.modeler.selected()})});
  const planPane=root.querySelector('[data-pane=plan]');
  let quickChoice=null,developmentPreview=null,developmentController=null;
- const selectedDevelopment=()=>planPane.dataset.labView==='simple'&&quickChoice==='development';
+ const simpleQuick=()=>planPane.dataset.labView==='simple'&&quickChoice!==null;
+ const selectedDevelopment=()=>simpleQuick()&&quickChoice==='development';
  function chooseView(view){
   planPane.dataset.labView=view;
   el('simple-view').setAttribute('aria-pressed',String(view==='simple'));
@@ -87,6 +88,7 @@ export function mountAITestLab({host,desktop}){
     el('quick-details').textContent=developmentPreview.modeler.model+' · '+developmentPreview.initial+' auf Low · höchstens '+developmentPreview.maximum+' Versuche insgesamt';
     return;
    }
+   if(simpleQuick()&&quickChoice==='low-control'&&!rolePickers.modeler.selected()?.reasoningEfforts?.includes('low'))throw Error('Die Gegenprobe benötigt Low.');
    const p=await api({action:'labPreview',plan:collect()});
    if(ticket!==reading)return;
    preview=p;
@@ -113,7 +115,7 @@ export function mountAITestLab({host,desktop}){
   for(const key of ['campaign','save','repeat','clear','preflight','review-run','review-export','review-enabled'])el(key).disabled=busy||rolePending>0;
   const requiredRoles=['modeler'];
   if(el('monitor-mode').value!=='off')requiredRoles.push('supervisor');
-  if(state?.lab?.reviewer?.enabled)requiredRoles.push('reviewer');
+  if(state?.lab?.reviewer?.enabled&&!simpleQuick())requiredRoles.push('reviewer');
   const supported=rolePickers.modeler.selected()?.reasoningEfforts??[];
   el('development-options').hidden=!selectedDevelopment();
   el('development-max').disabled=busy||!supported.includes('max');
@@ -163,6 +165,20 @@ export function mountAITestLab({host,desktop}){
     status('Externes Datenpaket gespeichert: '+result.path);
    }catch(error){status(error.message);}};
    actions.append(exportButton);
+  }
+  const failures=report.phases[0]?.outcomes.filter(entry=>entry.status==='failed').map(entry=>entry.caseId)??[];
+  if(!developmentController&&report.status==='completed'&&failures.length){
+   const control=node('button','Low-Gegenprobe vorbereiten');
+   control.onclick=()=>{
+    const draft=quickPlan('development',report.setup.modeler);
+    draft.name='Low-Gegenprobe · '+report.id;
+    draft.caseIds=failures;
+    quickChoice='low-control';
+    chooseView('simple');
+    load(draft);
+    tab('plan');
+   };
+   actions.append(control);
   }
   host.replaceChildren(heading,actions,table(
    ['Aufgabe','Versuche','Erste bestandene Stufe'],
@@ -221,12 +237,17 @@ export function mountAITestLab({host,desktop}){
   starting=true;
   controls();
   try{
+   const deferReview=simpleQuick();
+   if(deferReview)p={...p,roles:{...p.roles,reviewer:{...p.roles.modeler,effort:'profile'}}};
+   if(simpleQuick()&&quickChoice==='low-control'){
+    p={...p,efforts:['low'],roles:{...p.roles,modeler:{...p.roles.modeler,effort:'series'}}};
+   }
    const checked=await api({action:'labPreview',plan:p});
    status(checked.trials+' Versuche werden vorbereitet …');
    state={...state,busy:true};
    controls();
    tab('live');
-   await api({action:'start',mode:'lab',plan:checked.plan});
+   await api({action:'start',mode:'lab',plan:checked.plan,deferReview});
    status('Serie beendet. Ergebnisse und gemeldeter Verbrauch sind gespeichert.');
   }catch(e){
    status(e.message);
