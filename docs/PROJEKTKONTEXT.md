@@ -1,5 +1,16 @@
 # Technischer Projektkontext
 
+P3-4h2: Die beiden KI-Entwurfsabläufe des CAD-Controllers liegen in
+`src/cad-controller-task-candidate.js`: Materialisierung eines
+Auftragsvorschlags und Wiederherstellung eines gespeicherten Kandidaten. Der
+Helfer erhält Store, H1-Vorschau-Registry, Geometrieauflösung, Vorschau-Gate,
+Vorschau und Netzprüfung; Build-Zwischenwerte, Anzeige und Publisher bleiben im
+Controller. Gate-Reihenfolge, Identitätsprüfung über `await`,
+Modellschlüsselvergleich, frischer Körpernachweis, private
+Feature-Abhängigkeit, Fehlercodes und Aufräumreihenfolge bleiben unverändert.
+Die beiden öffentlichen Bindungen und Standardargumente bleiben gleich; F2
+wird nicht umgeordnet.
+
 P3-4h1: Der ID-gebundene Vorschau-Zustand des CAD-Controllers liegt in
 `src/cad-preview-registry.js`: Vorschläge, Ersatzmarker, Zeichnungs-,
 Fotorekonstruktions- und Merkmalsabhängigkeitsbelege. Registrierung,
