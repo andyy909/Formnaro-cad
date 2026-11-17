@@ -19,7 +19,7 @@ assert.equal(git('rev-parse',baseCommit),baseCommit);
 assert.equal(git('merge-base',baseCommit,'HEAD'),baseCommit);
 const sourceCommit=git('rev-parse','HEAD');
 const changed=git('diff','--name-only',baseCommit,'HEAD').split(/\r?\n/).filter(Boolean);
-assert(changed.every(name=>/^(ai|backend|docs|scripts|src|tests)\//.test(name)), 'Changed build or native runtime inputs require the full portable build.');
+assert(changed.every(name=>/^(ai|backend|docs|scripts|src|tests)\//.test(name)||['electron.cjs','preload.cjs'].includes(name)), 'Changed build or native runtime inputs require the full portable build.');
 assert(changed.every(name=>!(/\.(wasm|exe|dll|pyd|node|cs)$/i.test(name)||name.startsWith('src/fonts/'))),'Changed binary inputs require the full portable build.');
 
 const sha=buffer=>createHash('sha256').update(buffer).digest('hex');
@@ -46,12 +46,14 @@ try{
  fs.writeFileSync(path.join(stage,pin),entry(base,pin));
  const target=path.join(contents,'app.asar');
  await createPackage(stage,target);
- const binaries=archive=>files(archive).filter(n=>/\.(?:wasm|node|exe|dll|pyd)$/i.test(n)).map(n=>sha(entry(archive,n))).sort();
+ const binaries=archive=>files(archive).filter(n=>/\.(?:wasm|node|exe|dll|pyd)$/i.test(n)).map(n=>n+':'+sha(entry(archive,n))).sort();
  assert.deepEqual(binaries(target),binaries(base),'Native program bytes changed.');
  for(const file of ['cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref']){
   const name='src/'+file+'.js';
   assert.equal(sha(entry(target,name)),sha(fs.readFileSync(path.join(root,name))),name);
  }
+ assert.equal(git('rev-parse','HEAD'),sourceCommit);
+ assert.equal(git('status','--porcelain','--untracked-files=all'),'','Sources changed during patch assembly.');
  const manifest={format:'FormnaroPrivateAsarPatch',version:1,platform:'win32-x64',baseCommit,sourceCommit,baseExe,baseArchive,targetArchive:identify(target)};
  fs.writeFileSync(path.join(contents,'Manifest.json'),JSON.stringify(manifest,null,2)+'\n');
  console.log(JSON.stringify(manifest));
