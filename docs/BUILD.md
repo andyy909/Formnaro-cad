@@ -51,16 +51,18 @@ node scripts/test-all-functions.mjs --mode source --suite unit --output work/all
 Benötigt werden Windows x64, Node entsprechend package.json, der versionierte
 WASM-Kern unter cad-kernel-build/runtime und die folgenden lokalen Laufzeiten:
 
-- converter/runtime-v010-security: nativer STL-Konverter einschließlich Lizenzen.
-  Der Build ist in converter/README.md beschrieben; Abhängigkeiten sind in
-  converter/uv.lock festgeschrieben. Dieser Ordner ist ein Buildartefakt und wird
-  bewusst nicht durch Git bereitgestellt.
+- Nativer STL-Konverter einschließlich Lizenzen. Der Paketbau verwendet den
+  in [converter/provenance.json](../converter/provenance.json) angegebenen
+  Laufzeitordner und prüft den Hash der Konverter-EXE. Der Build ist in
+  [converter/README.md](../converter/README.md) beschrieben. Seine Abhängigkeiten
+  sind in `converter/uv.lock` festgeschrieben. Der Laufzeitordner ist ein lokales
+  Buildartefakt.
 - Die integrierte CAD-Laufzeit mit `npm run setup:cad-runtime` vorbereiten.
   Dies lädt beim Bau das fest gepinnte offizielle FreeCAD-1.1.4-Paket und
   dessen Quellarchiv. Native Tests verwenden diese Laufzeit. Allgemeine
-  Paketläufe liefern sie ebenfalls mit; keine externe Installation als
-  unbemerkter Ersatz. Die saubere Windows-Abnahme von Paket 6a bleibt bis
-  zum protokollierten Abschluss offen. Details: INTEGRIERTE-CAD-LAUFZEIT.md.
+  Paketläufe liefern sie ebenfalls mit. Die gezielte Windows-Abnahme von
+  Paket 6a ist in [INTEGRIERTE-CAD-LAUFZEIT.md](INTEGRIERTE-CAD-LAUFZEIT.md)
+  dokumentiert.
 - Eine lokale deutsche Windows-Systemstimme für die synthetische Sprachprüfung.
   Die Testaufnahme wird pro Lauf erzeugt; keine Datei aus einem alten work-Ordner
   und keine Mikrofonaufnahme des Nutzers sind erforderlich.

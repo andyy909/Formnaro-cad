@@ -1,4 +1,16 @@
-# Formnaro 0.28.0: gemeinsamer STL-STEP-Konverter
+# STL-zu-CAD in Formnaro
+
+Öffne **Funktionen → STL → STEP** und wähle eine STL-Datei. Prüfe die Einheit,
+die angezeigten Abmessungen und das Abweichungsbudget. Der Konverter berechnet
+zuerst einen lokalen STEP-Kandidaten. Bei Bedarf kann die optionale KI einzelne
+Bereiche anhand von Messwerten prüfen. Vergleiche Original und Ergebnis und
+speichere die STEP-Datei oder übernimm die geprüfte CAD-Vorschau ins Projekt.
+Die Übernahme lässt sich mit einem Rückgängig-Schritt widerrufen.
+
+[Englische Anleitung mit Symmetrie und Grenzen](STL-TO-CAD.md) ·
+[Aktuelle Windows-Ausgabe](AKTUELLER-STAND.md)
+
+## Einführung in Formnaro 0.28.0 (Paket 9)
 
 Paket 9 übernimmt die vorhandene Konverteroberfläche in das gemeinsame Programm.
 **STL → STEP** oben bei Import/Export öffnet die Dateiauswahl. Derselbe Konverter
@@ -65,7 +77,7 @@ Ungültige offene Hüllen werden verständlich abgewiesen. Reparatur wird nur na
 Auswahl angewandt; absichtliche Öffnungen nicht ungeprüft schließen lassen.
 Die Konstruktionsteile und Rohnetze im gemeinsamen Projekt bleiben unabhängig davon.
 
-## Prüfungen und Ausgabe
+## Prüfungen und Ausgabe von 0.28.0
 
 `test:converter-workspace` prüft den gemeinsamen Übernahmevertrag und das native
 Dateiprotokoll. `test:converter-workspace-ui` verwendet echte native Konvertierungen

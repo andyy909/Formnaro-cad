@@ -1,6 +1,6 @@
 # STL to CAD in Formnaro
 
-Available in **0.127.0 Nightly r10**. [Deutsch](GEMEINSAMER-KONVERTER.md)
+STL conversion is available in the [current Windows release](AKTUELLER-STAND.md). [Deutsch](GEMEINSAMER-KONVERTER.md)
 
 ## Open and check an STL
 
@@ -36,4 +36,4 @@ The mode supports one closed, consistently oriented component, an axis-aligned p
 - Difficult areas may stay faceted. STL conversion does not recover original sketches or construction history.
 - Conversion works on temporary input. The project changes only when the final CAD preview is applied.
 
-See the [r10 release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10) for downloads and verification scope.
+The [0.127.0-r10 release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.127.0-r10) records the earlier release and its verification scope.

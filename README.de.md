@@ -12,16 +12,16 @@
 
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
-| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.142.0-r1/Formnaro-v0.142.0-r1-Windows-x64.zip)** | **0.142.0-r1** | siehe Release | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
-| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1) | **0.142.0-r1** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen; optionale Downloads zum Weiterentwickeln. |
+| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/Formnaro-v0.143.0-r2-Windows-x64.zip)** | **0.143.0-r2** | ca. 673 MB | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
+| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.143.0-r2) | **0.143.0-r2** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen zum Weiterentwickeln. |
 
-**Neu:** Übungen bleiben im gewählten Solid- oder Fusion-Modus. Eine neue native Grundform erzeugt Trapezgewinde mit Längeneingaben bis 3.000 mm. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1).
+Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgelieferte Beispiele, bis zu drei zuletzt verwendete Projekte und bei vorhandener Autosicherung eine eigene Wiederherstellungsschaltfläche. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.143.0-r2) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/SHA256SUMS.txt) · [Aktueller Prüfstand](docs/AKTUELLER-STAND.md)
 
-## Aktuelle Ausgabe: zuverlässigeres KI-Labor
+## Verbesserungen am KI-Labor in 0.139.1-r1
 
 **0.139.1-r1** integriert sichere Ergebnisspeicherung, klarere Werkzeug- und Auswerterrückmeldungen, kompatible alte Skizzenkantenbezüge und die Prozess-/KI-Antwortkorrekturen. 128 Standardtests, 152 gezielte Regressionen und vier gezielte Liveversuche bestanden. Ein Liveversuch benötigte eine erfolgreiche Formatkorrektur. Die vollständige Testkampagne und die Ursache langen nativen Prozessabbaus bleiben offen; kein neuer Vollbenchmark. [Releasebericht](docs/VEROEFFENTLICHUNG-0.139.1-r1.md) · [Versionierte Belege](docs/benchmarks/lab-targeted-01391-2026-11-14.json).
 
-## Neuer vollständiger Sol-Benchmark: 16/16
+## Sol-Benchmark auf 0.137.4-r2
 
 GPT-6.1 Sol/high bestand alle sechzehn frischen Versuche auf der veröffentlichten **0.137.4-r2 / Suite 1.0.4** (acht feste CAD-Aufgaben, je zweimal; Überwacher aus). DeepSeeks ursprüngliche **16/16 auf 0.137.0-r1 / Suite 1.0.2** bleiben unverändert. Unterschiedliche Programm-, Werkzeug- und Promptstände sind ausdrücklich beschriftet; dies ist keine Modellrangliste auf gleichem Stand. Sols frühere 14/16 und 15/16 sowie Zeichnungsnachtests 2/2 und Bohrungsnachtest 1/1 bleiben erhalten.
 
@@ -29,7 +29,7 @@ GPT-6.1 Sol/high bestand alle sechzehn frischen Versuche auf der veröffentlicht
 
 [Sol-Beleg](docs/benchmarks/core-sol-01374-2026-11-08.json) · [Vergleichsdaten](docs/benchmarks/sol-deepseek-16-vergleich-2026-11-08.json) · [Alle Originalergebnisse](docs/benchmarks/README.md)
 
-[Passende Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.142.0-r1/Formnaro-Quellcode-v0.142.0-r1.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
+[Programmquellen zu 0.143.0-r2](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/Formnaro-Quellcode-v0.143.0-r2.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
 
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 
@@ -46,8 +46,8 @@ Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer
 ## Schnell starten
 
 1. Windows-ZIP herunterladen und vollständig in einen eigenen Ordner entpacken.
-2. Alle Unterordner zusammenlassen und **Formnaro.exe** doppelklicken.
-3. Ein neues Projekt anlegen oder ein vorhandenes Modell öffnen.
+2. Alle Unterordner zusammenlassen und **Formnaro starten** öffnen.
+3. Auf der Startseite ein Beispiel auswählen oder mit **Öffnen** ein vorhandenes Projekt laden.
 
 Die Portable-ZIP enthält das Programm, benötigte Laufzeiten, Lizenzen und Startanleitungen. FreeCAD und Python sind enthalten; eine separate Installation ist nicht nötig. Das optionale Modell für Offline-Sprache wird bei Bedarf im Programm heruntergeladen. Die Quellarchive stehen separat auf der Release-Seite.
 
@@ -102,7 +102,7 @@ Zwei Stufen, vier Räder, **6:1 Untersetzung** – ein offenes Getriebekonzept e
 | Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/ARCHITECTURE.md) |
 
 <!-- formnaro-development-status:start -->
-## Veröffentlichungsstand: 0.142.0-r1
+## Frühere Ausgabe 0.142.0-r1
 
 Übungen bleiben im gewählten Solid- oder Fusion-Modus. Eine neue native Grundform erzeugt Trapezgewinde mit Längeneingaben bis 3.000 mm.
 
@@ -110,7 +110,7 @@ Zwei Stufen, vier Räder, **6:1 Untersetzung** – ein offenes Getriebekonzept e
 
 ## Frühere Ausgabe: 0.139.1-r1
 
-Die neue Ausgabe enthält die geprüften Verbesserungen aus 0.139.0 und die anschließenden Prozess-/JSON-Korrekturen. Die vier gezielten Live-Nachtests ersetzen keinen neuen Vollbenchmark. Weitere Testbedingungen und die genaue Ursache langsamen nativen Prozessabbaus bleiben offen.
+0.139.1-r1 enthält die geprüften Verbesserungen aus 0.139.0 und die anschließenden Prozess-/JSON-Korrekturen. Die vier gezielten Live-Nachtests ersetzen keinen neuen Vollbenchmark. Weitere Testbedingungen und die genaue Ursache langsamen nativen Prozessabbaus bleiben offen.
 
 [Release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1) · [Source tag](https://github.com/andyy909/Formnaro-cad/tree/v0.139.1-r1) · [ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.139.1-r1/Formnaro-Quellcode-v0.139.1-r1.zip) · [Abnahme / acceptance](docs/VEROEFFENTLICHUNG-0.139.1-r1.md)
 
@@ -142,5 +142,5 @@ Der eigene Anwendungscode steht unter **[MIT](LICENSE.txt)**. Fremdkomponenten b
 
 ## Aufbaubenchmark und gezielte Reparaturen
 
-Neu in **0.138.2-r4**: ebene Bohrflächen skalierter Quader, Auswahl des bearbeiteten Körpers, eindeutige Checkbox-Zustände sowie Rückmeldung zu Skizzenersatz und Höhenlage. Der ursprüngliche DeepSeek-Aufbaulauf bleibt **5/16 auf 0.138.0-r1**. Durch getrennte Nachtests sind alle 16 ursprünglichen Bedingungen über mehrere Programmstände bestätigt; das ist kein neuer vollständiger 16/16-Lauf. Der letzte A07-Test mit der neuen EXE bestand 8/8 native Kriterien in 144,199s. [Versionierte Ergebnisse und getrennte Nachtests](docs/benchmarks/advanced-deepseek-2026-11-09.json).
+**0.138.2-r4** verbesserte Bohrbezüge auf ebenen Flächen skalierter Quader und die Auswahl bearbeiteter Körper. Die Ausgabe machte Checkbox-Zustände eindeutig und präzisierte Rückmeldungen zu Skizzenersatz und Höhenlage. Der ursprüngliche DeepSeek-Aufbaulauf bleibt **5/16 auf 0.138.0-r1**. Durch getrennte Nachtests sind alle 16 ursprünglichen Bedingungen über mehrere Programmstände bestätigt; das ist kein neuer vollständiger 16/16-Lauf. Der letzte A07-Test mit der neuen EXE bestand 8/8 native Kriterien in 144,199s. [Versionierte Ergebnisse und getrennte Nachtests](docs/benchmarks/advanced-deepseek-2026-11-09.json).
 
