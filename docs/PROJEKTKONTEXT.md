@@ -1,5 +1,14 @@
 # Technischer Projektkontext
 
+P3-4n1: `backend/practice-sketch-verification.cjs` führt die
+Draft-/Draft-Edit-Varianten des Übungsprüfers aus. Der Dispatcher behält
+Weiche, gemeinsame Vorbereitung, Elternsnapshot und Checkliste; die
+Delegation übergibt Fenster, Rendereradapter, Berichtsumgebung,
+Elternzustand und Checkliste. Die Skizzen-Fixture, der lokale Chatadapter,
+Review-/Apply-Prüfungen, Undo/Redo und die Wiederherstellung von
+`global.fetch` bleiben erhalten. Der portable Paketfilter lässt das
+Prüfmodul aus.
+
 P3-4m2: `backend/practice-drawing-verification.cjs` führt die
 Zeichnungsvarianten des Übungsprüfers einschließlich der lokalen
 Ausführung und der beiden Live-Aufrufpfade aus. Der Dispatcher behält

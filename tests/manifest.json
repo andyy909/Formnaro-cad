@@ -536,6 +536,7 @@
   {"file":"tests/practice-result.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.56},
   {"file":"tests/practice-runner.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.505},
   {"file":"tests/practice-security-audit.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.181},
+  {"file":"tests/practice-sketch-verification.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.467,"textCoupled":true,"note":"Checks the extracted draft helper and dispatcher across both variants, the unchanged provider fixture, fetch restoration on success and error, negative fixtures for open path, volume, contours and solids, renderer literal compilation, the ordered checks and the portable copy filter."},
   {"file":"tests/practice-sketch.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.169},
   {"file":"tests/practice-stl-verification.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.2,"textCoupled":true,"note":"Checks the STL dispatcher and plan placement in the source alongside behavior and the portable copy filter."},
   {"file":"tests/practice-title-feedback.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.222},
