@@ -40,6 +40,9 @@ app.whenReady().then(async () => {
   else require('./backend/practice-runner.cjs').installPracticeRunner(win,{ipcMain:require('electron').ipcMain,app,auditDirectory,
     windowTraceFile:auditDirectory?path.join(path.dirname(verifyPath),'practice-window-events.jsonl'):undefined});
   const {dataDirectory,installProgramStorage,cadOnlyForVersion}=require('./backend/program-storage.cjs'),dataPath=practiceChild?path.join(practiceDirectory,'data'):diagnosticHost?path.join(diagnosticHome,'data'):dataDirectory(app,{verificationPath:verifyPath}),legacyAIFile=path.join(profilePath,'ai-settings.json');
+  if(practiceChild&&!diagnosticChild)require('./backend/practice-tempo.cjs').installPracticeTempo(win,{
+    directory:dataDirectory(app),ipcMain:require('electron').ipcMain,
+  });
   let maintenanceWriteFailed=false;
   if(maintenanceVerifyArg&&verifyPath)require('./backend/error-log.cjs').createErrorLog({directory:path.join(dataPath,'Fehlerprotokolle')}).append({source:'verification-fixture',message:'Synthetic early startup log'});
   const programStore=installProgramStorage(win,{directory:dataPath,legacyAIFile,cadOnly:cadOnlyForVersion(app.getVersion())});
@@ -73,7 +76,8 @@ app.whenReady().then(async () => {
   const projectStore=installProjects(win,{directory:projectDirectory(app,{verificationPath:verifyPath}),...(fnpackVerifyArg?{onPackRead:event=>packReads.push(event)}:{}),...((performanceDialogs??mixedDialogs)?{dialog:(performanceDialogs??mixedDialogs).projectDialog}:{})});
   let quittingSources=false,sourceCleanupDone=false;app.on('before-quit',event=>{if(!win.isDestroyed()||!projectStore.hasPackageSources()||sourceCleanupDone)return;event.preventDefault();if(quittingSources)return;quittingSources=true;projectStore.close().catch(error=>console.error('Private package source cleanup: '+error.message)).finally(()=>{sourceCleanupDone=true;app.quit();});});
   const {installLayouts,layoutDirectory}=require('./backend/layouts.cjs');
-  installLayouts(win,{directory:layoutDirectory(app,{verificationPath:verifyPath})});
+  const layoutRoot=practiceChild?practiceDirectory:diagnosticHost?diagnosticHome:undefined;
+  installLayouts(win,{directory:layoutDirectory(app,{root:layoutRoot,verificationPath:verifyPath})});
   require('./backend/app-window.cjs').installAppWindow(win,{entry:path.join(__dirname,'dist','index.html'),query:verifyPath?{test:'1'}:undefined});
   if(verifyPath)win.webContents.on('console-message',e=>{if(e.level==='error'&&!/WebGL.*CONTEXT_LOST/.test(e.message))toolVerificationErrors.push(e.message);});
   // Only isolated acceptance instances enter this teardown. Stop both worker
