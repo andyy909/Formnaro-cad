@@ -35,7 +35,7 @@ export function mountAITestLab({host,desktop}){
  const rolePickers=Object.fromEntries(['modeler','supervisor','reviewer'].map(role=>[role,mountLabRolePicker({host:el('role-picker-'+role),role,api,onError:status,onBusy:delta=>{rolePending+=delta;controls();if(rolePending===0&&plan)void previewPlan();},onChange:()=>{if(!plan)return;syncModelerEfforts();void previewPlan();}})]));
  const benchmark=mountBenchmark({host:root.querySelector('[data-pane=benchmark]'),api,status,refresh:async()=>render(await api({action:'state'})),getModeler:()=>({...rolePickers.modeler.read(),selected:rolePickers.modeler.selected()})});
  const planPane=root.querySelector('[data-pane=plan]');
- let quickChoice=null,developmentPreview=null,developmentController=null;
+ let quickChoice=null,developmentPreview=null,developmentController=null,controlModeler=null;
  const simpleQuick=()=>planPane.dataset.labView==='simple'&&quickChoice!==null;
  const selectedDevelopment=()=>simpleQuick()&&quickChoice==='development';
  function chooseView(view){
@@ -88,7 +88,12 @@ export function mountAITestLab({host,desktop}){
     el('quick-details').textContent=developmentPreview.modeler.model+' · '+developmentPreview.initial+' auf Low · höchstens '+developmentPreview.maximum+' Versuche insgesamt';
     return;
    }
-   if(simpleQuick()&&quickChoice==='low-control'&&!rolePickers.modeler.selected()?.reasoningEfforts?.includes('low'))throw Error('Die Gegenprobe benötigt Low.');
+   if(simpleQuick()&&quickChoice==='low-control'){
+    const picker=rolePickers.modeler,modeler=picker.read();
+    if(modeler.model!==controlModeler.model||modeler.providerId!==controlModeler.providerId||!picker.selected()?.reasoningEfforts?.includes('low')){
+     throw Error('Die Low-Gegenprobe benötigt dasselbe Zugangsprofil und Modell mit Low.');
+    }
+   }
    const p=await api({action:'labPreview',plan:collect()});
    if(ticket!==reading)return;
    preview=p;
@@ -167,12 +172,13 @@ export function mountAITestLab({host,desktop}){
    actions.append(exportButton);
   }
   const failures=report.phases[0]?.outcomes.filter(entry=>entry.status==='failed').map(entry=>entry.caseId)??[];
-  if(!developmentController&&report.status==='completed'&&failures.length){
+  if(!developmentController&&report.status==='completed'&&report.compatible!==false&&failures.length){
    const control=node('button','Low-Gegenprobe vorbereiten');
    control.onclick=()=>{
     const draft=quickPlan('development',report.setup.modeler);
     draft.name='Low-Gegenprobe · '+report.id;
     draft.caseIds=failures;
+    controlModeler=report.setup.modeler;
     quickChoice='low-control';
     chooseView('simple');
     load(draft);
@@ -240,7 +246,7 @@ export function mountAITestLab({host,desktop}){
    const deferReview=simpleQuick();
    if(deferReview)p={...p,roles:{...p.roles,reviewer:{...p.roles.modeler,effort:'profile'}}};
    if(simpleQuick()&&quickChoice==='low-control'){
-    p={...p,efforts:['low'],roles:{...p.roles,modeler:{...p.roles.modeler,effort:'series'}}};
+    p={...p,efforts:['low'],roles:{...p.roles,modeler:{...controlModeler,effort:'series'}}};
    }
    const checked=await api({action:'labPreview',plan:p});
    status(checked.trials+' Versuche werden vorbereitet …');
