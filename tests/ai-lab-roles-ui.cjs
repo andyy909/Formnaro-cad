@@ -50,6 +50,10 @@ app.whenReady().then(async()=>{let win;try{
  assert.deepEqual(developmentCalls.slice(1).map(call=>call.ids),[['thread','drill'],['thread']]);
  assert.ok(developmentCalls.every(call=>call.model==='deepseek-flash'&&call.deferReview&&call.monitor==='off'));
  assert.equal(runner.state().lab.reviewer.enabled,true);
+ await js("Array.from(document.querySelectorAll('[data-development-results] button')).find(b=>b.textContent==='Low-Gegenprobe vorbereiten').click()");
+ await until(()=>js("document.querySelector('[data-quick-details]').textContent.includes('2 isolierte Versuche')&&!document.querySelector('[data-run]').disabled"),'Low control preview');
+ assert.equal(developmentCalls.length,3);
+
  developmentRecords.splice(0);
  await js("document.querySelector('[data-tab=plan]').click()");
 
