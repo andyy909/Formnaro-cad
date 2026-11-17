@@ -50,10 +50,29 @@ export function copyPortableCAD(from,to){
  fs.writeFileSync(path.join(to,'manifest.json'),JSON.stringify(manifest,null,2));
  return {files:files.length,removedFiles:removed.length,savedBytes:removed.reduce((a,r)=>a+r.size,0),removed};
 }
+export function copyBenchmarkSources(source,stage){
+ const required=new Map();
+ for(const suite of ['benchmark-core-v1.json','benchmark-advanced-v2.json']){
+  for(const entry of JSON.parse(fs.readFileSync(path.join(source,'ai',suite),'utf8')).dependencies){
+   if(!entry.path.startsWith('src/'))continue;
+   if(!/^src\/[\w-]+\.js$/.test(entry.path)||!/^[a-f0-9]{64}$/.test(entry.sha256))throw Error('Invalid benchmark source pin: '+entry.path);
+   if(required.has(entry.path)&&required.get(entry.path)!==entry.sha256)throw Error('Conflicting benchmark source pin: '+entry.path);
+   required.set(entry.path,entry.sha256);
+  }
+ }
+ const checked=[...required].map(([file,sha256])=>{
+  const bytes=fs.readFileSync(path.join(source,file));
+  if(createHash('sha256').update(bytes).digest('hex')!==sha256)throw Error('Benchmark source changed: '+file);
+  return {file,bytes};
+ });
+ for(const {file,bytes} of checked){const target=path.join(stage,file);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,bytes);}
+ return checked.map(({file})=>file);
+}
 export function copyPortableApp(source,stage){
  const docs=new Set(['Formnaro-CAD-Handbuch-DE.txt']);
  for(const n of ['backend','ai','licenses','dist','electron.cjs','preload.cjs','package.json','LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.cpSync(path.join(source,n),path.join(stage,n),{recursive:true,filter:file=>n!=='backend'||!(/verification|fixture|^all-functions|^\./.test(path.basename(file))||file.endsWith('.cs'))});
  for(const n of docs){const input=path.join(source,'docs',n);if(fs.existsSync(input)){fs.mkdirSync(path.join(stage,'docs'),{recursive:true});fs.copyFileSync(input,path.join(stage,'docs',n));}}
+ copyBenchmarkSources(source,stage);
  // The public bridge client and acceptance/build scripts stay in the source repository.
 }
 export function writeCADSourceAsset(from,directory){

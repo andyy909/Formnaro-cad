@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {formula as originalFormula} from '../src/templates.js';
 import {formula,validateCadTemplateData,cadTemplateVariables} from '../src/cad-template-data.js';
 import {buildCadTemplate} from '../src/cad-template-recipes.js';
 import {loadCadKernel} from '../src/cad-kernel-loader.js';
@@ -16,7 +15,7 @@ import {cadWorkplaneFromHit} from '../src/cad-tools-native.js';
 const oc=await loadCadKernel({print:()=>{},printErr:()=>{}}),near=(a,b,e=1e-5)=>assert.ok(Math.abs(a-b)<e,`${a} vs ${b}`);
 const editRecipe=(node,patch)=>cadEditFormRecipe(node,patch,{oc});
 test('Personal-template arithmetic retains precedence/unary grammar and rejects calls, property access and unknown values',()=>{
-  const vars={width:12,gap:1.5};for(const expression of ['width+gap*2','(width-gap)/2','-width+ +gap','-.5*width','width/(gap+2)'])near(formula(expression,vars),originalFormula(expression,vars));
+  const vars={width:12,gap:1.5};for(const [expression,expected] of [['width+gap*2',15],['(width-gap)/2',5.25],['-width+ +gap',-10.5],['-.5*width',-6],['width/(gap+2)',24/7]])near(formula(expression,vars),expected);
   for(const expression of ['Math.sin(width)','width.constructor','process.exit()','width;0','missing+1','width/0','1e3','width=2'])assert.throws(()=>formula(expression,vars));assert.throws(()=>cadTemplateVariables([{name:'width',value:12}],{missing:2}));
 });
 async function groupFixture(service){

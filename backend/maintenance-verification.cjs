@@ -3,9 +3,12 @@ exports.verifyMaintenance=async(win,{directory,dataPath,startupWriteFailed})=>{
  if(process.env.FORMNARO_VERIFY_WINDOWS_DICTATION_ONLY==='1')return require('./windows-dictation-verification.cjs').verifyWindowsDictation(win,{directory});
  const checks=[],run=code=>win.webContents.executeJavaScript(code);
  const check=(value,label)=>{assert(value,label);checks.push(label);};
- check(await run('window.__cadReady===true&&!window.__cadError'),'Editor is ready after a failed initial autosave');
+ check(await run('window.__cadReady===true&&!window.__cadError'),'Editor starts without forcing an empty autosave');
+ await run("window.__cadTest.addShape('box')");await run('window.__cadTest.settled()');
+ const beforeFailedSave=await run('window.__cadTest.serialize()');
  for(let i=0;i<150&&!startupWriteFailed();i++)await new Promise(resolve=>setTimeout(resolve,20));
- check(startupWriteFailed(),'Initial autosave disk error was actually injected through portable storage IPC');
+ check(startupWriteFailed(),'First meaningful autosave disk error was actually injected through portable storage IPC');
+ check(await run('window.__cadReady===true&&!window.__cadError&&window.__cadTest.serialize()=== '+JSON.stringify(beforeFailedSave)),'Failed autosave leaves the ready editor and exact model intact');
  check(fs.existsSync(path.join(dataPath,'profil.json'))&&fs.existsSync(path.join(dataPath,'Fehlerprotokolle/formnaro-fehler.jsonl')),'Early error logging directory is adopted without deleting the log');
  const sandbox=await run("window.__cadTest.runLocalScript({code:'return {value:21*2,origin:location.origin,storage:typeof localStorage,desktop:typeof offlinecadDesktop};',call:async()=>null})");
  check(sandbox.value===42&&sandbox.origin==='null'&&sandbox.storage==='undefined'&&sandbox.desktop==='undefined','Local scripts execute under the main CSP with opaque origin and no storage/desktop bridge');

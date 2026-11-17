@@ -1,14 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
-import {readFileSync} from 'node:fs';
 import * as THREE from 'three';
-import {flags} from '../src/organization.js';
-import {validateMeshSmoothOptions} from '../src/mesh-smooth.js';
 import {defaultLayout,validateLayout,emptyLayouts,validateLayouts} from '../backend/layout-data.mjs';
 import {moveLayoutItem} from '../src/layout-preferences.js';
+import {importRendererModule,installTestDocument} from './fixtures/renderer-test-support.mjs';
 
-const source=readFileSync(new URL('../src/cad-mesh-smooth-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('export function createCadMeshSmoothUI','function createCadMeshSmoothUI');
+const {createCadMeshSmoothUI}=await importRendererModule(new URL('../src/cad-mesh-smooth-ui.js',import.meta.url));
 const digest='a'.repeat(64),binding={objectId:'mesh',geometryDigest:digest,triangleIds:[0,1,2,3]},report={beforeTriangles:4,afterTriangles:4,selectedTriangles:4,protectedTriangles:1,pinnedVertices:4,movableVertices:1,movedVertices:1,maxDisplacement:.25,rmsDisplacement:.25,maximumSurfaceDeviationBound:.25,numericalAllowance:1e-12,boundsDifference:.25,roughnessBefore:1,roughnessAfter:.75,protectedGeometryExact:true,unselectedGeometryExact:true,connectivityUnchanged:true,solidProven:false};
 function harness({catalogQuery,preview,showPreview,prepare=()=>{},surface=structuredClone(binding),largeMesh=false,duplicatePoints=false,nonIndexed=false}={}){
  const node={id:'mesh',kind:'mesh',name:'Synthetische Fläche',layerId:'default',folderId:null,transform:[1,0,0,0,0,1,0,0,0,0,1,0,10,20,30,1],mesh:{verts:[0,0,0,4,0,0,4,4,0,0,4,0,2,2,1],triangles:[0,1,4,1,2,4,2,3,4,3,0,4]}},project={nodes:[node],layers:[{id:'default',hidden:false,locked:false}],folders:[]},controls=new Map(),discarded=[],calls=[],scene=new THREE.Scene(),bodies=new THREE.Group(),resultGroup=new THREE.Group(),camera=new THREE.PerspectiveCamera();scene.add(bodies,resultGroup);camera.position.set(23,-45,67);
@@ -20,8 +17,13 @@ function harness({catalogQuery,preview,showPreview,prepare=()=>{},surface=struct
  const make=(id,attrs='')=>({id,value:attrs.match(/value="([^"]*)"/)?.[1]??'',checked:attrs.includes('checked'),disabled:attrs.includes('disabled'),textContent:''});
  const panel={hidden:true,setAttribute(){},addEventListener(type,handler){this[type]=handler;},remove(){},querySelector:selector=>controls.get(selector.slice(1)),querySelectorAll:()=>[...controls.values()],set innerHTML(html){controls.clear();for(const match of html.matchAll(/<(input|select|button|p)([^>]*)>/g)){const id=match[2].match(/id="([^"]*)"/)?.[1];if(id)controls.set(id,make(id,match[2]));}controls.get('mesh-smooth-compare').value='result';}};
  const proposals=new Map(),controller={readSnapshot:()=>project,revision:()=>revision,cancel:()=>cancels++,discard:id=>{discarded.push(id);proposals.delete(id);},getPreview:id=>proposals.get(id),meshQuery:async(type,options)=>{calls.push({query:type,options});return catalogQuery?catalogQuery():{geometryDigest:digest,triangles:4,regions:[{name:'Anlage',triangles:1}]};},preview:async(o,opts)=>{calls.push({o,opts});const p=preview?await preview(o,opts):{previewId:'p1',report,project:{...project,nodes:[resultNode]}};proposals.set(p.previewId,p);return p;}};
- const context={document:{createElement:()=>panel},structuredClone,THREE,flags,validateMeshSmoothOptions:o=>validateMeshSmoothOptions(structuredClone(o))};vm.runInNewContext(source+'\ncreate=createCadMeshSmoothUI;',context);
- const ui=context.create({controller,view:{canvas:{parentElement:{append(){}}},scene,groups:{bodies,preview:resultGroup},allows:()=>true,setInteraction:callback=>interaction=callback,invalidate(){}},getSelection:()=>selection,getSurfaceSelection:()=>surface,prepare,select:s=>selection=s,onSelectSurfaces:()=>selectionRequests++,showPreview:async p=>{if(showPreview)await showPreview(p);shown=p.previewId;resultGroup.clear();const output=mesh.clone();output.geometry=resultGeometry;resultGroup.add(output);},clearPreview:()=>{shown=null;resultGroup.clear();},applyProposal:async()=>{applied++;revision='applied';}});
+ const restoreDocument=installTestDocument({createElement:()=>panel});
+ let ui;
+ try{
+  ui=createCadMeshSmoothUI({controller,view:{canvas:{parentElement:{append(){}}},scene,groups:{bodies,preview:resultGroup},allows:()=>true,setInteraction:callback=>interaction=callback,invalidate(){}},getSelection:()=>selection,getSurfaceSelection:()=>surface,prepare,select:s=>selection=s,onSelectSurfaces:()=>selectionRequests++,showPreview:async p=>{if(showPreview)await showPreview(p);shown=p.previewId;resultGroup.clear();const output=mesh.clone();output.geometry=resultGeometry;resultGroup.add(output);},clearPreview:()=>{shown=null;resultGroup.clear();},applyProposal:async()=>{applied++;revision='applied';}});
+ }finally{
+  restoreDocument();
+ }
  return {ui,node,resultNode,project,controls,discarded,calls,panel,scene,bodies,camera,setRevision:r=>revision=r,setSelection:s=>selection=s,get shown(){return shown;},get applied(){return applied;},get cancels(){return cancels;},get interaction(){return interaction;},get selectionRequests(){return selectionRequests;},dispose(){ui.dispose();geometry.dispose();resultGeometry.dispose();mesh.material.dispose();}};
 }
 test('Smoothing preview binds selected IDs, reports actual shape changes and commits only on Apply',async()=>{const h=harness();assert.equal(await h.ui.open(),true);assert.equal(h.ui.state().selectionCount,4);assert.ok(h.interaction);assert.equal(await h.ui.preview(),true,h.controls.get('mesh-smooth-status').textContent);const call=h.calls.find(c=>c.o);assert.equal(call.o.type,'mesh-smooth');assert.equal(call.o.options.strength,.3);assert.equal(call.o.options.iterations,5);assert.equal(call.o.options.maxDeviation,.5);assert.equal(call.o.options.featureAngle,60);assert.deepEqual([...call.o.options.triangleIds],[0,1,2,3]);assert.equal(h.applied,0);const summary=h.controls.get('mesh-smooth-result').textContent;assert.match(summary,/Globale Oberflächen-Abweichungsgrenze/);assert.match(summary,/Zusätzlicher numerischer Spielraum/);assert.match(summary,/verkleinern oder ausdehnen/);assert.match(summary,/nicht ausgewählten Flächen geometrisch exakt/);assert.equal(await h.ui.apply(),true);assert.equal(h.applied,1);assert.equal(h.ui.state(),null);assert.equal(h.interaction,null);h.dispose();});

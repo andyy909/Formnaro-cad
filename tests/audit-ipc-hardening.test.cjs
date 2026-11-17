@@ -1,4 +1,5 @@
-const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),vm=require('node:vm'),{createRequire}=require('node:module'),{EventEmitter}=require('node:events');
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{EventEmitter}=require('node:events');
+const {loadDesktopTestModules}=require('./fixtures/load-desktop-test-modules.cjs');
 const {installProgramStorage}=require('../backend/program-storage.cjs');
 const {installFiles}=require('../backend/files.cjs');
 const {installErrorLog}=require('../backend/error-log.cjs');
@@ -43,11 +44,11 @@ test('Projects, layouts, PDF and tool-library IPC also reject subframes before a
  }
 });
 test('Desktop AI validates empty requests before configuration or network access and ignores subframe replies',async t=>{
- const f=setup(t),file=path.resolve(__dirname,'../backend/desktop-ai.cjs'),local=createRequire(file),module={exports:{}};let sent,ready;
+ const f=setup(t);let sent,ready;
  const request=new Promise(resolve=>{ready=resolve;});f.win.webContents.send=(_name,value)=>{sent=value;ready();};
  const electron={app:{getPath:()=>f.directory},ipcMain:f.ipcMain,safeStorage:{isEncryptionAvailable:()=>false}};
- vm.runInNewContext(fs.readFileSync(file,'utf8'),{require:name=>name==='electron'?electron:local(name),module,Buffer,URL,AbortController,setTimeout,clearTimeout,process:{argv:[]}},{filename:file});
- const installed=module.exports.installDesktopAI(f.win,{settingsFile:path.join(f.directory,'ai-settings.json')});
+ const installed=loadDesktopTestModules(electron,{loadPreload:false})
+  .installDesktopAI(f.win,{settingsFile:path.join(f.directory,'ai-settings.json')});
  for(const args of [undefined,null,[],42,'invalid']){const r=await f.handlers.get('cad-ai:generate')(f.right,args);assert.equal(r.ok,false);assert.equal(r.code,'INVALID_AI_REQUEST');}
  const save=f.handlers.get('cad-ai:save');
  try{

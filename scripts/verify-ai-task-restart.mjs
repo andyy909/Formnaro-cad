@@ -5,7 +5,9 @@ fs.mkdirSync(directory,{recursive:true});assert(!['restart-seed.json','phase-see
 const reports=[],hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 for(const phase of ['seed','resume']){
  const report=path.join(directory,'phase-'+phase+'.json'),log=path.join(directory,'phase-'+phase+'.log'),fd=fs.openSync(log,'w'),env={...process.env};for(const key of Object.keys(env))if(key.startsWith('FORMNARO_VERIFY_'))delete env[key];env.FORMNARO_VERIFY_TASK_RESTART_ONLY='1';env.FORMNARO_TASK_RESTART_PHASE=phase;
- let code;try{code=await new Promise((resolve,reject)=>{const child=spawn(executable,[...args,'--verify-ai-result-checks='+report],{cwd:root,env,stdio:['ignore',fd,fd],windowsHide:true});child.once('error',reject);child.once('exit',(exit,signal)=>resolve(signal??exit));});}finally{fs.closeSync(fd);}
+ const verificationArgs=[...args,'--verify-ai-result-checks='+report];
+ const command=exeOption>=0?process.execPath:executable,commandArgs=exeOption>=0?[path.join(root,'scripts/verify-portable.mjs'),executable,...verificationArgs]:verificationArgs;
+ let code;try{code=await new Promise((resolve,reject)=>{const child=spawn(command,commandArgs,{cwd:root,env,stdio:['ignore',fd,fd],windowsHide:true});child.once('error',reject);child.once('exit',(exit,signal)=>resolve(signal??exit));});}finally{fs.closeSync(fd);}
  assert.equal(code,0,'Real '+phase+' app failed; inspect '+log);const result=JSON.parse(fs.readFileSync(report,'utf8'));assert(result.ok&&result.isolatedProfile&&!result.errors.length&&!result.external.length);reports.push({phase,checks:result.checks.length,report:path.basename(report),sha256:hash(fs.readFileSync(report)),exeSha256:result.exeSha256,asarSha256:result.asarSha256});
  if(phase==='seed'){const original=path.resolve(directory,'Original-Auftrag.fnpack');assert.equal(path.dirname(original),directory);assert(fs.statSync(original).isFile());fs.unlinkSync(original);}
 }

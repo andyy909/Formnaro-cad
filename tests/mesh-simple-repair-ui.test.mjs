@@ -1,19 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
-import {readFileSync} from 'node:fs';
-import {flags} from '../src/organization.js';
-import {meshProtectionRegions} from '../src/mesh-protection.js';
-import {createMeshSelectionService} from '../src/mesh-selection-data.js';
 import {MESH_INSPECTION_CATEGORIES} from '../src/mesh-inspector.js';
-const source=readFileSync(new URL('../src/cad-mesh-repair-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('export function createCadMeshRepairUI','function createCadMeshRepairUI');
+import {importRendererModule,installTestDocument} from './fixtures/renderer-test-support.mjs';
+
+const {createCadMeshRepairUI}=await importRendererModule(new URL('../src/cad-mesh-repair-ui.js',import.meta.url));
 function harness({service,preview,showPreview}={}){
  const node={id:'mesh',kind:'mesh',name:'Reparatur',transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],layerId:'default',folderId:null,mesh:{verts:[0,0,0,10,0,0,0,10,0],triangles:[0,1,2,0,1,2]}},project={nodes:[node],layers:[{id:'default',hidden:false,locked:false}],folders:[]},controls=new Map(),notices=[],discarded=[],calls=[];let revision='one',selection=[{rootId:'mesh',path:[]}],shown=null,applied=0,cancels=0,sequence=0;
  const make=(id,attrs='')=>({id,value:id==='mesh-repair-limit'?'20':id==='mesh-repair-compare'?'repaired':'',checked:false,disabled:attrs.includes('disabled'),dataset:{...(attrs.match(/data-part="(\d+)"/)?.[1]?{part:attrs.match(/data-part="(\d+)"/)[1]}:{}),...(attrs.match(/data-focus-part="(\d+)"/)?.[1]?{focusPart:attrs.match(/data-focus-part="(\d+)"/)[1]}:{})},textContent:'',classList:{toggle(){}},setAttribute(){},get innerHTML(){return this.html??'';},set innerHTML(v){this.html=v;if(id==='mesh-repair-parts')for(const m of v.matchAll(/<(input|button)([^>]+)>/g)){const a=m[2],key=a.match(/data-part="(\d+)"/)?.[1]??a.match(/data-focus-part="(\d+)"/)?.[1];if(key!==undefined){const name=(a.includes('data-focus')?'focus-':'part-')+key,e=make(name,a);e.partLocked=a.includes('data-part-locked');e.checked=a.includes('checked');controls.set(name,e);}}}});
  const panel={hidden:true,setAttribute(){},addEventListener(){},remove(){},querySelector:s=>controls.get(s.slice(1)),querySelectorAll:s=>[...controls.values()].filter(e=>s==='input,select'?['degenerate','duplicates','orient','limit','compare'].some(k=>e.id==='mesh-repair-'+k)||e.dataset.part!==undefined:s==='[data-part-locked]'?e.partLocked:s==='[data-part]'?e.dataset.part!==undefined:s==='[data-focus-part]'?e.dataset.focusPart!==undefined:false),set innerHTML(v){controls.clear();for(const m of v.matchAll(/id="([^"]+)"/g))controls.set(m[1],make(m[1]));}};
  const controller={readSnapshot:()=>project,revision:()=>revision,cancel:()=>{cancels++;},discard:id=>discarded.push(id),preview:async(o,opt)=>{calls.push({o,opt});if(preview)return preview(o,opt);const counts=Object.fromEntries(Object.keys(MESH_INSPECTION_CATEGORIES).map(k=>[k,0]));return {previewId:'p'+(++sequence),revision,report:{removedDegenerate:0,removedDuplicates:1,flippedFaces:0,removedComponents:0,removedComponentFaces:0,removedUnusedVertices:0,beforeTriangles:2,afterTriangles:1,skippedOrientationComponents:0,before:counts,after:counts}};}};
- const context={document:{createElement:()=>panel},structuredClone,AbortController,flags,meshProtectionRegions,createMeshSelectionService,MESH_INSPECTION_CATEGORIES};vm.runInNewContext(source+'\ncreate=createCadMeshRepairUI;',context);
- const ui=context.create({controller,view:{canvas:{parentElement:{append(){}}},allows:()=>true,focusWorldPoints:p=>{calls.push({focus:p});}},getSelection:()=>selection,select:s=>{selection=s;},showPreview:async p=>{if(showPreview)await showPreview(p);shown=p.previewId;},clearPreview:()=>{shown=null;},applyProposal:async()=>{applied++;revision='applied';},toast:s=>notices.push(s),...(service?{service}:{})});
+ const restoreDocument=installTestDocument({createElement:()=>panel});
+ let ui;
+ try{
+  ui=createCadMeshRepairUI({controller,view:{canvas:{parentElement:{append(){}}},allows:()=>true,focusWorldPoints:p=>{calls.push({focus:p});}},getSelection:()=>selection,select:s=>{selection=s;},showPreview:async p=>{if(showPreview)await showPreview(p);shown=p.previewId;},clearPreview:()=>{shown=null;},applyProposal:async()=>{applied++;revision='applied';},toast:s=>notices.push(s),...(service?{service}:{})});
+ }finally{
+  restoreDocument();
+ }
  return {ui,node,project,controls,notices,discarded,calls,panel,setRevision:r=>{revision=r;},setSelection:s=>{selection=s;},get shown(){return shown;},get applied(){return applied;},get cancels(){return cancels;}};
 }
 test('Repair UI keeps all actions opt-in and only Apply commits a preview; Cancel only discards',async()=>{const h=harness();await h.ui.open();assert.equal(h.controls.get('mesh-repair-duplicates').checked,false);assert.equal(h.controls.get('mesh-repair-apply').disabled,true);const before=structuredClone(h.project);h.controls.get('mesh-repair-duplicates').checked=true;assert.equal(await h.ui.preview(),true);assert.equal(h.shown,'p1');assert.equal(h.applied,0);assert.deepEqual(h.project,before);h.ui.close();assert.equal(h.shown,null);assert.ok(h.discarded.includes('p1'));await h.ui.open();h.controls.get('mesh-repair-duplicates').checked=true;await h.ui.preview();assert.equal(await h.ui.apply(),true);assert.equal(h.applied,1);assert.equal(h.ui.state(),null);h.ui.dispose();});

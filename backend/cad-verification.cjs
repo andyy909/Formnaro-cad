@@ -48,10 +48,21 @@ async function verifyNativeCad(win,app,outputPath,{python='python',adapterPath=p
     await a.setQuality({...settings,display:{deflection:.035,angleDegrees:12}});await a.settled();assert(a.controller.revision()===revision&&a.controller.serialize()===encoded&&a.snapshot().nodes[0].stats.volume===volume,'Display quality changed native state');
     await a.controller.open(encoded,{label:'Isolated saved CAD reopen'});await a.settled();assert(a.controller.serialize()===encoded,'CAD save/open altered original sources');
     let rejected=false;try{await a.controller.open(JSON.stringify({format:'OfflineCAD',version:4,nodes:[]}));}catch{rejected=true;}assert(rejected&&a.controller.serialize()===encoded,'Legacy project accepted or changed confirmed model');
-    assert(JSON.parse(a.storage.getItem('offlinecad-autosave-v7')||'{}').version===5,'Ordinary format5 project in CAD7 autosave missing');
+    // Model settling does not wait for the periodic recovery write and its storage acknowledgement.
+    const autosaveDeadline=performance.now()+10000;
+    const autosaveVersion=()=>JSON.parse(a.storage.getItem('offlinecad-autosave-v7')||'{}').version;
+    let savedVersion=autosaveVersion();
+    while(savedVersion!==5&&performance.now()<autosaveDeadline){
+      await new Promise(resolve=>setTimeout(resolve,50));
+      savedVersion=autosaveVersion();
+    }
+    assert(savedVersion===5,'Ordinary format5 project in CAD7 autosave missing');
     a.select([{rootId:group.id,path:[]}]);await a.settled();
     const context=await window.offlinecadAutomation.context(),scene=await window.offlinecadAutomation.scene();
-    assert(context.projectVersion===32&&context.supportedProjectVersions.includes(5)&&context.supportedProjectVersions.includes(8)&&context.version===${JSON.stringify(app.getVersion())}&&context.requestSchema&&context.exportSchema&&Object.keys(context.endpoints).length===21,'Native context/schema/routes missing');
+    assert(context.projectVersion===32&&context.supportedProjectVersions.includes(5)&&context.supportedProjectVersions.includes(8)&&context.version===${JSON.stringify(app.getVersion())}&&context.requestSchema&&context.exportSchema,'Native context/schema/routes missing');
+    const expectedRoutes=${JSON.stringify(Object.keys(require('./api-bridge.cjs').routes).sort())};
+    const actualRoutes=Object.keys(context.endpoints).sort();
+    assert(actualRoutes.length===expectedRoutes.length&&actualRoutes.every((route,index)=>route===expectedRoutes[index]),'Native context/schema/routes missing');
     assert(scene.revision===a.controller.revision()&&!JSON.stringify(scene).includes('triangles'),'Compact native scene contains display arrays or stale revision');
     assert(typeof a.actions.edges==='function'&&typeof a.actions['general-fit']==='function'&&typeof a.actions.section==='function'&&typeof a.actions.inspect==='function','Native tool actions missing');
     assert(scene.objects.filter(o=>o.kind==='cad').every(o=>o.measures?.editSize?.length===3&&o.measures.worldAxisSize.every(Number.isFinite)&&o.sizeToWorldAxisFactors.every(v=>v>0)&&o.worldAxisDirections.length===3),'Prepared native axis measures missing');

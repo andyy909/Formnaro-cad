@@ -1,5 +1,56 @@
-import {AI_RESULT_CHECKS_SCHEMA} from './cad-ai-result-checks.js';
+import { AI_RESULT_CHECKS_SCHEMA } from './cad-ai-result-checks.js';
 
-export const discardSchema={type:'object',properties:{previewId:{type:'string',minLength:1,maxLength:200},revision:{type:'string',minLength:1,maxLength:200}},required:['previewId','revision'],additionalProperties:false};
-export const screenshotSchema={...discardSchema,required:[],dependentRequired:{previewId:['revision'],revision:['previewId']}};
-export const analysisSchema={type:'object',properties:{revision:{type:'string',minLength:1,maxLength:200},queries:{type:'array',minItems:1,maxItems:8,items:{type:'object',properties:{id:{type:'string'},engine:{enum:['cad','mesh','app']},kind:{type:'string'},options:{type:'object',description:'For app/jointCollision: leftId and rightId are finished root IDs; values:[{jointId,value}] selects one pose. Optional minimumDistance, allowContact and tolerance. app/joints returns the actual joint IDs. This is not a continuous motion proof.'},report:{type:'object'}},required:['id','engine','kind'],additionalProperties:false}},previewId:{type:'string',minLength:1,maxLength:200},checks:{...AI_RESULT_CHECKS_SCHEMA,minItems:1,maxItems:8},reportBudget:{type:'integer',minimum:1024,maximum:32000}},required:['revision'],oneOf:[{required:['queries'],properties:{reportBudget:{minimum:2000}},not:{anyOf:[{required:['previewId']},{required:['checks']}]}},{required:['previewId','checks'],not:{required:['queries']}}],additionalProperties:false};
+export const discardSchema = {
+  type: 'object',
+  properties: {
+    previewId: { type: 'string', minLength: 1, maxLength: 200 },
+    revision: { type: 'string', minLength: 1, maxLength: 200 },
+  },
+  required: ['previewId', 'revision'],
+  additionalProperties: false,
+};
+export const screenshotSchema = {
+  ...discardSchema,
+  required: [],
+  dependentRequired: { previewId: ['revision'], revision: ['previewId'] },
+};
+export const analysisSchema = {
+  type: 'object',
+  properties: {
+    revision: { type: 'string', minLength: 1, maxLength: 200 },
+    queries: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 8,
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          engine: { enum: ['cad', 'mesh', 'app'] },
+          kind: { type: 'string' },
+          options: {
+            type: 'object',
+            description:
+              'For app/jointCollision: leftId and rightId are finished root IDs; values:[{jointId,value}] selects one pose. Optional minimumDistance, allowContact and tolerance. app/joints returns the actual joint IDs. This is not a continuous motion proof.',
+          },
+          report: { type: 'object' },
+        },
+        required: ['id', 'engine', 'kind'],
+        additionalProperties: false,
+      },
+    },
+    previewId: { type: 'string', minLength: 1, maxLength: 200 },
+    checks: { ...AI_RESULT_CHECKS_SCHEMA, minItems: 1, maxItems: 8 },
+    reportBudget: { type: 'integer', minimum: 1024, maximum: 32000 },
+  },
+  required: ['revision'],
+  oneOf: [
+    {
+      required: ['queries'],
+      properties: { reportBudget: { minimum: 2000 } },
+      not: { anyOf: [{ required: ['previewId'] }, { required: ['checks'] }] },
+    },
+    { required: ['previewId', 'checks'], not: { required: ['queries'] } },
+  ],
+  additionalProperties: false,
+};

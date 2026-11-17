@@ -1,18 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
-import {readFileSync} from 'node:fs';
-import {flags} from '../src/organization.js';
-import {createMeshSelectionService,meshSelectionGeometryDigest} from '../src/mesh-selection-data.js';
-import {MESH_INSPECTION_CATEGORIES} from '../src/mesh-inspector.js';
-import {meshInspectionFindingPoints} from '../src/cad-mesh-inspector-rendering.js';
-const source=readFileSync(new URL('../src/cad-mesh-inspector-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('export function createCadMeshInspectorUI','function createCadMeshInspectorUI');
+import {meshSelectionGeometryDigest} from '../src/mesh-selection-data.js';
+import {importRendererModule,installTestDocument} from './fixtures/renderer-test-support.mjs';
+
+const {createCadMeshInspectorUI}=await importRendererModule(new URL('../src/cad-mesh-inspector-ui.js',import.meta.url));
 function harness(service){
  const node={id:'mesh',kind:'mesh',name:'Diagnose',transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],layerId:'default',folderId:null,mesh:{verts:[0,0,0,10,0,0,0,10,0],triangles:[0,1,2]}},project={nodes:[node],layers:[{id:'default',hidden:false,locked:false}],folders:[]},controls=new Map(),notices=[];let selection=[{rootId:'mesh',path:[]}],overlay=null,options=null,focus=null;
  const control=id=>({id,value:id==='mesh-inspector-threshold'?'20':id==='mesh-inspector-focus-kind'?'boundary':'',checked:true,disabled:false,textContent:'',classList:{toggle(){}},innerHTML:'',setAttribute(){}});
  const panel={hidden:true,setAttribute(){},addEventListener(){},remove(){},querySelector:s=>controls.get(s.slice(1)),set innerHTML(value){controls.clear();for(const m of value.matchAll(/id="([^"]+)"/g))controls.set(m[1],control(m[1]));}};
  const view={canvas:{parentElement:{append(){}}},allows:()=>true,meshInspectionAvailable:()=>true,setMeshInspection(r,o){overlay=r?structuredClone(r):null;options=o;},focusWorldPoints:p=>{focus=p;}};
- const context={document:{createElement:()=>panel},structuredClone,AbortController,flags,createMeshSelectionService,meshInspectionFindingPoints,MESH_INSPECTION_CATEGORIES};vm.runInNewContext(source+'\ncreate=createCadMeshInspectorUI;',context);const ui=context.create({getProject:()=>project,getSelection:()=>selection,view,toast:s=>notices.push(s),...(service?{service}:{})});
+ const restoreDocument=installTestDocument({createElement:()=>panel});
+ let ui;
+ try{
+  ui=createCadMeshInspectorUI({getProject:()=>project,getSelection:()=>selection,view,toast:s=>notices.push(s),...(service?{service}:{})});
+ }finally{
+  restoreDocument();
+ }
  return {ui,node,project,controls,notices,get overlay(){return overlay;},get options(){return options;},get focus(){return focus;},select:s=>{selection=s;},panel};
 }
 test('Inspector previews all boundary findings and closes without writing model/selection/protection data',async()=>{const h=harness();h.node.locked=true;h.node.metadata={meshProtection:{note:'unchanged sentinel'}};const before=structuredClone(h.project);await h.ui.open();assert.equal(h.ui.state().result.categories.boundary.count,3);assert.equal(h.overlay.categories.boundary.count,3);h.controls.get('mesh-inspector-show-boundary').checked=false;h.controls.get('mesh-inspector-show-boundary').onchange();assert.equal(h.options.enabled.includes('boundary'),false);h.ui.close();assert.equal(h.overlay,null);assert.deepEqual(h.project,before);h.ui.dispose();});

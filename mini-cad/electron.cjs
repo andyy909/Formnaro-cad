@@ -1,6 +1,7 @@
 const {app,BrowserWindow,ipcMain,dialog,Menu,session,nativeImage}=require('electron');
 
 const fs=require('node:fs'),path=require('node:path');
+const {atomic}=require('./backend/atomic.cjs');
 
 app.setName('Formnaro Mini CAD');app.setAppUserModelId('de.formnaro.mini.cad');
 
@@ -19,12 +20,6 @@ let win,closing=false,closePending=false,io=Promise.resolve(),libraryStartupErro
 const limits={project:32*1024*1024,stl:256*1024*1024};
 
 const safeName=name=>(String(name||'Mini-Projekt').replace(/[<>:"/\\|?*\x00-\x1f]/g,'-').replace(/[. ]+$/,'').slice(0,90)||'Mini-Projekt');
-
-function atomic(file,data){
- const temp=path.join(path.dirname(file),'.formnaro-'+require('node:crypto').randomUUID()+'.tmp');let fd,created=false;
- try{fd=fs.openSync(temp,'wx',0o600);created=true;fs.writeFileSync(fd,data);fs.fsyncSync(fd);fs.closeSync(fd);fd=undefined;fs.renameSync(temp,file);}
- finally{if(fd!==undefined)fs.closeSync(fd);if(created)fs.rmSync(temp,{force:true});}
-}
 
 function ordered(fn){const next=io.then(fn);io=next.catch(()=>{});return next;}
 

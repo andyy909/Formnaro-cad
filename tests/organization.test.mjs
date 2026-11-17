@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {defaultOrganization,assign,flags,containerNodes,removeContainer,validateOrganization} from '../src/organization.js';
-import {migrateProject} from '../src/project-data.js';
+import {migrateProject} from '../src/mesh-engine/project-data.js';
 const folder=(id,parentId=null)=>({id,name:id,layerId:'parts',parentId,hidden:false,locked:false});
 function sample(){const s=defaultOrganization();s.layers.push({id:'parts',name:'Teile',hidden:false,locked:false});s.folders=[folder('a'),folder('b','a')];s.activeLayerId='parts';s.activeFolderId='b';const n=assign({id:'one',hidden:false,locked:false},s);return {s,n};}
 test('Nested folder visibility/locks are effective without changing object flags',()=>{const {s,n}=sample();validateOrganization(s,[n]);s.folders[0].hidden=true;s.layers[1].locked=true;assert.deepEqual(flags(n,s),{hidden:true,locked:true});assert.equal(n.hidden,false);assert.equal(n.locked,false);assert.equal(containerNodes(s.folders[0],s,[n]).length,1);});

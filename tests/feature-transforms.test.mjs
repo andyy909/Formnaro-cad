@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import Module from 'manifold-3d/manifold';import * as THREE from 'three';
-import {makeNode,groupNodes,setKernel,worldManifold} from '../src/geometry.js';import {synchronizeHistory,featureContext} from '../src/history.js';import {parentMatrix,featureMatrix,transformFeature} from '../src/feature-transforms.js';
+import {makeNode,groupNodes,setKernel,worldManifold} from '../src/mesh-engine/geometry.js';import {synchronizeHistory,featureContext} from '../src/mesh-engine/history.js';import {parentMatrix,featureMatrix,transformFeature} from '../src/mesh-engine/feature-transforms.js';
 const kernel=await Module({wasmBinary:fs.readFileSync(new URL('../node_modules/manifold-3d/manifold.wasm',import.meta.url))});kernel.setup();setKernel(kernel);
 const near=(a,b)=>assert.ok(Math.abs(a-b)<.002,`${a} vs ${b}`);
 function sample(){const body=makeNode('box',[0,0,5],{size:[50,40,10]}),hole=makeNode('box',[8,3,5],{size:[6,8,14],solid:false}),inner=groupNodes([body,hole]),outer=groupNodes([inner,makeNode('box',[70,0,5])]);outer.rot=[10,20,30];outer.mirror=[-1,1,1];outer.size=outer.size.map((v,i)=>v*[1.6,.8,1.3][i]);outer.children[0].rot=[0,0,17];synchronizeHistory([outer]);return {outer,context:featureContext([outer],{rootId:outer.id,path:[outer.children[0].id,hole.id]})};}

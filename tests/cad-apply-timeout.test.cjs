@@ -1,10 +1,12 @@
-const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),vm=require('node:vm'),{createRequire}=require('node:module');
-test('HTTP Apply timeout returns a known receipt or explicitly unknown status; mismatched receipts are ignored',async()=>{
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const {loadDesktopTestModules}=require('./fixtures/load-desktop-test-modules.cjs');
+test('HTTP Apply timeout returns a known receipt or explicitly unknown status; mismatched receipts are ignored',async t=>{
  const fixture=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-apply-timeout-')),handlers=new Map(),mainListeners=new Map(),rendererListeners=new Map(),frame={};let desktop;
  const webContents={mainFrame:frame,send:(name,value)=>rendererListeners.get(name)?.({},value),on:()=>{}},win={webContents,isDestroyed:()=>false,on:()=>{}};
  const electron={app:{getPath:()=>fixture},safeStorage:{isEncryptionAvailable:()=>false},ipcMain:{handle:(name,fn)=>handlers.set(name,fn),on:(name,fn)=>mainListeners.set(name,fn)},ipcRenderer:{on:(name,fn)=>rendererListeners.set(name,fn),removeListener:()=>{},send:(name,value)=>mainListeners.get(name)?.({sender:webContents,senderFrame:frame},value)},contextBridge:{exposeInMainWorld:(name,value)=>{if(name==='offlinecadDesktop')desktop=value;}}};
- function execute(file){const target=path.resolve(file),requireLocal=createRequire(target),module={exports:{}};vm.runInNewContext(fs.readFileSync(target,'utf8'),{require:name=>name==='electron'?electron:requireLocal(name),module,exports:module.exports,process:{argv:[]},Buffer,URL,AbortController,AbortSignal,setTimeout:(fn,ms)=>setTimeout(fn,ms===45000?20:ms),clearTimeout},{filename:target});return module.exports;}
- execute('preload.cjs');const installed=execute('backend/desktop-ai.cjs').installDesktopAI(win,{settingsFile:path.join(fixture,'settings.json')});
+ const hostSetTimeout=globalThis.setTimeout;
+ t.mock.method(globalThis,'setTimeout',(fn,ms,...args)=>hostSetTimeout(fn,ms===45000?20:ms,...args));
+ const installed=loadDesktopTestModules(electron).installDesktopAI(win,{settingsFile:path.join(fixture,'settings.json')});
  desktop.onAutomation((_method,args,id)=>{if(args.previewId!=='unknown')desktop.automationCommitted({id,previewId:args.previewId==='forged'?'different':args.previewId,requestRevision:args.revision,revision:'b'.repeat(16),changed:true,alreadyApplied:false});return new Promise(()=>{});});
  const event={sender:webContents,senderFrame:frame},save=handlers.get('cad-ai:save');
  try{

@@ -1,0 +1,11 @@
+cad-kernel-build/runtime/
+licenses/
+src/fonts/
+converter/
+parametric/
+python-runtime/
+**/*.wasm
+docs/
+ai/*.json
+tests/fixtures/
+dist/

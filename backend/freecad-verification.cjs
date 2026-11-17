@@ -1,6 +1,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 exports.verifyFreeCAD=async(win,{directory})=>{
- const run=s=>win.webContents.executeJavaScript(s),checks=[],check=(ok,label)=>{assert(ok,label);checks.push(label);},previous=await run('window.offlinecadDesktop.getAISettings()');let calls=0,constructions=0;
+ const run=s=>win.webContents.executeJavaScript(s),checks=[],check=(ok,label)=>{assert(ok,label);checks.push(label);},previous=await run('window.offlinecadDesktop.getAISettings()');let calls=0,constructions=0,primaryError;
+ const previousChecks=await run("window.__cadTest.storage.getItem('formnaro-model-checks-v1')");
  const until=async s=>{for(let i=0;i<1500;i++){if(await run(s))return;await new Promise(r=>setTimeout(r,40));}throw Error('FreeCAD UI timeout: '+s);};
  const server=http.createServer(async(req,res)=>{try{
   res.setHeader('Content-Type','application/json');if(req.url.endsWith('/models'))return res.end(JSON.stringify({data:[{id:'local-freecad-test',input_modalities:['text','image']}]}));
@@ -11,6 +12,7 @@ exports.verifyFreeCAD=async(win,{directory})=>{
   res.end(JSON.stringify({output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(answer)}]}]}));
  }catch(e){res.statusCode=500;res.end(JSON.stringify({error:{message:e.message}}));}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
  try{
+  await run("document.getElementById('ai-model-strictness-settings').click();document.getElementById('ai-check-mode').value='checked';document.getElementById('ai-check-mode').dispatchEvent(new Event('change'));document.querySelector('[data-check-key=freecad]').checked=true;document.querySelector('[data-check-key=visual]').checked=true;document.getElementById('ai-check-autocorrect').checked=true;document.getElementById('ai-check-corrections').value='3';document.getElementById('ai-check-save').click();void 0");
   check((await run('window.offlinecadDesktop.getFreeCADStatus()')).available,'Actual desktop discovers installed FreeCAD');
   const before=await run('window.__cadTest.serialize()'),depth=await run('window.__cadTest.undoDepth()');
   await run('window.offlinecadDesktop.saveAISettings('+JSON.stringify({config:{authMode:'api-key',protocol:'responses',baseUrl:'http://127.0.0.1:'+server.address().port+'/v1',model:'local-freecad-test',agentSteps:24},key:'synthetic-freecad-fixture'})+')');await run('window.__cadTest.aiUI.chat.refreshModels()');await until("!document.getElementById('ai-chat-send').disabled");
@@ -40,6 +42,16 @@ exports.verifyFreeCAD=async(win,{directory})=>{
   check(await run("document.getElementById('ai-agent-steps').value==='24'&&!!document.getElementById('ai-freecad-export')"),'Settings expose work budget, FreeCAD status and source-document export');
   await run("document.getElementById('ai-agent-steps').value='32';document.getElementById('ai-save-settings').click();void 0");await until("document.getElementById('ai-settings-message').textContent.includes('gespeichert')");check((await run('window.offlinecadDesktop.getAISettings()')).agentSteps===32,'Work budget is persisted through actual desktop IPC');
   fs.writeFileSync(path.join(directory,'freecad-settings.png'),(await win.webContents.capturePage()).toPNG());
- }finally{await run("document.getElementById('freecad-settings-test')?.remove();void 0").catch(()=>{});server.closeAllConnections();await new Promise(r=>server.close(r));await run('window.offlinecadDesktop.saveAISettings('+JSON.stringify({config:previous})+')');}
+ }catch(error){primaryError=error;throw error;}finally{
+  server.closeAllConnections();
+  const cleanup=await Promise.allSettled([
+   new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve())),
+   Promise.resolve().then(()=>run("document.getElementById('freecad-settings-test')?.remove();window.__cadTest.storage."+(previousChecks===null?"removeItem('formnaro-model-checks-v1')":"setItem('formnaro-model-checks-v1',"+JSON.stringify(previousChecks)+")"))),
+   Promise.resolve().then(()=>run('window.offlinecadDesktop.saveAISettings('+JSON.stringify({config:previous})+')'))
+  ]);
+  const errors=cleanup.filter(result=>result.status==='rejected').map(result=>result.reason);
+  if(errors.length&&!primaryError)throw new AggregateError(errors,'FreeCAD verification cleanup failed');
+ }
+
  return checks;
 };

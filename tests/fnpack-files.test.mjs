@@ -61,3 +61,19 @@ test('fnpack Save As streams unopened blocks and survives loss of its original p
 test('fnpack rejects corrupted unloaded data on demand and on save without replacing the last valid target',async t=>{const dir=await fixture(t),file=path.join(dir,'broken.fnpack'),target=path.join(dir,'safe.fnpack'),prior=Buffer.from('last valid project');await writeFnpack(file,{project:project(),blocks:[{sha256:hash,bytes:payload}]});const source=await openFnpack(file);try{const bytes=await fs.readFile(file);bytes[bytes.length-1]^=1;await fs.writeFile(file,bytes);await assert.rejects(source.read(hash),/Prüfsumme/);await fs.writeFile(target,prior);await assert.rejects(writeFnpack(target,{project:project(),source}),/beschädigt/);assert.deepEqual(await fs.readFile(target),prior);assert.equal((await fs.readdir(dir)).some(n=>n.endsWith('.tmp')),false);}finally{await source.close();}});
 test('fnpack rejects malformed headers, truncated files, invalid index hashes and missing source blocks',async t=>{const dir=await fixture(t),valid=path.join(dir,'valid.fnpack');await writeFnpack(valid,{project:project(),blocks:[{sha256:hash,bytes:payload}]});const original=await fs.readFile(valid);for(const [name,edit]of [['magic',b=>b[0]^=1],['indexhash',b=>b[16]^=1],['reserved',b=>b[63]=1],['truncated',b=>b.subarray(0,b.length-1)]]){const file=path.join(dir,name+'.fnpack'),bytes=Buffer.from(original),result=edit(bytes);await fs.writeFile(file,Buffer.isBuffer(result)?result:bytes);await assert.rejects(openFnpack(file));}const target=path.join(dir,'missing.fnpack');await assert.rejects(writeFnpack(target,{project:project()}),/fehlt/);await assert.rejects(fs.stat(target),{code:'ENOENT'});});
 test('fnpack verifies new blocks and cancels atomic writes before replacement',async t=>{const dir=await fixture(t),target=path.join(dir,'safe.fnpack'),prior=Buffer.from('original');await fs.writeFile(target,prior);await assert.rejects(writeFnpack(target,{project:project(),blocks:[{sha256:hash,bytes:Buffer.from('wrong')}]}),/Prüfsumme/);const controller=new AbortController();controller.abort();await assert.rejects(writeFnpack(target,{project:project(),blocks:[{sha256:hash,bytes:payload}],signal:controller.signal}),{name:'AbortError'});assert.deepEqual(await fs.readFile(target),prior);assert.equal((await fs.readdir(dir)).some(n=>n.endsWith('.tmp')),false);});
+
+
+test('first autosave after restart replaces existing recovery without shadowing the source registry',async t=>{
+ const dir=await fixture(t),recoveryFile=path.join(dir,'recovery.fnpack'),blocks=[{sha256:hash,bytes:payload}];
+ await writeFnpack(recoveryFile,{project:project(),blocks});
+ const previous=await fs.readFile(recoveryFile),changed=project();changed.nodes[1].transform[12]=87;
+ const store=createFnpackStore({recoveryFile});
+ try{
+  assert.deepEqual(await store.saveRecovery({project:changed,blocks}),{saved:true});
+  assert.equal(store.sourceCount(),0,'Temporary recovery reader is released');
+  assert.deepEqual(await fs.readFile(recoveryFile+'.vorher'),previous);
+  const saved=await openFnpack(recoveryFile);
+  try{assert.deepEqual(saved.index.project,changed);assert.deepEqual(await saved.read(hash),payload);}
+  finally{await saved.close();}
+ }finally{await store.close();}
+});

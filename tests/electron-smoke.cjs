@@ -1,62 +1,72 @@
 const {app,BrowserWindow,session}=require('electron');
-const assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs');
-const testOutput=process.env.OFFLINECAD_TEST_OUTPUT || fs.mkdtempSync(path.join(require('node:os').tmpdir(),'offlinecad-test-'));
-fs.mkdirSync(testOutput,{recursive:true});
-app.setPath('userData',path.join(testOutput,'profile'));
+const assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs'),os=require('node:os');
+const {once}=require('node:events'),{installNavigationGuard}=require('../backend/navigation-guard.cjs');
+const output=process.env.OFFLINECAD_TEST_OUTPUT||fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-smoke-'));
+fs.mkdirSync(output,{recursive:true});
+const profile=fs.mkdtempSync(path.join(output,'profile-'));
+app.setPath('userData',profile);app.setPath('sessionData',profile);
 app.commandLine.appendSwitch('disable-gpu-sandbox');
+app.on('window-all-closed',()=>app.quit());
+const watchdog=setTimeout(()=>{console.error('Desktop smoke timed out');app.exit(1);},120000);
 app.whenReady().then(async()=>{
-  const errors=[],requests=[];
-  session.defaultSession.webRequest.onBeforeRequest((details,cb)=>{if(/^https?:/.test(details.url))requests.push(details.url);cb({cancel:/^https?:/.test(details.url)});});
+  const errors=[],requests=[],downloads=[];
+  session.defaultSession.webRequest.onBeforeRequest((details,callback)=>{
+    const external=/^https?:/.test(details.url);if(external)requests.push(details.url);callback({cancel:external});
+  });
+  session.defaultSession.on('will-download',(_event,item)=>{
+    item.setSavePath(path.join(output,item.getFilename()));
+    const record={file:item.getSavePath(),state:null};downloads.push(record);item.once('done',(_e,state)=>{record.state=state;});
+  });
   const win=new BrowserWindow({show:false,width:1500,height:950,webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
-  win.webContents.on('console-message',(_e,_level,message)=>{if(_level===3)errors.push(message);});
-  session.defaultSession.on('will-download',(_e,item)=>item.setSavePath(path.join(testOutput,item.getFilename())));
+  win.webContents.on('console-message',details=>{if(details.level==='error')errors.push(details.message);});
   try{
-    await win.loadFile(path.join(__dirname,'../dist/index.html'),{query:{test:'1'}});
-    await win.webContents.executeJavaScript(`new Promise((resolve,reject)=>{let count=0;const interval=setInterval(async()=>{if(window.__cadReady){clearInterval(interval);resolve(true);}else if(window.__cadError||count++>150){clearInterval(interval);reject(new Error(window.__cadError||'Timeout'));}},100);})`);
+    const entry=path.resolve(__dirname,'../dist/index.html'),query={test:'1'};
+    installNavigationGuard(win,{entry,query});
+    await win.loadFile(entry,{query});
+    await win.webContents.executeJavaScript(`new Promise((resolve,reject)=>{
+      const start=performance.now(),timer=setInterval(()=>{
+        if(window.__cadError||performance.now()-start>60000){clearInterval(timer);reject(Error(window.__cadError||'Startup timeout'));}
+        else if(window.__cadReady&&window.__cadTest){clearInterval(timer);resolve();}
+      },20);
+    })`);
+    await win.webContents.executeJavaScript('window.__cadTest.resetProject()');
+    const current=win.webContents.getURL(),target=new URL(current);
+    target.searchParams.set('blocked','1');
+    const willNavigate=once(win.webContents,'will-navigate');
+    await win.webContents.executeJavaScript('location.assign('+JSON.stringify(target.href)+')');
+    const [navigation,url]=await willNavigate;
+    assert.equal(url??navigation.url,target.href);
+    assert.equal(navigation.defaultPrevented,true);
+    assert.equal(win.webContents.getURL(),current);
     const result=await win.webContents.executeJavaScript(`(async()=>{
-      const api=window.__cadTest,assert=(v,message)=>{if(!v)throw new Error(message);};
-      api.restore({nodes:[],bed:[200,200],planeZ:0,name:'Test'});
-      document.querySelector('.shape-tile').click();assert(api.snapshot().nodes.length===1,'Shape click');
-      document.getElementById('size-0').value=30;document.getElementById('size-0').dispatchEvent(new Event('change'));await api.settled();assert(api.snapshot().nodes[0].size[0]===30,'Numeric dimension');
-      document.getElementById('hole-btn').click();await api.settled();assert(!api.snapshot().nodes[0].solid,'Hole toggle');
-      document.getElementById('solid-btn').click();await api.settled();api.actions.undo();assert(!api.snapshot().nodes[0].solid,'Undo');api.actions.redo();assert(api.snapshot().nodes[0].solid,'Redo');
-      api.loadDemo();const before=api.volume();assert(api.snapshot().nodes[0].children.length===5,'Demo reversible group');
-      api.ungroup();assert(api.snapshot().nodes.length===5,'Ungroup');api.select(api.snapshot().nodes.map(n=>n.id));await api.group();assert(Math.abs(api.volume()-before)<.01,'Regroup volume');
-      api.mirror(0);assert(Math.abs(api.volume()-before)<.01,'Mirror volume');api.duplicate();assert(api.snapshot().nodes.length===2,'Duplicate');
-      api.select(api.snapshot().nodes.map(n=>n.id));api.align(0,1);api.drop();assert(api.bounds().min[2]>=-.001,'Drop to plane');
-      const save=JSON.parse(JSON.stringify(api.snapshot()));api.restore(save);assert(api.snapshot().nodes.length===2,'Project roundtrip');
-      api.select([api.snapshot().nodes[0].id]);api.actions.delete();api.actions.undo();assert(api.snapshot().nodes.length===2,'Delete undo');
-      api.restore({nodes:[],bed:[200,200],planeZ:0,name:'Test'});api.addShape('text');assert(api.volume()>0,'Text solid');
-      api.loadDemo();api.select([api.snapshot().nodes[0].id]);await api.exportModel('3mf',false);await api.exportModel('stl',false);await api.exportModel('obj',false);
-      return {volume:api.volume(),objects:api.snapshot().nodes.length,canvas:document.querySelector('canvas').width,ready:window.__cadReady};
+      const api=window.__cadTest,check=(value,message)=>{if(!value)throw Error(message);};
+      document.querySelector('.shape-tile[data-type="box"]').click();
+      await api.settled();
+      check(api.getModel().nodes.length===1,'Palette creates one native box after blocked navigation');
+      const box=api.getModel().nodes[0];check(box.kind==='cad'&&box.brep.data,'Native source and BRep');
+      const before=api.serialize(),depth=api.undoDepth();
+      const proposal=await api.access.preview({revision:api.controller.revision(),commands:[{op:'create',type:'sphere',size:[10,10,10],as:'sphere'}]});
+      check(api.serialize()===before&&api.undoDepth()===depth,'Preview leaves project and Undo unchanged');
+      await api.access.apply({previewId:proposal.previewId,revision:api.controller.revision()});await api.settled();
+      check(api.getModel().nodes.length===2&&api.undoDepth()===depth+1,'Apply commits one Undo');
+      await api.actions.undo();check(api.serialize()===before,'Undo restores exact project');
+      await api.actions.redo();check(api.getModel().nodes.length===2,'Redo restores second body');
+      await api.loadDemo();await api.settled();
+      const demo=api.getModel(),group=demo.nodes[0],expected=60*40*6-4*Math.PI*2.5**2*6;
+      check(group.children.length===5&&Math.abs(group.stats.volume-expected)<1e-5,'Native bored plate volume and sources');
+      const encoded=api.serialize();await api.resetProject();await api.openFile(new File([encoded],'smoke.ocad'));await api.settled();
+      check(api.serialize()===encoded,'Active project loader roundtrip');
+      await api.exportModel('stl');await api.exportModel('3mf');await api.exportModel('obj');
+      check(document.querySelector('canvas').width>0,'Viewport exists');
+      return {nativeVolume:group.stats.volume,children:group.children.length,previewApplyUndoRedo:true,projectRoundtrip:true};
     })()`);
-    await new Promise(resolve=>setTimeout(resolve,1500));
-    const points=await win.webContents.executeJavaScript(`({start:window.__cadTest.projectPoint([12,-5,6]),end:window.__cadTest.projectPoint([22,-5,6])})`);
-    win.webContents.sendInputEvent({type:'mouseMove',...points.start});
-    win.webContents.sendInputEvent({type:'mouseDown',...points.start,button:'left',clickCount:1});
-    win.webContents.sendInputEvent({type:'mouseMove',...points.end});
-    win.webContents.sendInputEvent({type:'mouseUp',...points.end,button:'left',clickCount:1});
-    await new Promise(resolve=>setTimeout(resolve,200));
-    const moved=await win.webContents.executeJavaScript(`window.__cadTest.snapshot().nodes[0].pos`);
-    assert.ok(Math.abs(moved[0])>1,'Dragging the model must move it');
-    await win.webContents.executeJavaScript(`window.__cadTest.actions.undo()`);
-    const importChecks=await win.webContents.executeJavaScript(`(async()=>{
-      const input=document.getElementById('import-file'),api=window.__cadTest;
-      const svg='<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0H20V10H0Z" fill="red"/></svg>';
-      const dt=new DataTransfer();dt.items.add(new File([svg],'rectangle.svg',{type:'image/svg+xml'}));input.files=dt.files;const pending=input.onchange();while(!document.getElementById('import-apply'))await new Promise(r=>setTimeout(r,20));document.getElementById('import-apply').click();await pending;
-      let data=api.snapshot();if(data.nodes.length!==2)throw new Error('SVG import failed');
-      if(data.nodes[1].size.some((v,i)=>Math.abs(v-[20,10,3][i])>.001))throw new Error('SVG dimensions');
-      const imported=data.nodes[1];api.restore({nodes:[imported],bed:[200,200],planeZ:0,name:'Import test'});if(Math.abs(api.volume()-600)>.01)throw new Error('SVG outward winding / volume');api.restore(data);
-      api.actions.undo();
-      return {svg:true};
-    })()`);
-    const formats={};
-    for(const extension of ['3mf','stl','obj']){const file=path.join(testOutput,'Montageplatte.'+extension);assert.ok(fs.statSync(file).size>100);formats[extension]=fs.statSync(file).size;}
-    await win.webContents.executeJavaScript(`window.__cadTest.select([window.__cadTest.snapshot().nodes[0].id]);window.__cadTest.actions.fit()`);
-    await new Promise(resolve=>setTimeout(resolve,300));
-    const screenshot=await win.webContents.capturePage();fs.writeFileSync(path.join(testOutput,'offlinecad-desktop.png'),screenshot.toPNG());
-    assert.equal(requests.length,0,'Unexpected online dependency');
-    assert.equal(errors.length,0,errors.join('\n'));
-    console.log(JSON.stringify({ok:true,result,mouseDrag:moved,importChecks,exportBytes:formats,networkRequests:requests.length,rendererErrors:errors},null,2));app.exit(0);
-  }catch(e){console.error(e.stack);console.error('Renderer:',errors);app.exit(1);}
+    const deadline=Date.now()+10000;while((downloads.length<3||downloads.some(item=>!item.state))&&Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,25));
+    assert.equal(downloads.length,3);for(const item of downloads)assert.equal(item.state,'completed');const files=downloads.map(item=>item.file);
+    for(const file of files)assert.ok(fs.statSync(file).size>100,file);
+    assert.deepEqual(requests,[]);assert.deepEqual(errors,[]);
+    fs.writeFileSync(path.join(output,'desktop.png'),(await win.webContents.capturePage()).toPNG());
+    fs.writeFileSync(path.join(output,'result.json'),JSON.stringify({ok:true,result,exports:files.map(file=>path.basename(file)),rendererErrors:errors,networkRequests:requests.length},null,2));
+    console.log(JSON.stringify({ok:true,result,exportCount:files.length,rendererErrors:errors,networkRequests:requests.length}));
+    clearTimeout(watchdog);win.close();
+  }catch(error){console.error(error.stack);console.error('Renderer:',errors);clearTimeout(watchdog);app.exit(1);}
 });

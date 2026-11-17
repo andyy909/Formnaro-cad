@@ -1,0 +1,758 @@
+{
+  "baseline": "2bcb131b262ac438b3f387852a00015a395f4393",
+  "candidateCount": 141,
+  "kept": [
+    {
+      "file": "scripts/package-freecad-python.mjs",
+      "reason": "Current release pipeline: imported packager or conditional source-copy/test dependency."
+    },
+    {
+      "file": "scripts/package-advanced-modeling.mjs",
+      "reason": "Current release pipeline: imported packager or conditional source-copy/test dependency."
+    },
+    {
+      "file": "scripts/package-ai-tasks.mjs",
+      "reason": "Current release pipeline: imported packager or conditional source-copy/test dependency."
+    },
+    {
+      "file": "scripts/package-freecad-document.mjs",
+      "reason": "Current release pipeline: imported packager or conditional source-copy/test dependency."
+    },
+    {
+      "file": "scripts/package-surfaces.mjs",
+      "reason": "Current release pipeline: imported packager or conditional source-copy/test dependency."
+    },
+    {
+      "file": "scripts/package-cad-release.mjs",
+      "reason": "Maintained compatibility entry; release-entrypoints tests and protected license references."
+    }
+  ],
+  "moved": [
+    {
+      "from": "scripts/archive-ai-checks.py",
+      "to": "scripts/legacy/archive-ai-checks.py",
+      "sha256": "02b9ff968394d8538793cb325212a9b7bc6580a2d4c2652188821815a8c8447d"
+    },
+    {
+      "from": "scripts/archive-ai-contract-release.py",
+      "to": "scripts/legacy/archive-ai-contract-release.py",
+      "sha256": "55cc0bcc9053c49bf4986fecc417ad2cd8643942c759533733d15ad6305a1099"
+    },
+    {
+      "from": "scripts/archive-all-functions.py",
+      "to": "scripts/legacy/archive-all-functions.py",
+      "sha256": "b326a3920f6f54d5927361773f1812f288f0166fa16aa66b93f5af9bb67de3ca"
+    },
+    {
+      "from": "scripts/archive-cad-mesh-copy.py",
+      "to": "scripts/legacy/archive-cad-mesh-copy.py",
+      "sha256": "1fef03baf283cd80f7cfbe790a5c7f93a51dfbcb277201ec98852a884f81dcad"
+    },
+    {
+      "from": "scripts/archive-cad-paket.py",
+      "to": "scripts/legacy/archive-cad-paket.py",
+      "sha256": "03b02fef7ed832ce1492d9792352a0736200d21df59df542e1bbec1795caf81d"
+    },
+    {
+      "from": "scripts/archive-converter-workspace.py",
+      "to": "scripts/legacy/archive-converter-workspace.py",
+      "sha256": "5b6a25b560244156c3b2c1f8097714bdf0cbf4a5d0a39de28e4c608f239bbf59"
+    },
+    {
+      "from": "scripts/archive-deepseek-release.py",
+      "to": "scripts/legacy/archive-deepseek-release.py",
+      "sha256": "7064c9a55058a3d589ba33b217c8b49d06fbf6fb3b833adeb59fd5fcfb4646d1"
+    },
+    {
+      "from": "scripts/archive-easy-auto-repair.py",
+      "to": "scripts/legacy/archive-easy-auto-repair.py",
+      "sha256": "477342a379e8951538fc67ae6f3f6dced5ff84fd584cae5df6d7ca5767d887d4"
+    },
+    {
+      "from": "scripts/archive-easy-domains.py",
+      "to": "scripts/legacy/archive-easy-domains.py",
+      "sha256": "a61ef38541310834f529a9c8a632702f81196e48bc26980748cabf02780f0220"
+    },
+    {
+      "from": "scripts/archive-easy-tinker.py",
+      "to": "scripts/legacy/archive-easy-tinker.py",
+      "sha256": "7015c49c4f42a3b3a930b32008a6af0644e0e17414a99022da1111206ce771b8"
+    },
+    {
+      "from": "scripts/archive-easy-verified.py",
+      "to": "scripts/legacy/archive-easy-verified.py",
+      "sha256": "8ae8741b46b36d2e591e99dac4623a0f5deeae818231709b0c1bf24642e54dcc"
+    },
+    {
+      "from": "scripts/archive-exchange-release.py",
+      "to": "scripts/legacy/archive-exchange-release.py",
+      "sha256": "3bcb893d739fe381a051c9e5693fca70884737ec9385037afee39b5e8a3594af"
+    },
+    {
+      "from": "scripts/archive-mesh-connectors.py",
+      "to": "scripts/legacy/archive-mesh-connectors.py",
+      "sha256": "ca2c8636a239790c76a3473d34ac91a3b6bd8086f6376d6da995b34f06749150"
+    },
+    {
+      "from": "scripts/archive-mesh-erase-fill.py",
+      "to": "scripts/legacy/archive-mesh-erase-fill.py",
+      "sha256": "ce022fa76069e474133ff71781d67093f8194ed9b6b83d8c2854f02d97a29465"
+    },
+    {
+      "from": "scripts/archive-mesh-hole-fill.py",
+      "to": "scripts/legacy/archive-mesh-hole-fill.py",
+      "sha256": "17d6a264a8399452f7a092717e571012931bfa92ea3686b569ca450c140cf2ed"
+    },
+    {
+      "from": "scripts/archive-mesh-hollow.py",
+      "to": "scripts/legacy/archive-mesh-hollow.py",
+      "sha256": "5feca9442bd15d9663853bab1c0b6363b7cc1703320c76d79becbf9ee8df54ab"
+    },
+    {
+      "from": "scripts/archive-mesh-inspector.py",
+      "to": "scripts/legacy/archive-mesh-inspector.py",
+      "sha256": "6faf4365f4e055e910a29641638441b207f634d155e7f5e85b22190e049bdf78"
+    },
+    {
+      "from": "scripts/archive-mesh-integration.py",
+      "to": "scripts/legacy/archive-mesh-integration.py",
+      "sha256": "afe8315dd88bba7de09d60a9065bc8e66f6376fe6f16ee6e79897a7f0d37f578"
+    },
+    {
+      "from": "scripts/archive-mesh-make-solid.py",
+      "to": "scripts/legacy/archive-mesh-make-solid.py",
+      "sha256": "cd2fe92b9cb4dd3a76cf6e7efe0fdb861b7cbf0f1620ff0d4a1cf67ee54f1dc8"
+    },
+    {
+      "from": "scripts/archive-mesh-partition.py",
+      "to": "scripts/legacy/archive-mesh-partition.py",
+      "sha256": "edf417acd68a13eec7c0365032491c1e5f1a6930d1756ce513168170d7097f8b"
+    },
+    {
+      "from": "scripts/archive-mesh-reduce.py",
+      "to": "scripts/legacy/archive-mesh-reduce.py",
+      "sha256": "2fcf5b9a9398b4f1d24507ee6e2bcd09c34f6424398362c2c268080f955b5a5f"
+    },
+    {
+      "from": "scripts/archive-mesh-remesh.py",
+      "to": "scripts/legacy/archive-mesh-remesh.py",
+      "sha256": "2795012c82805dc8072c8b254d8099ebad51bb79affb31e45c5d54f2c6ca3da3"
+    },
+    {
+      "from": "scripts/archive-mesh-selection-advanced.py",
+      "to": "scripts/legacy/archive-mesh-selection-advanced.py",
+      "sha256": "685d957b7396cd17aec69457b70f7e321b59a8b9048feae3c649a0684c2ed6f9"
+    },
+    {
+      "from": "scripts/archive-mesh-selection.py",
+      "to": "scripts/legacy/archive-mesh-selection.py",
+      "sha256": "28096dca9771ed94d8786d73d5b8c4e83b8bc6bdfa6c585504716df0d06b9df0"
+    },
+    {
+      "from": "scripts/archive-mesh-simple-repair.py",
+      "to": "scripts/legacy/archive-mesh-simple-repair.py",
+      "sha256": "447aab0263c75787a2cd810c88baa1af33634cc3bb372e8771d3e4ad4334f791"
+    },
+    {
+      "from": "scripts/archive-mesh-smooth.py",
+      "to": "scripts/legacy/archive-mesh-smooth.py",
+      "sha256": "39f7c282375482568e7b57d53ba846acc673cd42e5b7d92f2447736848425742"
+    },
+    {
+      "from": "scripts/archive-mesh-to-cad.py",
+      "to": "scripts/legacy/archive-mesh-to-cad.py",
+      "sha256": "0dc8b5b2c84fd18a272b453c479e850a6911fb4a11b872d1456b5a3ed6413567"
+    },
+    {
+      "from": "scripts/archive-release-acceptance.py",
+      "to": "scripts/legacy/archive-release-acceptance.py",
+      "sha256": "05b6f326897c2da856f4a5e0996d2e1941c628045e40e20a9890cb0021a0a37a"
+    },
+    {
+      "from": "scripts/archive-shared-ai.py",
+      "to": "scripts/legacy/archive-shared-ai.py",
+      "sha256": "8dba636cb42bfb0b0ee368a9a56cd594e19bb333a1028336653c10c6fefb4009"
+    },
+    {
+      "from": "scripts/archive-shared-workspace.py",
+      "to": "scripts/legacy/archive-shared-workspace.py",
+      "sha256": "59af66feada1e45c3e105aaa1907bc23c6fd58cb47d433502d742ae9a9b2d1b4"
+    },
+    {
+      "from": "scripts/archive-step-thickness.mjs",
+      "to": "scripts/legacy/archive-step-thickness.mjs",
+      "sha256": "d8b4548dad5f62c0657916f98d4e0d687b805259516f56a1f05a3973105de63e"
+    },
+    {
+      "from": "scripts/archive-tool-parity.py",
+      "to": "scripts/legacy/archive-tool-parity.py",
+      "sha256": "7b3b6c2a639b4b021b9d79d46e10f7c2a3dd0b8625c68b2319de8731ccd17478"
+    },
+    {
+      "from": "scripts/archive-unification-foundation.py",
+      "to": "scripts/legacy/archive-unification-foundation.py",
+      "sha256": "03286a270a29b0b414b91047b56d6dc5aad5e3520e77fa249f6657e998382c9a"
+    },
+    {
+      "from": "scripts/archive-unified-workflows.py",
+      "to": "scripts/legacy/archive-unified-workflows.py",
+      "sha256": "0d022952023b3acf72eb7a37349119f246398aaeec60292e8cd7690f2ddffa03"
+    },
+    {
+      "from": "scripts/package-ai-checks.mjs",
+      "to": "scripts/legacy/package-ai-checks.mjs",
+      "sha256": "f6ddb5c144b274eee07bbf1e47d63ff107a9a2d9eed142f527e9d0ae054f8420"
+    },
+    {
+      "from": "scripts/package-ai-contract-release.mjs",
+      "to": "scripts/legacy/package-ai-contract-release.mjs",
+      "sha256": "8f8ac970dfa9c3c1020952f10dde23b2efece20753bc84e02d5a0f1859abdb17"
+    },
+    {
+      "from": "scripts/package-ai-diagnostics.mjs",
+      "to": "scripts/legacy/package-ai-diagnostics.mjs",
+      "sha256": "206538b65f70cbd59a6b09d8166d8b4eb5e7898c7f7ce5330c633f3deb00a9d0"
+    },
+    {
+      "from": "scripts/package-ai-error-preview.mjs",
+      "to": "scripts/legacy/package-ai-error-preview.mjs",
+      "sha256": "55a3026d3d9f6fb222ef882ad3930a1a13f4e13966ecdf7be00b8bc1dc7256e7"
+    },
+    {
+      "from": "scripts/package-ai-inspection.mjs",
+      "to": "scripts/legacy/package-ai-inspection.mjs",
+      "sha256": "84ea0c4c5df2d8e59c2055006fd047bd2a82e56329b6032ded8fdc94cc111478"
+    },
+    {
+      "from": "scripts/package-ai-lid.mjs",
+      "to": "scripts/legacy/package-ai-lid.mjs",
+      "sha256": "038ce2e2bc1559649980923ade38e28a281bec2c690c3cf193ce253ea27cc6e8"
+    },
+    {
+      "from": "scripts/package-ai-measurement-fix.mjs",
+      "to": "scripts/legacy/package-ai-measurement-fix.mjs",
+      "sha256": "16aa471de30f68b4a8abd67143bff52c9abef5d54132db0d87d65e9b073e4ee5"
+    },
+    {
+      "from": "scripts/package-ai-measurements.mjs",
+      "to": "scripts/legacy/package-ai-measurements.mjs",
+      "sha256": "960bd6ad0750c822364a6e2bcfd8aaa8da03223569c3135bb83cf0160a7fc5c8"
+    },
+    {
+      "from": "scripts/package-ai-precision.mjs",
+      "to": "scripts/legacy/package-ai-precision.mjs",
+      "sha256": "a927a1c4995a1e422234f032c1be9068c3f6562c7e3c5d0bc5e9067373a2e7e8"
+    },
+    {
+      "from": "scripts/package-ai-program.mjs",
+      "to": "scripts/legacy/package-ai-program.mjs",
+      "sha256": "0ca57ddaefe0104ed3be8cf04101ad2ab305a814676a2169d553a2608e9790d9"
+    },
+    {
+      "from": "scripts/package-ai-task-evidence.mjs",
+      "to": "scripts/legacy/package-ai-task-evidence.mjs",
+      "sha256": "ee0b70252fbb049938b4120bc2539e8840e007f3088ef2035c3ddfc4d48091c7"
+    },
+    {
+      "from": "scripts/package-ai-usage.mjs",
+      "to": "scripts/legacy/package-ai-usage.mjs",
+      "sha256": "80cde7547cbb775b31c688c51b1fa3f830eb68f9995931b1f2179f59f4f74da7"
+    },
+    {
+      "from": "scripts/package-ai-workspace.mjs",
+      "to": "scripts/legacy/package-ai-workspace.mjs",
+      "sha256": "f7d7385fb479211ff7dafe8dba5aa3d30b3ff8a915a82ad4e0e976bb3b38f0d7"
+    },
+    {
+      "from": "scripts/package-all-functions.mjs",
+      "to": "scripts/legacy/package-all-functions.mjs",
+      "sha256": "294090d08d243bc053b8768b4218e0d0ef5ab618ad544548132bd1fc6e55a75b"
+    },
+    {
+      "from": "scripts/package-assembly-display.mjs",
+      "to": "scripts/legacy/package-assembly-display.mjs",
+      "sha256": "1d0ab72a14768163045ac83fc4ac31ce46efc02668924f205b41e091b24619e2"
+    },
+    {
+      "from": "scripts/package-auto-dimensions.mjs",
+      "to": "scripts/legacy/package-auto-dimensions.mjs",
+      "sha256": "a1c8825276afe57135d5b7a98b8bd0d49e836f3c5ab95c699ac60b39676ccac1"
+    },
+    {
+      "from": "scripts/package-cad-mesh-copy.mjs",
+      "to": "scripts/legacy/package-cad-mesh-copy.mjs",
+      "sha256": "729ed5cd74ff50acc43dceb32fdda90da5296d4a3aeafa1fcf4c6d81f45ec50f"
+    },
+    {
+      "from": "scripts/package-cad-mini-speed.mjs",
+      "to": "scripts/legacy/package-cad-mini-speed.mjs",
+      "sha256": "b5661dd657fbf2ddf799f6b0c53f79c01047246f32e0e2bc33fa9593156b4dc5"
+    },
+    {
+      "from": "scripts/package-cad-paket.mjs",
+      "to": "scripts/legacy/package-cad-paket.mjs",
+      "sha256": "1dbe50216fe6a6500a59ca6ad6396775e9642967b3ed84192b439cb7eb3bd2de"
+    },
+    {
+      "from": "scripts/package-chatgpt.mjs",
+      "to": "scripts/legacy/package-chatgpt.mjs",
+      "sha256": "572b480ae95844dcefc76c15bbbc18ae233aba2ccc2ccb6b9abedcf3f7d54390"
+    },
+    {
+      "from": "scripts/package-compact-ui.mjs",
+      "to": "scripts/legacy/package-compact-ui.mjs",
+      "sha256": "cd03d9b092b02a17b891a42dd71475f945d0bbe2b21a2c01540f3b0c503750a3"
+    },
+    {
+      "from": "scripts/package-converter-autopilot.mjs",
+      "to": "scripts/legacy/package-converter-autopilot.mjs",
+      "sha256": "106f151845e0f22594726c6f8792fd6d3c336fd8110b882fb1c28b2f635b232c"
+    },
+    {
+      "from": "scripts/package-converter-workspace.mjs",
+      "to": "scripts/legacy/package-converter-workspace.mjs",
+      "sha256": "1d8c6f1887b134f6291028fc872bdd2ed7b50b1adda0ad0bd2ab2f8e9133666b"
+    },
+    {
+      "from": "scripts/package-creation-domain.mjs",
+      "to": "scripts/legacy/package-creation-domain.mjs",
+      "sha256": "fdbb02d03f031b0d5227a4ac539f4175723c8ecb76c4433bed876f58cd3b7a8e"
+    },
+    {
+      "from": "scripts/package-curved-remesh.mjs",
+      "to": "scripts/legacy/package-curved-remesh.mjs",
+      "sha256": "29495848370b638eb6a01b0448385495247a6f9edf3e7bc0856b1a107b4432e3"
+    },
+    {
+      "from": "scripts/package-deepseek-release.mjs",
+      "to": "scripts/legacy/package-deepseek-release.mjs",
+      "sha256": "c9e2d1e942582873809baebbf06100c25f44a0045ffe42cb21270dc5fd645b62"
+    },
+    {
+      "from": "scripts/package-drawings.mjs",
+      "to": "scripts/legacy/package-drawings.mjs",
+      "sha256": "1d057664ab1f03a0ef5fcba8ab70eb6f212ff20bcb59ed07ba326d4c51493d91"
+    },
+    {
+      "from": "scripts/package-easy-auto-repair.mjs",
+      "to": "scripts/legacy/package-easy-auto-repair.mjs",
+      "sha256": "b0ea21321141b774c87d0b35aba36061b38659af69f6190a738b6bf51cb3a57d"
+    },
+    {
+      "from": "scripts/package-easy-domains.mjs",
+      "to": "scripts/legacy/package-easy-domains.mjs",
+      "sha256": "08418ae4983fbb0a0de8045ed08ea9a4453917e4c99618e6aa30a2e28abb24aa"
+    },
+    {
+      "from": "scripts/package-easy-performance.mjs",
+      "to": "scripts/legacy/package-easy-performance.mjs",
+      "sha256": "26abef8c12e148f9448efbdb344d0822e58a5d39613f835d44d5dba8b4557f57"
+    },
+    {
+      "from": "scripts/package-easy-tinker.mjs",
+      "to": "scripts/legacy/package-easy-tinker.mjs",
+      "sha256": "6da470b8c7cb41ab8e04a2068466182384cf361e0f3a27e5da952493c6f5e579"
+    },
+    {
+      "from": "scripts/package-easy-verified.mjs",
+      "to": "scripts/legacy/package-easy-verified.mjs",
+      "sha256": "5b6a7f165f28f2302b2de0f4bb4d0f0df95f9bdc5ba3f24c0574fd5ab75ce2ff"
+    },
+    {
+      "from": "scripts/package-exchange-release.mjs",
+      "to": "scripts/legacy/package-exchange-release.mjs",
+      "sha256": "5bacbd26fb2e6e3bb4f81402f483673983bdaed8e32180b2779b0c4a63dcff62"
+    },
+    {
+      "from": "scripts/package-feature-references.mjs",
+      "to": "scripts/legacy/package-feature-references.mjs",
+      "sha256": "1f0155cec32e084eb0fc285e81c66ca6c4388d7d8261470b1250b68895cbd530"
+    },
+    {
+      "from": "scripts/package-final-expansion.mjs",
+      "to": "scripts/legacy/package-final-expansion.mjs",
+      "sha256": "8fd7e7d8f0e82dd31e562cf872089390237bac2e79e03caef7bd13ed4291e738"
+    },
+    {
+      "from": "scripts/package-fnpack.mjs",
+      "to": "scripts/legacy/package-fnpack.mjs",
+      "sha256": "1a2039d570fe4090aa2277a1872f1bd3d111a9af45ddcb3c71fcf2820f166505"
+    },
+    {
+      "from": "scripts/package-freecad.mjs",
+      "to": "scripts/legacy/package-freecad.mjs",
+      "sha256": "1ef9293bee7b267e0fa5a27c478fdb5cd44c1ca01376fb10a936a697422cafe8"
+    },
+    {
+      "from": "scripts/package-fusion.mjs",
+      "to": "scripts/legacy/package-fusion.mjs",
+      "sha256": "228c8d55ea7cb1f2dc1e1ce0bfe246c5de50b861135618f09a4884d5852af346"
+    },
+    {
+      "from": "scripts/package-group-performance.mjs",
+      "to": "scripts/legacy/package-group-performance.mjs",
+      "sha256": "1f00efadb2b631f325635c1af680bb9954cf77006417eb8a341b56953dc08787"
+    },
+    {
+      "from": "scripts/package-hole-groups.mjs",
+      "to": "scripts/legacy/package-hole-groups.mjs",
+      "sha256": "cbf433fef4330242921b9392e5bebac846ff1ce3b169cf59dc9d3e0be1273823"
+    },
+    {
+      "from": "scripts/package-inspection.mjs",
+      "to": "scripts/legacy/package-inspection.mjs",
+      "sha256": "ba560cafaf8f0cb0318d127772884b3da697e620b08c8e9c6d2de975a0de0db6"
+    },
+    {
+      "from": "scripts/package-integrated-cad.mjs",
+      "to": "scripts/legacy/package-integrated-cad.mjs",
+      "sha256": "0cd6625d041ad707e885d0fd0f3ba8f183744c18e45af0e9c61d835a2636914e"
+    },
+    {
+      "from": "scripts/package-joints.mjs",
+      "to": "scripts/legacy/package-joints.mjs",
+      "sha256": "5424b1636fc2bb95dbc136e8d7e7d9e051449815f8901f3184fb19eff4489498"
+    },
+    {
+      "from": "scripts/package-linked-contours.mjs",
+      "to": "scripts/legacy/package-linked-contours.mjs",
+      "sha256": "2713efcd9002315bf9d2445d77bc9b22f17565399c0ced86db2726848ff86a63"
+    },
+    {
+      "from": "scripts/package-mechanism-tools.mjs",
+      "to": "scripts/legacy/package-mechanism-tools.mjs",
+      "sha256": "c6e51849ac375ff2120e2935cc4c59d50e4fab9658d2aa959942e51c01ad7409"
+    },
+    {
+      "from": "scripts/package-mesh-connectors.mjs",
+      "to": "scripts/legacy/package-mesh-connectors.mjs",
+      "sha256": "a8ae52b7fe6956d0923d94f3bffa408c9731a0c3ba4bc86969f9361fe49812a8"
+    },
+    {
+      "from": "scripts/package-mesh-contours.mjs",
+      "to": "scripts/legacy/package-mesh-contours.mjs",
+      "sha256": "aadfb24174c0a27d6299575f2289f06a41c62b6b163f7afb2c5b2e164c798890"
+    },
+    {
+      "from": "scripts/package-mesh-display.mjs",
+      "to": "scripts/legacy/package-mesh-display.mjs",
+      "sha256": "c14030e2b86f6ecad711b51a3911cb717069f1c2a73deaa2851872f6c7a6e644"
+    },
+    {
+      "from": "scripts/package-mesh-erase-fill.mjs",
+      "to": "scripts/legacy/package-mesh-erase-fill.mjs",
+      "sha256": "4752472dca5d49e8d85c12355e9e55cb0c622264fb215f8651c7e15019d87173"
+    },
+    {
+      "from": "scripts/package-mesh-features.mjs",
+      "to": "scripts/legacy/package-mesh-features.mjs",
+      "sha256": "6b744a7cf6ad255b3b31f7e994962d1dfc8cfc22e925df4e5709daa5fe2df727"
+    },
+    {
+      "from": "scripts/package-mesh-hole-fill.mjs",
+      "to": "scripts/legacy/package-mesh-hole-fill.mjs",
+      "sha256": "491bda599fd5f3541051e77be1e497fd03ac717b7bdd87f58f7bb8e10282681b"
+    },
+    {
+      "from": "scripts/package-mesh-hollow.mjs",
+      "to": "scripts/legacy/package-mesh-hollow.mjs",
+      "sha256": "ce3354466d546193a18ed2ad4c029eab8ea523e785cf0c8a20e4a98bb446c48a"
+    },
+    {
+      "from": "scripts/package-mesh-import.mjs",
+      "to": "scripts/legacy/package-mesh-import.mjs",
+      "sha256": "f08830bf3316473d2d3b44aaec27c276c3d570008267c8024e97ee740f29d967"
+    },
+    {
+      "from": "scripts/package-mesh-inspector.mjs",
+      "to": "scripts/legacy/package-mesh-inspector.mjs",
+      "sha256": "82db9a03cec8cd1b2aefeaca5a58645d67feac688aafe82999aaa5463bc97ce1"
+    },
+    {
+      "from": "scripts/package-mesh-integration.mjs",
+      "to": "scripts/legacy/package-mesh-integration.mjs",
+      "sha256": "3c847e849b594859f37cb06cbb76c824fd66182e4210453d235a9baea6285f2f"
+    },
+    {
+      "from": "scripts/package-mesh-make-solid.mjs",
+      "to": "scripts/legacy/package-mesh-make-solid.mjs",
+      "sha256": "5b199bea847a66bf2be150a0bd931c91d1e57470ad8dbfcf0bc89dc35676609b"
+    },
+    {
+      "from": "scripts/package-mesh-partition.mjs",
+      "to": "scripts/legacy/package-mesh-partition.mjs",
+      "sha256": "123b8860aacfccc998f52a79943894d551446eaae67d02c9309c37c73fc40371"
+    },
+    {
+      "from": "scripts/package-mesh-reduce.mjs",
+      "to": "scripts/legacy/package-mesh-reduce.mjs",
+      "sha256": "be0f53566478ed5c511886e400a9eb69378ce9755235d7db376f7b883ff8592e"
+    },
+    {
+      "from": "scripts/package-mesh-remesh.mjs",
+      "to": "scripts/legacy/package-mesh-remesh.mjs",
+      "sha256": "4d4052781cb8368b30760a31353c71e969460a025ab2e74588bea0c9082b0bbd"
+    },
+    {
+      "from": "scripts/package-mesh-sculpt.mjs",
+      "to": "scripts/legacy/package-mesh-sculpt.mjs",
+      "sha256": "18711e2149320381794f520e3119888ced90ff0861c378b3ad8f3483d46cf4b6"
+    },
+    {
+      "from": "scripts/package-mesh-selection-advanced.mjs",
+      "to": "scripts/legacy/package-mesh-selection-advanced.mjs",
+      "sha256": "b3f50bd237cd76de667a15b52ea258b91936f26bf73127191f01f8a9abeb0950"
+    },
+    {
+      "from": "scripts/package-mesh-selection.mjs",
+      "to": "scripts/legacy/package-mesh-selection.mjs",
+      "sha256": "8f8b96196b34e6f6204f0cc45ac8ce06f44beaebae01bd0b37895478f8013512"
+    },
+    {
+      "from": "scripts/package-mesh-simple-repair.mjs",
+      "to": "scripts/legacy/package-mesh-simple-repair.mjs",
+      "sha256": "90106c12c36cd667c686ae8a839c05f82c0e7b06723175502b11a8c4fd86a9ea"
+    },
+    {
+      "from": "scripts/package-mesh-smooth.mjs",
+      "to": "scripts/legacy/package-mesh-smooth.mjs",
+      "sha256": "eeb13ebc03bf14b3bcd1e5ab9498cf28f5b11bf56ecb880f854616a2b5fb252c"
+    },
+    {
+      "from": "scripts/package-mesh-surgery.mjs",
+      "to": "scripts/legacy/package-mesh-surgery.mjs",
+      "sha256": "7c5c70f0dbe4b2a37601ac56870ac94d588f46063b6110953bdf38ff8ca97001"
+    },
+    {
+      "from": "scripts/package-mesh-to-cad.mjs",
+      "to": "scripts/legacy/package-mesh-to-cad.mjs",
+      "sha256": "a735c0f91a0b3bc224330cda6907a4b72a5d437fba9d9139f173caf68e528d55"
+    },
+    {
+      "from": "scripts/package-model-placement.mjs",
+      "to": "scripts/legacy/package-model-placement.mjs",
+      "sha256": "ee3ea581fd11b250823bccfc7a9efc69a8f6f34da73f27e33c9f7d23143da7ad"
+    },
+    {
+      "from": "scripts/package-modeling-assistance-patch.mjs",
+      "to": "scripts/legacy/package-modeling-assistance-patch.mjs",
+      "sha256": "842559620ea21ad68a8d1fdb59f1a7d736a5e6d67dad41226d384121d4f93f0f"
+    },
+    {
+      "from": "scripts/package-modeling-assistance.mjs",
+      "to": "scripts/legacy/package-modeling-assistance.mjs",
+      "sha256": "2971de27985dbf8f0b1c8b161f4a8f3089f4728390dd5d16814be52db6c6eda5"
+    },
+    {
+      "from": "scripts/package-modeling-context.mjs",
+      "to": "scripts/legacy/package-modeling-context.mjs",
+      "sha256": "0cc55d7e617591f1dd09b77fbeb1cb061cf8e2ca2ee52530c25f04118aacf487"
+    },
+    {
+      "from": "scripts/package-modeling.mjs",
+      "to": "scripts/legacy/package-modeling.mjs",
+      "sha256": "e6ae8d7806938516054c3ce05f09f0839fb902b485700e498fd17520623cd3bf"
+    },
+    {
+      "from": "scripts/package-move-dimensions.mjs",
+      "to": "scripts/legacy/package-move-dimensions.mjs",
+      "sha256": "48b391f857301a3326ec6cd9a1ddc4d16c5e013a14356a467d1dac5c3d7c0144"
+    },
+    {
+      "from": "scripts/package-native-core.mjs",
+      "to": "scripts/legacy/package-native-core.mjs",
+      "sha256": "4f5dc1c54766d8d2d723f2b4d19db9f711c4953618c23906f4feb57cd5695702"
+    },
+    {
+      "from": "scripts/package-number-display.mjs",
+      "to": "scripts/legacy/package-number-display.mjs",
+      "sha256": "2a51be839b5265cc1681d7c5a77fef24cc101c723366741fdc3fe551658f0a83"
+    },
+    {
+      "from": "scripts/package-photo-assistant.mjs",
+      "to": "scripts/legacy/package-photo-assistant.mjs",
+      "sha256": "195cc4070bb8683dce8c96313d150b1c325d267076e52a3344b7f16aa56e6eac"
+    },
+    {
+      "from": "scripts/package-photo-multiview.mjs",
+      "to": "scripts/legacy/package-photo-multiview.mjs",
+      "sha256": "d7aac94d619a6738572f4e5a14f2e4f35b19c8e0a25d7ba6fd883f02808d1664"
+    },
+    {
+      "from": "scripts/package-photo-perspective.mjs",
+      "to": "scripts/legacy/package-photo-perspective.mjs",
+      "sha256": "3d376a8c0e79898e5f48cfe6a3336c354027051bb3256b14f4b0dc1408a848a5"
+    },
+    {
+      "from": "scripts/package-program-assistant.mjs",
+      "to": "scripts/legacy/package-program-assistant.mjs",
+      "sha256": "0dcb10790bfe0a690411ffe2255c429e3ac35f30dc4cf1dcf432fa6d3a307676"
+    },
+    {
+      "from": "scripts/package-project-parameters.mjs",
+      "to": "scripts/legacy/package-project-parameters.mjs",
+      "sha256": "8c5cbbf7b6b68f9ca8c39b4fd31e2b731b94ecf526fb29e2602a609bb1985ecb"
+    },
+    {
+      "from": "scripts/package-provider-context.mjs",
+      "to": "scripts/legacy/package-provider-context.mjs",
+      "sha256": "da8b3007b4d06cad2ae9bc3d5fd2a477bdf9da86e22929ce13af8612fc3cd17f"
+    },
+    {
+      "from": "scripts/package-python-api.mjs",
+      "to": "scripts/legacy/package-python-api.mjs",
+      "sha256": "e85fa143bfa12fc926f3ec34ff66436b49861c711c328e9adcaa4c0bcb747670"
+    },
+    {
+      "from": "scripts/package-reconstruction-repair.mjs",
+      "to": "scripts/legacy/package-reconstruction-repair.mjs",
+      "sha256": "e1e2c6d02455b1b528f4eb871cc8afb2d0fdc08a1f1969dc96855489be44fd5b"
+    },
+    {
+      "from": "scripts/package-reconstruction-tools.mjs",
+      "to": "scripts/legacy/package-reconstruction-tools.mjs",
+      "sha256": "6bacbf25d73b6404bfa47ae6078fbd5d181bde8ac7227b6a7e5af17249575b61"
+    },
+    {
+      "from": "scripts/package-release-acceptance.mjs",
+      "to": "scripts/legacy/package-release-acceptance.mjs",
+      "sha256": "c0fbd8da4e6a31ff5af55b1c14a4146bf8a571e781b2119741c125f5451cf5d4"
+    },
+    {
+      "from": "scripts/package-rotation-ring.mjs",
+      "to": "scripts/legacy/package-rotation-ring.mjs",
+      "sha256": "47a586ee66c7b6522fe346c1f2a86849a2530ee827593b557e86b2cc18dab470"
+    },
+    {
+      "from": "scripts/package-security.mjs",
+      "to": "scripts/legacy/package-security.mjs",
+      "sha256": "6766de1edf0db21b9881814cf25687dfa1943027b8a10807fc54d81c0f8d25c6"
+    },
+    {
+      "from": "scripts/package-servo-performance.mjs",
+      "to": "scripts/legacy/package-servo-performance.mjs",
+      "sha256": "1ad50a9f8ba0604831b95827a5779e78d5c7515769d0bd0f0d0de42be04b3f7f"
+    },
+    {
+      "from": "scripts/package-shared-ai.mjs",
+      "to": "scripts/legacy/package-shared-ai.mjs",
+      "sha256": "d95f77156eb2b6ceafe75e130acf837033ce127cdc19043e1dcb5d6b66488cda"
+    },
+    {
+      "from": "scripts/package-shared-workspace.mjs",
+      "to": "scripts/legacy/package-shared-workspace.mjs",
+      "sha256": "032c9ae7d6319d2f4a0880b5aff6081f42f5d7976467a0d193547ec9f9063778"
+    },
+    {
+      "from": "scripts/package-sketch-constraints.mjs",
+      "to": "scripts/legacy/package-sketch-constraints.mjs",
+      "sha256": "fd17d927d7aa66ff7de8874663655f41b414391c134c1341056f7ee4837bfed0"
+    },
+    {
+      "from": "scripts/package-sketch-mesh.mjs",
+      "to": "scripts/legacy/package-sketch-mesh.mjs",
+      "sha256": "58524ef17ef2e14e8a0825e1512077c421b6bf8c2c76679a661a7648b34543fd"
+    },
+    {
+      "from": "scripts/package-solid.mjs",
+      "to": "scripts/legacy/package-solid.mjs",
+      "sha256": "778a4ee9a3a6a5eb56e592259bebf56e192d76287140700d2ac6d40068e03060"
+    },
+    {
+      "from": "scripts/package-speech.mjs",
+      "to": "scripts/legacy/package-speech.mjs",
+      "sha256": "7e9b1b568d9de2a113b68910a3f02596b2eb6924e87d8fa670ccfe9cd1e9da82"
+    },
+    {
+      "from": "scripts/package-step-thickness.mjs",
+      "to": "scripts/legacy/package-step-thickness.mjs",
+      "sha256": "12ce077ff7e37b45ff3838de0a748f9a23cb8edc29f0bf8559240243b72d90c9"
+    },
+    {
+      "from": "scripts/package-stl-integration.mjs",
+      "to": "scripts/legacy/package-stl-integration.mjs",
+      "sha256": "899564ef209778aec33423adf9cef4f5f4db7aaedb8d4120d58df5d6e98a662c"
+    },
+    {
+      "from": "scripts/package-stl-preview.mjs",
+      "to": "scripts/legacy/package-stl-preview.mjs",
+      "sha256": "31cc451639e9ebb0e1bba357ff8e87ceb7761080212aec8cbfae2ecce003dad7"
+    },
+    {
+      "from": "scripts/package-tool-parity.mjs",
+      "to": "scripts/legacy/package-tool-parity.mjs",
+      "sha256": "779036edc52ea5f7847c831c49f7e90bfe553ad48bf1a05f98491949c6354cfa"
+    },
+    {
+      "from": "scripts/package-unification-foundation.mjs",
+      "to": "scripts/legacy/package-unification-foundation.mjs",
+      "sha256": "c5fb87e407be9c926b7ce1eb9ad1eb02f1ad6029c4285bcaa8b5de0717c73bef"
+    },
+    {
+      "from": "scripts/package-unified-workflows.mjs",
+      "to": "scripts/legacy/package-unified-workflows.mjs",
+      "sha256": "f2356080b8fc401f457ec21a73d40ad86dca039a931c8859a8a353f67866d4fa"
+    },
+    {
+      "from": "scripts/package-view-toolbar.mjs",
+      "to": "scripts/legacy/package-view-toolbar.mjs",
+      "sha256": "591db4836d413b4d05fe03ad1930476bc303f61803cb6b4cc39a84cac39a5ac7"
+    },
+    {
+      "from": "scripts/package-working-speed.mjs",
+      "to": "scripts/legacy/package-working-speed.mjs",
+      "sha256": "7ed0a1cb76ee0af6e65269ad4ea7df11ac3dde50e226a14a9aa88eb5c237b5e2"
+    }
+  ],
+  "removedCommands": [
+    "package:mesh-surgery",
+    "package:curved-remesh",
+    "package:cad-runtime",
+    "package:feature-references",
+    "package:photo-perspective",
+    "package:photo",
+    "package:linked-contours",
+    "package:drawings",
+    "package:cad-modeling",
+    "package:move-dimensions",
+    "package:view-toolbar",
+    "package:step-thickness",
+    "package:inspection",
+    "package:mesh-make-solid",
+    "package:mesh-erase-fill",
+    "package:mesh-smooth",
+    "package:mesh-remesh",
+    "package:mesh-partition",
+    "package:stl-integration",
+    "package:mesh-integration",
+    "package:shared-workspace",
+    "package:tool-parity",
+    "package:converter-workspace",
+    "package:shared-ai",
+    "package:cad-mesh-copy",
+    "package:mesh-to-cad",
+    "package:unified-workflows",
+    "package:release-acceptance",
+    "package:mesh-inspector",
+    "package:mesh-selection-advanced",
+    "package:mesh-selection",
+    "package:mesh-simple-repair",
+    "package:mesh-hole-fill",
+    "package:mesh-connectors",
+    "package:mesh-hollow",
+    "package:mesh-sculpt",
+    "package:sketch-mesh",
+    "package:rotation-ring",
+    "package:group-performance",
+    "package:native-core",
+    "package:working-speed",
+    "package:project-parameters",
+    "package:joints",
+    "package:assembly-display",
+    "package:python",
+    "package:chatgpt",
+    "package:fusion",
+    "package:solid"
+  ],
+  "testCommandsUnchanged": true
+}

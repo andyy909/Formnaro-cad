@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as THREE from 'three';
 import Module from 'manifold-3d/manifold';
-import {setKernel,makeNode,localManifold,meshData,worldManifold} from '../src/geometry.js';
-import {horizontalPlane,frame,planeFromHit,resolveReference,referenceOnSurface,validWorkplane,snapPoint,projectedBounds,dropToPlane} from '../src/coordinates.js';
+import {setKernel,makeNode,localManifold,meshData,worldManifold} from '../src/mesh-engine/geometry.js';
+import {horizontalPlane,frame,planeFromHit,resolveReference,referenceOnSurface,validWorkplane,snapPoint,projectedBounds,dropToPlane} from '../src/mesh-engine/coordinates.js';
 const kernel=await Module({wasmBinary:fs.readFileSync(new URL('../node_modules/manifold-3d/manifold.wasm',import.meta.url))});kernel.setup();setKernel(kernel);
 function geometry(n){const m=localManifold(n);try{const d=meshData(m),g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(d.verts,3));g.setIndex(d.triangles);return g;}finally{m.delete();}}
 const near=(a,b)=>assert.ok(Math.abs(a-b)<.001,`${a} vs ${b}`);

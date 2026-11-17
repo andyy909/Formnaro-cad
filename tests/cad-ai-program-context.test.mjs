@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import {createRequire} from 'node:module';
 import {cadAIContext} from '../src/cad-ai-context.js';
 import {cadAIRequestContext} from '../src/cad-ai-program-context.js';
+import {exerciseCadAIUI} from './fixtures/cad-ai-ui-harness.mjs';
 
 const require=createRequire(import.meta.url),{generate}=require('../backend/ai-provider.cjs');
 const full=()=>({...cadAIContext(),localEngines:{freecad:true},programAssistant:{...cadAIContext().programAssistant,state:{mode:'solid',targets:[{id:'tool:cad-loft',present:true,visible:false,disabled:true}]}}});
@@ -44,9 +44,32 @@ test('Provider serializes compact navigation and full modelling context through 
  }finally{global.fetch=oldFetch;}
 });
 
-test('Ordinary chat chooses navigation scope per generation, allowing safe full-contract regeneration',()=>{
- const source=fs.readFileSync(new URL('../src/cad-ai-ui.js',import.meta.url),'utf8');
- assert.match(source,/import \{cadAIRequestContext\} from '\.\/cad-ai-program-context\.js'/);
- assert.match(source,/context:options=>cadAIRequestContext\(/);
- assert.match(source,/\},options\),inspectFreeCADPreview/);
+test('Ordinary chat chooses navigation scope per generation, allowing safe full-contract regeneration',async()=>{
+ const context=full(),scene={revision:'current',selectionTargets:[],objects:[]},requests=[];
+ const access={
+  scene:()=>scene,context:()=>context,
+  preview:()=>assert.fail('A command from the compact catalogue must never be previewed'),
+ };
+ const programAssistant={isProgramQuestion:()=>true,context:()=>context.programAssistant};
+ const desktop={
+  getAISettings:async()=>({protocol:'responses',baseUrl:'https://example.invalid',model:'fixture'}),
+  getFreeCADStatus:async()=>({available:true}),
+  generateAI:async request=>{
+   requests.push(request);
+   if(requests.length===1)return {revision:scene.revision,commands:[{op:'create',type:'box'}]};
+   return {revision:scene.revision,message:'Vollständigen Modelliervertrag erhalten.'};
+  },
+ };
+ await exerciseCadAIUI({access,desktop,programAssistant},async({send})=>{
+  const answer=await send({prompt:'Zeig mir die Schnittansicht.',chat:true});
+  assert.equal(answer.message,'Vollständigen Modelliervertrag erhalten.');
+ });
+ assert.equal(requests.length,2);
+ const [navigation,modelling]=requests;
+ assert.equal(navigation.context.programHelpOnly,true);
+ assert.deepEqual(navigation.context.programAssistant.state,context.programAssistant.state);
+ assert.equal(navigation.context.commandSchema,undefined);
+ assert.equal(modelling.context.programHelpOnly,undefined);
+ assert.deepEqual(modelling.context.commandSchema,context.commandSchema);
+ assert.match(modelling.correction,/Modellbefehle wurden nicht ausgeführt/);
 });

@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Module from 'manifold-3d/manifold';
-import {makeNode,setKernel,groupNodes,worldManifold,fromMesh} from '../src/geometry.js';
-import {coloredParts,threeMF,gltf,svgProjection} from '../src/exports.js';
-import {formula,instantiateTemplate,validateTemplate} from '../src/templates.js';
-import {migrateProject} from '../src/project-data.js';
+import {makeNode,setKernel,groupNodes,worldManifold,fromMesh} from '../src/mesh-engine/geometry.js';
+import {coloredParts,threeMF,gltf,svgProjection} from '../src/mesh-engine/exports.js';
+import {formula} from '../src/cad-template-data.js';
+import {migrateProject} from '../src/mesh-engine/project-data.js';
 import {unzipSync,strFromU8} from 'fflate';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 const module=await Module();module.setup();setKernel(module);
@@ -18,7 +18,6 @@ test('3MF resources include separate named materials and valid references; glTF 
 });
 test('Formula parser supports precedence, unary and linked controls while rejecting code and invalid arithmetic',()=>{
  assert.equal(formula('(width - 2 * wall) / 2',{width:60,wall:2}),28);assert.equal(formula('-2 + 3 * (4+1)',{}),13);for(const text of ['1/0','process.exit()','width.constructor','foo(1)','1e9','2**3','1 2'])assert.throws(()=>formula(text,{width:10}));
- const n=makeNode('box'),t={name:'Gehäuse',nodes:[n],controls:[{name:'breite',value:30}],bindings:[{index:0,path:[],field:'size.0',formula:'breite-2'}]};assert.equal(instantiateTemplate(t,{breite:50})[0].size[0],48);assert.equal(n.size[0],20);assert.throws(()=>instantiateTemplate(t,{breite:1}));assert.throws(()=>validateTemplate({...t,controls:[{name:'a',value:1},{name:'a',value:2}]}));
 });
 test('Old long project names are repaired without losing nodes or settings',()=>{
  const n=makeNode('box'),s=migrateProject({version:1,nodes:[n],name:'x'.repeat(201),bed:[200,200],planeZ:12});assert.equal(s.name.length,200);assert.equal(s.nodes[0].id,n.id);assert.equal(s.workplane.origin[2],12);

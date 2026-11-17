@@ -4,13 +4,48 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ (github.ref_type == 'tag' || github.run_attempt > 1) && github.run_id || 'first-attempt' }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' && github.run_attempt == 1 }}
+
 permissions:
   contents: read
 
 jobs:
-  windows-source:
+  source-trigger:
+    if: ${{ github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name != github.event.repository.default_branch }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    outputs:
+      skip: ${{ steps.select.outputs.skip }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+      - id: select
+        run: node scripts/source-ci-trigger.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  windows-source-tests:
+    needs: source-trigger
+    if: ${{ !cancelled() && needs.source-trigger.outputs.skip != 'true' }}
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
+    outputs:
+      shard-1: ${{ matrix.shard == 1 && steps.passed.outputs.status || '' }}
+      shard-2: ${{ matrix.shard == 2 && steps.passed.outputs.status || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -19,19 +54,89 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
+      - name: Verify relative documentation links
+        if: matrix.shard == 1
+        run: node scripts/check-links.mjs
       - run: npm ci
-      - run: node cad-kernel-build/verify-runtime.mjs
-      - run: npm run build
-      - run: npm test
+      - name: Lint main program with four warning rules
+        if: matrix.shard == 1
+        run: npm run lint
+      - name: Record tested commit and tree
+        run: git log -1 --format="%H %T %P"
+      - name: Check formatting of completed files
+        if: matrix.shard == 1
+        run: |
+          $files = @(Get-Content .prettier-done.txt | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') })
+          if ($files.Count -eq 0) { throw 'No files listed for formatting' }
+          for ($i = 0; $i -lt $files.Count; $i += 64) {
+            $chunk = $files[$i..([Math]::Min($i + 63, $files.Count - 1))]
+            npm run format:check -- @chunk
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - if: matrix.shard == 1
+        run: node cad-kernel-build/verify-runtime.mjs
+      - if: matrix.shard == 1
+        run: npm run build
+      - if: matrix.shard == 1
+        run: npm test
+      - run: npm run test:all -- --shard=${{ matrix.shard }}/2 --balance-by-duration=ci
       - run: node --test tests/windows-dictation.test.cjs tests/renderer-recovery-lifecycle.test.cjs tests/desktop-ai-lifecycle.test.cjs tests/ai-model-benchmarks.test.cjs tests/ai-lab-benchmark.test.cjs tests/ai-advanced-benchmark.test.cjs tests/ai-drawing-reference.test.cjs tests/ai-tool-reference.test.cjs tests/ai-responses-json-input.test.cjs tests/ai-drill-completion.test.cjs tests/ai-lab-token-renewal.test.cjs tests/chatgpt-login.test.cjs
+        if: matrix.shard == 1
       - name: Verify laboratory storage, credentials and process shutdown
+        if: matrix.shard == 1
         run: node --test --test-concurrency=1 tests/ai-lab-integration-01390.test.cjs tests/ai-lab-ui-feedback.test.cjs tests/desktop-ai-lab-credentials.test.cjs tests/ai-diagnostic-close-grace.test.cjs tests/ai-diagnostic-os-exit.test.cjs tests/ai-lab-rejected-history.test.cjs
       - name: Verify archive and filesystem tooling
+        if: matrix.shard == 1
         run: node --test tests/dependency-toolchain.test.cjs
       - name: Verify the build leaves tracked inputs untouched
         run: git diff --exit-code
+      - id: passed
+        run: '"status=passed" >> $env:GITHUB_OUTPUT'
+
+  windows-source:
+    name: ${{ github.event_name == 'pull_request' && 'windows-source' || 'windows-source [push]' }}
+    needs: [source-trigger, windows-source-tests]
+    if: ${{ always() && needs.source-trigger.outputs.skip != 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require both Windows shards
+        env:
+          WINDOWS_RESULT: ${{ needs.windows-source-tests.result }}
+          SHARD_1: ${{ needs.windows-source-tests.outputs.shard-1 }}
+          SHARD_2: ${{ needs.windows-source-tests.outputs.shard-2 }}
+        run: |
+          printf '### Windows source checks\n\nShard 1: **%s**. Shard 2: **%s**.\n' "${SHARD_1:-incomplete}" "${SHARD_2:-incomplete}" >> "$GITHUB_STEP_SUMMARY"
+          test "$WINDOWS_RESULT" = success && test "$SHARD_1" = passed && test "$SHARD_2" = passed
+
+  linux-node-tests:
+    name: linux-node-tests (${{ matrix.shard }})${{ github.event_name == 'push' && ' [push]' || '' }}
+    needs: source-trigger
+    if: ${{ !cancelled() && needs.source-trigger.outputs.skip != 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run test:all -- --shard=${{ matrix.shard }}/2 --balance-by-duration=ci
 
   mini-source:
+    name: mini-source (${{ matrix.directory }})${{ github.event_name == 'push' && ' [push]' || '' }}
+    needs: source-trigger
+    if: ${{ !cancelled() && needs.source-trigger.outputs.skip != 'true' }}
     runs-on: windows-latest
     timeout-minutes: 15
     strategy:

@@ -1,1 +1,1 @@
-export {mountAITestLab as mountAIDiagnostics} from './cad-ai-test-lab.js';
+export { mountAITestLab as mountAIDiagnostics } from './cad-ai-test-lab.js';

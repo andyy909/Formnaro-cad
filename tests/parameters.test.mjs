@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import Module from 'manifold-3d/manifold';
-import {setKernel,makeNode,worldManifold,fitParameters,validNode,groupNodes,meshData,normalizeMesh} from '../src/geometry.js';
-import {parameters,gearDimensions,threadDimensions} from '../src/parameters.js';
-import {gearOutline,threadMesh,buildParametric} from '../src/parametric-geometry.js';
+import {setKernel,makeNode,worldManifold,fitParameters,validNode,groupNodes,meshData,normalizeMesh} from '../src/mesh-engine/geometry.js';
+import {parameters,gearDimensions,threadDimensions} from '../src/mesh-engine/parameters.js';
+import {gearOutline,threadMesh,buildParametric} from '../src/mesh-engine/parametric-geometry.js';
 const kernel=await Module({wasmBinary:fs.readFileSync(new URL('../node_modules/manifold-3d/manifold.wasm',import.meta.url))});kernel.setup();setKernel(kernel);
 const close=(a,b,tol=1e-4)=>assert.ok(Math.abs(a-b)<tol,`${a} vs ${b}`);
 function measure(n){const m=worldManifold(n);try{assert.equal(m.status(),'NoError');assert.ok(m.volume()>0);return {volume:m.volume(),bounds:m.boundingBox(),mesh:meshData(m)};}finally{m.delete();}}

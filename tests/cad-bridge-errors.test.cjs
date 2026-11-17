@@ -1,10 +1,10 @@
-const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),{createRequire}=require('node:module');
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {loadDesktopTestModules}=require('./fixtures/load-desktop-test-modules.cjs');
 
 test('Native error codes cross the original preload and desktop RPC into real HTTP conflicts, retaining legacy compatibility',async()=>{
   const work=path.resolve(__dirname,'../work/cad-v011');fs.mkdirSync(work,{recursive:true});const fixture=fs.mkdtempSync(path.join(work,'bridge-errors-')),handlers=new Map(),mainListeners=new Map(),rendererListeners=new Map(),webContents={send:(channel,request)=>rendererListeners.get(channel)?.({},request),on:()=>{}},win={webContents,isDestroyed:()=>false,on:()=>{}};let desktop;
   const electron={app:{getPath:()=>fixture},safeStorage:{isEncryptionAvailable:()=>false},ipcMain:{handle:(name,fn)=>handlers.set(name,fn),on:(name,fn)=>mainListeners.set(name,fn)},ipcRenderer:{on:(name,fn)=>rendererListeners.set(name,fn),removeListener:(name,fn)=>{if(rendererListeners.get(name)===fn)rendererListeners.delete(name);},send:(name,value)=>mainListeners.get(name)?.({sender:webContents},value)},contextBridge:{exposeInMainWorld:(name,value)=>{if(name==='offlinecadDesktop')desktop=value;}}};
-  function execute(file){const target=path.resolve(__dirname,'..',file),requireLocal=createRequire(target),module={exports:{}};vm.runInNewContext(fs.readFileSync(target,'utf8'),{require:name=>name==='electron'?electron:requireLocal(name),module,exports:module.exports,process:{argv:[]},Buffer,URL,AbortController,AbortSignal,setTimeout,clearTimeout},{filename:target});return module.exports;}
-  execute('preload.cjs');const installed=execute('backend/desktop-ai.cjs').installDesktopAI(win,{settingsFile:path.join(fixture,'ai-settings.json')});
+  const installed=loadDesktopTestModules(electron).installDesktopAI(win,{settingsFile:path.join(fixture,'ai-settings.json')});
   desktop.onAutomation((_method,args)=>{if(args.revision==='legacy')throw Error('STALE_REVISION: older renderer');if(args.revision==='success')return {format:'FormnaroAutomationReply',version:1,ok:true,value:{applied:true}};return {format:'FormnaroAutomationReply',version:1,ok:false,error:{message:'Die Übernahme gehört zu einer anderen Revision.',feedback:{code:'STALE_REVISION',message:'stale',commandIndex:2,target:{rootId:'part',path:[]},retryable:false,applied:false},code:args.revision==='invalid-code'?'unsafe\ncode':'STALE_REVISION'}};});
   const event={sender:webContents},save=handlers.get('cad-ai:save');
   try{

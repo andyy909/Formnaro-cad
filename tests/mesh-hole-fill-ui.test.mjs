@@ -1,18 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
-import {readFileSync} from 'node:fs';
-import {flags} from '../src/organization.js';
-import {meshProtectionRegions} from '../src/mesh-protection.js';
-import {MESH_INSPECTION_CATEGORIES} from '../src/mesh-inspector.js';
-const source=readFileSync(new URL('../src/cad-mesh-hole-fill-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('export function createCadMeshHoleFillUI','function createCadMeshHoleFillUI');
+import {Scene} from 'three';
+import {importRendererModule,installTestDocument} from './fixtures/renderer-test-support.mjs';
+
+const {createCadMeshHoleFillUI}=await importRendererModule(new URL('../src/cad-mesh-hole-fill-ui.js',import.meta.url));
 function harness({service,preview,showPreview}={}){const node={id:'mesh',kind:'mesh',name:'Offenes Gehäuse',transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],layerId:'default',folderId:null},project={nodes:[node],layers:[{id:'default',hidden:false,locked:false}],folders:[]},controls=new Map(),discarded=[],calls=[];let revision='one',selection=[{rootId:'mesh',path:[]}],shown=null,applied=0,cancels=0,overlay=null;
  const make=(id,attrs='')=>({id,value:id==='mesh-hole-compare'?'filled':'',checked:false,disabled:attrs.includes('disabled'),dataset:{...(attrs.match(/data-ring="([^"]+)"/)?.[1]?{ring:attrs.match(/data-ring="([^"]+)"/)[1],eligible:attrs.match(/data-eligible="([^"]+)"/)?.[1]}:{}),...(attrs.match(/data-focus-ring="([^"]+)"/)?.[1]?{focusRing:attrs.match(/data-focus-ring="([^"]+)"/)[1]}:{})},textContent:'',closest:()=>({querySelector:()=>({textContent:''})}),get innerHTML(){return this.html??'';},set innerHTML(v){this.html=v;if(id==='mesh-hole-rings')for(const m of v.matchAll(/<(input|button)([^>]+)>/g)){const a=m[2],key=a.match(/data-ring="([^"]+)"/)?.[1]??a.match(/data-focus-ring="([^"]+)"/)?.[1];if(key){const name=(a.includes('data-focus')?'focus-':'ring-')+key;controls.set(name,make(name,a));}}}});
  const panel={hidden:true,setAttribute(){},addEventListener(){},remove(){},querySelector:s=>{const match=s.match(/\[data-(ring|focus-ring)="([^"]+)"\]/);return controls.get(match?(match[1]==='ring'?'ring-':'focus-')+match[2]:s.slice(1));},querySelectorAll:s=>[...controls.values()].filter(e=>s==='[data-ring]'?e.dataset.ring!==undefined:s==='[data-focus-ring]'?e.dataset.focusRing!==undefined:false),set innerHTML(v){controls.clear();for(const m of v.matchAll(/id="([^"]+)"/g))controls.set(m[1],make(m[1]));}};
  const catalog={geometryDigest:'a'.repeat(64),total:2,offset:0,rings:[{id:'e:0:1',edgeCount:4,eligible:true,reason:'',edges:[{id:'e:0:1',vertices:[0,1]}],bounds:{min:[0,0,0],max:[10,10,0]}},{id:'e:5:6',edgeCount:4,eligible:false,reason:'Nicht eben.',edges:[],bounds:null}]};
  const controller={readSnapshot:()=>project,revision:()=>revision,cancel:()=>cancels++,discard:id=>discarded.push(id),preview:async(o,opt)=>{calls.push({o,opt});return preview?preview(o,opt):{previewId:'p1',revision,report:{boundaryEdgesClosed:4,addedTriangles:2,beforeTriangles:8,afterTriangles:10,before:{boundary:8},after:{boundary:4},maxLocalPlanarityDeviation:0}};}};
- const context={createCadMeshSurgeryUI:()=>({open(){},close:()=>false,state:()=>null,revisionChanged(){},selectionChanged(){},dispose(){}}),document:{createElement:()=>panel},structuredClone,AbortController,flags,meshProtectionRegions,MESH_INSPECTION_CATEGORIES,createMeshSelectionService:()=>({holeCatalog:async()=>catalog,cancel(){},dispose(){}})};vm.runInNewContext(source+'\ncreate=createCadMeshHoleFillUI;',context);
- const ui=context.create({controller,view:{canvas:{parentElement:{append(){}}},allows:()=>true,setMeshInspection:r=>overlay=r,focusWorldPoints:p=>calls.push({focus:p})},getSelection:()=>selection,select:s=>selection=s,showPreview:async p=>{if(showPreview)await showPreview(p);shown=p.previewId;},clearPreview:()=>shown=null,applyProposal:async()=>{applied++;revision='applied';},...(service?{service}:{})});
+ // The basic dialog creates its own section first and then the advanced dialog's section.
+ const surgeryPanel={hidden:true,setAttribute(){},addEventListener(){},remove(){}};
+ const panels=[panel,surgeryPanel];
+ const restoreDocument=installTestDocument({createElement:()=>panels.shift()});
+ let ui;
+ try{
+  ui=createCadMeshHoleFillUI({
+   controller,
+   view:{canvas:{parentElement:{append(){}}},scene:new Scene(),invalidate(){},allows:()=>true,setMeshInspection:r=>overlay=r,focusWorldPoints:p=>calls.push({focus:p})},
+   getSelection:()=>selection,select:s=>selection=s,
+   showPreview:async p=>{if(showPreview)await showPreview(p);shown=p.previewId;},
+   clearPreview:()=>shown=null,applyProposal:async()=>{applied++;revision='applied';},
+   service:service??{holeCatalog:async()=>catalog,cancel(){},dispose(){}},
+  });
+ }finally{
+  restoreDocument();
+ }
  return {ui,node,project,controls,discarded,calls,panel,choose:()=>{const e=controls.get('ring-e:0:1');e.checked=true;e.onchange();},setRevision:r=>revision=r,setSelection:s=>selection=s,get shown(){return shown;},get applied(){return applied;},get cancels(){return cancels;},get overlay(){return overlay;}};
 }
 test('No opening is preselected; explicit rim marks only that ring and only Apply commits',async()=>{const h=harness();await h.ui.open();assert.equal(h.ui.state().ringId,null);assert.equal(h.controls.get('mesh-hole-preview').disabled,true);assert.equal(await h.ui.preview(),false);h.choose();assert.equal(h.overlay.categories.boundary.count,1);assert.equal(h.controls.get('ring-e:5:6').disabled,true);h.controls.get('focus-e:0:1').onclick();assert.equal(h.calls.at(-1).focus.length,8);await h.ui.preview();assert.equal(h.shown,'p1');assert.equal(h.applied,0);assert.equal(h.calls.find(c=>c.o).o.options.ringId,'e:0:1');assert.equal(await h.ui.apply(),true);assert.equal(h.applied,1);assert.equal(h.overlay,null);assert.equal(h.ui.state(),null);h.ui.dispose();});

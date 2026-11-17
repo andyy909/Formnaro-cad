@@ -27,6 +27,44 @@ test('A failed durable write starts no provider request and releases its owned l
  rejectWrites=false;const next=createAITaskJournal({request:db.request,access:first.access});await next.begin({input:saved.input,requirements,maxSteps:7,saved});await next.close('interrupted');
 });
 
+test('A failed fallback release preserves the original close error and the lease for another close', async t => {
+  const finishError = Object.assign(new Error('Synthetic disk full'), { code: 'ENOSPC' });
+  const releaseError = new Error('Synthetic release transport failure');
+  let rejectWrites = false;
+  let releaseAttempts = 0;
+  const db = store(t, {
+    write(file, data) {
+      if (rejectWrites) throw finishError;
+      fs.writeFileSync(file, data);
+    },
+  });
+  const { access } = await setup(t);
+  const journal = createAITaskJournal({
+    access,
+    async request(args) {
+      if (args.action === 'release') {
+        releaseAttempts++;
+        throw releaseError;
+      }
+      return db.request(args);
+    },
+  });
+  await journal.begin({ input, requirements, maxSteps: 7 });
+  rejectWrites = true;
+  await assert.rejects(journal.close('interrupted'), error => error === finishError);
+  assert.equal(releaseAttempts, 1);
+
+  const running = await db.request({ action: 'read', id: journal.record().id });
+  assert.equal(running.status, 'running');
+  rejectWrites = false;
+  const { id, generation, binding } = running;
+  await assert.rejects(db.request({ action: 'claim', id, generation, binding }), { code: 'BUSY' });
+  const closed = await journal.close('interrupted');
+  assert.equal(closed.status, 'interrupted');
+  assert.equal(closed.generation, generation + 1);
+  assert.deepEqual(await db.request({ action: 'read', id }), closed);
+});
+
 test('Ready tasks reject altered original content and budget before claiming the journal',async t=>{
  const db=store(t),first=await setup(t),journal=createAITaskJournal({request:db.request,access:first.access});await journal.begin({input,requirements,maxSteps:7});const saved=await journal.close('interrupted');
  for(const variant of [{input:{...saved.input,prompt:'Different work'}},{maxSteps:8},{requirements:{...requirements,assumptions:['Changed']}}]){const next=createAITaskJournal({request:db.request,access:first.access});await assert.rejects(next.begin({input:saved.input,requirements,maxSteps:7,saved,...variant}),{code:'AI_TASK_JOURNAL_INVALID'});}

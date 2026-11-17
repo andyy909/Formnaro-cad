@@ -1,15 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
-import {readFileSync} from 'node:fs';
-import {randomUUID} from 'node:crypto';
 import * as THREE from 'three';
-import {flags} from '../src/organization.js';
-import {validateMeshHollowOptions} from '../src/mesh-hollow.js';
 import {defaultLayout,validateLayout,emptyLayouts,validateLayouts} from '../backend/layout-data.mjs';
 import {moveLayoutItem} from '../src/layout-preferences.js';
+import {importRendererModule,installTestDocument} from './fixtures/renderer-test-support.mjs';
 
-const source=readFileSync(new URL('../src/cad-mesh-hollow-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('export function createCadMeshHollowUI','function createCadMeshHollowUI');
+const {createCadMeshHollowUI}=await importRendererModule(new URL('../src/cad-mesh-hollow-ui.js',import.meta.url));
 const digest='a'.repeat(64),report={beforeTriangles:12,afterTriangles:24,wallThickness:1,resolution:.5,cavityVolume:8,removedVolume:8,volumeBefore:64,volumeAfter:56,sourceSolidProven:true,resultSolidProven:true,solidProven:true,minimumWallThicknessBound:1.1,approximationMargin:.866,numericalAllowance:1e-9,outerSurfacePreserved:true,outerSurfaceCoordinatesExact:true,drains:[]};
 function harness({catalogQuery,preview,showPreview,outputReport=report,missingResult=false}={}){
  const node={id:'mesh',kind:'mesh',name:'Synthetischer geschlossener Quader',meshRole:'solid',hidden:false,layerId:'default',folderId:null,transform:[1,0,0,0,0,1,0,0,0,0,1,0,10,20,30,1],mesh:{verts:[0,0,0,4,0,0,4,4,0,0,4,0,0,0,4,4,0,4,4,4,4,0,4,4],triangles:[0,2,1,0,3,2,0,1,5,0,5,4,1,2,6,1,6,5,2,3,7,2,7,6,3,0,4,3,4,7,4,5,6,4,6,7]}},unrelated={id:'cad-other',kind:'cad',hidden:false,name:'Unberührt',source:'unchanged'},project={nodes:[node,unrelated],layers:[{id:'default',hidden:false,locked:false}],folders:[]},controls=new Map(),discarded=[],calls=[],toasts=[],scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();camera.position.set(23,-45,67);const resultNode=structuredClone(node);resultNode.id='pending';resultNode.name='Ausgehöhlte Kopie';resultNode.mesh.verts=resultNode.mesh.verts.map(value=>value===0?-.1:4.1);resultNode.mesh.triangles.push(4,5,6,4,6,7);
@@ -17,8 +13,13 @@ function harness({catalogQuery,preview,showPreview,outputReport=report,missingRe
  const make=(id,attrs='')=>({id,value:attrs.match(/value="([^"]*)"/)?.[1]??'',checked:attrs.includes('checked'),disabled:attrs.includes('disabled'),textContent:''});
  const panel={hidden:true,setAttribute(){},addEventListener(type,handler){this[type]=handler;},remove(){},querySelector:selector=>controls.get(selector.slice(1)),querySelectorAll:()=>[...controls.values()],set innerHTML(html){controls.clear();for(const match of html.matchAll(/<(input|select|button|p|div|details)([^>]*)>/g)){const id=match[2].match(/id="([^"]*)"/)?.[1];if(id)controls.set(id,make(id,match[2]));}controls.get('mesh-hollow-compare').value='result';}};
  const proposals=new Map(),controller={readSnapshot:()=>project,revision:()=>revision,cancel:()=>cancels++,discard:id=>{discarded.push(id);proposals.delete(id);},getPreview:id=>proposals.get(id),meshQuery:async(type,options)=>{calls.push({query:type,options});return catalogQuery?catalogQuery():{geometryDigest:digest,triangles:10,worldBounds:{min:[10,20,30],max:[14,24,34]},extent:4,suggestedResolution:.5,suggestedWallThickness:1};},preview:async(o,opts)=>{calls.push({o,opts});resultNode.id=o.resultId;const p=preview?await preview(o,opts):{previewId:'p'+(++sequence),report:{...outputReport,resultId:o.resultId},project:{...project,nodes:missingResult?[node,unrelated]:[node,unrelated,resultNode]},selectedIds:[o.resultId]};proposals.set(p.previewId,p);return p;}};
- const context={document:{createElement:()=>panel},structuredClone,crypto:{randomUUID},THREE,flags,validateMeshHollowOptions:o=>validateMeshHollowOptions(structuredClone(o))};vm.runInNewContext(source+'\ncreate=createCadMeshHollowUI;',context);
- const ui=context.create({controller,view:{canvas:{parentElement:{append(){}}},scene,allows:()=>true,setInteraction:callback=>interaction=callback,invalidate(){}},getSelection:()=>selection,select:s=>selection=s,showPreview:async(p,ids,replaceIds)=>{calls.push({displayIds:[...ids],replaceIds:[...replaceIds]});if(showPreview)await showPreview(p);shown=p.previewId;},clearPreview:()=>shown=null,applyProposal:async p=>{applied++;revision='applied';project.nodes.push(structuredClone(p.project.nodes.find(n=>n.id===resultNode.id)));},toast:text=>toasts.push(text)});
+ const restoreDocument=installTestDocument({createElement:()=>panel});
+ let ui;
+ try{
+  ui=createCadMeshHollowUI({controller,view:{canvas:{parentElement:{append(){}}},scene,allows:()=>true,setInteraction:callback=>interaction=callback,invalidate(){}},getSelection:()=>selection,select:s=>selection=s,showPreview:async(p,ids,replaceIds)=>{calls.push({displayIds:[...ids],replaceIds:[...replaceIds]});if(showPreview)await showPreview(p);shown=p.previewId;},clearPreview:()=>shown=null,applyProposal:async p=>{applied++;revision='applied';project.nodes.push(structuredClone(p.project.nodes.find(n=>n.id===resultNode.id)));},toast:text=>toasts.push(text)});
+ }finally{
+  restoreDocument();
+ }
  return {ui,node,resultNode,unrelated,project,controls,discarded,calls,toasts,panel,scene,camera,setRevision:r=>revision=r,setSelection:s=>selection=s,get selection(){return selection;},get shown(){return shown;},get applied(){return applied;},get cancels(){return cancels;},get interaction(){return interaction;},dispose(){ui.dispose();}};
 }
 test('Hollow preview captures a new result identity and Apply adds exactly one distinct visible body',async()=>{const h=harness(),original=JSON.stringify(h.node),other=JSON.stringify(h.unrelated);assert.equal(await h.ui.open(),true);const id=h.ui.state().resultId;assert.notEqual(id,'mesh');assert.equal(await h.ui.preview(),true,h.controls.get('mesh-hollow-status').textContent);const call=h.calls.find(c=>c.o);assert.equal(call.o.type,'mesh-hollow');assert.equal(call.o.resultId,id);assert.equal(call.o.options.method,'signed-distance-shell-v1');assert.deepEqual(Object.keys(call.o.options).sort(),['drains','geometryDigest','method','resolution','wallThickness']);assert.equal(call.o.options.drains.length,0);assert.equal(h.applied,0);assert.equal(await h.ui.apply(),true);assert.equal(h.project.nodes.length,3);assert.equal(JSON.stringify(h.node),original);assert.equal(JSON.stringify(h.unrelated),other);assert.equal(h.node.hidden,false);assert.equal(h.project.nodes[2].hidden,false);assert.deepEqual([...h.selection].map(s=>s.rootId),[id]);h.dispose();});

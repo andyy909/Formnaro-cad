@@ -1,11 +1,10 @@
-import {meshProtectionRegions,validateMeshProtection} from '../src/mesh-protection.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
-import {readFileSync} from 'node:fs';
 import {createMeshSelectionState} from '../src/cad-mesh-selection-state.js';
 import {createMeshSelectionService,meshSelectionGeometryDigest,validateMeshSelectionBinding} from '../src/mesh-selection-data.js';
-import {flags} from '../src/organization.js';
+import {importRendererModule,installTestDocument} from './fixtures/renderer-test-support.mjs';
+
+const {createCadMeshSelectionUI}=await importRendererModule(new URL('../src/cad-mesh-selection-ui.js',import.meta.url));
 
 const identity=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
 const meshNode=(id='mesh')=>({id,kind:'mesh',name:'Prüfnetz',color:'#4b97ad',transform:[...identity],layerId:'default',folderId:null,mesh:{verts:[0,0,0,10,0,0,10,10,0,0,10,0],triangles:[0,1,2,0,2,3]}});
@@ -52,16 +51,17 @@ test('Persisted selection restores strictly and an invalid restore leaves the cu
  start(model,node);model.clear();assert.equal(model.commit().selection,null);assert.equal(model.snapshot(),null);
 });
 
-const uiSource=readFileSync(new URL('../src/cad-mesh-selection-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('export function createCadMeshSelectionUI','function createCadMeshSelectionUI');
 function harness({service}={}){
  const node=meshNode(),project={nodes:[node],layers:[{id:'default',hidden:false,locked:false}],folders:[]};let selection=[{rootId:node.id,path:[]}],overlay=null,interaction=null,changes=0,allowed=true;const notices=[];
  const controls=new Map();
  const control=id=>({id,value:id==='mesh-selection-mode'?'triangle':id==='mesh-selection-angle'?'30':'',hidden:false,disabled:false,textContent:'',classList:{toggle(){}},setAttribute(){}});
  const panel={hidden:true,setAttribute(){},addEventListener(){},remove(){},querySelector(selector){return controls.get(selector.slice(1));},querySelectorAll(selector){return selector==='select,input'?[controls.get('mesh-selection-mode'),controls.get('mesh-selection-angle')]:[];},set innerHTML(html){controls.clear();for(const match of html.matchAll(/id="([^"]+)"/g))controls.set(match[1],control(match[1]));}};
  const view={canvas:{parentElement:{append(){}}},allows:()=>allowed,setInteraction:fn=>{interaction=fn;},setMeshSelection:value=>{overlay=structuredClone(value);},meshSelectionHit:(ray,hit)=>({triangleIndex:hit.faceIndex,point:[8,2,0]})};
- const context={document:{createElement:()=>panel},structuredClone,AbortController,meshProtectionRegions,validateMeshProtection,flags,createMeshSelectionState,createMeshSelectionService,meshSelectionGeometryDigest,validateMeshSelectionBinding};
- vm.runInNewContext(uiSource+'\ncreate=createCadMeshSelectionUI;',context);
- const ui=context.create({getProject:()=>project,getSelection:()=>selection,view,onWorkspaceChange:()=>changes++,toast:message=>notices.push(message),...(service?{service}:{})});
+ const restoreDocument=installTestDocument({createElement:()=>panel});
+ let ui;
+ try{
+  ui=createCadMeshSelectionUI({getProject:()=>project,getSelection:()=>selection,view,onWorkspaceChange:()=>changes++,toast:message=>notices.push(message),...(service?{service}:{})});
+ }finally{restoreDocument();}
  const hit=index=>({object:{userData:{rootId:node.id}},faceIndex:index});
  return {ui,node,project,view,notices,controls,hit,get overlay(){return overlay;},get interaction(){return interaction;},get changes(){return changes;},setSelection:value=>{selection=value;},setAllowed:value=>{allowed=value;}};
 }

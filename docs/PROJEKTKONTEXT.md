@@ -1,5 +1,180 @@
 # Technischer Projektkontext
 
+P3-4m1: `backend/practice-files-verification.cjs` führt den vollständigen
+Files-Chat-Zweig des Übungsprüfers für die Varianten `1`, `adopt` und
+`recover` aus. Der Dispatcher behält das Gate an derselben Stelle und übergibt
+den effektiven Variantenwert, den vorhandenen Beobachter, den Elternzustand und
+den Snapshot-Ausdruck. Lokale Fixtures, der Provider-Ersatz, die
+Recover-Korrektur und die Wiederherstellung von `global.fetch` bleiben
+erhalten. Der portable Paketfilter lässt das Prüfmodul aus.
+
+P3-5f: Die native Workspace-Verifikation aktiviert für ihre Rekonstruktions-
+Vorschau ausdrücklich die benötigten Körper- und Volumenprüfungen über den
+vorhandenen Einstellungsdialog. Anschließend stellt sie im `finally` die
+vorherige Prüfkonfiguration wieder her. Der zusätzliche Verifikationsbericht
+enthält die tatsächlich ausgeführten Messungen; Produktdefaults und die
+ursprünglichen Geometrie-, Undo- und Abbruchprüfungen bleiben unverändert.
+
+P3-4f2: Der KI-Task-Helfer in `src/cad-controller-ai-task.js` übernimmt
+auch die Analyse- und Motion-Abfrageabläufe. Analyse, Kollision und
+Bewegungsbereich verwenden dieselben Analyse-Owner wie die Vorschauprüfung.
+Der Controller liefert weiterhin Szenenbeschreibung, Geometrie und
+fachliche Abfragen. Analyseberichte und die Freigabe der Owner behalten
+ihre bisherige Reihenfolge.
+
+P3-4f1: Der KI-Task-Zustand eines CAD-Controllers liegt in
+`src/cad-controller-ai-task.js`: ein Arbeitsbereich, die Konvertersperren,
+die gebundene Modellrevision und die laufenden Analyse-Owner samt ihren
+unmittelbaren Operationen, dem Konverter-Wrapper, der Workspace-Abfrage, der
+isolierten Ausführung und dem Owner-Gate. Der Controller verdrahtet Build,
+FreeCAD, Analyse, Motion, Vorschau und Abbruch mit derselben Instanz;
+öffentliche Methoden, Snapshot-Felder, Fehlercodes und Reihenfolgen bleiben
+unverändert. `analyze` und `motionQuery` bleiben Controller-Clients, die
+Kandidatenmaterialisierung bleibt beim Vorschau-/Zeichnungsblock.
+
+P3-4l: `backend/practice-quality-verification.cjs` führt die sieben
+Qualitätsvarianten des Übungsprüfers aus. Der Dispatcher behält die
+Variantenauswahl und übergibt den Elternzustand und den vorhandenen
+Live-Prüfhelfer. Prüfwerte, Berichte und die Wiederherstellung von
+`global.fetch` bleiben erhalten. Der portable Paketfilter lässt das
+Prüfmodul aus.
+
+P3-5e: Der native CAD-Prüfer wartet bei der Format-5-Autosicherung auf
+die Bestätigung des regulären periodischen CAD7-Schreibvorgangs. Nach
+zehn Sekunden gilt eine fehlende oder abweichende Sicherung als Prüffehler.
+Der Prüfer gleicht die im CAD-Kontext genannten Endpunkte mit den
+tatsächlich registrierten lokalen API-Routen ab.
+Der Skizzenprüfer erwartet beim Neustart eine leere Szene und prüft die
+Wiederherstellung der erhaltenen CAD5-Sicherung über die Startseite.
+Der Annotationsprüfer fügt Modellbilder über den Chat-Optionsdialog an
+und prüft dabei weiterhin Entwurf, Anhangsgrenze und Modellzustand.
+
+P3-4c1: `backend/verification-native-cad.cjs` führt die nativen CAD-
+Prüfschritte für die lokale Verifikation in ihrer bisherigen Reihenfolge aus.
+`electron.cjs` behält die Fehlerprüfung, die Berichtsausgabe und das Beenden
+des Prüfprozesses. Der portable Prüflader lädt den Helfer aus dem Quellbaum.
+
+P3-5d: Die CAD-Oberfläche entsorgt Controller, Werkzeuge und Autosave-Timer
+erst beim tatsächlichen Verlassen der Seite. Der vorbereitende
+Autosicherungs-Hook bleibt an `beforeunload` gebunden. Nach blockierter
+Navigation bleibt die laufende Oberfläche deshalb benutzbar.
+
+P3-4d: `backend/app-window.cjs` installiert Popup-Sperre, Navigationswächter
+und Autosicherungs-Wrapper für Neuladen und Schließen. Die ausstehenden
+Aktionen und die Freigabe zum Schließen gehören zum jeweiligen Fenster.
+Die Renderer-Wiederherstellung bindet weiterhin vor dieser Installation
+den ursprünglichen Reload.
+
+P3-4g: `exportModel` und `assertExportReady` liegen in
+`src/cad-controller-export.js`. Der Controller übergibt die vorhandene
+Lebensdauerprüfung, den Transaktionsstore, beide Worker sowie die Rückmeldungen
+für Auslastung und Fortschritt. Beide Methoden verwenden beim Aufruf den
+aktuellen Projektzustand und behalten ihre Export- und Fehlerverträge.
+
+P3-4j: backend/practice-stl-verification.cjs kapselt den STL-Prüfblock des
+Übungsverifiers. Fixture-Bytes, Varianten, Plan, Prompt-Texte, Qualitätskriterien,
+Assertions, Prüfreihenfolge und Rückgabefelder bleiben unverändert; die
+Hauptdatei reicht `livePractice` und `comparisonPolicy` weiter. Das Modul trägt
+wie die übrigen Prüfmodule „verification“ im Namen und fällt aus dem portablen
+Paket.
+
+P3-4b: backend/startup-options.cjs bündelt die Start- und Prüfoptionen
+für electron.cjs. Argumentprioritäten, Diagnose-/Übungskind-Erkennung,
+Berichtspfade und Sprachprüf-Schalter bleiben unverändert. Profilaufbau,
+Fenster, IPC und Prüfdispatch verbleiben in electron.cjs; der Parser
+gehört auch zum regulären portablen Programm.
+
+P3-5b: Die automatische Easy-Netzreparatur erkennt STL-Importe zusätzlich
+am vorhandenen importedFile.type-Marker. Bearbeitete, leere oder anders
+strukturierte Notizen heben den Schutz offener Importkonturen nicht auf.
+Alte Importberichte bleiben erkannt; die ausdrückliche Lochreparatur und
+die automatische Reparatur gewöhnlicher Netze behalten ihr Verhalten.
+
+P3-5a: `npm run lint` prüft den JavaScript-Anwendungscode des Hauptprogramms
+mit genau vier Warnregeln: no-undef, no-unused-vars, no-empty und no-dupe-keys.
+Browser, Worker und Node erhalten getrennte Umgebungen. Fremdlaufzeiten,
+Mini-Projekte, Tests und Hilfsskripte bleiben außerhalb dieses Lint-Schritts.
+Vorhandene Warnungen werden sichtbar; Syntaxfehler bleiben Fehler. Die
+Prüfung läuft einmal im ersten Windows-Quelltest-Teillauf der CI.
+
+P3-4i: backend/practice-native-verification-checks.cjs kapselt die native
+Freiraumprüfung der mittigen Plattenöffnung für den Übungsprüfer. Die
+Prüfkandidaten, Toleranzen, Ergebnisprüfung und Freigabe der Vorschau bleiben
+unverändert; beide bisherigen Skizzenprüfungen verwenden denselben Helfer.
+
+P3-4e: Die vier reinen Controller-Helfer für Modellschlüssel und das
+Zusammenführen von Zeichnungsberichten liegen in
+src/cad-controller-model-keys.js. Die bisherigen Feldfilter, Reihenfolgen
+und Berichtswerte bleiben unverändert; der Controller importiert die Helfer.
+
+P3-4a: Elf Electron-Prüfmodi schreiben ihre JSON-Erfolgsberichte über
+backend/verification-report.cjs. Der jeweilige Prüfzweig baut den Inhalt
+wie bisher. Das Hilfsmodul wird nur im Prüfmodus geladen und fällt beim
+Bau des portablen Programms unter den bestehenden Paketfilter.
+
+P3-3h: Die Renderer-Fabrik in src/app/recovery.js kapselt den Status der
+Autosicherung, die verzögerte Auslösung und das bestätigte Schreiben beim
+Schließen. Sie verwendet weiter den bestehenden OCAD-/FNPACK-Speicher.
+Der Renderer führt die Ladeprüfung aus und bietet die Wiederherstellung
+über die Startseite an.
+
+P3-3g: src/app/import-export.js verbindet die Importdialoge und den
+Zeichnungsexport mit dem bestehenden Modell-Exportworkflow. Der Renderer
+hält die gemeinsamen Dialog-, Arbeitsbereichs- und Konvertierungsdaten
+weiterhin für dieselbe Sitzung.
+
+P5-2: `node scripts/check-links.mjs` prüft relative Markdown-Ziele in
+`README*.md` und `docs/*.md` gegen das Git-Dateiinventar. Der Prüfer meldet
+fehlende Ziele mit Zeilennummer und verwendet Exitcode 1 bei Funden.
+Externe Ziele und reine Fragmente werden übersprungen. Die Prüfung läuft
+im ersten Windows-Quelltest-Teillauf der CI.
+
+P5-1: `docs/README.md` ist der deutsche Wegweiser über alle versionierten
+Markdown-Dateien direkt unter `docs/`. Die vier Abschnitte Benutzen,
+Entwickeln, KI-Schnittstelle und Archiv ordnen jede Datei einschließlich der
+Übersicht selbst genau einmal ein; Versions- und Abnahmebelege bleiben im
+Archiv. Zusätzlich verlinkt der Einstieg die vorhandenen Hinweise im
+Repository-Stamm.
+
+Auf der Startseite folgen bis zu drei zuletzt verwendete Modelle auf die drei Beispielkarten. Der normale Neustart beginnt mit leerem Arbeitsbereich. Eine vorhandene Autosicherung kann über ihre eigene Aktion geladen werden.
+
+P3-3f: `src/app/workspace-io.js` erfasst und restauriert den Arbeitsbereich
+und koordiniert Speichern und Öffnen über die bestehende OCAD- und
+FNPACK-Persistenz. Der CAD-Einstieg teilt seine Dateisitzung mit der Fabrik und
+der Autosicherung. Dieselbe Signaturfunktion erfasst den gespeicherten und
+den aktuellen Arbeitsbereich für die Änderungserkennung. Nur diese Signatur
+rundet Kamerawerte. Die Projektdateien behalten ihre volle Genauigkeit.
+
+P3-3e: Die Isolationsaktionen in `src/app/isolation.js` verbinden die
+Auswahl mit Renderer, Markierungen und Statushinweis. Der CAD-Einstieg teilt
+dieselbe temporäre `createCadIsolation`-Instanz mit den übrigen Aufrufern.
+
+P3-3d: Kopieren, Einfügen und Duplizieren liegen in `src/app/clipboard.js`.
+Die Fabrik hält die Projektauswahl der Zwischenablage und die laufende
+Erfassung für dieselbe Renderer-Sitzung.
+
+P3-3c: Spiegeln, Ausrichten und Zentrieren liegen in
+`src/app/alignment.js`. Der CAD-Einstieg hält die gemeinsam genutzte
+Ausrichtungssession, ihren laufenden Task und das Ticket.
+
+P3-3b: Die gemeinsamen UI-Helfer für Meldungen, Fehlerbehandlung, Dialoge,
+Dateiexport und Busy-Anzeige liegen in `src/app/ui-helpers.js`. Der CAD-Einstieg
+behält die Dialog-Aufräumfolge und den gemeinsam genutzten Busy-Zustand.
+
+Die Quellenprüfung verwendet `npm run test:inventory` für die Testübersicht
+und `npm run test:all` für die gemessenen grünen Node-Dateien unter Windows
+und Linux. Das Inventar in `tests/manifest.json` hält Electron- und
+Python-Dateien separat fest. Fehlende Paketlaufzeiten und andere Gründe für
+ausstehende Tests stehen bei den betroffenen Dateien. Mit
+`npm run test:all -- --include-failing` lassen sich dokumentierte Fehler und
+Timeouts für eine lokale Diagnose einbeziehen.
+
+Die CI verteilt die Manifest-Auswahl mit `--balance-by-duration=ci` je auf
+zwei Windows- und Linux-Runner. `tests/ci-test-durations.json` enthält
+plattformspezifische Medianwerte aus vollständigen PR-Läufen und die
+gemessene Zusatzlast des ersten Windows-Jobs. Neue Manifestdateien gehen
+mit ihrer Manifestdauer oder der bisherigen Sekunde als Schätzwert ein.
+
 Übungsmodus, Entwicklung 04.11.2026: Im KI-Chat startet die ausdrückliche Option „Übung auf Kopie des aktuellen Projekts“ eine Übung für ein bis acht ausgewählte vollständige Bauteile. Der Anbieter erhält kompakte Bezüge mit Übungsalias, Name und Typ. Die Anwendung materialisiert Geometrie, Quellen und weitere Projektdaten lokal und gibt die Kopie mit Ausgangsrevision und Auswahl getrennt vom Anbieterplan an das Übungsfenster. Das Fenster lädt die Kopie über den regulären CAD-Projektpfad und stellt die Auswahl vor dem ersten Bedienungsschritt wieder her. Bei Änderung von Projektidentität, Revision oder Auswahl wird ein veralteter Auftrag abgewiesen.
 
 Eine erfolgreiche Projektübung liefert dem Chat eine lokale Referenz auf das Ergebnis. „Änderungen ansehen“ prüft die Ergebnisrevision und den Schutz unbeteiligter beziehungsweise gesperrter Teile. Anschließend baut die reguläre CAD-Vorschau die Geometrie erneut auf und zeigt betroffene Teile und Projektbereiche. Übernehmen erfordert eine unveränderte Ausgangsrevision und Projektidentität und erzeugt genau einen Undo-Schritt. Bereits bestehende Teile müssen vor der Übung ausgewählt sein, wenn sie sich im Ergebnis ändern sollen. Die erweiterte Gesamtprüfung folgt im weiteren Ausbau.
@@ -5587,3 +5762,30 @@ Private Abnahme:269 automatische Pruefungen bestanden (128Standard,112Labor/Desk
 
 
 Formnaro 0.142.0 führt längere native Trapezgewinde, die Auswahl eines lokalen CAD-Merkmals im KI-Chat und Projektübungen in Solid und Fusion zusammen. Die schnellen Gewinde verwenden kürzere native Perioden, erhalten die Platzierung beim Längenwechsel und bieten eine eigene Grundform. Die Projektübung setzt Bedienaktionen sichtbar im gestarteten Arbeitsmodus um. Die Werkzeugauskunft verwendet dabei die zugehörigen Register und Gruppen. Projektänderungen werden erst nach der Vorschau übernommen.
+
+2026-11-15 Wartbarkeitsplan P2-1: reproduzierbarer AST-basierter Modulgraph mit exakter relativer Pfadauflösung. 558 src-Module, 522 vom aktuellen Einstieg erreichbar, 34 ausschließlich vom alten Einstieg. Dateinamentreffer bleiben von echten Importen getrennt; berechnete Modulpfade und fehlende Ziele werden explizit ausgewiesen. Neuer Graph-Test im Manifest als pass aufgenommen. Die 34 entsprechen dem historischen Sollwert; nur 11 davon haben keine externen Namensnennungen (historisch 15, inzwischen zusätzliche direkte Testimporte). Keine Löschfreigabe allein aus dem Graphen. Vorher-Desktop-Smoke scheitert am bestehenden ungebundenen exportModel-Testhook, Build erfolgreich.
+
+2026-11-15 P2-2a: Elf nur vom deaktivierten v0.9-Einstieg importierte und extern nirgends erwähnte UI-Module entfernt (calculations, edge-tools, fit-presets, magnet-tools, measure-tools, organization-ui, pattern-dialog, precision-tools, render-data, shape-inspector, workplane-tools). Die frühere Zahl 15 ist durch die aktuellen Abhängigkeiten überholt. Keine Tests entfernt. Der alte Einstieg bleibt in diesem bewusst gestuften Zwischenstand unbenutzbar und wird in P2-2b zusammen mit seinen übrigen exklusiven Modulen entfernt; index.html verwendet unverändert cad-main.js. Graph regeneriert, 522 aktuelle Module unverändert erreichbar. Vorher-Build erfolgreich, bestehender Desktop-Testhookfehler reproduziert.
+
+2026-11-15 P2-2b: Restliche 23 exklusive Altmodule entfernt, sämtliche 522 aktuellen src-Module bleiben erreichbar (insgesamt524). Gemeinsame Tests auf aktive Mesh-Implementierungen beziehungsweise historische Eingabefixtures umgestellt, aktive CAD-/Mesh-Projektladewege unverändert. Vier reine Altprogramm-Testdateien als obsolete erhalten; Inventargenerator bewahrt Tombstones mit echter Unterprozessregression. Auswahl513=515+2neue−4obsolete; 30Runtimefehler/1Timeout weiter begründet. Gezielte80/80, Standard100/100, Build und erneuerter aktueller Desktop-Smoke bestanden. Vorheriger exportModel-Testhookfehler minimal gebunden. Vollnachläufe laufen separat; Details docs/WARTBARKEIT-PHASE2.md. Keine Phase3/keine Veröffentlichung.
+
+2026-11-15 P2-3: 135 von 141 historischen Paket-/Archivskripten bytegleich nach scripts/legacy verschoben, 48 package-Befehle entfernt, test:-Befehle unverändert. Sechs reale Release-/Kompatibilitätsabhängigkeiten bleiben am Originalpfad; das security-Eingabemanifest und Testreferenzen wurden angepasst. SHA256 gegen Git-Blobs bestätigt, keine alten Pfadverweise außerhalb Archiv/docs. Zwei neue Archivregressionen bestanden und ihre Datei ins Manifest aufgenommen. Neue grüne Auswahl: 514 = 515 + 3 − 4. Erste Vollvorläufe mit versehentlichem System-Node 22.16 wurden abgebrochen und gelten nicht als Abnahme; zwölf Diagnosefälle bestanden unverändert unter dem gepinnten Node 22.23.4.
+
+2026-11-15 Phase-2-Quellprüfung: Alle fünf CI-Jobs für jeden der Entwürfe #33 bis #36 erfolgreich. Windows-Vollsuiten: P2-1a 516/516, P2-2a 516/516, P2-2b 513/513, P2-3 514/514. Beide Linux-Teilmengen und Mini/Mini-CAD ebenfalls grün. Integrierter Codecommit a72eb67f5831b02c07cfe947c0968c26dbb3279c; genaue Laufzeiten und Links in docs/WARTBARKEIT-PHASE2.md. Die 30 begründeten Laufzeitfehler und ein Schrift-Timeout bleiben im Quellmanifest, keine pauschale Vollabnahme des gesamten Inventars. Zwei unabhängige Reviewachsen ohne verbliebene Codebefunde. Die Windows-Paketprüfung vor/nach Archivierung wird mit getrennten Ausgaben und vollständigen Protokollen in PR #36 und der lokalen Abschlussübergabe nachgewiesen. Keine Phase 3, kein Merge und keine Veröffentlichung im Rahmen dieses Auftrags.
+
+2026-11-15 Ergänzung zur Paketabnahme: Der vorhandene Workbench-Prüfer erwartete veraltet eine automatische Projektwiederherstellung. Der Startbildschirm bietet die Autosicherung bereits seit vor Phase 2 ausdrücklich zur Auswahl an. Der externe Prüfer öffnet jetzt diesen realen Eintrag, wartet den gesamten Handler ab und vergleicht danach Modell, Modus und Layout strikt. Auf derselben Paket-EXE 14/14 Prüfungen und regulärer Exit 0; unabhängiges Nachreview ohne Befund. Keine Produktänderung. Vollständiger Paketvergleich mit identischem Prüferfix auf beiden Seiten; Vergleichsbasis 335bccc = P2-2b plus Testfix, noch ohne Archivierung. Der ursprüngliche Paketlauf bleibt als fehlgeschlagen dokumentiert.
+
+2026-11-15 Paketabnahme Phase 2 noch offen: Der Wiederholungslauf auf P2-2b plus Workbench-Prüferfix besteht 756/756 native Tests und fünf EXE-Gruppen, scheitert danach im KI-Prüfer an altem Chat-Bedienweg. Diagnostischer Dialog-Nachtest zeigt acht im Paket fehlende, unveränderte Benchmark-Quelldateien; 25 weitere Abhängigkeiten sind vorhanden und hashgleich. Zusätzliche Paketkorrektur gemäß Arbeitsregel 3 beim Nutzer angefragt, noch nicht umgesetzt. Speech- und Maintenance-EXE-Prüfungen ebenfalls mit offenen Diagnosebefunden. Kein vollständiger Paket-PASS, Nachherlauf offen, P2-3 nicht vollständig abgenommen. Quellcommit959cb3c dagegen vollständige CI mit Windows514/514, Linux je257/257 und beiden Minis grün. Details docs/WARTBARKEIT-PHASE2.md und PR36. Keine Phase3 oder Veröffentlichung.
+
+2026-11-15 Ausdrückliche Ergänzung zum Phase-2-Auftrag: Windows-Diktat ist als kompakter Mikrofonbutton direkt neben Senden im KI-Chat erreichbar. Der bestehende Windows-Startweg sowie Cursor-, Busy- und manuelle Sendelogik bleiben erhalten; Tooltip und zugänglicher Name sind deutsch/englisch. Build, sieben native Unitprüfungen und isolierte EXE-Bedienprüfung einschließlich kleinem Fenster, beiden Themes, Fokus, Fehlerfall und unverändertem Modell bestanden. Erfolgreicher Start-IPC simuliert, Helfer-Selbsttest echt; keine echte Sprachaufnahme. Zwei gezielte Reviews ohne Befund. Die freigegebene ergänzende Paketkorrektur und vollständige Phase-2-Paketabnahme laufen separat weiter; keine Veröffentlichung.
+
+
+2026-11-15 P2-3b freigegebene Paketkorrektur: acht unveränderte Benchmarkquellen werden nach vollständiger SHA256-Prüfung kopiert, Suiten bleiben eingefroren. Externe EXE-Prüfer an reale Dialogwege, verlustfreien Anbieter-Vertrag und ausdrückliche Prüfauswahl angepasst; keine Toleranzen gelockert. Zusätzlicher FNPACK-Autosicherungsfehler auf ausdrückliche Freigabe korrigiert: lokale Quellenliste verdeckte Registry beim ersten Schreiben über eine bestehende Recovery-Datei. Regression vorher rot/nachher grün, alte Sicherung und Geometriebytes erhalten; echter Zweiprozess-Restart 41 Prüfungen/Exit0. Erwartete Maintenance-Fehlerinjektion nur exakt einmal erlaubt; zusätzliche Fehler nachweislich abgewiesen. 100 Standard-/25 gezielte Tests und sämtliche Diagnosegruppen erfolgreich; vollständiger frischer Paketvergleich und finale CI noch offen. Kein Phase3/Merge/Release.
+
+2026-11-15 Phase2 vollständig abgeschlossen, Halt vor Phase3. Code10d52fa CI43750015650: Windows514/514, Linux je257/257, beideMinis grün. Vollständige normale Vorher-/Nachherpakete r209 aufefe83c1 und r208 auf10d52fa: je759 nativeTests,999Prüfungen in24EXE-Ergebnisgruppen, vollständige ZIP-Rückleseprüfung, Exit0. Alle ausgelieferten Runtime-Dateien bytegleich; nur vorbereitete package.json mit Entwicklungsbefehlen verschieden, ASAR gleich. Finaler direkter Windows-Diktatbutton zusätzlich15/15 an r208, Exit0, keine echten Sprach-/Cloudanfragen. r207 scheiterte nur am ZIP-Schutz wegen lokal vorbereiteter Converter-Junction; physische Kopien mit1129bytegleichenDateien jePrüfworktree beheben diese Umgebungsursache ohne Produktänderung. Neue Paket-Arbeitsbäume benötigen physische Converterlaufzeitkopien. Endnachweise und Hashes docs/WARTBARKEIT-PHASE2.md; Entwürfe33–37 bleiben ungemergt. Abschlusscommit nurDokumentation, vorhandeneCode-CI wiederverwendet. KeineVeröffentlichung/Installationsersetzung/Phase3.
+
+2026-11-16 Wartbarkeitsplan P3-4k: Multiview- und Foto-Übungsprüfungen liegen in
+`backend/practice-photo-verification.cjs`. `backend/practice-verification.cjs` erkennt
+weiterhin die bestehenden Varianten und übergibt den Elternzustand sowie Live- und
+Qualitätshilfen. Der portable Paketfilter lässt das Prüfmodul aus. Synthetische
+Foto- und Multiview-Prüfdaten, Prüfregeln und Berichtsformate bleiben gleich.
