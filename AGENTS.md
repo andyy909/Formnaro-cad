@@ -6,6 +6,9 @@ there. Keep that development history outside Git. In a fresh checkout, read
 changes there. Keep personal models, profiles and credentials out of shared
 documentation.
 
+Read the [developer context](docs/ENTWICKLER-KONTEXT.md) before changing
+architecture, compatibility, CI or packaging.
+
 Use Formnaro as the product name. Retain the existing OfflineCAD identifiers
 and profile paths for compatibility.
 

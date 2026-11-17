@@ -36,7 +36,7 @@ test('Write failures reach the caller synchronously before any window or process
   assert.equal(fs.existsSync(missing),false);
   assert.equal(fs.readdirSync(root).length,0);
 });
-const MIGRATED=['maintenanceVerifyArg','speechVerifyArg','fnpackVerifyArg','assemblyVerifyArg','jointsVerifyArg','sketchConstraintsVerifyArg','linkedContoursVerifyArg','parametersVerifyArg','modelingContextVerifyArg','reconstructionVerifyArg','pythonVerifyArg'];
+const MIGRATED=['maintenanceVerifyArg','speechVerifyArg','fnpackVerifyArg','assemblyVerifyArg','jointsVerifyArg','sketchConstraintsVerifyArg','linkedContoursVerifyArg','parametersVerifyArg','modelingContextVerifyArg','reconstructionVerifyArg','pythonVerifyArg','autoDimensionsVerifyArg','drawingsVerifyArg'];
 test('electron.cjs loads the helper lazily only inside the verification branch',()=>{
   assert.equal(electronSource.split(CALL).length-1,MIGRATED.length,`${MIGRATED.length} verification branches write through the helper`);
   const branch=electronSource.indexOf('if(verifyPath){');

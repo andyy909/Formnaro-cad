@@ -1,5 +1,65 @@
 # Technischer Projektkontext
 
+Die Quell-CI läuft bei Pull Requests zu allen Zielbranches und bei Pushes
+auf `main` oder Tags. `npm run test:all -- --verify-coverage` gleicht
+Testdateien und Manifest ab und prüft die Dateizuordnung zu beiden Gruppen
+pro Plattform. Die CI gleicht zusätzlich die tatsächlich erfolgreichen
+Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
+Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
+ausgewiesen.
+
+P3-4h2: Die beiden KI-Entwurfsabläufe des CAD-Controllers liegen in
+`src/cad-controller-task-candidate.js`: Materialisierung eines
+Auftragsvorschlags und Wiederherstellung eines gespeicherten Kandidaten. Der
+Helfer erhält Store, H1-Vorschau-Registry, Geometrieauflösung, Vorschau-Gate,
+Vorschau und Netzprüfung; Build-Zwischenwerte, Anzeige und Publisher bleiben im
+Controller. Gate-Reihenfolge, Identitätsprüfung über `await`,
+Modellschlüsselvergleich, frischer Körpernachweis, private
+Feature-Abhängigkeit, Fehlercodes und Aufräumreihenfolge bleiben unverändert.
+Die beiden öffentlichen Bindungen und Standardargumente bleiben gleich; F2
+wird nicht umgeordnet.
+
+P3-4h1: Der ID-gebundene Vorschau-Zustand des CAD-Controllers liegt in
+`src/cad-preview-registry.js`: Vorschläge, Ersatzmarker, Zeichnungs-,
+Fotorekonstruktions- und Merkmalsabhängigkeitsbelege. Registrierung,
+Eviction, Apply-Erfolg, spezielle Ablehnungen, öffentliches Discard und
+Dispose behalten Reihenfolge, Grenzen und Identität; der Controller behält
+Fach-Gates, Store, Scope und öffentliche Methoden. H2
+(Kandidatenmaterialisierung/-restore) und die Anzeige bleiben unverändert.
+
+P3-4a2: Die Erfolgsberichte der Zeichnungs- und automatischen
+Bemaßungsprüfung verwenden denselben synchronen Berichtsschreiber.
+Prüfungen, Berichtsfelder und Fehlerbehandlung bleiben beim Aufrufer.
+
+P3-4n3: Der Sketch-Prüfhelfer führt auch die Varianten `1` und
+`mode-recovery` aus. Der Dispatcher übergibt die gewählte Variante und den
+gemeinsamen Elternzustand. Der Helfer prüft die nativen Skizzengesten, die
+mittige Durchgangsöffnung und bei Wiederaufnahme zwei abgewiesene Aktionen
+auf derselben Revision. Die vorhandene Live-Funktion wird übergeben.
+
+P3-4n2: `backend/practice-sketch-verification.cjs` führt zusätzlich den
+vollständigen Repair-/Midpoint-Zweig des Übungsprüfers für `repair`,
+`midpoint`, `repair-live` und `midpoint-live` aus. Der Dispatcher behält Gate,
+gemeinsame Vorbereitung, Elternsnapshot und Checkliste und übergibt die
+Variante einmal an die ausgelagerte Funktion. N1-Block, N1-Renderer, N3-Grenze,
+Checkzahlen (5/3/5/3) und der portable Paketfilter bleiben unverändert.
+
+P3-4n1: `backend/practice-sketch-verification.cjs` führt die
+Draft-/Draft-Edit-Varianten des Übungsprüfers aus. Der Dispatcher behält
+Weiche, gemeinsame Vorbereitung, Elternsnapshot und Checkliste; die
+Delegation übergibt Fenster, Rendereradapter, Berichtsumgebung,
+Elternzustand und Checkliste. Die Skizzen-Fixture, der lokale Chatadapter,
+Review-/Apply-Prüfungen, Undo/Redo und die Wiederherstellung von
+`global.fetch` bleiben erhalten. Der portable Paketfilter lässt das
+Prüfmodul aus.
+
+P3-4m2: `backend/practice-drawing-verification.cjs` führt die
+Zeichnungsvarianten des Übungsprüfers einschließlich der lokalen
+Ausführung und der beiden Live-Aufrufpfade aus. Der Dispatcher behält
+Variantenauswahl und Elternvorbereitung. Maßbindungen, native
+Projektionsprüfungen und Elternschutz bleiben erhalten. Der portable
+Paketfilter lässt das Prüfmodul aus.
+
 P3-4m1: `backend/practice-files-verification.cjs` führt den vollständigen
 Files-Chat-Zweig des Übungsprüfers für die Varianten `1`, `adopt` und
 `recover` aus. Der Dispatcher behält das Gate an derselben Stelle und übergibt
