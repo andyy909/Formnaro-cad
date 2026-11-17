@@ -237,3 +237,74 @@ async function verifyPracticeSketchRepairMidpoint({js,directory,checks,before,pa
   return {ok:true,variant,checks,bounds,clearance,volume:body.stats.volume};
 }
 module.exports.verifyPracticeSketchRepairMidpoint=verifyPracticeSketchRepairMidpoint;
+
+async function verifyPracticeSketchModeRecovery({js,directory,checks,before,parentSnapshot,liveDomain,livePractice,comparisonPolicy,variant}){
+  const modeRecovery=variant==='mode-recovery';
+  const click=id=>({kind:'ui',action:'click',target:'ui:id:'+id});
+  const choose=(id,value)=>({kind:'ui',action:'choose',target:'ui:id:'+id,value});
+  const plan={version:1,title:'Platte als Linienzug mit Kreisöffnung',actions:[
+   {kind:'ui',action:'click',target:'menu:cad'},
+   {kind:'ui',action:'click',target:'ui:tool:sketch'},
+   click('sketch-profile-enable'),
+   choose('sketch-profile-role','outer'),choose('sketch-profile-shape','line'),
+   ...[[-30,-20],[30,-20],[30,20],[-30,20]].map(point=>({kind:'sketch-gesture',point})),
+   click('sketch-profile-close'),
+   choose('sketch-profile-role','hole'),choose('sketch-profile-shape','circle'),
+   {kind:'sketch-gesture',point:[0,0],to:[4,0]},
+   {kind:'ui',action:'set',target:'ui:label:Extrusionshöhe',value:'5'},
+   click('sketch-preview'),click('sketch-apply')
+  ]};
+  const openingPlan=modeRecovery?{...plan,actions:[...plan.actions.slice(0,2),choose('sketch-kind','profile'),click('sketch-profile-enable')]}:plan;
+  let result=liveDomain==='sketch'?await livePractice('Zeig mir im Skizzeneditor eine Platte 60 × 40 mm mit einem mittigen Durchgangsloch Ø8, 5 mm dick. Lass vorhandene Teile unverändert.',[],{quality:comparisonPolicy([
+   {id:'size',source:'Vorgegebene Plattenmaße 60 × 40 × 5 mm',check:{kind:'size',target:'$new',space:'worldAxes',expected:[60,40,5],tolerance:.001}},
+   {id:'solids',source:'Ein Volumenkörper gefordert',check:{kind:'solids',target:'$new',expected:1}},
+   {id:'volume',source:'Analytisches Volumen der Platte mit dem Ø8-Durchgang',check:{kind:'volume',target:'$new',expected:(60*40-Math.PI*16)*5,tolerance:.001}}
+  ],['size'])}):await js(`(async()=>{
+   const controller=window.__cadTest.controller;
+   const revision=controller.revision(),project=await controller.transactions.materialize();
+   return window.offlinecadDesktop.startPractice({plan:${JSON.stringify(openingPlan)},recovery:${JSON.stringify(modeRecovery?'text':undefined)},projectCopy:{revision,project,selection:[]}});
+  })()`);
+  if(modeRecovery){
+   const duplicate=result;
+   assert.equal(duplicate.ok,false);
+   assert.match(duplicate.reason,/Modus Konturen mit Öffnungen ist bereits aktiv/);
+   assert.equal(duplicate.report.confirmedCount,3);
+   assert(duplicate.continuationId&&!duplicate.resultRef);
+   const menu=await js(`window.offlinecadDesktop.continuePractice(${JSON.stringify({id:duplicate.continuationId,plan:{...plan,actions:plan.actions.slice(0,1)}})})`);
+   assert.equal(menu.ok,false);
+   assert.match(menu.reason,/Skizzeneditor ist bereits offen und verdeckt das CAD-Menü/);
+   assert.equal(menu.report.confirmedCount,3);
+   assert.equal(menu.report.revision,duplicate.report.revision);
+   assert(menu.continuationId&&!menu.resultRef);
+   result=await js(`window.offlinecadDesktop.continuePractice(${JSON.stringify({id:menu.continuationId,plan:{...plan,actions:plan.actions.slice(3)}})})`);
+   assert.equal(result.report.confirmedCount,plan.actions.length);
+   fs.writeFileSync(path.join(directory,'sketch-mode-diagnostics.json'),JSON.stringify([
+    {reason:duplicate.reason,report:duplicate.report},{reason:menu.reason,report:menu.report}
+   ],null,2));
+   checks.push('Both blocked controls name the still-open editor state and the exercise resumes on the same revision');
+  }
+  fs.writeFileSync(path.join(directory,'sketch-steps.json'),JSON.stringify(result,null,2));
+  assert(result.ok,result.reason);
+  const project=await js(`window.offlinecadDesktop.practiceProjectResult({action:'read',id:${JSON.stringify(result.resultRef)}})`);
+  const originalNodes=JSON.parse(before.serialized).nodes,known=new Set(originalNodes.map(node=>node.id));
+  const added=project.nodes.filter(node=>!known.has(node.id));
+  assert.deepEqual(project.nodes.filter(node=>known.has(node.id)),originalNodes);
+  assert.equal(added.length,1);
+  assert.equal(added[0].recipe.type,'sketch');
+  assert.equal(added[0].stats.solids,1);
+  assert(Math.abs(added[0].stats.volume-(60*40-Math.PI*16)*5)<.001,'Analytical volume for 60×40×5 with Ø8 through-hole');
+  const scene=await js(`window.__cadTest.controller.describe(${JSON.stringify(project)})`);
+  const bounds=scene.objects.find(node=>node.id===added[0].id).worldBounds,size=bounds.size;
+  assert(size.every((v,i)=>Math.abs(v-[60,40,5][i])<.001),'Independent native bounds');
+  const clearance=await checkPlateOpening(js,project,added[0],bounds);
+  const after=await js(parentSnapshot);
+  assert.equal(after.serialized,before.serialized);
+  assert.deepEqual(after.selection,before.selection);
+  assert.deepEqual(after.visiblePreviewRoots,before.visiblePreviewRoots);
+  assert.equal(after.previewId,before.previewId);
+  for(const key of ['undo','redo','previews','revision'])assert.equal(after.state[key],before.state[key],key);
+  checks.push('Native sketch board clicks form an outer polyline and close it','Native drag creates a circle opening, and height is set through its visible field','Independent analytical volume and native dimensions match the editable sketch','Parent project and history preserved');
+  return {ok:true,checks,size,clearance,volume:added[0].stats.volume,...(result.report.quality?{quality:result.report.quality}:{})};
+}
+
+module.exports.verifyPracticeSketchModeRecovery=verifyPracticeSketchModeRecovery;
