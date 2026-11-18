@@ -161,3 +161,35 @@ export function contextReactionPatterns(findings){
   .filter(([,count])=>count/total>=1/3)
   .map(([flag,count])=>({flag,count,total,hint:'Startkontext prüfen',untrusted:true}));
 }
+
+export function developmentFindings(report,records){
+ const outcomes=(report?.phases??[]).flatMap(phase=>phase.outcomes??[]);
+ const runs=(records??[]).map(record=>{
+  const outcome=outcomes.find(entry=>entry.runId===record?.id)??null;
+  return {...runFinding(record,outcome),symptoms:runSymptoms(record)};
+ });
+ const cases=developmentCases(report);
+ const passed=cases.filter(entry=>entry.decisive?.status==='passed');
+ const byReason={};
+ for(const entry of cases){
+  if(entry.decisive?.status==='passed')continue;
+  const reason=String(entry.decisive?.reason??'unverified');
+  byReason[reason]=(byReason[reason]??0)+1;
+ }
+ return {
+  format:'FormnaroDevelopmentFindings',
+  version:1,
+  check:{id:report?.id??null,model:report?.model??null,levels:report?.setup?.levels??[],sourceHash:report?.sourceHash??null},
+  summary:{
+   passedFirstTry:passed.filter(entry=>entry.decisive.firstTry===true).length,
+   passedAfterFeedback:passed.filter(entry=>entry.decisive.firstTry===false).length,
+   failed:cases.filter(entry=>entry.decisive?.status==='failed').length,
+   open:cases.filter(entry=>!['passed','failed'].includes(entry.decisive?.status)).length,
+   byReason,
+  },
+  runs,
+  patterns:findPatterns(runs),
+  contextReactions:contextReactionPatterns(runs),
+  contextGaps:runs.flatMap(run=>run.contextGaps.map(gap=>({...gap,runId:run.runId,caseId:run.caseId}))),
+ };
+}

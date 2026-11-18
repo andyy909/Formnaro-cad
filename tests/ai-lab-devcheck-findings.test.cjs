@@ -156,3 +156,28 @@ test('Erstreaktions-Muster ab einem Drittel der Läufe, mit Hinweis',async()=>{
  assert.equal(boundary[0].flag,'unklar');
  assert.deepEqual(contextReactionPatterns([]),[]);
 });
+test('Gesamtbefund verbindet Bericht, Läufe, Muster und Kontextlücken',async()=>{
+ const {developmentFindings}=await load();
+ const order=['advanced-01','advanced-02','advanced-05','advanced-07','drill'];
+ const records=order.map(fixture);
+ const outcomes=[
+  {caseId:'advanced-01',runId:records[0].id,status:'blocked',reason:'needs-input'},
+  {caseId:'advanced-02',runId:records[1].id,status:'passed',firstTry:false},
+  {caseId:'advanced-05',runId:records[2].id,status:'passed',firstTry:false},
+  {caseId:'advanced-07',runId:records[3].id,status:'passed',firstTry:true},
+  {caseId:'drill',runId:records[4].id,status:'passed',firstTry:true},
+ ];
+ const report={id:'f14586d9-dfd7-48f6-8869-f7309ca43f20',model:'deepseek-flash',setup:{levels:['low']},sourceHash:'f60b86cb1234567890',phases:[{effort:'low',caseIds:order,outcomes}]};
+ const findings=developmentFindings(report,records);
+ assert.equal(findings.format,'FormnaroDevelopmentFindings');
+ assert.equal(findings.version,1);
+ assert.deepEqual(findings.check,{id:report.id,model:'deepseek-flash',levels:['low'],sourceHash:'f60b86cb1234567890'});
+ assert.deepEqual(findings.summary,{passedFirstTry:2,passedAfterFeedback:2,failed:0,open:1,byReason:{'needs-input':1}});
+ assert.equal(findings.runs.length,5);
+ assert.equal(findings.patterns.length,1);
+ assert.equal(findings.contextReactions.length,1);
+ assert.equal(findings.contextReactions[0].flag,'szene-leer');
+ assert.equal(findings.contextReactions[0].count,3);
+ assert.equal(findings.contextGaps.length,4);
+ assert.ok(findings.contextGaps.every(gap=>gap.runId&&gap.caseId&&gap.kind));
+});
