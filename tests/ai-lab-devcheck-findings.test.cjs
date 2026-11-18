@@ -78,3 +78,16 @@ test('Erste Aktion nennt Denkzeit, Zeitpunkt des Vorschlags und die ersten Schri
  assert.equal(drill.firstProposalMs,8493);
  assert.deepEqual(drill.firstStepKinds,['select','ui','ui','ui','ui']);
 });
+test('Kontextlücken sammeln Rückfrage, Formatregeln und Werkzeugauskünfte',async()=>{
+ const {contextGaps}=await load();
+ const gaps=contextGaps(fixture('advanced-01'));
+ assert.equal(gaps.filter(gap=>gap.kind==='rueckfrage').length,1);
+ assert.ok(gaps.find(gap=>gap.kind==='rueckfrage').text.includes('Bohrachse'));
+ assert.ok(gaps.every(gap=>typeof gap.text==='string'&&gap.text.length<=600));
+ const seven=contextGaps(fixture('advanced-07'));
+ assert.equal(seven.length,1);
+ assert.equal(seven[0].kind,'formatregel');
+ assert.ok(seven[0].text.includes('plan.title'));
+ const withTool=contextGaps({status:'completed',events:[{type:'tool-call',tool:'offlinecad_tool_info',arguments:'ui:tool:drill'}]});
+ assert.deepEqual(withTool,[{kind:'werkzeugauskunft',text:'ui:tool:drill'}]);
+});

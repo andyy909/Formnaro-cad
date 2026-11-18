@@ -66,3 +66,13 @@ export function firstAction(record){
   firstStepKinds:Array.isArray(actions)?actions.slice(0,5).map(action=>action.kind??null):[],
  };
 }
+
+export function contextGaps(record){
+ const gaps=[];
+ if(record?.status==='needs-input')gaps.push({kind:'rueckfrage',text:String(record.finalMessage??'').slice(0,600)});
+ for(const event of record?.events??[]){
+  if(event.type==='format-feedback')gaps.push({kind:'formatregel',text:String(event.error??'').slice(0,600)});
+  if(event.type==='tool-call'&&/tool_info/.test(String(event.tool??'')))gaps.push({kind:'werkzeugauskunft',text:String(event.arguments??'').slice(0,200)});
+ }
+ return gaps;
+}
