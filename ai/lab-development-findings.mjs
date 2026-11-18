@@ -90,3 +90,24 @@ export function firstContextReaction(record){
  const excerpt=text.slice(0,800);
  return {excerpt,flags:CONTEXT_FLAGS.filter(([,matches])=>matches(excerpt)).map(([flag])=>flag),untrusted:true};
 }
+
+export function runFinding(record,outcome){
+ const facts=runFacts(record);
+ return {
+  caseId:facts.caseId,
+  runId:facts.runId,
+  effort:facts.effort,
+  status:facts.status,
+  seconds:facts.seconds,
+  requests:facts.requests,
+  tokens:facts.tokens,
+  failedChecks:facts.failedChecks,
+  formatFeedback:formatFeedback(record),
+  firstAction:firstAction(record),
+  contextGaps:contextGaps(record),
+  firstContextReaction:firstContextReaction(record),
+  outcome:outcome??null,
+  firstTry:typeof outcome?.firstTry==='boolean'?outcome.firstTry:null,
+  feedbackRounds:feedbackRounds(record),
+ };
+}

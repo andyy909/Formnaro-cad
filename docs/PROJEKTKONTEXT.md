@@ -13,6 +13,11 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-3.6: `runFinding()` in `ai/lab-development-findings.mjs` fasst Eckdaten,
+Formatkorrekturen, erste Aktion, Kontextlücken, Erstreaktion, Ergebnis,
+`firstTry` und Prüferrunden zu einem Befundblatt zusammen, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-3.5: `firstContextReaction()` in `ai/lab-development-findings.mjs` gibt die
 ersten 800 Zeichen des ersten Denktextes und die Hinweisflaggen `szene-leer`,
 `widerspruch`, `unklar` aus, immer mit `untrusted: true`, geprüft von

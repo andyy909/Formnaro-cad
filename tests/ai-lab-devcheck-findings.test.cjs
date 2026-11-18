@@ -103,3 +103,18 @@ test('Erstreaktion auf den Startkontext wird mit Hinweisflaggen erfasst',async()
  const german=firstContextReaction({events:[{type:'reasoning',text:'Die Szene ist leer, das ist ein Widerspruch.'}]});
  assert.deepEqual(german.flags,['szene-leer','widerspruch']);
 });
+test('Befundblatt fasst alle Teile eines Laufs mit einheitlichen Schlüsseln zusammen',async()=>{
+ const {runFinding}=await load();
+ const {developmentOutcome}=await import('../ai/lab-development-sequence.mjs');
+ const findings=Object.fromEntries(['advanced-01','advanced-02','advanced-05','advanced-07','drill'].map(name=>{
+  const record=fixture(name);
+  return [name,runFinding(record,developmentOutcome(record))];
+ }));
+ const keys=Object.keys(findings.drill).sort();
+ for(const name of Object.keys(findings))assert.deepEqual(Object.keys(findings[name]).sort(),keys,name+' hat andere Schlüssel');
+ assert.deepEqual(keys,['caseId','contextGaps','effort','failedChecks','feedbackRounds','firstAction','firstContextReaction','firstTry','formatFeedback','outcome','requests','runId','seconds','status','tokens']);
+ assert.equal(findings['advanced-01'].outcome.reason,'needs-input');
+ assert.equal(findings['advanced-02'].firstTry,false);
+ assert.equal(findings.drill.firstTry,true);
+ assert.ok(findings['advanced-01'].firstContextReaction.flags.includes('szene-leer'));
+});
