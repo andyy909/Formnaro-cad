@@ -35,19 +35,9 @@ async function makeRuntime({ desktop, signal, useAI, modeler }) {
     signal,
     createController() {
       signal.throwIfAborted();
-      const controller = createCadController({
+      return createCadController({
         createWorker: () => new Worker(new URL('./cad-worker.js', import.meta.url), { type: 'module' }),
       });
-      const dispose = controller.dispose;
-      const abort = () => controller.cancel();
-      signal.addEventListener('abort', abort, { once: true });
-      return {
-        ...controller,
-        dispose() {
-          signal.removeEventListener('abort', abort);
-          dispose();
-        },
-      };
     },
   };
   if (!useAI) return runtime;
@@ -74,7 +64,15 @@ async function makeRuntime({ desktop, signal, useAI, modeler }) {
     'maxOutputTokens',
   ];
   const requestConfig = Object.fromEntries(keys.map((key) => [key, settings[key] ?? null]));
-  runtime.model = settings.model;
+  runtime.connection = {
+    providerId: settings.providerId,
+    protocol: settings.protocol,
+    model: settings.model,
+    reasoningEffort: settings.reasoningEffort,
+    openAIReasoningEffort: settings.openAIReasoningEffort,
+    mistralReasoningEffort: settings.mistralReasoningEffort,
+    providerReasoningEffort: settings.providerReasoningEffort,
+  };
   runtime.generate = async (args) => {
     signal.throwIfAborted();
     const requestId = args.requestId ?? crypto.randomUUID();
@@ -159,7 +157,9 @@ export function mountLabSupplementalChecks({
     const passed = report.results.filter((row) => row.status === 'passed').length;
     const states = { running: 'Läuft', completed: 'Beendet', cancelled: 'Abgebrochen', interrupted: 'Unterbrochen' };
     const state = states[report.status];
-    const answerMode = report.model ? 'Live · ' + report.model : 'Fest vorgegebene Antworten';
+    const model = report.connection?.model ?? report.model;
+    const answerMode =
+      report.mode === 'live' || model ? 'Live' + (model ? ' · ' + model : '') : 'Fest vorgegebene Antworten';
     const summary = element(
       'p',
       state + ' · ' + passed + ' von ' + report.caseIds.length + ' bestanden · ' + answerMode,
@@ -207,13 +207,14 @@ export function mountLabSupplementalChecks({
       status: 'running',
       startedAt: new Date().toISOString(),
     };
-    const useAI = el('mode').value === 'live';
+    report.mode = el('mode').value;
+    const useAI = report.mode === 'live';
     onBusy();
     render(report);
     showResults();
     try {
       const runtime = await makeRuntime({ desktop, signal: controller.signal, useAI, modeler: getModeler() });
-      if (runtime.model) report.model = runtime.model;
+      if (runtime.connection) report.connection = runtime.connection;
       for (const test of queue) {
         if (controller.signal.aborted) break;
         status('Zusatzprüfung · ' + test.label);
@@ -234,6 +235,7 @@ export function mountLabSupplementalChecks({
           if (!Array.isArray(outcome?.checks) || !outcome.checks.length)
             throw Error('Kein messbarer Prüfbefund vorhanden.');
           row.checks = outcome.checks;
+          if (outcome.input) row.input = outcome.input;
           row.status = row.checks.every((check) => check.passed === true) ? 'passed' : 'failed';
         } catch (error) {
           row.status = controller.signal.aborted ? 'cancelled' : 'error';

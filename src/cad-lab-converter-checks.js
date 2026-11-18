@@ -120,7 +120,20 @@ async function checkProtectedCone({ analyse, convert, add }) {
     'Geschützte Konusflächen bleiben beim Zusammenführen tabu',
     refused && same(sorted(analysis.state.protected_faces), expected),
   );
-  return convert().run();
+  const unprotected = await convert().run();
+  const coneCount = (new TextDecoder().decode(unprotected.bytes).match(/=\s*CONICAL_SURFACE\s*\(/g) ?? []).length;
+  add(
+    'Ungeschützter Vergleichslauf rekonstruiert einen analytischen Konus',
+    unprotected.report.valid && coneCount === 1,
+    coneCount,
+  );
+  const result = await convert(analysis.state).run();
+  const applied = result.report.bodies[0]?.details?.manual_regions;
+  add('Konvertierung übernimmt den Dreiecksschutz', same(sorted(applied?.protected_faces ?? []), expected), {
+    selectedRegions: selection,
+    protectedFaces: applied?.protected_faces?.length ?? 0,
+  });
+  return result;
 }
 
 async function checkFreeform({ analyse, convert, desktop, generate, signal, add }) {
@@ -129,14 +142,25 @@ async function checkFreeform({ analyse, convert, desktop, generate, signal, add 
   const selection = analysis.regions.filter((region) => region.type === 'GRAPH').map((region) => region.edit_id);
   add('Zusammenhängende Freiformfläche erkannt', selection.length === 1, selection);
   if (selection.length !== 1) return baseline;
-  let answered = false,
-    providerFailure;
+  let answered = false;
+  let validAnswer = false;
+  let providerFailure;
   const generateLive =
     generate &&
     (async (request) => {
       try {
         const reply = await generate(request);
         answered = true;
+        const scene = request.scene;
+        if (reply.revision !== scene.revision || !Array.isArray(reply.commands))
+          throw Error('Ungültige Freiform-Antwort.');
+        const commands = reply.commands.length ? validateConverterAIProposal(reply, scene) : [];
+        const allowed = commands.every(
+          (command) =>
+            !(command.op === 'protect' && !command.enabled) && command.regions.some((id) => scene.targets.includes(id)),
+        );
+        if (!allowed) throw Error('Freiform-Antwort ändert geschützte oder unbeteiligte Flächen.');
+        validAnswer = true;
         return reply;
       } catch (error) {
         providerFailure = error;
@@ -159,10 +183,11 @@ async function checkFreeform({ analyse, convert, desktop, generate, signal, add 
     analyse: (_settings, edits, commands) => analyse(edits, commands),
     convert: (settings) => convert(settings.region_edits),
   });
-  const { result, outcome } = await withCancel(autopilot.cancel, signal, () => autopilot.run({ baseline }));
+  const { result, outcome, detail } = await withCancel(autopilot.cancel, signal, () => autopilot.run({ baseline }));
   if (generate) {
     if (!answered && providerFailure) throw providerFailure;
-    add('Live-Pr�fung des Freiformvorschlags beantwortet', answered);
+    add('Anbieter hat geantwortet', answered);
+    add('Gültiger Freiformvorschlag oder bewusster Verzicht', validAnswer, detail || undefined);
   }
   const before = baseline.report.deviation?.sampled_max_mm;
   const after = result.report.deviation?.sampled_max_mm;
@@ -221,10 +246,10 @@ async function measureImported(id, controller, body, result, signal, add) {
       bevel?.point ?? null,
     );
   }
-  if (countersinks || id === 'stl-cone') {
+  if (countersinks) {
     const step = new TextDecoder().decode(result.bytes);
     const cones = (step.match(/=\s*CONICAL_SURFACE\s*\(/g) ?? []).length;
-    add('Konische Flächen im importierten STEP enthalten', cones === (countersinks ? 2 : 1), cones);
+    add('Konische Flächen im importierten STEP enthalten', cones === 2, cones);
   }
   if (id === 'stl-cone') {
     const opening = await above(0, 0);
@@ -337,7 +362,9 @@ export async function runStlDevelopmentCheck(id, { desktop, createController, ge
     if (body) await measureImported(id, controller, body, result, signal, add);
     controller.undo();
     add('Ein Undo stellt das isolierte Projekt exakt wieder her', controller.serialize() === before);
-    return { checks };
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    const sha256 = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+    return { checks, input: { file: name, sha256, ...options } };
   } finally {
     transfer?.discard();
     controller.dispose();
