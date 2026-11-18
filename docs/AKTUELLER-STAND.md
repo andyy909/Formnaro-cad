@@ -12,7 +12,7 @@ Zusatzprüfungen decken CAD-Alltag, STL-Konvertierung und Fotomodus ab. Der Erge
 
 Das Windows-ZIP vollständig in einen beschreibbaren Ordner entpacken und **Formnaro starten** öffnen. Die Windows-EXE ist unsigniert. Programm-, CAD-Kern- und FreeCAD-Quellen sind separate Downloads.
 
-Die Paketprüfung umfasste 999 EXE-Prüfungen. Die Abnahme am entpackten Paket bestätigte den Start mit frischem Profil, Speichern und Wiederöffnen, STEP-Export, ein Beispielprojekt und die KI-Labor-Anzeige mit archivierten Läufen.
+Die Paketprüfung umfasste 999 EXE-Prüfungen. Die Quell-CI prüfte je 544 Testdateien unter Windows und Linux. Die Abnahme am entpackten Paket bestätigte den Start mit frischem Profil, Speichern und Wiederöffnen, STEP-Export, ein Beispielprojekt und die KI-Labor-Anzeige mit archivierten Läufen.
 
 ## English
 
@@ -22,6 +22,6 @@ Supplemental checks cover everyday CAD, STL conversion, and photo mode. Results 
 
 Extract the entire Windows ZIP into a writable folder and open **Formnaro starten**. The Windows executable is unsigned. Application, CAD-kernel, and FreeCAD sources are separate downloads.
 
-The package passed 999 executable checks. Acceptance of the extracted package verified a launch with a fresh profile, saving and reopening, STEP export, a bundled example, and AI Lab results with recorded runs.
+The package passed 999 executable checks. Source CI passed 544 test files each on Windows and Linux. Acceptance of the extracted package verified a launch with a fresh profile, saving and reopening, STEP export, a bundled example, and AI Lab results with recorded runs.
 
-[Release acceptance / Abnahme](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Abnahmebericht.md) · [Source CI](https://github.com/andyy909/Formnaro-cad/actions/workflows/build.yml) · [Release history / Frühere Ausgaben](https://github.com/andyy909/Formnaro-cad/releases)
+[Release acceptance / Abnahme](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Abnahmebericht.md) · [PR-CI](https://github.com/andyy909/Formnaro-cad/actions/runs/44264685374) · [main-CI](https://github.com/andyy909/Formnaro-cad/actions/runs/44267318443) · [Tag-CI](https://github.com/andyy909/Formnaro-cad/actions/runs/44267368075) · [Release history / Frühere Ausgaben](https://github.com/andyy909/Formnaro-cad/releases)

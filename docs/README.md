@@ -50,7 +50,6 @@ Anwenderdokumentation für die portable Windows-Ausgabe: Bedienwege, Werkzeuge, 
 | [GROSSE-NETZE-UND-ZAHNRAEDER.md](GROSSE-NETZE-UND-ZAHNRAEDER.md) | Zahnradkopplungen, Großnetzrezepte und KI-Modellstrenge ab 0.118.0. |
 | [GRUPPIEREN-TEMPO.md](GRUPPIEREN-TEMPO.md) | Schnellere Gruppenvereinigung über einen ausgewogenen Baum (0.78.0). |
 | [IMPORTMITTE-UND-EXPORTNUMMERN.md](IMPORTMITTE-UND-EXPORTNUMMERN.md) | Importmitte, Versatz weiterer Importe und laufende Exportnummern (0.60.0). |
-| [KLARER-START.md](KLARER-START.md) | Startordner mit drei zusätzlichen bearbeitbaren CAD-Beispielen (0.114.0-r7). |
 | [LESBARE-MASSE.md](LESBARE-MASSE.md) | Anzeige von Maßen und Winkeln mit höchstens zwei Nachkommastellen ab 0.65. |
 | [LOCHGRUPPEN.md](LOCHGRUPPEN.md) | Mehrere gleichartige Lochformen gemeinsam gruppieren ab 0.64. |
 | [MAKE-SOLID.md](MAKE-SOLID.md) | Netzteil in eine geschlossene Annäherung umwandeln, Original bleibt erhalten (Paket 25). |
@@ -96,6 +95,7 @@ Die erfassten Tests und ihre Ausführungsarten stehen im [Testmanifest](../tests
 | Dokument | Einordnung |
 | --- | --- |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Englische Architekturübersicht zu Electron, Vite-Oberfläche und den Arbeitsmodi. |
+| [ENTWICKLER-KONTEXT.md](ENTWICKLER-KONTEXT.md) | Technischer Einstieg zu Architektur, Kompatibilität, Prüfungen und Paketbau. |
 | [BUILD.md](BUILD.md) | Bauen der aktuellen Windows-Ausgabe mit den Skripten aus `package.json`. |
 | [CAD-PROJEKTFORMAT-5.md](CAD-PROJEKTFORMAT-5.md) | Strikter Formatvertrag für das CAD-Projektformat 5. |
 | [CAD-UMSTELLUNG-AUFTRAG.md](CAD-UMSTELLUNG-AUFTRAG.md) | Auftrag zur durchgängigen nativen CAD-Geometrie und zur Trennung von Anzeigemesh und CAD-Körper. |
@@ -130,7 +130,7 @@ Einrichtung und Verhalten der KI-Anbindung: Anbieter, Agenten, Werkzeuge, Messru
 | [KI-ANBIETER-UND-AGENTEN.md](KI-ANBIETER-UND-AGENTEN.md) | Zwei Wege im Programm: prüfender KI-Chat und ausführender Agentenchat über die lokale MCP-Schnittstelle. |
 | [KI-ARBEITSUMGEBUNG.md](KI-ARBEITSUMGEBUNG.md) | Getrennte Anbieter-Kontexte und Werkzeugvertrag der lokalen KI-Arbeitsumgebung. |
 | [KI-AUFTRAEGE.md](KI-AUFTRAEGE.md) | Gespeicherte KI-Aufträge mit Fortsetzung und verbleibendem Budget ab 0.111. |
-| [KI-BENCHMARK.md](KI-BENCHMARK.md) | Aufbaubenchmark 2.0.0 und Grundlagen 1.0.4 im Benchmark-Reiter. |
+| [KI-BENCHMARK.md](KI-BENCHMARK.md) | Aktuelle Grund- und Aufbau-Suiten, Bericht und historische Messstände. |
 | [KI-DECKEL.md](KI-DECKEL.md) | Formangepasste Deckel aus einem Gehäusenetz mit der KI ab 0.50.0. |
 | [KI-FEHLERVORSCHAU.md](KI-FEHLERVORSCHAU.md) | Sichtbare KI-Entwürfe trotz fehlgeschlagener Ergebnisprüfungen ab 0.94. |
 | [KI-MERKMALSBEZUEGE.md](KI-MERKMALSBEZUEGE.md) | Gezielte Änderungen mit Merkmalsbezügen ab Entwicklungsstand 0.109. |
@@ -145,11 +145,11 @@ Einrichtung und Verhalten der KI-Anbindung: Anbieter, Agenten, Werkzeuge, Messru
 | [KI-REKONSTRUKTION.md](KI-REKONSTRUKTION.md) | Messwerkzeuge für den nativen Nachbau aus STL-Schnittkonturen ab 0.92. |
 | [KI-STARTDIAGNOSE.md](KI-STARTDIAGNOSE.md) | Private Startdiagnose mit drei Kontextvarianten (A/B/C) für Vergleiche. |
 | [KI-STL-AUTOMATIK.md](KI-STL-AUTOMATIK.md) | Automatische STL-zu-CAD-Rekonstruktion über die KI im Import. |
-| [KI-TESTLABOR.md](KI-TESTLABOR.md) | KI-Testlabor mit dritter Auswerterrolle und historischen Ständen. |
+| [KI-TESTLABOR.md](KI-TESTLABOR.md) | Bedienung von Entwicklungscheck, Zusatzprüfungen und Befundexport mit historischen Ständen. |
 | [KI-WERKZEUGE.md](KI-WERKZEUGE.md) | Vorbereitende Messrunden und zusätzliche Körper-, Volumen- und Bohrkorridorprüfungen ab 0.53.0. |
 | [PROGRAMM-ASSISTENT.md](PROGRAMM-ASSISTENT.md) | Programm-Assistent für Fragen, Werkzeugerklärungen und sichtbare Vorführungen im KI-Chat. |
 | [PYTHON-SCHNITTSTELLE.md](PYTHON-SCHNITTSTELLE.md) | Python-Modellierung mit mitgelieferter, erst bei Bedarf geladener Laufzeit ab 0.90. |
-| [SPRACHEINGABE.md](SPRACHEINGABE.md) | Spracheingabe im KI-Chat über Deepgram und einen separat gespeicherten Schlüssel. |
+| [SPRACHEINGABE.md](SPRACHEINGABE.md) | Windows-Diktat und optionale Deepgram-Erkennung im KI-Chat. |
 
 ## Archiv
 
@@ -200,6 +200,7 @@ Historische Pläne, Versions-, Integrations- und Abnahmebelege. Sie dokumentiere
 | [KI-LABOR-ROLLENWAHL.md](KI-LABOR-ROLLENWAHL.md) | Eigene Modelle für die drei Laborrollen (Integrationsstand 07.11.2026). |
 | [KI-UEBERWACHER-ABNAHME-2026-11-06.md](KI-UEBERWACHER-ABNAHME-2026-11-06.md) | Umsetzung und Abnahme des KI-Überwachers (0.132.0). |
 | [KI-UEBERWACHER-ANTWORTKORREKTUR-2026-11-06.md](KI-UEBERWACHER-ANTWORTKORREKTUR-2026-11-06.md) | Begrenzte Antwortkorrektur des Überwachers (0.132.1). |
+| [KLARER-START.md](KLARER-START.md) | Startordner mit drei zusätzlichen bearbeitbaren CAD-Beispielen (0.114.0-r7). |
 | [MIT-FREIGABE-0.117.md](MIT-FREIGABE-0.117.md) | MIT-Freigabe 0.117.0-r8 für beide Repositories. |
 | [MODELLIERANKER-BAUGRUPPEN-KOMPAKTPROFIL.md](MODELLIERANKER-BAUGRUPPEN-KOMPAKTPROFIL.md) | Privater Entwicklungsstand 02.11.2026 zu Modellierankern, Baugruppen und Profil. |
 | [NACHPRUEFUNG-0.114.0.md](NACHPRUEFUNG-0.114.0.md) | Nachprüfung eines externen Berichts zu 0.114.0-r7. |

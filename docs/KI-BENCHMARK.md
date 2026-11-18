@@ -1,10 +1,12 @@
 # KI-Benchmark
 
-## Zwei getrennte 16er-Suiten ab 0.138.0
+## Zwei getrennte 16er-Suiten in 0.144.0-r1
 
-Im Reiter **Benchmark → Aufgabenserie** ist der neue **Aufbaubenchmark 2.0.0** vorausgewählt. **Grundlagen 1.0.4** mit den bisherigen Aufgaben bleiben jederzeit wählbar. Öffnen, Umschalten und Vorschau führen keine KI-Anfrage aus; der Startknopf startet ausschließlich die gewählte Suite. Die bestehende lokale API verwendet ohne `suiteId` weiterhin den Grundbenchmark; den Aufbau-Benchmark ausdrücklich mit `suiteId: "formnaro-practice-advanced"` starten.
+Im Reiter **Benchmark → Aufgabenserie** wählst du den [Aufbaubenchmark 2.0.18](../ai/benchmark-advanced-v2.json) oder [Grundlagen 1.0.22](../ai/benchmark-core-v1.json). Öffnen, Umschalten und Vorschau führen keine KI-Anfrage aus; der Startknopf startet ausschließlich die gewählte Suite. Die bestehende lokale API verwendet ohne `suiteId` weiterhin den Grundbenchmark; den Aufbau-Benchmark ausdrücklich mit `suiteId: "formnaro-practice-advanced"` starten.
 
-| Neue Aufgabe | Zusätzliche Anforderungen |
+## Aufbauaufgaben
+
+| Aufgabe | Zusätzliche Anforderungen |
 | --- | --- |
 | A01 Asymmetrisches Bohrbild | Drei Durchgangsbohrungen mit verschiedenen Durchmessern und Weltpositionen |
 | A02 Zwei versetzte Durchbrüche | Zwei unterschiedlich große Öffnungen mit erhaltenem Materialsteg |
@@ -17,19 +19,19 @@ Im Reiter **Benchmark → Aufgabenserie** ist der neue **Aufbaubenchmark 2.0.0**
 
 Auch der Aufbau-Benchmark umfasst **acht Aufgaben je zweimal = 16 frische Versuche**: A01–A08, dann A01–A08. Grenzen je Versuch: 600 Sekunden, 16.384 Ausgabetokens pro Antwort, 30 Runden, höchstens zwei Formatkorrekturen. Die 360 Sekunden und 20 Runden des Grundbenchmarks bleiben unverändert. Alle unbeteiligten Teile sind geschützt.
 
-Die neue Suite hat eigene Aufgaben-/Prüferhashes in `ai/benchmark-advanced-v2.json`. Acht richtige native Referenzmodelle wurden akzeptiert; je Aufgabe wurden zusätzlich Untätigkeit, ein nah am Soll liegender Fehler und fehlende sichtbare Ausführung abgewiesen. Die lokale Kalibrierung steht in `ai/benchmark-advanced-calibration-v2.json` und ist **kein KI-Ergebnis**. Ein neuer KI-Vollbenchmark auf der Aufbau-Suite wurde bei ihrer Vorbereitung nicht gestartet.
+Die Aufbau-Suite hat eigene Aufgaben-/Prüferhashes in `ai/benchmark-advanced-v2.json`. Bei ihrer Einführung mit Version 2.0.0 wurden acht richtige native Referenzmodelle akzeptiert. Je Aufgabe wurden zusätzlich Untätigkeit, ein nah am Soll liegender Fehler und fehlende sichtbare Ausführung abgewiesen. Die lokale Kalibrierung steht in `ai/benchmark-advanced-calibration-v2.json` und ist **kein KI-Ergebnis**. Ein neuer KI-Vollbenchmark auf der Aufbau-Suite wurde bei ihrer Vorbereitung nicht gestartet.
 
 Alte Serien, Originalfehler und erfolgreiche Nachtests bleiben vollständig erhalten. Die beiden neuen 16/16-Grundläufe auf 0.137.4-r2 sind weiterhin **Grundlagen 1.0.4**, keine Aufbau-Erfolge. Ergebnisberichte und Aufgabensäulen verwenden die im jeweiligen Lauf gespeicherten Fälle. Grund- und Aufbau-Suite werden im Modellvergleich anhand ihrer Suitehashes getrennt.
 
-## Bisheriger Grundbenchmark und gemeinsame Auswertung
+## Grundbenchmark und gemeinsame Auswertung
 
 Ab Formnaro0.137.0: ein eigenständiger Benchmark-Lauf mit16festenVersuchen und eigenem Säulendiagramm. Im KI-Testlabor den Reiter **Benchmark** öffnen. Profil und Modell kommen aus der Rollenwahl im Versuchsplan. Der Benchmark verwendet genau eine unterstützte Denkstufe und zeigt vor dem Start seine Bedingungen. Öffnen oder Einstellen startet keinen Versuch.
 
-Die eingefrorene Suite `formnaro-practice-core` Version 1.0.4 enthält acht bekannte Entwicklungsaufgaben: Maße/Mittelpunkt, ein Baugruppenteil, Durchgangsbohrung, Kreismuster, bestimmte Kante fasen, Aushöhlen, echte Messung und Zeichnung. Zwei frische isolierte Versuche je Aufgabe ergeben genau16. Reihenfolge: B01–B08, dann B01–B08. Sichtbare Übung, Kontext C, Auswahl, kein Startbild. Ohne Schrittüberwacher als Grundbenchmark; Shadow ausdrücklich als separate Diagnose auswählbar. Höchstens360s je Versuch,16384Outputtokens je Antwort,20Runden und zweiFormatkorrekturen. Der Überwacher erhält bei Shadow einen reservierten Anteil desselben Zeitbudgets; bei ausgeschaltetem Überwacher steht das ganze Budget dem Modellierer zur Verfügung.
+Die Suite `formnaro-practice-core` enthält acht bekannte Entwicklungsaufgaben: Maße/Mittelpunkt, ein Baugruppenteil, Durchgangsbohrung, Kreismuster, bestimmte Kante fasen, Aushöhlen, echte Messung und Zeichnung. Zwei frische isolierte Versuche je Aufgabe ergeben genau16. Reihenfolge: B01–B08, dann B01–B08. Sichtbare Übung, Kontext C, Auswahl, kein Startbild. Ohne Schrittüberwacher als Grundbenchmark; Shadow ausdrücklich als separate Diagnose auswählbar. Höchstens360s je Versuch,16384Outputtokens je Antwort,20Runden und zweiFormatkorrekturen. Der Überwacher erhält bei Shadow einen reservierten Anteil desselben Zeitbudgets; bei ausgeschaltetem Überwacher steht das ganze Budget dem Modellierer zur Verfügung.
 
 Aufgaben, Fixtures und ausgewählte Prüf-/Werkzeugquellen besitzen festgehaltene SHA256-Werte in `ai/benchmark-core-v1.json`. Die gespeicherte Serie enthält zusätzlich vollständigen Quellmanifest, Programmversion, feste Reihenfolge, Rollen, Budgets und Planhash; Protokolle enthalten konkrete Prompts, tatsächliche Modellkennungen, native Befunde und regulären Abschluss. Eine geänderte Aufgabe oder ein geänderter Prüfer erfordert bewusst eine neue Kalibrierung/Suite. Native Laufzeitdateien sind nicht Bestandteil des Quellhashs; der ausgelieferte Paketnachweis hält den ASAR- und EXE-Hash zusätzlich fest.
 
-Vollständig bestätigt verlangt richtige native Pflichtbefunde, regulären Abschluss, fehlerfreien abgeschlossenen Ablauf und passende Modellkennung in jeder Modellierantwort. Fehlende/abweichende Modellkennungen, ungeprüfte Geometrie und Infrastrukturprobleme werden getrennt gezeigt. Alle16geplanten Bedingungen bleiben im Nenner. Erfolg ohne/nach Korrektur, acht einzelne0/2–2/2Ergebnisse, Laufzeitmedian mit Fallzahl und sämtliche Versuche einschließlich Fehlern bleiben sichtbar. Die allgemeine Kostenanzeige und Berichte trennen Modellierer, Überwacher und Abschlussauswerter. Kosten beruhen auf gemeldetem Verbrauch; fehlende Usage bleibt unbekannt. Zwei Wiederholungen bekannter Aufgaben sind keine allgemeine Zuverlässigkeitsquote oder Modellrangliste.
+Vollständig bestätigt verlangt richtige native Pflichtbefunde, regulären Abschluss, fehlerfreien abgeschlossenen Ablauf und passende Modellkennung in jeder Modellierantwort. Fehlende/abweichende Modellkennungen, ungeprüfte Geometrie und Infrastrukturprobleme werden getrennt gezeigt. Alle16geplanten Bedingungen bleiben im Nenner. Erfolg ohne/nach Korrektur, acht einzelne0/2–2/2Ergebnisse, Laufzeitmedian mit Fallzahl und sämtliche Versuche einschließlich Fehlern bleiben sichtbar. Die allgemeine Kostenanzeige und Berichte trennen Modellierer, Überwacher und Abschlussauswerter. Der Bericht nennt den 95-%-Wilson-Bereich, sobald alle Bedingungen beendet sind. Geschätzte Kosten je bestätigtem Erfolg beruhen auf gemeldetem Verbrauch und bekannten Tarifen. Fehlende Verbrauchs- oder Preisangaben bleiben als unbekannt ausgewiesen. Zwei Wiederholungen bekannter Aufgaben sind keine allgemeine Zuverlässigkeitsquote oder Modellrangliste.
 
 Bei Abbruch bleiben Teilstände erhalten. **Nur ausstehende Versuche fortsetzen** verwendet denselben Programm-/Suite-Stand und die eingefrorene Rollenwahl. Fertig abgeschlossene Fehlerfälle zählen als Fehler und werden nicht still wiederholt. Unterbrochene Versuche bleiben als eigene Rohprotokolle erhalten. Fortsetzung erzeugt für deren Bedingung einen neuen Versuch. Ein vollständig beendeter Benchmark kann über diesen Knopf nicht noch einmal gestartet werden; ein neuer Start ist eine getrennte Serie.
 
