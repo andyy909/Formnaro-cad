@@ -1,0 +1,207 @@
+{
+  "id": "ae1d77f9-e425-47e8-993f-8197573488b9",
+  "spec": {
+    "caseId": "drill",
+    "effort": "low",
+    "seriesName": "Entwicklungscheck · f14586d9-dfd7-48f6-8869-f7309ca43f20 · low"
+  },
+  "status": "completed",
+  "cleanExit": true,
+  "close": {
+    "code": 0,
+    "signal": null,
+    "shutdownMs": 915,
+    "windowCloseMs": 90,
+    "afterWindowCloseMs": 825,
+    "windowCloseSource": "ipc-received"
+  },
+  "verification": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "Unbeteiligtes Teil vollständig erhalten",
+        "passed": true
+      },
+      {
+        "name": "Nur native sichtbare Volumenkörper",
+        "passed": true
+      },
+      {
+        "name": "Ein Körper mit geforderten Außenmaßen und Lage",
+        "passed": true
+      },
+      {
+        "name": "Unabhängig erwartetes Materialvolumen",
+        "passed": true,
+        "actual": {
+          "actual": 9373.805328941535,
+          "expected": 9373.805328941535
+        }
+      },
+      {
+        "name": "Native mittige Durchgangsbohrung",
+        "passed": true,
+        "actual": {
+          "revision": "a7242c5109ea2063",
+          "results": [
+            {
+              "id": "independentBore",
+              "engine": "cad",
+              "kind": "bore",
+              "value": {
+                "diameter": 6,
+                "depth": 8,
+                "from": [
+                  -2.775557561562892e-17,
+                  -8.881784197001254e-16,
+                  -6.352747104407253e-22
+                ],
+                "to": [
+                  -2.775557561562892e-17,
+                  -8.881784197001254e-16,
+                  8
+                ],
+                "axis": [
+                  0,
+                  0,
+                  1
+                ],
+                "axisAngleDegrees": 0,
+                "axisOffset": 8.886119947416685e-16,
+                "endpointError": 8.886119947418957e-16,
+                "clear": true,
+                "surroundingMaterial": true,
+                "minWall": 0.1,
+                "radialAllowance": 0.01,
+                "method": "analytic-cylinder-and-native-boolean-ring",
+                "scope": "Full cylindrical wall and continuous surrounding ring, excluding the reported axial/radial allowance. Endpoints measure the cylindrical portion, not countersinks or drill-tip cones."
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "scope": "Diskrete native Maße und erhaltene Quellen; keine Fertigungs- oder kontinuierliche Kollisionsfreigabe."
+  },
+  "modelIdentity": {
+    "requested": "deepseek-flash",
+    "returned": "deepseek-flash",
+    "exactMatch": true
+  },
+  "firstReasoningMs": 2457,
+  "elapsedMs": 23166,
+  "events": [
+    {
+      "type": "start-context",
+      "user": "Current scene (data):\n{\"revision\":\"c3f2b0abb1a64dfd\",\"objects\":[],\"selectionTargets\":[],\"practiceIsolated\":true}\nUser task:\nBohre mittig eine durchgehende Bohrung Ø6 mm entlang Welt-Z in die ausgewählte Platte40 ×30 ×8 mm. Außenmaße und Lage erhalten.\nDas unbeteiligte Teil unverändert erhalten."
+    },
+    {
+      "type": "request",
+      "round": 0,
+      "ms": 1431
+    },
+    {
+      "type": "reasoning",
+      "text": "We need answer JSON only. Need interpret: practiceObjects says alias existing-1 Platte kind cad. User says selected Platte 40x30x8, drill central through hole Ø6 along world Z. Need plan or actions? Task asks actual construction likely plan? We are practice assistant, visible UI only. Need provide plan with revision exact. We need know fields? For drilling, menu:cad then ui:tool:drill, choose face-centroid in ui:id:cad-ref-filter, face action top existing-1, uncheck through? Through is true. set diameter 6. preview/apply. But also \"Außenmaße und Lage erhalten\" means don't change size/position. Existing body selected? Scene selection empty but practiceObjects supplied selected. There's only one plate. Drill top face through Z gives central hole. We need perhaps ensure center? \"mittig\" but no coords facts. Practice objects only says alias name kind no size/center. Actual body presumably 40x30x8. \"ausgewählte Platte\" selected. Drill tool face-centroid top maybe face centroid, central. Good.\n\nNeed maybe plan with actions. They ask \"Bohre...\" probably execute. We can return plan actions. Since revision current c3f2b0abb1a64dfd. Need no message in plan. Use assistant kind practice plan. Actions max etc.\n\nNeed ensure actual field IDs. We know ui:id:cad-ref-filter, cad-drill-through, cad-drill-diameter, cad-ref-preview, cad-ref-apply. Also maybe set through true? Through default maybe false? \"uncheck ui:id:cad-drill-through\" for blind; for through ensure set true. Use ui set target u"
+    },
+    {
+      "type": "usage",
+      "round": 0,
+      "usage": {
+        "input_tokens": 7009,
+        "input_tokens_details": {
+          "cached_tokens": 6784
+        },
+        "output_tokens": 905,
+        "output_tokens_details": {
+          "reasoning_tokens": 571
+        },
+        "total_tokens": 7914
+      },
+      "returnedModel": "deepseek-flash"
+    },
+    {
+      "type": "proposal",
+      "plan": {
+        "version": 1,
+        "title": "Mittige Durchgangsbohrung Ø6 in Platte",
+        "actions": [
+          {
+            "kind": "select",
+            "targets": [
+              "existing-1"
+            ],
+            "text": "Platte auswählen"
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "menu:cad",
+            "text": "CAD-Menü öffnen"
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:tool:drill",
+            "text": "Bohrwerkzeug öffnen"
+          },
+          {
+            "kind": "ui",
+            "action": "choose",
+            "target": "ui:id:cad-ref-filter",
+            "value": "face-centroid",
+            "text": "Bezug als Flächenmitte wählen"
+          },
+          {
+            "kind": "ui",
+            "action": "set",
+            "target": "ui:id:cad-drill-through",
+            "value": "true",
+            "text": "Durchgangsbohrung aktivieren"
+          },
+          {
+            "kind": "ui",
+            "action": "set",
+            "target": "ui:id:cad-drill-diameter",
+            "value": "6",
+            "text": "Bohrungsdurchmesser 6 mm setzen"
+          },
+          {
+            "kind": "face",
+            "target": "existing-1",
+            "side": "top",
+            "text": "Mittige Oberseite der Platte als Bohrbezug wählen"
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:id:cad-ref-preview",
+            "text": "Bohrung prüfen"
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:id:cad-ref-apply",
+            "text": "Durchgangsbohrung anwenden"
+          }
+        ]
+      },
+      "ms": 8493
+    },
+    {
+      "type": "finished",
+      "status": "completed",
+      "elapsedMs": 23166,
+      "cleanExit": true,
+      "close": {
+        "code": 0,
+        "signal": null,
+        "shutdownMs": 915,
+        "windowCloseMs": 90,
+        "afterWindowCloseMs": 825,
+        "windowCloseSource": "ipc-received"
+      },
+      "ms": 23166
+    }
+  ]
+}

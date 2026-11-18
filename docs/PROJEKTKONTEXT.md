@@ -13,6 +13,11 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-0.2: `scripts/shrink-lab-run.mjs` verkleinert echte Laufprotokolle auf die
+Felder und Ereignisse der späteren Entwicklungsauswertung; fünf Läufe vom
+18.11.2026 liegen als Fixtures unter `tests/fixtures/development-check/`,
+geprüft von `tests/ai-lab-devcheck-fixtures.test.cjs`.
+
 P3-4h2: Die beiden KI-Entwurfsabläufe des CAD-Controllers liegen in
 `src/cad-controller-task-candidate.js`: Materialisierung eines
 Auftragsvorschlags und Wiederherstellung eines gespeicherten Kandidaten. Der
