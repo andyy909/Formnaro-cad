@@ -42,6 +42,11 @@ test('The staged portable app exports a ZIP with its packaged compression runtim
  for(const name of ['benchmark-core-v1.json','benchmark-advanced-v2.json'])fs.writeFileSync(path.join(source,'ai',name),'{"dependencies":[]}');
  for(const name of ['ai-lab-review-data.cjs','ai-lab-storage.cjs','ai-task-atomic.cjs'])
   fs.copyFileSync(require.resolve('../backend/'+name),path.join(source,'backend',name));
+ fs.mkdirSync(path.join(source,'src'));
+ for(const name of ['cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref']){
+  const file=name+'.js';
+  fs.copyFileSync(path.join(__dirname,'../src',file),path.join(source,'src',file));
+ }
  const {copyPortableApp}=await import('../scripts/portable-runtime-policy.mjs');
  copyPortableApp(source,stage);
  const packaged=require(path.join(stage,'backend','ai-lab-review-data.cjs'));

@@ -66,3 +66,99 @@ test('Retained assembly frames stay exact during a diameter change; changing an 
  const cad=controller();try{const f=await bores(cad),draft=cad.snapshot();draft.joints=createCadJoint(draft,{id:'fixed-assembly',kind:'fixed',parentId:f.root.id,childId:draft.nodes[1].id,origin:[0,0,0]});await cad.open(draft);assert.deepEqual(cadJointProblems(cad.snapshot()),[]);const reference=(await cad.query('featureReference',{action:'pick',kind:'bore',ids:[f.root.id],ray:{origin:[-10,0,0],direction:[1,1,0],far:100}})).reference,p=await cad.preview(edit(reference,'diameter',6));assert.deepEqual(p.project.joints,cad.snapshot().joints);assert.deepEqual(cadJointProblems(p.project),[]);cad.discard(p.previewId);const selected=captureCadAISourceReference(cad.snapshot(),target(f.root.id)),before=cad.serialize(),depth=cad.state().undo;await assert.rejects(cad.preview(edit(selected,'pos.0',10)),{code:'AI_FEATURE_JOINT_REASSIGN_REQUIRED'});assert.equal(cad.serialize(),before);assert.equal(cad.state().undo,depth);
  }finally{cad.dispose();}
 });
+
+
+test('Everyday plate edits preserve specified bore geometry and leave the other part intact',async()=>{
+ const cad=controller();
+ try{
+  const fixture=await bores(cad);
+  const rootId=fixture.root.id;
+  const baseId=fixture.root.children.find(node=>node.recipe.type==='box').id;
+  const initial=cad.serialize();
+  const other=cad.snapshot().nodes[1];
+  const source=id=>captureCadAISourceReference(cad.snapshot(),target(rootId,[id]));
+  const bore=async x=>(await cad.query('featureReference',{action:'pick',kind:'bore',ids:[rootId],ray:{origin:[x,0,5],direction:[1,1,0],far:100}})).reference;
+  async function applyPrompt(prompt,items,edits){
+   const before=cad.serialize();
+   const featureScope={version:1,items};
+   const scene=await cad.describe();
+   const access=createCadAutomationAccess({controller:cad,getScene:()=>scene});
+   const outcome=await runCadAIRequest({
+    input:{prompt},visualReview:false,
+    access:{...access,restrictedFeatures:true,preview:(request,options)=>access.preview(request,{...options,featureScope})},
+    generate:async request=>{
+     assert.equal(request.prompt,prompt);
+     return {revision:cad.revision(),commands:edits.map(([reference,field,value])=>({op:'feature',referenceId:reference.id,field,value}))};
+    },
+   });
+   assert.equal(cad.serialize(),before);
+   assert.ok(outcome.proposal?.previewId);
+   cad.apply({...outcome.proposal,acceptFeatureDependencies:true});
+   assert.deepEqual(cad.snapshot().nodes[1],other);
+  }
+  const initialSurfaces=await Promise.all([-10,10].map(async x=>(await bore(x)).selector.surface));
+  const base=source(baseId);
+  await applyPrompt('Mach die Platte rechts 20 mm länger. Lass die Bohrungen, wo sie sind.',[base],[[base,'size.0',60],[base,'pos.0',10]]);
+  const bounds=cad.snapshot().nodes[0].stats.bounds;
+  for(const [axis,min,max] of [[0,-20,40],[1,-15,15],[2,0,10]]){
+   near(bounds.min[axis],min);
+   near(bounds.max[axis],max);
+  }
+  assert.deepEqual(await Promise.all([-10,10].map(async x=>(await bore(x)).selector.surface)),initialSurfaces);
+
+  const left=await bore(-10);
+  await applyPrompt('Mach beide Bohrungen auf 8 mm. Die Lage bleibt.',[left],[[left,'diameter',8]]);
+  for(const [index,x] of [-10,10].entries()){
+   const measured=(await bore(x)).selector.surface;
+   assert.deepEqual(measured,{...initialSurfaces[index],diameter:8});
+  }
+  const afterDiameter=cad.serialize();
+
+  const cutters=fixture.holes.map(node=>source(node.id));
+  await applyPrompt('Setz die Bohrungen 30 mm auseinander. Die Mitte zwischen ihnen bleibt gleich.',cutters,[[cutters[0],'pos.0',-15],[cutters[1],'pos.0',15]]);
+  const moved=await Promise.all([-15,15].map(async x=>(await bore(x)).selector.surface));
+  near(moved[1].center[0]-moved[0].center[0],30);
+  for(const [index,x] of [-15,15].entries()){
+   assert.deepEqual(moved[index],{...initialSurfaces[index],center:[x,...initialSurfaces[index].center.slice(1)],diameter:8});
+  }
+  near(cad.snapshot().nodes[0].stats.volume,60*30*10-2*Math.PI*4**2*10);
+  cad.undo();
+  assert.equal(cad.serialize(),afterDiameter);
+  cad.undo();
+  cad.undo();
+  assert.equal(cad.serialize(),initial);
+ }finally{cad.dispose();}
+});
+
+test('Lab CAD checks exercise real edits, native drawing/STEP readback, stale Apply and the joint stop', async (t) => {
+  const { runCadDevelopmentCheck } = await import('../src/cad-lab-development-checks.js');
+  for (const id of ['plate-length', 'plate-diameter', 'plate-spacing', 'plate-drawing', 'plate-step', 'stale-preview', 'assembly-stop']) {
+    await t.test(id, async () => {
+      const result = await runCadDevelopmentCheck(id, { createController: controller });
+      assert.ok(result.checks.length >= 3);
+      assert.deepEqual(result.checks.filter(({ passed }) => !passed), []);
+    });
+  }
+});
+
+test('Lab model requests supply the short German prompt and the current native reference scope', async () => {
+  const { runCadDevelopmentCheck } = await import('../src/cad-lab-development-checks.js');
+  let calls = 0;
+  const result = await runCadDevelopmentCheck('plate-diameter', {
+    createController: controller,
+    generate: async ({ prompt, scene, context }) => {
+      calls++;
+      assert.equal(prompt, 'Mach beide Bohrungen auf 8 mm. Die Lage bleibt.');
+      const { references, restricted } = context.featureScope;
+      assert.equal(restricted, true);
+      assert.equal(references.length, 2);
+      assert.ok(references.every((item) => item.fields[0].value === 4));
+      return {
+        revision: scene.revision,
+        commands: references.map(({ id }) => ({ op: 'feature', referenceId: id, field: 'diameter', value: 8 })),
+      };
+    },
+  });
+  assert.equal(calls, 1);
+  assert.deepEqual(result.checks.filter(({ passed }) => !passed), []);
+});

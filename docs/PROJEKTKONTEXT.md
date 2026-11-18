@@ -1,9 +1,9 @@
 # Technischer Projektkontext
 
-Die veröffentlichte Ausgabe 0.143.0-r2 bündelt den Wartbarkeitsmeilenstein
-für das Hauptprogramm. Der veröffentlichte Tag verweist auf den geprüften
-Merge-Commit von #114. Den aktuellen Download, die passenden Quellen und
-die Abnahme verzeichnet [AKTUELLER-STAND.md](AKTUELLER-STAND.md).
+Die Ausgabe 0.144.0-r1 bündelt den gestuften Entwicklungscheck, separat
+startbare CAD-, STL- und Foto-Prüfungen sowie die Befunde aller Stufen im
+KI-Labor. Den Download, die passenden Quellen und die Windows-Abnahme
+verzeichnet [AKTUELLER-STAND.md](AKTUELLER-STAND.md).
 
 Die Quell-CI läuft bei Pull Requests zu allen Zielbranches und bei Pushes
 auf `main` oder Tags. `npm run test:all -- --verify-coverage` gleicht
@@ -12,6 +12,117 @@ pro Plattform. Die CI gleicht zusätzlich die tatsächlich erfolgreichen
 Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
+
+EC-7.4: `developmentFindings()` in `ai/lab-development-findings.mjs` behält alle
+Versuche aller Stufen in `runs` (Feld `decisive` markiert je Aufgabe den zählenden
+Versuch); Muster, Kontextlücken und Erstreaktion nutzen damit auch frühere Stufen,
+die Zusammenfassung zählt weiter einmal je Aufgabe. Der Kurzbericht listet frühere
+Stufen getrennt und zeigt Fehlschläge als „Durchgefallen“, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-7.1: Gesamtprüfung; der Export der 15 echten Läufe vom 18.11.2026 ergibt
+advanced-01 als Rückfrage, 12 Erfolge im ersten Versuch, 2 nach Prüferhinweis,
+ein Doppelkörper-Muster und `szene-leer` in 12 von 15 Läufen. Ergebnisse werden
+aus den Protokollen neu eingeordnet und die Erstreaktionsflaggen aus dem ganzen
+ersten Denktext gelesen; geprüft von `tests/ai-lab-devcheck-findings.test.cjs`
+und `tests/ai-lab-devcheck-export.test.cjs`.
+
+EC-6.1: `scripts/check-development-tasks.mjs` vergleicht die benötigten
+Werkzeuge der Referenzlösung mit der Werkzeugliste der Aufbauaufgaben und meldet
+fehlende Werkzeuge, ohne den Lauf abzubrechen (advanced-01 braucht `tool:group`),
+geprüft von `tests/ai-lab-devcheck-tasks.test.cjs`.
+
+EC-5.5: `showDevelopment()` lädt auf Klick „Befunde anzeigen“ die Läufe und zeigt
+Kontextlücken, Muster und die Erstreaktion aus `developmentHintsText()`;
+`developmentFindings()` liefert dafür den Gesamtbefund, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-5.4: `exportReport()` in `backend/ai-lab-development-evidence.cjs` ergänzt das
+Prüfpaket-ZIP um `Entwicklungsbefunde.json`, `Entwicklungsbefunde.md`,
+`AUSWERTUNG-SCHEMA.json` und `Befunde-Manifest.json` mit Hashes; das ZIP wird
+daneben geschrieben und umbenannt, geprüft von
+`tests/ai-lab-devcheck-export.test.cjs`.
+
+EC-5.3: `ai/lab-development-review-schema.json` beschreibt die Antwort der
+auswertenden KI als Liste von Befunden mit `runIds` oder `pattern`, `beleg`,
+`bereich`, `ursache`, `vermutung`, `vorschlag` und `nachtest`, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-5.2: `findingsMarkdown()` in `ai/lab-development-findings.mjs` schreibt den
+Kurzbericht mit Kopf, Ergebnistabelle, Kontextlücken, Mustern und Erstreaktion;
+Pipes in Aufgabennamen werden maskiert, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-5.1: `developmentFindings()` in `ai/lab-development-findings.mjs` baut den
+Gesamtbefund `FormnaroDevelopmentFindings` mit Kopf, Zusammenfassung, Läufen,
+Mustern, Erstreaktionen und allen Kontextlücken, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-4.3: `contextReactionPatterns()` in `ai/lab-development-findings.mjs` meldet
+jede Erstreaktions-Flagge, die in mindestens einem Drittel der Läufe vorkommt,
+mit Hinweis „Startkontext prüfen“ und `untrusted: true`, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-4.2: `findPatterns()` in `ai/lab-development-findings.mjs` meldet ein Symptom
+als Muster, wenn es in mindestens zwei verschiedenen Aufgaben vorkommt, geprüft
+von `tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-4.1: `symptomKey()` und `runSymptoms()` in `ai/lab-development-findings.mjs`
+bilden aus fehlgeschlagenen Prüfungen einen Symptomschlüssel mit Zählunterschied,
+Volumenunterschied und „deckungsgleich“ (Toleranz 1e-5), geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-3.6: `runFinding()` in `ai/lab-development-findings.mjs` fasst Eckdaten,
+Formatkorrekturen, erste Aktion, Kontextlücken, Erstreaktion, Ergebnis,
+`firstTry` und Prüferrunden zu einem Befundblatt zusammen, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-3.5: `firstContextReaction()` in `ai/lab-development-findings.mjs` gibt die
+ersten 800 Zeichen des ersten Denktextes und die Hinweisflaggen `szene-leer`,
+`widerspruch`, `unklar` aus, immer mit `untrusted: true`, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-3.4: `contextGaps()` in `ai/lab-development-findings.mjs` sammelt Rückfragen,
+Formatregeln und angeforderte Werkzeugauskünfte (Ereignis `tool-call` mit
+`offlinecad_tool_info`), geprüft von `tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-3.3: `firstAction()` in `ai/lab-development-findings.mjs` beschreibt Denkzeit,
+Zeitpunkt des ersten Vorschlags und dessen erste fünf Schrittarten, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-3.2: `formatFeedback()` in `ai/lab-development-findings.mjs` sammelt die
+Fehlertexte der Formatkorrekturen, je höchstens 200 Zeichen, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-3.1: `runFacts()` in `ai/lab-development-findings.mjs` liefert Eckdaten eines
+Laufs (Aufgabe, Lauf, Stufe, Dauer, Anfragen, Tokens, fehlgeschlagene Prüfungen);
+fehlende Tokenwerte bleiben `null`, geprüft von `tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-2.3: Bestandene Einträge zeigen „Bestanden (1. Versuch)“ oder
+„Bestanden nach Prüferhinweis“; über der Tabelle steht die Zeile aus
+`developmentSummaryText()`, geprüft von `tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-2.2: `developmentOutcome()` ergänzt bei bestandenen Läufen `firstTry` aus
+`feedbackRounds()`; die Eskalation bleibt unverändert, geprüft von
+`tests/ai-lab-devcheck-outcome.test.cjs`.
+
+EC-2.1: `feedbackRounds()` in `ai/lab-development-findings.mjs` liest die
+Runden fehlgeschlagener nativer Prüferrückmeldungen aus einem Lauf, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-1.2: Die Ergebnistabelle zeigt deutsche Gründe aus
+`developmentReasonLabels` in `ai/lab-development-findings.mjs`; unbekannte
+Gründe bleiben unverändert, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
+EC-1.1: `developmentOutcome()` in `ai/lab-development-sequence.mjs` prüft
+`needs-input` vor dem Prüferfehler; eine berechtigte Rückfrage gilt damit als
+`blocked · needs-input`, geprüft von `tests/ai-lab-devcheck-outcome.test.cjs`.
+
+EC-0.2: `scripts/shrink-lab-run.mjs` verkleinert echte Laufprotokolle auf die
+Felder und Ereignisse der späteren Entwicklungsauswertung; fünf Läufe vom
+18.11.2026 liegen als Fixtures unter `tests/fixtures/development-check/`,
+geprüft von `tests/ai-lab-devcheck-fixtures.test.cjs`.
 
 P3-4h2: Die beiden KI-Entwurfsabläufe des CAD-Controllers liegen in
 `src/cad-controller-task-candidate.js`: Materialisierung eines
@@ -5884,3 +5995,19 @@ Foto- und Multiview-Prüfdaten, Prüfregeln und Berichtsformate bleiben gleich.
 2026-11-17 KL-B6 (Korrektur): Der Markdown-Bericht kennzeichnet alle aus Tarifen berechneten Beträge als `Tarifschätzung` in USD, auch bei vollständigen Preisen. Bei unvollständigen oder unbekannten Preisen erscheinen Gesamt- und Erfolgskosten als `unbekannt` ohne vollständigen Zahlenbetrag. Der Bereich heißt `Wilson-Bereich für diese Aufgaben`; Überschrift, Wilson-Nenner, Abdeckung und Fallzeilen verwenden den geplanten Nenner aus `summary.planned` statt einer festen 16. Keine bestätigten Erfolge werden als `nicht berechenbar (Nenner 0)` und damit getrennt von unbekannten Kosten dargestellt. Tests: vollständige Preise, unvollständige Preise, unbekannte Preise und keine Erfolge; `ai-lab-benchmark` 18/18.
 
 2026-11-17 AI Lab integration: the packaged Windows candidate passed isolated practice layout and native tool checks, the Lab IPC ZIP export with independent manifest verification, and 50% to 185% playback persistence across practice windows. Benchmark reports use the captured modeler rates for normal usage events and keep missing pricing distinct from measured duration. The statistical and practice changes are integrated independently of the replay work.
+
+2026-11-17 AI Lab plan validation: incompatible task combinations display the validator message beside the start action. Asynchronous role and campaign updates keep the start action disabled until the current plan preview succeeds. The packaged UI regression exercises an incompatible practice task, a stale campaign update, and the valid exercise preset.
+
+2026-11-17 AI Lab drawing acceptance: the Windows package carries the drawing measurement modules used by the Advanced Lab main-process oracle. The regression test exercises the advanced drawing oracle from the portable layout.
+
+2026-11-17 AI Lab development checks run a fixed 15-case list through Low, High for verified native misses and optional Max. They use the ordinary diagnostics IPC and keep the original benchmark dependencies pinned. Stage evidence remains linked to the raw runs. Interrupted conditions stay visible and the same check can resume unstarted conditions. The first passing level describes observed attempts. A separately prepared Low control helps investigate repeat variability. Windows private test patches replace only a verified app.asar and keep a verified rollback archive.
+
+2026-11-18 AI Lab practice follow-up: thread and nut create commands validate supplied fields against the existing CAD parameter schema before playback. The portable layout includes that schema for Electron. Four development fixtures identify the actual tool and required starting geometry. Both pinned benchmark suites still verify. The everyday-edit catalogue covers retained geometry, ambiguous references, follow-up edits and Undo. The first three edits have a native regression through the AI preview and Apply path with scripted responses.
+
+2026-11-18 Development check follow-up: docs/KI-LABOR-KONVERTER-FOTO.md specifies quick and extended STL conversion and photo checks with reusable fixtures and native outcomes. The two Windows STEP baselines reopened as solids. A live Flash Low correction protected exactly the two marked cylindrical regions and preserved converter Undo. The Windows photo workflow was verified with simulated provider responses. A hidden-window click and text probe succeeded. The actual practice window still pauses after loss of focus and needs a separate replay acceptance before adding a show/hide switch.
+
+2026-11-18 The development check now has a per-series practice-window visibility option. The background child uses the same native inputs and verification and skips presentation delays. On Windows, both modes passed all 15 prerecorded Flash Low plans with matching measurements and identical native bodies. At 300 percent playback speed the visible run took 7:41 and the hidden run took 11:54. Ordinary interactive practice still pauses on loss of focus.
+
+2026-11-18 Hidden practice windows now use Electron offscreen rendering. This keeps the render frames needed before trusted UI input moving while the window is hidden. Using the unchanged 300 percent tempo and the same 15 recorded plans, the hidden replay took 299.198 s versus 713.813 s before and 460.759 s visible. Median input spacing fell from 2012 ms to 717 ms. All native measurements and stored BReps matched the earlier runs, and the interruption test exited cleanly. The private Windows archives differed only in electron.cjs.
+
+2026-11-18 Supplemental Lab checks are selectable in the current plan form. Seven CAD cases cover the three everyday plate edits, a retained drawing dimension, a native STEP roundtrip, a stale preview and a measured 45-degree assembly limit. Five STL cases use the packaged converter and reopen native STEP. Four synthetic-photo cases check calibration, missing scale, perspective and multiview conflict handling. The quick selection runs seven cases. The full selection runs all sixteen. The default uses scripted responses. Live mode uses the current provider for applicable cases and records request counts per result. Result JSON is stored in the Lab diagnosis directory.

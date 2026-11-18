@@ -1,0 +1,369 @@
+{
+  "id": "47b401d4-9fd1-4b0e-8e0f-e6f666e940bf",
+  "spec": {
+    "caseId": "advanced-07",
+    "effort": "low",
+    "seriesName": "Entwicklungscheck · f14586d9-dfd7-48f6-8869-f7309ca43f20 · low"
+  },
+  "status": "completed",
+  "cleanExit": true,
+  "close": {
+    "code": 0,
+    "signal": null,
+    "shutdownMs": 1722,
+    "windowCloseMs": 86,
+    "afterWindowCloseMs": 1636,
+    "windowCloseSource": "child-event"
+  },
+  "verification": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+        "passed": true
+      },
+      {
+        "name": "Sichtbare Ausführung abgeschlossen",
+        "passed": true
+      },
+      {
+        "name": "Nur sichtbare gültige native Einzelkörper",
+        "passed": true
+      },
+      {
+        "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+        "passed": true,
+        "actual": {
+          "actual": {
+            "count": 1,
+            "bodies": [
+              {
+                "size": [
+                  60,
+                  40,
+                  6
+                ],
+                "center": [
+                  7,
+                  -9,
+                  7
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "count": 1,
+            "size": [
+              60,
+              40,
+              6
+            ],
+            "center": [
+              7,
+              -9,
+              7
+            ]
+          }
+        }
+      },
+      {
+        "name": "Unabhängig berechnetes Materialvolumen",
+        "passed": true,
+        "actual": {
+          "actual": 12128.76110196153,
+          "expected": 12128.76110196153
+        }
+      },
+      {
+        "name": "L-Aussparung und beide Schenkel an richtigen Weltpositionen",
+        "passed": true
+      },
+      {
+        "name": "Beide Skizzenlöcher mit richtigen Durchmessern und Weltlagen",
+        "passed": true
+      },
+      {
+        "name": "Bearbeitbare Skizzenquelle mit Außenkontur und zwei Innenkonturen",
+        "passed": true
+      }
+    ],
+    "scope": "Fester Aufbau-Benchmark: native Maße, Volumen, Durchbrüche/Blindböden, erhaltene Quellen und gemessene Zeichnungen."
+  },
+  "modelIdentity": {
+    "requested": "deepseek-flash",
+    "returned": "deepseek-flash",
+    "exactMatch": true
+  },
+  "firstReasoningMs": 2311,
+  "elapsedMs": 79016,
+  "events": [
+    {
+      "type": "start-context",
+      "user": "Current scene (data):\n{\"revision\":\"f324c2c2b8410704\",\"objects\":[],\"selectionTargets\":[],\"practiceIsolated\":true}\nUser task:\nErsetze nur das ausgewählte Aufgabenteil durch eine einzige bearbeitbare Skizzenextrusion mit Höhe 6 mm und Unterseite auf Weltkoordinate Z = +4 mm. Lokale XY-Kontur: (−30,−20),(30,−20),(30,5),(10,5),(10,20),(−30,20), geschlossen. Zwei kreisförmige Innenkonturen: Ø8 mit lokaler Mitte (−15,0) und Ø6 bei (15,−10). Verschiebe die gesamte Kontur um Weltkoordinaten X = +7 mm und Y = -9 mm; lokale (0,0) liegt somit bei Welt (7,−9). Beide Löcher müssen durchgehen. Skizze mit Außenkontur und beiden Innenkonturen bearbeitbar erhalten. Alle unbeteiligten Teile einschließlich Schutzteil vollständig erhalten. Modellierung ausschließlich mit sichtbaren Übungswerkzeugen.\nDas unbeteiligte Teil unverändert erhalten."
+    },
+    {
+      "type": "request",
+      "round": 0,
+      "ms": 1480
+    },
+    {
+      "type": "reasoning",
+      "text": "We need respond JSON plan. Need construct visible UI sketch extrusion replacing selected Aufgabenteil. Existing alias existing-1 selected. Need delete old after creating new? Practice says \"Ersetze nur das ausgewählte Aufgabenteil durch eine einzige bearbeitbare Skizzenextrusion...\" Tool sketch steps: for replacement select old first and delete, new sketch adds another body. But user wants preserve existing sketch editable. If delete old first then sketch. Need ensure if failure? Plan can select existing-1, delete, then create sketch, profile, gestures, extrusion height 6, preview/apply, position bottom Z=4 and local origin at world (7,-9). Need likely center positioning. We need know sketch editor coordinate placement/active workplane. New sketch maybe local coordinates? User specifies local contour and placement. The sketch gesture points in sketch-local mm, but placement of sketch origin? New sketch likely on default workplane, local (0,0) world (0,0). Need position body after creation: pos-2 center. Body extrusion from Z=0 to 6; bottom at Z=4 => center Z=7. X contour local bounds: -30 to 30 plus holes; center 0. Shift X +7 gives center 7. Y local min -20 max20 center0, shift -9 gives center -9. So set size? The body's size after sketch should be 60 x 40 x 6. Position fields center: X=7, Y=-9, Z=7. But does sketch local (0,0) on default world origin yes likely. Use set pos after creation, preserving size/dimensions. Need create sketch with two holes. Tool controls. Flow:\n\n"
+    },
+    {
+      "type": "usage",
+      "round": 0,
+      "usage": {
+        "input_tokens": 7983,
+        "input_tokens_details": {
+          "cached_tokens": 7552
+        },
+        "output_tokens": 2242,
+        "output_tokens_details": {
+          "reasoning_tokens": 1660
+        },
+        "total_tokens": 10225
+      },
+      "returnedModel": "deepseek-flash"
+    },
+    {
+      "type": "format-feedback",
+      "round": 0,
+      "error": "plan.title ist zu lang: 220 Zeichen, höchstens 200. Nur eine kurze Überschrift verwenden; eine Erklärung gehört in das oberste diagnosis-Feld.",
+      "attempt": 1,
+      "ms": 17843
+    },
+    {
+      "type": "request",
+      "round": 1,
+      "ms": 17844
+    },
+    {
+      "type": "usage",
+      "round": 1,
+      "usage": {
+        "input_tokens": 8092,
+        "input_tokens_details": {
+          "cached_tokens": 7552
+        },
+        "output_tokens": 3087,
+        "output_tokens_details": {
+          "reasoning_tokens": 2223
+        },
+        "total_tokens": 11179
+      },
+      "returnedModel": "deepseek-flash"
+    },
+    {
+      "type": "blocker-diagnosis",
+      "text": "Nur die zu lange Überschrift wurde gekürzt; der sichtbare Modellierplan und die angeforderte Geometrie bleiben unverändert.",
+      "round": 1,
+      "ms": 38550
+    },
+    {
+      "type": "proposal",
+      "plan": {
+        "version": 1,
+        "title": "Aufgabenteil durch Skizzenextrusion ersetzen",
+        "actions": [
+          {
+            "kind": "select",
+            "targets": [
+              "existing-1"
+            ]
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:tool:delete",
+            "text": "Nur das ausgewählte Aufgabenteil entfernen."
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "menu:cad",
+            "text": "CAD-Menü öffnen."
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:tool:sketch",
+            "text": "Neue Skizzenextrusion starten."
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:id:sketch-profile-enable",
+            "text": "Konturen mit Öffnungen aktivieren."
+          },
+          {
+            "kind": "ui",
+            "action": "choose",
+            "target": "ui:id:sketch-profile-role",
+            "value": "outer",
+            "text": "Außenkontur festlegen."
+          },
+          {
+            "kind": "ui",
+            "action": "choose",
+            "target": "ui:id:sketch-profile-shape",
+            "value": "line",
+            "text": "Linienzug für die Außenkontur wählen."
+          },
+          {
+            "kind": "sketch-gesture",
+            "point": [
+              -30,
+              -20
+            ],
+            "text": "Ersten Außenpunkt setzen."
+          },
+          {
+            "kind": "sketch-gesture",
+            "point": [
+              30,
+              -20
+            ],
+            "text": "Zweiten Außenpunkt setzen."
+          },
+          {
+            "kind": "sketch-gesture",
+            "point": [
+              30,
+              5
+            ],
+            "text": "Dritten Außenpunkt setzen."
+          },
+          {
+            "kind": "sketch-gesture",
+            "point": [
+              10,
+              5
+            ],
+            "text": "Vierten Außenpunkt setzen."
+          },
+          {
+            "kind": "sketch-gesture",
+            "point": [
+              10,
+              20
+            ],
+            "text": "Fünften Außenpunkt setzen."
+          },
+          {
+            "kind": "sketch-gesture",
+            "point": [
+              -30,
+              20
+            ],
+            "text": "Sechsten Außenpunkt setzen."
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:id:sketch-profile-close",
+            "text": "Außenkontur schließen."
+          },
+          {
+            "kind": "ui",
+            "action": "choose",
+            "target": "ui:id:sketch-profile-role",
+            "value": "hole",
+            "text": "Innenöffnungen festlegen."
+          },
+          {
+            "kind": "ui",
+            "action": "choose",
+            "target": "ui:id:sketch-profile-shape",
+            "value": "circle",
+            "text": "Kreisförmige Öffnungen wählen."
+          },
+          {
+            "kind": "sketch-gesture",
+            "point": [
+              -15,
+              0
+            ],
+            "to": [
+              -11,
+              0
+            ],
+            "text": "Ø8-Innenkontur bei lokal (−15,0) zeichnen."
+          },
+          {
+            "kind": "sketch-gesture",
+            "point": [
+              15,
+              -10
+            ],
+            "to": [
+              18,
+              -10
+            ],
+            "text": "Ø6-Innenkontur bei lokal (15,−10) zeichnen."
+          },
+          {
+            "kind": "ui",
+            "action": "set",
+            "target": "ui:label:Extrusionshöhe",
+            "value": "6",
+            "text": "Extrusionshöhe 6 mm setzen."
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:id:sketch-preview",
+            "text": "Vorschau berechnen."
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:id:sketch-apply",
+            "text": "Skizzenextrusion hinzufügen."
+          },
+          {
+            "kind": "ui",
+            "action": "choose",
+            "target": "ui:id:size-anchor",
+            "value": "center",
+            "text": "Mittelpunkt als Größenanker festhalten."
+          },
+          {
+            "kind": "set",
+            "field": "pos-0",
+            "value": 7,
+            "text": "Lokales Zentrum auf Welt-X = 7 setzen."
+          },
+          {
+            "kind": "set",
+            "field": "pos-1",
+            "value": -9,
+            "text": "Lokales Zentrum auf Welt-Y = −9 setzen."
+          },
+          {
+            "kind": "set",
+            "field": "pos-2",
+            "value": 7,
+            "text": "Unterseite bei 6 mm Höhe auf Welt-Z = +4 setzen."
+          }
+        ]
+      },
+      "ms": 38550
+    },
+    {
+      "type": "finished",
+      "status": "completed",
+      "elapsedMs": 79016,
+      "cleanExit": true,
+      "close": {
+        "code": 0,
+        "signal": null,
+        "shutdownMs": 1722,
+        "windowCloseMs": 86,
+        "afterWindowCloseMs": 1636,
+        "windowCloseSource": "child-event"
+      },
+      "ms": 79016
+    }
+  ]
+}

@@ -1,0 +1,519 @@
+{
+  "id": "ce837565-1768-4bc1-aa4d-23fff3f73c82",
+  "spec": {
+    "caseId": "advanced-02",
+    "effort": "low",
+    "seriesName": "Entwicklungscheck · f14586d9-dfd7-48f6-8869-f7309ca43f20 · low"
+  },
+  "status": "completed",
+  "cleanExit": true,
+  "close": {
+    "code": 0,
+    "signal": null,
+    "shutdownMs": 649,
+    "windowCloseMs": 87,
+    "afterWindowCloseMs": 562,
+    "windowCloseSource": "child-event"
+  },
+  "verification": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+        "passed": true
+      },
+      {
+        "name": "Sichtbare Ausführung abgeschlossen",
+        "passed": true
+      },
+      {
+        "name": "Nur sichtbare gültige native Einzelkörper",
+        "passed": true
+      },
+      {
+        "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+        "passed": true,
+        "actual": {
+          "actual": {
+            "count": 1,
+            "bodies": [
+              {
+                "size": [
+                  70,
+                  50,
+                  8
+                ],
+                "center": [
+                  7,
+                  -9,
+                  8
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "count": 1,
+            "size": [
+              70,
+              50,
+              8
+            ],
+            "center": [
+              7,
+              -9,
+              8
+            ]
+          }
+        }
+      },
+      {
+        "name": "Unabhängig berechnetes Materialvolumen",
+        "passed": true,
+        "actual": {
+          "actual": 24352.000000000004,
+          "expected": 24352
+        }
+      },
+      {
+        "name": "Zwei getrennte rechteckige Durchbrüche und Materialstege",
+        "passed": true
+      }
+    ],
+    "scope": "Fester Aufbau-Benchmark: native Maße, Volumen, Durchbrüche/Blindböden, erhaltene Quellen und gemessene Zeichnungen."
+  },
+  "modelIdentity": {
+    "requested": "deepseek-flash",
+    "returned": "deepseek-flash",
+    "exactMatch": true
+  },
+  "firstReasoningMs": 2328,
+  "elapsedMs": 116366,
+  "events": [
+    {
+      "type": "start-context",
+      "user": "Current scene (data):\n{\"revision\":\"b59e598098797614\",\"objects\":[],\"selectionTargets\":[],\"practiceIsolated\":true}\nUser task:\nErzeuge in der Platte 70×50×8 mm mit Weltmitte (7,−9,8), Z4 bis Z12, zwei getrennte rechteckige Durchbrüche parallel zu Welt-X/Y: 18×12 mm bei XY-Mitte (−10,−14) und 12×20 mm bei (24,−4). Beide vollständig durchgehend. Die zwei Öffnungen getrennt halten; Außenmaße, Lage und Material dazwischen erhalten. Alle unbeteiligten Teile einschließlich Schutzteil vollständig erhalten. Modellierung ausschließlich mit sichtbaren Übungswerkzeugen.\nDas unbeteiligte Teil unverändert erhalten."
+    },
+    {
+      "type": "request",
+      "round": 0,
+      "ms": 1480
+    },
+    {
+      "type": "reasoning",
+      "text": "The plate: 70×50×8 with center at (7,-9,8), Z4 to Z12. Wait, center Z=8 with height 8 gives Z4 to Z12. Correct.\n\nWe need to create the plate as a new body (existing-1 is \"Aufgabenteil\" — unrelated part, must be preserved; keep it). Actually wait: practiceObjects includes existing-1 \"Aufgabenteil\". Is that the plate? The task says \"Erzeuge in der Platte ... \" — create in the plate. Hmm, the plate doesn't exist yet in scene (objects empty!). The scene shows objects:[] — so existing-1 alias exists in practiceObjects but objects list is empty. Odd. Anyway, we should create the plate with a box, then create two hole forms (boxes with role hole) and group.\n\nPlan:\n1. Click menu:cad → shape? Use shape action type \"box\" as alias \"platte\".\n2. Set size-0=70, size-1=50, size-2=8; pos to center (7,-9,8).\n\nCareful: pos is geometry bounds center — so pos-0=7, pos-1=-9, pos-2=8.\n\n3. Create box for opening 1: 18×12×8 thick (through-going above and below, but height must cover plate Z4..Z12; use 8 exactly matching? Better make it 8 with center at same Z=8 — but through-cut exact co-planar faces can be fine. Safer to make it taller, e.g. 20 with center 8, spanning -2..18. But then the hole form must be fully through. Use size 18×12×20, pos (-10,-14,8), role hole.\n\n4. Opening 2: 12×20×20, pos (24,-4,8), role hole.\n\n5. Select all three, group as \"platte_mit_durchbruechen\".\n\nBut careful: user says \"Die zwei Öffnungen getrennt halten\" — keep the two openings separate (not merged). They're far apart"
+    },
+    {
+      "type": "usage",
+      "round": 0,
+      "usage": {
+        "input_tokens": 6262,
+        "input_tokens_details": {
+          "cached_tokens": 5888
+        },
+        "output_tokens": 1342,
+        "output_tokens_details": {
+          "reasoning_tokens": 832
+        },
+        "total_tokens": 7604
+      },
+      "returnedModel": "deepseek-flash"
+    },
+    {
+      "type": "format-feedback",
+      "round": 0,
+      "error": "Invalid JSON: response ended with 1 unclosed object/array level(s). Expected closing delimiters at the end: }. Return the COMPLETE corrected JSON object; no actions were executed.",
+      "attempt": 1,
+      "ms": 10141
+    },
+    {
+      "type": "request",
+      "round": 1,
+      "ms": 10142
+    },
+    {
+      "type": "usage",
+      "round": 1,
+      "usage": {
+        "input_tokens": 6368,
+        "input_tokens_details": {
+          "cached_tokens": 5888
+        },
+        "output_tokens": 3990,
+        "output_tokens_details": {
+          "reasoning_tokens": 3553
+        },
+        "total_tokens": 10358
+      },
+      "returnedModel": "deepseek-flash"
+    },
+    {
+      "type": "proposal",
+      "plan": {
+        "version": 1,
+        "title": "Neue Platte 70×50×8 mit zwei rechteckigen Durchbrüchen; existing-1 bleibt unberührt",
+        "actions": [
+          {
+            "kind": "shape",
+            "type": "box",
+            "as": "platte"
+          },
+          {
+            "kind": "set",
+            "field": "size-0",
+            "value": 70
+          },
+          {
+            "kind": "set",
+            "field": "size-1",
+            "value": 50
+          },
+          {
+            "kind": "set",
+            "field": "size-2",
+            "value": 8
+          },
+          {
+            "kind": "set",
+            "field": "pos-0",
+            "value": 7
+          },
+          {
+            "kind": "set",
+            "field": "pos-1",
+            "value": -9
+          },
+          {
+            "kind": "set",
+            "field": "pos-2",
+            "value": 8
+          },
+          {
+            "kind": "role",
+            "value": "solid"
+          },
+          {
+            "kind": "shape",
+            "type": "box",
+            "as": "durchbruch_1"
+          },
+          {
+            "kind": "set",
+            "field": "size-0",
+            "value": 18
+          },
+          {
+            "kind": "set",
+            "field": "size-1",
+            "value": 12
+          },
+          {
+            "kind": "set",
+            "field": "size-2",
+            "value": 8
+          },
+          {
+            "kind": "set",
+            "field": "pos-0",
+            "value": -10
+          },
+          {
+            "kind": "set",
+            "field": "pos-1",
+            "value": -14
+          },
+          {
+            "kind": "set",
+            "field": "pos-2",
+            "value": 8
+          },
+          {
+            "kind": "role",
+            "value": "hole"
+          },
+          {
+            "kind": "shape",
+            "type": "box",
+            "as": "durchbruch_2"
+          },
+          {
+            "kind": "set",
+            "field": "size-0",
+            "value": 12
+          },
+          {
+            "kind": "set",
+            "field": "size-1",
+            "value": 20
+          },
+          {
+            "kind": "set",
+            "field": "size-2",
+            "value": 8
+          },
+          {
+            "kind": "set",
+            "field": "pos-0",
+            "value": 24
+          },
+          {
+            "kind": "set",
+            "field": "pos-1",
+            "value": -4
+          },
+          {
+            "kind": "set",
+            "field": "pos-2",
+            "value": 8
+          },
+          {
+            "kind": "role",
+            "value": "hole"
+          },
+          {
+            "kind": "select",
+            "targets": [
+              "platte",
+              "durchbruch_1",
+              "durchbruch_2"
+            ]
+          },
+          {
+            "kind": "group",
+            "as": "platte_mit_durchbruechen"
+          }
+        ]
+      },
+      "ms": 37209
+    },
+    {
+      "type": "practice-ui-feedback",
+      "phase": "native-verification",
+      "round": 1,
+      "verification": {
+        "passed": false,
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": false,
+            "actual": {
+              "actual": {
+                "count": 2,
+                "bodies": [
+                  {
+                    "size": [
+                      70,
+                      50,
+                      8
+                    ],
+                    "center": [
+                      7,
+                      -9,
+                      8
+                    ]
+                  },
+                  {
+                    "size": [
+                      70,
+                      50,
+                      8
+                    ],
+                    "center": [
+                      7,
+                      -9,
+                      8
+                    ]
+                  }
+                ]
+              },
+              "expected": {
+                "count": 1,
+                "size": [
+                  70,
+                  50,
+                  8
+                ],
+                "center": [
+                  7,
+                  -9,
+                  8
+                ]
+              }
+            }
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": false,
+            "actual": {
+              "actual": 27999.999999999993,
+              "expected": 24352
+            }
+          },
+          {
+            "name": "Zwei getrennte rechteckige Durchbrüche und Materialstege",
+            "passed": false
+          }
+        ],
+        "scope": "Fester Aufbau-Benchmark: native Maße, Volumen, Durchbrüche/Blindböden, erhaltene Quellen und gemessene Zeichnungen."
+      },
+      "freshRevision": "b59e598098797614",
+      "ms": 79889
+    },
+    {
+      "type": "request",
+      "round": 2,
+      "ms": 79906
+    },
+    {
+      "type": "usage",
+      "round": 2,
+      "usage": {
+        "input_tokens": 7318,
+        "input_tokens_details": {
+          "cached_tokens": 6272
+        },
+        "output_tokens": 816,
+        "output_tokens_details": {
+          "reasoning_tokens": 384
+        },
+        "total_tokens": 8134
+      },
+      "returnedModel": "deepseek-flash"
+    },
+    {
+      "type": "proposal",
+      "plan": {
+        "version": 1,
+        "title": "Bestehende Platte (existing-1, 70×50×8 bei (7,−9,8)) unverändert nutzen und nur zwei Lochquader abziehen – kein zweiter Plattenkörper",
+        "actions": [
+          {
+            "kind": "shape",
+            "type": "box",
+            "as": "loch_1",
+            "text": "Lochquader 1 auf die vorhandene Platte setzen"
+          },
+          {
+            "kind": "set",
+            "field": "size-0",
+            "value": 18
+          },
+          {
+            "kind": "set",
+            "field": "size-1",
+            "value": 12
+          },
+          {
+            "kind": "set",
+            "field": "size-2",
+            "value": 8
+          },
+          {
+            "kind": "set",
+            "field": "pos-0",
+            "value": -10
+          },
+          {
+            "kind": "set",
+            "field": "pos-1",
+            "value": -14
+          },
+          {
+            "kind": "set",
+            "field": "pos-2",
+            "value": 8,
+            "text": "Zentrum Z8 ⇒ Z4 bis Z12, voll durchgehend"
+          },
+          {
+            "kind": "role",
+            "value": "hole"
+          },
+          {
+            "kind": "shape",
+            "type": "box",
+            "as": "loch_2"
+          },
+          {
+            "kind": "set",
+            "field": "size-0",
+            "value": 12
+          },
+          {
+            "kind": "set",
+            "field": "size-1",
+            "value": 20
+          },
+          {
+            "kind": "set",
+            "field": "size-2",
+            "value": 8
+          },
+          {
+            "kind": "set",
+            "field": "pos-0",
+            "value": 24
+          },
+          {
+            "kind": "set",
+            "field": "pos-1",
+            "value": -4
+          },
+          {
+            "kind": "set",
+            "field": "pos-2",
+            "value": 8
+          },
+          {
+            "kind": "role",
+            "value": "hole"
+          },
+          {
+            "kind": "select",
+            "targets": [
+              "existing-1",
+              "loch_1",
+              "loch_2"
+            ],
+            "text": "Platte und beide Lochformen gemeinsam auswählen"
+          },
+          {
+            "kind": "group",
+            "as": "platte_mit_durchbruechen",
+            "text": "Material abziehen; beide Öffnungen bleiben getrennt, Steg und Außenmaße erhalten"
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "view:fit"
+          }
+        ]
+      },
+      "ms": 85799
+    },
+    {
+      "type": "finished",
+      "status": "completed",
+      "elapsedMs": 116366,
+      "cleanExit": true,
+      "close": {
+        "code": 0,
+        "signal": null,
+        "shutdownMs": 649,
+        "windowCloseMs": 87,
+        "afterWindowCloseMs": 562,
+        "windowCloseSource": "child-event"
+      },
+      "ms": 116366
+    }
+  ]
+}

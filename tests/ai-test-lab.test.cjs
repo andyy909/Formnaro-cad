@@ -34,3 +34,150 @@ test('Active supervisor can stop only on a validated high-confidence violation',
 test('Supervisor errors and cancellation never fabricate judgments',async t=>{
  const h=monitor(t,{completeModel:async(c,k,e,signal)=>new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}))});h.instance.observeReasoning('x'.repeat(400));h.controller.abort();assert.equal(await h.instance.finish(),null);assert.equal(h.events.at(-1).type,'monitor-error');assert.equal(h.stops.length,0);
 });
+
+test('Quick plans cover the validated 3, 15, 30 and 45 independent development cases',async()=>{
+ const {quickPlans,quickPlan,developmentCaseIds}=await import('../ai/lab-quick-plans.mjs');
+ const actual=quickPlans.map(({id})=>expandPlan(quickPlan(id,{providerId:'current',model:'deepseek-flash'})));
+ assert.deepEqual(actual.map(plan=>plan.trials),[3,15,30,45]);
+ assert.deepEqual(actual[1].plan.caseIds,developmentCaseIds);
+ assert.ok(actual.flatMap(plan=>plan.rows).every(row=>row.effort==='low'&&row.workflow==='practice'&&row.stage==='full'&&row.monitor.mode==='off'));
+ const engine=require('../backend/ai-lab-benchmark.cjs');
+ assert.equal(engine.verifySuite().cases.length,8);
+ assert.equal(engine.verifySuite(undefined,'advanced').cases.length,8);
+});
+
+test('Development check escalates native mismatches, excludes looking at the wrong model or a broken checker',async()=>{
+ const {developmentOutcome,escalationCases}=await import('../ai/lab-development-sequence.mjs');
+ const terminal={status:'completed',cleanExit:true,modelIdentity:{exactMatch:true},verification:{passed:false},events:[{type:'finished'}]};
+ const attempts=[
+  {spec:{caseId:'failed'},...terminal},
+  {spec:{caseId:'passed'},...terminal,verification:{passed:true}},
+  {spec:{caseId:'input'},...terminal,status:'needs-input'},
+  {spec:{caseId:'checker'},...terminal,verification:{passed:false,checks:[{name:'Native Gegenprüfung ausführbar',passed:false}]}},
+  {spec:{caseId:'different'},...terminal,modelIdentity:{exactMatch:false}},
+  {spec:{caseId:'runtime'},...terminal,cleanExit:false},
+  {spec:{caseId:'interrupted'},...terminal,status:'interrupted'},
+  {spec:{caseId:'missing'},...terminal,verification:null},
+  {spec:{caseId:'later'},...terminal},
+ ];
+ assert.deepEqual(escalationCases(['later','input','passed','checker','different','runtime','interrupted','missing','unseen','failed'],attempts),['later','failed']);
+ assert.deepEqual(developmentOutcome(attempts[3]),{status:'blocked',reason:'checker-error'});
+ assert.equal(developmentOutcome(attempts[1]).status,'passed');
+ assert.equal(developmentOutcome().status,'open');
+});
+
+test('Development check schedules Low, only scoped High failures, and optional Max',async()=>{
+ const {previewDevelopment,runDevelopment}=await import('../ai/lab-development-sequence.mjs');
+ const modeler={providerId:'current',model:'fixture',effort:'series'};
+ const setup=previewDevelopment(modeler,['low','high','max'],true);
+ const calls=[];
+ const result=await runDevelopment({setup,id:'fixture',signal:new AbortController().signal,startStage:async plan=>{
+  const effort=plan.efforts[0];
+  calls.push([effort,plan.caseIds]);
+  return {records:plan.caseIds.map((caseId,index)=>({
+   id:effort+'-'+caseId,spec:{caseId,effort},status:effort==='low'&&index===2?'needs-input':'completed',
+   cleanExit:true,modelIdentity:{exactMatch:true},events:[{type:'finished'}],
+   verification:{passed:effort==='max'||(effort==='high'?index>0:index>2)},
+  }))};
+ }});
+ assert.equal(calls[0][1].length,15);
+ assert.deepEqual(calls.slice(1),[['high',['thread','drill']],['max',['thread']]]);
+ assert.equal(result.status,'completed');
+ assert.equal(result.phases[0].outcomes[2].reason,'needs-input');
+ assert.throws(()=>previewDevelopment(modeler,['low'],false),/Low und High/);
+ assert.throws(()=>previewDevelopment(modeler,['low','high'],true),/Max/);
+});
+
+test('A stop after the Low checkpoint does not dispatch High',async()=>{
+ const {previewDevelopment,runDevelopment}=await import('../ai/lab-development-sequence.mjs');
+ const abort=new AbortController();
+ const setup=previewDevelopment({model:'fixture'},['low','high'],false);
+ let calls=0;
+ const result=await runDevelopment({setup,id:'stop',signal:abort.signal,startStage:async()=>{
+  calls++;
+  abort.abort();
+  return {records:[]};
+ }});
+ assert.equal(calls,1);
+ assert.equal(result.status,'interrupted');
+});
+
+test('A resumed check reads existing attempts, keeps an interrupted case open, and starts only untouched conditions',async()=>{
+ const {previewDevelopment,runDevelopment}=await import('../ai/lab-development-sequence.mjs');
+ const {developmentCaseIds}=await import('../ai/lab-quick-plans.mjs');
+ const setup=previewDevelopment({providerId:'current',model:'fixture'},['low','high'],false);
+ const passed=id=>({id,spec:{caseId:id},modelIdentity:{exactMatch:true},status:'completed',cleanExit:true,verification:{passed:true},events:[{type:'finished'}]});
+ const recorded=[passed('thread'),{...passed('drill'),status:'interrupted'}];
+ const previous={id:'resume',model:'fixture',setup,status:'interrupted',phases:[{effort:'low',caseIds:[...developmentCaseIds],outcomes:[]}]};
+ let calls=0;
+ const result=await runDevelopment({setup,id:'resume',previous,signal:new AbortController().signal,readStage:async()=>recorded,startStage:async plan=>{
+  calls++;
+  assert.deepEqual(plan.caseIds,developmentCaseIds.slice(2));
+  return {records:[...recorded,...plan.caseIds.map(passed)]};
+ }});
+ assert.equal(calls,1);
+ assert.equal(result.status,'completed');
+ assert.equal(result.phases[0].outcomes[1].reason,'interrupted');
+});
+
+test('A clean fifteen-case development check makes no High dispatch',async()=>{
+ const {previewDevelopment,runDevelopment}=await import('../ai/lab-development-sequence.mjs');
+ const setup=previewDevelopment({model:'fixture'},['low','high'],false);
+ let calls=0;
+ const result=await runDevelopment({setup,id:'good',signal:new AbortController().signal,startStage:async plan=>{
+  calls++;
+  return {records:plan.caseIds.map(caseId=>({spec:{caseId},status:'completed',cleanExit:true,
+   modelIdentity:{exactMatch:true},events:[{type:'finished'}],verification:{passed:true}}))};
+ }});
+ assert.equal(calls,1);
+ assert.equal(result.status,'completed');
+ assert.equal(result.phases[0].outcomes.length,15);
+});
+
+test('Development evidence links only its own attempts and rejects a changed source on save',async t=>{
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
+ const {unzipSync,strFromU8}=require('fflate');
+ const {createDevelopmentEvidence}=require('../backend/ai-lab-development-evidence.cjs');
+ const folder=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-dev-evidence-'));
+ t.after(()=>{assert.equal(path.dirname(fs.realpathSync(folder)),fs.realpathSync(os.tmpdir()));fs.rmSync(folder,{recursive:true,force:true});});
+ const id=crypto.randomUUID(),runId=crypto.randomUUID(),seriesId=crypto.randomUUID();
+ let source='one';
+ const store=createDevelopmentEvidence(folder,()=>source);
+ const report={id,setup:{modeler:{providerId:'current',model:'fixture'}},status:'completed',
+  phases:[{effort:'low',caseIds:['thread'],outcomes:[{caseId:'thread',runId,status:'passed'}]}]};
+ store.save(report);
+ const spec={caseId:'thread',effort:'low',seriesName:'Entwicklungscheck · '+id+' · low',seriesId,monitor:{mode:'off'}};
+ fs.writeFileSync(path.join(folder,'Serie-'+seriesId+'.json'),JSON.stringify({id:seriesId,plan:{},rows:[spec]}));
+ fs.writeFileSync(path.join(folder,'run-'+runId+'.json'),JSON.stringify({id:runId,spec,events:[{type:'finished'}],status:'completed',verification:{passed:true},cleanExit:true}));
+ const exported=await store.exportReport(id);
+ const entries=unzipSync(fs.readFileSync(exported.path));
+ const series=JSON.parse(strFromU8(entries['Serienplaene.json']));
+ assert.equal(series[0].developmentCheck.id,id);
+ assert.deepEqual(JSON.parse(strFromU8(entries['Manifest.json'])).runs,[runId]);
+ source='two';
+ assert.equal(store.recent().compatible,false);
+ assert.throws(()=>store.save(report),/denselben Programmstand/);
+});
+
+test('Supplemental checks persist native results and keep interrupted cases open',()=>{
+ const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
+ const {randomUUID}=require('node:crypto');
+ const {createSupplementalEvidence}=require('../backend/ai-lab-supplemental-evidence.cjs');
+ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-supplemental-'));
+ try{
+  const evidence=createSupplementalEvidence(directory);
+  assert.equal(evidence.recent(),null);
+  const report={id:randomUUID(),status:'interrupted',caseIds:['plate-drawing','photo-multiview'],results:[{id:'plate-drawing',status:'passed',checks:[{label:'Länge',passed:true,actual:65}]}]};
+  const file=evidence.save(report).path;
+  assert.equal(evidence.recent().path,file);
+  assert.deepEqual(evidence.recent().report,{...report,format:'FormnaroSupplementalLabCheck',version:1});
+  assert.throws(()=>evidence.save({...report,status:'completed'}),/Ungültiges Ergebnis/);
+  assert.throws(()=>evidence.save({...report,id:'../datei'}),/Ungültiges Ergebnis/);
+  assert.throws(()=>evidence.save({...report,caseIds:['plate-drawing','plate-drawing']}),/Ungültiges Ergebnis/);
+  const untouched=path.join(directory,'Entwicklungscheck-alt.json');
+  fs.writeFileSync(untouched,'keep');
+  evidence.clear();
+  assert.equal(evidence.recent(),null);
+  assert.equal(fs.readFileSync(untouched,'utf8'),'keep');
+ }finally{fs.rmSync(directory,{recursive:true,force:true});}
+});

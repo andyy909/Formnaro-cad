@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 import {cadExclusion,copyBenchmarkSources} from '../scripts/portable-runtime-policy.mjs';
 
 function temporary(t){
@@ -14,11 +14,26 @@ function temporary(t){
 }
 test('Portable package contains every pinned renderer source needed by both frozen benchmarks',t=>{
  const source=fileURLToPath(new URL('../',import.meta.url)),stage=temporary(t),copied=copyBenchmarkSources(source,stage);
- assert.deepEqual(copied.sort(),['cad-agent-ui-policy','cad-ai-analysis','cad-ai-result-checks','cad-bore-check-native','cad-drill-stock-native','cad-practice-controls','cad-practice-model-ui','cad-service'].map(n=>'src/'+n+'.js'));
+ assert.deepEqual(copied.sort(),['cad-agent-ui-policy','cad-ai-analysis','cad-ai-result-checks','cad-bore-check-native','cad-drill-stock-native','cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref','cad-practice-controls','cad-practice-model-ui','cad-service'].map(n=>'src/'+n+'.js').sort());
  for(const suite of ['benchmark-core-v1.json','benchmark-advanced-v2.json'])for(const entry of JSON.parse(fs.readFileSync(path.join(source,'ai',suite))).dependencies.filter(e=>e.path.startsWith('src/'))){
   const bytes=fs.readFileSync(path.join(stage,entry.path));assert.deepEqual(bytes,fs.readFileSync(path.join(source,entry.path)));assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.sha256);
  }
  assert.equal(fs.existsSync(path.join(stage,'src/cad-main.js')),false);
+});
+test('Advanced drawing measurements load from the portable main-process layout',async t=>{
+ const source=fileURLToPath(new URL('../',import.meta.url)),stage=temporary(t);
+ copyBenchmarkSources(source,stage);
+ fs.writeFileSync(path.join(stage,'package.json'),JSON.stringify({type:'module'}));
+ const evaluator=path.join(stage,'backend','ai-benchmark-advanced-evaluate.cjs');
+ fs.mkdirSync(path.dirname(evaluator));
+ fs.copyFileSync(path.join(source,'backend','ai-benchmark-advanced-evaluate.cjs'),evaluator);
+ const {evaluateAdvanced}=(await import(pathToFileURL(evaluator).href)).default;
+ const original={id:'body',name:'Aufgabenteil'},project={nodes:[original,{id:'guard'}]};
+ const {checks}=await evaluateAdvanced({id:'advanced-08'},{project},{
+  project,scene:{objects:[{id:'body',target:{path:[]},kind:'cad',solid:true,solids:1}]}
+ },null,{ok:true,steps:[{observation:{}}]});
+ assert.ok(checks.some(c=>c.name==='Mindestens drei gültige geometrisch verknüpfte Maße'));
+ assert.ok(!checks.some(c=>c.name==='Native Gegenprüfung ausführbar'));
 });
 test('Wrong, conflicting or escaping benchmark pins fail before any source is copied',t=>{
  const root=temporary(t),source=path.join(root,'source'),stage=path.join(root,'stage');fs.mkdirSync(path.join(source,'ai'),{recursive:true});fs.mkdirSync(path.join(source,'src'));fs.writeFileSync(path.join(source,'src/a.js'),'a');fs.writeFileSync(path.join(source,'src/b.js'),'b');

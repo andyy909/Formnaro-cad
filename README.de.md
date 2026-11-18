@@ -12,10 +12,10 @@
 
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
-| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/Formnaro-v0.143.0-r2-Windows-x64.zip)** | **0.143.0-r2** | ca. 673 MB | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
-| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.143.0-r2) | **0.143.0-r2** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen zum Weiterentwickeln. |
+| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** | **0.144.0-r1** | ca. 673 MB | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
+| [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) | **0.144.0-r1** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen zum Weiterentwickeln. |
 
-Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgelieferte Beispiele, bis zu drei zuletzt verwendete Projekte und bei vorhandener Autosicherung eine eigene Wiederherstellungsschaltfläche. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.143.0-r2) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/SHA256SUMS.txt) · [Aktueller Prüfstand](docs/AKTUELLER-STAND.md)
+Das KI-Labor bietet die Ansichten Einfach und Erweitert, einen gestuften Entwicklungscheck und einen Befundexport. Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgelieferte Beispiele, bis zu drei zuletzt verwendete Projekte und bei vorhandener Autosicherung eine eigene Wiederherstellungsschaltfläche. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) · [Aktueller Prüfstand](docs/AKTUELLER-STAND.md)
 
 ## Verbesserungen am KI-Labor in 0.139.1-r1
 
@@ -29,7 +29,7 @@ GPT-6.1 Sol/high bestand alle sechzehn frischen Versuche auf der veröffentlicht
 
 [Sol-Beleg](docs/benchmarks/core-sol-01374-2026-11-08.json) · [Vergleichsdaten](docs/benchmarks/sol-deepseek-16-vergleich-2026-11-08.json) · [Alle Originalergebnisse](docs/benchmarks/README.md)
 
-[Programmquellen zu 0.143.0-r2](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/Formnaro-Quellcode-v0.143.0-r2.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
+[Programmquellen zu 0.144.0-r1](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-Quellcode-v0.144.0-r1.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
 
 Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer als separate Release-Dateien angeboten. [Paketregel](docs/PORTABLE-PAKETE.md).
 

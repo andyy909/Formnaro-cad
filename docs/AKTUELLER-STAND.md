@@ -1,23 +1,27 @@
-# Formnaro 0.143.0-r2
+# Formnaro 0.144.0-r1
 
-Veröffentlicht am 17. November 2026. Published on 17 November 2026.
+Ausgabe vom 18. November 2026 · Release dated 18 November 2026.
 
-[GitHub Release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.143.0-r2) · [Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/Formnaro-v0.143.0-r2-Windows-x64.zip) · [SHA-256](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/SHA256SUMS.txt) · [Application sources / Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/Formnaro-Quellcode-v0.143.0-r2.zip)
+[GitHub Release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip) · [SHA-256](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) · [Application sources / Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-Quellcode-v0.144.0-r1.zip)
 
 ## Deutsch
 
-Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei Beispiele und bis zu drei zuletzt verwendete Projekte. Für eine vorhandene Autosicherung steht eine eigene Schaltfläche bereit. Die Wartungsarbeiten betreffen Projektdateien, Import und Export, Autosicherung und Vorschauen.
+Das KI-Labor bietet die Ansichten **Einfach** und **Erweitert**. Der Entwicklungscheck beginnt mit 15 Aufgaben auf Low. Fachlich fehlgeschlagene Fälle können auf High und, wenn vom Modell unterstützt und ausgewählt, auf Max erneut laufen. Das Übungsfenster kann für die Serie sichtbar bleiben oder im Hintergrund laufen.
 
-Das Windows-ZIP vollständig in einen beschreibbaren Ordner entpacken und **Formnaro starten** öffnen. Das Programm enthält FreeCAD und Python. Programm-, CAD-Kern- und FreeCAD-Quellen sind auf der Release-Seite separat erhältlich.
+Zusatzprüfungen decken CAD-Alltag, STL-Konvertierung und Fotomodus ab. Der Ergebnisbericht zeigt, ob ein Versuch sofort oder nach einem Prüferhinweis bestand. Das exportierte Prüfpaket enthält Kontextlücken, wiederkehrende Muster, Erstreaktionen und frühere Stufen. Der Benchmarkbericht weist einen Wilson-Bereich und geschätzte Kosten pro bestätigtem Erfolg aus, soweit die Daten dafür vorliegen.
 
-Die CI prüfte je 538 Testdateien auf Windows und Linux. Das Paket bestand 763 lokale Tests und 999 EXE-Prüfungen. Der Start über die mitgelieferte Verknüpfung, Speichern, Wiederöffnen und STEP-Export wurden in einem frischen Windows-Standardprofil geprüft.
+Das Windows-ZIP vollständig in einen beschreibbaren Ordner entpacken und **Formnaro starten** öffnen. Die Windows-EXE ist unsigniert. Programm-, CAD-Kern- und FreeCAD-Quellen sind separate Downloads.
+
+Die Paketprüfung umfasste 999 EXE-Prüfungen. Die Abnahme am entpackten Paket bestätigte den Start mit frischem Profil, Speichern und Wiederöffnen, STEP-Export, ein Beispielprojekt und die KI-Labor-Anzeige mit archivierten Läufen.
 
 ## English
 
-Formnaro opens with an empty workspace. The welcome screen shows three examples and up to three recent projects. An available autosave has its own restore button. The maintenance work covers project files, import and export, autosave, and previews.
+AI Lab has **Simple** and **Advanced** views. The development check starts with 15 tasks at Low. Cases that fail validation can run again at High and at Max when supported by the model and selected. The practice window can stay visible or run in the background.
 
-Extract the complete Windows ZIP into a writable folder and open **Formnaro starten**. FreeCAD and Python are included. Application, CAD-kernel and FreeCAD sources are separate downloads on the release page.
+Supplemental checks cover everyday CAD, STL conversion, and photo mode. Results show whether a run passed on the first attempt or after verifier feedback. The exported evidence includes context gaps, recurring patterns, initial reactions, and earlier stages. The benchmark report includes a Wilson interval and estimated cost per verified success when the data supports those figures.
 
-CI checked 538 test files each on Windows and Linux. The package passed 763 local tests and 999 executable checks. Launch through the bundled shortcut, saving, reopening and STEP export were verified with a fresh Windows standard user profile.
+Extract the entire Windows ZIP into a writable folder and open **Formnaro starten**. The Windows executable is unsigned. Application, CAD-kernel, and FreeCAD sources are separate downloads.
 
-[Release acceptance / Abnahme](https://github.com/andyy909/Formnaro-cad/releases/download/v0.143.0-r2/Abnahmebericht.md) · [Source CI](https://github.com/andyy909/Formnaro-cad/actions/runs/44027914917) · [Release history / Frühere Ausgaben](https://github.com/andyy909/Formnaro-cad/releases)
+The package passed 999 executable checks. Acceptance of the extracted package verified a launch with a fresh profile, saving and reopening, STEP export, a bundled example, and AI Lab results with recorded runs.
+
+[Release acceptance / Abnahme](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Abnahmebericht.md) · [Source CI](https://github.com/andyy909/Formnaro-cad/actions/workflows/build.yml) · [Release history / Frühere Ausgaben](https://github.com/andyy909/Formnaro-cad/releases)

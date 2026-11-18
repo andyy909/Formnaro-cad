@@ -66,6 +66,12 @@ export function copyBenchmarkSources(source,stage){
   if(createHash('sha256').update(bytes).digest('hex')!==sha256)throw Error('Benchmark source changed: '+file);
   return {file,bytes};
  });
+ // The Advanced Lab drawing oracle imports plain modules in Electron's main process.
+ // Keep this runtime closure separate from the frozen benchmark source pins.
+ if(fs.existsSync(path.join(source,'backend','ai-benchmark-advanced-evaluate.cjs'))) for(const name of ['cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref']){
+  const file='src/'+name+'.js';
+  if(!required.has(file))checked.push({file,bytes:fs.readFileSync(path.join(source,file))});
+ }
  for(const {file,bytes} of checked){const target=path.join(stage,file);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,bytes);}
  return checked.map(({file})=>file);
 }
@@ -74,6 +80,11 @@ export function copyPortableApp(source,stage){
  for(const n of ['backend','ai','licenses','dist','electron.cjs','preload.cjs','package.json','LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.cpSync(path.join(source,n),path.join(stage,n),{recursive:true,filter:file=>n!=='backend'||!(/verification|fixture|^all-functions|^\./.test(path.basename(file))||file.endsWith('.cs'))});
  for(const n of docs){const input=path.join(source,'docs',n);if(fs.existsSync(input)){fs.mkdirSync(path.join(stage,'docs'),{recursive:true});fs.copyFileSync(input,path.join(stage,'docs',n));}}
  copyBenchmarkSources(source,stage);
+ // Both the Electron main process and the renderer check the same CAD parameter schema.
+ if(fs.existsSync(path.join(stage,'backend','practice-ui-policy.cjs'))){
+  fs.mkdirSync(path.join(stage,'src'),{recursive:true});
+  fs.copyFileSync(path.join(source,'src','parameters.js'),path.join(stage,'src','parameters.js'));
+ }
  // The lab ZIP export runs in Electron's main process, outside the renderer bundle.
  const require=createRequire(import.meta.url);
  const fflate=path.dirname(require.resolve('fflate/package.json'));

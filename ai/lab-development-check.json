@@ -1,0 +1,74 @@
+{
+  "name": "Entwicklungscheck · Externe KI · 15 Aufgaben · Low",
+  "preset": "practice-functions",
+  "caseIds": [
+    "thread",
+    "drill",
+    "sketch",
+    "pattern",
+    "shell",
+    "drawing",
+    "assembly",
+    "advanced-01",
+    "advanced-02",
+    "advanced-03",
+    "advanced-04",
+    "advanced-05",
+    "advanced-06",
+    "advanced-07",
+    "advanced-08"
+  ],
+  "variants": [
+    "C"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "repeats": 1,
+  "stage": "full",
+  "dataset": "development",
+  "workflow": "practice",
+  "scopes": [
+    "selection"
+  ],
+  "images": [
+    "none"
+  ],
+  "finalist": "C",
+  "monitor": {
+    "mode": "off",
+    "model": "deepseek-flash",
+    "effort": "low",
+    "trigger": "proposal",
+    "prefixChars": 1000,
+    "cadence": "first",
+    "maxChecks": 12,
+    "confidence": 0.95
+  },
+  "limits": {
+    "seconds": 360,
+    "outputTokens": 16384,
+    "rounds": 20,
+    "formatRepairs": 2,
+    "requestBudget": 600
+  },
+  "customContext": "",
+  "variantNotes": {},
+  "roles": {
+    "modeler": {
+      "providerId": "current",
+      "model": "",
+      "effort": "series"
+    },
+    "supervisor": {
+      "providerId": "current",
+      "model": "",
+      "effort": "monitor"
+    },
+    "reviewer": {
+      "providerId": "current",
+      "model": "",
+      "effort": "high"
+    }
+  }
+}
