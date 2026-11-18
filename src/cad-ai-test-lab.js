@@ -5,7 +5,7 @@ import {mountDiagnosticUsage} from './cad-ai-diagnostic-usage.js';
 import {summarizeLab} from '../ai/test-lab-summary.mjs';
 import {quickPlans,quickPlan} from '../ai/lab-quick-plans.mjs';
 import {previewDevelopment,runDevelopment} from '../ai/lab-development-sequence.mjs';
-import {developmentReasonLabels} from '../ai/lab-development-findings.mjs';
+import {developmentReasonLabels,developmentSummaryText} from '../ai/lab-development-findings.mjs';
 import {mountLabSupplementalChecks} from './cad-ai-lab-supplemental.js';
 const labels={running:'Läuft',completed:'Beendet',proposal:'Vorschlag',failed:'Fehler',timeout:'Zeitlimit',cancelled:'Abgebrochen','monitor-stopped':'Vom Überwacher gestoppt','read-limit':'Auskunftslimit',truncated:'Ausgabelimit','step-limit':'Schrittlimit',interrupted:'Unterbrochen'};
 const seconds=n=>Number.isFinite(n)?(n/1000).toFixed(1)+' s':'—';
@@ -164,6 +164,7 @@ export function mountAITestLab({host,desktop}){
   const rows=report.phases[0]?.caseIds??[];
   const outcomes=caseId=>report.phases.flatMap(phase=>phase.outcomes.filter(cell=>cell.caseId===caseId).map(cell=>({...cell,effort:phase.effort})));
   const labels={passed:'Bestanden',failed:'Durchgefallen',blocked:'Offen',open:'Ausstehend'};
+  const statusText=entry=>entry.status==='passed'?(entry.firstTry===true?'Bestanden (1. Versuch)':entry.firstTry===false?'Bestanden nach Prüferhinweis':labels.passed):labels[entry.status]??entry.status;
   const heading=node('h3','Entwicklungscheck · '+report.model);
   const actions=node('div');
   if(!developmentController&&report.status!=='completed'&&report.compatible!==false){
@@ -194,13 +195,13 @@ export function mountAITestLab({host,desktop}){
    };
    actions.append(control);
   }
-  host.replaceChildren(heading,actions,table(
+  host.replaceChildren(heading,actions,node('p',developmentSummaryText(report)),table(
    ['Aufgabe','Versuche','Erste bestandene Stufe'],
    rows.map(caseId=>{
     const history=outcomes(caseId);
     const links=node('div');
     for(const entry of history){
-     const description=entry.effort+' · '+labels[entry.status]+(entry.reason?' ('+(developmentReasonLabels[entry.reason]??entry.reason)+')':'');
+     const description=entry.effort+' · '+statusText(entry)+(entry.reason?' ('+(developmentReasonLabels[entry.reason]??entry.reason)+')':'');
      if(entry.runId){const button=node('button',description);button.onclick=()=>read(entry.runId);links.append(button);}
      else links.append(node('span',description));
     }

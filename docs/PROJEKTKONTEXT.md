@@ -13,6 +13,10 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-2.3: Bestandene Einträge zeigen „Bestanden (1. Versuch)“ oder
+„Bestanden nach Prüferhinweis“; über der Tabelle steht die Zeile aus
+`developmentSummaryText()`, geprüft von `tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-2.2: `developmentOutcome()` ergänzt bei bestandenen Läufen `firstTry` aus
 `feedbackRounds()`; die Eskalation bleibt unverändert, geprüft von
 `tests/ai-lab-devcheck-outcome.test.cjs`.
