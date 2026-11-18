@@ -150,3 +150,14 @@ export function findPatterns(findings){
   .filter(([,entry])=>entry.caseIds.size>=2)
   .map(([key,entry])=>({key,caseIds:[...entry.caseIds],runIds:[...entry.runIds],hint:'Gleiches Symptom in mehreren Aufgaben: mögliche Programmursache'}));
 }
+
+export function contextReactionPatterns(findings){
+ const list=findings??[];
+ const total=list.length;
+ if(!total)return [];
+ const counts=new Map();
+ for(const finding of list)for(const flag of finding?.firstContextReaction?.flags??[])counts.set(flag,(counts.get(flag)??0)+1);
+ return [...counts]
+  .filter(([,count])=>count/total>=1/3)
+  .map(([flag,count])=>({flag,count,total,hint:'Startkontext prüfen',untrusted:true}));
+}

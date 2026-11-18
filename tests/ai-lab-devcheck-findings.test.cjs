@@ -147,3 +147,12 @@ test('Ein Symptom in nur einer Aufgabe ist kein Muster',async()=>{
  const {findPatterns}=await load();
  assert.deepEqual(findPatterns([{caseId:'advanced-07',runId:'r1',symptoms:['Zwei getrennte rechteckige Durchbrüche und Materialstege']}]),[]);
 });
+test('Erstreaktions-Muster ab einem Drittel der Läufe, mit Hinweis',async()=>{
+ const {contextReactionPatterns}=await load();
+ const findings=[{firstContextReaction:{flags:['szene-leer']}},{firstContextReaction:{flags:['szene-leer']}},{firstContextReaction:{flags:[]}}];
+ assert.deepEqual(contextReactionPatterns(findings),[{flag:'szene-leer',count:2,total:3,hint:'Startkontext prüfen',untrusted:true}]);
+ const boundary=contextReactionPatterns([{firstContextReaction:{flags:['unklar']}},{firstContextReaction:{flags:[]}},{firstContextReaction:{flags:[]}}]);
+ assert.equal(boundary.length,1);
+ assert.equal(boundary[0].flag,'unklar');
+ assert.deepEqual(contextReactionPatterns([]),[]);
+});
