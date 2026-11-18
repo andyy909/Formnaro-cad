@@ -5,6 +5,7 @@ export function developmentOutcome(record){
  if(['running','interrupted','cancelled'].includes(record.status)||!record.events?.some(event=>event.type==='finished')){
   return {status:'blocked',reason:'interrupted'};
  }
+ if(record.status==='needs-input')return {status:'blocked',reason:'needs-input'};
  if(record.verificationFailure==='checker-error'||record.verification?.checks?.some(check=>check.name==='Native Gegenprüfung ausführbar'&&!check.passed)){
   return {status:'blocked',reason:'checker-error'};
  }
@@ -12,7 +13,6 @@ export function developmentOutcome(record){
   return {status:'blocked',reason:record.error?.code??'infrastructure'};
  }
  if(record.modelIdentity?.exactMatch!==true||record.events.some(event=>event.type==='usage'&&(event.role??'modeler')==='modeler'&&event.returnedModel!==record.modelIdentity.requested))return {status:'blocked',reason:'model-identity'};
- if(record.status==='needs-input')return {status:'blocked',reason:'needs-input'};
  if(record.status!=='completed'||record.error||typeof record.verification?.passed!=='boolean'){
   return {status:'blocked',reason:record.error?.code??record.verificationSkipped??record.status??'unverified'};
  }

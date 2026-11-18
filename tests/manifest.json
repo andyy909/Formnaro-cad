@@ -24,6 +24,7 @@
   {"file":"tests/ai-lab-cause-fixes.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.205},
   {"file":"tests/ai-lab-completion-fixes.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.445},
   {"file":"tests/ai-lab-devcheck-fixtures.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.066},
+  {"file":"tests/ai-lab-devcheck-outcome.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.073},
   {"file":"tests/ai-lab-extended-acceptance.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.314},
   {"file":"tests/ai-lab-integration-01390.test.cjs","referencedBy":["ci"],"kind":"node","status":"pass","seconds":2.509},
   {"file":"tests/ai-lab-interruption-resolution.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.273},

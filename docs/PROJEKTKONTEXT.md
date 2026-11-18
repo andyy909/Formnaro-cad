@@ -13,6 +13,10 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-1.1: `developmentOutcome()` in `ai/lab-development-sequence.mjs` prüft
+`needs-input` vor dem Prüferfehler; eine berechtigte Rückfrage gilt damit als
+`blocked · needs-input`, geprüft von `tests/ai-lab-devcheck-outcome.test.cjs`.
+
 EC-0.2: `scripts/shrink-lab-run.mjs` verkleinert echte Laufprotokolle auf die
 Felder und Ereignisse der späteren Entwicklungsauswertung; fünf Läufe vom
 18.11.2026 liegen als Fixtures unter `tests/fixtures/development-check/`,
