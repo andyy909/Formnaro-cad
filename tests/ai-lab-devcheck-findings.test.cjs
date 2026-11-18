@@ -209,6 +209,36 @@ test('Markdown-Kurzbericht hat Kopf, Tabelle, Abschnitte und Schlusssatz',async(
  assert.ok(row,'Zeile mit maskiertem Namen');
  assert.equal((row.match(/(?<!\\)\|/g)??[]).length,7,'sechs Spalten ergeben sieben unmaskierte Striche');
 });
+test('Frühere Stufen bleiben in den Befunden, die Zusammenfassung zählt je Aufgabe einmal',async()=>{
+ const {developmentFindings,findingsMarkdown}=await load();
+ const clone=value=>JSON.parse(JSON.stringify(value));
+ const low02=clone(fixture('advanced-02'));
+ low02.id='00000000-0000-4000-8000-000000000001';
+ low02.spec.effort='low';
+ low02.verification={...low02.verification,passed:false};
+ const high02=clone(fixture('advanced-02'));
+ high02.id='00000000-0000-4000-8000-000000000002';
+ high02.spec.effort='high';
+ high02.events=high02.events.filter(event=>event.type!=='practice-ui-feedback');
+ const low05=fixture('advanced-05');
+ const report={id:'f14586d9-dfd7-48f6-8869-f7309ca43f20',model:'deepseek-flash',setup:{levels:['low','high']},sourceHash:'f60b86cb1234567890',phases:[
+  {effort:'low',caseIds:['advanced-02','advanced-05'],outcomes:[{caseId:'advanced-02',runId:low02.id,status:'failed'},{caseId:'advanced-05',runId:low05.id,status:'passed',firstTry:false}]},
+  {effort:'high',caseIds:['advanced-02'],outcomes:[{caseId:'advanced-02',runId:high02.id,status:'passed',firstTry:true}]},
+ ]};
+ // Deliberately unordered input: the high attempt comes first.
+ const findings=developmentFindings(report,[high02,low05,low02]);
+ assert.equal(findings.runs.length,3);
+ assert.deepEqual(findings.runs.map(run=>[run.runId,run.effort,run.decisive]),[[low02.id,'low',false],[low05.id,'low',true],[high02.id,'high',true]]);
+ assert.deepEqual(findings.summary,{passedFirstTry:1,passedAfterFeedback:1,failed:0,open:0,byReason:{}});
+ assert.equal(findings.patterns.length,1,'Doppelkörper aus der Low-Stufe bleibt als Muster erhalten');
+ assert.deepEqual(findings.patterns[0].caseIds.sort(),['advanced-02','advanced-05']);
+ assert.ok(findings.patterns[0].runIds.includes(low02.id));
+ const md=findingsMarkdown(findings);
+ assert.match(md,/^\| advanced-02 \| Bestanden \(1\. Versuch\) \| ja \|/m);
+ assert.equal(md.split('\n').filter(line=>line.startsWith('| advanced-02 ')).length,1,'eine Tabellenzeile je Aufgabe');
+ assert.match(md,/^## Frühere Stufen$/m);
+ assert.match(md,/^- advanced-02 · low: Durchgefallen · Symptome: .*2 statt 1, deckungsgleich/m);
+});
 test('Antwortschema für die auswertende KI ist gültiges JSON mit allen Pflichtfeldern',()=>{
  const schema=JSON.parse(fs.readFileSync(path.join(__dirname,'..','ai','lab-development-review-schema.json'),'utf8'));
  assert.equal(schema.type,'array');

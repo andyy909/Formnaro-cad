@@ -165,21 +165,23 @@ export function contextReactionPatterns(findings){
 }
 
 export function developmentFindings(report,records){
- const byCase=new Map();
- for(const record of records??[]){
-  const caseId=record?.spec?.caseId;
-  if(!caseId)continue;
-  if(!byCase.has(caseId))byCase.set(caseId,[]);
-  byCase.get(caseId).push(record);
- }
- const caseIds=report?.phases?.[0]?.caseIds??[...byCase.keys()];
+ // Every recorded attempt stays in the findings, so symptoms from an earlier
+ // stage survive a later success. Only the summary counts one decisive
+ // attempt per task: the first passed one, otherwise the last one.
+ const caseIds=report?.phases?.[0]?.caseIds??[...new Set((records??[]).map(record=>record?.spec?.caseId).filter(Boolean))];
+ const levels=report?.setup?.levels??(report?.phases??[]).map(phase=>phase.effort);
+ const stage=record=>{const index=levels.indexOf(record?.spec?.effort);return index<0?levels.length:index;};
+ const ordered=(records??[])
+  .filter(record=>caseIds.includes(record?.spec?.caseId))
+  .sort((a,b)=>stage(a)-stage(b)||caseIds.indexOf(a.spec.caseId)-caseIds.indexOf(b.spec.caseId)||String(a.startedAt??'').localeCompare(String(b.startedAt??'')));
  const chosen=new Map();
  for(const caseId of caseIds){
-  const candidates=byCase.get(caseId)??[];
+  const candidates=ordered.filter(record=>record.spec.caseId===caseId);
   if(!candidates.length)continue;
   chosen.set(caseId,candidates.find(record=>developmentOutcome(record).status==='passed')??candidates.at(-1));
  }
- const runs=[...chosen.values()].map(record=>({...runFinding(record,developmentOutcome(record)),symptoms:runSymptoms(record)}));
+ const decisive=new Set([...chosen.values()]);
+ const runs=ordered.map(record=>({...runFinding(record,developmentOutcome(record)),symptoms:runSymptoms(record),decisive:decisive.has(record)}));
  const outcomes=caseIds.map(caseId=>chosen.has(caseId)?developmentOutcome(chosen.get(caseId)):null);
  const passed=outcomes.filter(outcome=>outcome?.status==='passed');
  const byReason={};
@@ -213,6 +215,7 @@ const cell=value=>{
 const runResult=run=>{
  const outcome=run?.outcome??{};
  if(outcome.status==='passed')return outcome.firstTry===true?'Bestanden (1. Versuch)':outcome.firstTry===false?'Bestanden nach Prüferhinweis':'Bestanden';
+ if(outcome.status==='failed')return 'Durchgefallen';
  return outcome.reason?(developmentReasonLabels[outcome.reason]??String(outcome.reason)):'Offen';
 };
 const runFirstTry=run=>{
@@ -238,7 +241,13 @@ export function findingsMarkdown(findings){
   '| Aufgabe | Ergebnis | 1. Versuch | Grund | Sekunden | Tokens |',
   '| --- | --- | --- | --- | --- | --- |',
  ];
- for(const run of runs)lines.push('| '+[cell(run.caseId),cell(runResult(run)),cell(runFirstTry(run)),cell(run?.outcome?.reason),cell(run?.seconds),cell(runTokens(run))].join(' | ')+' |');
+ const decisiveRuns=runs.filter(run=>run?.decisive!==false);
+ const earlierRuns=runs.filter(run=>run?.decisive===false);
+ for(const run of decisiveRuns)lines.push('| '+[cell(run.caseId),cell(runResult(run)),cell(runFirstTry(run)),cell(run?.outcome?.reason),cell(run?.seconds),cell(runTokens(run))].join(' | ')+' |');
+ if(earlierRuns.length){
+  lines.push('', '## Frühere Stufen', '');
+  for(const run of earlierRuns)lines.push('- '+cell(run.caseId)+' · '+cell(run.effort)+': '+cell(runResult(run))+((run.symptoms??[]).length?' · Symptome: '+cell(run.symptoms.join('; ')):''));
+ }
  lines.push('', '## Kontextlücken', '');
  if((findings?.contextGaps??[]).length)for(const gap of findings.contextGaps)lines.push('- '+cell(gap.caseId)+' · '+cell(gap.kind)+': '+cell(gap.text));
  else lines.push('- keine');

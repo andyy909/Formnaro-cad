@@ -13,6 +13,13 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-7.4: `developmentFindings()` in `ai/lab-development-findings.mjs` behält alle
+Versuche aller Stufen in `runs` (Feld `decisive` markiert je Aufgabe den zählenden
+Versuch); Muster, Kontextlücken und Erstreaktion nutzen damit auch frühere Stufen,
+die Zusammenfassung zählt weiter einmal je Aufgabe. Der Kurzbericht listet frühere
+Stufen getrennt und zeigt Fehlschläge als „Durchgefallen“, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-7.1: Gesamtprüfung; der Export der 15 echten Läufe vom 18.11.2026 ergibt
 advanced-01 als Rückfrage, 12 Erfolge im ersten Versuch, 2 nach Prüferhinweis,
 ein Doppelkörper-Muster und `szene-leer` in 12 von 15 Läufen. Ergebnisse werden
