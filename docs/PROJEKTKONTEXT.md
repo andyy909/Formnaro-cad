@@ -13,6 +13,10 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-3.1: `runFacts()` in `ai/lab-development-findings.mjs` liefert Eckdaten eines
+Laufs (Aufgabe, Lauf, Stufe, Dauer, Anfragen, Tokens, fehlgeschlagene Prüfungen);
+fehlende Tokenwerte bleiben `null`, geprüft von `tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-2.3: Bestandene Einträge zeigen „Bestanden (1. Versuch)“ oder
 „Bestanden nach Prüferhinweis“; über der Tabelle steht die Zeile aus
 `developmentSummaryText()`, geprüft von `tests/ai-lab-devcheck-findings.test.cjs`.

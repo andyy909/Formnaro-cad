@@ -41,3 +41,21 @@ test('Eine eskalierte Aufgabe zählt einmal als bestanden',async()=>{
  ]};
  assert.equal(developmentSummaryText(report),'Bestanden: 1 im ersten Versuch, 0 nach Prüferhinweis, 0 offen');
 });
+test('Eckdaten eines Laufs kommen aus den Ereignissen',async()=>{
+ const {runFacts}=await load();
+ assert.deepEqual(runFacts(fixture('advanced-01')),{
+  caseId:'advanced-01',runId:'28ba5f84-f2ed-441a-bf73-fba6e7c977bf',effort:'low',status:'needs-input',seconds:16.8,requests:1,
+  tokens:{input:6654,output:1734},
+  failedChecks:['Sichtbare Ausführung abgeschlossen','Unabhängig berechnetes Materialvolumen','Native Gegenprüfung ausführbar'],
+ });
+ const drill=runFacts(fixture('drill'));
+ assert.equal(drill.caseId,'drill');
+ assert.equal(drill.status,'completed');
+ assert.deepEqual(drill.failedChecks,[]);
+ assert.ok(drill.tokens.input>0&&drill.tokens.output>0);
+});
+test('Fehlende Tokenwerte bleiben null statt 0',async()=>{
+ const {runFacts}=await load();
+ const facts=runFacts({id:'x',spec:{caseId:'drill',effort:'low'},status:'completed',elapsedMs:1000,events:[{type:'usage',usage:{}}]});
+ assert.deepEqual(facts.tokens,{input:null,output:null});
+});
