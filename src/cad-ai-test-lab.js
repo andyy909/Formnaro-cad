@@ -5,7 +5,7 @@ import {mountDiagnosticUsage} from './cad-ai-diagnostic-usage.js';
 import {summarizeLab} from '../ai/test-lab-summary.mjs';
 import {quickPlans,quickPlan} from '../ai/lab-quick-plans.mjs';
 import {previewDevelopment,runDevelopment} from '../ai/lab-development-sequence.mjs';
-import {developmentReasonLabels,developmentSummaryText} from '../ai/lab-development-findings.mjs';
+import {developmentFindings,developmentReasonLabels,developmentSummaryText,developmentHintsText} from '../ai/lab-development-findings.mjs';
 import {mountLabSupplementalChecks} from './cad-ai-lab-supplemental.js';
 const labels={running:'Läuft',completed:'Beendet',proposal:'Vorschlag',failed:'Fehler',timeout:'Zeitlimit',cancelled:'Abgebrochen','monitor-stopped':'Vom Überwacher gestoppt','read-limit':'Auskunftslimit',truncated:'Ausgabelimit','step-limit':'Schrittlimit',interrupted:'Unterbrochen'};
 const seconds=n=>Number.isFinite(n)?(n/1000).toFixed(1)+' s':'—';
@@ -195,7 +195,7 @@ export function mountAITestLab({host,desktop}){
    };
    actions.append(control);
   }
-  host.replaceChildren(heading,actions,node('p',developmentSummaryText(report)),table(
+  const results=table(
    ['Aufgabe','Versuche','Erste bestandene Stufe'],
    rows.map(caseId=>{
     const history=outcomes(caseId);
@@ -207,7 +207,21 @@ export function mountAITestLab({host,desktop}){
     }
     return [caseId,links,history.find(entry=>entry.status==='passed')?.effort];
    })
-  ));
+  );
+  const hints=node('div');
+  if(report.phases.some(phase=>phase.outcomes.some(entry=>entry.runId))){
+   const showFindings=node('button','Befunde anzeigen');
+   showFindings.onclick=async()=>{
+    try{
+     showFindings.disabled=true;
+     const records=await Promise.all(report.phases.flatMap(phase=>phase.outcomes.filter(entry=>entry.runId).map(entry=>api({action:'read',id:entry.runId}))));
+     hints.replaceChildren(node('p',developmentHintsText(developmentFindings(report,records))));
+    }catch(error){status(error.message);}
+    finally{showFindings.disabled=false;}
+   };
+   hints.append(showFindings);
+  }
+  host.replaceChildren(heading,actions,node('p',developmentSummaryText(report)),results,hints);
  }
  async function stageRecords(name){
   const current=await api({action:'state'});

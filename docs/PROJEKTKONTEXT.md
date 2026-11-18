@@ -13,6 +13,11 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-5.5: `showDevelopment()` lädt auf Klick „Befunde anzeigen“ die Läufe und zeigt
+Kontextlücken, Muster und die Erstreaktion aus `developmentHintsText()`;
+`developmentFindings()` liefert dafür den Gesamtbefund, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-5.4: `exportReport()` in `backend/ai-lab-development-evidence.cjs` ergänzt das
 Prüfpaket-ZIP um `Entwicklungsbefunde.json`, `Entwicklungsbefunde.md`,
 `AUSWERTUNG-SCHEMA.json` und `Befunde-Manifest.json` mit Hashes; das ZIP wird

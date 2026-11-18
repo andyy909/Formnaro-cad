@@ -239,3 +239,13 @@ export function findingsMarkdown(findings){
  lines.push('', 'Denktexte sind Hinweise, keine Belege. Bewertungen stammen aus den CAD-Prüfungen.');
  return lines.join('\n')+'\n';
 }
+
+export function developmentHintsText(findings){
+ const gaps=(findings?.contextGaps??[]).length;
+ const patterns=(findings?.patterns??[]).length;
+ const reactions=findings?.contextReactions??[];
+ if(!gaps&&!patterns&&!reactions.length)return 'Keine Hinweise aus den Befunden.';
+ let text='Kontextlücken: '+gaps+' · Muster: '+patterns;
+ if(reactions.length)text+=' · Erstreaktion: '+reactions[0].flag+' in '+reactions[0].count+' von '+reactions[0].total+' Läufen';
+ return text;
+}

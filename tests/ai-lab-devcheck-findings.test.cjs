@@ -217,3 +217,8 @@ test('Antwortschema für die auswertende KI ist gültiges JSON mit allen Pflicht
  assert.deepEqual(item.properties.bereich.enum,['modell','kontext','programm','aufgabe','pruefer']);
  assert.ok(Array.isArray(item.anyOf)&&item.anyOf.length===2,'runIds oder pattern');
 });
+test('Hinweiszeile für die Oberfläche nennt Lücken, Muster und Erstreaktion',async()=>{
+ const {developmentHintsText}=await load();
+ assert.equal(developmentHintsText({contextGaps:[{},{},{},{}],patterns:[{}],contextReactions:[{flag:'szene-leer',count:3,total:5}]}),'Kontextlücken: 4 · Muster: 1 · Erstreaktion: szene-leer in 3 von 5 Läufen');
+ assert.equal(developmentHintsText({}),'Keine Hinweise aus den Befunden.');
+});
