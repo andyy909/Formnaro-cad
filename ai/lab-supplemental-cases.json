@@ -1,0 +1,18 @@
+[
+  {"id":"plate-length","group":"CAD","label":"Platte verlängern","prompt":"Mach die Platte rechts 20 mm länger. Lass die Bohrungen, wo sie sind.","quick":true},
+  {"id":"plate-diameter","group":"CAD","label":"Beide Bohrungen auf Ø8","prompt":"Mach beide Bohrungen auf 8 mm. Die Lage bleibt.","quick":true},
+  {"id":"plate-spacing","group":"CAD","label":"Bohrungsabstand 30 mm","prompt":"Setz die Bohrungen 30 mm auseinander. Die Mitte zwischen ihnen bleibt gleich.","quick":true},
+  {"id":"plate-drawing","group":"CAD","label":"Platte ändern und Zeichnung aktualisieren","prompt":"Mach die Platte rechts noch 5 mm länger. Lass die Bohrungen, wo sie sind, und aktualisiere die Zeichnung.","quick":true},
+  {"id":"plate-step","group":"CAD","label":"Geänderte Platte als STEP wieder einlesen"},
+  {"id":"stale-preview","group":"CAD","label":"Veraltete Vorschau ablehnen"},
+  {"id":"assembly-stop","group":"CAD","label":"Baugruppenanschlag bei 45°","prompt":"Begrenze den Deckel auf 45 Grad. Das Gehäuse bleibt fest."},
+  {"id":"stl-bores","group":"STL","label":"Bohrplatte mit geschützten Zylindern","prompt":"Schütze die ausgewählten Bohrungsflächen.","quick":true},
+  {"id":"stl-countersinks","group":"STL","label":"Platte mit zwei Senkungen"},
+  {"id":"stl-rim","group":"STL","label":"Offenes Gehäuse mit Randfase"},
+  {"id":"stl-cone","group":"STL","label":"Konische Profilbohrung"},
+  {"id":"stl-freeform","group":"STL","label":"Sinus-Freiformfläche"},
+  {"id":"photo-calibrated","group":"Foto","label":"Kalibrierte Platte mit Öffnung","prompt":"Baue die Platte aus dem Bild, 4 mm dick, mit der Öffnung.","quick":true},
+  {"id":"photo-missing-scale","group":"Foto","label":"Foto ohne Maßstab und Tiefenangabe","prompt":"Mach daraus ein maßgenaues 3D-Modell.","quick":true},
+  {"id":"photo-perspective","group":"Foto","label":"Schräg fotografierte Platte"},
+  {"id":"photo-multiview","group":"Foto","label":"Mehrere Ansichten und Maßkonflikt"}
+]

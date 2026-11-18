@@ -23,3 +23,15 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 165px), 1fr));
 }
 [data-lab-view='simple'] [data-lab-role='modeler'] .lab-field { grid-column: auto; }
+
+#ai-diagnostics [data-supplemental-controls] {
+ display: grid;
+ gap: 12px;
+ margin-top: 12px;
+}
+#ai-diagnostics [data-suite-start] {
+ justify-self: start;
+}
+#ai-diagnostics [data-supplemental-results] details {
+ margin-top: 8px;
+}

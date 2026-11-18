@@ -157,3 +157,26 @@ test('Development evidence links only its own attempts and rejects a changed sou
  assert.equal(store.recent().compatible,false);
  assert.throws(()=>store.save(report),/denselben Programmstand/);
 });
+
+test('Supplemental checks persist native results and keep interrupted cases open',()=>{
+ const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
+ const {randomUUID}=require('node:crypto');
+ const {createSupplementalEvidence}=require('../backend/ai-lab-supplemental-evidence.cjs');
+ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-supplemental-'));
+ try{
+  const evidence=createSupplementalEvidence(directory);
+  assert.equal(evidence.recent(),null);
+  const report={id:randomUUID(),status:'interrupted',caseIds:['plate-drawing','photo-multiview'],results:[{id:'plate-drawing',status:'passed',checks:[{label:'Länge',passed:true,actual:65}]}]};
+  const file=evidence.save(report).path;
+  assert.equal(evidence.recent().path,file);
+  assert.deepEqual(evidence.recent().report,{...report,format:'FormnaroSupplementalLabCheck',version:1});
+  assert.throws(()=>evidence.save({...report,status:'completed'}),/Ungültiges Ergebnis/);
+  assert.throws(()=>evidence.save({...report,id:'../datei'}),/Ungültiges Ergebnis/);
+  assert.throws(()=>evidence.save({...report,caseIds:['plate-drawing','plate-drawing']}),/Ungültiges Ergebnis/);
+  const untouched=path.join(directory,'Entwicklungscheck-alt.json');
+  fs.writeFileSync(untouched,'keep');
+  evidence.clear();
+  assert.equal(evidence.recent(),null);
+  assert.equal(fs.readFileSync(untouched,'utf8'),'keep');
+ }finally{fs.rmSync(directory,{recursive:true,force:true});}
+});

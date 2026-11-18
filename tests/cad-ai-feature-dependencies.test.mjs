@@ -129,3 +129,36 @@ test('Everyday plate edits preserve specified bore geometry and leave the other 
   assert.equal(cad.serialize(),initial);
  }finally{cad.dispose();}
 });
+
+test('Lab CAD checks exercise real edits, native drawing/STEP readback, stale Apply and the joint stop', async (t) => {
+  const { runCadDevelopmentCheck } = await import('../src/cad-lab-development-checks.js');
+  for (const id of ['plate-length', 'plate-diameter', 'plate-spacing', 'plate-drawing', 'plate-step', 'stale-preview', 'assembly-stop']) {
+    await t.test(id, async () => {
+      const result = await runCadDevelopmentCheck(id, { createController: controller });
+      assert.ok(result.checks.length >= 3);
+      assert.deepEqual(result.checks.filter(({ passed }) => !passed), []);
+    });
+  }
+});
+
+test('Lab model requests supply the short German prompt and the current native reference scope', async () => {
+  const { runCadDevelopmentCheck } = await import('../src/cad-lab-development-checks.js');
+  let calls = 0;
+  const result = await runCadDevelopmentCheck('plate-diameter', {
+    createController: controller,
+    generate: async ({ prompt, scene, context }) => {
+      calls++;
+      assert.equal(prompt, 'Mach beide Bohrungen auf 8 mm. Die Lage bleibt.');
+      const { references, restricted } = context.featureScope;
+      assert.equal(restricted, true);
+      assert.equal(references.length, 2);
+      assert.ok(references.every((item) => item.fields[0].value === 4));
+      return {
+        revision: scene.revision,
+        commands: references.map(({ id }) => ({ op: 'feature', referenceId: id, field: 'diameter', value: 8 })),
+      };
+    },
+  });
+  assert.equal(calls, 1);
+  assert.deepEqual(result.checks.filter(({ passed }) => !passed), []);
+});

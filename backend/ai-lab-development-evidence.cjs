@@ -57,6 +57,7 @@ function createDevelopmentEvidence(directory,readSource=()=>sourceManifest().has
 
 function installDevelopmentEvidence(win,directory,ipcMain=require('electron').ipcMain){
  const store=createDevelopmentEvidence(directory);
+ const supplemental=require('./ai-lab-supplemental-evidence.cjs').createSupplementalEvidence(directory);
  ipcMain.handle('cad-ai:development-evidence',async(event,value)=>{
   try{
    if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('Ungültiges Laborfenster.');
@@ -65,6 +66,9 @@ function installDevelopmentEvidence(win,directory,ipcMain=require('electron').ip
     else process.env.FORMNARO_LAB_HIDE_PRACTICE='1';
     return {ok:true,value:value.show};
    }
+   if(value?.action==='supplement-save')return {ok:true,value:supplemental.save(value.report)};
+   if(value?.action==='supplement-recent')return {ok:true,value:supplemental.recent()};
+   if(value?.action==='supplement-clear'){supplemental.clear();return {ok:true,value:null};}
    if(value?.action==='recent')return {ok:true,value:store.recent()};
    if(value?.action==='save'){store.save(value.report);return {ok:true,value:null};}
    if(value?.action==='export')return {ok:true,value:store.exportReport(value.id)};
