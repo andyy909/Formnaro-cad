@@ -13,6 +13,11 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-6.1: `scripts/check-development-tasks.mjs` vergleicht die benötigten
+Werkzeuge der Referenzlösung mit der Werkzeugliste der Aufbauaufgaben und meldet
+fehlende Werkzeuge, ohne den Lauf abzubrechen (advanced-01 braucht `tool:group`),
+geprüft von `tests/ai-lab-devcheck-tasks.test.cjs`.
+
 EC-5.5: `showDevelopment()` lädt auf Klick „Befunde anzeigen“ die Läufe und zeigt
 Kontextlücken, Muster und die Erstreaktion aus `developmentHintsText()`;
 `developmentFindings()` liefert dafür den Gesamtbefund, geprüft von
