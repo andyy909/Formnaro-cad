@@ -13,6 +13,10 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-2.1: `feedbackRounds()` in `ai/lab-development-findings.mjs` liest die
+Runden fehlgeschlagener nativer Prüferrückmeldungen aus einem Lauf, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-1.2: Die Ergebnistabelle zeigt deutsche Gründe aus
 `developmentReasonLabels` in `ai/lab-development-findings.mjs`; unbekannte
 Gründe bleiben unverändert, geprüft von
