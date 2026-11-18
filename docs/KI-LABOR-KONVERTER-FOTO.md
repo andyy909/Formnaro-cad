@@ -23,11 +23,9 @@ Für vergleichbare Wiederholungen festhalten, welche Dateien, Auswahl, Einheiten
 
 ## Übungsfenster während einer Serie
 
-„Live mitfolgen“ springt zum laufenden Versuch und scrollt die Protokolle. Die tatsächlichen Schritte laufen im separaten Übungsfenster. Dessen Fokusverlust löst im aktuellen Stand eine Pause aus. Die bisherige Vorführung steuert Maus, Tastatur, Flächenwahl und Skizzengesten innerhalb des Fensters.
+„Live mitfolgen“ springt zum laufenden Versuch und scrollt die Protokolle. Der Schalter „Übungsfenster anzeigen“ unter „Einfach → Entwicklungscheck“ legt vor dem Start fest, ob das separate Übungsfenster sichtbar ist. Beide Einstellungen führen die nativen Maus-, Tastatur- und Skizzenschritte im isolierten Fenster aus. Der Hintergrundlauf überspringt Vorführpausen. Für interaktive Übungen gilt die Pause bei Fokusverlust.
 
-Für die Umsetzung ist ein eigener Schalter „Übungsfenster anzeigen“ sinnvoll. Der erste Abschnitt prüft verstecktes Windows-Eingabeverhalten mit mindestens einem Dialog, einem Editierfeld und einer Skizzengeste. Anschließend kann ein vom Labor gestarteter Hintergrundlauf dieselben Aktionen in seinem isolierten Fenster abspielen. Die Anzeige kann nach jeder bestätigten Aktion umgeschaltet werden. Der herkömmliche interaktive Übungsmodus behält seine Pause bei Fokusverlust.
-
-In beiden Anzeigearten dieselbe aufgezeichnete Antwort abspielen. CAD-Revision, native Geometrie, Ergebnisprüfungen, Abbruch und normales Prozessende vergleichen. Für den Zeitvergleich Modellzeit, Dauer der UI-Wiedergabe und CAD-Rechenzeit separat messen. Für den Hintergrund können die zusätzlichen Zeigepausen und Animationen entfallen, sobald die Eingabe und der nächste Zustand zuverlässig bestätigt sind.
+Der Vergleich in derselben Windows-Testkopie verwendet 15 gespeicherte Flash-Low-Pläne, dieselben Ausgangsfälle und 300 % Übungstempo. Beide Serien erreichten 15 von 15 nativen Erfolgen. Die Messbefunde und die gespeicherten CAD-Körper stimmten paarweise überein. Sichtbar dauerte die Serie 7:41 Minuten und ausgeblendet 11:54 Minuten. In den Aufzeichnungen sind die Abstände zwischen den einzelnen Eingaben im Hintergrund länger.
 
 ## Geprüfter Ausgangsstand
 
@@ -35,4 +33,4 @@ Die zwei Platten wurden im Windows-Konverter mit Millimetern und 0,15 mm Toleran
 
 Der Fototest unter Windows verwendet simulierte Modellantworten. Er prüft die Kalibrierungsdaten auf den beiden Transportwegen, den lokalen Fotovergleich nach einem absichtlich falschen Entwurf, die korrigierte native Platte und Undo. Die tatsächliche Reaktion eines Live-Modells auf Fotos ist separat zu prüfen.
 
-Eine Windows-Probe mit einem versteckten Electron-Fenster hat einen Klick und ein eingegebenes Zeichen als echte Eingabeereignisse erhalten. Das Übungsfenster selbst verwendet zusätzliche Fokus- und Sichtprüfungen. Ein vollständiger Lauf über reale Werkzeuge, einschließlich Menü und Skizzengeste, und ein Zeitvergleich stehen aus. Für eine sofort kürzere sichtbare Vorführung kann das Übungstempo im Fenster bis 300 % gestellt werden.
+Eine Windows-Probe mit einem versteckten Electron-Fenster hat einen Klick und ein eingegebenes Zeichen als echte Eingabeereignisse erhalten. Der gepackte Entwicklungscheck hat anschließend auch die nativen Werkzeuge und Skizzengesten im ausgeblendeten Fenster ausgeführt.
