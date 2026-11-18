@@ -2,6 +2,8 @@
 
 Download an `.ocad` file, choose **Open** in Formnaro and select the downloaded file. Use **Save As** to create your own copy. In the model tree, expand a part to inspect its native geometry and editable construction sources.
 
+The current Windows package includes **ATLAS-5**, the **6:1 helical gearbox**, and the **precision vise**. Select one on the welcome screen or open it from `Programmdateien/Projekte/Beispiele`. [Current Windows download](../docs/AKTUELLER-STAND.md)
+
 | Project | What it shows |
 | --- | --- |
 | [Electronics enclosure](elektronikgehaeuse.ocad) | Enclosure walls, openings, vents, screw bosses and an exploded view |

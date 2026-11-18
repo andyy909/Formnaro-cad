@@ -1,6 +1,16 @@
 # Formnaro KI-Testlabor
 
-Aktuelle Erweiterung vom 07.11.2026: Eine dritte Rolle wertet abgeschlossene Ergebnisse aus; der ursprüngliche Entwurf und seine Auslieferungsstände darunter bleiben historisch nachvollziehbar. Technische Bedienung und Abnahme stehen in `KI-ABSCHLUSSAUSWERTER.md`.
+## Bedienung in der aktuellen Windows-Ausgabe
+
+Öffne **Einstellungen → KI / API → KI-Testlabor**. Unter **Versuchsplan → Einfach** findest du **Entwicklungscheck · 15** und die Zusatzprüfungen für CAD-Alltag, STL und Foto. **Erweitert** öffnet die freie Versuchsplanung. Für den Entwicklungscheck lässt sich **Übungsfenster anzeigen** je Serie wählen.
+
+Der Entwicklungscheck beginnt auf Low und wiederholt fachlich fehlgeschlagene Aufgaben auf High sowie optional auf Max. Unter **Ergebnisse** zeigt **Befunde anzeigen** Kontextlücken, Muster und Erstreaktionen. Der Export enthält auch frühere Stufen. Die separaten [Benchmarks](KI-BENCHMARK.md) verwenden feste Aufgabenserien.
+
+[Download und Abnahme](AKTUELLER-STAND.md) · [Technischer Ablauf des Entwicklungschecks](KI-LABOR-ENTWICKLUNGSCHECK-UMSETZUNG.md)
+
+## Historischer Entwurf und Auslieferungsstände
+
+Am 07.11.2026 kam eine dritte Rolle zur Auswertung abgeschlossener Ergebnisse hinzu. Die damalige Bedienung und Abnahme stehen in [KI-ABSCHLUSSAUSWERTER.md](KI-ABSCHLUSSAUSWERTER.md).
 
 Umsetzungsauftrag vom 05.11.2026. Dieses Dokument ist zunächst Spezifikation; Nachweise und tatsächlich erreichte Funktionen werden bei Abschluss ergänzt. Grundlage sind `KI-CAD-EVAL-QUELLEN-2026-11-05.md` und die abgeschlossene private Diagnose r1. Keine Veröffentlichung oder Änderung der bestehenden Installation.
 
