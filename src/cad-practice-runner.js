@@ -23,7 +23,7 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
  let running=false,waiting=false,stopped=false,closing=false,paused=false,unpause=null,expectedInput=null,captionBeforePause='',completedSteps=[],pauseError=null,statusQueue=Promise.resolve(),pauseGeneration=0,mainGeneration=0;
  window.__formnaroPracticeSketch=spec=>locatePracticeSketchGesture(document,spec);
  installPracticeControlBridge(document,window,{onLocate:positionNotice});if(view){window.__formnaroPracticeGearPreferences=getPreferences;installPracticeGearDrag({controller,view});installPracticeFace({controller,view,getFacePickState,getDrillState,getInspectionState,getAlignmentState});installPracticeEdge({controller,view,getEdgeState});}
- const background=new URLSearchParams(location.search).get('labBackground')==='1';
+ const background=new URLSearchParams(globalThis.location?.search).get('labBackground')==='1';
  const pause=ms=>new Promise(r=>setTimeout(r,ms));
  const overlay=document.createElement('div');overlay.id='practice-overlay';overlay.hidden=true;
  overlay.style.cssText='position:fixed;inset:0;z-index:2147483000;pointer-events:none;font-family:system-ui,sans-serif';
