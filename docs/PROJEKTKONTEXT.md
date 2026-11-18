@@ -1,9 +1,9 @@
 # Technischer Projektkontext
 
-Die veröffentlichte Ausgabe 0.143.0-r2 bündelt den Wartbarkeitsmeilenstein
-für das Hauptprogramm. Der veröffentlichte Tag verweist auf den geprüften
-Merge-Commit von #114. Den aktuellen Download, die passenden Quellen und
-die Abnahme verzeichnet [AKTUELLER-STAND.md](AKTUELLER-STAND.md).
+Die Ausgabe 0.144.0-r1 bündelt den gestuften Entwicklungscheck, separat
+startbare CAD-, STL- und Foto-Prüfungen sowie die Befunde aller Stufen im
+KI-Labor. Den Download, die passenden Quellen und die Windows-Abnahme
+verzeichnet [AKTUELLER-STAND.md](AKTUELLER-STAND.md).
 
 Die Quell-CI läuft bei Pull Requests zu allen Zielbranches und bei Pushes
 auf `main` oder Tags. `npm run test:all -- --verify-coverage` gleicht

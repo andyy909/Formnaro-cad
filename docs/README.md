@@ -15,7 +15,7 @@ Anwenderdokumentation für die portable Windows-Ausgabe: Bedienwege, Werkzeuge, 
 
 | Dokument | Einordnung |
 | --- | --- |
-| [AKTUELLER-STAND.md](AKTUELLER-STAND.md) | Aktuelle öffentliche Ausgabe mit Download, Prüfsummen, Quellen und Abnahme. |
+| [AKTUELLER-STAND.md](AKTUELLER-STAND.md) | Formnaro 0.144.0-r1 mit Download, Prüfsummen, Quellen und Abnahme. |
 | [ARBEITSGESCHWINDIGKEIT.md](ARBEITSGESCHWINDIGKEIT.md) | Bedienhinweise zu den Geschwindigkeitsverbesserungen ab 0.80.0 bei Skizzen, Netzauswahl und Ansicht. |
 | [AUSHOEHLEN.md](AUSHOEHLEN.md) | Aushöhlen geschlossener Netzkörper mit Wandstärke, Auflösung und Ablauföffnungen (Paket 26). |
 | [AUSTAUSCHFORMATE-3MF-GLB-GLTF.md](AUSTAUSCHFORMATE-3MF-GLB-GLTF.md) | Import und Weitergabe von 3MF, GLB und glTF mit Farben, Einheiten und Anordnung. |
@@ -138,6 +138,9 @@ Einrichtung und Verhalten der KI-Anbindung: Anbieter, Agenten, Werkzeuge, Messru
 | [KI-MODELL-BENCHMARKS.md](KI-MODELL-BENCHMARKS.md) | Benchmark-Säulendiagramm in der Modellauswahl mit festem Grundbenchmark. |
 | [KI-MODELLIERHILFEN.md](KI-MODELLIERHILFEN.md) | Zwei Hilfen des Python-SDK 1.3 mit denselben nativen CAD-Regeln. |
 | [KI-MODELLIERKONTEXT.md](KI-MODELLIERKONTEXT.md) | Kontextdateien und Modelliergedächtnis im persönlichen `Daten`-Ordner. |
+| [KI-LABOR-ALLTAGSFAELLE.md](KI-LABOR-ALLTAGSFAELLE.md) | Alltagsaufträge und native Nachprüfung. |
+| [KI-LABOR-ENTWICKLUNGSCHECK-UMSETZUNG.md](KI-LABOR-ENTWICKLUNGSCHECK-UMSETZUNG.md) | Stufen, Prüfablauf und Befunde des Entwicklungschecks. |
+| [KI-LABOR-KONVERTER-FOTO.md](KI-LABOR-KONVERTER-FOTO.md) | Zusatzprüfungen für STL-Konverter und Fotomodus. |
 | [KI-PRUEFWERKZEUGE.md](KI-PRUEFWERKZEUGE.md) | Interne Prüfungen vor der Übernahme und feste Modellansichten ab 0.96.0. |
 | [KI-REKONSTRUKTION.md](KI-REKONSTRUKTION.md) | Messwerkzeuge für den nativen Nachbau aus STL-Schnittkonturen ab 0.92. |
 | [KI-STARTDIAGNOSE.md](KI-STARTDIAGNOSE.md) | Private Startdiagnose mit drei Kontextvarianten (A/B/C) für Vergleiche. |

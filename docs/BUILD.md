@@ -31,7 +31,10 @@ die Oberfläche. Anschließend wird der Startfehler samt System-Theme im echten
 Electron-Fenster mit isolierten Daten geprüft. Der Paketbefehl führt diese
 Prüfungen erneut gegen eingefrorene Quellen und die vorhandenen 23 fachlichen
 EXE-Suiten sowie die neue Startprüfung gegen die tatsächliche neue EXE aus.
-Ein Paketlauf ist erst bei erfolgreicher Abnahme abgeschlossen.
+Ein Paketlauf ist erst bei erfolgreicher technischer Abnahme abgeschlossen.
+Der anschließende Start des entpackten Pakets mit frischem Windows-Profil
+und die Sichtprüfung werden separat belegt. Den veröffentlichten Prüfstand
+verzeichnet [AKTUELLER-STAND.md](AKTUELLER-STAND.md).
 
 Für den begrenzten letzten Nachlauf der Wartung 0.113.1 wurde eine geprüfte
 Basis wiederverwendet: scripts/release-test-scope.mjs vergleicht die eingefrorenen
