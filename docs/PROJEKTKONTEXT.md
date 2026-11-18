@@ -13,6 +13,10 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-4.2: `findPatterns()` in `ai/lab-development-findings.mjs` meldet ein Symptom
+als Muster, wenn es in mindestens zwei verschiedenen Aufgaben vorkommt, geprüft
+von `tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-4.1: `symptomKey()` und `runSymptoms()` in `ai/lab-development-findings.mjs`
 bilden aus fehlgeschlagenen Prüfungen einen Symptomschlüssel mit Zählunterschied,
 Volumenunterschied und „deckungsgleich“ (Toleranz 1e-5), geprüft von

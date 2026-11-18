@@ -133,3 +133,17 @@ test('Symptomschlüssel nennt Zählunterschied und deckungsgleiche Körper',asyn
  assert.equal(new Set(symptoms).size,symptoms.length);
  assert.deepEqual(runSymptoms(fixture('drill')),[]);
 });
+test('Muster über Aufgaben nennt den deckungsgleichen Doppelkörper in advanced-02 und advanced-05',async()=>{
+ const {runSymptoms,findPatterns}=await load();
+ const findings=['advanced-02','advanced-05'].map(name=>{const record=fixture(name);return {caseId:name,runId:record.id,symptoms:runSymptoms(record)}});
+ const patterns=findPatterns(findings);
+ assert.equal(patterns.length,1);
+ assert.equal(patterns[0].key,'Genau ein Körper mit richtigen Außenmaßen und Lage: 2 statt 1, deckungsgleich');
+ assert.deepEqual(patterns[0].caseIds,['advanced-02','advanced-05']);
+ assert.equal(patterns[0].runIds.length,2);
+ assert.equal(patterns[0].hint,'Gleiches Symptom in mehreren Aufgaben: mögliche Programmursache');
+});
+test('Ein Symptom in nur einer Aufgabe ist kein Muster',async()=>{
+ const {findPatterns}=await load();
+ assert.deepEqual(findPatterns([{caseId:'advanced-07',runId:'r1',symptoms:['Zwei getrennte rechteckige Durchbrüche und Materialstege']}]),[]);
+});

@@ -135,3 +135,18 @@ export function runSymptoms(record){
  for(const check of record?.verification?.checks??[])if(!check.passed)checks.push(check);
  return [...new Set(checks.map(symptomKey))];
 }
+
+export function findPatterns(findings){
+ const byKey=new Map();
+ for(const finding of findings??[]){
+  for(const key of finding?.symptoms??[]){
+   const entry=byKey.get(key)??{caseIds:new Set(),runIds:new Set()};
+   entry.caseIds.add(finding.caseId);
+   entry.runIds.add(finding.runId);
+   byKey.set(key,entry);
+  }
+ }
+ return [...byKey]
+  .filter(([,entry])=>entry.caseIds.size>=2)
+  .map(([key,entry])=>({key,caseIds:[...entry.caseIds],runIds:[...entry.runIds],hint:'Gleiches Symptom in mehreren Aufgaben: mögliche Programmursache'}));
+}
