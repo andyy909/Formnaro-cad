@@ -17,6 +17,7 @@ const verifiedArchives=new Map([
  ['759c71f20bf7c2e8eb1435aacdc65d2bd4cff067','7a1861152ba2c5ad23018686edeb7adf6324e0341d60b1fa7c735f30b83a2d75'],
  ['53e93ee9c75b6c8edcc7276be1de118a2c417c9d','140532c9d953eac6f36660be4e3e2451a00ffcbd06780ac3dff8741552cfe441'],
  ['7624d3a1bbf8208038c4fac262f437ae6ceb4d97','b17c891103e2dfd0f9fc94f00c0a9cf93a4a01e6f406cdb4f7529f4dd162be5c'],
+ ['e2678e5a459f53fe285d7801f8304f8bd20881ba','177b9b429655529cfac5254e9c8efbeb9b09642215997dd20887d608a48196a1'], // r4-Testkopie mit Entwicklungschecks
 ]);
 assert.equal(path.extname(output).toLowerCase(),'.zip');
 assert(!fs.existsSync(output),'Choose a new ZIP name.');
