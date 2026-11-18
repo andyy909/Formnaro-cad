@@ -10,6 +10,8 @@ const fs = require('node:fs');
 const {parseStartupOptions}=require('./backend/startup-options.cjs');
 const startupOptions=parseStartupOptions({app});
 const {diagnosticHost,diagnosticHome,diagnosticChild,practiceChild,practiceDirectory,maintenanceVerifyArg,speechVerifyArg,allFunctionsVerifyArg,allFunctionsPhase,aiResultChecksVerifyArg,easyCompleteVerifyArg,easyAutoRepairVerifyArg,easyDomainVerifyArg,rotationVerifyArg,moveDimensionsVerifyArg,drawingsVerifyArg,modelingContextVerifyArg,reconstructionVerifyArg,pythonVerifyArg,autoDimensionsVerifyArg,fnpackPhase,fnpackVerifyArg,assemblyVerifyArg,jointsVerifyArg,sketchConstraintsVerifyArg,linkedContoursVerifyArg,parametersVerifyArg,modelingVerifyArg,sketchUpgradeVerifyArg,numberDisplayVerifyArg,holeGroupsVerifyArg,meshImportVerifyArg,viewToolbarVerifyArg,contextMenuVerifyArg,fusionVerifyArg,solidVerifyArg,workbenchVerifyArg,meshHollowVerifyArg,meshMakeSolidVerifyArg,meshEraseFillVerifyArg,stepThicknessVerifyArg,placementVerifyArg,inspectionVerifyArg,meshSculptVerifyArg,meshSmoothVerifyArg,meshRemeshVerifyArg,meshReduceVerifyArg,meshConnectorsVerifyArg,meshPartitionVerifyArg,meshHoleVerifyArg,meshRepairVerifyArg,meshInspectorVerifyArg,meshSelectionVerifyArg,releaseWorkflowVerifyArg,releaseWorkflowReopenArg,unifiedWorkflowsVerifyArg,meshToCadVerifyArg,cadMeshCopyVerifyArg,sharedAIVerifyArg,stlVerifyArg,converterWorkspaceVerifyArg,toolParityVerifyArg,workspaceVerifyArg,meshVerifyArg,mixedVerifyArg,meshFeaturesVerifyArg,meshDisplayVerifyArg,cadMiniPerformanceVerifyArg,creationDomainVerifyArg,easyPerformanceVerifyArg,workingSpeedVerifyArg,verifyPath}=startupOptions;
+const labPracticeWindow=require('./backend/lab-practice-window.cjs');
+const backgroundPractice=practiceChild&&!diagnosticChild&&process.argv.includes('--formnaro-lab-background-practice');
 if(practiceChild)global.fetch=async()=>{throw Error('Netzwerkzugriff ist im Übungsfenster deaktiviert.');};
 function packageIdentity(){if(!app.isPackaged)return {};const sha=file=>require('node:crypto').createHash('sha256').update(require('original-fs').readFileSync(file)).digest('hex');return {electronVersion:process.versions.electron,packagedRuntime:path.dirname(process.execPath),exeSha256:sha(process.execPath),asarSha256:sha(path.join(process.resourcesPath,'app.asar'))};}
 const toolVerificationErrors=[],toolVerificationExternal=[];
@@ -26,7 +28,7 @@ app.whenReady().then(async () => {
     if(verifyPath&&/^https?:/i.test(details.url))toolVerificationExternal.push(details.url);
     callback({ cancel: /^https?:/i.test(details.url) });
   });
-  const win = new BrowserWindow({ show:!verifyPath&&!diagnosticChild, width: 1500, height: 950, minWidth: 1000, minHeight: 680,
+  const win = new BrowserWindow({ show:!verifyPath&&!diagnosticChild&&!backgroundPractice, width: 1500, height: 950, minWidth: 1000, minHeight: 680,
     title: practiceChild?'Formnaro · Übungsmodus':'Formnaro', icon:path.join(__dirname,'dist','formnaro-icon.png'), backgroundColor: '#edf1f5',
     // Native/Python previews also run while an external assistant covers this
     // window. Throttling those renderers can turn a valid batch into a timeout.
@@ -36,8 +38,12 @@ app.whenReady().then(async () => {
   const auditDirectory=verifyPath&&aiResultChecksVerifyArg&&process.env.FORMNARO_VERIFY_PRACTICE_ONLY==='1'&&
     process.env.FORMNARO_VERIFY_PRACTICE_EVIDENCE==='1'?path.join(path.dirname(verifyPath),'child-audit'):undefined;
   if(diagnosticChild)require('./backend/ai-diagnostic-child.cjs').installDiagnosticChild(win);
-  if(practiceChild&&!diagnosticChild)require('./backend/practice-child.cjs').installPracticeChild(win,{audit:practiceAudit});
-  else require('./backend/practice-runner.cjs').installPracticeRunner(win,{ipcMain:require('electron').ipcMain,app,auditDirectory,
+  if(practiceChild&&!diagnosticChild){
+   const install=require('./backend/practice-child.cjs').installPracticeChild;
+   if(backgroundPractice)labPracticeWindow.installHiddenChild(win,install);
+   else install(win,{audit:practiceAudit});
+  }else require('./backend/practice-runner.cjs').installPracticeRunner(win,{ipcMain:require('electron').ipcMain,app,auditDirectory,
+    ...(diagnosticChild&&process.env.FORMNARO_LAB_HIDE_PRACTICE==='1'?{spawnChild:labPracticeWindow.spawnHiddenChild}:{}),
     windowTraceFile:auditDirectory?path.join(path.dirname(verifyPath),'practice-window-events.jsonl'):undefined});
   const {dataDirectory,installProgramStorage,cadOnlyForVersion}=require('./backend/program-storage.cjs'),dataPath=practiceChild?path.join(practiceDirectory,'data'):diagnosticHost?path.join(diagnosticHome,'data'):dataDirectory(app,{verificationPath:verifyPath}),legacyAIFile=path.join(profilePath,'ai-settings.json');
   if(practiceChild&&!diagnosticChild)require('./backend/practice-tempo.cjs').installPracticeTempo(win,{
@@ -111,7 +117,7 @@ app.whenReady().then(async () => {
       })()`).catch(()=>{});
     });
   }
-  win.loadFile(path.join(__dirname, 'dist', 'index.html'),diagnosticChild?{query:{test:'1',diagnosticChild:'1'}}:practiceChild?{query:{practice:'1',...(practiceAudit?{practiceAudit:'1'}:{})}}:verifyPath?{query:{test:'1'}}:diagnosticHost?{query:{diagnosticHost:'1'}}:undefined);
+  win.loadFile(path.join(__dirname, 'dist', 'index.html'),diagnosticChild?{query:{test:'1',diagnosticChild:'1'}}:practiceChild?{query:{practice:'1',...(practiceAudit?{practiceAudit:'1'}:{}),...(backgroundPractice?{labBackground:'1'}:{})}}:verifyPath?{query:{test:'1'}}:diagnosticHost?{query:{diagnosticHost:'1'}}:undefined);
   if(verifyPath){
     win.webContents.once('did-finish-load',async()=>{
       try{

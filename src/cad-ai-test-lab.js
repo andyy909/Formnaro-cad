@@ -14,7 +14,7 @@ export function mountAITestLab({host,desktop}){
  const root=node('dialog');root.id='ai-diagnostics';root.setAttribute('aria-label','Formnaro KI-Testlabor');
  root.innerHTML=`<div class="lab-shell"><header class="lab-header"><div class="lab-mark" aria-hidden="true">◈</div><div class="lab-heading"><h2>KI-Testlabor</h2><small>Kontexte verstehen. Ergebnisse prüfen. Gemeinsam live verfolgen.</small></div><span class="lab-top-status" data-top-status>Bereit</span><button data-close>Schließen</button></header>
  <nav class="lab-nav" aria-label="Testlabor"><button data-tab="plan" aria-selected="true">Versuchsplan</button><button data-tab="live" aria-selected="false">Zwei Agenten · live</button><button data-tab="results" aria-selected="false">Ergebnisse</button><button data-tab="benchmark" aria-selected="false">Benchmark</button><button data-tab="review" aria-selected="false">Abschlussauswertung</button><button data-tab="methods" aria-selected="false">Methodik</button><span class="lab-spacer"></span><label class="lab-subtle"><input data-follow type="checkbox" checked>Live mitfolgen</label></nav>
- <main class="lab-body"><section class="lab-pane" data-pane="plan" data-lab-view="simple"><div class="lab-card lab-view-card"><div class="lab-view-switch" role="group" aria-label="Ansicht des Versuchsplans"><button type="button" data-simple-view aria-pressed="true">Einfach</button><button type="button" data-advanced-view aria-pressed="false">Erweitert</button></div><div data-lab-simple><div class="lab-presets" data-quick-plans></div><label data-development-options hidden><input type="checkbox" data-development-max> Falls weiterhin durchgefallen, einmal auf Max prüfen</label><p class="lab-subtle" data-quick-details aria-live="polite"></p></div></div><div class="lab-grid"><div data-lab-advanced>
+ <main class="lab-body"><section class="lab-pane" data-pane="plan" data-lab-view="simple"><div class="lab-card lab-view-card"><div class="lab-view-switch" role="group" aria-label="Ansicht des Versuchsplans"><button type="button" data-simple-view aria-pressed="true">Einfach</button><button type="button" data-advanced-view aria-pressed="false">Erweitert</button></div><div data-lab-simple><div class="lab-presets" data-quick-plans></div><div data-development-options hidden><label><input type="checkbox" data-development-window checked> Übungsfenster anzeigen</label><br><label><input type="checkbox" data-development-max> Falls weiterhin durchgefallen, einmal auf Max prüfen</label></div><p class="lab-subtle" data-quick-details aria-live="polite"></p></div></div><div class="lab-grid"><div data-lab-advanced>
  <div class="lab-card"><div class="lab-card-title"><h3>Mit einer Vorlage beginnen</h3><span class="lab-subtle">Gleiche Aufgaben. Vergleichbare Bedingungen.</span></div><div class="lab-presets" data-presets></div>
  <div class="lab-controls"><label class="lab-field lab-wide">Name des Vergleichs<input data-name value="Kleiner Pilot" maxlength="120"></label><label class="lab-field">Testtiefe<select data-stage><option value="start">Kurzer Start · Werkzeugwahl</option><option value="full">Vollständige Modellierung</option></select></label><label class="lab-field">Aufgabenstand<select data-dataset><option value="development">Bekannte Entwicklungsfälle</option><option value="holdout">Neue Bestätigungsfälle</option></select></label><label class="lab-field">Arbeitsweise<select data-workflow><option value="agent">API-Modellieragent</option><option value="practice">Sichtbarer Übungsmodus</option><option value="both">Beide, getrennt auswerten</option></select></label><label class="lab-field">Wiederholungen<input data-repeats type="number" min="1" max="8" value="1"></label><div class="lab-field lab-wide">Aufgaben<div data-cases class="lab-checks"></div></div><div class="lab-field">Denkstufen<div data-efforts class="lab-checks"></div></div><div class="lab-field">Textkontext<div data-scopes class="lab-checks"></div></div><div class="lab-field lab-wide">Startbild<div data-images class="lab-checks"></div></div></div></div>
  <div class="lab-card"><div class="lab-card-title"><h3>Startkontexte</h3><span class="lab-subtle">Der vollständige Katalog bleibt erreichbar.</span></div><div data-variants class="lab-variants"></div><details><summary>Eigenen Entwicklungskontext ergänzen</summary><p class="lab-subtle">Gilt für alle gewählten Varianten dieses Plans. Für eigene A/B-Vergleiche Pläne getrennt speichern. In Bestätigungsfällen deaktiviert.</p><textarea data-custom maxlength="6000" placeholder="Kurze Zusatzinformation oder eine zu untersuchende Anweisung …"></textarea></details></div>
@@ -124,6 +124,7 @@ export function mountAITestLab({host,desktop}){
   const supported=rolePickers.modeler.selected()?.reasoningEfforts??[];
   el('development-options').hidden=!selectedDevelopment();
   el('development-max').disabled=busy||!supported.includes('max');
+  el('development-window').disabled=busy||starting;
   el('campaign').hidden=root.querySelector('[data-pane=benchmark]').hidden===false||planPane.dataset.labView==='simple';
   el('run').disabled=busy||starting||rolePending>0||(selectedDevelopment()
    ?!developmentPreview||!rolePickers.modeler.ready()
@@ -216,7 +217,10 @@ export function mountAITestLab({host,desktop}){
    const catalog=await api({action:'labRoleCatalog',providerId:setup.modeler.providerId});
    const detail=catalog.models.find(model=>model.id===setup.modeler.model);
    previewDevelopment(setup.modeler,detail?.reasoningEfforts??[],setup.levels.includes('max'));
-   if(!previous&&catalog.providerId)setup.modeler.providerId=catalog.providerId;
+   if(!previous){
+    if(catalog.providerId)setup.modeler.providerId=catalog.providerId;
+    setup.showPracticeWindow=el('development-window').checked;
+   }
    const result=await runDevelopment({setup,id,previous,readStage:stageRecords,signal:controller.signal,
     onPhase:async report=>{
      showDevelopment(report);status('Entwicklungscheck · '+(report.phases.at(-1)?.effort??'Low'));
@@ -224,7 +228,11 @@ export function mountAITestLab({host,desktop}){
     },
     startStage:async plan=>{
      let error;
-     try{await api({action:'start',mode:'lab',plan,deferReview:true});}catch(cause){error=cause.message;}
+     try{
+      await desktop.developmentEvidence({action:'practice-window',show:setup.showPracticeWindow!==false});
+      await api({action:'start',mode:'lab',plan,deferReview:true});
+     }catch(cause){error=cause.message;}
+     finally{await desktop.developmentEvidence({action:'practice-window',show:true});}
      return {records:await stageRecords(plan.name),error};
     }
    });

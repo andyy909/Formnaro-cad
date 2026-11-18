@@ -23,6 +23,7 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
  let running=false,waiting=false,stopped=false,closing=false,paused=false,unpause=null,expectedInput=null,captionBeforePause='',completedSteps=[],pauseError=null,statusQueue=Promise.resolve(),pauseGeneration=0,mainGeneration=0;
  window.__formnaroPracticeSketch=spec=>locatePracticeSketchGesture(document,spec);
  installPracticeControlBridge(document,window,{onLocate:positionNotice});if(view){window.__formnaroPracticeGearPreferences=getPreferences;installPracticeGearDrag({controller,view});installPracticeFace({controller,view,getFacePickState,getDrillState,getInspectionState,getAlignmentState});installPracticeEdge({controller,view,getEdgeState});}
+ const background=new URLSearchParams(location.search).get('labBackground')==='1';
  const pause=ms=>new Promise(r=>setTimeout(r,ms));
  const overlay=document.createElement('div');overlay.id='practice-overlay';overlay.hidden=true;
  overlay.style.cssText='position:fixed;inset:0;z-index:2147483000;pointer-events:none;font-family:system-ui,sans-serif';
@@ -56,7 +57,8 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
  function enterPause(message){if((!running&&!waiting)||paused)return;captionBeforePause=caption.textContent;paused=true;pauseGeneration++;pauseButton.textContent='Weiter';if(message)caption.textContent=message;syncOverlayLayer();void notifyPause(true);}
  pauseButton.onclick=()=>{if(!running&&!waiting)return;if(!paused){enterPause('Übung pausiert. Mit Weiter fortsetzen.');return;}const generation=pauseGeneration;pauseButton.disabled=true;void (async()=>{await statusQueue;if(stopped||generation!==pauseGeneration)return;await notifyPause(false,mainGeneration);if(stopped||generation!==pauseGeneration)return;paused=false;pauseButton.textContent='Pause';if(captionBeforePause)caption.textContent=captionBeforePause;unpause?.();})().finally(()=>{pauseButton.disabled=false;});};
  function onFocusLost(event){if(Number.isSafeInteger(event?.generation))mainGeneration=Math.max(mainGeneration,event.generation);if(running||waiting){if(paused){syncOverlayLayer();pauseGeneration++;void notifyPause(true);caption.textContent='Pausiert: Übungsfenster wieder öffnen und Weiter wählen.';}else enterPause('Pausiert: Übungsfenster wieder öffnen und Weiter wählen.');}}
- window.addEventListener('blur',onFocusLost);desktop.onPracticeBlur?.(onFocusLost);
+ if(!background)window.addEventListener('blur',onFocusLost);
+ desktop.onPracticeBlur?.(onFocusLost);
  // Native injected input and user input both arrive as trusted events. Only
  // allow events at the currently sequenced target; a click elsewhere pauses the
  // exercise before it can change its selection or invalidate the next action.
@@ -94,11 +96,11 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
   await checkpoint();const gearDrag=spec.target==='gear-mesh',faceClick=spec.target==='cad-face',edgeClick=spec.target==='cad-edge',sketch=spec.target==='sketch-board',canvasInput=gearDrag||faceClick||edgeClick||sketch,target=sketch?document.getElementById('sketch-board'):canvasInput?document.querySelector('#canvas-host canvas'):spec.target?.startsWith('ui:')?practiceControl(document,spec.target):element(spec.target,spec.rootId);if(!target)throw Error('Bedienelement im Übungsfenster nicht verfügbar: '+spec.target);
   if(spec.action==='choose'&&['joint-parent','joint-child'].includes(target.id)&&modelUI.rootAlias(spec.value))spec={...spec,value:modelUI.rootAlias(spec.value)};
   if(spec.action==='choose')practiceOptionIndex(target,spec.value);
-  target.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});await playback.delay(500);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));await checkpoint();
+  target.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});if(!background)await playback.delay(500);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));await checkpoint();
   const box=sketch?locatePracticeSketchGesture(document,spec,{checkHit:false}):gearDrag?window.__formnaroPracticeGearDrag(spec):faceClick?await window.__formnaroPracticeFace(spec):edgeClick?window.__formnaroPracticeEdge(spec):target.getBoundingClientRect();
   const hitTarget=box.markerId?practiceReferenceMarker(document,box.markerId):target;
   if(!hitTarget)throw Error('Der sichtbare Bezugspunkt wurde geändert.');
-  pointer.style.display='block';pointer.style.transform=`translate(${Math.max(0,(canvasInput?box.x:box.left+box.width/2))}px,${Math.max(0,(canvasInput?box.y:box.top+box.height/2))}px)`;caption.textContent=text;positionNotice(canvasInput?{getBoundingClientRect:()=>({left:Math.min(box.x,box.to?.x??box.x)-12,right:Math.max(box.x,box.to?.x??box.x)+12,top:Math.min(box.y,box.to?.y??box.y)-12,bottom:Math.max(box.y,box.to?.y??box.y)+12})}:target);hitTarget.classList.add('practice-active-target');try{await playback.delay(1300);await checkpoint();
+  pointer.style.display='block';pointer.style.transform=`translate(${Math.max(0,(canvasInput?box.x:box.left+box.width/2))}px,${Math.max(0,(canvasInput?box.y:box.top+box.height/2))}px)`;caption.textContent=text;positionNotice(canvasInput?{getBoundingClientRect:()=>({left:Math.min(box.x,box.to?.x??box.x)-12,right:Math.max(box.x,box.to?.x??box.x)+12,top:Math.min(box.y,box.to?.y??box.y)-12,bottom:Math.max(box.y,box.to?.y??box.y)+12})}:target);hitTarget.classList.add('practice-active-target');try{if(!background)await playback.delay(1300);await checkpoint();
   // Electron may acknowledge the IPC before its queued native events reach the DOM.
   // Keep the registered target armed through the existing input-settle interval.
   if(spec.action==='drag'){let x,y;if(gearDrag||sketch){x=box.to.x;y=box.to.y;}else if(spec.target.startsWith('shape:')){const r=document.querySelector('#canvas-host canvas').getBoundingClientRect();x=r.left+r.width*.6;y=r.top+r.height*.4;}else{x=box.left+8+(Number(spec.value)-Number(target.min||0))/(Number(target.max||100)-Number(target.min||0))*(box.width-16);y=(gearDrag?box.y:box.top+box.height/2);}pointer.style.transitionDuration=(1.4*playback.multiplier())+'s';pointer.style.transform=`translate(${x}px,${y}px)`;}
@@ -242,7 +244,7 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
    }else if(action.kind==='model'){
     if(!access||!Array.isArray(action.commands)||!action.commands.length||action.commands.length>200)throw Error('Modellierauftrag oder lokale Übungsschnittstelle fehlt.');
     caption.textContent=prefix+(action.label??'Formnaro-Werkzeuge im Übungsprojekt ausführen.');pointer.style.display='none';let proposal;
-    const next=plan.actions[i+1],holdMotion=next?.kind==='model'&&next.commands?.every(c=>c.op==='joint'&&c.action==='move');const result=await modelUI.run(action,{holdMotion});checks.push({kind:'model',commands:action.commands.length,objectCount:project().nodes.length,joints:project().joints?.joints.length??0,couplings:project().joints?.gears?.length??0,...result});await playback.delay(650);await checkpoint();
+    const next=plan.actions[i+1],holdMotion=next?.kind==='model'&&next.commands?.every(c=>c.op==='joint'&&c.action==='move');const result=await modelUI.run(action,{holdMotion});checks.push({kind:'model',commands:action.commands.length,objectCount:project().nodes.length,joints:project().joints?.joints.length??0,couplings:project().joints?.gears?.length??0,...result});if(!background)await playback.delay(650);await checkpoint();
    }else if(action.kind==='sketch-gesture'){
     await input({target:'sketch-board',action:action.to?'drag':'click',point:action.point,to:action.to,add:action.add},action.text??prefix+'Auf der Skizzenfläche zeichnen oder auswählen.');
     // A polyline is intentionally open between points. The editor's message
@@ -515,5 +517,5 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
    catch{await desktop.practiceClose?.().catch(()=>{});}
   });
  });
- desktop.onPracticeCancel?.(endSession);void ready();return {isRunning:()=>running,onBuildPreview:async({completed,total})=>{if(!running)return;caption.textContent='Live-Aufbau · Schritt '+completed+' / '+total;pointer.style.display='none';await playback.delay(650);}};
+ desktop.onPracticeCancel?.(endSession);void ready();return {isRunning:()=>running,onBuildPreview:async({completed,total})=>{if(!running)return;caption.textContent='Live-Aufbau · Schritt '+completed+' / '+total;pointer.style.display='none';if(!background)await playback.delay(650);}};
 }

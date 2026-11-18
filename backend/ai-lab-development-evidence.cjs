@@ -60,6 +60,11 @@ function installDevelopmentEvidence(win,directory,ipcMain=require('electron').ip
  ipcMain.handle('cad-ai:development-evidence',async(event,value)=>{
   try{
    if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('Ungültiges Laborfenster.');
+   if(value?.action==='practice-window'&&typeof value.show==='boolean'){
+    if(value.show)delete process.env.FORMNARO_LAB_HIDE_PRACTICE;
+    else process.env.FORMNARO_LAB_HIDE_PRACTICE='1';
+    return {ok:true,value:value.show};
+   }
    if(value?.action==='recent')return {ok:true,value:store.recent()};
    if(value?.action==='save'){store.save(value.report);return {ok:true,value:null};}
    if(value?.action==='export')return {ok:true,value:store.exportReport(value.id)};
