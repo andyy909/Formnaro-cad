@@ -13,6 +13,10 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-3.2: `formatFeedback()` in `ai/lab-development-findings.mjs` sammelt die
+Fehlertexte der Formatkorrekturen, je höchstens 200 Zeichen, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-3.1: `runFacts()` in `ai/lab-development-findings.mjs` liefert Eckdaten eines
 Laufs (Aufgabe, Lauf, Stufe, Dauer, Anfragen, Tokens, fehlgeschlagene Prüfungen);
 fehlende Tokenwerte bleiben `null`, geprüft von `tests/ai-lab-devcheck-findings.test.cjs`.

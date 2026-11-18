@@ -59,3 +59,12 @@ test('Fehlende Tokenwerte bleiben null statt 0',async()=>{
  const facts=runFacts({id:'x',spec:{caseId:'drill',effort:'low'},status:'completed',elapsedMs:1000,events:[{type:'usage',usage:{}}]});
  assert.deepEqual(facts.tokens,{input:null,output:null});
 });
+test('Formatkorrekturen werden mit gekürztem Fehlertext gesammelt',async()=>{
+ const {formatFeedback}=await load();
+ const lists=formatFeedback(fixture('advanced-07'));
+ assert.equal(lists.length,1);
+ assert.ok(lists[0].includes('plan.title ist zu lang'));
+ assert.deepEqual(formatFeedback(fixture('drill')),[]);
+ const long=formatFeedback({events:[{type:'format-feedback',error:'x'.repeat(300)}]});
+ assert.equal(long[0].length,200);
+});

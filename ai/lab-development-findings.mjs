@@ -50,3 +50,9 @@ export function runFacts(record){
   failedChecks:(record?.verification?.checks??[]).filter(check=>!check.passed).map(check=>check.name),
  };
 }
+
+export function formatFeedback(record){
+ return (record?.events??[])
+  .filter(event=>event.type==='format-feedback')
+  .map(event=>String(event.error??'').slice(0,200));
+}
