@@ -5,6 +5,7 @@ import {mountDiagnosticUsage} from './cad-ai-diagnostic-usage.js';
 import {summarizeLab} from '../ai/test-lab-summary.mjs';
 import {quickPlans,quickPlan} from '../ai/lab-quick-plans.mjs';
 import {previewDevelopment,runDevelopment} from '../ai/lab-development-sequence.mjs';
+import {developmentReasonLabels} from '../ai/lab-development-findings.mjs';
 import {mountLabSupplementalChecks} from './cad-ai-lab-supplemental.js';
 const labels={running:'Läuft',completed:'Beendet',proposal:'Vorschlag',failed:'Fehler',timeout:'Zeitlimit',cancelled:'Abgebrochen','monitor-stopped':'Vom Überwacher gestoppt','read-limit':'Auskunftslimit',truncated:'Ausgabelimit','step-limit':'Schrittlimit',interrupted:'Unterbrochen'};
 const seconds=n=>Number.isFinite(n)?(n/1000).toFixed(1)+' s':'—';
@@ -199,7 +200,7 @@ export function mountAITestLab({host,desktop}){
     const history=outcomes(caseId);
     const links=node('div');
     for(const entry of history){
-     const description=entry.effort+' · '+labels[entry.status]+(entry.reason?' ('+entry.reason+')':'');
+     const description=entry.effort+' · '+labels[entry.status]+(entry.reason?' ('+(developmentReasonLabels[entry.reason]??entry.reason)+')':'');
      if(entry.runId){const button=node('button',description);button.onclick=()=>read(entry.runId);links.append(button);}
      else links.append(node('span',description));
     }

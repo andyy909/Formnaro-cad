@@ -13,6 +13,11 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-1.2: Die Ergebnistabelle zeigt deutsche Gründe aus
+`developmentReasonLabels` in `ai/lab-development-findings.mjs`; unbekannte
+Gründe bleiben unverändert, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-1.1: `developmentOutcome()` in `ai/lab-development-sequence.mjs` prüft
 `needs-input` vor dem Prüferfehler; eine berechtigte Rückfrage gilt damit als
 `blocked · needs-input`, geprüft von `tests/ai-lab-devcheck-outcome.test.cjs`.
