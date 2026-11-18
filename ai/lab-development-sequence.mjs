@@ -1,4 +1,5 @@
 import {developmentCaseIds,quickPlan} from './lab-quick-plans.mjs';
+import {feedbackRounds} from './lab-development-findings.mjs';
 
 export function developmentOutcome(record){
  if(!record)return {status:'open',reason:'not-started'};
@@ -16,7 +17,7 @@ export function developmentOutcome(record){
  if(record.status!=='completed'||record.error||typeof record.verification?.passed!=='boolean'){
   return {status:'blocked',reason:record.error?.code??record.verificationSkipped??record.status??'unverified'};
  }
- return {status:record.verification.passed?'passed':'failed'};
+ return record.verification.passed?{status:'passed',firstTry:feedbackRounds(record).length===0}:{status:'failed'};
 }
 
 export function escalationCases(caseIds,records){

@@ -19,3 +19,8 @@ test('Der glatte Erfolg bleibt bestanden',async()=>{
  const outcome=developmentOutcome(fixture('drill'));
  assert.equal(outcome.status,'passed');
 });
+test('Erfolg im ersten Versuch wird von Erfolg nach Prüferhinweis unterschieden',async()=>{
+ const {developmentOutcome}=await load();
+ assert.equal(developmentOutcome(fixture('advanced-02')).firstTry,false);
+ assert.equal(developmentOutcome(fixture('drill')).firstTry,true);
+});
