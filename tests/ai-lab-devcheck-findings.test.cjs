@@ -68,3 +68,13 @@ test('Formatkorrekturen werden mit gekürztem Fehlertext gesammelt',async()=>{
  const long=formatFeedback({events:[{type:'format-feedback',error:'x'.repeat(300)}]});
  assert.equal(long[0].length,200);
 });
+test('Erste Aktion nennt Denkzeit, Zeitpunkt des Vorschlags und die ersten Schritte',async()=>{
+ const {firstAction}=await load();
+ const missing=firstAction(fixture('advanced-01'));
+ assert.equal(missing.reasoningMs,2471);
+ assert.equal(missing.firstProposalMs,null);
+ assert.deepEqual(missing.firstStepKinds,[]);
+ const drill=firstAction(fixture('drill'));
+ assert.equal(drill.firstProposalMs,8493);
+ assert.deepEqual(drill.firstStepKinds,['select','ui','ui','ui','ui']);
+});

@@ -56,3 +56,13 @@ export function formatFeedback(record){
   .filter(event=>event.type==='format-feedback')
   .map(event=>String(event.error??'').slice(0,200));
 }
+
+export function firstAction(record){
+ const proposal=(record?.events??[]).find(event=>event.type==='proposal');
+ const actions=proposal?.plan?.actions;
+ return {
+  reasoningMs:Number.isFinite(record?.firstReasoningMs)?record.firstReasoningMs:null,
+  firstProposalMs:Number.isFinite(proposal?.ms)?proposal.ms:null,
+  firstStepKinds:Array.isArray(actions)?actions.slice(0,5).map(action=>action.kind??null):[],
+ };
+}

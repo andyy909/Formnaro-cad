@@ -13,6 +13,10 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-3.3: `firstAction()` in `ai/lab-development-findings.mjs` beschreibt Denkzeit,
+Zeitpunkt des ersten Vorschlags und dessen erste fünf Schrittarten, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-3.2: `formatFeedback()` in `ai/lab-development-findings.mjs` sammelt die
 Fehlertexte der Formatkorrekturen, je höchstens 200 Zeichen, geprüft von
 `tests/ai-lab-devcheck-findings.test.cjs`.
