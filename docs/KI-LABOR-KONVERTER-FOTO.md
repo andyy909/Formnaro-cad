@@ -25,7 +25,7 @@ Für vergleichbare Wiederholungen festhalten, welche Dateien, Auswahl, Einheiten
 
 „Live mitfolgen“ springt zum laufenden Versuch und scrollt die Protokolle. Der Schalter „Übungsfenster anzeigen“ unter „Einfach → Entwicklungscheck“ legt vor dem Start fest, ob das separate Übungsfenster sichtbar ist. Beide Einstellungen führen die nativen Maus-, Tastatur- und Skizzenschritte im isolierten Fenster aus. Der Hintergrundlauf überspringt Vorführpausen. Für interaktive Übungen gilt die Pause bei Fokusverlust.
 
-Der Vergleich in derselben Windows-Testkopie verwendet 15 gespeicherte Flash-Low-Pläne, dieselben Ausgangsfälle und 300 % Übungstempo. Beide Serien erreichten 15 von 15 nativen Erfolgen. Die Messbefunde und die gespeicherten CAD-Körper stimmten paarweise überein. Sichtbar dauerte die Serie 7:41 Minuten und ausgeblendet 11:54 Minuten. In den Aufzeichnungen sind die Abstände zwischen den einzelnen Eingaben im Hintergrund länger.
+Der Vergleich in derselben Windows-Testkopie verwendet 15 gespeicherte Flash-Low-Pläne, dieselben Ausgangsfälle und 300 % Übungstempo. Beide Serien erreichten 15 von 15 nativen Erfolgen. Die Messbefunde und die gespeicherten CAD-Körper stimmten paarweise überein. Sichtbar dauerte die Serie 7:41 Minuten. Mit der ursprünglichen Fensterdarstellung im Hintergrund waren es 11:54 Minuten. Seit das verborgene Fenster außerhalb des Bildschirms rendert, dauert derselbe Hintergrundlauf bei 300 % 4:59 Minuten. Die mittleren Abstände zwischen den Eingaben (Median) fielen von 2,012 auf 0,717 Sekunden. Alle 15 Messbefunde und die gespeicherten CAD-Körper stimmen weiterhin überein. Ein Abbruch während der Eingabe schließt den Lauf sauber.
 
 ## Geprüfter Ausgangsstand
 
