@@ -13,6 +13,12 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-5.4: `exportReport()` in `backend/ai-lab-development-evidence.cjs` ergänzt das
+Prüfpaket-ZIP um `Entwicklungsbefunde.json`, `Entwicklungsbefunde.md`,
+`AUSWERTUNG-SCHEMA.json` und `Befunde-Manifest.json` mit Hashes; das ZIP wird
+daneben geschrieben und umbenannt, geprüft von
+`tests/ai-lab-devcheck-export.test.cjs`.
+
 EC-5.3: `ai/lab-development-review-schema.json` beschreibt die Antwort der
 auswertenden KI als Liste von Befunden mit `runIds` oder `pattern`, `beleg`,
 `bereich`, `ursache`, `vermutung`, `vorschlag` und `nachtest`, geprüft von

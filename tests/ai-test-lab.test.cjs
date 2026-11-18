@@ -134,7 +134,7 @@ test('A clean fifteen-case development check makes no High dispatch',async()=>{
  assert.equal(result.phases[0].outcomes.length,15);
 });
 
-test('Development evidence links only its own attempts and rejects a changed source on save',t=>{
+test('Development evidence links only its own attempts and rejects a changed source on save',async t=>{
  const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
  const {unzipSync,strFromU8}=require('fflate');
  const {createDevelopmentEvidence}=require('../backend/ai-lab-development-evidence.cjs');
@@ -149,7 +149,8 @@ test('Development evidence links only its own attempts and rejects a changed sou
  const spec={caseId:'thread',effort:'low',seriesName:'Entwicklungscheck · '+id+' · low',seriesId,monitor:{mode:'off'}};
  fs.writeFileSync(path.join(folder,'Serie-'+seriesId+'.json'),JSON.stringify({id:seriesId,plan:{},rows:[spec]}));
  fs.writeFileSync(path.join(folder,'run-'+runId+'.json'),JSON.stringify({id:runId,spec,events:[{type:'finished'}],status:'completed',verification:{passed:true},cleanExit:true}));
- const entries=unzipSync(fs.readFileSync(store.exportReport(id).path));
+ const exported=await store.exportReport(id);
+ const entries=unzipSync(fs.readFileSync(exported.path));
  const series=JSON.parse(strFromU8(entries['Serienplaene.json']));
  assert.equal(series[0].developmentCheck.id,id);
  assert.deepEqual(JSON.parse(strFromU8(entries['Manifest.json'])).runs,[runId]);

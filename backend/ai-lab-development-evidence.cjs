@@ -1,5 +1,6 @@
 const fs=require('node:fs');
 const path=require('node:path');
+const crypto=require('node:crypto');
 const {sourceManifest}=require('./ai-test-lab-source.cjs');
 const {writeLabFile}=require('./ai-lab-storage.cjs');
 const {selectScope,exportPackage}=require('./ai-lab-review-data.cjs');
@@ -31,7 +32,7 @@ function createDevelopmentEvidence(directory,readSource=()=>sourceManifest().has
   if(bytes.length>65536)throw Error('Entwicklungsbericht ist zu groß.');
   writeLabFile(file,bytes);
  }
- function exportReport(id){
+ async function exportReport(id){
   const report=read(id);
   const selected=[];
   for(const phase of report.phases){
@@ -50,7 +51,32 @@ function createDevelopmentEvidence(directory,readSource=()=>sourceManifest().has
   const scope=selectScope(directory,selected,{ids:selected.map(record=>record.id),completion});
   // Link the stage evidence without changing the existing external ZIP format.
   scope.manifests=scope.manifests.map(manifest=>({...manifest,developmentCheck:report}));
-  return exportPackage({directory,scope});
+  const exported=exportPackage({directory,scope});
+  const {zipSync,unzipSync,strToU8}=require('fflate');
+  const {developmentFindings,findingsMarkdown}=await import('../ai/lab-development-findings.mjs');
+  const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
+  const findings=developmentFindings(report,selected);
+  const additions=[
+   {name:'Entwicklungsbefunde.json',data:Buffer.from(JSON.stringify(findings,null,2))},
+   {name:'Entwicklungsbefunde.md',data:Buffer.from(findingsMarkdown(findings))},
+   {name:'AUSWERTUNG-SCHEMA.json',data:fs.readFileSync(path.join(__dirname,'../ai/lab-development-review-schema.json'))},
+  ];
+  const entries=unzipSync(fs.readFileSync(exported.path));
+  for(const addition of additions)entries[addition.name]=strToU8(addition.data.toString('utf8'));
+  const baseManifest=entries['Manifest.json'];
+  const manifest={
+   format:'FormnaroDevelopmentFindingsManifest',
+   version:1,
+   createdAt:new Date().toISOString(),
+   entries:additions.map(addition=>({name:addition.name,bytes:addition.data.length,sha256:hash(addition.data)})),
+   baseManifest:{name:'Manifest.json',bytes:baseManifest.length,sha256:hash(Buffer.from(baseManifest))},
+  };
+  entries['Befunde-Manifest.json']=strToU8(JSON.stringify(manifest,null,2));
+  const zip=zipSync(entries,{level:6});
+  const temporary=exported.path+'.'+crypto.randomUUID()+'.tmp';
+  fs.writeFileSync(temporary,zip,{flag:'wx'});
+  fs.renameSync(temporary,exported.path);
+  return {...exported,bytes:zip.length,sha256:hash(zip),files:Object.keys(entries).length};
  }
  return {recent,save,exportReport};
 }
@@ -71,7 +97,7 @@ function installDevelopmentEvidence(win,directory,ipcMain=require('electron').ip
    if(value?.action==='supplement-clear'){supplemental.clear();return {ok:true,value:null};}
    if(value?.action==='recent')return {ok:true,value:store.recent()};
    if(value?.action==='save'){store.save(value.report);return {ok:true,value:null};}
-   if(value?.action==='export')return {ok:true,value:store.exportReport(value.id)};
+   if(value?.action==='export')return {ok:true,value:await store.exportReport(value.id)};
    throw Error('Unbekannte Laboraktion.');
   }catch(error){return {ok:false,error:error.message};}
  });
