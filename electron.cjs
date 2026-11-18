@@ -33,7 +33,7 @@ app.whenReady().then(async () => {
     // Native/Python previews also run while an external assistant covers this
     // window. Throttling those renderers can turn a valid batch into a timeout.
     // The viewport already uses an idle render scheduler rather than a busy loop.
-    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, offscreen:!!verifyPath, preload:path.join(__dirname,'preload.cjs'), additionalArguments:['--formnaro-portable-data','--formnaro-stl-converter','--formnaro-error-log',...(practiceChild&&!diagnosticChild?['--formnaro-practice']:[])], backgroundThrottling:false } });
+    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, offscreen:!!verifyPath||backgroundPractice, preload:path.join(__dirname,'preload.cjs'), additionalArguments:['--formnaro-portable-data','--formnaro-stl-converter','--formnaro-error-log',...(practiceChild&&!diagnosticChild?['--formnaro-practice']:[])], backgroundThrottling:false } });
   const practiceAudit=practiceChild&&process.env.FORMNARO_PRACTICE_AUDIT==='1';
   const auditDirectory=verifyPath&&aiResultChecksVerifyArg&&process.env.FORMNARO_VERIFY_PRACTICE_ONLY==='1'&&
     process.env.FORMNARO_VERIFY_PRACTICE_EVIDENCE==='1'?path.join(path.dirname(verifyPath),'child-audit'):undefined;
