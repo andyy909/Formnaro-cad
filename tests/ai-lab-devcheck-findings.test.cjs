@@ -209,3 +209,11 @@ test('Markdown-Kurzbericht hat Kopf, Tabelle, Abschnitte und Schlusssatz',async(
  assert.ok(row,'Zeile mit maskiertem Namen');
  assert.equal((row.match(/(?<!\\)\|/g)??[]).length,7,'sechs Spalten ergeben sieben unmaskierte Striche');
 });
+test('Antwortschema für die auswertende KI ist gültiges JSON mit allen Pflichtfeldern',()=>{
+ const schema=JSON.parse(fs.readFileSync(path.join(__dirname,'..','ai','lab-development-review-schema.json'),'utf8'));
+ assert.equal(schema.type,'array');
+ const item=schema.items;
+ for(const field of ['runIds','pattern','beleg','bereich','ursache','vermutung','vorschlag','nachtest'])assert.ok(item.required.includes(field),'Pflichtfeld fehlt: '+field);
+ assert.deepEqual(item.properties.bereich.enum,['modell','kontext','programm','aufgabe','pruefer']);
+ assert.ok(Array.isArray(item.anyOf)&&item.anyOf.length===2,'runIds oder pattern');
+});

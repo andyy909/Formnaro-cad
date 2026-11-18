@@ -13,6 +13,11 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-5.3: `ai/lab-development-review-schema.json` beschreibt die Antwort der
+auswertenden KI als Liste von Befunden mit `runIds` oder `pattern`, `beleg`,
+`bereich`, `ursache`, `vermutung`, `vorschlag` und `nachtest`, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-5.2: `findingsMarkdown()` in `ai/lab-development-findings.mjs` schreibt den
 Kurzbericht mit Kopf, Ergebnistabelle, Kontextlücken, Mustern und Erstreaktion;
 Pipes in Aufgabennamen werden maskiert, geprüft von
