@@ -193,3 +193,49 @@ export function developmentFindings(report,records){
   contextGaps:runs.flatMap(run=>run.contextGaps.map(gap=>({...gap,runId:run.runId,caseId:run.caseId}))),
  };
 }
+
+const cell=value=>{
+ const text=String(value??'').replace(/\|/g,'\\|').replace(/\r?\n/g,' ').trim();
+ return text||'–';
+};
+const runResult=run=>{
+ const outcome=run?.outcome??{};
+ if(outcome.status==='passed')return outcome.firstTry===true?'Bestanden (1. Versuch)':outcome.firstTry===false?'Bestanden nach Prüferhinweis':'Bestanden';
+ return outcome.reason?(developmentReasonLabels[outcome.reason]??String(outcome.reason)):'Offen';
+};
+const runFirstTry=run=>{
+ const outcome=run?.outcome??{};
+ if(outcome.status!=='passed')return '–';
+ return outcome.firstTry===true?'ja':outcome.firstTry===false?'nein':'–';
+};
+const runTokens=run=>{
+ const input=run?.tokens?.input;
+ const output=run?.tokens?.output;
+ if(typeof input!=='number'&&typeof output!=='number')return '–';
+ return (typeof input==='number'?input:'–')+' / '+(typeof output==='number'?output:'–');
+};
+
+export function findingsMarkdown(findings){
+ const check=findings?.check??{};
+ const runs=findings?.runs??[];
+ const lines=[
+  '# Entwicklungsbefund',
+  '',
+  'Modell: '+cell(check.model)+' · Stufen: '+cell((check.levels??[]).join(' / '))+' · Quellstand: '+cell(String(check.sourceHash??'').slice(0,8)),
+  '',
+  '| Aufgabe | Ergebnis | 1. Versuch | Grund | Sekunden | Tokens |',
+  '| --- | --- | --- | --- | --- | --- |',
+ ];
+ for(const run of runs)lines.push('| '+[cell(run.caseId),cell(runResult(run)),cell(runFirstTry(run)),cell(run?.outcome?.reason),cell(run?.seconds),cell(runTokens(run))].join(' | ')+' |');
+ lines.push('', '## Kontextlücken', '');
+ if((findings?.contextGaps??[]).length)for(const gap of findings.contextGaps)lines.push('- '+cell(gap.caseId)+' · '+cell(gap.kind)+': '+cell(gap.text));
+ else lines.push('- keine');
+ lines.push('', '## Muster über Aufgaben', '');
+ if((findings?.patterns??[]).length)for(const pattern of findings.patterns)lines.push('- '+cell(pattern.key)+' ('+cell((pattern.caseIds??[]).join(', '))+'): '+cell(pattern.hint));
+ else lines.push('- keine');
+ lines.push('', '## Erstreaktion auf den Kontext', '');
+ if((findings?.contextReactions??[]).length)for(const reaction of findings.contextReactions)lines.push('- '+cell(reaction.flag)+': '+cell(reaction.count)+' von '+cell(reaction.total)+' ('+cell(reaction.hint)+')');
+ else lines.push('- keine');
+ lines.push('', 'Denktexte sind Hinweise, keine Belege. Bewertungen stammen aus den CAD-Prüfungen.');
+ return lines.join('\n')+'\n';
+}

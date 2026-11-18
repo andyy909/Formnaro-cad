@@ -181,3 +181,31 @@ test('Gesamtbefund verbindet Bericht, Läufe, Muster und Kontextlücken',async()
  assert.equal(findings.contextGaps.length,4);
  assert.ok(findings.contextGaps.every(gap=>gap.runId&&gap.caseId&&gap.kind));
 });
+test('Markdown-Kurzbericht hat Kopf, Tabelle, Abschnitte und Schlusssatz',async()=>{
+ const {developmentFindings,findingsMarkdown}=await load();
+ const order=['advanced-01','advanced-02','advanced-05','advanced-07','drill'];
+ const records=order.map(fixture);
+ const outcomes=[
+  {caseId:'advanced-01',runId:records[0].id,status:'blocked',reason:'needs-input'},
+  {caseId:'advanced-02',runId:records[1].id,status:'passed',firstTry:false},
+  {caseId:'advanced-05',runId:records[2].id,status:'passed',firstTry:false},
+  {caseId:'advanced-07',runId:records[3].id,status:'passed',firstTry:true},
+  {caseId:'drill',runId:records[4].id,status:'passed',firstTry:true},
+ ];
+ const report={id:'f14586d9-dfd7-48f6-8869-f7309ca43f20',model:'deepseek-flash',setup:{levels:['low']},sourceHash:'f60b86cb1234567890',phases:[{effort:'low',caseIds:order,outcomes}]};
+ const md=findingsMarkdown(developmentFindings(report,records));
+ assert.match(md,/^# Entwicklungsbefund/m);
+ assert.match(md,/Modell: deepseek-flash/);
+ assert.match(md,/Stufen: low/);
+ assert.match(md,/Quellstand: f60b86cb/);
+ assert.match(md,/^\| Aufgabe \| Ergebnis \| 1\. Versuch \| Grund \| Sekunden \| Tokens \|$/m);
+ assert.match(md,/^\| advanced-02 \| Bestanden nach Prüferhinweis \| nein \| – \| 116\.4 \| 19948 \/ 6148 \|$/m);
+ assert.match(md,/^## Kontextlücken$/m);
+ assert.match(md,/^## Muster über Aufgaben$/m);
+ assert.match(md,/^## Erstreaktion auf den Kontext$/m);
+ assert.ok(md.trimEnd().endsWith('Denktexte sind Hinweise, keine Belege. Bewertungen stammen aus den CAD-Prüfungen.'));
+ const piped=findingsMarkdown({check:{},runs:[{caseId:'a|b',runId:'r1',outcome:{status:'passed',firstTry:true},tokens:{input:1,output:2},seconds:1}]});
+ const row=piped.split('\n').find(line=>line.includes('a\\|b'));
+ assert.ok(row,'Zeile mit maskiertem Namen');
+ assert.equal((row.match(/(?<!\\)\|/g)??[]).length,7,'sechs Spalten ergeben sieben unmaskierte Striche');
+});

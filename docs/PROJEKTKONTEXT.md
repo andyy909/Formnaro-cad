@@ -13,6 +13,11 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-5.2: `findingsMarkdown()` in `ai/lab-development-findings.mjs` schreibt den
+Kurzbericht mit Kopf, Ergebnistabelle, Kontextlücken, Mustern und Erstreaktion;
+Pipes in Aufgabennamen werden maskiert, geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-5.1: `developmentFindings()` in `ai/lab-development-findings.mjs` baut den
 Gesamtbefund `FormnaroDevelopmentFindings` mit Kopf, Zusammenfassung, Läufen,
 Mustern, Erstreaktionen und allen Kontextlücken, geprüft von
