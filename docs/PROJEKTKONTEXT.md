@@ -13,6 +13,13 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-7.1: Gesamtprüfung; der Export der 15 echten Läufe vom 18.11.2026 ergibt
+advanced-01 als Rückfrage, 12 Erfolge im ersten Versuch, 2 nach Prüferhinweis,
+ein Doppelkörper-Muster und `szene-leer` in 12 von 15 Läufen. Ergebnisse werden
+aus den Protokollen neu eingeordnet und die Erstreaktionsflaggen aus dem ganzen
+ersten Denktext gelesen; geprüft von `tests/ai-lab-devcheck-findings.test.cjs`
+und `tests/ai-lab-devcheck-export.test.cjs`.
+
 EC-6.1: `scripts/check-development-tasks.mjs` vergleicht die benötigten
 Werkzeuge der Referenzlösung mit der Werkzeugliste der Aufbauaufgaben und meldet
 fehlende Werkzeuge, ohne den Lauf abzubrechen (advanced-01 braucht `tool:group`),

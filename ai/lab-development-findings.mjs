@@ -1,3 +1,5 @@
+import {developmentOutcome} from './lab-development-sequence.mjs';
+
 export const developmentReasonLabels={
  'needs-input':'Rückfrage des Agenten',
  'checker-error':'Prüferfehler',
@@ -88,7 +90,7 @@ export function firstContextReaction(record){
  const text=typeof reasoning?.text==='string'?reasoning.text:'';
  if(!text)return {excerpt:null,flags:[],untrusted:true};
  const excerpt=text.slice(0,800);
- return {excerpt,flags:CONTEXT_FLAGS.filter(([,matches])=>matches(excerpt)).map(([flag])=>flag),untrusted:true};
+ return {excerpt,flags:CONTEXT_FLAGS.filter(([,matches])=>matches(text)).map(([flag])=>flag),untrusted:true};
 }
 
 export function runFinding(record,outcome){
@@ -163,17 +165,27 @@ export function contextReactionPatterns(findings){
 }
 
 export function developmentFindings(report,records){
- const outcomes=(report?.phases??[]).flatMap(phase=>phase.outcomes??[]);
- const runs=(records??[]).map(record=>{
-  const outcome=outcomes.find(entry=>entry.runId===record?.id)??null;
-  return {...runFinding(record,outcome),symptoms:runSymptoms(record)};
- });
- const cases=developmentCases(report);
- const passed=cases.filter(entry=>entry.decisive?.status==='passed');
+ const byCase=new Map();
+ for(const record of records??[]){
+  const caseId=record?.spec?.caseId;
+  if(!caseId)continue;
+  if(!byCase.has(caseId))byCase.set(caseId,[]);
+  byCase.get(caseId).push(record);
+ }
+ const caseIds=report?.phases?.[0]?.caseIds??[...byCase.keys()];
+ const chosen=new Map();
+ for(const caseId of caseIds){
+  const candidates=byCase.get(caseId)??[];
+  if(!candidates.length)continue;
+  chosen.set(caseId,candidates.find(record=>developmentOutcome(record).status==='passed')??candidates.at(-1));
+ }
+ const runs=[...chosen.values()].map(record=>({...runFinding(record,developmentOutcome(record)),symptoms:runSymptoms(record)}));
+ const outcomes=caseIds.map(caseId=>chosen.has(caseId)?developmentOutcome(chosen.get(caseId)):null);
+ const passed=outcomes.filter(outcome=>outcome?.status==='passed');
  const byReason={};
- for(const entry of cases){
-  if(entry.decisive?.status==='passed')continue;
-  const reason=String(entry.decisive?.reason??'unverified');
+ for(const outcome of outcomes){
+  if(!outcome||outcome.status==='passed')continue;
+  const reason=String(outcome.reason??'unverified');
   byReason[reason]=(byReason[reason]??0)+1;
  }
  return {
@@ -181,10 +193,10 @@ export function developmentFindings(report,records){
   version:1,
   check:{id:report?.id??null,model:report?.model??null,levels:report?.setup?.levels??[],sourceHash:report?.sourceHash??null},
   summary:{
-   passedFirstTry:passed.filter(entry=>entry.decisive.firstTry===true).length,
-   passedAfterFeedback:passed.filter(entry=>entry.decisive.firstTry===false).length,
-   failed:cases.filter(entry=>entry.decisive?.status==='failed').length,
-   open:cases.filter(entry=>!['passed','failed'].includes(entry.decisive?.status)).length,
+   passedFirstTry:passed.filter(outcome=>outcome.firstTry===true).length,
+   passedAfterFeedback:passed.filter(outcome=>outcome.firstTry===false).length,
+   failed:outcomes.filter(outcome=>outcome?.status==='failed').length,
+   open:outcomes.filter(outcome=>!outcome||!['passed','failed'].includes(outcome.status)).length,
    byReason,
   },
   runs,
