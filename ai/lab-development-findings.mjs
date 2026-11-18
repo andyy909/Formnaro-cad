@@ -76,3 +76,17 @@ export function contextGaps(record){
  }
  return gaps;
 }
+
+const CONTEXT_FLAGS=[
+ ['szene-leer',text=>/objects:\s*\[\s*\]/i.test(text)||(/scene|szene/i.test(text)&&/empty|leer/i.test(text))],
+ ['widerspruch',text=>/ambigu|contradict|widerspr|inconsistent/i.test(text)],
+ ['unklar',text=>/unclear|unklar|not sure|missing|fehlt/i.test(text)],
+];
+
+export function firstContextReaction(record){
+ const reasoning=(record?.events??[]).find(event=>event.type==='reasoning');
+ const text=typeof reasoning?.text==='string'?reasoning.text:'';
+ if(!text)return {excerpt:null,flags:[],untrusted:true};
+ const excerpt=text.slice(0,800);
+ return {excerpt,flags:CONTEXT_FLAGS.filter(([,matches])=>matches(excerpt)).map(([flag])=>flag),untrusted:true};
+}

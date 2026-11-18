@@ -91,3 +91,15 @@ test('Kontextlücken sammeln Rückfrage, Formatregeln und Werkzeugauskünfte',as
  const withTool=contextGaps({status:'completed',events:[{type:'tool-call',tool:'offlinecad_tool_info',arguments:'ui:tool:drill'}]});
  assert.deepEqual(withTool,[{kind:'werkzeugauskunft',text:'ui:tool:drill'}]);
 });
+test('Erstreaktion auf den Startkontext wird mit Hinweisflaggen erfasst',async()=>{
+ const {firstContextReaction}=await load();
+ const reaction=firstContextReaction(fixture('advanced-01'));
+ assert.equal(reaction.untrusted,true);
+ assert.equal(typeof reaction.excerpt,'string');
+ assert.ok(reaction.excerpt.length<=800);
+ assert.ok(reaction.flags.includes('szene-leer'),'Szene leer erkennen');
+ assert.ok(!firstContextReaction({events:[]}).excerpt);
+ assert.deepEqual(firstContextReaction({events:[]}),{excerpt:null,flags:[],untrusted:true});
+ const german=firstContextReaction({events:[{type:'reasoning',text:'Die Szene ist leer, das ist ein Widerspruch.'}]});
+ assert.deepEqual(german.flags,['szene-leer','widerspruch']);
+});
