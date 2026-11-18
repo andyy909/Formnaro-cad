@@ -111,3 +111,27 @@ export function runFinding(record,outcome){
   feedbackRounds:feedbackRounds(record),
  };
 }
+
+const TOLERANCE=1e-5;
+const sameNumbers=(left,right)=>Array.isArray(left)&&Array.isArray(right)&&left.length===right.length&&left.every((value,index)=>Math.abs(value-right[index])<=TOLERANCE);
+const sameBody=(body,reference)=>sameNumbers(body?.size,reference?.size)&&sameNumbers(body?.center,reference?.center);
+const round3=value=>Math.round(value*1000)/1000;
+
+export function symptomKey(check){
+ const name=String(check?.name??'');
+ const actual=check?.actual;
+ if(typeof actual?.actual?.count==='number'&&typeof actual?.expected?.count==='number'){
+  const bodies=actual.actual.bodies;
+  const identical=Array.isArray(bodies)&&bodies.length>1&&bodies.every(body=>sameBody(body,bodies[0]));
+  return name+': '+actual.actual.count+' statt '+actual.expected.count+(identical?', deckungsgleich':'');
+ }
+ if(typeof actual?.actual==='number'&&typeof actual?.expected==='number')return name+': '+round3(actual.actual)+' statt '+round3(actual.expected);
+ return name;
+}
+
+export function runSymptoms(record){
+ const checks=[];
+ for(const event of record?.events??[])if(event.type==='practice-ui-feedback')for(const check of event.verification?.checks??[])if(!check.passed)checks.push(check);
+ for(const check of record?.verification?.checks??[])if(!check.passed)checks.push(check);
+ return [...new Set(checks.map(symptomKey))];
+}

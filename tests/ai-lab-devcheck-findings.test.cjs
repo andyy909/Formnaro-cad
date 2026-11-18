@@ -118,3 +118,18 @@ test('Befundblatt fasst alle Teile eines Laufs mit einheitlichen Schlüsseln zus
  assert.equal(findings.drill.firstTry,true);
  assert.ok(findings['advanced-01'].firstContextReaction.flags.includes('szene-leer'));
 });
+test('Symptomschlüssel nennt Zählunterschied und deckungsgleiche Körper',async()=>{
+ const {symptomKey,runSymptoms}=await load();
+ const feedback=fixture('advanced-02').events.find(event=>event.type==='practice-ui-feedback');
+ const body=feedback.verification.checks.find(check=>!check.passed&&check.actual?.actual?.count);
+ assert.equal(symptomKey(body),'Genau ein Körper mit richtigen Außenmaßen und Lage: 2 statt 1, deckungsgleich');
+ const volume=feedback.verification.checks.find(check=>check.name==='Unabhängig berechnetes Materialvolumen');
+ assert.equal(symptomKey(volume),'Unabhängig berechnetes Materialvolumen: 28000 statt 24352');
+ assert.equal(symptomKey({name:'Zwei getrennte rechteckige Durchbrüche und Materialstege',passed:false}),'Zwei getrennte rechteckige Durchbrüche und Materialstege');
+ const distinct=symptomKey({name:'Genau ein Körper mit richtigen Außenmaßen und Lage',actual:{actual:{count:2,bodies:[{size:[70,50,8],center:[7,-9,8]},{size:[70,50,9],center:[7,-9,8]}]},expected:{count:1}}});
+ assert.equal(distinct,'Genau ein Körper mit richtigen Außenmaßen und Lage: 2 statt 1');
+ const symptoms=runSymptoms(fixture('advanced-02'));
+ assert.ok(symptoms.includes('Genau ein Körper mit richtigen Außenmaßen und Lage: 2 statt 1, deckungsgleich'));
+ assert.equal(new Set(symptoms).size,symptoms.length);
+ assert.deepEqual(runSymptoms(fixture('drill')),[]);
+});

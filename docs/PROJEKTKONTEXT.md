@@ -13,6 +13,11 @@ Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
 
+EC-4.1: `symptomKey()` und `runSymptoms()` in `ai/lab-development-findings.mjs`
+bilden aus fehlgeschlagenen Prüfungen einen Symptomschlüssel mit Zählunterschied,
+Volumenunterschied und „deckungsgleich“ (Toleranz 1e-5), geprüft von
+`tests/ai-lab-devcheck-findings.test.cjs`.
+
 EC-3.6: `runFinding()` in `ai/lab-development-findings.mjs` fasst Eckdaten,
 Formatkorrekturen, erste Aktion, Kontextlücken, Erstreaktion, Ergebnis,
 `firstTry` und Prüferrunden zu einem Befundblatt zusammen, geprüft von
