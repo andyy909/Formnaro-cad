@@ -39,3 +39,80 @@ test('Native drill reports no removed material with its actual command and targe
  await assert.rejects(cad.preview({kind:'batch',commands:[{op:'drill',target:'drill',reference:{ray:{origin:[0,0,30],direction:[0,0,-1]}},offset:[100,0,0],diameter:4,depth:3,through:false}]}),e=>{assert.equal(e.code,'NO_CAD_DRILL_MATERIAL');assert.equal(e.feedback.commandIndex,1);assert.deepEqual(e.feedback.target,{rootId:'drill',path:[]});assert.equal(e.feedback.retryable,true);return true;});assert.equal(cad.serialize(),before);assert.equal(cad.state().undo,undo);
  }finally{cad.dispose();}
 });
+
+test('The compact benchmark checks spatial, blind and stepped bores and selective source edits natively',async()=>{
+ const {runSpatialBoreCheck}=await import('../src/cad-lab-spatial-bores.js');
+ const signal=new AbortController().signal;
+ const {compactLadders}=await import('../src/cad-lab-compact-plan.js');
+ const failures=[];
+ for(const {id} of compactLadders.get('Plattengrenze').tasks.filter((task)=>task.check==='spatial-bores')){
+  try{
+   const {checks}=await runSpatialBoreCheck(id,{createController:controller,signal});
+   const missed=checks.filter(check=>!check.passed);
+   if(checks.length<10 || missed.length) failures.push({id,missed});
+  }catch(error){failures.push({id,error:error.message,code:error.code});}
+ }
+ assert.deepEqual(failures,[]);
+ let cad;
+ const result=await runSpatialBoreCheck('bore-oblique',{
+  createController:()=>cad=controller(),signal,
+  async generate(){return {revision:cad.revision(),commands:[
+   {op:'create',type:'cylinder',solid:false,size:[6,6,34],pos:[-11.5,23,14],as:'wrongAxis'},
+   {op:'group',targets:[cad.snapshot().nodes[0].id,'$wrongAxis'],as:'wrongPart'},
+  ]};},
+ });
+ assert.ok(result.checks.some(check=>!check.passed && check.label.startsWith('Schräge Achse frei')));
+ assert.ok(result.checks.some(check=>check.passed && check.label.startsWith('Undo')));
+});
+
+
+test('Cumulative lab fixtures verify native geometry, fit, two axes, named drawings and Undo',async()=>{
+ const {runLabFixture}=await import('../src/cad-lab-fixture.js');
+ const failures=[];
+ for(let level=1;level<=9;level++){
+  try{
+   const {checks}=await runLabFixture(level,{createController:controller,signal:new AbortController().signal});
+   const missed=checks.filter(check=>!check.passed);
+   if(missed.length)failures.push({level,missed});
+  }catch(error){failures.push({level,error:error.message,code:error.code});}
+ }
+ assert.deepEqual(failures,[]);
+});
+
+test('The end stop must be fixed and the slide must move to its specified pose', async () => {
+ const {runLabFixture}=await import('../src/cad-lab-fixture.js');
+ let cad;
+ const {checks}=await runLabFixture(8,{
+  signal:new AbortController().signal,
+  createController:()=>cad=controller(),
+  async generate(){
+   return {revision:cad.revision(),commands:[{
+    op:'create',type:'box',name:'Endanschlag',size:[4,24,6],pos:[30,0,9],
+   }]};
+  },
+ });
+ const failed=checks.filter(check=>!check.passed).map(check=>check.label);
+ assert(failed.includes('Anschlag fest mit Führung verbunden'));
+ assert(failed.includes('Schubgelenk · alte linke Grenze, neue rechte Grenze und Arbeitsstellung'));
+});
+test('No-photo drawing ladder checks linked views, dimensions, section, assembly and Undo with the native kernel', async () => {
+ const {runDrawingBenchmark}=await import('../src/cad-lab-drawing.js');
+ for(let level=1;level<=7;level++){
+  const {checks}=await runDrawingBenchmark(level,{createController:controller,signal:new AbortController().signal});
+  assert.deepEqual(checks.filter(check=>!check.passed),[], 'drawing level '+level);
+ }
+});
+
+test('An offset pocket accepts the reference insert and rejects equal-size geometry at the wrong height', async () => {
+ const {runLabFittingPocket}=await import('../src/cad-lab-fitting-pocket.js');
+ const signal=new AbortController().signal;
+ const reference=await runLabFittingPocket({createController:controller,signal});
+ assert.equal(reference.checks.length,7);
+ assert.deepEqual(reference.checks.filter(({passed})=>!passed),[]);
+ const shifted=await runLabFittingPocket({createController:controller,signal,
+  async generate({scene}) {
+   return {revision:scene.revision,commands:[{op:'create',type:'box',name:'Einsatz',size:[25.6,19.8,7],pos:[42.5,-7.5,15.3]}]};
+  },
+ });
+ assert.deepEqual(shifted.checks.filter(({passed})=>!passed).map(({label})=>label),['Bodenluft und Einsatzhöhe']);
+});

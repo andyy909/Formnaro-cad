@@ -1,6 +1,6 @@
 // Resolve System once for both CSS and the 3D view; react without saving settings.
 export function createThemeBinding({ document, media, setViewTheme }) {
-  let preference = 'light';
+  let preference = 'system';
   const refresh = () => {
     const dark = preference === 'dark' || (preference === 'system' && media.matches);
     const theme = dark ? 'dark' : 'light';

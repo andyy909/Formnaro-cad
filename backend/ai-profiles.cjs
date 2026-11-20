@@ -3,7 +3,10 @@ const {BUILTIN_PROVIDERS}=require('./ai-models.cjs');
 // Secrets never cross IPC. Profiles are scoped to their validated API origin.
 function createAIProfiles({stored,encrypt,decrypt,canEncrypt,persist}){
  let config={...DEFAULT_CONFIG},profiles=new Map();const usedProviders=new Map(Object.entries(stored?.usedProviders||{}).filter(([id,date])=>typeof date==='string'&&Number.isFinite(Date.parse(date))&&(BUILTIN_PROVIDERS.some(p=>p.id===id)||/^https?:\/\//.test(id))));const origin=c=>['chatgpt','mistral-vibe'].includes(c.authMode)?c.authMode:new URL(c.baseUrl).origin;
- function load(entry){const c=validateConfig(entry.config);let key='',encryptedKey=c.rememberKey&&typeof entry.encryptedKey==='string'?entry.encryptedKey:'';if(encryptedKey){try{key=decrypt(encryptedKey);}catch{/* Keep unavailable encrypted credentials recoverable. */}}profiles.set(origin(c),{config:c,key,encryptedKey});return c;}
+ function load(entry){const c=validateConfig(entry.config);
+  // Each new desktop session starts DeepSeek on its Flash preset. Manual selections apply immediately.
+  if(origin(c)==='https://api.deepseek.com')c.model=BUILTIN_PROVIDERS.find(p=>p.id===origin(c)).model;
+  let key='',encryptedKey=c.rememberKey&&typeof entry.encryptedKey==='string'?entry.encryptedKey:'';if(encryptedKey){try{key=decrypt(encryptedKey);}catch{/* Keep unavailable encrypted credentials recoverable. */}}profiles.set(origin(c),{config:c,key,encryptedKey});return c;}
  if(stored){for(const entry of Array.isArray(stored.profiles)?stored.profiles:[]){try{load(entry);}catch{/* Ignore malformed inactive profiles. */}}try{config=load(stored);}catch{/* Keep valid inactive profiles. */}}
  let lastAPIConfig={...config};
  if(stored?.vibeConfig){try{const c=validateConfig(stored.vibeConfig);if(c.authMode==='mistral-vibe'){profiles.set('mistral-vibe',{config:c,key:'',encryptedKey:''});if(stored.selectedProviderId==='mistral-vibe')config=c;}}catch{}}

@@ -31,3 +31,23 @@ test('Context metrics count actual compact input once, UTF-8 file bytes, unknown
  const schema={allTools:'UNIQUE_SCHEMA'},context={commandSchema:schema,requestSchema:schema},modeling={status:()=>({notesFile:notes,journalFile:path.join(dir,'journal.json')}),context:()=> 'Loaded notes'};
  const m=contextMetrics({context,config,modeling,bundledDirectory:dir});assert.equal(m.files[0].bytes,20);assert.equal(m.files.find(f=>f.id==='journal').bytes,0);assert(m.files.find(f=>f.id==='journal').missing);assert.equal(m.components[0].characters,JSON.stringify({...context,requestSchema:{$ref:'#/commandSchema'}}).length);assert(m.total.estimatedInputCostUSD.max>0);assert.equal(m.tokenEstimateMethod,'characters/4');assert.equal(context.requestSchema,schema);assert.equal(m.total.bytes,m.components.reduce((s,r)=>s+r.bytes,0));
 }));
+
+test('Navigation mode and how-to questions take precedence over geometry keywords',()=>{
+ assert.equal(categoryFor({prompt:'Bohrung bearbeiten',context:{programHelpOnly:true}}),'help');
+ assert.equal(categoryFor({prompt:'Wie bohre ich durch die Platte?'}),'help');
+ assert.equal(categoryFor({prompt:'Welche Bohrung ist ausgewählt?'}),'help');
+ assert.equal(categoryFor({prompt:'Kannst du die Bohrung verschieben?'}),'edit');
+ assert.equal(categoryFor({prompt:'Kannst du mir erklären, wie ich die Bohrung verschiebe?'}),'help');
+ assert.equal(categoryFor({prompt:'Erzeuge eine Platte mit zwei Bohrungen und erkläre die Konstruktion.'}),'create');
+});
+
+test('Per-model totals respect provider and period filters without modifying historical categories',temporary(dir=>{
+ const ledger=createAIUsageLedger({file:path.join(dir,'usage.json')});
+ for(const [provider,model] of [['a','flash'],['a','pro'],['b','flash']])
+  ledger.record({usage,config:{...config,model},provider,args:{prompt:'Wie bohre ich durch die Platte?'}});
+ const stats=ledger.statistics({provider:'a'});
+ assert.deepEqual(stats.models.map(r=>[r.provider,r.model,r.requests,r.inputTokens]),[
+  ['a','flash',1,1000],['a','pro',1,1000],
+ ]);
+ assert.equal(stats.rows.find(row=>row.category==='help').api.requests,2);
+}));

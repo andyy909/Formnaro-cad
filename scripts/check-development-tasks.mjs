@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import { developmentGroupingTasks } from '../ai/lab-quick-plans.mjs';
 
 const require = createRequire(import.meta.url);
 const { definitions } = require('../backend/ai-benchmark-advanced-cases.cjs');
@@ -30,7 +31,9 @@ export function checkDevelopmentTasks(ids = caseIds) {
     if (!definition) return `${id}: keine Referenz`;
     const tools = requiredTools(id);
     if (!tools) return `${id}: keine Referenz`;
-    const missing = [...tools].filter((tool) => !definition.toolIds.includes(tool));
+    const declared = new Set(definition.toolIds);
+    if (Object.hasOwn(developmentGroupingTasks, id)) declared.add('tool:group');
+    const missing = [...tools].filter((tool) => !declared.has(tool));
     return missing.length
       ? `${id}: Referenz braucht ${missing.join(', ')}, Aufgabe nennt nur ${definition.toolIds.join(', ') || 'keine'}`
       : `${id}: ok`;

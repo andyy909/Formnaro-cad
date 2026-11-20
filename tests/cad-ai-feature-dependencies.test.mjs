@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Worker} from 'node:worker_threads';
+import {existsSync,mkdirSync,readFileSync,writeFileSync} from 'node:fs';
+import path from 'node:path';
 import {createCadController} from '../src/cad-controller.js';
 import {createCadProjectParameters,cadProjectParameterProblems} from '../src/cad-project-parameters-data.js';
 import {captureCadAISourceReference} from '../src/cad-ai-feature-references.js';
@@ -9,6 +11,8 @@ import {createCadDrawingSheet,cadDrawingDimension} from '../src/cad-drawing-data
 import {createCadJoint,cadJointProblems} from '../src/cad-joints-data.js';
 import {createCadAutomationAccess} from '../src/cad-automation-access.js';
 import {runCadAIRequest} from '../src/cad-ai-request.js';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),{generate}=require('../backend/ai-provider.cjs'),{readVerificationContract}=require('../backend/provider-contract-verification.cjs');
 
 const near=(a,b)=>assert(Math.abs(a-b)<1e-6,`${a} != ${b}`),target=(rootId,path=[])=>({rootId,path});
 function controller(){return createCadController({createWorker:()=>{const worker=new Worker(new URL('./fixtures/cad-node-worker.mjs',import.meta.url)),adapter={postMessage:m=>worker.postMessage(m),terminate:()=>worker.terminate()};worker.on('message',data=>adapter.onmessage?.({data}));worker.on('error',e=>adapter.onerror?.(e));return adapter;}});}
@@ -141,6 +145,143 @@ test('Lab CAD checks exercise real edits, native drawing/STEP readback, stale Ap
   }
 });
 
+test('01 · Only the natively selected bore of a rotated plate changes; the locked similarly named neighbor stays exact', async () => {
+  const { runCadDevelopmentCheck } = await import('../src/cad-lab-development-checks.js');
+  const result = await runCadDevelopmentCheck('plate-selected-bore', { createController: controller });
+  assert.deepEqual(result.checks.filter(({ passed }) => !passed), []);
+  assert.equal(result.evidence.prompt, 'Vergrößere nur die ausgewählte Bohrung von Ø6 auf Ø8. Behalte alles andere bei.');
+  assert.equal(result.evidence.selectedBore, true);
+  assert.equal(typeof result.evidence.selectedReferenceId, 'string');
+  assert.deepEqual(
+    result.evidence.answerCommands.map(({ op, field, value }) => ({ op, field, value })),
+    [{ op: 'feature', field: 'diameter', value: 8 }],
+  );
+  assert.equal(result.evidence.answerCommands[0].referenceId, result.evidence.selectedReferenceId);
+  assert.deepEqual(result.evidence.localSize, [112, 44, 6]);
+  assert.deepEqual(result.evidence.localBoreCenters, [[12, 0], [100, 0]]);
+  assert.deepEqual(result.evidence.worldMin, [178, -50, 8]);
+  assert.deepEqual(result.evidence.worldMax, [222, 62, 14]);
+  assert.deepEqual(result.evidence.bores, [
+    { diameter: 6, from: [200, -38, 8], to: [200, -38, 14] },
+    { diameter: 8, from: [200, 50, 8], to: [200, 50, 14] },
+  ]);
+  assert.deepEqual(result.evidence.faceDistances, [12, 12]);
+  assert.deepEqual(result.evidence.neighbor, {
+    min: [140, -4, 8],
+    max: [160, 4, 14],
+    volume: 960,
+    locked: true,
+    unchanged: true,
+  });
+});
+
+test('02 · A controlled answer for the other bore is rejected; the native checker also sees Ø8 at the wrong axis and the locked neighbor stays', async () => {
+  const { runCadDevelopmentCheck } = await import('../src/cad-lab-development-checks.js');
+  const result = await runCadDevelopmentCheck('plate-selected-bore', {
+    createController: controller,
+    counterCheck: 'wrong-target',
+  });
+  assert.deepEqual(result.checks.filter(({ passed }) => !passed), []);
+  assert.equal(result.evidence.rejection.code, 'AI_FEATURE_REFERENCE_REQUIRED');
+  assert.match(result.evidence.rejection.message, /Merkmalsbezüge/);
+  assert.notEqual(result.evidence.answerCommands[0].referenceId, result.evidence.attachedReferenceId);
+  assert.equal(result.evidence.project.afterReject, result.evidence.project.before);
+  assert.equal(result.evidence.project.revisionAfterReject, result.evidence.project.revisionBefore);
+  assert.deepEqual(
+    result.evidence.independentCheck.map(({ passed, actual }) => ({
+      passed,
+      diameter: actual.diameter,
+      from: actual.from,
+      to: actual.to,
+    })),
+    [
+      { passed: false, diameter: 8, from: [200, -38, 8], to: [200, -38, 14] },
+      { passed: false, diameter: 6, from: [200, 50, 8], to: [200, 50, 14] },
+    ],
+  );
+  assert.equal(result.evidence.neighbor.locked, true);
+  assert.equal(result.evidence.neighbor.unchanged, true);
+});
+
+test('02 · An old valid preview is rejected after a small permitted revision change and the project stays at the newer state', async () => {
+  const { runCadDevelopmentCheck } = await import('../src/cad-lab-development-checks.js');
+  const result = await runCadDevelopmentCheck('plate-selected-bore', {
+    createController: controller,
+    counterCheck: 'stale-preview',
+  });
+  assert.deepEqual(result.checks.filter(({ passed }) => !passed), []);
+  assert.equal(result.evidence.rejection.code, 'STALE_REVISION');
+  assert.notEqual(result.evidence.project.revisionAfterChange, result.evidence.project.revisionBefore);
+  assert.equal(result.evidence.project.afterReject, result.evidence.project.afterChange);
+  assert.equal(result.evidence.project.revisionAfterReject, result.evidence.project.revisionAfterChange);
+  assert.equal(result.evidence.project.undoAfterReject, result.evidence.project.undoAfterChange);
+  assert.equal(result.evidence.neighbor.locked, true);
+  assert.equal(result.evidence.neighbor.unchanged, true);
+});
+
+test('03 · A saved copy reopens with two editable bores (Ø6/Ø8) and the locked neighbor, while Undo restores the two Ø6 bores', async () => {
+  const { runCadDevelopmentCheck } = await import('../src/cad-lab-development-checks.js');
+  const copyFile = path.resolve('work/flash-03', 'wiedergeoeffnet.ocad');
+  const result = await runCadDevelopmentCheck('plate-selected-bore', {
+    createController: controller,
+    reopenProject: async (text) => {
+      mkdirSync(path.dirname(copyFile), { recursive: true });
+      writeFileSync(copyFile, text, 'utf8');
+      const reopened = controller();
+      await reopened.open(readFileSync(copyFile, 'utf8'));
+      return { path: copyFile, controller: reopened };
+    },
+  });
+  assert.deepEqual(result.checks.filter(({ passed }) => !passed), []);
+  // 03 · Nachweis 1: gespeicherte Kopie in einem neuen Arbeitszustand.
+  assert.equal(result.evidence.copy.path, copyFile);
+  assert.equal(existsSync(copyFile), true);
+  assert.equal(JSON.parse(readFileSync(copyFile, 'utf8')).nodes.length, 2);
+  assert.equal(result.evidence.copy.sources.editable, true);
+  assert.deepEqual(
+    result.evidence.copy.sources.holes.map(({ type, diameter, height }) => ({ type, diameter, height })),
+    [
+      { type: 'cylinder', diameter: 6, height: 20 },
+      { type: 'cylinder', diameter: 8, height: 20 },
+    ],
+  );
+  assert.deepEqual(result.evidence.copy.bores, [
+    { diameter: 6, from: [200, -38, 8], to: [200, -38, 14] },
+    { diameter: 8, from: [200, 50, 8], to: [200, 50, 14] },
+  ]);
+  assert.deepEqual(result.evidence.copy.neighbor, {
+    min: [140, -4, 8],
+    max: [160, 4, 14],
+    volume: 960,
+    locked: true,
+    unchanged: true,
+  });
+  // 03 · Nachweis 2: Undo in der ursprünglichen Bearbeitungssitzung.
+  assert.equal(result.evidence.undo.exact, true);
+  assert.equal(result.evidence.undo.afterUndo, result.evidence.undo.projectBefore);
+  assert.notEqual(result.evidence.revisionAfterEdit, result.evidence.undo.revisionBefore);
+  assert.equal(result.evidence.undo.revisionAfterUndo, result.evidence.undo.revisionBefore);
+  assert.equal(result.evidence.undo.sources.editable, true);
+  assert.deepEqual(
+    result.evidence.undo.sources.holes.map(({ type, diameter, height }) => ({ type, diameter, height })),
+    [
+      { type: 'cylinder', diameter: 6, height: 20 },
+      { type: 'cylinder', diameter: 6, height: 20 },
+    ],
+  );
+  assert.deepEqual(result.evidence.undo.bores, [
+    { diameter: 6, from: [200, -38, 8], to: [200, -38, 14] },
+    { diameter: 6, from: [200, 50, 8], to: [200, 50, 14] },
+  ]);
+  assert.deepEqual(result.evidence.undo.neighbor, {
+    min: [140, -4, 8],
+    max: [160, 4, 14],
+    volume: 960,
+    locked: true,
+    unchanged: true,
+  });
+});
+
 test('Lab model requests supply the short German prompt and the current native reference scope', async () => {
   const { runCadDevelopmentCheck } = await import('../src/cad-lab-development-checks.js');
   let calls = 0;
@@ -161,4 +302,65 @@ test('Lab model requests supply the short German prompt and the current native r
   });
   assert.equal(calls, 1);
   assert.deepEqual(result.checks.filter(({ passed }) => !passed), []);
+});
+
+test('Adaptive plate oracle distinguishes an old bore position and a residual floor', async () => {
+  const {measurePlate,plateTask,runPlateLevel} = await import('../src/cad-lab-plate-benchmark.js');
+  const signal = new AbortController().signal;
+  for (const [level,repeat] of [[1,false],[1,true],[2,false]]) {
+    const run = await runPlateLevel({level,repeat},{createController:controller,signal});
+    assert.deepEqual(run.checks.filter(check=>!check.passed),[]);
+  }
+  for (const fault of ['old-position','floor']) {
+    const cad = controller(), task = plateTask(1);
+    try {
+      const commands = [
+        {op:'create',type:'box',size:[100,40,6],pos:[50,0,3],as:'base'},
+        {op:'create',type:'cylinder',size:[6,6,8],pos:[10,0,3],solid:false,as:'left'},
+        {op:'create',type:'cylinder',size:[6,6,fault==='floor'?6:8],
+          pos:[fault==='old-position'?70:90,0,fault==='floor'?3.2:3],solid:false,as:'right'},
+        {op:'group',targets:['$base','$left','$right']},
+      ];
+      await cad.execute({kind:'batch',commands});
+      const checks=[];
+      assert.equal(await measurePlate(cad,task,1,checks,'Gegenmodell'),false);
+      assert.equal(checks.at(-1).passed,false);
+      assert.equal(checks.at(-1).label,'Gegenmodell · '+(fault==='floor'?'volume':'bore'));
+    } finally { cad.dispose(); }
+  }
+});
+
+test('Trimmed CAD answer contract still drives a native preview and leaves the confirmed model and Undo untouched', async () => {
+  const cad = controller(), original = global.fetch;
+  try {
+    await cad.execute({kind:'batch',commands:[{op:'create',type:'box',as:'plate',size:[40,30,10]}]});
+    const before = cad.serialize(), depth = cad.state().undo, scene = await cad.describe(), access = createCadAutomationAccess({controller:cad,getScene:()=>scene}), bodies = [];
+    try {
+      global.fetch = async (_url,options) => {
+        bodies.push(JSON.parse(options.body));
+        const payload = JSON.stringify({revision:cad.revision(),label:'Vertrag native',commands:[{op:'create',type:'box',as:'part',size:[20,20,10],pos:[0,0,5]}]});
+        return new Response(JSON.stringify({output:[{type:'message',content:[{type:'output_text',text:payload}]}]}));
+      };
+      const outcome = await runCadAIRequest({
+        input:{prompt:'Setze einen zweiten Körper'},
+        visualReview:false,
+        access,
+        generate:args=>generate({protocol:'responses',baseUrl:'https://api.deepseek.com',model:'deepseek-flash'},'synthetic-fixture',args),
+      });
+      assert.equal(bodies.length,1);
+      const {wire,contract} = readVerificationContract(bodies[0].instructions,'');
+      assert.equal(wire.requestSchema.$ref,'#/commandSchema');
+      for (const key of ['saveSchema','applySchema','exportSchema','statusSchema','automationJobs','endpoints'])
+        assert.equal(wire[key],undefined,key+' stays out of the normal CAD answer contract');
+      assert.ok(contract.requestSchema.properties.commands.items.oneOf.length>20);
+      assert.equal(contract.requestSchema.properties.responseDetail,undefined);
+      assert.ok(outcome.proposal.previewId);
+      assert.equal(cad.serialize(),before);
+      assert.equal(cad.state().undo,depth);
+      cad.discard(outcome.proposal.previewId);
+    } finally { global.fetch = original; }
+  } finally {
+    global.fetch = original;
+    cad.dispose();
+  }
 });

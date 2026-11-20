@@ -44,6 +44,37 @@ function Confirm-TrustedArchiveEntry($Entry, $Identity) {
   }
 }
 
+function Expand-LabDelta($Payload, [string]$Base, [string]$Output, [long]$TargetSize) {
+  $reader = [IO.BinaryReader]::new($Payload.Open())
+  $source = [IO.File]::OpenRead($Base)
+  $dest = [IO.File]::Open($Output,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+  try {
+    if ([Text.Encoding]::ASCII.GetString($reader.ReadBytes(8)) -cne 'FNLAB001') { throw 'Invalid lab delta header.' }
+    $buffer = [byte[]]::new(65536)
+    while ($dest.Position -lt $TargetSize) {
+      $kind = $reader.ReadByte()
+      if ($kind -eq 1) {
+        $offset = $reader.ReadInt32()
+        $size = $reader.ReadInt32()
+        if ($offset -lt 0 -or ([long]$offset + $size) -gt $source.Length) { throw 'Invalid base range.' }
+        $source.Position = $offset
+        $inputStream = $source
+      } elseif ($kind -eq 0) {
+        $size = $reader.ReadInt32()
+        $inputStream = $reader.BaseStream
+      } else { throw 'Invalid lab delta record.' }
+      if ($size -le 0 -or $dest.Position + $size -gt $TargetSize) { throw 'Invalid lab delta size.' }
+      while ($size -gt 0) {
+        $count = $inputStream.Read($buffer,0,[Math]::Min($size,$buffer.Length))
+        if ($count -le 0) { throw 'Incomplete lab delta.' }
+        $dest.Write($buffer,0,$count)
+        $size -= $count
+      }
+    }
+    if ($reader.BaseStream.ReadByte() -ne -1) { throw 'Trailing lab delta bytes.' }
+  } finally { $dest.Dispose(); $source.Dispose(); $reader.Dispose() }
+}
+
 $program = Require-LocalPath $PrivateTestCopy $true
 $resources = Require-LocalPath (Join-Path $program 'resources') $true
 $exe = Require-LocalPath (Join-Path $program 'Formnaro.exe')
@@ -61,16 +92,17 @@ try {
   if ($zipHash -ne $ExpectedZipSha256) { throw 'Patch ZIP SHA-256 differs.' }
   $zipFile.Position = 0
   $archive = [IO.Compression.ZipArchive]::new($zipFile,[IO.Compression.ZipArchiveMode]::Read,$true)
-  $validNames = @('Manifest.json','app.asar')
+  $payloadName = if ($archive.GetEntry('Labor.delta')) { 'Labor.delta' } else { 'app.asar' }
+  $validNames = @('Manifest.json',$payloadName)
   if ($archive.Entries.Count -ne 2 -or ($archive.Entries.FullName | Where-Object { $_ -cnotin $validNames })) {
     throw 'Unexpected patch contents.'
   }
   $manifestEntry = $archive.GetEntry('Manifest.json')
-  $payload = $archive.GetEntry('app.asar')
+  $payload = $archive.GetEntry($payloadName)
   if (!$manifestEntry -or !$payload -or $manifestEntry.Length -gt 16384) { throw 'Invalid patch entries.' }
   $reader = [IO.StreamReader]::new($manifestEntry.Open())
   try { $manifest = $reader.ReadToEnd() | ConvertFrom-Json } finally { $reader.Dispose() }
-  if ($manifest.format -cne 'FormnaroPrivateAsarPatch' -or $manifest.version -ne 1 -or $manifest.platform -cne 'win32-x64' -or
+  if ($manifest.format -cne 'FormnaroPrivateAsarPatch' -or (($manifest.version -ne 1 -or $payloadName -ne 'app.asar') -and ($manifest.version -ne 2 -or $payloadName -ne 'Labor.delta')) -or $manifest.platform -cne 'win32-x64' -or
       $manifest.baseCommit -cnotmatch '^[a-f0-9]{40}$' -or $manifest.sourceCommit -cnotmatch '^[a-f0-9]{40}$') {
     throw 'Unsupported patch manifest.'
   }
@@ -81,7 +113,8 @@ try {
     }
   }
   if ($manifest.baseArchive.sha256 -eq $manifest.targetArchive.sha256) { throw 'The patch contains the existing archive.' }
-  Confirm-TrustedArchiveEntry $payload $manifest.targetArchive
+  if ($manifest.version -eq 2) { Confirm-TrustedArchiveEntry $payload $manifest.delta }
+  else { Confirm-TrustedArchiveEntry $payload $manifest.targetArchive }
   Confirm-Closed
   $before = $manifest.baseArchive
   $after = $manifest.targetArchive
@@ -94,6 +127,15 @@ try {
   if (Test-Path -LiteralPath $lockPath) { [void](Require-LocalPath $lockPath) }
   $lock = [IO.File]::Open($lockPath,[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
   $backup = Join-Path $resources ('app.asar.before-' + $manifest.targetArchive.sha256)
+  if (Test-Path -LiteralPath $backup) {
+    [void](Require-LocalPath $backup)
+    $baseIdentity = $manifest.baseArchive
+    if ((Get-Item -LiteralPath $backup).Length -ne $baseIdentity.bytes -or
+        (Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash -ne $baseIdentity.sha256) {
+      # The same target may be reached from several valid starting archives.
+      $backup = Join-Path $resources ('app.asar.before-' + $manifest.targetArchive.sha256 + '-from-' + $baseIdentity.sha256.Substring(0,16))
+    }
+  }
   if ($Mode -eq 'Rollback') {
     $backup = Require-LocalPath $backup
     Confirm-Identity $backup $after
@@ -105,7 +147,8 @@ try {
       Confirm-Identity $backup $before
     }
     $stage = Join-Path $resources ('app.asar.pending-' + [guid]::NewGuid())
-    [IO.Compression.ZipFileExtensions]::ExtractToFile($payload,$stage)
+    if ($manifest.version -eq 2) { Expand-LabDelta $payload $asar $stage $after.bytes }
+    else { [IO.Compression.ZipFileExtensions]::ExtractToFile($payload,$stage) }
   }
 
   Confirm-Identity $stage $after

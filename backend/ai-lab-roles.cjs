@@ -1,6 +1,8 @@
 const fs=require('node:fs'),path=require('node:path');
 const {validateConfig}=require('./ai-provider.cjs');
 const {reasoningEfforts,requestEffort}=require('./ai-reasoning.cjs');
+const {findCatalogModel}=require('./ai-models.cjs');
+const {modelForReasoning}=require('./mistral-api-models.cjs');
 const ROLES=['modeler','supervisor','reviewer'];
 const EFFORTS=['auto','none','minimal','low','medium','high','xhigh','max','enabled','disabled'];
 function validateSelection(value={},role){
@@ -42,21 +44,22 @@ function createLabRoles({directory,credentials,provider,connections,onChange=()=
   else{const raw=await provider.testConnection(validateConfig(c.config),c.key,signal),details=raw.details??raw.models.map(id=>({id}));result={hasKey:!!c.key||['localhost','127.0.0.1','[::1]'].includes(new URL(c.config.baseUrl).hostname),models:require('./ai-models.cjs').modelCatalog(c.config,details),availableModelIds:raw.models};}
   if(result.error)throw Error(result.error);
   if(!result.hasKey)throw Error('Zugangsprofil zuerst einrichten oder anmelden.');
-  const value=redact({providerId:id,defaultModel:c.config.model,models:result.models.map(m=>({id:m.id,name:m.name??m.id,vision:m.vision??null,reasoningEfforts:m.reasoningEfforts??reasoningEfforts({...c.config,model:m.id},m),supported_reasoning_levels:m.reasoningEfforts??reasoningEfforts({...c.config,model:m.id},m)})),availableModelIds:result.availableModelIds??result.models.filter(m=>!m.current).map(m=>m.id)});
+  const value=redact({providerId:id,defaultModel:findCatalogModel(result.models,c.config.model)?.id??c.config.model,models:result.models.map(m=>({id:m.id,name:m.name??m.id,...(m.aliases?{aliases:m.aliases}:{}),...(m.reasoningModelIds?{reasoningModelIds:m.reasoningModelIds}:{}),vision:m.vision??null,reasoningEfforts:m.reasoningEfforts??reasoningEfforts({...c.config,model:m.id},m),supported_reasoning_levels:m.reasoningEfforts??reasoningEfforts({...c.config,model:m.id},m)})),availableModelIds:result.availableModelIds??result.models.filter(m=>!m.current).map(m=>m.id)});
   return value;
  }
  async function resolve(role,selection,{signal,seriesEfforts=['high'],monitor}={}){
   selection=validateSelection(selection??selections[role],role);
   const stored=getConnection(selection.providerId),config=validateConfig({...stored.config,webResearchAllowed:false}),cat=await catalog(selection.providerId,{signal});
-  const model=selection.model||((new URL(config.baseUrl).hostname==='api.deepseek.com'&&cat.availableModelIds.includes('deepseek-flash'))?'deepseek-flash':config.model);
-  if(!model||!cat.availableModelIds.includes(model))throw Error('Modell ist für dieses Zugangsprofil nicht verfügbar: '+model);
-  const detail=cat.models.find(m=>m.id===model),base={...config,model},efforts=selection.effort==='series'?seriesEfforts:[selection.effort==='monitor'?(monitor?.effort??'low'):selection.effort];
+  const requestedModel=selection.model||((new URL(config.baseUrl).hostname==='api.deepseek.com'&&cat.availableModelIds.includes('deepseek-flash'))?'deepseek-flash':config.model);
+  const detail=findCatalogModel(cat.models,requestedModel),model=detail?.id??requestedModel;
+  if(!model||!cat.availableModelIds.includes(model))throw Error('Modell ist für dieses Zugangsprofil nicht verfügbar: '+requestedModel);
+  const base={...config,model},efforts=selection.effort==='series'?seriesEfforts:[selection.effort==='monitor'?(monitor?.effort??'low'):selection.effort];
   // Validate every requested condition before the first modeling request.
   for(const e of efforts)applyEffort(base,e,detail);
   const credential=async signal=>{signal?.throwIfAborted();const key=connections?.credential?await connections.credential(base,stored.key,signal):stored.key;if(key)secrets.add(key);return key;};
   const key=await credential(signal);
   const resolved={providerId:cat.providerId,config:base,key,credential,detail,selection};
-  resolved.forEffort=e=>{const chosen=selection.effort==='series'?e:selection.effort==='monitor'?(monitor?.effort??'low'):selection.effort;const applied=applyEffort(base,chosen,detail);return {...resolved,...applied,public:publicConnection(resolved,applied.effort,chosen)};};
+  resolved.forEffort=e=>{const chosen=selection.effort==='series'?e:selection.effort==='monitor'?(monitor?.effort??'low'):selection.effort;const applied=applyEffort(base,chosen,detail);return {...resolved,...applied,config:modelForReasoning(applied.config,detail,applied.effort),public:publicConnection(resolved,applied.effort,chosen)};};
   return resolved.forEffort(efforts[0]);
  }
  return {state,redact,catalog,resolve,selection:role=>structuredClone(selections[role]),

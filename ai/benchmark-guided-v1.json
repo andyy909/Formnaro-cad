@@ -1,0 +1,198 @@
+{
+  "id": "formnaro-practice-guided",
+  "label": "Vormachen",
+  "version": "1.0.1",
+  "ladder": true,
+  "knownDevelopmentTasks": true,
+  "limits": {
+    "seconds": 600,
+    "outputTokens": 16384,
+    "rounds": 30,
+    "formatRepairs": 2,
+    "requestBudget": 1000
+  },
+  "cases": [
+    {
+      "id": "V01",
+      "caseId": "practice-01",
+      "label": "Einen Quader verschieben",
+      "taskHash": "3c6b0f784e69ba044a553b105bb442d20ce0723ddec62e30b84d7e110cd0dde7"
+    },
+    {
+      "id": "V02",
+      "caseId": "drill",
+      "label": "Mittige Durchgangsbohrung",
+      "taskHash": "dda61eb79f03bd1b7d77e6668eb905dc59651f7d5aa2744abe17700e8860a7d5"
+    },
+    {
+      "id": "V03",
+      "caseId": "pattern",
+      "label": "Ein Teil als Kreismuster vervielfältigen",
+      "taskHash": "f5da1e5f7899313d4011883c1bd53db97cd23eaa780366e1c77801def2bcf8c5"
+    },
+    {
+      "id": "V04",
+      "caseId": "advanced-01",
+      "label": "Drei asymmetrische Bohrungen",
+      "taskHash": "61fa244734c9a8d03e9794f19f41807ac6670e85f3e5af44a35c185c76e36ac5"
+    },
+    {
+      "id": "V05",
+      "caseId": "advanced-03",
+      "label": "Gebohrte Hülsen im versetzten Muster",
+      "taskHash": "2431fb17166c8509909fe946bace5f9fd2c3f9d819a1366b508d310b70dfe2f7"
+    },
+    {
+      "id": "V06",
+      "caseId": "advanced-05",
+      "label": "Gehäuse aushöhlen und seitlich öffnen",
+      "taskHash": "afceb1aa64b5dea51df85c8c6c85ef74ee686b2e32fc1805602200c6cf5dcce8"
+    },
+    {
+      "id": "V07",
+      "caseId": "advanced-07",
+      "label": "Bearbeitbare L-Skizze mit zwei Innenkonturen",
+      "taskHash": "34f893a41a1a9c221961f660170982cc956b7c1fd7d57595e537edb54c57427e"
+    },
+    {
+      "id": "V08",
+      "caseId": "advanced-08",
+      "label": "Technische Zeichnung mit Schnitt und Bezugsmaßen",
+      "taskHash": "26cd389b56c12fa145a6ae32d7cada418998c29be5c0feb9064bc165e2099c1a"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": "backend/ai-practice-function-evaluate.cjs",
+      "sha256": "a0da5955d43f03bfb87aaae7de1631b1380c336c206cfe7fd644144b6555e039"
+    },
+    {
+      "path": "backend/ai-diagnostic-evaluate.cjs",
+      "sha256": "611ac2a6f2c43ed2579268dc9b4a3f8df159ae372304e717511d4b44473a6d76"
+    },
+    {
+      "path": "backend/ai-diagnostic-assembly.cjs",
+      "sha256": "4f01099b49de84b2e856fb3aac50c4b6af749c85b3030ebd18e43b1e4f45b8ba"
+    },
+    {
+      "path": "backend/ai-practice-context.cjs",
+      "sha256": "e203ec4a385deeb06abc2c18483482a59c43e049e87b52c187435896b8a2ceaa"
+    },
+    {
+      "path": "backend/ai-practice-prompt.cjs",
+      "sha256": "f3666eef4124da4e429b08a2dab51ce14de1f31eb1f44f8c8063f766411f7c43"
+    },
+    {
+      "path": "backend/practice-result-checks.cjs",
+      "sha256": "c3290e9a1dc2b45c80208cc6364343a6c7f59bf6d54d3dd7b2eb1c8b3d094be0"
+    },
+    {
+      "path": "ai/formnaro-tool-reference.mjs",
+      "sha256": "38de0ee9a1b1a43045e39345dd37440f2e3e4a5fb069a9b63485b0f01fa7cff7"
+    },
+    {
+      "path": "ai/formnaro-solid-labels.mjs",
+      "sha256": "4db013c5c35cf0875f0eb1af2d372d9f5f972c5de25a3a315e2c7e765e17acfc"
+    },
+    {
+      "path": "ai/practice-plan-feedback.mjs",
+      "sha256": "4f224ee3d8565c3a96d689626dcec1f9bab8c7ad133e8b07e31126dee44b162f"
+    },
+    {
+      "path": "src/cad-service.js",
+      "sha256": "3949ce0a6eaa8aa9fff8cebbd2b883bc91eb0b0ee48a59d4ba1b0a86f54afd48"
+    },
+    {
+      "path": "src/cad-drill-stock-native.js",
+      "sha256": "570c00945d9b02f8fcb2c904a6799c85b8703c0600362d3478242503ea7741fc"
+    },
+    {
+      "path": "src/cad-bore-check-native.js",
+      "sha256": "49a4b406e488b8366cabd701df29add54079c6939c2cdb2220a12006cae241e5"
+    },
+    {
+      "path": "src/cad-practice-model-ui.js",
+      "sha256": "55d30ce556637d5e0726e99e925db25e5f0ae78ede320fd873fd61faf3df2f53"
+    },
+    {
+      "path": "backend/ai-lab-review-data.cjs",
+      "sha256": "3a358282058513f87f33a2c4474508445fce10c8d0c346e0675d5e37608cc301"
+    },
+    {
+      "path": "backend/ai-diagnostics.cjs",
+      "sha256": "299fa8e267b53cda263603aa77174aedf8fbb8513831512e291b05f3abde5004"
+    },
+    {
+      "path": "src/cad-practice-controls.js",
+      "sha256": "76172d1409fcf2935b201d66b2d557173b05f49adb1170222182f6c782c4463e"
+    },
+    {
+      "path": "backend/practice-child.cjs",
+      "sha256": "d878eaa3a8b9ff392408ba667115dfe5d1308ae13d085a625720dbc3ca545bfa"
+    },
+    {
+      "path": "backend/practice-runner.cjs",
+      "sha256": "134612e1f114b59b0cc8291ec6c9736780c9ab32829d2ea7c6e9a4ba4b009899"
+    },
+    {
+      "path": "src/cad-agent-ui-policy.js",
+      "sha256": "442e21d5f0db858dbc14638c44294afa86de03300babc11ce73f9cf172066440"
+    },
+    {
+      "path": "backend/desktop-ai.cjs",
+      "sha256": "40998c6be044efdac6733f4333e55c170a509858246e9197d20b9f76f02c8151"
+    },
+    {
+      "path": "backend/ai-lab-storage.cjs",
+      "sha256": "d55c2482acc689953c6fd94407f6fd2a0edd1b6f1f0dc18342990391456d1ee6"
+    },
+    {
+      "path": "backend/ai-task-atomic.cjs",
+      "sha256": "ee952e2437b68d0a7e0262613b0d1b51e69e38c97cf4aad1c2b04e20b276798f"
+    },
+    {
+      "path": "backend/ai-lab-response.cjs",
+      "sha256": "0a52f5168cbff310ef52aa829d39fe751ac729d49f88036ac54ab9904fb8243f"
+    },
+    {
+      "path": "backend/ai-lab-reviewer.cjs",
+      "sha256": "e8f0db854572518bcbd96a661d86e8a80e10067ff7c516b976ca5e6913ee38aa"
+    },
+    {
+      "path": "backend/ai-diagnostic-child.cjs",
+      "sha256": "1c3021e11bea9a99b2261ff490aa48bb04fa744b4ac656f6efd3bf7de74d4c85"
+    },
+    {
+      "path": "src/cad-ai-analysis.js",
+      "sha256": "b05d5d8f4ad02cfdc2597c151aa4fe0dc05fd0936ffbff38d667d3444730c1de"
+    },
+    {
+      "path": "src/cad-ai-result-checks.js",
+      "sha256": "198fe355df644f360499d533ff1a465115f3dfaaa3c6c00d7866038a289e1645"
+    },
+    {
+      "path": "ai/formnaro-fusion-labels.mjs",
+      "sha256": "6f5021d8c0879156ca11022879c222248496a0b681322b8fb86199563833f038"
+    },
+    {
+      "path": "backend/ai-benchmark-advanced-cases.cjs",
+      "sha256": "3b851a92300f05c305f10b43928c279732be008a8648cfab9be923a2e537dfc4"
+    },
+    {
+      "path": "backend/ai-benchmark-advanced-evaluate.cjs",
+      "sha256": "24be67a910ff5e194f01d2e6e085713fb5e68c8da8ae97d98febf38a7ee31b9f"
+    },
+    {
+      "path": "backend/ai-test-lab-cases.cjs",
+      "sha256": "1edcc75587824fef1b97ef409ba0f85f7dd1a6088ec522fc8b7a4b77075a11f1"
+    },
+    {
+      "path": "backend/ai-test-lab-plan.cjs",
+      "sha256": "284c5e6d9108aa1f289b69d237c0057dc9ef8360b55449bdd9fc9b3d7af8a59d"
+    },
+    {
+      "path": "ai/benchmark-advanced-calibration-v2.json",
+      "sha256": "247f9e5ef32075370b1af42d5125d45c235fa35d3f5d1d8e66975b3449648ad8"
+    }
+  ]
+}

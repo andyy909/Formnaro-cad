@@ -73,6 +73,8 @@ auch beim Fortsetzen desselben Auftrags verwendet.
   Prüfungen ohne entsprechend auswertbaren Zahlenbefund bleiben streng.
 - **100:** Ursprüngliche Anforderungen und Toleranzen werden streng geprüft.
 
+Der Dialog zeigt den Faktor auf höchstens zwei Nachkommastellen gerundet an; die numerische Prüfung rechnet weiterhin mit dem genauen Wert `100 / Reglerwert`.
+
 Der Regler gilt für die interne KI-Auftragsverarbeitung. Explizite externe
 API-Prüfaufträge behalten ihren strengen Vertrag. Dateischemata,
 Revisionsprüfung, geschützte Quellen, geerbte Sperren, ausführbare

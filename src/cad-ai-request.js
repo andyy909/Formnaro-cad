@@ -11,6 +11,7 @@ import { validateAIAnalysis, compactAIAnalysisResult } from './cad-ai-analysis.j
 import { aiFeedback, correctionFeedback } from './ai-feedback.js';
 import { validateAIResultChecks } from './cad-ai-result-checks.js';
 import { compactAIRequestContext, createAITaskEvidence } from './cad-ai-task-evidence.js';
+import { cadAIRequestScene } from './cad-ai-program-context.js';
 import { createPhotoTask, addPhotoImages } from './cad-photo-task.js';
 import {
   createAITaskProgress,
@@ -39,6 +40,7 @@ export async function runCadAIRequest({
   onCorrection = () => {},
   onAnalysis = () => {},
   onVisualReview = () => {},
+  onModelVerification = () => {},
   onCandidate = async () => {},
   visualReview = true,
   maxCorrections,
@@ -46,6 +48,7 @@ export async function runCadAIRequest({
   requirements,
   purpose = requirements?.purpose ?? 'technical',
   onProgress,
+  benchmark,
   resume,
   restoreOnly = false,
 }) {
@@ -228,6 +231,21 @@ export async function runCadAIRequest({
     }
     return scene;
   }
+  function correctionMessage(error, result) {
+    const feedback = correctionFeedback(error, result);
+    if (!benchmark) return feedback;
+    const rootId = error.rootId ?? error.feedback?.rootId ?? error.feedback?.target?.rootId;
+    if (error.code === 'JOINT_REFERENCE_LOST' && typeof rootId === 'string' && /^[a-z0-9_-]{1,80}$/i.test(rootId)) {
+      const alias = result?.commands?.some((command) => command.as === rootId);
+      return feedback + '\nMissing joint part: ' + rootId +
+        (alias ? '. To reference the part created earlier in this batch, use $' + rootId + '.' : '.');
+    }
+    if (result?.commands?.some((command) => command.op === 'drawing') && /Blatt aktualisieren/.test(error.message)) {
+      return feedback + '\nAfter updating the sheet definition, use {op:"drawing",action:"update",sheetId:the sheet ID}.';
+    }
+    return feedback;
+  }
+
   async function observed(phase) {
     current();
     if (typeof onProgress !== 'function') return;
@@ -454,7 +472,7 @@ export async function runCadAIRequest({
         result,
         preparedProposal;
       try {
-        if (typeof access.sceneForAI === 'function') {
+        if (!programHelpBudget && typeof access.sceneForAI === 'function') {
           scene = await access.sceneForAI();
           current();
         }
@@ -528,7 +546,7 @@ export async function runCadAIRequest({
           },
           scene: practiceTask
             ? { revision: scene.revision, objects: [], selectionTargets: [], practiceIsolated: true }
-            : scene,
+            : cadAIRequestScene(scene, { programHelpOnly: requestContext.programHelpOnly === true }),
           correction,
           ...(analysisResults.length ? { analysisResults } : {}),
         });
@@ -911,6 +929,10 @@ export async function runCadAIRequest({
           const next = { requests: successfulRequests, ...measured };
           compactAIAnalysisResult([...analysisResults, next], extended ? 256000 : 32000);
           analysisResults.push(next);
+          if (benchmark?.acceptMeasurement && requests.every(({ id }) => measured.results?.some((result) =>
+            result.id === id && result.value != null && !result.error))) {
+            benchmark.acceptMeasurement(requests.map(({ id, engine, kind }) => ({ id, engine, kind })));
+          }
           const stalled = progress.analysis(requests, measured);
           if (!stalled) correction = '';
           await observed(stalled ? 'stopped' : 'analysis');
@@ -972,6 +994,7 @@ export async function runCadAIRequest({
           compareAIQuality(aiCandidateQuality(proposal), aiCandidateQuality(retained.proposal)) < 0
         ) {
           try {
+            benchmark?.recordCandidate(proposal);
             await onCandidate(proposal);
             current();
           } catch (error) {
@@ -990,6 +1013,7 @@ export async function runCadAIRequest({
             proposal.independentCheck = { status: 'unavailable', reason: error.message };
           }
         }
+        onModelVerification(proposal);
         if (proposal.verification)
           proposal.verification.modellingPolicy = aiStrictnessDecision(proposal.verification, modelPolicy.strictness);
         // A later failed correction must not evict an already better usable draft.
@@ -1131,6 +1155,7 @@ export async function runCadAIRequest({
             /TIMEOUT/.test(error.code ?? '') ||
             /timed out/i.test(error.message);
         if (!interrupted && error.code !== 'AI_TASK_STALLED') {
+          if (!/^LAB_/.test(error.code ?? '')) benchmark?.recordFailure(error);
           lastFailure = aiFeedback(error);
           taskEvidence.failed(attempt + 1, error, result);
           const stalled = progress.failed(error, result);
@@ -1150,13 +1175,13 @@ export async function runCadAIRequest({
         if (stop || (!result && !error.aiRetryable) || used >= limit) {
           if (retained && !interrupted) return await finish(error);
           if (!interrupted) {
-            correction = correctionFeedback(error, result);
+            correction = correctionMessage(error, result);
             await observed('failure');
           }
           if (lastResult) error.aiResponse = lastResult;
           throw error;
         }
-        correction = correctionFeedback(error, result);
+        correction = correctionMessage(error, result);
         if (visualInput && retained) retained.proposal.visualReview = { status: 'incomplete', reason: error.message };
         if (qualityFailure) qualityCorrections++;
         else technicalRepairs++;

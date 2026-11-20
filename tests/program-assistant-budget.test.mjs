@@ -15,7 +15,7 @@ test('Local help can find navigation controls already registered in the target c
  assert(searchProgramHelp('KI Verbrauch').some(row=>row.id==='settings:usage'));
 });
 
-const scene={revision:'fixture',selectionTargets:[]};
+const scene={revision:'fixture',selection:['plate'],selectionTargets:[{rootId:'plate',path:[]}],objects:[{id:'plate',target:{rootId:'plate',path:[]},name:'Platte',kind:'cad',worldBounds:{size:[40,30,6]},volume:7200},{id:'other',target:{rootId:'other',path:[]},name:'Anderes Teil',kind:'cad',worldBounds:{size:[10,10,10]},volume:1000}]};
 const access=()=>({programOnly:true,scene:()=>scene,context:()=>({}),programAssistant:{execute:async value=>({documentation:[{label:value.query??'shown'}],ui:{mode:'normal'}})}});
 
 for(const maxSteps of [24,80])test(`Navigation cannot spend the ${maxSteps}-step modelling budget on repeated help`,async()=>{
@@ -62,14 +62,29 @@ test('Invalid paid provider replies count toward the three navigation generation
 });
 
 for(const initial of [{commands:[{op:'create',as:'untrusted'}]},{analysis:[{id:'untrusted',engine:'cad',kind:'measure'}]},{assistant:{kind:'demonstrate',title:'untrusted',stages:[{text:'untrusted',commands:[{op:'create'}]}]}}])test(`A compact navigation reply cannot execute ${Object.keys(initial)[0]} before the full modelling contract is sent`,async()=>{
- let calls=0,previews=0;const app=access();
+ let calls=0,previews=0,fullSceneReads=0;const app=access();
+ const fullScene={...scene,referencePoints:[{id:'native-point',xyz:[1,2,3]}]};
+ app.sceneForAI=async()=>{fullSceneReads++;return fullScene;};
  app.context=options=>options?.programHelpOnly?{programHelpOnly:true,programAssistant:{}}:{commandSchema:{marker:'full'}};
  app.preview=async request=>{previews++;assert.equal(request.commands[0].as,'checked');return {revision:scene.revision,previewId:'checked',verification:{passed:true,checks:[]}};};
  app.analyze=()=>{throw Error('Compact measurements must not run');};
  app.programAssistant.demonstrate=()=>{throw Error('Compact demonstrations must not run');};
  const result=await runCadAIRequest({maxSteps:24,input:{prompt:'Zeig mir ein Werkzeug'},access:app,generate:async args=>{
-  if(++calls===1){assert.equal(args.context.programHelpOnly,true);return {revision:scene.revision,...initial};}
-  assert.equal(args.context.commandSchema.marker,'full');assert.match(args.correction,/nicht ausgeführt/);
+  if(++calls===1){
+   assert.equal(args.context.programHelpOnly,true);
+   assert.equal(args.scene.revision,scene.revision);
+   assert.deepEqual(args.scene.selectionTargets,scene.selectionTargets);
+   assert.deepEqual(args.scene.selectionDescription,[{target:{rootId:'plate',path:[]},name:'Platte',kind:'cad'}]);
+   assert.equal(args.scene.objects,undefined);
+   assert.equal(fullSceneReads,0,'Navigation skips the native reference query');
+   return {revision:scene.revision,...initial};
+  }
+  assert.equal(args.context.commandSchema.marker,'full');
+  assert.deepEqual(args.context.commandSchema,{marker:'full'});
+  assert.equal(args.context.programHelpOnly,undefined);
+  assert.deepEqual(args.scene,fullScene,'Modelling fallback receives the normal scene with native references');
+  assert.equal(fullSceneReads,1);
+  assert.match(args.correction,/nicht ausgeführt/);
   return {revision:scene.revision,commands:[{op:'create',as:'checked'}]};
  }});
  assert.equal(calls,2);assert.equal(previews,1);assert.equal(result.proposal.previewId,'checked');

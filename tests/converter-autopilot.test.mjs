@@ -53,6 +53,12 @@ test('Selected correction sends only targets and real edge neighbours after pres
  assert.equal(r.result,improved);
  assert.equal(r.outcome,'improved');
  assert.deepEqual(h.calls[0].scene.targets,[10]);
+ assert.equal(h.calls[0].scene.units,'mm');
+ assert.match(h.calls[0].context.coordinateConvention,/minimum and maximum.*millimetres/);
+ assert.deepEqual(h.calls[0].scene.overview.boundsMM,[[0,0,0],[9,2,0]]);
+ assert.deepEqual(h.calls[0].scene.regions.map(region=>region.boundsMM),[
+   [[0,0,0],[2,2,0]],[[0,0,0],[2,2,0]],
+ ]);
  assert.deepEqual(h.calls[0].scene.regions.map(r=>r.id),[10,11]);
  assert.deepEqual(h.local.map(x=>x[0]),['convert','analyse','convert']);
  assert.equal(h.local[2][1].tolerance,h.local[0][1].tolerance);

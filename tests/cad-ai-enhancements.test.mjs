@@ -6,7 +6,7 @@ import {summarizeAIUsage,formatAIUsage} from '../src/cad-ai-usage.js';
 const require=createRequire(import.meta.url),{generate,validateConfig}=require('../backend/ai-provider.cjs'),{aiUsage}=require('../backend/ai-usage.cjs'),{createAIProfiles}=require('../backend/ai-profiles.cjs');
 test('DeepSeek effort maps to both protocols; other providers retain their original request options',async()=>{
  const previous=global.fetch,calls=[];global.fetch=async(url,args)=>{const body=JSON.parse(args.body);calls.push(body);return new Response(JSON.stringify(body.messages?{choices:[{finish_reason:'stop',message:{content:'{"message":"OK"}'}}],usage:{prompt_tokens:100,completion_tokens:50,prompt_cache_hit_tokens:80,completion_tokens_details:{reasoning_tokens:30}}}:{output:[{type:'message',content:[{type:'output_text',text:'{"message":"OK"}'}]}],usage:{input_tokens:100,output_tokens:50,input_tokens_details:{cached_tokens:80},output_tokens_details:{reasoning_tokens:30}}}));};
- try{for(const protocol of ['responses','chat'])for(const reasoningEffort of ['low','high','max']){const r=await generate({baseUrl:'https://api.deepseek.com',model:'deepseek-flash',protocol,reasoningEffort},'fixture',{prompt:'Explain',context:{},scene:{revision:'now'},chat:true});const b=calls.at(-1);assert.equal(protocol==='responses'?b.reasoning.effort:b.reasoning_effort,reasoningEffort);assert.equal(r.usage.reasoningTokens,30);assert.equal(r.usage.outputTokens,50);assert.equal(r.usage.cachedInputTokens,80);assert.ok(r.usage.estimatedCostUSD.min>0);}
+ try{for(const protocol of ['responses','chat'])for(const reasoningEffort of ['none','low','high','max']){const r=await generate({baseUrl:'https://api.deepseek.com',model:'deepseek-flash',protocol,reasoningEffort},'fixture',{prompt:'Explain',context:{},scene:{revision:'now'},chat:true});const b=calls.at(-1);assert.equal(protocol==='responses'?b.reasoning.effort:b.reasoning_effort,reasoningEffort);if(protocol==='chat')assert.equal(b.thinking.type,reasoningEffort==='none'?'disabled':'enabled');assert.equal(r.usage.effort,reasoningEffort);assert.equal(r.usage.reasoningTokens,30);assert.equal(r.usage.outputTokens,50);assert.equal(r.usage.cachedInputTokens,80);assert.ok(r.usage.estimatedCostUSD.min>0);}
  await generate({baseUrl:'https://example.invalid',model:'custom',protocol:'responses'},'fixture',{prompt:'Explain',context:{},scene:{revision:'now'},chat:true});assert.equal(calls.at(-1).reasoning,undefined);assert.equal(validateConfig({}).reasoningEffort,'high');assert.throws(()=>validateConfig({reasoningEffort:'unsupported'}));
  }finally{global.fetch=previous;}
 });
@@ -17,6 +17,15 @@ test('Usage counts reasoning within output, preserves unknown values and totals 
 });
 test('Effort selection persists per provider without rewriting or exposing encrypted keys',()=>{
  const encryptedKey='encrypted-fixture';let saved;const p=createAIProfiles({stored:{config:{baseUrl:'https://api.deepseek.com',model:'deepseek-flash',rememberKey:true},encryptedKey},canEncrypt:()=>true,decrypt:()=> 'fixture-secret',encrypt:()=>{throw Error('Should retain ciphertext');},persist:v=>{saved=v;}});p.selectEffort('max');assert.equal(saved.encryptedKey,encryptedKey);p.selectProvider('https://api.openai.com');assert.equal(p.publicSettings().reasoningEffort,'high');p.selectProvider('https://api.deepseek.com');assert.equal(p.publicSettings().reasoningEffort,'max');assert.ok(!JSON.stringify(p.publicSettings()).includes('fixture-secret'));
+});
+test('Existing DeepSeek Pro sessions restart on Flash and keep manual model changes during the session',()=>{
+ const config={baseUrl:'https://api.deepseek.com',model:'deepseek-v4-pro',reasoningEffort:'low'},other={baseUrl:'https://example.com',model:'other-model'};
+ let stored={config:other,profiles:[{config}]};
+ const open=()=>createAIProfiles({stored,canEncrypt:()=>false,persist:v=>{stored=v;}});
+ const first=open();assert.equal(first.active().config.model,'other-model');
+ assert.equal(first.selectProvider(config.baseUrl).model,'deepseek-flash');
+ assert.equal(first.selectModel('deepseek-v4-pro').model,'deepseek-v4-pro');
+ const next=open();assert.equal(next.active().config.model,'deepseek-flash');assert.equal(next.active().config.reasoningEffort,'low');
 });
 function fixture(){let revision='current',selection=[],commits=0,discards=[];return {access:{scene:()=>({revision,selectionTargets:selection}),context:()=>({units:'mm'}),preview:async r=>{if(r.commands[0].target==='bad')throw Error('CAD target missing');return {previewId:'checked',revision};},discard:id=>discards.push(id),apply:()=>commits++},change:()=>{revision='changed';},select:()=>{selection=[{rootId:'other',path:[]}];},discards,get commits(){return commits;}};}
 test('Failed native proposal repairs once with current context, original task and no Apply',async()=>{

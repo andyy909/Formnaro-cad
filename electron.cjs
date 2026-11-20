@@ -1,7 +1,7 @@
 // If a future runtime disables Node mode, fail closed before opening any
 // normal application profile when the internal integrity child is launched.
 if(process.env.FORMNARO_INTEGRITY_CHILD==='1')process.exit(125);
-const { app, BrowserWindow, Menu, session } = require('electron');
+const { app, BrowserWindow, Menu, session, nativeTheme } = require('electron');
 // Opaque Python frames have their own renderer process. Keep those computation
 // processes at normal priority even when an external assistant covers the UI.
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
@@ -29,7 +29,7 @@ app.whenReady().then(async () => {
     callback({ cancel: /^https?:/i.test(details.url) });
   });
   const win = new BrowserWindow({ show:!verifyPath&&!diagnosticChild&&!backgroundPractice, width: 1500, height: 950, minWidth: 1000, minHeight: 680,
-    title: practiceChild?'Formnaro · Übungsmodus':'Formnaro', icon:path.join(__dirname,'dist','formnaro-icon.png'), backgroundColor: '#edf1f5',
+    title: practiceChild?'Formnaro · Übungsmodus':'Formnaro', icon:path.join(__dirname,'dist','formnaro-icon.png'), backgroundColor: nativeTheme.shouldUseDarkColors ? '#1f2d3d' : '#edf1f5',
     // Native/Python previews also run while an external assistant covers this
     // window. Throttling those renderers can turn a valid batch into a timeout.
     // The viewport already uses an idle render scheduler rather than a busy loop.
@@ -63,6 +63,11 @@ app.whenReady().then(async () => {
   if(!verifyPath&&!practiceChild)require('./backend/renderer-recovery.cjs').installRendererRecovery(win,{reload:win.reload.bind(win)});
   const flashProfile=verifyPath&&aiResultChecksVerifyArg&&process.env.FORMNARO_VERIFY_PRACTICE_ONLY==='1'&&process.env.FORMNARO_VERIFY_PRACTICE_FLASH_PROFILE;
   const initialSettings=flashProfile?require('./backend/practice-flash-verification.cjs').flashProfile(flashProfile):undefined;
+  if(!practiceChild)require('./backend/orca-slicer.cjs').installOrcaSlicer(win,{
+    ipcMain:require('electron').ipcMain,dialog:require('electron').dialog,dataDirectory:dataPath,profileDirectory:profilePath,
+    writeAtomic:require('./backend/program-storage.cjs').writeAtomicSync,
+  });
+  require('./backend/ai-rate-catalog.cjs').loadLocalRates(path.join(dataPath,'KI-Tarife.json'));
   require('./backend/desktop-ai.cjs').installDesktopAI(win,{settingsFile:path.join(dataPath,'ai-settings.json'),toolLibraryStatus:()=>toolLibrary.status(),fallbackFile:fs.existsSync(path.join(dataPath,'profil.json'))?undefined:legacyAIFile,initialSettings});
   if(!practiceChild) require('./backend/ai-lab-development-evidence.cjs').installDevelopmentEvidence(win,path.join(dataPath,'KI-Diagnose'));
   const speechService=require('./backend/speech.cjs').installSpeech(win,{settingsDirectory:dataPath});
