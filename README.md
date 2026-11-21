@@ -15,6 +15,8 @@
   <a href="README.de.md">Deutsch</a>
 </p>
 
+**[AI model comparison v13](docs/benchmarks/modellvergleich-v13.md)** · 25 CAD, STL and drawing tasks across eight runs, with charts for success rates, cost, elapsed time and output tokens.
+
 ## Download
 
 Formnaro is portable on Windows x64. The modelling workspace works offline.

@@ -17,6 +17,8 @@
 
 Das KI-Labor bietet die Ansichten Einfach und Erweitert, einen gestuften Entwicklungscheck und einen Befundexport. Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgelieferte Beispiele, bis zu drei zuletzt verwendete Projekte und bei vorhandener Autosicherung eine eigene Wiederherstellungsschaltfläche. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) · [Aktueller Prüfstand](docs/AKTUELLER-STAND.md)
 
+**[KI-Modellvergleich v13](docs/benchmarks/modellvergleich-v13.md)** · 25 CAD-, STL- und Zeichnungsaufgaben in acht Läufen mit Diagrammen zu Ergebnis, Kosten, Laufzeit und Ausgabetokens.
+
 ## Verbesserungen am KI-Labor in 0.139.1-r1
 
 **0.139.1-r1** integriert sichere Ergebnisspeicherung, klarere Werkzeug- und Auswerterrückmeldungen, kompatible alte Skizzenkantenbezüge und die Prozess-/KI-Antwortkorrekturen. 128 Standardtests, 152 gezielte Regressionen und vier gezielte Liveversuche bestanden. Ein Liveversuch benötigte eine erfolgreiche Formatkorrektur. Die vollständige Testkampagne und die Ursache langen nativen Prozessabbaus bleiben offen; kein neuer Vollbenchmark. [Releasebericht](docs/VEROEFFENTLICHUNG-0.139.1-r1.md) · [Versionierte Belege](docs/benchmarks/lab-targeted-01391-2026-11-14.json).

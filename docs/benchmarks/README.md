@@ -1,5 +1,7 @@
 # Benchmark-Ergebnisse / benchmark results
 
+[Modellvergleich v13 / v13 model comparison](modellvergleich-v13.md) · 25 Aufgaben, acht Läufe / 25 tasks, eight runs
+
 Jeder Vollbenchmark umfasst acht feste Aufgaben mit je zwei Versuchen. Jeder Lauf behält seine Messversion, Suite und Quellhashes. Nachtests stehen separat; sie verändern keinen früheren Benchmarkwert. / Each complete run contains eight tasks repeated twice. Builds, suites and source hashes stay attached to their own runs. Targeted retests never change earlier scores.
 
 | Modell / Serie | Ergebnis | Messstand | Beleg |
