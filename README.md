@@ -15,35 +15,36 @@
   <a href="README.de.md">Deutsch</a>
 </p>
 
-**[AI model comparison v13](docs/benchmarks/modellvergleich-v13.md)** · 25 CAD, STL and drawing tasks across eight runs, with charts for success rates, cost, elapsed time and output tokens.
-
 ## Download
 
 Formnaro is portable on Windows x64. The modelling workspace works offline.
 
 | Build | Best for | Download |
 | --- | --- | --- |
-| **0.144.0-r1** · current release | AI Lab development checks and evidence | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** · [Separate sources and release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256 checksums](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) |
+| **0.144.0-r1** · stable release | AI Lab development checks and evidence | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** · [Separate sources and release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256 checksums](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) |
+| **0.145.0-r1** · preview | New AI Lab checks and OrcaSlicer integration | [Preview download, sources and release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.145.0-r1) |
 
-AI Lab offers Simple and Advanced views, a staged development check, and evidence exports. Formnaro starts with an empty workspace. The welcome screen shows three bundled examples, up to three recent projects and a restore button when an autosave is available. [Current release and verification](docs/AKTUELLER-STAND.md)
+Formnaro starts with an empty workspace. The welcome screen shows three bundled examples, up to three recent projects and a restore button when an autosave is available. [Current release and verification](docs/AKTUELLER-STAND.md)
 
 Extract the whole application ZIP into a writable folder and open the **Formnaro starten** shortcut. FreeCAD and Python are bundled. Source archives are separate downloads. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
-## AI laboratory updates in 0.139.1-r1
+## AI Lab
 
-**0.139.1-r1** integrates atomic result storage, clearer tool and reviewer feedback, legacy sketch-edge compatibility and the shutdown/rejected-response fixes. 128 standard tests, 152 focused regressions and four targeted live trials passed. One live trial needed a successful format correction. Broader campaign coverage and the cause of long native teardown remain open; this is not a new full benchmark. [Release report](docs/VEROEFFENTLICHUNG-0.139.1-r1.md) · [Versioned evidence](docs/benchmarks/lab-targeted-01391-2026-11-14.json).
+Open **Settings → AI / API → AI test lab**. In stable release 0.144.0-r1, **Simple** runs a 15-task development check at Low, with targeted retries at High and optional Max. Everyday CAD, STL conversion and photo mode can be checked separately. Use **Advanced** to set up custom trials.
 
-## Sol benchmark on 0.137.4-r2
+**Results** shows first-attempt passes and passes after verifier feedback. The export also records earlier stages, gaps in context, recurring patterns and initial reactions.
 
-GPT-6.1 Sol/high passed all sixteen fresh trials on the published **0.137.4-r2 / suite 1.0.4** build (eight fixed CAD tasks, two trials each; supervisor off). DeepSeek’s original **16/16 on 0.137.0-r1 / suite 1.0.2** is unchanged. Different program, tool-reference and prompt states are shown explicitly; this is not a controlled same-build model ranking. Sol’s previous 14/16 and 15/16 and the separate successful drawing 2/2 and drilling 1/1 retests remain intact.
+[Preview 0.145.0-r1](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.145.0-r1) includes the standard benchmark v13, extended plan v14, STL diagnostics and a fit benchmark with a skill comparison. The automated campaign can stall in this version. Two open reference cases cover countersink opening direction in STL reconstruction and a name-dependent end-stop check.
 
-![DeepSeek 16/16 (0.137.0-r1) / Sol 16/16 (0.137.4-r2)](docs/bilder/benchmark-sol-deepseek-16-2026-11-08-en.svg)
+### AI model comparison in benchmark v13
 
-[Sol evidence](docs/benchmarks/core-sol-01374-2026-11-08.json) · [Comparison data](docs/benchmarks/sol-deepseek-16-vergleich-2026-11-08.json) · [All original results](docs/benchmarks/README.md)
+Eight runs covered 25 CAD, STL and technical drawing tasks. GPT-6.2 Sol solved the most tasks, at 24 out of 25. GPT-6.1 Terra had the lowest average time per solved task. DeepSeek Flash High had the lowest reported API cost estimate per solved task.
 
-## Advanced benchmark and targeted repairs
+[![Five v13 chart panels on tasks solved, costs, elapsed time, tokens and individual task results](docs/benchmarks/modellvergleich-v13.png)](docs/benchmarks/modellvergleich-v13.png)
 
-**0.138.2-r4** improved planar drill references on scaled boxes, kept selection aliases attached to edited bodies, made checkbox states reliable and clarified feedback about sketch replacement and height. The original advanced DeepSeek run stays **5/16 on 0.138.0-r1**. Targeted retests now confirm all 16 original conditions across builds; this is not a new complete 16/16 run. The final A07 repeat on the new EXE passed 8/8 native criteria in 144.199s. [Versioned results and separate retests](docs/benchmarks/advanced-deepseek-2026-11-09.json).
+The sample contains one to three runs per model and reasoning setting. Plan v14 uses different budgets and some revised tasks and is evaluated separately. The original chart is in German.
+
+[Result tables and methodology](docs/benchmarks/modellvergleich-v13.md) · [AI Lab on formnaro.de](https://formnaro.de/en/ai-lab/#benchmark-v13) · [Archive of earlier 16-trial runs and retests](docs/benchmarks/README.md)
 
 ## A look inside Formnaro
 
@@ -91,11 +92,11 @@ Two stages, four gears and a **6:1 reduction ratio** — an open gearbox concept
 
 ### Practice mode: drilling and a circular pattern
 
-[![Eight drilled sleeves in a circular pattern — video at 100% practice speed](bilder/formnaro-uebungsmodus-muster-100.jpg)](https://formnaro.de/en/#uebung)
+[![Eight drilled sleeves in a circular pattern — video at 100% practice speed](bilder/formnaro-uebungsmodus-muster-100.jpg)](https://formnaro.de/practice-pattern-100.mp4)
 
 **Formnaro 0.139.1-r1 · DeepSeek Flash/high · 22 visible steps · 5/5 native checks passed.** Turn one cylinder into eight separate sleeves with real through-bores, while preserving an unrelated part.
 
-[Watch: 100% speed, 1:06](https://formnaro.de/en/#uebung) · [Download MP4](bilder/formnaro-uebungsmodus-muster-100.mp4) · [Prompt, usage and cost calculation](docs/demos/muster-100.md)
+[Watch: 100% speed, 1:06](https://formnaro.de/practice-pattern-100.mp4) · [Download MP4](bilder/formnaro-uebungsmodus-muster-100.mp4) · [Prompt, usage and cost calculation](docs/demos/muster-100.md)
 
 **Exact prompt (German, 66 words):**
 
@@ -126,7 +127,7 @@ Practice stays in the selected Solid or Fusion workbench. A new native trapezoid
 
 ## Earlier release: 0.139.1-r1
 
-This release contains the verified 0.139.0 improvements and subsequent shutdown/JSON fixes. Four targeted live retests do not replace a fresh full benchmark. Additional campaign conditions and the native cause of slow process teardown remain open.
+0.139.1-r1 bundled the AI Lab improvements from 0.139.0 with process shutdown and JSON handling fixes. The release report documents four targeted live retests from that version.
 
 [Release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1) · [Source tag](https://github.com/andyy909/Formnaro-cad/tree/v0.139.1-r1) · [ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.139.1-r1/Formnaro-Quellcode-v0.139.1-r1.zip) · [Abnahme / acceptance](docs/VEROEFFENTLICHUNG-0.139.1-r1.md)
 
