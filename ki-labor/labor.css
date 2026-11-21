@@ -3,3 +3,16 @@ html{scroll-behavior:smooth}body{overflow-wrap:break-word}.draft{display:flex;ju
 
 /* Four current roles: three AI agents and independent CAD checks. */
 @media(min-width:781px){.roles{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+.model-comparison > p { max-width: 78ch; }
+.model-comparison figure { margin: 1.5rem 0; max-width: 1100px; }
+.model-comparison figure img { display: block; height: auto; width: 100%; }
+#benchmark-v13 { scroll-margin-top: 1rem; }
+.lab-details { max-width: 1100px; padding: 1rem; border: 1px solid var(--line); border-radius: 12px; }
+.lab-details summary { cursor: pointer; font-weight: 700; }
+.lab-details section { margin-block: 1.5rem; }
+.report-table { overflow-x: auto; }
+.report-table table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+.report-table th, .report-table td { padding: .5rem .65rem; border-bottom: 1px solid var(--line); text-align: left; }
+.report-table tbody th { white-space: nowrap; }
+.lab-release-links { display: grid; gap: .75rem; justify-items: start; }

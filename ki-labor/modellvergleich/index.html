@@ -3,75 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="KI-Modellvergleich im Benchmark v13. 25 Aufgaben aus CAD, STL und technischem Zeichnen in acht Läufen. GPT-6.2 Sol löste mit 24 von 25 Aufgaben die meisten. GPT-6.1 Terra benötigte im Mittel die wenigste Zeit je gelöster Aufgabe. DeepSeek Flash High hatte die niedrigste ausgewiesene Kostenschätzung pro gelöster Aufgabe.">
+  <link rel="canonical" href="https://formnaro.de/ki-labor/#benchmark-v13">
+  <meta name="robots" content="noindex">
+  <meta http-equiv="refresh" content="0;url=../#benchmark-v13">
   <title>KI-Modellvergleich im Benchmark v13 | Formnaro</title>
-  <link rel="canonical" href="https://formnaro.de/ki-labor/modellvergleich/">
-  <link rel="alternate" hreflang="en" href="https://formnaro.de/en/ai-lab/model-comparison/">
-  <link rel="icon" href="../../logo.png">
-  <link rel="stylesheet" href="../../style.css?v=10">
-  <link rel="stylesheet" href="../../ki-labor/modellvergleich/report.css">
 </head>
-<body>
-<a class="skip" href="#content">Zum Inhalt</a>
-<header class="wrap top">
-  <a class="brand" href="../../"><img src="../../logo.png" alt="" width="38" height="38">Formnaro</a>
-  <nav aria-label="Sprache und Projekt">
-    <a class="nav-lab" href="../">KI-Labor</a>
-    <a href="../../en/ai-lab/model-comparison/" lang="en" hreflang="en">English</a>
-    <a href="https://github.com/andyy909/Formnaro-cad/blob/main/docs/benchmarks/modellvergleich-v13.md">GitHub ↗</a>
-  </nav>
-</header>
-<main id="content" class="wrap report">
-  <p class="eyebrow">KI-Labor · 20. November 2026</p>
-  <h1>KI-Modellvergleich im Benchmark v13</h1>
-  <p class="intro">25 Aufgaben aus CAD, STL und technischem Zeichnen in acht Läufen. GPT-6.2 Sol löste mit 24 von 25 Aufgaben die meisten. GPT-6.1 Terra benötigte im Mittel die wenigste Zeit je gelöster Aufgabe. DeepSeek Flash High hatte die niedrigste ausgewiesene Kostenschätzung pro gelöster Aufgabe.</p>
-  <figure>
-    <a href="../../ki-labor/modellvergleich/modellvergleich-v13.png"><img src="../../ki-labor/modellvergleich/modellvergleich-v13.png" width="1100" height="2868" alt="Fünf Diagrammblöcke zu Lösungsquote, Kosten, Laufzeit, Ausgabetokens, Aufgabenbereichen und Einzelergebnissen. Die folgenden Tabellen enthalten die Werte."></a>
-    <figcaption>Klicken für Originalgröße.</figcaption>
-  </figure>
-  <section><h2>Datengrundlage</h2>
-  <p>Quelle sind die Ergebnis.json-Dateien aus acht Benchmark-Exporten. Zwei Aufgaben des Mistral-Laufs 45754961 wurden vor Ablauf des Zeitbudgets nicht gestartet und zählen als ungelöst. Die Läufe da032db4 (Preislimit), a6042c34 (Denkstufe nicht verfügbar) und 6d73cae2 (Zeitbudget nach 19 von 25 Aufgaben) sind in diesem Vergleich nicht enthalten.</p>
-<p>Die Preise sind API-Kostenschätzungen in US-Dollar. Diagramme und Tabellen verwenden die im Export ausgewiesene Obergrenze für gemeldete Nutzung. Für Lauf 16ca7893 enthält der Export zusätzlich eine separate Reserve von 0,2535 USD für einen Aufruf ohne Nutzungsdaten. Ausgabetokens enthalten die ausgewiesenen Denktokens. Kosten, Laufzeit und Ausgabetokens je gelöster Aufgabe werden pro Lauf berechnet und dann pro Modell und Denkstufe gemittelt.</p>
-<p>Pro Modell und Denkstufe liegen ein bis drei Läufe vor. Die Zahlen beschreiben diese Stichprobe. Plan v14 hatte andere Budgets und teilweise überarbeitete Aufgaben und ist nur separat auswertbar.</p></section>
-  <section><h2>Ergebnisse nach Modell und Denkstufe</h2><div class="report-table" tabindex="0" role="region" aria-label="Ergebnisse nach Modell und Denkstufe"><table><thead><tr><th scope="col">Modell</th><th scope="col">Denkstufe</th><th scope="col">Läufe</th><th scope="col">Gelöst von 25</th><th scope="col">USD je Lösung</th><th scope="col">Sekunden je Lösung</th><th scope="col">Ausgabetokens je Lösung</th><th scope="col">CAD</th><th scope="col">STL</th><th scope="col">Zeichnen</th></tr></thead><tbody><tr><th scope="row">GPT-6.2 Sol</th><td>Medium</td><td>1</td><td>24,0</td><td>0,072</td><td>28</td><td>920</td><td>100 %</td><td>83 %</td><td>100 %</td></tr>
-<tr><th scope="row">GPT-6.1 Terra</th><td>Medium</td><td>2</td><td>21,0</td><td>0,028</td><td>24</td><td>710</td><td>92 %</td><td>50 %</td><td>100 %</td></tr>
-<tr><th scope="row">DeepSeek Flash</th><td>Low</td><td>3</td><td>15,7</td><td>0,010</td><td>45</td><td>6.013</td><td>53 %</td><td>67 %</td><td>76 %</td></tr>
-<tr><th scope="row">DeepSeek Flash</th><td>High</td><td>1</td><td>20,0</td><td>0,009</td><td>45</td><td>5.911</td><td>83 %</td><td>50 %</td><td>100 %</td></tr>
-<tr><th scope="row">Mistral Large 4</th><td>Medium</td><td>1</td><td>17,0</td><td>0,022</td><td>64</td><td>4.360</td><td>75 %</td><td>50 %</td><td>71 %</td></tr></tbody></table></div></section>
-<section><h2>Alle acht Läufe</h2><div class="report-table" tabindex="0" role="region" aria-label="Alle acht Läufe"><table><thead><tr><th scope="col">Lauf</th><th scope="col">Modell</th><th scope="col">Denkstufe</th><th scope="col">Gelöst</th><th scope="col">USD je Lauf</th><th scope="col">Sekunden</th><th scope="col">Ausgabetokens</th></tr></thead><tbody><tr><th scope="row">21fe9f9e</th><td>GPT-6.2 Sol</td><td>Medium</td><td>24</td><td>1,7347</td><td>679,6</td><td>22088</td></tr>
-<tr><th scope="row">a7a9e5b8</th><td>GPT-6.1 Terra</td><td>Medium</td><td>22</td><td>0,5837</td><td>502,2</td><td>14719</td></tr>
-<tr><th scope="row">eb595234</th><td>GPT-6.1 Terra</td><td>Medium</td><td>20</td><td>0,5817</td><td>513,9</td><td>15019</td></tr>
-<tr><th scope="row">16ca7893</th><td>DeepSeek Flash</td><td>Low</td><td>16</td><td>0,1487</td><td>675,2</td><td>85311</td></tr>
-<tr><th scope="row">93ccb010</th><td>DeepSeek Flash</td><td>Low</td><td>18</td><td>0,1689</td><td>645,7</td><td>100085</td></tr>
-<tr><th scope="row">afa009ae</th><td>DeepSeek Flash</td><td>Low</td><td>13</td><td>0,1618</td><td>744,9</td><td>92891</td></tr>
-<tr><th scope="row">37215eb6</th><td>DeepSeek Flash</td><td>High</td><td>20</td><td>0,1834</td><td>893,7</td><td>118225</td></tr>
-<tr><th scope="row">45754961</th><td>Mistral Large 4</td><td>Medium</td><td>17</td><td>0,3666</td><td>1.080,0</td><td>74122</td></tr></tbody></table></div></section>
-<section><h2>Ergebnisse je Aufgabe</h2><div class="report-table" tabindex="0" role="region" aria-label="Ergebnisse je Aufgabe"><table><thead><tr><th scope="col">Aufgabe</th><th scope="col">21fe</th><th scope="col">a7a9</th><th scope="col">eb59</th><th scope="col">16ca</th><th scope="col">93cc</th><th scope="col">afa0</th><th scope="col">3721</th><th scope="col">4575</th><th scope="col">Gelöst</th></tr></thead><tbody><tr><th scope="row">fixture-3</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>8/8</td></tr>
-<tr><th scope="row">fixture-5</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>8/8</td></tr>
-<tr><th scope="row">bore-oblique</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>8/8</td></tr>
-<tr><th scope="row">converter-selected</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>8/8</td></tr>
-<tr><th scope="row">converter-cone</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>8/8</td></tr>
-<tr><th scope="row">drawing-views</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>8/8</td></tr>
-<tr><th scope="row">drawing-section</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>8/8</td></tr>
-<tr><th scope="row">drawing-assembly</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>8/8</td></tr>
-<tr><th scope="row">fixture-6</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gescheitert</td><td>Gelöst</td><td>7/8</td></tr>
-<tr><th scope="row">converter-find</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Fehler</td><td>Gelöst</td><td>Gelöst</td><td>7/8</td></tr>
-<tr><th scope="row">drawing-dimensions</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gescheitert</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>7/8</td></tr>
-<tr><th scope="row">drawing-detail</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Fehler</td><td>Gelöst</td><td>Gelöst</td><td>7/8</td></tr>
-<tr><th scope="row">plate-drawing</th><td>Gelöst</td><td>Gelöst</td><td>Gescheitert</td><td>Gelöst</td><td>Gelöst</td><td>Gescheitert</td><td>Gelöst</td><td>Gelöst</td><td>6/8</td></tr>
-<tr><th scope="row">fixture-2</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Fehler</td><td>Gelöst</td><td>Fehler</td><td>Gelöst</td><td>Gelöst</td><td>6/8</td></tr>
-<tr><th scope="row">drawing-revision</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Fehler</td><td>Gelöst</td><td>Offen</td><td>6/8</td></tr>
-<tr><th scope="row">fixture-1</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Fehler</td><td>Fehler</td><td>Gelöst</td><td>Gelöst</td><td>Fehler</td><td>5/8</td></tr>
-<tr><th scope="row">fixture-7</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gescheitert</td><td>Gelöst</td><td>Gescheitert</td><td>Gelöst</td><td>Gescheitert</td><td>5/8</td></tr>
-<tr><th scope="row">fixture-4</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gescheitert</td><td>Gescheitert</td><td>Gescheitert</td><td>Gelöst</td><td>Gelöst</td><td>5/8</td></tr>
-<tr><th scope="row">bore-final-fit</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gescheitert</td><td>Gescheitert</td><td>Offen</td><td>Gelöst</td><td>Gelöst</td><td>5/8</td></tr>
-<tr><th scope="row">fixture-9</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Fehler</td><td>Fehler</td><td>Gelöst</td><td>Offen</td><td>5/8</td></tr>
-<tr><th scope="row">drawing-linked-revision</th><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Fehler</td><td>Gelöst</td><td>Fehler</td><td>Gelöst</td><td>Ohne Versuch</td><td>5/8</td></tr>
-<tr><th scope="row">fixture-8</th><td>Gelöst</td><td>Gelöst</td><td>Gescheitert</td><td>Gescheitert</td><td>Gescheitert</td><td>Gelöst</td><td>Gescheitert</td><td>Gelöst</td><td>4/8</td></tr>
-<tr><th scope="row">stl-cross-drilled</th><td>Gelöst</td><td>Fehler</td><td>Fehler</td><td>Gelöst</td><td>Gelöst</td><td>Gelöst</td><td>Offen</td><td>Ohne Versuch</td><td>4/8</td></tr>
-<tr><th scope="row">stl-countersinks</th><td>Gelöst</td><td>Gescheitert</td><td>Gescheitert</td><td>Offen</td><td>Gelöst</td><td>Offen</td><td>Gescheitert</td><td>Gescheitert</td><td>2/8</td></tr>
-<tr><th scope="row">stl-rim</th><td>Fehler</td><td>Gescheitert</td><td>Gescheitert</td><td>Gescheitert</td><td>Fehler</td><td>Fehler</td><td>Offen</td><td>Offen</td><td>0/8</td></tr></tbody></table></div></section>
-</main>
-<footer class="wrap foot"><span>Formnaro</span><a href="../../impressum/">Impressum</a></footer>
-</body>
+<body><p><a href="../#benchmark-v13">KI-Modellvergleich im Benchmark v13</a></p></body>
 </html>
