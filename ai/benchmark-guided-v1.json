@@ -1,7 +1,7 @@
 {
   "id": "formnaro-practice-guided",
   "label": "Vormachen",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "ladder": true,
   "knownDevelopmentTasks": true,
   "limits": {
@@ -120,7 +120,7 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "6b099e1961753c1f2f30504f90e214353ef142e28319b2ce1717352c8d14cc2c"
+      "sha256": "c409957605ea3770c96e41308fa06915653b0bef9cdd61db20784fb4f6834a4c"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -194,5 +194,6 @@
       "path": "ai/benchmark-advanced-calibration-v2.json",
       "sha256": "247f9e5ef32075370b1af42d5125d45c235fa35d3f5d1d8e66975b3449648ad8"
     }
-  ]
+  ],
+  "revisionReason": "Preserve and validate replay fixtures and decision-relevant lab feedback. Benchmark tasks, limits and native predicates are unchanged."
 }

@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.24",
+  "version": "1.0.25",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -118,7 +118,7 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "6b099e1961753c1f2f30504f90e214353ef142e28319b2ce1717352c8d14cc2c"
+      "sha256": "c409957605ea3770c96e41308fa06915653b0bef9cdd61db20784fb4f6834a4c"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -173,5 +173,5 @@
       "sha256": "6f5021d8c0879156ca11022879c222248496a0b681322b8fb86199563833f038"
     }
   ],
-  "revisionReason": "Resolve Mistral API aliases and route the selected reasoning level through the corresponding model ID. CAD tasks, checks, fixtures and budgets retain their definitions."
+  "revisionReason": "Preserve and validate replay fixtures and decision-relevant lab feedback. Benchmark tasks, limits and native predicates are unchanged."
 }
