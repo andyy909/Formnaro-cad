@@ -1,3 +1,4 @@
+import { cadFinishRepairDraft, previewCadFinishPrefix, repairedCadFinishOperation } from './cad-finish-repair.js';
 import { createCadAnnotationsUI } from './cad-annotations-ui.js';
 import { createCadExtractUI } from './cad-extract-ui.js';
 import { createCadSplitUI } from './cad-split-ui.js';
@@ -5,6 +6,7 @@ import * as THREE from 'three';
 import './cad-tools.css';
 import { cadIdentity, cadPoint, inverseCadMatrix } from './cad-affine.js';
 import { pickCadEdge } from './cad-edge-picking.js';
+import { cadFinishAmountOperation } from './cad-finish-command.js';
 import { measureCadPoints } from './cad-tools-native.js';
 import { createCadReferenceToolsUI } from './cad-reference-tools-ui.js';
 import { openCadLinkedPatternUI } from './cad-linked-pattern-ui.js';
@@ -120,6 +122,11 @@ export function createCadToolsUI({
       controller.cancel();
       active.computing = false;
     }
+    if (active?.repairPicking) {
+      active.repairPicking = false;
+      view.setEdges([]);
+      view.setInteraction(null);
+    }
     if (active?.preview) controller.discard(active.preview.previewId);
     if (active) {
       active.preview = null;
@@ -140,6 +147,9 @@ export function createCadToolsUI({
     active = null;
     measurementResult = null;
     panel.hidden = true;
+    delete panel.dataset.edgeBodyId;
+    delete panel.dataset.edgeStepId;
+    delete panel.dataset.edgeStepAmount;
     view.setInteraction(null);
     view.setEdges([]);
     return had;
@@ -147,6 +157,10 @@ export function createCadToolsUI({
   function valid(kind) {
     if (!active || active.kind !== kind) throw Error('CAD-Werkzeug wurde geschlossen.');
     assertRevision(active.revision);
+    if (active.scope !== undefined && active.scope !== controller.projectScope()) {
+      close();
+      throw Error('Projekt wurde erneut geöffnet. Kantenschritt neu wählen.');
+    }
     return active;
   }
   const readProject = () => controller.readSnapshot?.() ?? controller.snapshot();
@@ -179,20 +193,68 @@ export function createCadToolsUI({
     view.setEdges(s.edges.map((edge) => ({ ...edge, selected: s.selected.has(edge.edgeToken) })));
     panel.querySelector('[data-edge-count]').textContent =
       `${s.selected.size} von ${s.edges.length} CAD-Kanten ausgewählt`;
-    panel.querySelector('[data-edge-preview]').disabled = !s.selected.size;
-    panel.querySelector('[data-edge-apply]').disabled = !s.preview;
+    updateEdgeButtons(s);
+  }
+  function updateEdgeButtons(s) {
+    panel.querySelector('[data-edge-preview]').disabled = s.computing || (!s.stepId && !s.selected.size);
+    panel.querySelector('[data-edge-apply]').disabled = s.computing || !s.preview;
+    const repair = panel.querySelector('[data-edge-repair]');
+    if (repair) {
+      repair.hidden = !s.repairDraft;
+      repair.disabled = s.computing || s.repairPicking;
+    }
   }
   function pickEdge(event) {
     return pickCadEdge(valid('edges').edges, (p) => view.projectPoint(p), event);
   }
-  async function openEdges(kind = 'round') {
+  async function openEdges(kind = 'round', savedStep = null) {
     close();
     const [item] = chosen({ one: true, roots: true, positive: true }),
       revision = controller.revision(),
-      token = ++generation;
-    active = { kind: 'edges', nodeId: item.id, revision, edges: [], selected: new Set(), preview: null };
+      token = ++generation,
+      node = savedStep ? bodyNode(item.id) : null,
+      step = savedStep ? node.finish?.steps?.find((entry) => entry.id === savedStep.stepId) : null;
+    if (savedStep && (savedStep.bodyId !== item.id || !step))
+      throw Error('Gespeicherter Kantenschritt gehört nicht zum ausgewählten CAD-Körper.');
+    active = {
+      kind: 'edges',
+      nodeId: item.id,
+      bodyId: item.id,
+      stepId: step?.id ?? null,
+      stepKind: step?.kind ?? null,
+      stepAmount: step?.amount ?? null,
+      scope: controller.projectScope(),
+      revision,
+      edges: [],
+      selected: new Set(),
+      preview: null,
+    };
     panel.hidden = false;
-    panel.innerHTML = `<div class="section-title">CAD-Kanten bearbeiten</div><p>CAD-Kanten anklicken oder einen Rahmen ziehen. Vollständig eingeschlossene Kanten werden auch auf der Rückseite ausgewählt. Umschalt: hinzufügen; Alt: entfernen.</p><label class="dialog-label">Operation<select id="cad-edge-kind" data-edge-kind><option value="round">Abrundung</option><option value="chamfer">Fase</option></select></label><label class="dialog-label">Radius / Fasenmaß (mm)<input id="cad-edge-amount" data-edge-amount inputmode="decimal" value="1"></label><p class="small-note">Das Maß gilt vor der Skalierung des Ergebniskörpers. Quellen bleiben editierbar.</p><div class="two-buttons"><button id="cad-edge-all" data-edge-all>Alle Kanten</button><button id="cad-edge-none" data-edge-none>Auswahl leeren</button></div><p data-edge-count role="status">Native CAD-Kanten werden geladen …</p><button data-edge-remove>Letzte Kantenoperation entfernen</button><div class="edge-actions"><button id="cad-edge-preview" data-edge-preview disabled>Vorschau berechnen</button><button id="cad-edge-apply" data-edge-apply class="primary" disabled>Übernehmen</button><button id="cad-edge-close" data-edge-close>Abbrechen</button></div>`;
+    const title = '<div class="section-title">CAD-Kanten bearbeiten</div>';
+    if (step) {
+      panel.dataset.edgeBodyId = item.id;
+      panel.dataset.edgeStepId = step.id;
+      panel.dataset.edgeStepAmount = String(step.amount);
+      const label = step.kind === 'round' ? 'Radius' : 'Fasenmaß';
+      panel.innerHTML = `${title}<p class="small-note" data-edge-saved>Gespeicherter Schritt ${esc(step.id)} · ${format(step.amount)} mm.</p><label class="dialog-label">${label} (mm)<input id="cad-edge-amount" data-edge-amount inputmode="decimal" value="${step.amount}"></label><p class="small-note" data-edge-status role="status"></p><button data-edge-repair hidden>Ersatzkante am Zwischenkörper wählen</button><div class="edge-actions"><button id="cad-edge-preview" data-edge-preview>Vorschau berechnen</button><button id="cad-edge-apply" data-edge-apply class="primary" disabled>Übernehmen</button><button id="cad-edge-close" data-edge-close>Abbrechen</button></div>`;
+      panel.querySelector('[data-edge-amount]').oninput = () => {
+        const s = valid('edges');
+        discardPreview();
+        s.repairDraft = null;
+        panel.querySelector('[data-edge-status]').textContent = '';
+        updateEdgeButtons(s);
+      };
+      panel.querySelector('[data-edge-repair]').onclick = () => run(pickReplacement);
+      panel.querySelector('[data-edge-preview]').onclick = () => run(() => previewEdges());
+      panel.querySelector('[data-edge-apply]').onclick = () => run(applyEdges);
+      panel.querySelector('[data-edge-close]').onclick = close;
+      return;
+    }
+    panel.innerHTML = `${title}<p>CAD-Kanten anklicken oder einen Rahmen ziehen. Vollständig eingeschlossene Kanten werden auch auf der Rückseite ausgewählt. Umschalt: hinzufügen; Alt: entfernen.</p><label class="dialog-label">Operation<select id="cad-edge-kind" data-edge-kind><option value="round">Abrundung</option><option value="chamfer">Fase</option></select></label><label class="dialog-label">Radius / Fasenmaß (mm)<input id="cad-edge-amount" data-edge-amount inputmode="decimal" value="1"></label><p class="small-note">Das Maß gilt vor der Skalierung des Ergebniskörpers. Quellen bleiben editierbar.</p><div class="two-buttons"><button id="cad-edge-all" data-edge-all>Alle Kanten</button><button id="cad-edge-none" data-edge-none>Auswahl leeren</button></div><p data-edge-count role="status">Native CAD-Kanten werden geladen …</p><button data-edge-remove>Letzte Kantenoperation entfernen</button><div class="edge-actions"><button id="cad-edge-preview" data-edge-preview disabled>Vorschau berechnen</button><button id="cad-edge-apply" data-edge-apply class="primary" disabled>Übernehmen</button><button id="cad-edge-close" data-edge-close>Abbrechen</button></div>`;
+    const pickLabel = document.createElement('p');
+    pickLabel.dataset.pickKind = 'edge';
+    pickLabel.textContent = document.documentElement.lang === 'en' ? 'Select edge' : 'Kante wählen';
+    panel.querySelector('.section-title').after(pickLabel);
     panel.querySelector('[data-edge-kind]').value = kind;
     panel.querySelector('[data-edge-close]').onclick = close;
     panel.querySelector('[data-edge-remove]').hidden = !item.finish;
@@ -225,48 +287,178 @@ export function createCadToolsUI({
     valid('edges').edges = result.edges;
     drawEdges();
   }
-  async function previewEdges(remove = false) {
-    const s = valid('edges'),
-      node = bodyNode(s.nodeId),
-      amount = remove ? 1 : number(panel.querySelector('[data-edge-amount]').value),
-      kind = panel.querySelector('[data-edge-kind]').value;
-    discardPreview();
-    let operation;
-    if (remove) {
-      if (!node.finish) throw Error('Keine CAD-Kantenoperation zum Entfernen.');
-      operation = { kind: 'editFinish', target: s.nodeId, steps: node.finish.steps.slice(0, -1) };
-    } else {
-      if (!s.selected.size || s.selected.size > 128 || amount < 0.01 || amount > 1000)
-        throw Error('1–128 Kanten und Radius/Fase von 0,01–1000 mm wählen.');
-      operation = {
-        kind: 'finish',
-        target: s.nodeId,
-        step: {
-          id: crypto.randomUUID(),
-          kind,
-          amount,
-          edges: s.edges.filter((edge) => s.selected.has(edge.edgeToken)).map((edge) => edge.reference),
-        },
-      };
-    }
-    const token = generation,
-      version = s.previewVersion;
-    s.computing = true;
-    try {
-      const result = await controller.preview(operation, { revision: s.revision, label: 'CAD-Kantenvorschau' });
-      if (token !== generation || active !== s || version !== s.previewVersion) {
-        controller.discard(result.previewId);
-        return;
-      }
-      s.preview = result;
-      const display = await controller.display(result.project);
-      if (token === generation && active === s && version === s.previewVersion) {
-        view.setPreview(display.meshes, result.project);
+  function pickTool() {
+    const s = active;
+    if (!s) return referenceUI.pickTool();
+    if (s.kind !== 'edges' || s.stepId || s.preview || s.computing || !s.edges.length) return null;
+    const en = document.documentElement.lang === 'en';
+    const current = () => active === s && controller.revision() === s.revision && controller.projectScope() === s.scope;
+    return {
+      label: en ? 'Choose native edge' : 'Native Kante wählen',
+      current,
+      async candidates(hits, point, menuCurrent) {
+        const items = getScene()?.objects ?? [];
+        const result = [];
+        for (const hit of hits) {
+          if (!menuCurrent()) return [];
+          const { target } = hit;
+          if (target.path.length) continue;
+          if (hit.simplified) {
+            result.push({ target, label: en ? 'Frame only' : 'Nur Rahmen', disabled: true });
+            continue;
+          }
+          const item = items.find((node) => targetEqual(node.target, target));
+          if (!item || item.kind !== 'cad' || !item.solid || item.locked || item.hidden) continue;
+          const edges =
+            target.rootId === s.nodeId
+              ? s.edges
+              : (await query('edges', { nodeId: target.rootId, ...quality() })).edges;
+          if (!menuCurrent()) return [];
+          const token = pickCadEdge(edges, view.projectPoint, point, { unique: true });
+          const edge = edges.find((candidate) => candidate.edgeToken === token);
+          if (edge) result.push({ target, label: en ? 'Edge' : 'Kante', points: edge.points, edge });
+        }
+        return result;
+      },
+      async apply({ target, edge }) {
+        if (!current()) throw Error('Modell oder Werkzeug geändert. Kante erneut wählen.');
+        const amount = panel.querySelector('[data-edge-amount]').value;
+        const kind = panel.querySelector('[data-edge-kind]').value;
+        if (s.nodeId !== target.rootId) {
+          select([target]);
+          await openEdges(kind);
+        }
+        const updated = valid('edges');
+        const selectedEdge = updated.edges.find(
+          (candidate) =>
+            candidate.edgeToken === edge.edgeToken &&
+            JSON.stringify(candidate.reference) === JSON.stringify(edge.reference),
+        );
+        if (updated.nodeId !== target.rootId || !selectedEdge)
+          throw Error('Native Kante wurde geändert. Kante erneut wählen.');
+        discardPreview();
+        panel.querySelector('[data-edge-amount]').value = amount;
+        updated.selected = new Set([selectedEdge.edgeToken]);
         drawEdges();
+      },
+    };
+  }
+  async function previewEdges(remove = false, replacement) {
+    const s = valid('edges');
+    if (s.stepId && remove) throw Error('Im gespeicherten Kantenschritt kann nur das Maß geändert werden.');
+    const node = bodyNode(s.nodeId),
+      status = panel.querySelector('[data-edge-status]');
+    discardPreview();
+    const token = generation,
+      version = s.previewVersion,
+      current = () =>
+        token === generation && active === s && version === s.previewVersion && s.scope === controller.projectScope();
+    s.computing = true;
+    updateEdgeButtons(s);
+    s.repairDraft = null;
+    if (status) status.textContent = 'Native CAD-Vorschau wird berechnet …';
+    let result, operation;
+    try {
+      const amount = remove ? 1 : number(panel.querySelector('[data-edge-amount]').value);
+      if (replacement) {
+        operation = replacement;
+      } else if (s.stepId) {
+        operation = cadFinishAmountOperation(node, s.stepId, amount);
+      } else if (remove) {
+        if (!node.finish) throw Error('Keine CAD-Kantenoperation zum Entfernen.');
+        operation = { kind: 'editFinish', target: s.nodeId, steps: node.finish.steps.slice(0, -1) };
+      } else {
+        if (!s.selected.size || s.selected.size > 128 || amount < 0.01 || amount > 1000)
+          throw Error('1–128 Kanten und Radius/Fase von 0,01–1000 mm wählen.');
+        operation = {
+          kind: 'finish',
+          target: s.nodeId,
+          step: {
+            id: crypto.randomUUID(),
+            kind: panel.querySelector('[data-edge-kind]').value,
+            amount,
+            edges: s.edges.filter((edge) => s.selected.has(edge.edgeToken)).map((edge) => edge.reference),
+          },
+        };
       }
+      result = await controller.preview(operation, { revision: s.revision, label: 'CAD-Kantenvorschau' });
+      if (!current()) return;
+      const display = await controller.display(result.project);
+      if (!current()) return;
+      view.setPreview(display.meshes, result.project);
+      s.preview = result;
+      if (status) status.textContent = `Vorschau: ${format(amount)} mm.`;
       return result;
+    } catch (error) {
+      if (status && current()) {
+        status.textContent = error.stepId
+          ? 'Körper ' + (error.bodyId ?? s.nodeId) + ' · Schritt ' + error.stepId + ' · ' + error.message
+          : error.message;
+        if (operation?.kind === 'editFinish') s.repairDraft = cadFinishRepairDraft(s.nodeId, operation.steps, error);
+      }
+      throw error;
     } finally {
-      if (active === s && version === s.previewVersion) s.computing = false;
+      if (result && s.preview !== result) controller.discard(result.previewId);
+      if (current()) {
+        s.computing = false;
+        updateEdgeButtons(s);
+      }
+    }
+  }
+  async function pickReplacement() {
+    const s = valid('edges'),
+      repair = s.repairDraft;
+    if (!repair || s.computing) return;
+    discardPreview();
+    const version = s.previewVersion,
+      current = () =>
+        active === s &&
+        s.previewVersion === version &&
+        s.revision === controller.revision() &&
+        s.scope === controller.projectScope();
+    const status = panel.querySelector('[data-edge-status]');
+    s.computing = true;
+    updateEdgeButtons(s);
+    try {
+      const result = await previewCadFinishPrefix(controller, repair, s.revision, quality(), current);
+      if (!current() || !result) return;
+      s.repairPicking = true;
+      view.setPreview(result.meshes, result.prefix.project, [s.nodeId]);
+      view.setEdges(result.edges);
+      status.textContent =
+        'Schritt ' + repair.steps[repair.index].id + ' · Eine eindeutige Ersatzkante am Zwischenkörper anklicken.';
+      view.setInteraction((_ray, event, hit) =>
+        run(async () => {
+          if (!current() || !s.repairPicking) return;
+          const hitId = hit?.object?.userData?.rootId ?? hit?.object?.userData?.id;
+          const projectPoint = (point) => view.projectPoint(point);
+          const wrongBody = hitId && hitId !== s.nodeId;
+          const token = !wrongBody && pickCadEdge(result.edges, projectPoint, event, { unique: true });
+          if (wrongBody || (!token && pickCadEdge(result.edges, projectPoint, event))) {
+            discardPreview();
+            updateEdgeButtons(s);
+            status.textContent = wrongBody
+              ? 'Ein anderer Körper wurde getroffen. Ersatzkantenwahl neu starten.'
+              : 'Mehrdeutige Kantenlage. Ersatzkantenwahl aus einer anderen Ansicht neu starten.';
+            return;
+          }
+          const edge = result.edges.find((candidate) => candidate.edgeToken === token);
+          if (!edge) {
+            status.textContent =
+              'Keine eindeutige Kante am Zwischenkörper getroffen. Ansicht ändern und erneut wählen.';
+            return;
+          }
+          await previewEdges(false, repairedCadFinishOperation(repair, edge));
+        }),
+      );
+    } catch (error) {
+      if (current()) status.textContent = error.message;
+      throw error;
+    } finally {
+      if (current()) {
+        s.computing = false;
+        updateEdgeButtons(s);
+      }
     }
   }
   async function applyEdges() {
@@ -299,7 +491,7 @@ export function createCadToolsUI({
   view.canvas.addEventListener(
     'pointerdown',
     (event) => {
-      if (active?.kind !== 'edges' || event.button !== 0) return;
+      if (active?.kind !== 'edges' || active.stepId || event.button !== 0) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       gesture = {
@@ -952,7 +1144,12 @@ export function createCadToolsUI({
     splitUI?.revisionChanged();
     extractUI?.revisionChanged();
     marksUI?.revisionChanged();
-    if (active && active.revision !== controller.revision()) close();
+    if (
+      active &&
+      (active.revision !== controller.revision() ||
+        (active.scope !== undefined && active.scope !== controller.projectScope()))
+    )
+      close();
     if (measurementResult && measurementResult.revision !== controller.revision()) {
       for (const id of ['point-distance', 'point-distance-apply']) if ($(id)) $(id).disabled = true;
       const status = document.querySelector('[data-point-status]');
@@ -973,7 +1170,7 @@ export function createCadToolsUI({
       active &&
       ['edges', 'lay'].includes(active.kind) &&
       (!getSelection().some((target) => !target.path.length && target.rootId === active.nodeId) ||
-        (active.kind === 'lay' && getSelection().length !== 1))
+        ((active.kind === 'lay' || active.stepId) && getSelection().length !== 1))
     )
       close();
   }
@@ -1058,7 +1255,7 @@ export function createCadToolsUI({
   };
   return {
     practiceEdgeState: () =>
-      active?.kind === 'edges'
+      active?.kind === 'edges' && !active.stepId
         ? {
             kind: active.kind,
             revision: active.revision,
@@ -1074,6 +1271,7 @@ export function createCadToolsUI({
     extractUI,
     draw: referenceUI.draw,
     openEdges,
+    pickTool,
     previewEdges,
     applyEdges,
     layOnFace,
@@ -1096,6 +1294,10 @@ export function createCadToolsUI({
             kind: active.kind,
             revision: active.revision,
             nodeId: active.nodeId,
+            bodyId: active.bodyId ?? null,
+            stepId: active.stepId ?? null,
+            stepKind: active.stepKind ?? null,
+            stepAmount: active.stepAmount ?? null,
             selected: [...(active.selected ?? [])],
             samples: structuredClone(active.samples ?? []),
             preview: active.preview?.previewId,

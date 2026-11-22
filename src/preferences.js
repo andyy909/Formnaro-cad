@@ -1,6 +1,6 @@
 export const DEFAULTS = {
   language: 'de',
-  theme: 'light',
+  theme: 'system',
   snap: 1,
   rotationSnap: 15,
   handleSize: 14,

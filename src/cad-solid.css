@@ -106,3 +106,5 @@ body.solid-workbench #empty-hint h1{font-size:24px}
 [data-theme=dark] .solid-ribbon .solid-command:hover:not(:disabled),[data-theme=dark] .solid-menu[open]>summary{background:#3a536b;color:#e1eaf3}
 @media(max-width:1000px){.solid-mode-note{display:none}.solid-tabs button{padding:7px 12px}.solid-command-panel{min-height:76px}.solid-ribbon .solid-command{min-width:70px;min-height:65px}body.solid-workbench main,body.solid-workbench[data-library-side=right] main{grid-template-columns:255px minmax(0,1fr) auto}.solid-task-pane{width:280px}.solid-task-pane:has(#ai-chat:not(.collapsed)){position:absolute;right:0;top:0;bottom:0;z-index:40;max-width:calc(100% - 260px);background:var(--solid-panel)}}
 @media(max-height:750px){.solid-command-panel{min-height:68px;padding-top:3px;padding-bottom:3px}.solid-ribbon .solid-command{min-height:60px}.solid-command-icon{width:27px;height:27px}}
+
+#solid-shortcuts input{display:block;width:100%;box-sizing:border-box;margin:8px 0 4px;padding:6px}

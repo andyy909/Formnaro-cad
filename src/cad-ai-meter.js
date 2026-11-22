@@ -300,7 +300,43 @@ export function createAIUsagePanel({ desktop, getContext, language = () => 'de',
       table.append(tbody);
       wrap.append(table);
       data.append(wrap);
+      if (stats.models?.length) {
+        const modelRows = document.createElement('ul');
+        modelRows.className = 'ai-meter-models';
+        const tokens = (row) => row.inputTokens + row.outputTokens;
+        const sorted = [...stats.models].sort((a, b) => tokens(b) - tokens(a) || a.model.localeCompare(b.model));
+        const highest = tokens(sorted[0]);
+        for (const row of sorted) {
+          const item = element('li');
+          const bar = element('span', undefined, 'ai-meter-bar');
+          bar.style.width = (highest ? (100 * tokens(row)) / highest : 0) + '%';
+          bar.setAttribute('aria-hidden', 'true');
+          const total = (row.inputMissing || row.outputMissing ? '≥ ' : '') + n(tokens(row));
+          const name = row.model || say('Modell ohne Kennung', 'Model without an identifier');
+          const provider = row.provider.replace(/^https?:\/\//, '');
+          item.append(
+            bar,
+            element('strong', name),
+            element(
+              'small',
+              ' · ' +
+                [provider, total + ' Tokens', n(row.requests) + say(' Anfragen', ' requests')]
+                  .filter(Boolean)
+                  .join(' · '),
+            ),
+          );
+          modelRows.append(item);
+        }
+        data.append(element('h4', say('Tokenverbrauch je Modell', 'Token usage by model')), modelRows);
+      }
+      const help = stats.rows.find((row) => row.category === 'help');
       status.textContent = [
+        help && !(help.api.requests + help.subscription.requests)
+          ? say(
+              'Für diese Auswahl wurde keine Modellanfrage als Bedienhilfe oder Frage erfasst.',
+              'No model request was recorded as guidance or a question for this selection.',
+            )
+          : '',
         stats.warning,
         say(
           'Automatische Zuordnung nach Auftrag, einschließlich Messungen und Korrekturen. Menü-Klicks ohne KI-Anfrage verbrauchen keine Tokens.',

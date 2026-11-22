@@ -1,7 +1,5 @@
 # Benchmark-Ergebnisse / benchmark results
 
-[Modellvergleich v13 / v13 model comparison](modellvergleich-v13.md) · 25 Aufgaben, acht Läufe / 25 tasks, eight runs
-
 Jeder Vollbenchmark umfasst acht feste Aufgaben mit je zwei Versuchen. Jeder Lauf behält seine Messversion, Suite und Quellhashes. Nachtests stehen separat; sie verändern keinen früheren Benchmarkwert. / Each complete run contains eight tasks repeated twice. Builds, suites and source hashes stay attached to their own runs. Targeted retests never change earlier scores.
 
 | Modell / Serie | Ergebnis | Messstand | Beleg |
@@ -14,7 +12,9 @@ Jeder Vollbenchmark umfasst acht feste Aufgaben mit je zwei Versuchen. Jeder Lau
 | GPT-6.1 Sol/high · neu | 16/16 | 0.137.4-r2 · Suite 1.0.4 | [Neuer vollständiger Lauf](core-sol-01374-2026-11-08.json) |
 | DeepSeek V4.1 Flash/high · neuer Lauf | 16/16 | 0.137.4-r2 · Suite 1.0.4 | [Neuer vollständiger Lauf](core-deepseek-01374-2026-11-08.json) |
 
-[Historische Vergleichsdaten mit Quellhashes / Historical comparison data with source hashes](sol-deepseek-16-vergleich-2026-11-08.json)
+![DeepSeek 16/16 auf 0.137.0-r1 und Sol 16/16 auf 0.137.4-r2](../bilder/benchmark-sol-deepseek-16-2026-11-08.svg)
+
+[Comparison diagram in English](../bilder/benchmark-sol-deepseek-16-2026-11-08-en.svg) · [Daten / chart data with evidence SHA-256](sol-deepseek-16-vergleich-2026-11-08.json)
 
 Die unterschiedlichen Programm-, Werkzeug- und Promptstände schließen eine reine Modellrangfolge auf identischem Stand aus. Die 16/16 beschreiben die beobachteten nativen Prüfungen dieser Aufgaben, keine allgemeine Erfolgsquote. / Different program, tool-reference and prompt states prevent a controlled same-build model ranking. The 16/16 scores describe the observed native checks for these tasks, not general reliability.
 

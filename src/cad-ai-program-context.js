@@ -1,6 +1,32 @@
 // Menu navigation needs its trusted target catalogue and current UI state, not
 // the geometry command schemas. The request loop asks again with the full
 // contract before executing any model reply returned from this smaller scope.
+// Pure program help needs the confirmed revision and the current selection, not
+// the geometry records. The request loop keeps the full scene for revision and
+// selection checks and sends it again before any modelling or measurement
+// fallback is executed.
+export function cadAIRequestScene(scene, { programHelpOnly = false } = {}) {
+  if (!programHelpOnly || !scene || typeof scene !== 'object' || Array.isArray(scene)) return scene;
+  const selectionTargets = Array.isArray(scene.selectionTargets) ? scene.selectionTargets : [],
+    selected = new Set(selectionTargets.map((target) => JSON.stringify(target))),
+    descriptions = (Array.isArray(scene.objects) ? scene.objects : [])
+      .filter((object) => selected.has(JSON.stringify(object.target)))
+      .map((object) => ({
+        target: structuredClone(object.target),
+        ...(object.name !== undefined ? { name: object.name } : {}),
+        ...(object.kind !== undefined ? { kind: object.kind } : {}),
+        ...(object.locked ? { locked: true } : {}),
+      }));
+  return {
+    revision: scene.revision,
+    ...(Array.isArray(scene.selection) && scene.selection.length
+      ? { selection: structuredClone(scene.selection) }
+      : {}),
+    ...(selectionTargets.length
+      ? { selectionTargets: structuredClone(selectionTargets), selectionDescription: descriptions }
+      : {}),
+  };
+}
 export function cadAIRequestContext(context, { programHelpOnly = false } = {}) {
   if (!programHelpOnly || !context?.programAssistant) return context;
   return {

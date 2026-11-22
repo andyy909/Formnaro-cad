@@ -154,7 +154,7 @@ function simplify(p, eps) {
 }
 // Slice the original triangles, weld only numerically coincident endpoints and
 // require unambiguous closed cycles. A branching or interrupted cut is rejected.
-function section(f, plane) {
+function section(f, plane, diagnostics) {
   const points = [],
     neighbors = [],
     grid = new Map(),
@@ -199,10 +199,27 @@ function section(f, plane) {
     neighbors[b].push(a);
   }
   if (points.length > 6000) fail('Der Öffnungsrand ist für diese Analyse zu komplex.', 'MESH_LID_LIMIT');
-  if (!points.length || neighbors.some((n) => n.length !== 2))
+  if (!points.length || (!diagnostics && neighbors.some((n) => n.length !== 2)))
     fail('Dieser Querschnitt hat keinen eindeutigen geschlossenen Rand.', 'MESH_LID_SECTION');
   const seen = new Set(),
     loops = [];
+  if (diagnostics) {
+    // Discard an entire connected component if any of its vertices is open or branched.
+    // Other components still describe actual mesh intersections.
+    for (let i = 0; i < neighbors.length; i++) {
+      if (neighbors[i].length === 2 || seen.has(i)) continue;
+      diagnostics.rejectedComponents++;
+      const pending = [i];
+      seen.add(i);
+      while (pending.length) {
+        for (const next of neighbors[pending.pop()]) {
+          if (seen.has(next)) continue;
+          seen.add(next);
+          pending.push(next);
+        }
+      }
+    }
+  }
   for (let start = 0; start < points.length; start++) {
     if (seen.has(start)) continue;
     let prev = -1,
@@ -274,28 +291,37 @@ function circle(p, { maxRadius = 15 } = {}) {
 }
 function simpleContours(loops, eps) {
   const edges = loops.flatMap((p, loop) =>
-    p.map((a, i) => ({ a, b: p[(i + 1) % p.length], loop, index: i, count: p.length })),
+    p.map((a, i) => {
+      const b = p[(i + 1) % p.length];
+      return {
+        a,
+        b,
+        loop,
+        index: i,
+        count: p.length,
+        xMin: Math.min(a[0], b[0]),
+        xMax: Math.max(a[0], b[0]),
+        yMin: Math.min(a[1], b[1]),
+        yMax: Math.max(a[1], b[1]),
+      };
+    }),
   );
-  if (edges.length > 2000) fail('Zu viele Randsegmente für eine eindeutige Öffnungsprüfung.', 'MESH_LID_LIMIT');
+  if (edges.length > 6000) fail('Zu viele Randsegmente für eine eindeutige Öffnungsprüfung.', 'MESH_LID_LIMIT');
+  edges.sort((a, b) => a.xMin - b.xMin);
   const turn = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
-  for (let i = 0; i < edges.length; i++)
+  for (let i = 0; i < edges.length; i++) {
+    const a = edges[i];
     for (let j = i + 1; j < edges.length; j++) {
-      const a = edges[i],
-        b = edges[j];
+      const b = edges[j];
+      if (b.xMin > a.xMax + eps) break;
       if (a.loop === b.loop && (Math.abs(a.index - b.index) === 1 || Math.abs(a.index - b.index) === a.count - 1))
         continue;
-      if (
-        [0, 1].some(
-          (k) =>
-            Math.max(a.a[k], a.b[k]) + eps < Math.min(b.a[k], b.b[k]) ||
-            Math.max(b.a[k], b.b[k]) + eps < Math.min(a.a[k], a.b[k]),
-        )
-      )
-        continue;
+      if (a.yMax + eps < b.yMin || b.yMax + eps < a.yMin) continue;
       const t = [turn(a.a, a.b, b.a), turn(a.a, a.b, b.b), turn(b.a, b.b, a.a), turn(b.a, b.b, a.b)],
         tol = eps * Math.max(distance(a.a, a.b), distance(b.a, b.b));
       if (t[0] * t[1] <= tol * tol && t[2] * t[3] <= tol * tol) return false;
     }
+  }
   return true;
 }
 function findCandidate(f) {

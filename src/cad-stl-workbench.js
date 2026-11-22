@@ -30,6 +30,8 @@ export function openStlWorkbench(
     setBusy,
     setTask,
     importConverted,
+    importMeshForHelp,
+    showMeshHelp,
     converterImport,
     fitPreview = () => {},
     mountAISettings,
@@ -57,7 +59,8 @@ export function openStlWorkbench(
   let host = null;
   const $ = (id) =>
     host && !['modal', 'modal-body'].includes(id) ? host.querySelector('#' + id) : document.getElementById(id);
-  let result = null,
+  let meshHelpAvailable = false,
+    result = null,
     analysis = null,
     task = null,
     sequence = 0,
@@ -80,7 +83,7 @@ export function openStlWorkbench(
       .map(([key, name]) => `<option value="${key}">${name}</option>`)
       .join(
         '',
-      )}</select><button id="stl-set-type">Typ übernehmen</button><button id="stl-split">Teilen</button><button id="stl-merge">Zusammenführen</button><button id="stl-protect">Schützen</button><button id="stl-unprotect">Schutz lösen</button><button id="stl-undo">Rückgängig</button><button id="stl-redo">Wiederholen</button><button id="stl-save-edits">Korrektur speichern</button><button id="stl-load-edits">Korrektur laden</button><input id="stl-edit-file" type="file" accept=".json" hidden></div></details></div><p id="converter-status" role="status"></p><p id="converter-result" data-no-translate></p><p id="converter-project-info" hidden role="status"></p><div class="stl-output-actions"><button id="converter-report" disabled>Prüfbericht speichern</button><button id="stl-repaired-3mf" disabled>Reparierte 3MF speichern</button><button id="stl-repaired-stl" disabled>Reparierte STL speichern</button><button id="stl-preview-save" disabled>Ergebnisnetz speichern</button></div><div class="modal-actions"><button id="converter-cancel">Berechnung abbrechen</button><button id="stl-close">Schließen</button><button id="converter-import" disabled>CAD-Übernahme prüfen</button><button id="converter-apply" class="primary" hidden disabled>Übernehmen</button><button id="converter-discard" hidden>Vorschau verwerfen</button><button id="converter-run" class="primary">Konvertieren und STEP speichern</button></div></div>`,
+      )}</select><button id="stl-set-type">Typ übernehmen</button><button id="stl-split">Teilen</button><button id="stl-merge">Zusammenführen</button><button id="stl-protect">Schützen</button><button id="stl-unprotect">Schutz lösen</button><button id="stl-undo">Rückgängig</button><button id="stl-redo">Wiederholen</button><button id="stl-save-edits">Korrektur speichern</button><button id="stl-load-edits">Korrektur laden</button><input id="stl-edit-file" type="file" accept=".json" hidden></div></details></div><p id="converter-status" role="status"></p><p id="converter-result" data-no-translate></p><p id="converter-project-info" hidden role="status"></p><div class="stl-output-actions"><button id="converter-report" disabled>Prüfbericht speichern</button><button id="stl-repaired-3mf" disabled>Reparierte 3MF speichern</button><button id="stl-repaired-stl" disabled>Reparierte STL speichern</button><button id="stl-preview-save" disabled>Ergebnisnetz speichern</button></div><div class="modal-actions"><button id="converter-cancel">Berechnung abbrechen</button><button id="stl-close">Schließen</button><button id="converter-mesh-help" hidden>Mit Netz-Hilfe weiter</button><button id="converter-import" disabled>CAD-Übernahme prüfen</button><button id="converter-apply" class="primary" hidden disabled>Übernehmen</button><button id="converter-discard" hidden>Vorschau verwerfen</button><button id="converter-run" class="primary">Konvertieren und STEP speichern</button></div></div>`,
   );
   host = $('stl-workbench');
   const dialog = $('modal'),
@@ -277,6 +280,9 @@ export function openStlWorkbench(
     $('converter-cancel').disabled = !locked || applying;
     $('converter-import').disabled =
       locked || sourceApplied || !!projectPreview || !result || (!converterImport && !importConverted);
+    $('converter-mesh-help').hidden =
+      !meshHelpAvailable || !!result || !showMeshHelp || (!boundSource && !importMeshForHelp);
+    $('converter-mesh-help').disabled = locked || !!projectPreview || sourceApplied;
     $('converter-apply').hidden = !projectPreview;
     $('converter-apply').disabled = locked || !projectPreview;
     $('converter-discard').hidden = !projectPreview;
@@ -358,6 +364,7 @@ export function openStlWorkbench(
     aiPanel?.invalidate();
     discardPreview();
     result = null;
+    meshHelpAvailable = false;
     preview.clearResult();
     $('converter-result').textContent = '';
     $('converter-run').textContent = projectOnly ? 'Lokal in CAD umwandeln' : 'Konvertieren und STEP speichern';
@@ -443,6 +450,7 @@ export function openStlWorkbench(
         : 'Flächenvorschläge bereit. Bereiche und Dreiecke am Modell oder in der Liste wählen.';
     } catch (error) {
       if (ticket === sequence && alive()) {
+        meshHelpAvailable = true;
         status.textContent = error.message;
         loadOriginal();
       }
@@ -522,6 +530,7 @@ export function openStlWorkbench(
   }
   function showResult(value, settings) {
     result = value;
+    meshHelpAvailable = false;
     $('converter-result').textContent = conversionSummary(value.report) + scaleNote(value.report, settings);
     if (value.report.symmetry)
       $('converter-result').textContent +=
@@ -575,10 +584,38 @@ export function openStlWorkbench(
           status.textContent = 'CAD-Ergebnis bereit. Original und Ergebnis vergleichen, dann CAD-Übernahme prüfen.';
         else await save();
       } catch (error) {
-        if (ticket === sequence && alive()) status.textContent = error.message;
+        if (ticket === sequence && alive()) {
+          meshHelpAvailable = !result && error.name !== 'AbortError' && error.code !== 'ABORTED';
+          status.textContent = error.message;
+        }
       } finally {
         finish(ticket);
       }
+    });
+  $('converter-mesh-help').onclick = () =>
+    safe(async () => {
+      if ($('converter-mesh-help').disabled || $('converter-mesh-help').hidden || !alive()) return;
+      ready();
+      if (boundSource && !boundSource.current()) return;
+      const unit = Number($('converter-unit').value);
+      const abort = new AbortController(),
+        ticket = begin({ cancel: () => abort.abort() }),
+        current = () => alive() && dialog.open && ticket === sequence && !abort.signal.aborted;
+      let id;
+      try {
+        id =
+          boundSource?.source.target.rootId ??
+          (await importMeshForHelp(selected, { unit, signal: abort.signal, current }));
+        if (!current()) return;
+      } catch (error) {
+        if (current() && error.name !== 'AbortError') status.textContent = error.message;
+        return;
+      } finally {
+        finish(ticket);
+      }
+      dialog.close();
+      dispose();
+      showMeshHelp(id);
     });
   $('stl-symmetry-run').onclick = () =>
     safe(async () => {
@@ -987,12 +1024,14 @@ export function openStlWorkbench(
       if (projectOnly && converterImport) await prepareProjectPreview(true);
       else status.textContent = message + ' Ergebnis vergleichen oder STEP speichern.';
     } catch (error) {
-      if (alive())
+      if (alive()) {
+        if (!autoCancelled && !result) meshHelpAvailable = true;
         status.textContent =
           autoCancelled && result
             ? 'KI-Korrektur abgebrochen. Die lokale Vorschau bleibt erhalten.'
             : error.message +
               (analysis || autoCancelled ? '' : ' Für eine gezielte Korrektur Flächen analysieren und markieren.');
+      }
     } finally {
       autoBusy = false;
       if (alive()) {

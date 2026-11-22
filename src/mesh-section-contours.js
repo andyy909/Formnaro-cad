@@ -60,7 +60,7 @@ function arcFit(points, tolerance) {
   if (angle >= Math.PI * 1.95 || angle < 0.03 || bound > tolerance) return null;
   return { element: { type: 'arc', start: a, through: b, end: c }, error: bound };
 }
-function fittedLoop(points, tolerance) {
+function fittedCircle(points, tolerance) {
   const circle = g.circle(points, { maxRadius: 5000 });
   if (circle) {
     let stepMax = 0;
@@ -71,8 +71,13 @@ function fittedLoop(points, tolerance) {
     }
     const error = circle.fitError + (circle.diameter / 2) * (1 - Math.cos(stepMax / 2));
     if (error <= tolerance)
-      return { elements: [{ type: 'circle', center: circle.center, diameter: circle.diameter }], error };
+      return { element: { type: 'circle', center: circle.center, diameter: circle.diameter }, error };
   }
+  return null;
+}
+function fittedLoop(points, tolerance) {
+  const circle = fittedCircle(points, tolerance);
+  if (circle) return { elements: [circle.element], error: circle.error };
   const path = [...points, points[0]],
     elements = [];
   let error = 0;
@@ -94,10 +99,18 @@ function fittedLoop(points, tolerance) {
   return { elements, error };
 }
 
-/** A section at the requested plane, never the widest rim in a search band.
- * Closed original triangle cycles only. No bridging, repair or model mutation. */
+/** A section at the requested plane. Measurements may keep closed cycles from
+ * an incomplete cut. Sketch profiles still require all components to be closed. */
 export function meshSectionContours(node, options = {}) {
-  const allowed = ['normal', 'planePoint', 'fitTolerance', 'includePoints', 'loopIndices', 'geometryDigest'];
+  const allowed = [
+    'normal',
+    'planePoint',
+    'fitTolerance',
+    'includePoints',
+    'loopIndices',
+    'geometryDigest',
+    'summaryOnly',
+  ];
   if (
     !options ||
     Object.getPrototypeOf(options) !== Object.prototype ||
@@ -105,6 +118,8 @@ export function meshSectionContours(node, options = {}) {
     !vector(options.normal) ||
     Math.hypot(...options.normal) < 1e-12 ||
     !vector(options.planePoint) ||
+    (options.summaryOnly !== undefined && typeof options.summaryOnly !== 'boolean') ||
+    (options.summaryOnly && options.includePoints) ||
     (options.includePoints !== undefined && typeof options.includePoints !== 'boolean') ||
     !Number.isFinite(options.fitTolerance ?? 0.02) ||
     (options.fitTolerance ?? 0.02) < 0 ||
@@ -118,7 +133,7 @@ export function meshSectionContours(node, options = {}) {
         options.loopIndices.some((i) => !Number.isInteger(i) || i < 0 || i > 31)))
   )
     fail(
-      'Schnittkonturen: normal, planePoint, optional fitTolerance 0–0,1 mm, includePoints, loopIndices und aktueller geometryDigest.',
+      'Schnittkonturen: normal, planePoint, optional fitTolerance 0–0,1 mm, includePoints, loopIndices, summaryOnly und aktueller geometryDigest.',
     );
   const s = g.source(node);
   if (options.geometryDigest && options.geometryDigest !== s.geometryDigest)
@@ -128,7 +143,8 @@ export function meshSectionContours(node, options = {}) {
     shift = f.epsilon * 2.231,
     actual = plane + shift;
   if (actual <= f.lo || actual >= f.hi) fail('Die Schnittebene muss innerhalb der Vorlage liegen.');
-  const contours = g.section(f, plane);
+  const diagnostics = options.summaryOnly ? { rejectedComponents: 0 } : undefined;
+  const contours = g.section(f, plane, diagnostics);
   if (!g.simpleContours(contours, f.epsilon * 8))
     fail('Berührende oder überschneidende Schnittkonturen sind nicht eindeutig.');
   const selected = options.loopIndices ?? contours.map((_, i) => i);
@@ -147,24 +163,67 @@ export function meshSectionContours(node, options = {}) {
       )
         parentIndex = j;
     const depth = parentIndex === null ? 0 : all[parentIndex].depth + 1,
-      fit = fittedLoop(points, tolerance),
-      elements = fit.elements.map((e, i) => ({ id: `s${index}e${i}`, ...e }));
-    all.push({
-      index,
-      parentIndex,
-      depth,
-      role: depth % 2 ? 'hole' : 'outer',
-      area: g.area(points),
-      pointCount: points.length,
-      complete: true,
-      fitErrorBound: fit.error,
-      elements,
-      ...(options.includePoints ? { points } : {}),
-      bounds: {
+      role = depth % 2 ? 'hole' : 'outer',
+      bounds = {
         min: [0, 1].map((k) => Math.min(...points.map((p) => p[k]))),
         max: [0, 1].map((k) => Math.max(...points.map((p) => p[k]))),
-      },
-    });
+      };
+    if (diagnostics) {
+      const circle = fittedCircle(points, tolerance);
+      const label = { index, depth, role: diagnostics.rejectedComponents ? 'unknown' : role };
+      if (circle) {
+        const exactCenter = f.world([...circle.element.center, actual]),
+          center = exactCenter.map((n) => Number(n.toFixed(6))),
+          diameter = Number(circle.element.diameter.toFixed(6)),
+          rounding =
+            Math.hypot(...exactCenter.map((n, i) => n - center[i])) + Math.abs(circle.element.diameter - diameter) / 2;
+        const fitErrorBound = Math.ceil((circle.error + rounding) * 1e6) / 1e6;
+        if (fitErrorBound <= tolerance) {
+          all.push({ ...label, kind: 'circle', center, diameter, fitErrorBound });
+          continue;
+        }
+      }
+      all.push({ ...label, kind: 'outline', bounds });
+    } else {
+      const fit = fittedLoop(points, tolerance),
+        elements = fit.elements.map((e, i) => ({ id: `s${index}e${i}`, ...e }));
+      all.push({
+        index,
+        parentIndex,
+        depth,
+        role,
+        area: g.area(points),
+        pointCount: points.length,
+        complete: true,
+        fitErrorBound: fit.error,
+        elements,
+        ...(options.includePoints ? { points } : {}),
+        bounds,
+      });
+    }
+  }
+  if (diagnostics) {
+    return {
+      version: 1,
+      kind: 'meshSectionMeasurements',
+      geometryDigest: s.geometryDigest,
+      units: 'mm',
+      measurementPlanePoint: origin,
+      normal: f.n,
+      frame,
+      fitTolerance: tolerance,
+      complete: diagnostics.rejectedComponents === 0 && selected.length === all.length,
+      rejectedComponents: diagnostics.rejectedComponents,
+      totalLoops: all.length,
+      measurements: selected.map((i) => {
+        const { depth, ...measurement } = all[i];
+        return measurement;
+      }),
+      sketch: null,
+      sourcePreserved: true,
+      limitations:
+        'Closed cycles on this plane. Circle centers in world mm; outline bounds in section frame. An unknown role does not prove a hole.',
+    };
   }
   const loops = selected.map((i) => all[i]),
     elements = loops.flatMap((l) => l.elements),

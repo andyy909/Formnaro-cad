@@ -28,8 +28,9 @@ export function developmentSummaryText(report){
  const first=passed.filter(entry=>entry.decisive.firstTry===true).length;
  const after=passed.filter(entry=>entry.decisive.firstTry===false).length;
  const unknown=passed.filter(entry=>typeof entry.decisive.firstTry!=='boolean').length;
- const open=cases.length-passed.length;
- return 'Bestanden: '+first+' im ersten Versuch, '+after+' nach Prüferhinweis, '+open+' offen'+(unknown?' · '+unknown+' ohne Angabe':'');
+ const failed=cases.filter(entry=>entry.decisive?.status==='failed').length;
+ const open=cases.length-passed.length-failed;
+ return 'Bestanden: '+first+' im ersten Versuch, '+after+' nach Prüferhinweis, '+(failed?failed+' durchgefallen, ':'')+open+' offen'+(unknown?' · '+unknown+' ohne Angabe':'');
 }
 
 export function runFacts(record){
@@ -186,8 +187,8 @@ export function developmentFindings(report,records){
  const passed=outcomes.filter(outcome=>outcome?.status==='passed');
  const byReason={};
  for(const outcome of outcomes){
-  if(!outcome||outcome.status==='passed')continue;
-  const reason=String(outcome.reason??'unverified');
+  if(outcome?.status==='passed')continue;
+  const reason=outcome?.reason??(outcome?.status==='failed'?'native-mismatch':'not-started');
   byReason[reason]=(byReason[reason]??0)+1;
  }
  return {

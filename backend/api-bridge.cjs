@@ -1,14 +1,32 @@
 const http=require('node:http'),crypto=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
-const routes={'POST /v1/ui':'ui','POST /v1/assembly':'assembly','GET /v1/context':'context','POST /v1/context':'context','GET /v1/command_info':'command_info','POST /v1/command_info':'command_info','GET /v1/scene':'scene','POST /v1/scene':'scene','GET /v1/project':'project','GET /v1/screenshot':'screenshot','POST /v1/screenshot':'screenshot','POST /v1/preview':'preview','POST /v1/analysis':'analysis','POST /v1/discard':'discard','POST /v1/apply':'apply','POST /v1/export':'export','POST /v1/save':'save','GET /v1/status':'status','POST /v1/status':'status','POST /v1/cancel':'cancel','POST /v1/preview/start':'preview_start','POST /v1/preview/result':'preview_result'};
+const routes={'POST /v1/agent-chat':'agent_chat','POST /v1/orca':'orca','POST /v1/ui':'ui','POST /v1/assembly':'assembly','GET /v1/context':'context','POST /v1/context':'context','GET /v1/command_info':'command_info','POST /v1/command_info':'command_info','GET /v1/scene':'scene','POST /v1/scene':'scene','GET /v1/project':'project','GET /v1/screenshot':'screenshot','POST /v1/screenshot':'screenshot','POST /v1/preview':'preview','POST /v1/analysis':'analysis','POST /v1/discard':'discard','POST /v1/apply':'apply','POST /v1/export':'export','POST /v1/save':'save','GET /v1/status':'status','POST /v1/status':'status','POST /v1/cancel':'cancel','POST /v1/preview/start':'preview_start','POST /v1/preview/result':'preview_result'};
+const orcaServices=new Map();
+function registerOrcaSlicer(directory, service, schema) {
+ const key=path.resolve(directory);
+ orcaServices.set(key,{service,schema});
+ return ()=>{if(orcaServices.get(key)?.service===service)orcaServices.delete(key);};
+}
 function fail(message,status=400){return Object.assign(new Error(message),{status});}
-async function startBridge({rpc,directory,port=0}){const token=crypto.randomBytes(32).toString('hex'),descriptorPath=path.join(directory,'ai-bridge.json');const jobs=require('./automation-jobs.cjs').createAutomationJobs({rpc});
+async function startBridge({rpc,directory,port=0}){const token=crypto.randomBytes(32).toString('hex'),descriptorPath=path.join(directory,'ai-bridge.json');const jobs=require('./automation-jobs.cjs').createAutomationJobs({rpc:async(method,args,options)=>{
+ const orca=orcaServices.get(path.resolve(directory));
+ if(method==='orca'){
+  if(!orca?.service.available())throw Object.assign(fail('OrcaSlicer ist nicht verfügbar.',404),{code:'ORCA_UNAVAILABLE'});
+  return orca.service.agentRequest(args,{...options,rpc});
+ }
+ const value=await rpc(method,args,options);
+ return method==='context'&&orca?.service.available()?{...value,orcaSlicerSchema:orca.schema}:value;
+ }});
  const server=http.createServer(async(req,res)=>{const cancellation=new AbortController(),abort=()=>{if(!res.writableFinished)cancellation.abort(Object.assign(Error('CAD client disconnected.'),{name:'AbortError',code:'ABORTED'}));};req.once('aborted',abort);res.once('close',abort);const send=(status,value)=>{if(res.destroyed)return;res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(value));};try{
   if(req.headers.origin!==undefined)throw fail('Browser origins are not allowed.',403);
   const supplied=Buffer.from(String(req.headers.authorization||'')),expected=Buffer.from('Bearer '+token);if(supplied.length!==expected.length||!crypto.timingSafeEqual(supplied,expected))throw fail('Unauthorized.',401);
   if(!/^127\.0\.0\.1:\d+$/.test(req.headers.host||''))throw fail('Invalid host.',403);
   const method=routes[req.method+' '+req.url];if(!method)throw fail('Unknown endpoint.',404);
   let body={},size=0;if(req.method==='POST'){if(!String(req.headers['content-type']||'').startsWith('application/json'))throw fail('JSON content type required.',415);const chunks=[];for await(const chunk of req){size+=chunk.length;if(size>2*1024*1024)throw fail('Command request exceeds 2 MB.',413);chunks.push(chunk);}try{body=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw fail('Invalid JSON.');}}
-  cancellation.signal.throwIfAborted();const value=await jobs.request(method,body,{signal:cancellation.signal});send(200,method==='context'?{...value,workingContext:require('./ai-working-rules.cjs').sharedAgentContext()}:method==='ui'&&body.action==='state'?{...value,workingContext:require('./ai-working-rules.cjs').sharedAgentContext('practice')}:value);
+  cancellation.signal.throwIfAborted();
+  // The agent calls this same bridge for CAD tools while it is running.
+  if(method==='agent_chat')orcaServices.get(path.resolve(directory))?.service.panelContact?.(req.headers['x-formnaro-orca-instance'] ?? 'system');
+  const options={signal:cancellation.signal};
+  const value=await (method==='agent_chat'?rpc(method,body,options):jobs.request(method,body,options));send(200,method==='context'?{...value,workingContext:require('./ai-working-rules.cjs').sharedAgentContext()}:method==='ui'&&body.action==='state'?{...value,workingContext:require('./ai-working-rules.cjs').sharedAgentContext('practice')}:value);
  }catch(e){const code=typeof e.code==='string'&&/^[A-Z][A-Z0-9_]{0,79}$/.test(e.code)?e.code:undefined;send(e.status||(code==='STALE_REVISION'||/STALE_REVISION/.test(e.message)?409:400),{error:e.message,...(code?{code}:{}),...(e.feedback?{feedback:e.feedback}:{})});}finally{req.removeListener('aborted',abort);res.removeListener('close',abort);}});
  server.requestTimeout=30000;server.headersTimeout=10000;
  // Some hosts allocate ephemeral ports below 49152, including Fetch-blocked
@@ -31,4 +49,4 @@ async function startBridge({rpc,directory,port=0}){const token=crypto.randomByte
  const descriptor={application:'Formnaro',apiVersion:1,url:'http://127.0.0.1:'+server.address().port,token,pid:process.pid,started:new Date().toISOString()};try{fs.mkdirSync(directory,{recursive:true});fs.writeFileSync(descriptorPath,JSON.stringify(descriptor,null,2),{mode:0o600});}catch(e){server.close();throw e;}
  return {descriptor,descriptorPath,observeState:value=>jobs.observe(value),close:async()=>{jobs.close();try{const current=JSON.parse(fs.readFileSync(descriptorPath,'utf8'));if(current.token===token)fs.unlinkSync(descriptorPath);}catch{}server.closeAllConnections();await new Promise(r=>server.close(r));}};
 }
-module.exports={startBridge,routes};
+module.exports={registerOrcaSlicer,startBridge,routes};

@@ -1,7 +1,9 @@
 // Explicit, read-only technical drawing calculations in the existing CAD worker.
 // Curves remain in model millimetres with mathematical Y up; sheet placement,
 // scale, text and zoom never enter this native query.
-import { cadIdentity, inverseCadMatrix, multiplyCadMatrices } from './cad-affine.js';
+import { cadIdentity, cadPoint, inverseCadMatrix, multiplyCadMatrices } from './cad-affine.js';
+import { findAssociativeDrillBox } from './cad-associative-drill.js';
+import { remapCadBoxFaceAnchor } from './cad-box-face-anchor.js';
 import { cadBounds, readCadBrep, transformCad } from './cad-native-kernel.js';
 import { cadGeometryDigest, cadSourceGeometryDigest } from './cad-geometry-digest.js';
 import {
@@ -14,6 +16,7 @@ import { createCadPrecisionNative } from './cad-precision-native.js';
 import { cadContourEdgeSourceKey } from './cad-linked-contours-native.js';
 
 const TAU = 2 * Math.PI;
+export const CAD_DRAWING_BORE_ROLE = 'drill.bore.entry';
 const fail = (message) => {
   const error = Error(message);
   error.code = 'INVALID_DRAWING_PROJECTION';
@@ -196,23 +199,63 @@ export function createDrawingReferenceLookup(buckets, overflow) {
     return refs.length && refs.length <= 8 ? refs : undefined;
   };
 }
+function throughBoreEntry(node) {
+  const drill = node.drill;
+  if (drill?.version !== 1 || drill.kind !== 'plain' || drill.termination !== 'through' || drill.pattern) return null;
+  const source = node.children?.[0];
+  if (source?.source !== 'native' || source.id !== drill.sourceId) return null;
+  const stock = findAssociativeDrillBox(source);
+  if (!stock || stock.node.id !== drill.boxId) return null;
+  const anchor = remapCadBoxFaceAnchor({
+    feature: drill.feature,
+    anchor: drill.anchor,
+    previousBounds: drill.sourceBounds,
+    currentBounds: stock.node.stats.bounds,
+  });
+  if (!anchor) return null;
+  const inverse = inverseCadMatrix(stock.matrix),
+    normal = [0, 1, 2].map((k) =>
+      anchor.normal.reduce((sum, coordinate, row) => sum + inverse[k * 4 + row] * coordinate, 0),
+    ),
+    length = Math.hypot(...normal);
+  return {
+    center: cadPoint(stock.matrix, anchor.point),
+    radius: drill.diameter / 2 + drill.gap,
+    normal: normal.map((n) => n / length),
+  };
+}
+
+function isBoreEntry(curve, entry) {
+  return (
+    curve.kind === 'circle' &&
+    curve.closed &&
+    referenceNear(curve.center, entry.center) &&
+    Math.abs(curve.radii[0] - entry.radius) <= 1e-7 &&
+    Math.abs(Math.abs(curve.normal.reduce((dot, n, k) => dot + n * entry.normal[k], 0)) - 1) <= 1e-9 &&
+    Math.abs(curve.parameterRange[1] - curve.parameterRange[0] - TAU) <= 1e-7
+  );
+}
+
 function drawingSourceReferences(oc, nodes, inverse) {
   const buckets = new Map();
   let count = 0,
     overflow = false;
   function visit(node, target, parent) {
     if (node.kind !== 'cad' || node.suppressed) return;
-    const world = multiplyCadMatrices(parent, node.transform);
-    if (
-      node.source === 'step' ||
-      (node.source === 'native' && ['box', 'cylinder', 'sketch'].includes(node.recipe?.type))
-    ) {
+    const world = multiplyCadMatrices(parent, node.transform),
+      bore = throughBoreEntry(node),
+      originalSource =
+        node.source === 'step' ||
+        (node.source === 'native' && ['box', 'cylinder', 'sketch'].includes(node.recipe?.type));
+    if (originalSource || bore) {
       const shape = readCadBrep(oc, node.brep.data),
         brepSignature = node.source === 'step' ? cadGeometryDigest(node.brep.data) : null;
       let edges = [];
       try {
         edges = uniqueCadEdgesNative(oc, shape);
-        for (const edge of edges) {
+        const boreEdges = bore ? edges.filter((edge) => isBoreEntry(cadNativeCurveDto(oc, edge), bore)) : null;
+        const sourceEdges = boreEdges?.length === 1 ? boreEdges : boreEdges ? [] : edges;
+        for (const edge of sourceEdges) {
           if (++count > 20000) {
             overflow = true;
             return;
@@ -236,7 +279,7 @@ function drawingSourceReferences(oc, nodes, inverse) {
             if (!bucket) continue;
             let role;
             try {
-              role = cadContourEdgeSourceKey(oc, node, edge);
+              role = bore ? CAD_DRAWING_BORE_ROLE : cadContourEdgeSourceKey(oc, node, edge);
             } catch (error) {
               if (error.code === 'CONTOUR_REBIND_REQUIRED') continue;
               throw error;
@@ -275,7 +318,8 @@ function drawingSourceReferences(oc, nodes, inverse) {
         edges.forEach((edge) => edge.delete());
         shape.delete();
       }
-    } else if (!node.extraction && !node.modeling?.sourceSignature)
+    }
+    if ((bore || !originalSource) && !node.extraction && !node.modeling?.sourceSignature)
       for (const child of node.children ?? [])
         visit(child, { rootId: target.rootId, path: [...target.path, child.id] }, world);
   }

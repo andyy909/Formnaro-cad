@@ -6,6 +6,8 @@ import { resolveSketch } from './mesh-engine/mesh-sketch.js';
 import { analyzeMeshLids, createMeshLid, validateMeshLidOptions } from './mesh-lid.js';
 import { analyzeMeshFeatures } from './mesh-features.js';
 import { meshSectionContours } from './mesh-section-contours.js';
+import { directedCountersinks } from './cad-lab-opening-profile.js';
+import { measuredSteppedBores } from './mesh-stepped-bores.js';
 import { checkMeshAIResults } from './mesh-ai-result-checks.js';
 import { measureMeshRadialClearance } from './mesh-radial-clearance.js';
 import { createMeshCounterpart, validateCounterpartOptions } from './mesh-counterpart.js';
@@ -939,6 +941,18 @@ export function createMeshEngineAdapter({ kernel } = {}) {
       if (!n || n.kind !== 'mesh' || n.meshRole === 'hole')
         throw Error('Eine vorhandene Material-Netzvorlage auswählen.');
       return meshSectionContours(n, options);
+    }
+    if (kind === 'openingDirections') {
+      const n = project.nodes.find((n) => n.id === id);
+      if (!n || n.kind !== 'mesh' || n.meshRole === 'hole')
+        throw Error('Eine vorhandene Material-Netzvorlage auswählen.');
+      return { countersinks: directedCountersinks(n) };
+    }
+    if (kind === 'steppedBores') {
+      const n = project.nodes.find((n) => n.id === id);
+      if (!n || n.kind !== 'mesh' || n.meshRole === 'hole')
+        throw Error('Eine vorhandene Material-Netzvorlage auswählen.');
+      return { steps: measuredSteppedBores(n) };
     }
     if (kind === 'featureCatalog') {
       const p = cadProjectSnapshot(project),

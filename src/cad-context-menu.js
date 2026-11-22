@@ -17,6 +17,9 @@ export function createCadContextMenu({
   getSelection,
   getContexts,
   getRevision,
+  getProjectScope,
+  getPickTool = () => null,
+  describePick,
   select,
   runCommand,
   canRun = () => true,
@@ -63,6 +66,7 @@ export function createCadContextMenu({
     ++sequence;
     if (!active) return;
     const previous = active.focus;
+    if (active.picking) view.highlightPick(null);
     active.node.remove();
     active = null;
     if (focus) (previous?.isConnected ? previous : view.canvas)?.focus({ preventScroll: true });
@@ -75,10 +79,76 @@ export function createCadContextMenu({
     }
     return contextCommandAllowed(key, contexts) && canRun(key);
   }
+  function current(s) {
+    return (
+      active === s &&
+      s.revision === getRevision() &&
+      s.scope === getProjectScope?.() &&
+      s.selection === signature() &&
+      (!s.pickTool || s.pickTool.current())
+    );
+  }
+  function rejectStale(s) {
+    if (active !== s) return;
+    close({ focus: true });
+    toast(word('Modell oder Auswahl geändert. Treffer erneut wählen.', 'Model or selection changed. Pick again.'));
+  }
+  function position(menu, x, y) {
+    const r = menu.getBoundingClientRect();
+    menu.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';
+    menu.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px';
+  }
+  async function showPicks(s) {
+    if (!current(s)) return rejectStale(s);
+    if (!s.pickTool && s.beforeSelection) {
+      s.selection = JSON.stringify(s.beforeSelection);
+      select(s.beforeSelection);
+    }
+    s.picking = true;
+    const { node: menu, point, pickTool } = s;
+    const heading = pickTool?.label ?? word('Andere auswählen', 'Select other');
+    const status = make('strong', word('Treffer werden ermittelt …', 'Finding candidates …'), 'context-heading');
+    status.setAttribute('role', 'status');
+    menu.replaceChildren(status);
+    const hits = view.visualTargets(point);
+    const candidates = pickTool
+      ? await pickTool.candidates(hits, point, () => current(s))
+      : hits.map((hit) => ({ ...hit, label: hit.simplified ? word('Rahmen', 'Frame') : word('Körper', 'Body') }));
+    if (!current(s)) return rejectStale(s);
+    status.textContent = heading;
+    for (const entry of candidates) {
+      const name = describePick(entry.target);
+      if (!name) continue;
+      const candidate = row(menu, 'pick-candidate', name + ' · ' + entry.label, !entry.disabled);
+      candidate.dataset.pickRoot = entry.target.rootId;
+      if (entry.disabled) continue;
+      const highlight = () => view.highlightPick(entry);
+      candidate.onfocus = highlight;
+      candidate.onpointerenter = highlight;
+      candidate.onpointerleave = () => {
+        if (document.activeElement === candidate) highlight();
+        else view.highlightPick(null);
+      };
+      candidate.onclick = () =>
+        safe(() => {
+          if (!current(s)) return rejectStale(s);
+          close({ focus: true });
+          if (pickTool) return pickTool.apply(entry);
+          select([entry.target]);
+        });
+    }
+    if (!menu.querySelector('button'))
+      menu.append(make('strong', word('Keine passenden Treffer.', 'No matching candidates.'), 'context-heading'));
+    const cancel = row(menu, 'pick-dismiss', word('Abbrechen', 'Cancel'));
+    cancel.onfocus = () => view.highlightPick(null);
+    cancel.onclick = () => close({ focus: true });
+    position(menu, point.clientX, point.clientY);
+    menu.querySelector('button:not(:disabled)')?.focus({ preventScroll: true });
+  }
   function choose(key) {
     const s = active;
     if (!s) return;
-    if (s.revision !== getRevision() || s.selection !== signature()) {
+    if (!current(s)) {
       close();
       toast(
         word(
@@ -88,6 +158,7 @@ export function createCadContextMenu({
       );
       return;
     }
+    if (key === 'pick-other') return showPicks(s);
     if (!['cancel', 'apply-active', 'customize'].includes(key) && !allowed(key)) return;
     const picked = { point: s.point, canvas: s.canvas, target: s.target };
     close();
@@ -112,7 +183,11 @@ export function createCadContextMenu({
     parent.append(b);
     return b;
   }
-  function show(x, y, { background = false, focus = document.activeElement, canvas = false, target = null } = {}) {
+  function show(
+    x,
+    y,
+    { background = false, focus = document.activeElement, canvas = false, target = null, beforeSelection = null } = {},
+  ) {
     close();
     const mode = getMode(),
       idle = isIdle(),
@@ -132,12 +207,18 @@ export function createCadContextMenu({
     active = {
       node: menu,
       revision: getRevision(),
+      scope: getProjectScope?.(),
       selection: signature(),
       focus,
       point: { clientX: x, clientY: y },
       canvas,
       target,
+      beforeSelection,
+      pickTool: !idle && canvas ? getPickTool() : null,
     };
+    if (canvas && ((idle && target) || active.pickTool)) {
+      row(menu, 'pick-other', active.pickTool?.label ?? word('Andere auswählen', 'Select other'));
+    }
     if (!idle) {
       row(menu, 'apply-active', word('Vorschau übernehmen', 'Apply preview'), canRun('apply-active'));
       row(menu, 'cancel', word('Bearbeitung abbrechen', 'Cancel operation'));
@@ -186,9 +267,7 @@ export function createCadContextMenu({
     }
     document.body.append(menu);
     menu.style.maxHeight = Math.max(100, innerHeight - 16) + 'px';
-    const r = menu.getBoundingClientRect();
-    menu.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';
-    menu.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px';
+    position(menu, x, y);
     menu.onkeydown = (event) => {
       const buttons = [...menu.querySelectorAll('button:not(:disabled)')],
         i = buttons.indexOf(document.activeElement);
@@ -232,12 +311,16 @@ export function createCadContextMenu({
     };
   }
   function onContext(event) {
+    if (rightGesture?.moved) {
+      if (event.target === view.canvas) event.preventDefault();
+      return;
+    }
     const place = location(event);
     if (!place || document.getElementById('modal')?.open || document.body.classList.contains('layout-editing')) return;
     event.preventDefault();
     event.stopPropagation();
-    if (rightGesture?.moved) return;
     safe(() => {
+      const beforeSelection = getSelection();
       if (
         isIdle() &&
         place.target &&
@@ -251,6 +334,7 @@ export function createCadContextMenu({
         focus: event.target,
         canvas: place.canvas,
         target: place.target,
+        beforeSelection,
       });
     });
   }
@@ -304,7 +388,10 @@ export function createCadContextMenu({
   window.addEventListener('resize', () => close());
   window.addEventListener('blur', () => close());
   function refresh() {
-    if (active && (active.revision !== getRevision() || active.selection !== signature())) close();
+    if (active && !current(active)) {
+      if (active.picking) rejectStale(active);
+      else close();
+    }
   }
   function mountSettings(root) {
     const field = make('fieldset');

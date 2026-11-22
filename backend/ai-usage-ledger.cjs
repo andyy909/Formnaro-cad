@@ -3,11 +3,13 @@ const {writeAtomicSync}=require('./program-storage.cjs');
 const CATEGORIES=['edit','rebuild','create','help','other'],MAX_BYTES=8*1024*1024;
 const empty=()=>({requests:0,tasks:0,inputTokens:0,outputTokens:0,cachedInputTokens:0,reasoningTokens:0,inputMissing:0,outputMissing:0,cacheMissing:0,reasoningMissing:0,costMinUSD:0,costMaxUSD:0,pricedRequests:0,unpricedRequests:0});
 const finite=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0;
-function categoryFor({prompt='',domain,scene,assistantKind}={}){
- const s=String(prompt).toLowerCase();
- if(['guide','help','note'].includes(assistantKind)||/zeig.*(menü|menu|bedien|werkzeug)|show.*(menu|tool|navigation)/.test(s))return 'help';
+function categoryFor({prompt='',domain,context,assistantKind}={}){
+ const s=String(prompt).trim().toLowerCase();
+ if(context?.programHelpOnly===true||['guide','help','note'].includes(assistantKind)||/zeig.*(menü|menu|bedien|werkzeug)|show.*(menu|tool|navigation)/.test(s))return 'help';
+ if(/^(?:bitte[,\s]+)?(?:wie|wo(?:für|mit|her|hin)?|was|welch\w*|warum|wieso|wann|kann ich|darf ich|how|where|what|which|why|can i)\b/.test(s)||/^(?:kannst du (?:mir )?(?:erklären|erklaeren|sagen)|can you (?:explain|tell me))\b/.test(s))return 'help';
  if(/\b(wo|wie|welch|what|where|how)\b/.test(s)&&/menü|menu|button|schaltfl|einstell|settings|werkzeug|bedien|finde|öffne|open|export|speicher/.test(s))return 'help';
  if(domain==='converter'||/nachbau|nachstell|rekonstru|reconstruct|rebuild|reverse.?engineer/.test(s)||/\bstl\b/.test(s)&&/\bcad\b|\bstep\b|baue|bau |erstell|konvert/.test(s))return 'rebuild';
+ if(/^(?:(?:bitte|please)\s+)?(?:erstell\w*|erzeug\w*|konstruiere|generiere|baue?|create|build|generate)\b/.test(s))return 'create';
  if(/änder|aender|bearbeit|verschieb|skalier|verrund|bohr|extrudier|resize|rotate|modify|\bcut\b|\bmove\b/.test(s))return 'edit';
  if(/erstell|erzeug|konstrui|generier|\bbaue?\b|\bcreate\b|\bbuild\b|\bgenerate\b/.test(s))return 'create';
  if(assistantKind==='demonstrate')return 'create';
@@ -41,8 +43,17 @@ function createAIUsageLedger({file,now=()=>new Date(),write=writeAtomicSync,reda
   let data;try{data=load();}catch{return {warning,available:false,rows:[]};}
   const start=now();if(period==='30days')start.setDate(start.getDate()-29);const from=period==='all'?'':day(start);
   const rows=CATEGORIES.map(category=>({category,api:empty(),subscription:empty()}));
-  for(const r of data.rows){if(r.day<from||provider&&r.provider!==provider)continue;const target=rows.find(x=>x.category===r.category)[['chatgpt','mistral-vibe'].includes(r.authMode)?'subscription':'api'];for(const k of Object.keys(empty()))target[k]+=r[k];}
-  return {available:true,since:data.since,updatedAt:now().toISOString(),period,rows,warning,containsPrompts:false};
+  const models=new Map();
+  for(const r of data.rows){
+   if(r.day<from||provider&&r.provider!==provider)continue;
+   const target=rows.find(x=>x.category===r.category)[['chatgpt','mistral-vibe'].includes(r.authMode)?'subscription':'api'];
+   const key=JSON.stringify([r.provider,r.model]);
+   if(!models.has(key))models.set(key,{provider:r.provider,model:r.model,requests:0,inputTokens:0,outputTokens:0,inputMissing:0,outputMissing:0});
+   const model=models.get(key);
+   for(const field of Object.keys(empty()))target[field]+=r[field];
+   for(const field of ['requests','inputTokens','outputTokens','inputMissing','outputMissing'])model[field]+=r[field];
+  }
+  return {available:true,since:data.since,updatedAt:now().toISOString(),period,rows,models:[...models.values()],warning,containsPrompts:false};
  }
  return {record,statistics};
 }

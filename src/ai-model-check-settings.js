@@ -1,4 +1,9 @@
-import { defaultModelCheckConfig, readModelCheckConfig, saveModelCheckConfig } from './ai-model-check-config.js';
+import {
+  aiToleranceFactorText,
+  defaultModelCheckConfig,
+  readModelCheckConfig,
+  saveModelCheckConfig,
+} from './ai-model-check-config.js';
 const rows = [
   ['size', 'Außenmaße', 'Angegebene Maße entlang der Objekt- oder Weltachsen.', 'Dimensions'],
   ['bounds', 'Lage und Begrenzungen', 'Minimum, Maximum, Mittelpunkt und Ausdehnung.', 'Position and bounds'],
@@ -83,7 +88,10 @@ export function openModelCheckSettings({ storage, language = () => 'de', onSave 
   function refresh() {
     const normal = $('ai-check-mode').value === 'normal';
     $('ai-check-options').disabled = normal;
-    $('ai-check-strictness-value').textContent = $('ai-check-strictness').value + ' / 100';
+    const strictness = Number($('ai-check-strictness').value),
+      factor = aiToleranceFactorText(strictness, en ? 'en' : 'de');
+    $('ai-check-strictness-value').textContent =
+      strictness + ' / 100' + (factor ? (en ? ` · tolerance factor ${factor}` : ` · Toleranzfaktor ${factor}`) : '');
     $('ai-check-corrections').disabled = normal || !$('ai-check-autocorrect').checked;
     $('ai-check-mode-note').textContent = normal
       ? en

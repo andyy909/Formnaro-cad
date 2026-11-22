@@ -84,7 +84,8 @@ export function createCadAIModelPicker({
     discoveryTicket = 0,
     adjustable = false,
     overviewError = '';
-  const selected = () => catalog?.models.find((model) => model.id === settings?.model);
+  const selected = () =>
+    catalog?.models.find((model) => model.id === settings?.model || model.aliases?.includes(settings?.model));
   const label = trigger.querySelector('span');
   const money = (value) =>
     new Intl.NumberFormat(language() === 'en' ? 'en-US' : 'de-DE', { maximumFractionDigits: 4 }).format(value);
@@ -144,16 +145,40 @@ export function createCadAIModelPicker({
         ? [{ ...catalog, provider: settings.providers.find((provider) => provider.id === catalog.providerId) }]
         : [];
     const query = search.value.trim().toLocaleLowerCase();
-    const models = catalogs
+    const rows = catalogs
       .flatMap((entry) =>
         entry.models.map((model) => ({ model, entry, sample: modelPracticeSample(entry.providerId, model.id, scope) })),
       )
       .filter(
         ({ model, entry }) =>
           (scope !== 'photo' || model.vision !== false) &&
-          [model.name, model.id, entry.provider?.label].join(' ').toLocaleLowerCase().includes(query),
+          [model.name, model.id, entry.provider?.label, ...(model.aliases ?? [])]
+            .join(' ')
+            .toLocaleLowerCase()
+            .includes(query),
       );
-    models.sort((a, b) => Number(b.entry.hasKey) - Number(a.entry.hasKey) || a.model.name.localeCompare(b.model.name));
+    const activeModel = ({ entry, model }) =>
+      entry.providerId === settings?.providerId &&
+      (model.id === settings.model || model.aliases?.includes(settings.model));
+    const isMistralAPI = ({ entry }) => entry.providerId === 'https://api.mistral.ai';
+    const mistralModels = rows.filter(isMistralAPI);
+    const models = rows.sort(
+      (a, b) =>
+        Number(activeModel(b)) - Number(activeModel(a)) ||
+        Number(b.entry.hasKey) - Number(a.entry.hasKey) ||
+        a.model.name.localeCompare(b.model.name),
+    );
+    const mistralPosition = models.findIndex(isMistralAPI);
+    if (mistralPosition >= 0) {
+      const otherModels = models.filter((row) => !isMistralAPI(row));
+      models.splice(
+        0,
+        models.length,
+        ...otherModels.slice(0, mistralPosition),
+        ...mistralModels,
+        ...otherModels.slice(mistralPosition),
+      );
+    }
     el('#ai-model-chart-title').textContent = text(
       'KI-Benchmarks · 16 feste Versuche',
       'AI benchmarks · 16 fixed trials',
@@ -224,7 +249,7 @@ export function createCadAIModelPicker({
         );
     list.replaceChildren();
     for (const { model, entry, sample } of models) {
-      const active = entry.providerId === settings?.providerId && model.id === settings.model;
+      const active = activeModel({ entry, model });
       const row = element('article', 'ai-model-card');
       if (active) row.dataset.active = '';
       const identity = element('div', 'ai-model-identity');

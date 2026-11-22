@@ -3,7 +3,8 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const {sourceManifest}=require('./ai-test-lab-source.cjs');
 const {writeLabFile}=require('./ai-lab-storage.cjs');
-const {selectScope,exportPackage}=require('./ai-lab-review-data.cjs');
+const {writeTaskAtomicSync}=require('./ai-task-atomic.cjs');
+const {selectScope,exportPackage,sanitize}=require('./ai-lab-review-data.cjs');
 const {caseIds}=require('../ai/lab-development-check.json');
 const uuid=/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
 
@@ -51,39 +52,57 @@ function createDevelopmentEvidence(directory,readSource=()=>sourceManifest().has
   const scope=selectScope(directory,selected,{ids:selected.map(record=>record.id),completion});
   // Link the stage evidence without changing the existing external ZIP format.
   scope.manifests=scope.manifests.map(manifest=>({...manifest,developmentCheck:report}));
-  const exported=exportPackage({directory,scope});
-  const {zipSync,unzipSync,strToU8}=require('fflate');
-  const {developmentFindings,findingsMarkdown}=await import('../ai/lab-development-findings.mjs');
+   const {developmentFindings,findingsMarkdown}=await import('../ai/lab-development-findings.mjs');
   const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
-  const findings=developmentFindings(report,selected);
+  const findings=sanitize(developmentFindings(report,selected));
   const additions=[
    {name:'Entwicklungsbefunde.json',data:Buffer.from(JSON.stringify(findings,null,2))},
    {name:'Entwicklungsbefunde.md',data:Buffer.from(findingsMarkdown(findings))},
    {name:'AUSWERTUNG-SCHEMA.json',data:fs.readFileSync(path.join(__dirname,'../ai/lab-development-review-schema.json'))},
   ];
-  const entries=unzipSync(fs.readFileSync(exported.path));
-  for(const addition of additions)entries[addition.name]=strToU8(addition.data.toString('utf8'));
-  const baseManifest=entries['Manifest.json'];
-  const manifest={
-   format:'FormnaroDevelopmentFindingsManifest',
-   version:1,
-   createdAt:new Date().toISOString(),
-   entries:additions.map(addition=>({name:addition.name,bytes:addition.data.length,sha256:hash(addition.data)})),
-   baseManifest:{name:'Manifest.json',bytes:baseManifest.length,sha256:hash(Buffer.from(baseManifest))},
-  };
-  entries['Befunde-Manifest.json']=strToU8(JSON.stringify(manifest,null,2));
-  const zip=zipSync(entries,{level:6});
-  const temporary=exported.path+'.'+crypto.randomUUID()+'.tmp';
-  fs.writeFileSync(temporary,zip,{flag:'wx'});
-  fs.renameSync(temporary,exported.path);
-  return {...exported,bytes:zip.length,sha256:hash(zip),files:Object.keys(entries).length};
+  const {zipSync,unzipSync}=require('fflate');
+  const stage=fs.mkdtempSync(path.join(directory,'.development-export-'));
+  try{
+   for(const record of selected){
+    const files=new Set(['model-'+record.id+'.ocad']);
+    for(const attempt of record.practiceAttempts??[]){
+     const name=attempt.modelFile;
+     if(typeof name==='string'&&new RegExp('^model-'+record.id+'-attempt-[1-9][0-9]?\\.ocad$').test(name))files.add(name);
+    }
+    for(const file of files){
+     const source=path.join(directory,file);
+     if(fs.existsSync(source))fs.copyFileSync(source,path.join(stage,file));
+    }
+   }
+   const exported=exportPackage({directory:stage,scope});
+   const entries=unzipSync(fs.readFileSync(exported.path));
+   for(const {name,data} of additions)entries[name]=data;
+   const baseManifest=entries['Manifest.json'];
+   const manifest={
+    format:'FormnaroDevelopmentFindingsManifest',
+    version:1,
+    createdAt:new Date().toISOString(),
+    entries:additions.map(({name,data})=>({name,bytes:data.length,sha256:hash(data)})),
+    baseManifest:{name:'Manifest.json',bytes:baseManifest.length,sha256:hash(baseManifest)},
+   };
+   entries['Befunde-Manifest.json']=Buffer.from(JSON.stringify(manifest,null,2));
+   const zip=zipSync(entries,{level:6});
+   const target=path.join(directory,path.basename(exported.path));
+   writeTaskAtomicSync(target,zip);
+   return {...exported,path:target,bytes:zip.length,sha256:hash(zip),files:Object.keys(entries).length};
+  }finally{
+   if(path.dirname(fs.realpathSync(stage))===fs.realpathSync(directory))fs.rmSync(stage,{recursive:true,force:true,maxRetries:3,retryDelay:30});
+  }
  }
  return {recent,save,exportReport};
 }
 
 function installDevelopmentEvidence(win,directory,ipcMain=require('electron').ipcMain){
  const store=createDevelopmentEvidence(directory);
- const supplemental=require('./ai-lab-supplemental-evidence.cjs').createSupplementalEvidence(directory);
+ let program;
+ const supplemental=require('./ai-lab-supplemental-evidence.cjs').createSupplementalEvidence(directory,{
+  provenance:()=>program??={version:require('electron').app.getVersion(),sourceHash:sourceManifest().hash},
+ });
  ipcMain.handle('cad-ai:development-evidence',async(event,value)=>{
   try{
    if(event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('Ungültiges Laborfenster.');
@@ -92,8 +111,35 @@ function installDevelopmentEvidence(win,directory,ipcMain=require('electron').ip
     else process.env.FORMNARO_LAB_HIDE_PRACTICE='1';
     return {ok:true,value:value.show};
    }
+   if(value?.action==='guided-result'){
+    if(!/^[a-f0-9-]{36}$/.test(value.id))throw Error('Ungültiger Lauf.');
+    const record=JSON.parse(fs.readFileSync(path.join(directory,'run-'+value.id+'.json'),'utf8'));
+    if(record.spec?.workflow!=='practice')throw Error('Kein Vorführlauf.');
+    const events=record.events.filter(e=>!e.role||e.role==='modeler');
+    const requests=events.filter(e=>e.type==='request').length;
+    const {tokenEvents}=await import('../ai/lab-token-totals.mjs');
+    const tokens=tokenEvents(requests,events.filter(e=>e.type==='usage'));
+    const modelPath=path.join(directory,'model-'+value.id+'.ocad');
+    const modelStat=value.visual===true?fs.lstatSync(modelPath,{throwIfNoEntry:false}):null;
+    const model= modelStat?.isFile()&&modelStat.size<=2*1024*1024?fs.readFileSync(modelPath,'utf8'):null;
+    return {ok:true,value:{id:record.id,...(model?{model}:{}),outcome:require('./ai-lab-benchmark.cjs').classifyBenchmarkTrial(record),
+      requests, tokens, elapsedMs:record.elapsedMs}};
+   }
    if(value?.action==='supplement-save')return {ok:true,value:supplemental.save(value.report)};
+   if(value?.action==='supplement-chart-data')return {ok:true,value:supplemental.chartRows()};
+   if(value?.action==='supplement-read')return {ok:true,value:supplemental.read(value.id)};
    if(value?.action==='supplement-recent')return {ok:true,value:supplemental.recent()};
+   if(value?.action==='supplement-completed')return {ok:true,value:supplemental.completed()};
+   if(value?.action==='supplement-export'){
+    const {data,filename,reports}=supplemental.exportData(value.id);
+    const {canceled,filePath}=await require('electron').dialog.showSaveDialog(win,{
+     title:'Benchmark-Paket speichern',defaultPath:filename,filters:[{name:'Benchmark-Paket',extensions:['zip']}],
+    });
+    if(canceled||!filePath)return {ok:true,value:{saved:false}};
+    const target=path.extname(filePath).toLowerCase()==='.zip'?filePath:filePath+'.zip';
+    writeTaskAtomicSync(target,Buffer.from(data));
+    return {ok:true,value:{saved:true,path:target,reports}};
+   }
    if(value?.action==='supplement-clear'){supplemental.clear();return {ok:true,value:null};}
    if(value?.action==='recent')return {ok:true,value:store.recent()};
    if(value?.action==='save'){store.save(value.report);return {ok:true,value:null};}

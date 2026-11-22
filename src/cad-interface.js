@@ -3,6 +3,7 @@ import { formatUiNumber, preserveUiNumber } from './ui-numbers.js';
 import { meshColorsEnabled, setMeshColors } from './mesh-appearance.js';
 import { cadShapeIcon as icon } from './cad-shape-icons.js';
 import { projectObjectType } from './project-objects.js';
+import { cadDrillEditStart } from './cad-drill-source-data.js';
 const objectTypeLabel = (node) =>
   ({
     closedMesh: 'Geschlossenes Netz',
@@ -69,6 +70,7 @@ export function createCadInterface({
   onAddShape,
   onAddPlugin,
   onMeshSource,
+  onFinishStep,
   onSketchTemplate,
   mountAI,
   mountLayout,
@@ -114,9 +116,9 @@ export function createCadInterface({
   const display = (n) => formatUiNumber(n, getPreferences().language),
     t = (text) => translateText(text, getPreferences().language),
     project = () => controller.readSnapshot?.() ?? controller.snapshot(),
-    selected = () => {
+    selected = (targets = getSelection()) => {
       const p = project();
-      return getSelection().flatMap((target) => {
+      return targets.flatMap((target) => {
         try {
           return [cadSelectionContext(p, target)];
         } catch {
@@ -349,13 +351,28 @@ export function createCadInterface({
     objectTree();
     return getTreeState();
   }
+  function getSelectedFinishSteps() {
+    const selection = getSelection();
+    if (selection.length !== 1) return [];
+    const [context] = selected(selection);
+    return (context?.node.finish?.steps ?? []).map((step) => ({
+      bodyId: context.node.id,
+      stepId: step.id,
+      kind: step.kind,
+      amount: step.amount,
+    }));
+  }
   function objectTree() {
     const root = $('object-list');
     if (!root) return;
     const p = project(),
-      selection = getSelection();
+      selection = getSelection(),
+      // K02-01 reads steps for exactly one selected body. Reusing that result
+      // keeps multi-selection and same-named neighbours from leaking rows.
+      selectedFinishSteps = getSelectedFinishSteps();
     // Geometry and placement never affect tree rows. Keep focus and handlers
-    // when only selection or a CAD parameter has changed.
+    // when only selection or a CAD parameter has changed; the selected body's
+    // finish steps are the one selection-derived exception included below.
     const metadata = (node) => [
         node.id,
         node.name,
@@ -378,6 +395,7 @@ export function createCadInterface({
         p.activeFolderId,
         [...expanded],
         getPreferences().language,
+        selectedFinishSteps,
       ]);
     if (signature === treeSignature) {
       const keys = new Set(selection.map((v) => v.rootId + '/' + v.path.join('/')));
@@ -476,6 +494,29 @@ export function createCadInterface({
       root.append(row);
       if (open) for (const child of entry.children) meshSource(child, rootNode, context, depth + 1);
     }
+    function finishStep(step, depth, canOpen) {
+      const label = step.kind === 'round' ? t('Verrundung') : t('Fase'),
+        row = element('div', undefined, 'object-item feature-item finish-step-item');
+      row.style.marginLeft = depth * 12 + 'px';
+      // Body and saved step form the identity. No array index is involved, so
+      // equal labels keep separate IDs and a neighbour cannot own this row.
+      row.dataset.finishBodyId = step.bodyId;
+      row.dataset.finishStepId = step.stepId;
+      row.dataset.bodyId = step.bodyId;
+      row.dataset.stepId = step.stepId;
+      accessible(row, depth, treeKey('finishStep', step.bodyId, step.stepId));
+      row.append(
+        element('span', step.kind === 'round' ? '◠' : '◢', 'feature-icon'),
+        element('span', label, 'object-label'),
+        element('span', display(step.amount) + ' mm', 'small-note'),
+      );
+      row.title = label + ' · ' + display(step.amount) + ' mm · ' + step.stepId;
+      // K02-03 reuses the existing edge editor. The row only forwards the
+      // saved body and step identities; it never edits the stored step itself.
+      if (canOpen && typeof onFinishStep === 'function')
+        row.onclick = () => safe(() => onFinishStep(step.bodyId, step.stepId));
+      root.append(row);
+    }
     function object(node, rootId, path, depth) {
       const value = { rootId, path },
         context = cadSelectionContext(p, value),
@@ -520,6 +561,8 @@ export function createCadInterface({
         smallButton(node.locked ? '🔒' : '○', node.locked ? 'Entsperren' : 'Sperren', () => toggleLock(value)),
       );
       root.append(row);
+      for (const step of selectedFinishSteps.filter((step) => step.bodyId === node.id))
+        finishStep(step, depth + 1, !path.length);
       if (open) {
         for (const child of node.children ?? []) object(child, rootId, [...path, child.id], depth + 1);
         for (const source of sources) meshSource(source, node, context, depth + 1);
@@ -949,10 +992,13 @@ export function createCadInterface({
       drillInfo.append(title, note, edit);
       root.prepend(drillInfo);
     }
-    drillInfo.hidden = !context.node.drill;
+    const drillStart = cadDrillEditStart(context.node);
+    drillInfo.hidden = !drillStart;
     drillInfo.children[0].textContent = t('Mitwachsende Bohrung');
     drillInfo.children[1].textContent = t(
-      'Die Bohrungen werden aus der erhaltenen Originalquelle berechnet. „Gruppe auflösen“ würde die Bohrungen entfernen. Nutze „Bohrung bearbeiten“ für Maße und Muster.',
+      drillStart?.path.length
+        ? 'Die Bohrung bleibt als editierbare Quelle im Kantenkörper erhalten.'
+        : 'Die Bohrungen werden aus der erhaltenen Originalquelle berechnet. „Gruppe auflösen“ würde die Bohrungen entfernen. Nutze „Bohrung bearbeiten“ für Maße und Muster.',
     );
     $('history-drill-edit').textContent = t('Bohrung bearbeiten');
     $('history-drill-edit').hidden = !!context.target.path.length;
@@ -1466,6 +1512,7 @@ export function createCadInterface({
     refresh,
     renderLibrary,
     getTreeState,
+    getSelectedFinishSteps,
     restoreTreeState,
     openLibrary: () => library.open(),
     settings,

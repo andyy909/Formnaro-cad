@@ -16,9 +16,10 @@ function modelCatalog(config,details=[]){
   // /models includes speech, image generation and embedding models too.
   if(config.authMode!=='chatgpt'&&host==='api.openai.com'&&(!/^(?:gpt-|chatgpt-|ft:gpt-)/.test(model.id)||/(?:audio|realtime|transcrib|tts|image|instruct|search|embedding)/i.test(model.id)))continue;
   const previous=result.get(model.id),vision=Array.isArray(model.input_modalities)?model.input_modalities.includes('image'):previous?.vision??null;
-  result.set(model.id,{id:model.id,name:previous?.name||model.name||model.id,vision,reasoningEfforts:reasoningEfforts({...config,model:model.id},model)});
+  result.set(model.id,{id:model.id,name:previous?.name||model.name||model.id,vision,...(model.aliases?.length?{aliases:model.aliases}:{}),...(model.reasoningModelIds?{reasoningModelIds:model.reasoningModelIds}:{}),reasoningEfforts:reasoningEfforts({...config,model:model.id},model)});
  }
- if(config.authMode!=='chatgpt'&&config.model&&!result.has(config.model))result.set(config.model,{id:config.model,name:config.model,vision:knownVision(config),current:true});
+ if(config.authMode!=='chatgpt'&&config.model&&!findCatalogModel([...result.values()],config.model))result.set(config.model,{id:config.model,name:config.model,vision:knownVision(config),current:true});
  return [...result.values()].map(m=>({...m,reasoningEfforts:m.reasoningEfforts??reasoningEfforts({...config,model:m.id})}));
 }
-module.exports={BUILTIN_PROVIDERS,DEEPSEEK_MODELS,knownVision,modelCatalog};
+function findCatalogModel(models,id){return models?.find(model=>model.id===id||model.aliases?.includes(id));}
+module.exports={BUILTIN_PROVIDERS,DEEPSEEK_MODELS,knownVision,modelCatalog,findCatalogModel};

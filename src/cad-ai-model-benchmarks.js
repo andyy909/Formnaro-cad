@@ -141,7 +141,7 @@ export function renderBenchmarkChart(host, entries, language = 'de') {
     column.setAttribute('role', 'listitem');
     column.setAttribute('aria-label', r.modelName + ' · ' + benchmarkDescription(r, language));
     column.dataset.benchmarkId = r.id;
-    column.append(node('strong', 'ai-benchmark-value', r.passed + ' / ' + r.total));
+    column.append(node('strong', 'ai-benchmark-value', r.valueLabel ?? r.passed + ' / ' + r.total));
     const track = node('div', 'ai-benchmark-track'),
       bar = node('div', 'ai-benchmark-bar');
     bar.style.height = Math.max(0, Math.min(100, percent)) + '%';
@@ -151,7 +151,7 @@ export function renderBenchmarkChart(host, entries, language = 'de') {
     column.append(
       node('strong', 'ai-benchmark-model', r.modelName),
       node('small', '', ((en ? r.labelEn : r.label) || r.label) + (r.suiteVersion ? ' ' + r.suiteVersion : '')),
-      node('small', '', r.date + ' · ' + r.effort),
+      node('small', '', [r.date, r.effort].filter(Boolean).join(' · ')),
       node(
         'small',
         'ai-benchmark-state',

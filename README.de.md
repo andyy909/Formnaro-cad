@@ -18,7 +18,7 @@
 | [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) | **0.144.0-r1** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen zum Weiterentwickeln. |
 | **[Windows-x64-ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.147.1-r2/Formnaro-v0.147.1-r2-Windows.zip)** · [Versionshinweise und Quellen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.147.1-r2) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.147.1-r2/SHA256SUMS.txt) | **0.147.1-r2** · Windows Nightly | ca. 741 MB | Solid-Befehlssuche, gezielte Auswahl überlagerter Körper und Bearbeitung gespeicherter Radien und Fasen. |
 
-Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgelieferte Beispiele, bis zu drei zuletzt verwendete Projekte und bei vorhandener Autosicherung eine eigene Wiederherstellungsschaltfläche. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) · [Aktueller Prüfstand](docs/AKTUELLER-STAND.md)
+Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgelieferte Beispiele, bis zu drei zuletzt verwendete Projekte und bei vorhandener Autosicherung eine eigene Wiederherstellungsschaltfläche. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) · [Windows-Ausgaben und Abnahme](docs/AKTUELLER-STAND.md)
 
 ## KI-Labor
 
@@ -58,7 +58,7 @@ Für die normale Nutzung genügt die Programm-ZIP. Die Quellarchive werden immer
 2. Alle Unterordner zusammenlassen und **Formnaro starten** öffnen.
 3. Auf der Startseite ein Beispiel auswählen oder mit **Öffnen** ein vorhandenes Projekt laden.
 
-Die Portable-ZIP enthält das Programm, benötigte Laufzeiten, Lizenzen und Startanleitungen. FreeCAD und Python sind enthalten; eine separate Installation ist nicht nötig. Das optionale Modell für Offline-Sprache wird bei Bedarf im Programm heruntergeladen. Die Quellarchive stehen separat auf der Release-Seite.
+Die Portable-ZIP enthält das Programm, benötigte Laufzeiten, Lizenzen und Startanleitungen. FreeCAD und Python sind enthalten. Eine separate Installation ist nicht nötig. Die [Spracheingabe im KI-Chat](docs/SPRACHEINGABE.md) nutzt Windows-Diktat oder optional Deepgram. Die Quellarchive stehen separat auf der Release-Seite.
 
 ## Funktionen
 

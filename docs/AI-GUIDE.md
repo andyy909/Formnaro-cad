@@ -10,10 +10,6 @@ Formnaro's CAD tools, project files and exports work offline. **Settings → AI 
 
 The usage view reports available token counts and estimates costs for models with a known standard tariff. Account invoices and subscription allowances come from the provider. [Provider setup and usage details in German](KI-ANBIETER-UND-AGENTEN.md)
 
-## Run a development check
-
-Open **Settings → AI / API → AI test lab**. In **Simple**, select the 15-task development check or the supplemental CAD, STL, and photo checks. Use **Advanced** for a custom experiment plan. Use **Results** to inspect saved findings and export evidence. [AI Lab guide (German)](KI-TESTLABOR.md) · [Benchmark suites (German)](KI-BENCHMARK.md)
-
 ## Connect an external MCP client
 
 1. Start Formnaro and enable its local interface under **Settings → AI / API**. Copy the connection file path shown there.

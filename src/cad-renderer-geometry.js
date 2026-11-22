@@ -25,9 +25,26 @@ export function cadDisplayGeometry(mesh, reference = false) {
 
 // Three.js raycasts invisible meshes too. Filter before the expensive triangle
 // tests, retaining source-first ordering for coincident source/body displays.
-export function cadVisibleRayHit(raycaster, sources, bodies) {
+function visibleIntersections(raycaster, sources, bodies) {
   return raycaster.intersectObjects(
     [...sources, ...bodies].filter((mesh) => mesh.visible),
     false,
-  )[0];
+  );
+}
+
+export function cadVisibleRayHit(raycaster, sources, bodies) {
+  return visibleIntersections(raycaster, sources, bodies)[0];
+}
+
+export function cadVisibleRayTargets(raycaster, sources, bodies) {
+  const targets = new Map();
+  for (const { object, distance } of visibleIntersections(raycaster, sources, bodies)) {
+    const { rootId, sourceTarget, simplified } = object.userData;
+    if (!rootId) continue;
+    const target = sourceTarget ?? { rootId, path: [] };
+    const key = JSON.stringify([target.rootId, target.path]);
+    if (targets.has(key)) continue;
+    targets.set(key, { target, distance, simplified: !!simplified });
+  }
+  return [...targets.values()];
 }

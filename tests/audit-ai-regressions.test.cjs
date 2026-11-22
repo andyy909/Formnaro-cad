@@ -16,9 +16,10 @@ for(const cached of [false,true])test('BUG-08 ChatGPT text-only catalog blocks i
  const provider=require('../backend/ai-provider.cjs'),auth=require('../backend/chatgpt-auth.cjs');
  const config={authMode:'chatgpt',baseUrl:'https://api.openai.com/v1',protocol:'responses',model:'text-only'};
  const detail={id:config.model,input_modalities:['text']};
+ const token=t.mock.fn(async()=>'');
  t.mock.method(auth,'createChatGPTAuth',()=>({
   publicStatus:()=>({pending:false,activeId:'fixture',connected:true,accounts:[]}),
-  token:async()=>'',dispose(){}
+  token,dispose(){}
  }));
  const catalog=t.mock.method(provider,'testConnection',async()=>({models:[config.model],details:[detail]}));
  const generate=t.mock.method(provider,'generate',async()=>({}));
@@ -35,7 +36,34 @@ for(const cached of [false,true])test('BUG-08 ChatGPT text-only catalog blocks i
  assert.equal(result.ok,false);
  assert.match(result.error,/Bilder/);
  assert.equal(generate.mock.callCount(),0);
+ assert.equal(token.mock.callCount(),1);
  assert.equal(catalog.mock.callCount(),1);
+});
+test('BUG-08 ChatGPT checks the current account when the cached catalog belongs to another account',async t=>{
+ const provider=require('../backend/ai-provider.cjs'),auth=require('../backend/chatgpt-auth.cjs');
+ const config={authMode:'chatgpt',baseUrl:'https://api.openai.com/v1',protocol:'responses',model:'same-model'};
+ let activeId='first';
+ t.mock.method(auth,'createChatGPTAuth',()=>({
+  publicStatus:()=>({pending:false,activeId,connected:true,accounts:[]}),
+  token:async()=>activeId,dispose(){}
+ }));
+ const catalog=t.mock.method(provider,'testConnection',async(_config,token)=>{
+  const detail={id:config.model,input_modalities:token==='first'?['text']:['text','image']};
+  return {models:[config.model],details:[detail]};
+ });
+ const generate=t.mock.method(provider,'generate',async()=>({}));
+ const {call}=desktop(t);
+ const saved=await call('cad-ai:save',{config});
+ assert.equal(saved.ok,true,saved.error);
+ const cached=await call('cad-ai:models',{});
+ assert.equal(cached.ok,true,cached.error);
+ assert.deepEqual(cached.value.availableModelIds,[config.model]);
+ activeId='second';
+ const result=await call('cad-ai:generate',{images:[{synthetic:true}]});
+ assert.equal(result.ok,true,result.error);
+ assert.deepEqual(catalog.mock.calls.map(call=>call.arguments[1]),['first','second']);
+ assert.equal(generate.mock.callCount(),1);
+ assert.equal(generate.mock.calls[0].arguments[1],'second');
 });
 test('BUG-43 renderer crash, main navigation and owner close release leases and pending RPC calls',async t=>{
  const taskStore=require('../backend/ai-tasks.cjs'),bridge=require('../backend/api-bridge.cjs'),provider=require('../backend/ai-provider.cjs');

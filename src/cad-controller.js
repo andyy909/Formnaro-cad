@@ -130,6 +130,7 @@ export function createCadController({
   // every cached sheet again during ordinary 3D gestures.
   // History restores these same frozen objects. Scope follows a real Open
   // boundary without a second history stack; ordinary commits inherit it.
+  const previewScopes = new WeakMap();
   const projectScopes = new WeakMap(),
     geometryOwners = new WeakMap(),
     geometryOwner = (project) => {
@@ -1172,7 +1173,8 @@ export function createCadController({
     // The confirmed model and Undo live in the transaction store.
     if (replaceProject) worker.trim();
     onBusy(true);
-    const ticket = ++previewSequence;
+    const ticket = ++previewSequence,
+      opening = projectScope;
     livePreviewSequence = livePreview ? ticket : null;
     endOnlySequence = intermediateDisplay === 'final' ? ticket : null;
     buildPreview = null;
@@ -1186,6 +1188,7 @@ export function createCadController({
           ...metadata,
         };
       result.warnings = [...new Set([...(result.warnings ?? []), ...synchronized.warnings])];
+      previewScopes.set(result, opening);
       previewRegistry.registerPreview(result, {
         featureDependency: () =>
           ((operation?.kind === 'projectParameters' ||
@@ -1854,6 +1857,26 @@ export function createCadController({
     }
     return result;
   }
+  async function queryPreviewEdges(previewId, options, { signal } = {}) {
+    alive();
+    const proposal = previewRegistry.getPreview(previewId),
+      revision = store.revision();
+    const isCurrent = () =>
+      store.revision() === revision &&
+      proposal?.revision === revision &&
+      previewScopes.get(proposal) === projectScope &&
+      previewRegistry.getPreview(previewId) === proposal;
+    if (!isCurrent())
+      throw Object.assign(Error('Die Kantenvorschau ist nicht mehr aktuell.'), { code: 'STALE_REVISION' });
+    const { project } = proposal;
+    const result = await worker.run(
+      { job: 'query', project, query: { kind: 'edges', options } },
+      { revision: cadProjectRevision(project), progress, signal },
+    );
+    if (!isCurrent())
+      throw Object.assign(Error('Die Kantenvorschau ist nicht mehr aktuell.'), { code: 'STALE_REVISION' });
+    return result;
+  }
   async function checkPreview(previewId, checks, { collectFailures = false } = {}) {
     if (collectFailures) {
       const original = previewRegistry.getPreview(previewId),
@@ -2386,6 +2409,7 @@ export function createCadController({
     execute,
     apply,
     query,
+    queryPreviewEdges,
     analyze: aiTask.analyze,
     checkPreview,
     inspectFreeCADPreview,

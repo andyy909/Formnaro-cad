@@ -48,3 +48,52 @@ test('Vibe-reported cost is an API-equivalent estimate, and its ledger remains i
  try{const usage=aiUsage({model:'actual-vibe-model',usage:{input_tokens:100,output_tokens:20},vibeCostUSD:.003},config,1);assert.equal(usage.estimatedCostUSD.min,.003);assert.equal(usage.estimatedCostUSD.subscription,true);assert.equal(usage.estimatedCostUSD.basis,'api-equivalent');assert.equal(usage.model,'actual-vibe-model');const ledger=createAIUsageLedger({file});assert.equal(ledger.record({usage,config,provider:'mistral-vibe'}),true);const stats=createAIUsageLedger({file}).statistics();assert.equal(stats.available,true);assert.equal(stats.rows.reduce((n,r)=>n+r.subscription.requests,0),1);assert.equal(stats.rows.reduce((n,r)=>n+r.api.requests,0),0);}
  finally{fs.rmSync(directory,{recursive:true,force:true});}
 });
+
+test('Reviewed catalog prices label subscription usage and distinguish DeepSeek hosting',()=>{
+ const sample={usage:{input_tokens:100000,output_tokens:10000,input_tokens_details:{cached_tokens:20000}}};
+ const sol=aiUsage(sample,{baseUrl:'https://api.openai.com/v1',model:'gpt-6.2-sol',authMode:'chatgpt'},0).estimatedCostUSD;
+ assert.equal(sol.subscription,true);
+ assert.equal(sol.basis,'api-equivalent');
+ assert.equal(sol.min,.262);
+ const mistral=aiUsage({...sample,model:'mistral-large-4',vibeCostUSD:.01},{baseUrl:'https://api.mistral.ai/v1',model:'vibe-default',authMode:'mistral-vibe'},0).estimatedCostUSD;
+ assert.equal(mistral.min,.0784);
+ assert.equal(mistral.subscription,true);
+ const direct=aiUsage(sample,{baseUrl:'https://api.deepseek.com',model:'deepseek-flash'},0).estimatedCostUSD;
+ const hosted=aiUsage(sample,{baseUrl:'https://api.mistral.ai/v1',model:'deepseek-v4-1-flash-1017'},0).estimatedCostUSD;
+ assert.equal(direct.min,.01806);
+ assert.equal(direct.max,.03612);
+ assert.equal(hosted.min,.03614);
+ assert.equal(hosted.max,.03614);
+});
+
+test('A local audited rate update applies without rebuilding and rejects an old or malformed catalog',()=>{
+ const {loadLocalRates}=require('../backend/ai-rate-catalog.cjs');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-rate-file-')),file=path.join(dir,'KI-Tarife.json');
+ const config={baseUrl:'https://api.openai.com/v1',model:'gpt-6.2-sol'};
+ const row={input:3,output:20,cached:.12};
+ const entry={verified:'2026-11-21',source:'https://developers.openai.com/api/docs/pricing',models:{'gpt-6.2-sol':row}};
+ const save=()=>fs.writeFileSync(file,JSON.stringify({version:1,providers:{'api.openai.com':entry}}));
+ try{
+  save();
+  assert(loadLocalRates(file,'2026-11-22'));
+  assert.equal(rateFor(config,0).input,3);
+  assert.equal(rateFor(config,0).rateDate,'2026-11-21');
+  assert.equal(rateFor({...config,model:'gpt-6.2-astra'},0).input,8);
+  entry.verified='2026-10-31';
+  save();
+  assert(!loadLocalRates(file,'2026-11-22'));
+  assert.equal(rateFor(config,0).input,2);
+  entry.verified='2026-11-22';
+  row.output=-20;
+  save();
+  assert(!loadLocalRates(file,'2026-11-22'));
+ }finally{loadLocalRates(path.join(dir,'missing.json'));fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+test('GPT-6.2 standard API-equivalent estimate includes reported default cache writes',()=>{
+ const config={baseUrl:'https://api.openai.com/v1',authMode:'chatgpt',model:'gpt-6.2-sol'};
+ const usage={input_tokens:100000,output_tokens:10000,input_tokens_details:{cached_tokens:20000,cache_write_tokens:30000}};
+ const cost=aiUsage({usage},config,1).estimatedCostUSD;
+ assert.equal(cost.max,.277);
+ assert.equal(cost.subscription,true);
+});

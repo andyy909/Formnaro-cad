@@ -167,10 +167,15 @@ export function createCadDrawingUI({
   }
   function busyControls() {
     if (!active) return;
+    const stale = !active.running && problems().length > 0;
+    const pending = pendingSourceCommit(sheet());
     for (const element of panel.querySelectorAll(
       '[data-drawing-update],[data-drawing-apply],[data-drawing-export],[data-drawing-edit],[data-drawing-auto]',
     ))
-      element.disabled = active.running || (element.matches('[data-drawing-auto]') && problems().length > 0);
+      element.disabled =
+        active.running ||
+        (element.matches('[data-drawing-auto]') && stale) ||
+        (element.matches('[data-drawing-export]') && (stale || pending));
     const cancel = q('[data-drawing-stop]');
     if (cancel) {
       cancel.hidden = !active.running;

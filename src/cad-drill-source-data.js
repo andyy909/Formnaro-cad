@@ -44,6 +44,15 @@ export function cadDrillSourceProblems(project, { ids, includeHidden = false } =
   }
   return problems;
 }
+// A finish wraps the intact drill as its sole source. Its persisted drawing
+// address also identifies the start of the existing drill-edit chain.
+export function cadDrillEditStart(node) {
+  if (node?.drill) return { node, path: [] };
+  if (node?.source === 'finish' && node.children?.length === 1 && node.children[0].drill)
+    return { node: node.children[0], path: [node.children[0].id] };
+  return null;
+}
+
 export function assertCadDrillSourcesReady(project, options = {}) {
   const problems = cadDrillSourceProblems(project, options);
   if (problems.length)

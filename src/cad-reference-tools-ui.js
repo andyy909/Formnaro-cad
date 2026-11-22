@@ -3,7 +3,7 @@ import { mountCadDrillConversionEditor } from './cad-drill-conversion-ui.js';
 import { multiplyCadMatrices } from './cad-affine.js';
 import { cadProjectParameterProblems } from './cad-project-parameters-data.js';
 import { cadSelectionContext } from './cad-interface-state.js';
-import { cadDrillSourceProblems } from './cad-drill-source-data.js';
+import { cadDrillEditStart, cadDrillSourceProblems } from './cad-drill-source-data.js';
 import { mountCadPatternConsumerEditor } from './cad-pattern-consumers-ui.js';
 import { buildCadDependencyGraph, cadDependencyAffected, cadDependencyNodeId } from './cad-dependency-graph.js';
 import { cadDrillSourceBranch } from './cad-drill-source-branch.js';
@@ -288,7 +288,7 @@ export function createCadReferenceToolsUI({
         if (s.preview || s.computing) return;
         const id = hit?.object.userData.rootId,
           n = id ? item(id) : null;
-        if (!n || n.kind !== 'cad' || n.hidden) {
+        if (!n || n.kind !== 'cad' || n.hidden || hit?.object?.userData?.simplified) {
           toast('Sichtbare native CAD-Fläche wählen.');
           return;
         }
@@ -328,6 +328,7 @@ export function createCadReferenceToolsUI({
       kind,
       id: n.id,
       selectionPath: initialPath,
+      scope: controller.projectScope(),
       revision: controller.revision(),
       stage: kind === 'place' ? 'source' : 'target',
       version: 0,
@@ -348,6 +349,10 @@ export function createCadReferenceToolsUI({
         : '<label class="dialog-label">Bohrung<select id="cad-drill-kind" data-drill-kind><option value="plain">Normale Bohrung</option><option value="countersink">Kegelige Senkung</option><option value="counterbore">Schraubenkopfaufnahme</option></select></label><label class="dialog-label">Bohrung Ø (mm)<input id="cad-drill-diameter" data-drill-diameter value="4" inputmode="decimal"></label><label class="check-line"><input id="cad-drill-through" data-drill-through type="checkbox" checked> Durchgehend</label><label class="check-line"><input data-drill-associative type="checkbox"> Mitwachsend (Quader, runder Zylinder oder geeignetes STEP)</label><label class="check-line"><input data-drill-convert type="checkbox"> Alte Bohrgruppe überführen: Maße, Spiel und Endbedingung hier ausdrücklich bestätigen</label><p class="small-note">Zur Überführung einen freien Punkt auf der ursprünglichen Eintrittsfläche wählen und U/V bis zur Bohrmitte einstellen. Nur geometrisch übereinstimmende Bohrdaten werden angenommen.</p><label class="check-line"><input data-drill-to-face type="checkbox"> Bis Fläche (gegenüberliegende Quader- oder Zylinderstirnfläche)</label><button data-drill-stop-select hidden>Zielfläche auswählen</button><label class="dialog-label">Tiefe (mm)<input id="cad-drill-depth" data-drill-depth value="10" inputmode="decimal"></label><label class="dialog-label">Kopf / Senkung Ø (mm)<input data-drill-head value="8" inputmode="decimal"></label><label class="dialog-label">Kopftiefe (mm)<input data-drill-head-depth value="3" inputmode="decimal"></label><label class="dialog-label">Senkwinkel (°)<input data-drill-angle value="90" inputmode="decimal"></label><label class="dialog-label">Spiel je Seite (mm)<input data-drill-gap value="0" inputmode="decimal"></label><label class="dialog-label">Passungsvorlage<select data-drill-preset><option value="">Eigener Wert</option></select></label>') +
       '<div class="edge-actions"><button data-ref-repick>Neu wählen</button><button id="cad-ref-preview" data-ref-preview disabled>Vorschau berechnen</button><button id="cad-ref-apply" data-ref-apply class="primary" disabled>Übernehmen</button><button data-ref-close>Abbrechen</button></div>';
     if (kind === 'drill') {
+      const pickLabel = document.createElement('p');
+      pickLabel.dataset.pickKind = 'face';
+      pickLabel.textContent = document.documentElement.lang === 'en' ? 'Select face' : 'Fläche wählen';
+      q('[data-ref-status]').before(pickLabel);
       const scopeNote = document.createElement('p');
       scopeNote.className = 'small-note';
       scopeNote.textContent =
@@ -1102,11 +1107,13 @@ export function createCadReferenceToolsUI({
     prepare();
     close();
     const selected = root(),
-      node = (controller.readSnapshot?.() ?? controller.snapshot()).nodes.find((n) => n.id === selected.id);
-    if (!node?.drill) throw Error('Ein Teil mit mitwachsender Bohrung auswählen.');
-    const drills = [];
-    let current = node,
-      path = [];
+      node = (controller.readSnapshot?.() ?? controller.snapshot()).nodes.find((n) => n.id === selected.id),
+      start = cadDrillEditStart(node);
+    if (!start) throw Error('Ein Teil mit mitwachsender Bohrung auswählen.');
+    const drills = [],
+      wrapped = start.path.length > 0;
+    let current = start.node,
+      path = [...start.path];
     while (current?.drill) {
       drills.push({ path: [...path], drill: current.drill });
       if (current.children?.length !== 1) break;
@@ -1141,7 +1148,7 @@ export function createCadReferenceToolsUI({
     rebindButton.dataset.editRebind = '';
     rebindButton.textContent = 'Flächenbezüge gemeinsam neu zuordnen …';
     rebindButton.onclick = () => run(openRebind);
-    q('[data-edit-position]').parentElement.after(rebindButton);
+    if (!wrapped) q('[data-edit-position]').parentElement.after(rebindButton);
     const selectDrill = q('[data-edit-select]');
     drills.forEach((_, i) => selectDrill.add(new Option('Bohrung ' + (i + 1), String(i))));
     selectDrill.value = String(drills.length - 1);
@@ -1231,7 +1238,7 @@ export function createCadReferenceToolsUI({
       const record = entry.drill;
       s.dirty = false;
       q('.drill-pattern').hidden = record.version === 3;
-      q('[data-pattern-detach-section]').hidden = !record.pattern;
+      q('[data-pattern-detach-section]').hidden = wrapped || !record.pattern;
       q('[data-edit-kind]').value = record.kind;
       q('[data-edit-termination]').value = record.termination;
       for (const el of panel.querySelectorAll('[data-edit-field]')) el.value = String(record[el.dataset.editField]);
@@ -1383,6 +1390,44 @@ export function createCadReferenceToolsUI({
     select([resultTarget]);
     toast('Native Bearbeitung übernommen.');
   }
+  function pickTool() {
+    const s = active;
+    if (
+      s?.kind !== 'drill' ||
+      s.stage !== 'target' ||
+      s.preview ||
+      s.computing ||
+      s.selectionPath.length ||
+      q('[data-drill-convert]').checked
+    )
+      return null;
+    const en = document.documentElement.lang === 'en';
+    const current = () => active === s && s.revision === controller.revision() && s.scope === controller.projectScope();
+    return {
+      label: en ? 'Choose native face' : 'Native Fläche wählen',
+      current,
+      async candidates(hits, point, menuCurrent) {
+        const ray = view.cadRay(point);
+        const result = [];
+        for (const { target, simplified } of hits) {
+          if (target.path.length) continue;
+          if (simplified) {
+            result.push({ target, disabled: true, label: en ? 'Frame only' : 'Nur Rahmen' });
+            continue;
+          }
+          if (target.rootId !== s.id) continue;
+          const hit = await controller.query('rayPick', { ray, ids: [s.id] });
+          if (!menuCurrent()) return [];
+          if (hit?.faceIndex > 0) result.push({ target, reference: { ray }, label: en ? 'Face' : 'Fläche' });
+        }
+        return result;
+      },
+      apply({ target, reference, label }) {
+        if (!current()) throw Error('Modell oder Werkzeug geändert. Fläche erneut wählen.');
+        return choose(target.rootId, reference, label);
+      },
+    };
+  }
   function practiceDrillState() {
     if (active?.kind !== 'drill' || active.selectionPath.length || q('[data-drill-convert]')?.checked) return null;
     const { id, revision, stage, pointRoot, loading, target, preview, points } = active;
@@ -1398,6 +1443,7 @@ export function createCadReferenceToolsUI({
   }
   return {
     practiceDrillState,
+    pickTool,
     openPlacement: () => open('place'),
     openDrill: () => open('drill'),
     openEdit,

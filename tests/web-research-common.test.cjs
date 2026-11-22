@@ -20,3 +20,20 @@ test('RSS parsing strips markup and rejects non-web links; search never forwards
  assert.deepEqual(parseSearchRSS(xml),[{title:'A & B',url:'https://example.org/doc',snippet:'Useful facts'}]);
  const r=await searchWeb('query',{fetchImpl:async(url,options)=>{assert.equal(url.origin,'https://www.bing.com');assert.equal(options.headers.Authorization,undefined);assert.equal(options.redirect,'error');return new Response(xml);}});assert.equal(r.results.length,1);
 });
+
+test('A priced benchmark call disables research while keeping the provider preference',async()=>{
+ const config={webResearchAllowed:true};
+ let searches=0;
+ await assert.rejects(withWebResearch({
+  config,envelope:{system:'benchmark contract',user:'drawing',outputBudget:131072,
+   context:{benchmarkWithoutResearch:true,benchmarkOutputLimit:4096}},
+  complete:async envelope=>{
+   assert.equal(envelope.system,'benchmark contract');
+   assert.equal(envelope.outputBudget,4096);
+   return {text:'{"research":{"query":"drawing"}}',data:{}};
+  },
+  search:async()=>{searches++;},
+ }),e=>e.code==='WEB_RESEARCH_DISABLED');
+ assert.equal(searches,0);
+ assert.equal(config.webResearchAllowed,true);
+});

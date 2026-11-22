@@ -7,7 +7,7 @@ function declaredEfforts(model){
 }
 function reasoningEfforts(config,model){
  const host=new URL(config.baseUrl).hostname;
- if(host==='api.deepseek.com')return ['low','high','max'];
+ if(host==='api.deepseek.com')return ['none','low','high','max'];
  if(host==='api.groq.com'){
   if(/^openai\/gpt-oss-(?:20b|120b)$/.test(config.model))return ['low','medium','high'];
   if(config.model==='qwen/qwen3.8-27b')return ['none','low','medium','high'];

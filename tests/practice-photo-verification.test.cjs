@@ -1,4 +1,5 @@
 const test=require('node:test');
+const { writeEmptyBenchmarkManifests } = require('./fixtures/portable-benchmark-manifests.cjs');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const os=require('node:os');
@@ -49,7 +50,7 @@ test('The portable package filter drops the extracted photo verification module'
  for(const file of ['electron.cjs','preload.cjs','package.json','LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.writeFileSync(path.join(source,file),'');
  for(const name of ['practice-verification.cjs','practice-photo-verification.cjs','practice-stl-verification.cjs','practice-runner.cjs','practice-files.cjs'])
   fs.writeFileSync(path.join(source,'backend',name),name);
- for(const suite of ['benchmark-core-v1.json','benchmark-advanced-v2.json'])fs.writeFileSync(path.join(source,'ai',suite),JSON.stringify({dependencies:[]}));
+ writeEmptyBenchmarkManifests(source);
  const {copyPortableApp}=await import('../scripts/portable-runtime-policy.mjs');
  copyPortableApp(source,stage);
  assert.deepEqual(fs.readdirSync(path.join(stage,'backend')).sort(),['practice-files.cjs','practice-runner.cjs']);

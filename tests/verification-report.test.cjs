@@ -36,11 +36,39 @@ test('Write failures reach the caller synchronously before any window or process
   assert.equal(fs.existsSync(missing),false);
   assert.equal(fs.readdirSync(root).length,0);
 });
-const MIGRATED=['maintenanceVerifyArg','speechVerifyArg','fnpackVerifyArg','assemblyVerifyArg','jointsVerifyArg','sketchConstraintsVerifyArg','linkedContoursVerifyArg','parametersVerifyArg','modelingContextVerifyArg','reconstructionVerifyArg','pythonVerifyArg','autoDimensionsVerifyArg','drawingsVerifyArg'];
+const MIGRATED = [
+  'maintenanceVerifyArg',
+  'speechVerifyArg',
+  'fnpackVerifyArg',
+  'assemblyVerifyArg',
+  'jointsVerifyArg',
+  'sketchConstraintsVerifyArg',
+  'linkedContoursVerifyArg',
+  'parametersVerifyArg',
+  'modelingContextVerifyArg',
+  'reconstructionVerifyArg',
+  'pythonVerifyArg',
+  'autoDimensionsVerifyArg',
+  'u05VerifyArg',
+  'k08VerifyArg',
+  'drawingsVerifyArg',
+];
 test('electron.cjs loads the helper lazily only inside the verification branch',()=>{
   assert.equal(electronSource.split(CALL).length-1,MIGRATED.length,`${MIGRATED.length} verification branches write through the helper`);
   const branch=electronSource.indexOf('if(verifyPath){');
+  assert.notEqual(branch, -1, 'electron.cjs guards the verification branch');
   for(let at=electronSource.indexOf(CALL);at>=0;at=electronSource.indexOf(CALL,at+1))assert.ok(at>branch,'helper call stays inside the verification branch');
   assert.doesNotMatch(electronSource,/^(?:const|let|var)\s[^\n=]*=\s*require\('\.\/backend\/verification-report\.cjs'\)/m);
-  for(const flag of MIGRATED)assert.equal(electronSource.split('\n').find(line=>line.includes(`if(${flag}){`)&&line.includes('fs.writeFileSync(verifyPath')),undefined,flag+' no longer writes inline');
+  const lines = electronSource.split(/\r?\n/);
+  for (const flag of MIGRATED) {
+    const start = lines.findIndex(line => line.trimStart().startsWith('if(' + flag + '){'));
+    assert.notEqual(start, -1, flag + ' has a verification branch');
+    const opening = lines[start];
+    const indent = opening.slice(0, opening.length - opening.trimStart().length);
+    const end = opening.endsWith('}') ? start + 1 : lines.findIndex((line, index) => index > start && line === indent + '}') + 1;
+    assert.ok(end > start, flag + ' closes its branch');
+    const body = lines.slice(start, end).join('\n');
+    assert.equal(body.split(CALL).length - 1, 1, flag + ' writes through the helper');
+    assert.doesNotMatch(body, /fs\.writeFileSync\(\s*verifyPath\b/, flag + ' no longer writes inline');
+  }
 });

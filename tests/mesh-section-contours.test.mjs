@@ -41,3 +41,52 @@ test('Rounded noncircular profiles retain native arcs and independently sampled 
  const edges=p=>p.map((a,i)=>[a,p[(i+1)%p.length]]),distance=(p,list)=>Math.min(...list.map(([a,b])=>{const dx=b[0]-a[0],dy=b[1]-a[1],d=dx*dx+dy*dy,t=d?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/d)):0;return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy);})),sourceEdges=edges(original),curveEdges=curves.flatMap(p=>p.slice(1).map((b,i)=>[p[i],b]));
  let maximum=0;for(const curve of curves)for(const p of curve)maximum=Math.max(maximum,distance(p,sourceEdges));for(const p of original)maximum=Math.max(maximum,distance(p,curveEdges));assert.ok(maximum<=r.loops[0].fitErrorBound+2e-5,`${maximum} > ${r.loops[0].fitErrorBound}`);
 });
+
+test('Measurement mode keeps independent round sections when the outer outline is open',()=>{
+  const node=lidHousing(kernel);
+  const {verts,triangles}=node.mesh;
+  const height=10;
+  const face=Array.from({length:triangles.length/3},(_,i)=>i*3).find(i=>{
+    const vertices=triangles.slice(i,i+3);
+    const z=vertices.map(index=>verts[index*3+2]);
+    return vertices.every(index=>verts[index*3]===0)&&Math.min(...z)<height&&Math.max(...z)>height;
+  });
+  assert.ok(Number.isInteger(face));
+  triangles.splice(face,3);
+  const request={normal:[0,0,1],planePoint:[0,0,height]};
+  assert.throws(()=>meshSectionContours(node,request),{code:'MESH_LID_SECTION'});
+  const before=structuredClone(node);
+  const result=meshSectionContours(node,{...request,summaryOnly:true});
+  assert.deepEqual(node,before);
+  assert.equal(result.complete,false);
+  assert.equal(result.rejectedComponents,1);
+  assert.equal(result.sketch,null);
+  const circles=result.measurements.filter(entry=>entry.kind==='circle');
+  assert.equal(circles.length,2);
+  assert.ok(circles.every(c=>Math.abs(c.diameter-3.5)<.01&&Math.abs(c.center[2]-height)<.001));
+  assert.ok(circles.every(c=>c.role==='unknown'));
+  assert.deepEqual(pageAIAnalysisResult(result,undefined,4000),result);
+});
+
+test('Measurement mode fits many holes without transferring polylines or repeating the sketch',()=>{
+  const ids=[];
+  const keep=shape=>(ids.push(shape),shape);
+  try {
+    const M=kernel.Manifold;
+    const plate=keep(M.cube([48,56,9]));
+    const holes=Array.from({length:14},(_,i)=>{
+      const h=keep(M.cylinder(12,1.8,1.8,160));
+      return keep(h.translate([8+(i%4)*10,8+Math.floor(i/4)*13,-1]));
+    });
+    const body=keep(M.difference([plate,...holes]));
+    const raw=body.getMesh(),node=lidHousing(kernel);
+    node.mesh={verts:Array.from(raw.vertProperties),triangles:Array.from(raw.triVerts)};
+    const result=meshSectionContours(node,{normal:[0,0,1],planePoint:[0,0,3],summaryOnly:true});
+    assert.equal(result.complete,true);
+    assert.equal(result.rejectedComponents,0);
+    assert.equal(result.measurements.filter(m=>m.kind==='circle'&&m.role==='hole').length,14);
+    assert.ok(JSON.stringify(result).length<4000);
+  } finally {
+    for(const shape of ids.reverse()) shape.delete();
+  }
+});

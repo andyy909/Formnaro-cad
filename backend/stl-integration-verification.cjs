@@ -1,6 +1,5 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
-async function verify(win,app,{reportPath,converter,fixtures,prepareProject,normalFileInput=false,syntheticOnly=false,exercisePreview}){
- fixtures=path.join(__dirname,'../converter/examples');
+async function verify(win,app,{reportPath,converter,fixtures=path.join(__dirname,'../converter/examples'),prepareProject,normalFileInput=false,syntheticOnly=false,exercisePreview}){
  const checks=[],errors=[],external=[],started=Date.now(),out=path.dirname(reportPath),pause=ms=>new Promise(r=>setTimeout(r,ms)),js=async code=>{const value=await win.webContents.executeJavaScript(code);await pause(0);return value;};
  const progressPath=reportPath+'.progress';
  const phase=message=>fs.writeFileSync(progressPath,JSON.stringify({phase:message,checks},null,2));
@@ -152,6 +151,10 @@ async function verify(win,app,{reportPath,converter,fixtures,prepareProject,norm
   await js('document.getElementById("modal-close").click()');await open(cancelName);await js('document.getElementById("converter-run").click()');for(let i=0;i<500&&!converter.state()?.pid;i++)await pause(10);
   fs.writeFileSync(path.join(out,'before-reload.ocad'),directBefore);
   await new Promise(resolve=>{win.webContents.once('did-finish-load',resolve);win.reload();});await until('!!window.__cadTest');await js('window.__cadTest.settled()');for(let i=0;i<500&&converter.state();i++)await pause(10);
+  await until(`(()=>{const button=document.querySelector('[data-restore-autosave]');return !!(button&&!button.hidden&&!button.disabled&&button.getClientRects().length);})()`);
+  await js(`document.querySelector('[data-restore-autosave]').click()`);
+  await until(`document.getElementById('empty-hint').hidden&&document.querySelector('[data-restore-autosave]').disabled===false`);
+  await js('window.__cadTest.settled()');
   fs.writeFileSync(path.join(out,'after-reload.ocad'),await js('window.__cadTest.serialize()'));
   phase('Reload comparison: converter active='+!!converter.state());
   const beforeReload=JSON.parse(directBefore),afterReload=JSON.parse(await js('window.__cadTest.serialize()'));

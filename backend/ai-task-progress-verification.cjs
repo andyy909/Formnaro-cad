@@ -1,4 +1,4 @@
-const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{readVerificationContract}=require('./provider-contract-verification.cjs');
 exports.verifyTaskProgress=async(win,{directory})=>{
  const js=code=>win.webContents.executeJavaScript(code),checks=[],records=[],original=global.fetch;let calls=0;
  const check=(ok,label)=>{assert(ok,label);checks.push(label);};
@@ -9,7 +9,7 @@ exports.verifyTaskProgress=async(win,{directory})=>{
   if(!String(url).startsWith('https://api.deepseek.com/'))throw Error('No external requests permitted');
   if(String(url).endsWith('/models'))return new Response(JSON.stringify({data:[{id:'deepseek-flash',input_modalities:['text']}]}));
   const body=JSON.parse(options.body),raw=body.messages?.at(-1).content??body.input,content=typeof raw==='string'?raw:raw.at(-1)?.role?raw.at(-1).content:raw,text=typeof content==='string'?content:content.find(c=>c.type==='input_text'||c.type==='text').text,system=body.instructions??body.messages[0].content;
-  const scene=JSON.parse(text.split('Current scene (data):\n')[1].split('\nUser task:\n')[0]),contract=JSON.parse(system.split('Contract:\n').at(-1).split('\n',1)[0]);calls++;
+  const scene=JSON.parse(text.split('Current scene (data):\n')[1].split('\nUser task:\n')[0]),contract=readVerificationContract(system,text).contract;calls++;
   assert.equal(contract.agentWorkflow.progress.usedSteps,calls);assert.equal(contract.agentWorkflow.progress.maxSteps,24);records.push({protocol:body.messages?'chat':'responses',step:calls,progress:contract.agentWorkflow.progress});
   const answer={revision:scene.revision,label:'Wiederholter falscher Prüfkörper',commands:[{op:'create',type:'box',as:'part',size:[40,40,6]}],checks:[{kind:'size',target:'$part',space:'worldAxes',expected:[calls===1?60:40,40,6]}]};
   const result=JSON.stringify(answer);return new Response(JSON.stringify(body.messages?{choices:[{message:{content:result}}]}:{output:[{type:'message',content:[{type:'output_text',text:result}]}]}));

@@ -1,7 +1,8 @@
+import { formatTokenTotals } from '../ai/lab-token-totals.mjs';
 import { benchmarkRunEntries, renderBenchmarkChart } from './cad-ai-model-benchmarks.js';
 // The benchmark has its own fixed plan. Opening this panel never starts a trial.
-export function mountBenchmark({ host, api, status, refresh, getModeler }) {
-  host.innerHTML = `<div class="lab-card"><h3>KI-Benchmark · feste Aufgaben</h3><p>Der Aufbau-Benchmark prüft mehrstufige CAD-Aufträge. Der bisherige Grundbenchmark bleibt separat wählbar. Jeder Lauf umfasst acht feste Aufgaben mit je zwei unabhängigen Versuchen, sichtbarer Übung, Kontext C und ohne Startbild.</p><label class="lab-field">Aufgabenserie<select data-benchmark-suite><option value="formnaro-practice-advanced">Aufbau · schwierige Aufgaben · 2.0.0</option><option value="formnaro-practice-core">Grundlagen · bisherige Aufgaben · 1.0.4</option></select></label><details><summary>Die acht Aufgaben dieser Serie</summary><ul data-benchmark-tasks></ul></details><p data-benchmark-model></p><div class="lab-controls"><label class="lab-field">Eine feste Denkstufe<select data-benchmark-effort><option value="high">high</option></select></label><label class="lab-field">Schrittüberwachung<select data-benchmark-monitor><option value="off">Aus · Vergleichslauf</option><option value="shadow">Beobachtend · separate Diagnose</option></select></label></div><p data-benchmark-conditions class="lab-subtle">Maximal 360 s je Versuch · 16.384 Ausgabetokens je Antwort · 20 Runden · höchstens zwei Formatkorrekturen.</p><button data-benchmark-start class="lab-primary">KI-Benchmark starten</button><p data-benchmark-status role="status">Bereit. Start erfolgt ausschließlich über den Knopf.</p></div><div class="lab-card"><h3>Ein Benchmark-Lauf · 16 feste Versuche</h3><label class="lab-field">Einzelner Benchmark-Lauf<select data-benchmark-series><option value="">Noch kein Benchmark</option></select></label><p data-benchmark-score></p><div data-benchmark-chart class="lab-benchmark-chart"></div><div data-benchmark-results class="lab-table-wrap"></div><p data-benchmark-notes class="lab-subtle"></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button data-benchmark-resume>Nur ausstehende Versuche fortsetzen</button><button data-benchmark-json>Bericht JSON</button><button data-benchmark-md>Bericht Markdown</button><button data-benchmark-export>Datenpaket für externen Agenten</button></div></div>`;
+export function mountBenchmark({ host, api, status, refresh, getModeler, selectSupplemental }) {
+  host.innerHTML = `<div class="lab-card"><h3>KI-Benchmark · feste Aufgaben</h3><p>Vormachen führt acht Stufen im Übungsfenster aus, je zweimal mit frischem Projekt. Die Stufen reichen vom Verschieben bis zur technischen Zeichnung mit Schnitt und Bezugsmaßen.</p><label class="lab-field">Aufgabenserie<select data-benchmark-suite><option value="formnaro-practice-advanced">Aufbau · schwierige Aufgaben · 2.0.0</option><option value="formnaro-practice-core">Grundlagen · bisherige Aufgaben · 1.0.4</option><option value="formnaro-practice-guided">Vormachen · steigende Anforderungen · 1.0.0</option></select></label><details><summary>Die acht Aufgaben dieser Serie</summary><ul data-benchmark-tasks></ul></details><p data-benchmark-model></p><div class="lab-controls"><label class="lab-field">Eine feste Denkstufe<select data-benchmark-effort><option value="high">high</option></select></label><label class="lab-field">Schrittüberwachung<select data-benchmark-monitor><option value="off">Aus · Vergleichslauf</option><option value="shadow">Beobachtend · separate Diagnose</option></select></label></div><p data-benchmark-conditions class="lab-subtle">Maximal 360 s je Versuch · 16.384 Ausgabetokens je Antwort · 20 Runden · höchstens zwei Formatkorrekturen.</p><button data-benchmark-start class="lab-primary">KI-Benchmark starten</button><p data-benchmark-status role="status">Bereit. Start erfolgt ausschließlich über den Knopf.</p></div><div class="lab-card" data-benchmark-supplemental><h3>Weitere Arbeitsweisen</h3><button type="button" data-benchmark-guidedladder>Leistungsgrenze · Vorführen</button> <button type="button" data-benchmark-photoladder>Leistungsgrenze · Fotos</button> <button type="button" data-benchmark-stlladder>Leistungsgrenze · STL zu CAD</button> <button type="button" data-benchmark-frontier>Leistungsgrenze · Platte ändern</button> <button type="button" data-benchmark-merge>Modellbau · Teilezahl steigern</button> <button type="button" data-benchmark-converter>STL-Konverter · Flächenkorrektur</button></div><div class="lab-card"><h3>Ein Benchmark-Lauf · 16 feste Versuche</h3><label class="lab-field">Einzelner Benchmark-Lauf<select data-benchmark-series><option value="">Noch kein Benchmark</option></select></label><p data-benchmark-score></p><div data-benchmark-chart class="lab-benchmark-chart"></div><div data-benchmark-results class="lab-table-wrap"></div><p data-benchmark-notes class="lab-subtle"></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button data-benchmark-resume>Nur ausstehende Versuche fortsetzen</button><button data-benchmark-json>Bericht JSON</button><button data-benchmark-md>Bericht Markdown</button><button data-benchmark-export>Datenpaket für externen Agenten</button></div></div>`;
   const el = (k) => host.querySelector('[data-benchmark-' + k + ']');
   let state = null,
     busy = false,
@@ -13,6 +14,15 @@ export function mountBenchmark({ host, api, status, refresh, getModeler }) {
     el('score').textContent = r
       ? `${r.passed} / ${r.planned} vollständig bestätigt · ${r.finished} / ${r.planned} beendet · ${r.pending} ausstehend · Abschlussauswerter: ${r.reviewStatus}`
       : 'Noch keine Benchmark-Ergebnisse. Vorhandene Entwicklungsversuche werden nicht in diesen Benchmark übernommen.';
+    if (r?.suite.ladder) {
+      const first = r.cases.find((test) =>
+        r.outcomes.some((outcome) => outcome.caseId === test.caseId && outcome.outcome === 'failed'),
+      );
+      if (first)
+        el('score').textContent += ' · Erste Stufe mit bestätigter Abweichung: ' + first.id + ' ' + first.label;
+      else if (r.passed === r.planned)
+        el('score').textContent += ' · Obere Leistungsgrenze liegt außerhalb dieser Aufgabenreihe.';
+    }
     renderBenchmarkChart(el('chart'), benchmarkRunEntries(r));
     el('results').replaceChildren();
     el('notes').textContent = '';
@@ -32,6 +42,14 @@ export function mountBenchmark({ host, api, status, refresh, getModeler }) {
         tr.insertCell().textContent = text;
     }
     el('results').append(table);
+    for (const [role, usage] of Object.entries(r.usage ?? {})) {
+      const counts = formatTokenTotals(usage.tokens);
+      if (counts) {
+        const line = document.createElement('p');
+        line.textContent = (role === 'modeler' ? 'Modellieragent' : 'Versuchsleiter') + ' · ' + counts;
+        el('results').append(line);
+      }
+    }
     el('notes').textContent =
       `Ohne Korrektur: ${r.withoutCorrections}; nach Korrektur: ${r.afterCorrections}. Erfolgszeit: ${r.medianSuccessfulMs === null ? '—' : (r.medianSuccessfulMs / 1000).toFixed(1) + ' s Median'} (n=${r.successfulSample}). Infrastruktur: ${r.byOutcome.infrastructure}; Modellkennung ungeprüft/abweichend: ${r.byOutcome['model-unverified']}; ungeprüft: ${r.byOutcome.unverified}; fehlgeschlagen: ${r.byOutcome.failed}. ${r.limitations}${r.error ? ' Letzter Hinweis: ' + r.error : ''}`;
   }
@@ -41,6 +59,9 @@ export function mountBenchmark({ host, api, status, refresh, getModeler }) {
     busy = !!value?.busy || pending;
     const selected = (value?.lab?.benchmarks?.suites ?? []).find((s) => s.suiteId === el('suite').value);
     el('suite').disabled = busy;
+    for (const key of ['frontier', 'guidedladder', 'photoladder', 'stlladder']) el(key).disabled = busy;
+    el('merge').disabled = busy;
+    el('converter').disabled = busy;
     el('start').disabled = busy || selected?.available === false;
     el('tasks').replaceChildren(
       ...(selected?.cases ?? []).map((c) => {
@@ -78,13 +99,19 @@ export function mountBenchmark({ host, api, status, refresh, getModeler }) {
             .map(
               (r) =>
                 new Option(
-                  (r.suite.suiteId === 'formnaro-practice-advanced' ? 'Aufbau' : 'Grundlagen') +
+                  (r.suite.ladder
+                    ? 'Vormachen'
+                    : r.suite.suiteId === 'formnaro-practice-advanced'
+                      ? 'Aufbau'
+                      : 'Grundlagen') +
                     ' ' +
                     r.suite.suiteVersion +
                     ' · ' +
                     new Date(r.createdAt).toLocaleString('de-DE') +
                     ' · ' +
-                    r.id.slice(0, 8),
+                    (r.plan.roles?.modeler?.model || 'Modell unbekannt') +
+                    ' · ' +
+                    r.plan.efforts[0],
                   r.id,
                 ),
             )
@@ -116,6 +143,16 @@ export function mountBenchmark({ host, api, status, refresh, getModeler }) {
       await refresh();
     }
   }
+  el('supplemental').hidden = !selectSupplemental;
+  for (const [key, domain] of [
+    ['guidedladder', 'Vorführgrenze'],
+    ['photoladder', 'Fotogrenze'],
+    ['stlladder', 'STL-Grenze'],
+  ])
+    el(key).onclick = () => selectSupplemental?.(domain);
+  el('frontier').onclick = () => selectSupplemental?.('Plattengrenze');
+  el('merge').onclick = () => selectSupplemental?.('Modellbau');
+  el('converter').onclick = () => selectSupplemental?.('Konverter');
   el('suite').onchange = () => update(state);
   el('start').onclick = () => run();
   el('resume').onclick = () => run(el('series').value);
