@@ -1,4 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto');
+const { writeEmptyBenchmarkManifests } = require('./fixtures/portable-benchmark-manifests.cjs');
 const data=require('../backend/ai-lab-review-data.cjs'),{createLabReviewer,validateResult}=require('../backend/ai-lab-reviewer.cjs');
 const id=()=>crypto.randomUUID();
 function directory(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-review-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return dir;}
@@ -39,7 +40,7 @@ test('The staged portable app exports a ZIP with its packaged compression runtim
  const dir=directory(t),source=path.join(dir,'source'),stage=path.join(dir,'stage');
  for(const name of ['backend','ai','licenses','dist'])fs.mkdirSync(path.join(source,name),{recursive:true});
  for(const name of ['electron.cjs','preload.cjs','package.json','LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.writeFileSync(path.join(source,name),name==='package.json'?'{}':'');
- for(const name of ['benchmark-core-v1.json','benchmark-advanced-v2.json'])fs.writeFileSync(path.join(source,'ai',name),'{"dependencies":[]}');
+ writeEmptyBenchmarkManifests(source);
  for(const name of ['ai-lab-review-data.cjs','ai-lab-storage.cjs','ai-task-atomic.cjs'])
   fs.copyFileSync(require.resolve('../backend/'+name),path.join(source,'backend',name));
  fs.mkdirSync(path.join(source,'src'));
