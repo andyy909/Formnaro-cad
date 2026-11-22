@@ -40,8 +40,6 @@ const only = (v, keys) => {
   if (!v || Object.getPrototypeOf(v) !== Object.prototype || Object.keys(v).some((k) => !keys.includes(k)))
     fail('Unbekannte Bearbeitungsfelder.');
 };
-const within = (a, b) =>
-  a.rootId === b.rootId && b.path.every((id, k) => a.path[k] === id) && a.path.length >= b.path.length;
 const aborted = (signal) => {
   if (signal?.aborted)
     throw Object.assign(Error('Merkmalsänderung abgebrochen.'), { name: 'AbortError', code: 'ABORTED' });

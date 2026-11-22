@@ -24,8 +24,7 @@ const sub = (a, b) => a.map((v, k) => v - b[k]),
     if (!n || !Number.isFinite(n)) fail('Kein eindeutiger Flächenrahmen.');
     return v.map((x) => x / n);
   };
-const mean = (ps) => [0, 1, 2].map((k) => ps.reduce((s, p) => s + p[k], 0) / ps.length),
-  edgeKey = (a, b) => (a < b ? a + ':' + b : b + ':' + a);
+const mean = (ps) => [0, 1, 2].map((k) => ps.reduce((s, p) => s + p[k], 0) / ps.length);
 const plain = (o, fields) =>
   o && Object.getPrototypeOf(o) === Object.prototype && Object.keys(o).every((k) => fields.includes(k));
 const finite = (x, min, max) => typeof x === 'number' && Number.isFinite(x) && x >= min && x <= max;

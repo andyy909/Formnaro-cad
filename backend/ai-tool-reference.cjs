@@ -24,7 +24,7 @@ async function withToolReference({envelope,complete,signal}){
  for(let round=0;round<=8;round++){
   signal?.throwIfAborted();const reply=await complete(current);usage.push(reply.data?.usage??{});
   const raw=reply.text.trim().replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'');
-  let parsed;try{parsed=JSON.parse(raw);}catch{}
+  let parsed;try{parsed=JSON.parse(raw);}catch{ /* The validation below handles replies that cannot be parsed. */ }
   if(!parsed){
    if(round===8||formatCorrections++>=2){const e=Error('Ungültiges JSON nach zwei Formatkorrekturen. Es wurde nichts ausgeführt.');e.code='AI_OUTPUT_INVALID';e.aiRetryable=false;e.feedback={retryable:false};e.toolReferenceData={usage:sumUsage(usage),toolReferences:records};throw e;}
    let error='Return one valid JSON object with balanced braces. Put message at the top level, outside assistant. Preserve the exact task revision and allowed action fields.';
@@ -33,7 +33,7 @@ async function withToolReference({envelope,complete,signal}){
     // strictly parsed response can proceed to plan validation and execution.
     try{
      if(JSON.parse(raw+'}')?.assistant?.kind==='practice')error='The final top-level closing brace is missing. Keep the actions, omit message from the plan reply, and end the actions array with ]}}} to close plan, assistant and the root object.';
-    }catch{}
+    }catch{ /* Use the regular validation feedback if the incomplete reply cannot be inspected. */ }
    }
    records.push({request:{validation:'response-json'},source:'response-validation',result:{ok:false,error}});
    current={...envelope,system,user:envelope.user+'\n\nLocal response validation (nothing executed):\n'+JSON.stringify(records)+'\nPrevious response:\n'+raw.slice(0,200000)+'\nReturn the corrected complete JSON object under the original response contract.'};

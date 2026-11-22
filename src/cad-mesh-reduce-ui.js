@@ -12,7 +12,7 @@ const upper = (n) =>
     : ((Math.ceil((n / 10 ** Math.floor(Math.log10(n))) * 100) / 100) * 10 ** Math.floor(Math.log10(n)))
         .toExponential(2)
         .replace('.', ',');
-function curveReport(r, o) {
+function curveReport(r) {
   return `${fmt(r.beforeTriangles)} → ${fmt(r.afterTriangles)} Dreiecke (${fmt(r.reductionPercent)} % weniger).\nBereich: ${fmt(r.scopeBeforeTriangles)} → ${fmt(r.scopeAfterTriangles)}. ${r.targetReached ? 'Ziel erreicht.' : 'Sicherheitsgrenze erreicht; Zielzahl nicht erzwungen.'}\n${fmt(r.protectedTriangles)} geschützte Dreiecke und alle nicht ausgewählten Flächen exakt erhalten. Keine Punktkoordinate verschoben.\nOptimiererschätzung: ${fmt(r.errorEstimateMm)} mm. Budget: ${fmt(r.requestedErrorMm)} mm.\n${r.sampledDeviation.directions.map((d) => (d.direction === 'left-to-right' ? 'Original → Ergebnis' : 'Ergebnis → Original') + ': ' + fmt(d.sampledMaximum) + ' mm Stichprobenmaximum; ' + d.samplePoints + ' Messpunkte, ' + d.unmeasuredTriangles + ' ungeprüfte Dreiecke.').join('\n')}\nStichproben sind kein garantierter globaler Maximalfehler.\n${r.solidProven ? 'Geschlossener Körper geprüft; Volumenänderung ' + fmt(r.volumePercentChange) + ' % (Grenze 1 %).' : 'Offene Fläche: Öffnungsränder erhalten, kein Materialkörper behauptet.'}`;
 }
 export function createCadMeshReduceUI({

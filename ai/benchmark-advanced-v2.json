@@ -1,7 +1,7 @@
 {
   "id": "formnaro-practice-advanced",
   "label": "Aufbaubenchmark",
-  "version": "2.0.22",
+  "version": "2.0.23",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 600,
@@ -63,7 +63,7 @@
   "dependencies": [
     {
       "path": "backend/ai-practice-function-evaluate.cjs",
-      "sha256": "a0da5955d43f03bfb87aaae7de1631b1380c336c206cfe7fd644144b6555e039"
+      "sha256": "90452716fc547e8c60146c71bd81b92d2073b04f4b5b4ef9b109d62f7d68be75"
     },
     {
       "path": "backend/ai-diagnostic-evaluate.cjs",
@@ -115,7 +115,7 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "64a8fda09fdc1b598eab51b6206777f957a80f82af517a81b8ac1c1095cb1b61"
+      "sha256": "fc0584e797e65f98383b30bd45db4984a680e06e003a9b73256c033c43c64650"
     },
     {
       "path": "ai/benchmark-advanced-calibration-v2.json",
@@ -135,11 +135,11 @@
     },
     {
       "path": "src/cad-practice-model-ui.js",
-      "sha256": "55d30ce556637d5e0726e99e925db25e5f0ae78ede320fd873fd61faf3df2f53"
+      "sha256": "4477f9799f5bcf005e1881ce83d2fac7d76ff35d0302bea055c6c0f60f0793f2"
     },
     {
       "path": "backend/ai-lab-review-data.cjs",
-      "sha256": "3a358282058513f87f33a2c4474508445fce10c8d0c346e0675d5e37608cc301"
+      "sha256": "3f904f71cbcca685ddc5cdfe226ac9cee29b7bc80b5221675ec1d30ed35858b6"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -147,11 +147,11 @@
     },
     {
       "path": "backend/practice-child.cjs",
-      "sha256": "d878eaa3a8b9ff392408ba667115dfe5d1308ae13d085a625720dbc3ca545bfa"
+      "sha256": "ad5b0ff4dcdee629b69305b737dd268f612ce964ed261120d5f2d303892122bb"
     },
     {
       "path": "backend/practice-runner.cjs",
-      "sha256": "134612e1f114b59b0cc8291ec6c9736780c9ab32829d2ea7c6e9a4ba4b009899"
+      "sha256": "3ebdaec1f9a12d3f8d1f4faa75d2cd1de21ecb6abcaca056db2aa01df5800131"
     },
     {
       "path": "src/cad-agent-ui-policy.js",
@@ -159,7 +159,7 @@
     },
     {
       "path": "backend/desktop-ai.cjs",
-      "sha256": "5c4e8516ead2d7f4f3aef2a8c8f464d9953ec7230e52e04f420ae1ecfd12f93d"
+      "sha256": "52f01d74434deee87d6575d2c0b8a3eb40505b244ef0bc7a98046aa9fdf152d4"
     },
     {
       "path": "backend/ai-lab-storage.cjs",
@@ -175,7 +175,7 @@
     },
     {
       "path": "backend/ai-lab-reviewer.cjs",
-      "sha256": "e8f0db854572518bcbd96a661d86e8a80e10067ff7c516b976ca5e6913ee38aa"
+      "sha256": "169c5f328adeb81e993fc3755c85abdaa5cf1f873a6993656aae0e75f8c4be83"
     },
     {
       "path": "backend/ai-diagnostic-child.cjs",
@@ -202,5 +202,5 @@
     "negativeNative": 24,
     "providerRequests": 0
   },
-  "revisionReason": "Diagnostics lint cleanup. Tasks, limits and native predicates unchanged."
+  "revisionReason": "Lint cleanup preserves benchmark tasks, limits and native grading."
 }

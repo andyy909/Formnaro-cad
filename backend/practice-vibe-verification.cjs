@@ -32,7 +32,7 @@ exports.recordPracticeVibe=function recordPracticeVibe(directory){
   const round={round:rounds.length+1,session:sessions.get(session),model:config.find(o=>o.category==='model'||o.id==='model')?.currentValue,
    confirmedEffort:config.find(o=>o.id==='thinking')?.currentValue,requestBytes:Buffer.byteLength(JSON.stringify(params)),images:[],response:''};
   const validation=params.prompt.find(block=>block.type==='text')?.text.split('\nValidation feedback:\n').at(-1);
-  if(validation?.startsWith('{'))try{round.applicationFeedback=JSON.parse(validation);}catch{}
+  if(validation?.startsWith('{'))try{round.applicationFeedback=JSON.parse(validation);}catch{ /* Validation feedback may be plain text rather than JSON. */ }
   for(const block of params.prompt.filter(block=>block.type==='image')){
    const bytes=Buffer.from(block.data,'base64'),file=`vibe-round-${round.round}-image-${round.images.length+1}.${block.mimeType.split('/').at(-1)}`;
    fs.writeFileSync(path.join(directory,file),bytes);

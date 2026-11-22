@@ -251,7 +251,9 @@ function validate(value, schema, path = 'Befehl') {
       try {
         validate(value, option, path);
         valid++;
-      } catch {}
+      } catch {
+        /* A rejected alternative does not count as a valid schema match. */
+      }
     }
     if (valid !== 1) invalid(path + ': eindeutiger gültiger Wert erforderlich.');
     return;

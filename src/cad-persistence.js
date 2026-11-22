@@ -1,4 +1,4 @@
-import { validateCadJoints, remapCadJoints, mergeCadJoints } from './cad-joints-data.js';
+import { remapCadJoints, mergeCadJoints } from './cad-joints-data.js';
 import {
   cadLinkedPatternProblems,
   stampCadLinkedPattern,
@@ -20,7 +20,7 @@ import {
 } from './cad-project-parameters-data.js';
 import { cadProjectSnapshot, parseCadProject, serializeCadProject, cadProjectRevision } from './cad-project.js';
 import { validateCadTemplateData, cadTemplateVariables } from './cad-template-data.js';
-import { createCadRecovery, CAD_AUTOSAVE_KEY } from './cad-recovery.js';
+import { createCadRecovery } from './cad-recovery.js';
 
 export { CAD_AUTOSAVE_KEY, CAD_LEGACY_AUTOSAVE_KEY } from './cad-recovery.js';
 export const MIXED_LIBRARY_KEY = 'offlinecad-library-common-v8';

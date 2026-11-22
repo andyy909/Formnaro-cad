@@ -8,7 +8,7 @@ function isPackaged(){return !!process.versions.electron&&!!require('electron').
 function runtimeRoot(){return isPackaged()?path.join(process.resourcesPath,'freecad'):path.resolve(__dirname,'../freecad-runtime/runtime');}
 function external(){
  for(const root of [process.env.ProgramFiles,process.env['ProgramFiles(x86)']].filter(Boolean)){
-  let names=[];try{names=fs.readdirSync(root).filter(n=>/^FreeCAD(?:[ ._-]|$)/i.test(n)).sort().reverse();}catch{}
+  let names=[];try{names=fs.readdirSync(root).filter(n=>/^FreeCAD(?:[ ._-]|$)/i.test(n)).sort().reverse();}catch{ /* An unreadable installation directory must not prevent checking the others. */ }
   for(const name of names){const file=path.join(root,name,'bin/FreeCADCmd.exe');if(fs.existsSync(file))return file;}
  }return null;
 }
@@ -19,7 +19,7 @@ function resolveRuntime({root=runtimeRoot(),packaged=isPackaged(),findExternal=e
    if(m.schema!==1||m.version!=='1.1.4'||!Array.isArray(m.files)||!m.files.length)throw fail('Manifest');
    for(const file of ['bin/FreeCADCmd.exe','bin/FreeCAD.exe','bin/python311.dll','formnaro-container.exe'])if(!fs.statSync(path.join(root,file)).isFile()||!m.files.some(row=>row.file.toLowerCase()===file.toLowerCase()))throw fail(file);
    return {available:true,executable:path.join(root,'bin/FreeCADCmd.exe'),root,version:m.version,bundled:true,externalInstallation:false};
-  }catch(e){return {available:false,executable:null,root,bundled:true,externalInstallation:false,error:message,code:'FREECAD_RUNTIME_INVALID'};}
+  }catch{return {available:false,executable:null,root,bundled:true,externalInstallation:false,error:message,code:'FREECAD_RUNTIME_INVALID'};}
  }
  const executable=findExternal();return {available:!!executable,executable,bundled:false,externalInstallation:!!executable};
 }

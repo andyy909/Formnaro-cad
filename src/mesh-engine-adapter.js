@@ -17,7 +17,7 @@ import { eraseFillSelectedMesh, validateMeshEraseFillOptions, MESH_ERASE_FILL_LI
 import { sculptMesh, validateMeshSculptOptions } from './mesh-sculpt.js';
 import { smoothSelectedMesh, validateMeshSmoothOptions, MESH_SMOOTH_LIMIT } from './mesh-smooth.js';
 import { reduceCurvedMesh } from './mesh-curved-reduce.js';
-import { reduceLargeMesh, largeMeshCatalog, validateLargeMeshReduceOptions } from './mesh-large-reduce.js';
+import { reduceLargeMesh, largeMeshCatalog } from './mesh-large-reduce.js';
 import { reducePlanarMesh, validateMeshReduceOptions } from './mesh-reduce.js';
 import { remeshPlanarMesh, validateMeshRemeshOptions } from './mesh-remesh.js';
 import {

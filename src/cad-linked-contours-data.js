@@ -803,7 +803,7 @@ export function cadContourSourceClosure(project, targets) {
       if (families.some((family) => within(link.target, family))) {
         try {
           cadProjectParameterTarget(project, link.source);
-        } catch (error) {
+        } catch {
           fail(
             'Benötigte Originalquelle fehlt. Bezug erneut wählen oder die Verknüpfung ausdrücklich lösen.',
             'CONTOUR_REFERENCE_LOST',

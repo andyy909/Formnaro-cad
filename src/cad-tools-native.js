@@ -15,7 +15,7 @@ import {
   multiplyCadMatrices,
   inverseCadMatrix,
 } from './cad-affine.js';
-import { cadBounds, cadRayHits, readCadBrep, cadBoolean, cadVolume } from './cad-native-kernel.js';
+import { cadBounds, cadRayHits, readCadBrep } from './cad-native-kernel.js';
 import { cadPlacementOnPlane } from './cad-face-placement.js';
 import { cadReferencePointsNative, resolveCadReferenceNative, cadReferenceFrame } from './cad-reference-points.js';
 import { cadPartitionDirection } from './cad-partition-data.js';

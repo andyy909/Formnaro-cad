@@ -1,14 +1,6 @@
 import { flags } from './organization.js';
 import { projectObjectGeometryDigest } from './project-objects.js';
-export function createSketchAttachmentPicker({
-  controller,
-  view,
-  getSelection,
-  prepare,
-  pickFace,
-  onPicked,
-  toast = () => {},
-}) {
+export function createSketchAttachmentPicker({ controller, view, getSelection, prepare, pickFace, onPicked }) {
   const panel = document.createElement('section');
   panel.id = 'sketch-attachment-pick';
   panel.className = 'edge-tool-panel';

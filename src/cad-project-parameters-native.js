@@ -2,7 +2,7 @@ import { isFreeCADParameterField, freeCADParameterKey, freeCADTargetKey } from '
 import { buildFreeCADParametersNative } from './cad-freecad-parameters-native.js';
 import { solveSketchConstraints } from './sketch-constraints-solver.js';
 import { cadProjectSnapshot } from './cad-project.js';
-import { cadIdentity, cadPoint, multiplyCadMatrices, resizeCadAtCorner } from './cad-affine.js';
+import { cadPoint, multiplyCadMatrices, resizeCadAtCorner } from './cad-affine.js';
 import { cadSelectionContext, cadFormLocalDimensions, cadInterfaceLocalBounds } from './cad-interface-state.js';
 import { cadSketchRecipe } from './cad-sketch.js';
 import { validateCadModelingOperation } from './cad-modeling-data.js';

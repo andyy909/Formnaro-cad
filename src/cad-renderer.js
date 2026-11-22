@@ -63,9 +63,6 @@ export function createCadRenderer({
   onGesture,
   onSnapGesture,
   onResize,
-  onPlanePick,
-  onMeasurePick,
-  onMagnetPick,
   onError = () => {},
   getPreferences = () => ({ handleSize: 14, gridVisible: true, zoomSpeed: 1 }),
   onDimensions = () => {},
@@ -86,8 +83,7 @@ export function createCadRenderer({
     selection = [],
     gesture = null,
     interaction = null,
-    interactionAllowsCanvasListeners = false,
-    ghost = null;
+    interactionAllowsCanvasListeners = false;
   camera.position.set(245, -310, 265);
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, stencil: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -2131,7 +2127,6 @@ export function createCadRenderer({
       bed,
       edges,
       measurements,
-      motionMarks,
       section,
       preview,
       sources,

@@ -6,7 +6,7 @@ import {
   cadDrawingId,
   CAD_DRAWING_LIMITS,
 } from './cad-drawing-data.js';
-import { cadDrawingCurveBounds, cadDrawingCurvePoint } from './cad-drawing-measure.js';
+import { cadDrawingCurvePoint } from './cad-drawing-measure.js';
 import { cadDrawingAnnotationGeometry } from './cad-drawing-export.js';
 
 const EPS = 1e-7,

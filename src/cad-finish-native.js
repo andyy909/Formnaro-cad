@@ -3,7 +3,7 @@
 // cover imported curves, original text/SVG, partial conics and NURBS.
 import { Vector3 } from 'three';
 import { cadBounds, readCadBrep, writeCadBrep, transformCad, validateCadSolid } from './cad-native-kernel.js';
-import { cadIdentity, cadPoint, multiplyCadMatrices } from './cad-affine.js';
+import { cadIdentity, multiplyCadMatrices } from './cad-affine.js';
 import { validateCadEdgeDomain } from './cad-project.js';
 
 const fail = (code, message) => {

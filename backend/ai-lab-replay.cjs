@@ -161,7 +161,6 @@ function createReplayProvider(transcript) {
       envelope?.onDiagnostic?.({ type: 'request', body: { model: REPLAY_PREFIX + transcript.requestedModel } });
       if (next >= transcript.responses.length)
         throw Object.assign(Error('Aufzeichnung erschöpft: Der aktuelle Programmstand verlangt mehr Runden als der Originallauf.'), { code: 'REPLAY_EXHAUSTED' });
-      const round = transcript.responses[next].round;
       const divergentRound = typeof provider.beforeAnswer === 'function' ? provider.beforeAnswer(next) : null;
       if (divergentRound !== null && divergentRound !== undefined) {
         provider.stoppedBefore = { answerIndex: next, round: divergentRound };

@@ -107,7 +107,9 @@ export function loadPlugins(storage) {
         if (ids.has(manifest.id) || typeof value.enabled !== 'boolean') continue;
         ids.add(manifest.id);
         packages.push({ ...structuredClone(value), manifest });
-      } catch {}
+      } catch {
+        /* Skip an invalid installed package and continue reading the remaining packages. */
+      }
     }
     return packages;
   } catch {

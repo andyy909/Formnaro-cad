@@ -47,6 +47,6 @@ async function startBridge({rpc,directory,port=0}){const token=crypto.randomByte
   }
  }catch(error){jobs.close();throw error;}
  const descriptor={application:'Formnaro',apiVersion:1,url:'http://127.0.0.1:'+server.address().port,token,pid:process.pid,started:new Date().toISOString()};try{fs.mkdirSync(directory,{recursive:true});fs.writeFileSync(descriptorPath,JSON.stringify(descriptor,null,2),{mode:0o600});}catch(e){server.close();throw e;}
- return {descriptor,descriptorPath,observeState:value=>jobs.observe(value),close:async()=>{jobs.close();try{const current=JSON.parse(fs.readFileSync(descriptorPath,'utf8'));if(current.token===token)fs.unlinkSync(descriptorPath);}catch{}server.closeAllConnections();await new Promise(r=>server.close(r));}};
+ return {descriptor,descriptorPath,observeState:value=>jobs.observe(value),close:async()=>{jobs.close();try{const current=JSON.parse(fs.readFileSync(descriptorPath,'utf8'));if(current.token===token)fs.unlinkSync(descriptorPath);}catch{ /* The descriptor may already be gone. Continue closing the server. */ }server.closeAllConnections();await new Promise(r=>server.close(r));}};
 }
 module.exports={registerOrcaSlicer,startBridge,routes};

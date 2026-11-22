@@ -113,7 +113,7 @@ export function installSketchConstraintsUI({
     $('sketch-direct-value').focus();
     $('sketch-direct-value').select();
   }
-  async function solve({ before, affected } = {}) {
+  async function solve({ affected } = {}) {
     if (s.sketch.version < 3) return true;
     const candidate = structuredClone(s.sketch),
       baseline = lastValid,
@@ -148,7 +148,9 @@ export function installSketchConstraintsUI({
               ],
             });
         }
-    } catch {}
+    } catch {
+      /* Continue solving if automatic joins cannot be inferred from the current geometry. */
+    }
     if (!affected && JSON.stringify(candidate.variables) === JSON.stringify(baseline.variables))
       affected = candidate.elements
         .filter((e) => JSON.stringify(e) !== JSON.stringify(baseline.elements?.find((b) => b.id === e.id)))

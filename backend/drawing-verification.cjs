@@ -80,5 +80,5 @@ exports.verifyDrawings=async(win,{directory,files}={})=>{
   fs.writeFileSync(path.join(directory,'drawing-final.ocad'),await run('return a.serialize();'));
   fs.writeFileSync(path.join(directory,'drawing-expected.json'),JSON.stringify({paperA4:[297,210],paperA3:[297,420],bores:4,boreRadius:2.5,plate:[60,40,6],dxfUnits:'mm',dxfScale:1,sourcePreserved:true},null,2));
   return {ok:true,checks};
- }catch(error){try{fs.writeFileSync(path.join(directory,'drawing-failure.png'),(await win.webContents.capturePage()).toPNG());fs.writeFileSync(path.join(directory,'drawing-failure-state.json'),JSON.stringify(await run('return {drawing:a.drawingUI.state(),controller:a.controller.state(),stage:window.__drawingStage};'),null,2));}catch{}throw error;}finally{clearInterval(watchdog);}
+ }catch(error){try{fs.writeFileSync(path.join(directory,'drawing-failure.png'),(await win.webContents.capturePage()).toPNG());fs.writeFileSync(path.join(directory,'drawing-failure-state.json'),JSON.stringify(await run('return {drawing:a.drawingUI.state(),controller:a.controller.state(),stage:window.__drawingStage};'),null,2));}catch{ /* Failure evidence is optional. Preserve the original verification error. */ }throw error;}finally{clearInterval(watchdog);}
 };

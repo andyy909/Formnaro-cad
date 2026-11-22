@@ -27,7 +27,9 @@ export function createLayoutLibrary({ storage, desktop, onChange = () => {} }) {
         let legacy;
         try {
           legacy = JSON.parse(storage.getItem(LAYOUT_KEY));
-        } catch {}
+        } catch {
+          /* The remaining layout recovery handles unreadable legacy storage. */
+        }
         if (legacy) {
           try {
             legacy = emptyLayouts(legacy).current;
@@ -57,7 +59,9 @@ export function createLayoutLibrary({ storage, desktop, onChange = () => {} }) {
     storage.setItem(LAYOUT_LIBRARY_KEY, JSON.stringify(next));
     try {
       storage.setItem(LAYOUT_KEY, JSON.stringify(next.current));
-    } catch {}
+    } catch {
+      /* The current layout has already been saved in the canonical library. */
+    }
     return accept({ data: next });
   }
   return {

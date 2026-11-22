@@ -1,4 +1,4 @@
-import { validatePhotoReference, photoBounds, PHOTO_VIEWS } from './cad-photo-data.js';
+import { validatePhotoReference, photoBounds } from './cad-photo-data.js';
 import { photoPlane, projectPhotoPoint, photoPlaneContains } from './cad-photo-perspective.js';
 import { cadGeometryDigest } from './cad-geometry-digest.js';
 

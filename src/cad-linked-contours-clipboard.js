@@ -11,7 +11,7 @@ import {
 import { captureCadProjectParameterClipboard } from './cad-project-parameters-clipboard.js';
 import { copyCadProjectParameterReferences } from './cad-project-parameters-references.js';
 import { mergeCadProjectParameters, stampCadProjectParameters } from './cad-project-parameters-data.js';
-import { remapCadJoints, validateCadJoints, mergeCadJoints } from './cad-joints-data.js';
+import { remapCadJoints, mergeCadJoints } from './cad-joints-data.js';
 
 const within = (target, family) =>
   target.rootId === family.rootId &&

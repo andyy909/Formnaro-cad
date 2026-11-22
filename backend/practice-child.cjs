@@ -39,10 +39,10 @@ function installPracticeChild(win,{ipc=ipcMain,channel=process,audit=false}={}){
  channel.on('disconnect',()=>{for(const p of observations.values()){clearTimeout(p.timer);p.reject(Error('Elternverbindung beendet.'));}observations.clear();cancelled=true;wake();if(!win.isDestroyed())win.webContents.send('cad-practice:cancel');});
  win.on?.('blur',focusPause);
  ipc.handle('cad-practice:ready',reply(()=>{ready=true;deliver();return true;}));
- function parent(){focusPause();try{channel.send({type:'focus-parent',nonce});}catch{}return true;}
+ function parent(){focusPause();try{channel.send({type:'focus-parent',nonce});}catch{ /* The parent may have disconnected before the focus notification. */ }return true;}
  ipc.handle('cad-practice:parent',reply(()=>parent()));
- ipc.handle('cad-practice:close',reply(()=>{cancelled=true;wake();if(!finished&&nonce){finished=true;try{channel.send({type:'result',nonce,round:retries,value:{ok:false,reason:'Übung wurde beendet.',steps:[]}});}catch{}}parent();setTimeout(()=>{if(!win.isDestroyed())win.close();},0);return true;}));
- win.on?.('close',()=>{cancelled=true;wake();if(!finished&&nonce){finished=true;try{channel.send({type:'result',nonce,round:retries,value:{ok:false,reason:'Übungsfenster wurde geschlossen.',steps:[]}});}catch{}}try{channel.send({type:'focus-parent',nonce});}catch{}});
+ ipc.handle('cad-practice:close',reply(()=>{cancelled=true;wake();if(!finished&&nonce){finished=true;try{channel.send({type:'result',nonce,round:retries,value:{ok:false,reason:'Übung wurde beendet.',steps:[]}});}catch{ /* Close the child even if the parent has disconnected. */ }}parent();setTimeout(()=>{if(!win.isDestroyed())win.close();},0);return true;}));
+ win.on?.('close',()=>{cancelled=true;wake();if(!finished&&nonce){finished=true;try{channel.send({type:'result',nonce,round:retries,value:{ok:false,reason:'Übungsfenster wurde geschlossen.',steps:[]}});}catch{ /* The child is already closing when the parent disconnects. */ }}try{channel.send({type:'focus-parent',nonce});}catch{ /* The parent may have disconnected before the final focus notification. */ }});
  ipc.handle('cad-practice:abort',reply(()=>{cancelled=true;wake();return true;}));
  ipc.handle('cad-practice:status',reply(value=>{if(!nonce||finished||!value||typeof value.paused!=='boolean'||Object.keys(value).some(k=>!['paused','generation'].includes(k)))throw Error('Ungültiger Übungsstatus.');if(!value.paused&&value.generation!==generation)throw Error('Der Fokus hat sich erneut geändert. Bitte Weiter erneut wählen.');if(!value.paused&&typeof win.isFocused==='function'&&!win.isFocused())throw Error('Übungsfenster muss zum Fortsetzen aktiv sein.');if(value.paused&&!paused)pauseVersion++;paused=value.paused;if(!paused)wake();channel.send?.({type:'status',nonce,paused});return {generation};}));
  ipc.handle('cad-practice:observation',reply(value=>{
@@ -92,7 +92,7 @@ function installPracticeChild(win,{ipc=ipcMain,channel=process,audit=false}={}){
       const encoded=frame.toJPEG(78).toString('base64');
       if(encoded.length<=2*1024*1024&&await revision()===value.report.revision)image=encoded;
      }
-    }catch{}
+    }catch{ /* Continue sending the report if the optional screenshot is unavailable. */ }
    }
    if(!cancelled&&!finished)channel.send({type:'result',nonce,round:retries,value,waiting:true,...(image?{image}:{}),...(auditProject?{auditProject}:{})});
    return true;

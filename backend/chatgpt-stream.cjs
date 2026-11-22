@@ -5,7 +5,7 @@ function planError(code,status){
  e.code='CHATGPT_REQUEST_FAILED';return e;
 }
 async function readChatGPTResponse(response){
- if(!response.ok){let code;try{code=(await response.json()).error?.code;}catch{}throw planError(code,response.status);}
+ if(!response.ok){let code;try{code=(await response.json()).error?.code;}catch{ /* The HTTP status still identifies the failure if the response has no JSON body. */ }throw planError(code,response.status);}
  // The live ChatGPT plan endpoint can omit Content-Type on a valid SSE response.
  // Validate the event envelopes and terminal completion below, not this header.
  const decoder=new TextDecoder(),finishedItems=new Map();let size=0,completed;

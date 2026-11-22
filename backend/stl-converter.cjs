@@ -37,7 +37,7 @@ function createStlConverter({command,prefix=[],tempRoot=os.tmpdir(),timeoutMs=60
    directory=await fs.mkdtemp(path.join(tempRoot,'formnaro-stl-'));
    await fs.writeFile(path.join(directory,'input.stl'),args.bytes,{flag:'wx'});
    await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({version:PROTOCOL,action,options,edits:args.edits??null,commands:args.commands??[]}),{flag:'wx'});aborted();
-   let last='';poll=setInterval(async()=>{try{const value=await fs.readFile(path.join(directory,'progress.txt'),'utf8');if(value.length>512000)return;const message=value.trim().split(/\r?\n/).at(-1);if(message&&message!==last&&!job.cancelled){last=message;onProgress({id:job.id,message});}}catch{}},250);poll.unref();
+   let last='';poll=setInterval(async()=>{try{const value=await fs.readFile(path.join(directory,'progress.txt'),'utf8');if(value.length>512000)return;const message=value.trim().split(/\r?\n/).at(-1);if(message&&message!==last&&!job.cancelled){last=message;onProgress({id:job.id,message});}}catch{ /* The converter can replace the progress file while it is being read. */ }},250);poll.unref();
    const exit=await new Promise((resolve,reject)=>{
     const child=spawnProcess(command,[...prefix,directory],{windowsHide:true,shell:false,stdio:'ignore',cwd:path.dirname(command),env:childEnvironment()});job.child=child;
     child.once('error',reject);child.once('close',code=>resolve(code));

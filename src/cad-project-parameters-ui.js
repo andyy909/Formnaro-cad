@@ -583,7 +583,9 @@ export function createCadProjectParametersUI({
         property = cadProjectParameterCatalog(project(), { targets: [binding.target] })[0]?.fields.find(
           (p) => p.field === binding.field,
         );
-      } catch {}
+      } catch {
+        /* Display the stored field identifier when its label cannot be resolved. */
+      }
       text(cell(row), property?.label ?? binding.field);
       const output = text(cell(row), '—', 'span');
       output.dataset.projectParametersBindingValue = '';

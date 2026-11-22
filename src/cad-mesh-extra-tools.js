@@ -13,7 +13,6 @@ import { meshSurfaceHit, meshReferenceAt } from './mesh-surface.js';
 import { meshTextPaths, meshSvgPaths } from './mesh-contours.js';
 import { cloneCadSources } from './cad-source-clone.js';
 import { cadPermanentlyVisible } from './cad-isolation.js';
-import { flags } from './organization.js';
 
 const modes = [
   ['measure', 'Messen'],
@@ -185,8 +184,7 @@ export function createCadMeshExtraTools({
     const s = active;
     if (!s || s.busy) return;
     s.busy = true;
-    const token = generation,
-      ticket = s.ticket;
+    const token = generation;
     try {
       const hit = await pickSurface(ray, event, hint, {
         exclude: s.kind === 'reference' && s.source ? s.id : undefined,

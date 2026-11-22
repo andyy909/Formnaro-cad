@@ -1,15 +1,5 @@
 import * as THREE from 'three';
-import {
-  localManifold,
-  worldManifold,
-  meshData,
-  matrixArray,
-  normalizeMesh,
-  makeNode,
-  groupNodes,
-  fromMesh,
-  validNode,
-} from './geometry.js';
+import { worldManifold, normalizeMesh, makeNode, groupNodes, fromMesh, validNode } from './geometry.js';
 
 import { analyzeLocalFinishEdges, sweepRim } from './mesh-edge-topology.js';
 export const analyzeFinishEdges = analyzeLocalFinishEdges;

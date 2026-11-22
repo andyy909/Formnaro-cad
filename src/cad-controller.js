@@ -1904,7 +1904,9 @@ export function createCadController({
               check.target,
               proposal.aliases ?? {},
             ).target;
-          } catch {}
+          } catch {
+            /* Keep the caller's target in the report when target resolution fails. */
+          }
           reports.push({
             ...structuredClone(check),
             target,

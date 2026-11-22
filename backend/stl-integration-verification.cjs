@@ -134,10 +134,10 @@ async function verify(win,app,{reportPath,converter,fixtures=path.join(__dirname
   const prior=await js('window.__cadTest.serialize()');const cancelName='gerundetes-profil.stl';await open(cancelName);await js('document.getElementById("converter-run").click()');
   for(let i=0;i<500&&!converter.state()?.pid;i++)await pause(10);const pid=converter.state()?.pid;check(!!pid,'Actual native conversion process starts');
   await js('document.getElementById("converter-cancel").click()');for(let i=0;i<500&&converter.state();i++)await pause(10);
-  check(!converter.state(),'Cancel stops and cleans up native process');let alive=false;try{process.kill(pid,0);alive=true;}catch{}check(!alive,'Canceled native worker no longer exists');
+  check(!converter.state(),'Cancel stops and cleans up native process');let alive=false;try{process.kill(pid,0);alive=true;}catch{ /* Leave the process marked as gone if the process probe throws. */ }check(!alive,'Canceled native worker no longer exists');
   check(await js('window.__cadTest.serialize()')===prior&&!fs.existsSync(path.join(exports,cancelName.replace('.stl','.step'))),'Cancel preserves project and creates no output');
   await js('document.getElementById("converter-run").click()');for(let i=0;i<500&&!converter.state()?.pid;i++)await pause(10);const closingPid=converter.state()?.pid;assert(closingPid);
-  await js('document.getElementById("modal-close").click()');await open(name);let closingAlive=false;try{process.kill(closingPid,0);closingAlive=true;}catch{}
+  await js('document.getElementById("modal-close").click()');await open(name);let closingAlive=false;try{process.kill(closingPid,0);closingAlive=true;}catch{ /* Leave the closing process marked as gone if the process probe throws. */ }
   check(!closingAlive&&!converter.state()&&await js('document.querySelectorAll("#stl-regions tr").length>0&&document.getElementById("modal").classList.contains("stl-workbench-modal")'),'Closing an active worker then reopening waits for cleanup and preserves the new analysis');await js('document.getElementById("modal-close").click()');
   // Direct CAD import uses the same bridge, with cm->mm and original workplane placement.
   const chamfer='gefasste-bohrplatte.stl';await js(`(async()=>{const a=window.__cadTest;await a.importFile(${asFile(chamfer,fixture(chamfer))},{reconstruct:true,repair:true,unit:10});await a.settled();})()`);

@@ -1,4 +1,4 @@
-const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
 exports.verifyCompact=async function(win,{directory},mode){
  const checks=[],run=code=>win.webContents.executeJavaScript(code);
  const frame=()=>run('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');

@@ -202,17 +202,7 @@ export function finishCadPatternConsumers(
 export async function updateCadLinkedPatternWithConsumers(
   input,
   requested,
-  {
-    oc,
-    service,
-    editRecipe,
-    signal,
-    freecadRun,
-    consumerBindings,
-    baseline = input,
-    progress,
-    collectConsumerChoices = false,
-  } = {},
+  { oc, service, editRecipe, signal, freecadRun, consumerBindings, progress, collectConsumerChoices = false } = {},
 ) {
   const previous = input.linkedPatterns?.patterns.find((pattern) => pattern.id === requested.id),
     patterns = previous ? [previous] : [],

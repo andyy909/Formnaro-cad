@@ -265,9 +265,7 @@ export function reconstructStlPatches(mesh) {
     const { a, b } = edge,
       p = model.points[a],
       q = model.points[b],
-      [left, right] = edge.faces,
-      ln = model.faces[left].normal,
-      rn = model.faces[right].normal;
+      [left, right] = edge.faces;
     const linearP = scale(add(scale(p, 2), q), 1 / 3),
       linearQ = scale(add(scale(q, 2), p), 1 / 3),
       limit = Math.min(STL_CAD_LIMITS.displacement, norm(sub(p, q)) * 0.08);

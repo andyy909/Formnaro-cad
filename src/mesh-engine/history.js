@@ -2,10 +2,6 @@ import { booleanManifold, fromMesh, meshData, normalizeMesh, matrixArray, validN
 import { meshNodeJSON } from './mesh-project-json.js';
 import { partitionManifold } from './mesh-partition-recipe.js';
 import { meshHash, validCad } from '../cad-data.js';
-let historyFinisher;
-export function setHistoryFinisher(fn) {
-  historyFinisher = fn;
-}
 
 // Children are in the physical, unscaled group frame. Recentring a rebuilt
 // mesh must move the parent frame and every child together, preserving all

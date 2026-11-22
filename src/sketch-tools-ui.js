@@ -126,7 +126,9 @@ export function installSketchToolsUI({ s, controller, properties, fields, change
         row.append(span, input, button);
         direct.append(row);
       }
-    } catch {}
+    } catch {
+      /* The sketch editor remains available when direct dimension fields cannot be derived. */
+    }
   }
   function refresh() {
     const active = [2, 3, 4].includes(s.sketch.version);

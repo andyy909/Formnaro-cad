@@ -2,7 +2,6 @@ import './cad-context-menu.css';
 import { fusionLabel } from './cad-fusion-state.js';
 import {
   CONTEXT_COMMANDS,
-  CONTEXT_MODES,
   CONTEXT_DEFAULTS,
   createContextSettings,
   isFunctionCommand,
@@ -39,8 +38,7 @@ export function createCadContextMenu({
       return e;
     };
   let active = null,
-    rightGesture = null,
-    sequence = 0;
+    rightGesture = null;
   const signature = () => JSON.stringify(getSelection()),
     locale = () => (getLanguage() === 'en' ? 1 : 0);
   function functionEntries() {
@@ -63,7 +61,6 @@ export function createCadContextMenu({
           word('Nicht verfügbare Funktion: ', 'Unavailable function: ') + key);
   }
   function close({ focus = false } = {}) {
-    ++sequence;
     if (!active) return;
     const previous = active.focus;
     if (active.picking) view.highlightPick(null);

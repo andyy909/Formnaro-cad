@@ -2,7 +2,6 @@ import { SKETCH_TEMPLATES } from './sketch-templates.js';
 import './sketch-templates.css';
 import { createCadPersistence, cadTemplateSelection } from './cad-persistence.js';
 import { CAD_PLUGIN } from './cad-plugin-manifest.js';
-import { cadProjectSnapshot } from './cad-project.js';
 import { materializedFnpackProject } from './cad-fnpack-data.js';
 import { cadContourSourceClosure } from './cad-linked-contours-data.js';
 import { cadProjectParameterTarget } from './cad-project-parameters-data.js';
@@ -52,7 +51,9 @@ export function createCadInterfaceLibrary({
   try {
     const saved = JSON.parse(storage.getItem(CAD_PLUGIN.favoritesKey) || '[]');
     if (Array.isArray(saved)) favorites = new Set(saved.filter((value) => typeof value === 'string'));
-  } catch {}
+  } catch {
+    /* Use an empty favorites list if the saved list cannot be read. */
+  }
   const favoriteKey = (kind, id) => (kind === 'shape' ? id : `${kind}:${id}`);
   function isFavorite(id, kind = 'shape') {
     return favorites.has(favoriteKey(kind, id));

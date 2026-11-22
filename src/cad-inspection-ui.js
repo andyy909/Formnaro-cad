@@ -17,24 +17,14 @@ const numeric = (v) => {
     throw Error('Endlichen Wert zwischen −200000 und 200000 mm eingeben.');
   return n;
 };
-export function createCadInspectionUI({
-  controller,
-  view,
-  getSelection,
-  getScene,
-  prepare,
-  toast,
-  getQuality,
-  legacyMeasure,
-}) {
+export function createCadInspectionUI({ controller, view, getSelection, prepare, toast, getQuality, legacyMeasure }) {
   const panel = document.createElement('section');
   panel.id = 'cad-inspection';
   panel.className = 'edge-tool-panel';
   panel.hidden = true;
   view.canvas.parentElement.append(panel);
   let active = null,
-    sectionState = null,
-    sequence = 0;
+    sectionState = null;
   const project = () => controller.readSnapshot(),
     $ = (id) => panel.querySelector('#' + id),
     en = () => document.documentElement.lang === 'en',
@@ -101,7 +91,6 @@ export function createCadInspectionUI({
     if (!active && !sectionState) return false;
     const s = active;
     active = null;
-    sequence++;
     if (s?.timer) clearTimeout(s.timer);
     panel.hidden = true;
     view.setInteraction(null);

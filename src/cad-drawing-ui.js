@@ -783,7 +783,9 @@ export function createCadDrawingUI({
     s.drag = null;
     try {
       q('[data-drawing-paper]').releasePointerCapture(event.pointerId);
-    } catch {}
+    } catch {
+      /* Pointer capture may already have been released when the drag ends. */
+    }
     renderSheet();
     status('Position geändert. Mit „Blatt übernehmen“ speichern.');
   }

@@ -1,3 +1,4 @@
+/* global window, document, DataTransfer -- Serialized verification callbacks run in Electron's renderer. */
 // Synthetic fixtures only. Called exclusively by isolated acceptance harnesses.
 const assert=require('node:assert/strict');
 async function verifyExchange(win,{cad=false}={}){

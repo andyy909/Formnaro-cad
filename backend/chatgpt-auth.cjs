@@ -39,7 +39,7 @@ function createChatGPTAuth({directory,encrypt,decrypt,canEncrypt,openExternal,fe
   if(!acquired)throw Error('ChatGPT-Anmeldesperre wurde wiederholt geändert. Bitte erneut versuchen.');
   localBusy=true;try{read();}catch(e){unlock();throw e;}
  }
- function unlock(){if(localBusy){localBusy=false;try{fs.unlinkSync(lockFile);}catch{}}}
+ function unlock(){if(localBusy){localBusy=false;try{fs.unlinkSync(lockFile);}catch{ /* The lock file may already be gone when the local operation ends. */ }}}
  function current(){return state.accounts.find(a=>a.id===state.active);}
  function publicStatus(){
   if(!localBusy){try{read();}catch(e){return {connected:false,activeId:'',email:'',pending:false,message:e.message,accounts:[],needsWelcome:false};}}const a=current();return {connected:!!a?.access_token&&a.scopes?.includes('chatgpt.tokens.use.direct'),activeId:a?.id||'',email:a?.email||'',pending:!!pending,message,accounts:state.accounts.map(a=>({id:a.id,label:(a.email||'ChatGPT-Konto')+' · '+a.id.slice(0,6),connected:!!a.access_token})),needsWelcome:!!a?.access_token&&!a.welcomed};

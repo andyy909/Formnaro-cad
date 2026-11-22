@@ -22,7 +22,7 @@ function createMCPAgent({directory,connectionFile,node=process.execPath,Client=A
   const client=new Client({command:node,args:[script,connectionFile,path.join(__dirname,'../ai/FORMNARO-MODELLIERFREIRAUM.json'),'--profile=compact'],cwd:directory,env});current=client;
   const previews=new Map(),jobs=new Map(),committed=new Set(),uncertainApplies=new Set();
   let applied=0,toolSequence=0,checkedConfirmed=false,lastCommitRevision;
-  const started=performance.now(),usages=[];
+  const usages=[];
   async function tool(name,args){
    if(!ALLOWED.has(name))throw Error('Unbekanntes Formnaro-Werkzeug.');
    signal?.throwIfAborted();
@@ -36,7 +36,7 @@ function createMCPAgent({directory,connectionFile,node=process.execPath,Client=A
     throw error;
    }
    if(!result.isError){
-    const text=result.content?.find(c=>c.type==='text')?.text;if(text){let value;try{value=JSON.parse(text);}catch{}if(name==='offlinecad_preview_start'&&typeof value?.jobId==='string'&&typeof value?.revision==='string')jobs.set(value.jobId,value.revision);if((['offlinecad_preview','offlinecad_python'].includes(name)||name==='offlinecad_preview_result'&&jobs.get(args.jobId)===value?.revision)&&typeof value?.previewId==='string'&&typeof value?.revision==='string')previews.set(value.previewId,value.revision);
+    const text=result.content?.find(c=>c.type==='text')?.text;if(text){let value;try{value=JSON.parse(text);}catch{ /* Some tool results are plain text and have no structured job metadata. */ }if(name==='offlinecad_preview_start'&&typeof value?.jobId==='string'&&typeof value?.revision==='string')jobs.set(value.jobId,value.revision);if((['offlinecad_preview','offlinecad_python'].includes(name)||name==='offlinecad_preview_result'&&jobs.get(args.jobId)===value?.revision)&&typeof value?.previewId==='string'&&typeof value?.revision==='string')previews.set(value.previewId,value.revision);
      if(name==='offlinecad_apply'&&value?.applied===true){
       uncertainApplies.delete(args.previewId);
       lastCommitRevision=value.revision;
@@ -114,7 +114,7 @@ function createMCPAgent({directory,connectionFile,node=process.execPath,Client=A
     let receipt;
     if(action.tool==='offlinecad_apply'&&!report.isError){
      checkedConfirmed=false;
-     try{receipt=JSON.parse(textValue(result));}catch{}
+     try{receipt=JSON.parse(textValue(result));}catch{ /* Without a structured receipt the apply remains unconfirmed. */ }
     }
     if(stale||receipt?.applied===true){
      try{

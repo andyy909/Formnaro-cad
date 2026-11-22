@@ -70,6 +70,11 @@ Aus dem sauberen Kandidatenstand: `node scripts/build-lab-test-patch.mjs <Progra
 
 ## Entwicklung und Prüfungen
 
+Bei Desktop-Prüfmodulen deklarieren die betroffenen Dateien die Browser-Globals
+der Rückrufe, die Electron im Renderer ausführt. Objekt-Destrukturierung darf
+Felder bewusst aus der Restkopie ausschließen. Optionale Fehlerpfade
+dokumentieren im jeweiligen `catch`-Block, welche Rückfallebene übernimmt.
+
 Die Node-Version steht in `.node-version`. Nach `npm ci` baut
 `npm run build` die Oberfläche. `npm test` führt die Standardauswahl aus
 `package.json` aus. Für einzelne Änderungen die betroffenen Tests und

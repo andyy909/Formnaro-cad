@@ -19,7 +19,6 @@ export function createCadProgramAssistant({
   showPreview,
   clearPreview,
   cancelComputation = () => {},
-  select = () => {},
   getSelection = () => [],
   getMode = () => document.body.dataset.workbenchMode ?? 'normal',
   getBusy = () => false,
@@ -160,14 +159,18 @@ export function createCadProgramAssistant({
     if (overlay.parentElement !== parent) {
       try {
         overlay.hidePopover?.();
-      } catch {}
+      } catch {
+        /* The assistant can still close its overlay when the popover is unavailable. */
+      }
       parent.append(overlay);
     }
     overlay.hidden = false;
     try {
       if (overlay.matches(':popover-open')) overlay.hidePopover();
       overlay.showPopover?.();
-    } catch {}
+    } catch {
+      /* The assistant can still show its overlay when opening the popover fails. */
+    }
   }
   function start(kind) {
     if (active) throw Error('Die Bedienhilfe läuft bereits.');
@@ -185,7 +188,9 @@ export function createCadProgramAssistant({
       .forEach((n) => n.classList.remove('program-assistant-target'));
     try {
       overlay.hidePopover?.();
-    } catch {}
+    } catch {
+      /* The assistant can still hide its overlay when the popover is already closed. */
+    }
     overlay.hidden = true;
     document.body.append(overlay);
     delete overlay.dataset.stage;
@@ -439,7 +444,7 @@ export function createCadProgramAssistant({
       end();
     }
   }
-  async function demonstrate(value, { preview, inspect, checks, isCurrent = () => true } = {}) {
+  async function demonstrate(value, { preview, checks, isCurrent = () => true } = {}) {
     value = validateAssistantAction(value);
     if (value.kind !== 'demonstrate') throw Error('Keine Modellvorführung.');
     document.querySelector('dialog[open].ai-modal')?.close();

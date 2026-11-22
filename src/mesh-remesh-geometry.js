@@ -12,7 +12,6 @@ const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 const norm = (a) => Math.hypot(...a);
 const ekey = (a, b) => (a < b ? a + ':' + b : b + ':' + a);
-const fkey = (ids) => [...ids].sort((a, b) => a - b).join(':');
 const mean = (points) => [0, 1, 2].map((k) => points.reduce((s, p) => s + p[k], 0) / points.length);
 export function placement(m) {
   if (

@@ -4,7 +4,7 @@ const path=require('node:path');
 const fs=require('node:fs'),os=require('node:os');
 const practiceChildren=new Map();
 function cleanupPractice(directory){const record=practiceChildren.get(directory);if(!record)return;try{const resolved=fs.realpathSync(directory),root=fs.realpathSync(record.tempRoot);if(fs.lstatSync(directory).isSymbolicLink()||path.dirname(resolved)!==root||!/^formnaro-practice-[A-Za-z0-9]+$/.test(path.basename(resolved)))return;fs.rmSync(resolved,{recursive:true,force:true,maxRetries:4,retryDelay:50});practiceChildren.delete(directory);}catch(error){if(error.code==='ENOENT')practiceChildren.delete(directory);}}
-process.once('exit',()=>{for(const [directory,record]of practiceChildren){try{if(record.child&&!record.child.killed)record.child.kill();}catch{}cleanupPractice(directory);}});
+process.once('exit',()=>{for(const [directory,record]of practiceChildren){try{if(record.child&&!record.child.killed)record.child.kill();}catch{ /* Continue removing temporary profiles if a child has already exited. */ }cleanupPractice(directory);}});
 const SHAPES=new Set(require('../ai/OfflineCAD-KI-Kontext.json').shapes.map(s=>s.type));
 const {isPracticeUICommand}=require('./practice-ui-policy.cjs');
 const {validatePracticeProjectCopy,validatePracticeResultProject}=require('./practice-project-copy.cjs');
@@ -116,7 +116,7 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
     if(projectCopy?.sketchDraft){closingSketchResult=value;return;}
     finish(null,value);
    };
-   const startClock=()=>{started=Date.now();timer=setTimeout(()=>{try{child.kill();}catch{}finish(Error('Übung hat das aktive Zeitlimit erreicht und wurde beendet.'));},Math.max(1,remaining));};
+   const startClock=()=>{started=Date.now();timer=setTimeout(()=>{try{child.kill();}catch{ /* Report the timeout even if the child exits before it can be killed. */ }finish(Error('Übung hat das aktive Zeitlimit erreicht und wurde beendet.'));},Math.max(1,remaining));};
    const pauseClock=()=>{if(paused||finished)return;paused=true;if(timer)clearTimeout(timer);timer=null;remaining=Math.max(1,remaining-(Date.now()-started));};
    const resumeClock=()=>{if(!paused||finished)return;paused=false;startClock();};startClock();
    const session={child,nonce,finish,ready:false,cancelRequested:false,resume(input){
@@ -130,10 +130,10 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
     return new Promise((resolve,reject)=>{
      reply={resolve,reject};
      try{child.send({type:'continue',nonce,...next});}
-     catch(error){finish(error);try{child.kill();}catch{}}
+     catch(error){finish(error);try{child.kill();}catch{ /* Keep the send error even if the child is already gone. */ }}
     });
    }};
-   active=session;child.once('error',err=>{trace({state:'error',code:err.code});if(active?.child===child)active=null;if(child.pid){try{child.kill();}catch{}}else cleanupPractice(profileDirectory);finish(err);});child.once('exit',code=>{
+   active=session;child.once('error',err=>{trace({state:'error',code:err.code});if(active?.child===child)active=null;if(child.pid){try{child.kill();}catch{ /* An errored child may exit before it can be killed. */ }}else cleanupPractice(profileDirectory);finish(err);});child.once('exit',code=>{
     trace({state:'exit',code});
     if(active?.child===child)active=null;
     cleanupPractice(profileDirectory);
@@ -151,7 +151,7 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
     if(!reply||recovery&&msg.round!==retries)return;
     if(!exact(msg.value,['ok','steps','report','reason'])||typeof msg.value.ok!=='boolean'||Buffer.byteLength(JSON.stringify(msg.value),'utf8')>PRACTICE_REPORT_MAX_BYTES){
      finish(Error('Ungültiger Übungsbericht.'));
-     try{child.send({type:'cancel',nonce});}catch{}
+     try{child.send({type:'cancel',nonce});}catch{ /* The invalid report has already been rejected. The child may be disconnected. */ }
      return;
     }
     trace({state:'result',ok:msg.value.ok,round:retries});
@@ -178,11 +178,11 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
       const pending=reply;reply=null;
       idleTimer=setTimeout(()=>{
        finish(Error('Übung wartet zu lange auf eine Korrektur.'));
-       try{child.send({type:'cancel',nonce});}catch{}
+       try{child.send({type:'cancel',nonce});}catch{ /* The timeout has already been reported. The child may be disconnected. */ }
       },300000);
       idleTimer.unref?.();
       return pending.resolve({...msg.value,continuationId:continuation.id,...(image?{image}:{})});
-     }catch(error){finish(error);try{child.send({type:'cancel',nonce});}catch{}return;}
+     }catch(error){finish(error);try{child.send({type:'cancel',nonce});}catch{ /* The failure has already been reported. The child may be disconnected. */ }return;}
     }
     if(msg.project!==undefined){
      try{
@@ -201,7 +201,7 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
   return done(await active.resume(input));
  }catch(error){return fail(error);}});
  const cancel=()=>{if(!active)return false;active.cancelRequested=true;if(active.ready)active.child.send({type:'cancel',nonce:active.nonce});return true;};
- win.once?.('closed',()=>{retainedResult=null;const current=active;if(!current)return;try{current.child.kill();}catch{}current.finish(Error('Hauptfenster wurde geschlossen. Übung beendet.'));});
+ win.once?.('closed',()=>{retainedResult=null;const current=active;if(!current)return;try{current.child.kill();}catch{ /* Finish the session even if its child has already exited. */ }current.finish(Error('Hauptfenster wurde geschlossen. Übung beendet.'));});
  ipcMain.handle('cad-practice:cancel',async(e)=>{try{if(!trusted(e))throw Error('Ungültiges Fenster.');return done(cancel());}catch(error){return fail(error);}});
  return {cancel};
 }

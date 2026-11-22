@@ -1,5 +1,5 @@
 import { INSPECTION_COMMAND_SCHEMAS } from './cad-inspection-state.js';
-import { CAD_NATIVE_RAY_SCHEMA, CAD_NATIVE_REFERENCE_SCHEMA } from './cad-precise-tools.js';
+import { CAD_NATIVE_REFERENCE_SCHEMA } from './cad-precise-tools.js';
 import {
   CAD_COMMAND_INFO_SCHEMA,
   CAD_CONTEXT_PROFILE_SCHEMA,
@@ -189,8 +189,7 @@ export function cadAIContext(fonts = CAD_FONTS) {
       },
     },
   });
-  const ray = structuredClone(CAD_NATIVE_RAY_SCHEMA),
-    reference = structuredClone(CAD_NATIVE_REFERENCE_SCHEMA);
+  const reference = structuredClone(CAD_NATIVE_REFERENCE_SCHEMA);
   commandSchema.properties.commands.items.oneOf.push({
     type: 'object',
     additionalProperties: false,

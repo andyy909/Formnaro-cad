@@ -25,8 +25,7 @@ export function createCadMeshCopyUI({
       close();
     }
   });
-  let active = null,
-    generation = 0;
+  let active = null;
   const $ = (id) => panel.querySelector('#mesh-copy-' + id),
     key = () => JSON.stringify(getSelection());
   const number = (value) => Number(value).toLocaleString('de-DE', { maximumFractionDigits: 6 });
@@ -56,7 +55,6 @@ export function createCadMeshCopyUI({
   }
   function close() {
     const had = !!active;
-    ++generation;
     discard();
     active = null;
     panel.hidden = true;
@@ -123,7 +121,6 @@ export function createCadMeshCopyUI({
     const proposal = s.proposal,
       onlyCopy = $('isolate').checked;
     active = null;
-    ++generation;
     panel.hidden = true;
     try {
       await applyProposal(proposal);

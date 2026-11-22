@@ -62,5 +62,5 @@ model.get(${JSON.stringify(await run('return p.plateId;'))}, [${JSON.stringify(a
   }finally{await bridge.close();}
   checks.push(...await require('./ai-assistance-verification.cjs').verifyAIAssistance(win,{directory}));
   return {ok:true,checks,cloudRequests:0,pythonBundled:true,hostFilesMounted:false};
- }catch(error){try{fs.writeFileSync(path.join(directory,'failure.png'),(await win.webContents.capturePage()).toPNG());}catch{}throw error;}finally{await run(`document.getElementById('modal').close();`);}
+ }catch(error){try{fs.writeFileSync(path.join(directory,'failure.png'),(await win.webContents.capturePage()).toPNG());}catch{ /* Failure evidence is optional. Preserve the original verification error. */ }throw error;}finally{await run(`document.getElementById('modal').close();`);}
 };

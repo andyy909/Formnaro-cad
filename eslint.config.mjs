@@ -29,7 +29,7 @@ export default [
     linterOptions: { reportUnusedDisableDirectives: 'off' },
     rules: {
       'no-undef': 'warn',
-      'no-unused-vars': 'warn',
+      'no-unused-vars': ['warn', { ignoreRestSiblings: true }],
       'no-empty': 'warn',
       'no-dupe-keys': 'warn',
     },
