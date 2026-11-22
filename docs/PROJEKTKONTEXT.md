@@ -1,5 +1,9 @@
 # Technischer Projektkontext
 
+Die Hilfe bietet „Formnaro über PayPal unterstützen“ auf Deutsch und
+Englisch. Der vorhandene Desktop-Linkdienst öffnet die feste öffentliche
+Spendenseite erst nach einem Klick im Standardbrowser.
+
 ## Gespeicherte Kantenschritte ändern
 
 Im Objektbaum eines ausgewählten CAD-Wurzelkörpers öffnet die gespeicherte

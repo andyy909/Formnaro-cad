@@ -32,7 +32,11 @@ export function showCadAbout({ modal, safe, language }) {
     pre.textContent = content;
     pre.style.whiteSpace = 'pre-wrap';
   }
-  for (const anchor of document.querySelectorAll('[data-about-link]')) {
+  bindCadAboutLinks(document.getElementById('modal-body'), safe);
+}
+
+export function bindCadAboutLinks(container, safe) {
+  for (const anchor of container.querySelectorAll('[data-about-link]')) {
     anchor.target = '_blank';
     anchor.rel = 'noopener noreferrer';
     const desktop = window.offlinecadDesktop;
