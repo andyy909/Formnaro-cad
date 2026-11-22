@@ -1,5 +1,5 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
-const {completeModel,testConnection,validateConfig}=require('./ai-provider.cjs');
+const {completeModel,testConnection}=require('./ai-provider.cjs');
 const {aiUsage,displayTokenRates}=require('./ai-usage.cjs');
 const {SYSTEM}=require('./ai-mcp-agent.cjs');
 const {providerContext}=require('./ai-provider-context.cjs');
@@ -43,7 +43,12 @@ function startingModelProblems(expected,initial){
 }
 // Zustand und Gesamtberichte brauchen den Hash und die Herkunft, aber nicht die
 // vollständigen Projektdaten jedes Laufs. Der Einzel-Export (`read`) behält sie.
-function fixtureSummary(fixture){if(!fixture||typeof fixture!=='object')return fixture;const {project,...summary}=fixture;return summary;}
+function fixtureSummary(fixture){
+ if(!fixture||typeof fixture!=='object')return fixture;
+ const summary={...fixture};
+ delete summary.project;
+ return summary;
+}
 function createDiagnostics({app,directory,credentials,onEvent=()=>{},openChild=require('./ai-diagnostic-child.cjs').openDiagnosticChild,provider={completeModel,testConnection},runPractice,cancelPractice=()=>{},reviewerEnabled=true,connections,writeRecord=writeLabFile}){
  fs.mkdirSync(directory,{recursive:true});let active=null,campaignControl=null,campaignState=null;const records=[];
  for(const file of fs.readdirSync(directory).filter(n=>/^run-[\w-]+\.json$/.test(n))){try{const record=JSON.parse(fs.readFileSync(path.join(directory,file),'utf8'));if(record.status==='running'){record.status='interrupted';record.error={code:'HOST_EXIT',message:'Vor Abschluss unterbrochen; Verbrauch kann unvollständig sein.'};}if(record.proposal&&!record.toolChoice){try{const user=record.events.find(e=>e.type==='start-context').user;const scene=JSON.parse(user.split('Current scene (data):\n')[1].split('\nUser task:')[0]);record.toolChoice=proposalRelevance(record.spec.caseId,record.proposal,scene);}catch{record.toolChoice={appropriate:false,scope:'Historische Zielauskunft fehlt.'};}}records.push(record);}catch{}}

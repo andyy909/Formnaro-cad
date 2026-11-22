@@ -2,7 +2,12 @@ const fs=require('node:fs'),path=require('node:path');
 const {readLabCampaigns,campaignReportMarkdown}=require('./ai-test-lab-campaign-report.cjs');
 async function exportReport({directory,records,format,pricing}){
  const {usagePrice,usageTotals}=await import('../ai/diagnostic-costs.mjs');
- let exchange=null;try{exchange=JSON.parse(fs.readFileSync(path.join(directory,'../KI-Wechselkurs.json'),'utf8'));}catch{}
+ let exchange;
+ try{
+  exchange=JSON.parse(fs.readFileSync(path.join(directory,'../KI-Wechselkurs.json'),'utf8'));
+ }catch{
+  exchange=null;
+ }
  const rows=records.map(r=>({id:r.id,spec:r.spec,requestedModel:r.requestedModel,returnedModel:r.returnedModel,startedAt:r.startedAt,status:r.status,elapsedMs:r.elapsedMs,preparationMs:r.preparationMs,firstToolMs:r.firstToolMs,firstReasoningMs:r.firstReasoningMs,toolCalls:r.toolCalls,sourceHash:r.sourceHash,fixtureHash:r.fixtureHash,startImageHash:r.startImageHash,toolChoice:r.toolChoice,proposedValid:r.proposedValid,verification:r.verification,error:r.error,cleanExit:r.cleanExit,close:r.close??null,unsettledRequests:r.unsettledRequests,usage:usageTotals(r.usageEvents.map(e=>usagePrice(e.usage,e.rates??r.rates??pricing,e.at)))}));
  const total=usageTotals(records.flatMap(r=>r.usageEvents.map(e=>usagePrice(e.usage,e.rates??r.rates??pricing,e.at)))),unsettledRequests=rows.reduce((n,r)=>n+r.unsettledRequests,0);
  const reconciliation=require('./ai-diagnostic-reconciliation.cjs').readReconciliation(directory);

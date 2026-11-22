@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -118,7 +118,7 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "c409957605ea3770c96e41308fa06915653b0bef9cdd61db20784fb4f6834a4c"
+      "sha256": "64a8fda09fdc1b598eab51b6206777f957a80f82af517a81b8ac1c1095cb1b61"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -173,5 +173,5 @@
       "sha256": "6f5021d8c0879156ca11022879c222248496a0b681322b8fb86199563833f038"
     }
   ],
-  "revisionReason": "Preserve and validate replay fixtures and decision-relevant lab feedback. Benchmark tasks, limits and native predicates are unchanged."
+  "revisionReason": "Diagnostics lint cleanup. Tasks, limits and native predicates unchanged."
 }

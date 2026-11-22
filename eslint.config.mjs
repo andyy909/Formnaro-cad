@@ -51,4 +51,8 @@ export default [
     files: ['backend/**/*.{js,mjs}', 'vite.config.js'],
     languageOptions: { globals: globals.nodeBuiltin },
   },
+  {
+    files: ['ai/*.mjs'],
+    languageOptions: { globals: { structuredClone: 'readonly' } },
+  },
 ];
