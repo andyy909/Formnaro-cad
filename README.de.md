@@ -4,7 +4,7 @@
 
 # Formnaro
 
-[English](README.md) | **Deutsch**
+[English](README.md) | **Deutsch** | [Formnaro über PayPal unterstützen](https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES)
 
 **CAD und Netzbearbeitung für Modellbau und 3D-Druck.** Konstruiere Bauteile, bearbeite 3D-Modelle und erstelle technische Zeichnungen. Formnaro läuft lokal unter Windows; die normale Modellierung funktioniert offline.
 
