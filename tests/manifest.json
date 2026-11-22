@@ -213,6 +213,7 @@
   {"file":"tests/cad-face-placement.test.mjs","referencedBy":["test:cad-face-placement"],"kind":"node","status":"pass","seconds":3.043},
   {"file":"tests/cad-face-sketch-native.test.mjs","referencedBy":["test:cad-modeling"],"kind":"node","status":"pass","seconds":2.819},
   {"file":"tests/cad-finish-domains-extended.test.mjs","referencedBy":["test:cad-kernel-extended"],"kind":"node","status":"pass","seconds":4.286},
+  {"file":"tests/cad-finish-amount.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.15},
   {"file":"tests/cad-finish-native.test.mjs","referencedBy":["test:cad-foundation"],"kind":"node","status":"pass","seconds":2.833},
   {"file":"tests/cad-finish-remove-extended.test.mjs","referencedBy":["test:cad-kernel-extended"],"kind":"node","status":"pass","seconds":1.533},
   {"file":"tests/cad-fonts.test.mjs","referencedBy":["scripts/package-freecad-python.mjs","test:cad-fonts"],"kind":"node","status":"timeout","seconds":120.379,"note":"The native outline loop spawns a separate CAD process for each of 64 fonts. It exceeded the 120-second per-file cap twice; npm run test:cad-fonts remains the dedicated entry point."},
