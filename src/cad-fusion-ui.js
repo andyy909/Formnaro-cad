@@ -1,3 +1,4 @@
+import { appendCadCommandSearch } from './cad-command-search.js';
 import './cad-fusion.css';
 import { createFusionCommandIcon } from './cad-solid-icons.js';
 import {
@@ -270,42 +271,20 @@ export function createCadFusionUI({
     popup.id = 'fusion-search';
     popup.setAttribute('role', 'dialog');
     popup.setAttribute('aria-label', word('Konstruktionswerkzeuge suchen', 'Search design tools'));
-    const input = make('input');
-    input.type = 'search';
-    input.placeholder = word('Befehl suchen …', 'Search commands …');
-    input.setAttribute('aria-label', input.placeholder);
-    popup.append(input);
-    const list = make('div');
-    popup.append(list);
     const keys = [
       ...new Set([...Object.values(tabCommands).flatMap((groups) => groups.flatMap(([, keys]) => keys)), 'fit']),
     ];
-    function render() {
-      list.replaceChildren();
-      for (const key of keys) {
-        const original = controls.get(key) || extraControls.get(key),
-          text = label(key) === key ? original?.title || key : label(key);
-        if (!text.toLocaleLowerCase().includes(input.value.toLocaleLowerCase())) continue;
-        const b = button(text, () => {
-          closePopup();
-          invoke(key);
-        });
-        b.disabled = original?.disabled ?? false;
-        list.append(b);
-      }
-    }
-    input.oninput = render;
-    input.onkeydown = (e) => {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        list.querySelector('button:not(:disabled)')?.focus();
-      }
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        list.querySelector('button:not(:disabled)')?.click();
-      }
-    };
-    render();
+    const input = appendCadCommandSearch(popup, {
+      placeholder: word('Befehl suchen …', 'Search commands …'),
+      entries: () => keys.map(key => {
+        const original = controls.get(key) || extraControls.get(key);
+        return { key, label: label(key) === key ? original?.title || key : label(key), disabled: original?.disabled ?? false };
+      }),
+      choose: key => safe(() => {
+        closePopup();
+        return invoke(key);
+      }),
+    });
     $('viewport').append(popup);
     input.focus();
   }

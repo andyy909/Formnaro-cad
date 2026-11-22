@@ -47,6 +47,10 @@ Die lokale KI-Schnittstelle verwendet die in Formnaro angezeigte
 `ai-bridge.json`. Die Verbindung und der Python-Fallback stehen in
 [AGENTS.md](../AGENTS.md). Verbindungsdatei und Token bleiben vertraulich.
 
+## Private Laborupdates auf Windows
+
+Aus dem sauberen Kandidatenstand: `node scripts/build-lab-test-patch.mjs <Programmordner> <Ausgabe.zip> <Basiscommit> [vorherige.zip.basis.json]`. Als letzte Angabe das eigene Buildprotokoll verwenden, wenn ein Laborpatch die installierte Basis bildet. Der Builder prüft EXE und Anwendungsarchiv, baut die Weboberfläche und verpackt neue Archivbereiche. Für den Tester die drei gleichnamigen Dateien ZIP, ZIP.ps1 und ZIP.cmd zusammen ablegen. Formnaro schließen, die CMD starten und den privaten Programmordner auswählen oder als Argument übergeben. Für den Rückweg unterstützt dieselbe PS1 `-Mode Rollback` mit Programmordner, ZIP und dem im Starter hinterlegten ZIP-Hash. Aufgaben und ihre Prüfer können damit gemeinsam versioniert werden. Geänderte native Komponenten oder Abhängigkeiten benötigen eine passende Programmbasis.
+
 ## Schutz und Laufzeiten
 
 - Bei Modelländerungen bestehende Quellen, Parameter, Sperren und

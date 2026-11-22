@@ -163,6 +163,11 @@ export function createCadWorkerClient({
       if (data.type === 'error') {
         const error = new Error(data.message || 'CAD-Berechnung fehlgeschlagen.');
         error.code = data.code || 'CAD_ERROR';
+        if (typeof data.bodyId === 'string' && typeof data.stepId === 'string') {
+          error.bodyId = data.bodyId;
+          error.stepId = data.stepId;
+          if (Number.isInteger(data.edgeIndex)) error.edgeIndex = data.edgeIndex;
+        }
         if (data.feedback) error.feedback = data.feedback;
         if (typeof data.stack === 'string') error.stack = data.stack;
         try {

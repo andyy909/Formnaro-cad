@@ -128,7 +128,38 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
       }
       const timing=started===null?undefined:{preparationMs:operationStarted-started,operationMs:performance.now()-operationStarted,...(displayTiming?{display:displayTiming}:{})};
       cadNativeMemory(kernel).sample('request-complete');const retire=recycle()||(kernel?.wasmMemory?.buffer?.byteLength??0)>=memoryPolicy.retireBytes;reply(message,{type:'result',result,...(timing?{timing}:{}),recycleWorker:retire,...(retire?{proofs:service.exportProofs()}:{})});
-    }catch(error){const fatal=error instanceof WebAssembly.RuntimeError,code=fatal?'CAD_KERNEL_FATAL':error.code||'CAD_ERROR',phase=error.cadPhase??message.request?.job,messageText=fatal?'Die CAD-Berechnung musste beendet werden. Diesen Auftrag beenden und den Fehlerbericht prüfen.':error.message||'CAD-Workerauftrag fehlgeschlagen.';reply(message,{type:'error',recycleWorker:recycle(true)||code==='CAD_MEMORY_BUDGET',...(code==='CAD_MEMORY_BUDGET'&&service?{proofs:service.exportProofs()}:{}),code,feedback:aiFeedback({code,message:messageText,feedback:error.feedback,measuredTolerance:error.measuredTolerance,allowedTolerance:error.allowedTolerance},{phase}),phase,stack:String(error.stack??'').slice(0,12000),message:messageText});}
+    } catch (error) {
+      const fatal = error instanceof WebAssembly.RuntimeError;
+      const code = fatal ? 'CAD_KERNEL_FATAL' : error.code || 'CAD_ERROR';
+      const phase = error.cadPhase ?? message.request?.job;
+      const messageText = fatal
+        ? 'Die CAD-Berechnung musste beendet werden. Diesen Auftrag beenden und den Fehlerbericht prüfen.'
+        : error.message || 'CAD-Workerauftrag fehlgeschlagen.';
+      const finishFailure = typeof error.bodyId === 'string' && typeof error.stepId === 'string'
+        ? {
+            bodyId: error.bodyId,
+            stepId: error.stepId,
+            ...(Number.isInteger(error.edgeIndex) ? { edgeIndex: error.edgeIndex } : {}),
+          }
+        : {};
+      reply(message, {
+        type: 'error',
+        recycleWorker: recycle(true) || code === 'CAD_MEMORY_BUDGET',
+        ...(code === 'CAD_MEMORY_BUDGET' && service ? { proofs: service.exportProofs() } : {}),
+        code,
+        feedback: aiFeedback({
+          code,
+          message: messageText,
+          feedback: error.feedback,
+          measuredTolerance: error.measuredTolerance,
+          allowedTolerance: error.allowedTolerance,
+        }, { phase }),
+        ...finishFailure,
+        phase,
+        stack: String(error.stack ?? '').slice(0, 12000),
+        message: messageText,
+      });
+    }
   }
   function receive(message){
     if(closed)return;

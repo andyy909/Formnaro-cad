@@ -1,0 +1,13 @@
+{
+  "version": 4,
+  "label": "Leistungsgrenze · Platte ändern",
+  "context": "",
+  "prompts": [
+    "Erzeuge eine editierbare rechteckige Platte mit Länge {length} in X, Breite {width} in Y und Dicke 6 mm. Linke Stirnfläche bei X=0, Mitte bei Y=0, Unterseite Z=0. Setze {holes} durchgehende Bohrungen Ø6 auf die Längsmittellinie, erste und letzte jeweils {margin} mm von der kurzen Stirnfläche, gleichmäßig verteilt. Ein zusammenhängender Körper.",
+    "Verlängere diese Platte an der rechten Stirnseite um {extension} mm. Die linke Stirnfläche bleibt ortsfest. Beide Randabstände von {margin} mm und die gleichmäßige Verteilung aller Bohrungen erhalten.",
+    "Ändere von links gezählt nur die {boreNoun} Nummer {ordinals} auf Ø8 mm. Positionen, übrige Bohrungen und Platte erhalten."
+  ],
+  "attempts": 3,
+  "progression": { "factor": 2, "plateBores": 128, "steppedBores": 64, "photoSetSize": 32, "guidedSetSize": 32 },
+  "minutesByEffort": { "default": 4, "high": 6, "xhigh": 8, "max": 8 }
+}

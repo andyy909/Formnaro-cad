@@ -1,4 +1,5 @@
 import './cad-solid.css';
+import { appendCadCommandSearch } from './cad-command-search.js';
 import { createSolidSettings, solidLabel, solidShortcut, SOLID_TABS } from './cad-solid-state.js';
 import { createSolidCommandIcon } from './cad-solid-icons.js';
 
@@ -48,6 +49,7 @@ export function createCadSolidUI({
   getLanguage = () => 'de',
   view,
   executeCommand = () => {},
+  canExecute = () => true,
   openSettings = () => {},
   openAbout = () => {},
   isIdle = () => true,
@@ -62,6 +64,7 @@ export function createCadSolidUI({
     taskPane = null,
     menubar = null,
     popup = null,
+    shortcutFocus = null,
     observer = null,
     managerTab = 'model',
     activeTab = settings.get().defaultTab,
@@ -159,9 +162,11 @@ export function createCadSolidUI({
     for (const panel of manager.querySelectorAll('[data-solid-manager-panel]'))
       panel.hidden = panel.dataset.solidManagerPanel !== key;
   }
-  function closePopup() {
+  function closePopup({ restoreFocus = false } = {}) {
     popup?.remove();
     popup = null;
+    if (restoreFocus) (shortcutFocus?.isConnected ? shortcutFocus : view.canvas)?.focus({ preventScroll: true });
+    shortcutFocus = null;
   }
   function orientation() {
     closePopup();
@@ -201,27 +206,42 @@ export function createCadSolidUI({
     popup.id = 'solid-shortcuts';
     popup.setAttribute('role', 'dialog');
     popup.setAttribute('aria-label', word('Schnellwerkzeuge', 'Shortcut bar'));
-    for (const [key, de, en] of [
+    shortcutFocus = document.activeElement === document.body ? view.canvas : document.activeElement;
+    const direct = [
       ['extrude', 'Extrudierter Aufsatz', 'Extruded boss'],
       ['cut', 'Linearer Schnitt', 'Extruded cut'],
       ['round', 'Verrundung', 'Fillet'],
       ['measure', 'Messen', 'Measure'],
-    ]) {
-      const b = button(word(de, en), () => {
-        closePopup();
-        if (['extrude', 'cut'].includes(key)) return executeCommand(key);
-        const node = controls.get(key) || extraControls.get(key);
-        if (node && !node.disabled) node.click();
-        else if (!node) {
-          const original = document.querySelector(`[data-action="${key}"]`);
-          if (original && !original.disabled) original.click();
-        }
-      });
+    ];
+    const keys = [...new Set([...direct.map(([key]) => key), ...Object.values(tabCommands).flat(2)])];
+    const original = key => controls.get(key) || control(key);
+    const disabled = key => original(key).disabled || !canExecute(key);
+    const invoke = key => {
+      const node = original(key);
+      if (disabled(key)) return;
+      closePopup({ restoreFocus: true });
+      if (!node.isConnected || ['extrude', 'cut'].includes(key)) return executeCommand(key);
+      node.click();
+    };
+    for (const [key, de, en] of direct) {
+      const b = button(word(de, en), () => invoke(key));
+      b.dataset.solidShortcut = key;
+      b.disabled = disabled(key);
       b.prepend(createSolidCommandIcon(key));
       popup.append(b);
     }
+    const input = appendCadCommandSearch(popup, {
+      placeholder: word('Befehl suchen …', 'Search commands …'),
+      entries: () => keys.map(key => ({
+        key,
+        label: label(key),
+        aliases: [solidLabel(key, 'de'), solidLabel(key, 'en'), key, ...(direct.find(item => item[0] === key)?.slice(1) ?? [])],
+        disabled: disabled(key),
+      })),
+      choose: key => safe(() => invoke(key)),
+    });
     $('viewport').append(popup);
-    popup.querySelector('button').focus();
+    input.focus();
   }
   function menu(key, entries) {
     const details = make('details', undefined, 'solid-menu');
@@ -558,6 +578,14 @@ export function createCadSolidUI({
     view.setNavigationProfile?.('normal');
   }
   function keydown(event) {
+    if (mounted && event.key === 'Escape' && popup) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const wasSearch = popup.id === 'solid-shortcuts';
+      closePopup({ restoreFocus: wasSearch });
+      if (!wasSearch) view.canvas?.focus();
+      return;
+    }
     if (
       !mounted ||
       !settings.get().shortcuts ||
@@ -568,13 +596,7 @@ export function createCadSolidUI({
       !isIdle()
     )
       return;
-    if (event.key === 'Escape' && popup) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      closePopup();
-      view.canvas?.focus();
-      return;
-    }
+    if (popup && event.target.closest('#solid-shortcuts')) return;
     const action = solidShortcut(event);
     if (!action) return;
     event.preventDefault();

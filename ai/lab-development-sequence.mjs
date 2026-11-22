@@ -47,11 +47,11 @@ export async function runDevelopment({setup,id,startStage,signal,previous,readSt
   const phase=oldPhase??{effort,caseIds,outcomes:[]};
   if(!oldPhase)phases.push(phase);
   caseIds=phase.caseIds;
-  const plan=quickPlan('development',setup.modeler,effort);
-  plan.name='Entwicklungscheck · '+id+' · '+effort;
-  const recorded=oldPhase?await readStage(plan.name):[];
+  const name='Entwicklungscheck · '+id+' · '+effort;
+  const recorded=oldPhase?await readStage(name):[];
   const started=new Set(recorded.map(record=>record.spec.caseId));
-  plan.caseIds=caseIds.filter(caseId=>!started.has(caseId));
+  const plan=quickPlan('development',setup.modeler,effort,caseIds.filter(caseId=>!started.has(caseId)));
+  plan.name=name;
   plan.limits.requestBudget=Math.max(1,remaining-requests(recorded));
   // Legacy diagnostics resolves a reviewer connection whenever enabled.
   // Reuse the frozen model connection and defer reviewer execution.

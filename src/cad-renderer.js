@@ -19,7 +19,7 @@ import { createCadRotationHandles } from './cad-rotation-handles.js';
 import { cadAdaptiveBedSize, cadBedGrid, workplaneOnGround } from './cad-bed-grid.js';
 import { marqueeIntersectsMesh } from './cad-marquee-selection.js';
 import { cadEdgeRenderBuffers } from './cad-edge-rendering.js';
-import { cadDisplayGeometry as buildGeometry, cadVisibleRayHit } from './cad-renderer-geometry.js';
+import { cadDisplayGeometry as buildGeometry, cadVisibleRayHit, cadVisibleRayTargets } from './cad-renderer-geometry.js';
 import {
   createMeshSelectionOverlay,
   meshSelectionSurfaceHit,
@@ -88,6 +88,7 @@ export function createCadRenderer({
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, stencil: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(Math.max(1, host.clientWidth), Math.max(1, host.clientHeight));
+  renderer.domElement.tabIndex = 0;
   host.append(renderer.domElement);
   const cutoutDisplay = createCadCutoutDisplay(renderer);
   const orbit = new OrbitControls(camera, renderer.domElement);
@@ -118,6 +119,7 @@ export function createCadRenderer({
   scene.add(light);
   const bodies = new THREE.Group(),
     outlines = new THREE.Group(),
+    pickHighlight = new THREE.Group(),
     handles = new THREE.Group(),
     bed = new THREE.Group(),
     edges = new THREE.Group(),
@@ -128,6 +130,7 @@ export function createCadRenderer({
     sources = new THREE.Group(),
     annotations = new THREE.Group();
   scene.add(bodies, outlines, handles, bed, edges, measurements, motionMarks, section, preview, sources, annotations);
+  scene.add(pickHighlight);
   const assemblyBoxes = createCadAssemblyBoxes();
   scene.add(assemblyBoxes.group);
   const aiErrorMarks = new THREE.Group();
@@ -1190,6 +1193,32 @@ export function createCadRenderer({
     cast(event);
     return cadVisibleRayHit(raycaster, sources.children, [...bodies.children, ...assemblyBoxes.proxies]);
   }
+  function visualTargets(event) {
+    cast(event);
+    return cadVisibleRayTargets(raycaster, sources.children, [...bodies.children, ...assemblyBoxes.proxies]);
+  }
+  function highlightPick(candidate) {
+    clear(pickHighlight);
+    if (!candidate) return;
+    const { target, points } = candidate;
+    const item = getScene()?.objects?.find(entry => targetKey(entry.target) === targetKey(target));
+    if (!item?.worldBounds || !allows(target.rootId)) return;
+    const color = 0x24c6e4;
+    const bounds = new THREE.Box3(point(item.worldBounds.min), point(item.worldBounds.max));
+    const box = new THREE.Box3Helper(bounds, color);
+    box.material.depthTest = false;
+    box.renderOrder = 20;
+    box.userData = { rootId: target.rootId };
+    pickHighlight.add(box);
+    if (points?.length > 1) {
+      const line = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(points.map(point)),
+        new THREE.LineBasicMaterial({ color, depthTest: false }),
+      );
+      line.renderOrder = 21;
+      pickHighlight.add(line);
+    }
+  }
   function updateMarquee(start, event) {
     if (Math.hypot(event.clientX - start.x, event.clientY - start.y) < 4) return;
     const rect = {
@@ -1846,6 +1875,8 @@ export function createCadRenderer({
     canvas: renderer.domElement,
     cadRay,
     visualHit,
+    visualTargets,
+    highlightPick,
     projectPoint: projected,
     setDisplay,
     setSelection,
@@ -2091,6 +2122,7 @@ export function createCadRenderer({
       rotation: rotationHandles.group,
       bodies,
       outlines,
+      pickHighlight,
       handles,
       bed,
       edges,
@@ -2127,6 +2159,7 @@ export function createCadRenderer({
       orbit.dispose();
       for (const group of [
         aiErrorMarks,
+        pickHighlight,
         comparisonMarks,
         thicknessMarks,
         bodies,
@@ -2163,6 +2196,7 @@ export function createCadRenderer({
     'clearAlignmentPreview',
     'setDisplay',
     'setSelection',
+    'highlightPick',
     'setView',
     'restoreView',
     'fit',

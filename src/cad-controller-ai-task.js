@@ -279,11 +279,22 @@ export function createCadControllerAITask({
                   ? target.rootId
                   : null;
           if (typeof id !== 'string') throw Error('Ein vollständiges Netzteil für die Messung wählen.');
-          value = await meshQuery(
-            q.kind === 'inspectSolid' ? 'inspectSolid' : 'toolsQuery',
-            { id, ...(q.kind === 'inspectSolid' ? {} : { kind: q.kind, options: options.options }) },
-            { signal },
-          );
+          const request = { id, ...(q.kind === 'inspectSolid' ? {} : { kind: q.kind, options: options.options }) };
+          try {
+            value = await meshQuery(q.kind === 'inspectSolid' ? 'inspectSolid' : 'toolsQuery', request, { signal });
+          } catch (error) {
+            const section = request.options;
+            if (
+              q.kind !== 'sectionContours' || error.code !== 'MESH_LID_SECTION' ||
+              !section || section.summaryOnly || section.includePoints || section.loopIndices
+            ) throw error;
+            // Keep the usable closed contours from this plane in the same analysis round.
+            // An explicit request for sketch points or particular loops stays strict.
+            value = await meshQuery('toolsQuery', {
+              ...request, options: { ...section, summaryOnly: true },
+            }, { signal });
+            if (!value.measurements?.length) throw error;
+          }
         }
         if (store.revision() !== revision)
           throw Object.assign(Error('Modell während der Messung geändert.'), { code: 'STALE_REVISION' });

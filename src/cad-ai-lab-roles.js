@@ -88,11 +88,9 @@ export function mountLabRolePicker({ host, role, api, onChange = () => {}, onErr
         models: result.models.filter((m) => !result.availableModelIds || result.availableModelIds.includes(m.id)),
       };
       if (!catalog.models.length) throw Error('Für dieses Zugangsprofil sind keine verwendbaren Modelle verfügbar.');
-      const model = catalog.models.some((m) => m.id === value.model)
-        ? value.model
-        : catalog.models.some((m) => m.id === catalog.defaultModel)
-          ? catalog.defaultModel
-          : catalog.models[0].id;
+      const savedModel = catalog.models.find((m) => m.id === value.model || m.aliases?.includes(value.model));
+      const defaultModel = catalog.models.find((m) => m.id === catalog.defaultModel);
+      const model = (savedModel ?? defaultModel ?? catalog.models[0]).id;
       options(
         fields.model,
         catalog.models.map((m) => [m.id, m.name || m.id]),

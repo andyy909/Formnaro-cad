@@ -22,6 +22,8 @@ export function createCadFunctionsUI({
   setBusy = () => {},
   createController = createCadController,
   importConverted,
+  importMeshForHelp,
+  showMeshHelp,
   converterImport,
   fitPreview,
   mountAISettings,
@@ -257,6 +259,8 @@ export function createCadFunctionsUI({
         temporary = value;
       },
       importConverted,
+      importMeshForHelp,
+      showMeshHelp,
       converterImport,
       fitPreview,
       mountAISettings,

@@ -10,33 +10,24 @@
 
 **Windows 64 Bit · portabel – Programm und separate Quellen:**
 
-[Formano Mini für Android](https://github.com/andyy909/Formnaro-Android) ist frisch und wird aktiv weiterentwickelt. Im Android-Repo gibt es die APK als Vorabversion. Dort steht auch, mit welchem Windows-Begleitbuild sie geprüft wurde.
-
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
-| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** | **0.144.0-r1** · reguläre Ausgabe | ca. 673 MB | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
+| **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** | **0.144.0-r1** | ca. 673 MB | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
 | [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) | **0.144.0-r1** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen zum Weiterentwickeln. |
-| [Vorabversion und Quellen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.145.0-r1) | **0.145.0-r1** | siehe Release | Neue Laborprüfungen und OrcaSlicer-Anbindung. |
 
-Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgelieferte Beispiele, bis zu drei zuletzt verwendete Projekte und bei vorhandener Autosicherung eine eigene Wiederherstellungsschaltfläche. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) · [Aktueller Prüfstand](docs/AKTUELLER-STAND.md)
+Das KI-Labor bietet die Ansichten Einfach und Erweitert, einen gestuften Entwicklungscheck und einen Befundexport. Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgelieferte Beispiele, bis zu drei zuletzt verwendete Projekte und bei vorhandener Autosicherung eine eigene Wiederherstellungsschaltfläche. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) · [Aktueller Prüfstand](docs/AKTUELLER-STAND.md)
 
-## KI-Labor
+## Verbesserungen am KI-Labor in 0.139.1-r1
 
-Öffne **Einstellungen → KI / API → KI-Testlabor**. In der regulären Ausgabe 0.144.0-r1 startet unter **Einfach** der Entwicklungscheck mit 15 Aufgaben auf Low, gezielten Wiederholungen auf High und optional Max. CAD-Alltag, STL-Konvertierung und Fotomodus lassen sich separat prüfen. Unter **Erweitert** kannst du eigene Versuche zusammenstellen.
+**0.139.1-r1** integriert sichere Ergebnisspeicherung, klarere Werkzeug- und Auswerterrückmeldungen, kompatible alte Skizzenkantenbezüge und die Prozess-/KI-Antwortkorrekturen. 128 Standardtests, 152 gezielte Regressionen und vier gezielte Liveversuche bestanden. Ein Liveversuch benötigte eine erfolgreiche Formatkorrektur. Die vollständige Testkampagne und die Ursache langen nativen Prozessabbaus bleiben offen; kein neuer Vollbenchmark. [Releasebericht](docs/VEROEFFENTLICHUNG-0.139.1-r1.md) · [Versionierte Belege](docs/benchmarks/lab-targeted-01391-2026-11-14.json).
 
-Unter **Ergebnisse** siehst du Erfolge im ersten Versuch und nach Prüferhinweisen. Der Export dokumentiert auch frühere Stufen, Kontextlücken, wiederkehrende Muster und Erstreaktionen.
+## Sol-Benchmark auf 0.137.4-r2
 
-Die [Vorabversion 0.145.0-r1](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.145.0-r1) bietet den Standardtest v13, den ausführlichen Prüfplan v14, die STL-Diagnose und den Passungsbenchmark mit Skill-Vergleich. In dieser Version kann die automatische Kampagne stehen bleiben. Zwei offene Referenzfälle betreffen die Öffnungsrichtung von Senkungen beim STL-Nachbau und die namensabhängige Endanschlagprüfung.
+GPT-6.1 Sol/high bestand alle sechzehn frischen Versuche auf der veröffentlichten **0.137.4-r2 / Suite 1.0.4** (acht feste CAD-Aufgaben, je zweimal; Überwacher aus). DeepSeeks ursprüngliche **16/16 auf 0.137.0-r1 / Suite 1.0.2** bleiben unverändert. Unterschiedliche Programm-, Werkzeug- und Promptstände sind ausdrücklich beschriftet; dies ist keine Modellrangliste auf gleichem Stand. Sols frühere 14/16 und 15/16 sowie Zeichnungsnachtests 2/2 und Bohrungsnachtest 1/1 bleiben erhalten.
 
-### KI-Modellvergleich im Benchmark v13
+![DeepSeek 16/16 (0.137.0-r1) / Sol 16/16 (0.137.4-r2)](docs/bilder/benchmark-sol-deepseek-16-2026-11-08.svg)
 
-Acht Läufe mit 25 Aufgaben aus CAD, STL und technischem Zeichnen. GPT-6.2 Sol löste mit 24 von 25 die meisten Aufgaben. GPT-6.1 Terra hatte die kürzeste mittlere Zeit pro gelöster Aufgabe. DeepSeek Flash High hatte die niedrigste ausgewiesene API-Kostenschätzung pro gelöster Aufgabe.
-
-[![Fünf v13-Diagrammblöcke zu gelösten Aufgaben, Kosten, Laufzeit, Tokens und Ergebnissen pro Aufgabe](docs/benchmarks/modellvergleich-v13.png)](docs/benchmarks/modellvergleich-v13.png)
-
-Die Stichprobe umfasst ein bis drei Läufe je Modell und Denkstufe. Plan v14 hat andere Budgets und teilweise überarbeitete Aufgaben und wird separat ausgewertet.
-
-[Ergebnistabellen und Datengrundlage](docs/benchmarks/modellvergleich-v13.md) · [KI-Labor auf formnaro.de](https://formnaro.de/ki-labor/#benchmark-v13) · [Archiv mit früheren 16er-Läufen und Nachtests](docs/benchmarks/README.md)
+[Sol-Beleg](docs/benchmarks/core-sol-01374-2026-11-08.json) · [Vergleichsdaten](docs/benchmarks/sol-deepseek-16-vergleich-2026-11-08.json) · [Alle Originalergebnisse](docs/benchmarks/README.md)
 
 [Programmquellen zu 0.144.0-r1](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-Quellcode-v0.144.0-r1.zip) · [STL-zu-CAD-Anleitung](docs/GEMEINSAMER-KONVERTER.md).
 
@@ -86,11 +77,11 @@ Zwei Stufen, vier Räder, **6:1 Untersetzung** – ein offenes Getriebekonzept e
 
 ### Übungsmodus: Bohrung und Kreismuster
 
-[![Acht gebohrte Hülsen im Kreismuster — Video mit 100 % Übungstempo](bilder/formnaro-uebungsmodus-muster-100.jpg)](https://formnaro.de/practice-pattern-100.mp4)
+[![Acht gebohrte Hülsen im Kreismuster — Video mit 100 % Übungstempo](bilder/formnaro-uebungsmodus-muster-100.jpg)](https://formnaro.de/#uebung)
 
 **Formnaro 0.139.1-r1 · DeepSeek Flash/high · 22 sichtbare Schritte · 5/5 native Prüfungen bestanden.** Aus einem Zylinder entstehen acht getrennte Hülsen mit echten Durchgangsbohrungen; ein unbeteiligtes Teil bleibt erhalten.
 
-[Video ansehen: 100 % Tempo, 1:06](https://formnaro.de/practice-pattern-100.mp4) · [MP4 herunterladen](bilder/formnaro-uebungsmodus-muster-100.mp4) · [Prompt, Verbrauch und Preisberechnung](docs/demos/muster-100.md)
+[Video ansehen: 100 % Tempo, 1:06](https://formnaro.de/#uebung) · [MP4 herunterladen](bilder/formnaro-uebungsmodus-muster-100.mp4) · [Prompt, Verbrauch und Preisberechnung](docs/demos/muster-100.md)
 
 **Genauer Prompt (66 Wörter):**
 
@@ -119,7 +110,7 @@ Zwei Stufen, vier Räder, **6:1 Untersetzung** – ein offenes Getriebekonzept e
 
 ## Frühere Ausgabe: 0.139.1-r1
 
-0.139.1-r1 bündelte die Laborverbesserungen aus 0.139.0 und Korrekturen beim Beenden von Prozessen und beim Verarbeiten von JSON. Der damalige Releasebericht dokumentiert vier gezielte Live-Nachtests.
+0.139.1-r1 enthält die geprüften Verbesserungen aus 0.139.0 und die anschließenden Prozess-/JSON-Korrekturen. Die vier gezielten Live-Nachtests ersetzen keinen neuen Vollbenchmark. Weitere Testbedingungen und die genaue Ursache langsamen nativen Prozessabbaus bleiben offen.
 
 [Release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1) · [Source tag](https://github.com/andyy909/Formnaro-cad/tree/v0.139.1-r1) · [ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.139.1-r1/Formnaro-Quellcode-v0.139.1-r1.zip) · [Abnahme / acceptance](docs/VEROEFFENTLICHUNG-0.139.1-r1.md)
 
@@ -147,3 +138,9 @@ Für FreeCAD-Funktionen im Entwicklungscheckout: `npm run setup:cad-runtime`. We
 Fehler oder Ideen? Erstelle ein [Issue](https://github.com/andyy909/Formnaro-cad/issues). Bei Fehlern helfen die verwendete Version und nachvollziehbare Schritte.
 
 Der eigene Anwendungscode steht unter **[MIT](LICENSE.txt)**. Fremdkomponenten behalten ihre [eigenen Lizenzen](THIRD-PARTY-LICENSES.txt); der kombinierte CAD-Kern ist nicht insgesamt MIT-lizenziert. [Lizenzdetails](docs/LIZENZ-MIT.md) · [CAD-Quellen und Build](licenses/CAD-Quellen-und-Build.txt).
+
+
+## Aufbaubenchmark und gezielte Reparaturen
+
+**0.138.2-r4** verbesserte Bohrbezüge auf ebenen Flächen skalierter Quader und die Auswahl bearbeiteter Körper. Die Ausgabe machte Checkbox-Zustände eindeutig und präzisierte Rückmeldungen zu Skizzenersatz und Höhenlage. Der ursprüngliche DeepSeek-Aufbaulauf bleibt **5/16 auf 0.138.0-r1**. Durch getrennte Nachtests sind alle 16 ursprünglichen Bedingungen über mehrere Programmstände bestätigt; das ist kein neuer vollständiger 16/16-Lauf. Der letzte A07-Test mit der neuen EXE bestand 8/8 native Kriterien in 144,199s. [Versionierte Ergebnisse und getrennte Nachtests](docs/benchmarks/advanced-deepseek-2026-11-09.json).
+

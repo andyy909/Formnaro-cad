@@ -2,6 +2,7 @@ import '../../src/style.css';
 import '../../src/settings.css';
 import {createCadController} from '../../src/cad-controller.js';
 import {createCadInterface} from '../../src/cad-interface.js';
+import {createCadToolsUI} from '../../src/cad-tools-ui.js';
 import {CAD_SHAPES} from '../../src/cad-shapes.js';
 import {CAD_QUALITY_DEFAULTS,validateCadQuality} from '../../src/cad-quality.js';
 import {DEFAULTS} from '../../src/preferences.js';
@@ -10,9 +11,9 @@ import {cadFormLocalDimensions} from '../../src/cad-interface-state.js';
 const $=id=>document.getElementById(id);
 const check=(value,message)=>{if(!value)throw Error(message);};
 const near=(a,b,e=1e-5)=>check(Math.abs(a-b)<=e,`${a} vs ${b}`);
-window.runCadInterfaceProof=async()=>{
+window.runCadInterfaceProof=async({finishStepsOnly=false}={})=>{
   const messages=[],jobs=new Set(),reads=[],writes=[],values=new Map([['offlinecad-library-v1','poisoned-old-mesh-library']]),storage={getItem:key=>(reads.push(key),values.get(key)??null),setItem:(key,value)=>{writes.push(key);values.set(key,value);}},customPack={format:'OfflineCAD-Plugin',version:1,id:'browser',name:'Browser CAD Pack',shapes:[{id:'bored',name:'CAD cylinder with original hole',nodes:[{type:'cylinder',size:[16,16,8]},{type:'cylinder',size:[4,4,10],solid:false}]}]};
-  let selection=[],scene={objects:[]},preferences={...DEFAULTS},quality=structuredClone(CAD_QUALITY_DEFAULTS),plugins=[],ui,workers=0,mounts=[];
+  let selection=[],scene={objects:[]},preferences={...DEFAULTS},quality=structuredClone(CAD_QUALITY_DEFAULTS),plugins=[],ui,tools,workers=0,mounts=[];
   const controller=createCadController({createWorker:()=>{workers++;return new Worker(new URL('../../src/cad-worker.js',import.meta.url),{type:'module'});},onChange:()=>ui?.refresh()});
   const safe=fn=>{try{const promise=Promise.resolve(fn()).catch(error=>{messages.push(error.message);});jobs.add(promise);promise.finally(()=>jobs.delete(promise));return promise;}catch(error){messages.push(error.message);}};
   const sync=async()=>{while(jobs.size)await Promise.all([...jobs]);scene=await controller.query('scene');ui?.refresh();};
@@ -22,8 +23,177 @@ window.runCadInterfaceProof=async()=>{
   const modal=(title,html)=>{$('modal-title').textContent=title;$('modal-body').innerHTML=html;if(!$('modal').open)$('modal').showModal();};
   const add=async type=>{await execute({kind:'batch',commands:[{op:'create',type,as:'created'}]});select([{rootId:controller.snapshot().nodes.at(-1).id,path:[]}]);};
   const input=async(id,value)=>{$(id).value=String(value);$(id).dispatchEvent(new Event('change'));$(id).dispatchEvent(new Event('blur'));await sync();};
-  ui=createCadInterface({controller,storage,getPreferences:()=>({...preferences}),setPreferences:next=>{preferences=next;ui.refresh();},getPlugins:()=>structuredClone(plugins),setPlugins:next=>{plugins=next;ui.refresh();},getSelection:()=>structuredClone(selection),select,getScene:()=>scene,execute,mutate,modal,safe,toast:()=>{},download:()=>{},fit:()=>{},onAddShape:add,onAddPlugin:async(manifest,shapeId)=>{await execute({kind:'plugin',manifest,shapeId});select([{rootId:controller.snapshot().nodes.at(-1).id,path:[]}]);},mountAI:root=>mounts.push(root.id),mountLayout:root=>mounts.push(root.id),getQuality:()=>structuredClone(quality),setQuality:next=>{quality=validateCadQuality(next);}});
+  ui=createCadInterface({controller,storage,getPreferences:()=>({...preferences}),setPreferences:next=>{preferences=next;ui.refresh();},getPlugins:()=>structuredClone(plugins),setPlugins:next=>{plugins=next;ui.refresh();},getSelection:()=>structuredClone(selection),select,getScene:()=>scene,execute,mutate,modal,safe,toast:()=>{},download:()=>{},fit:()=>{},onFinishStep:(bodyId,stepId)=>tools.openEdges('round',{bodyId,stepId}),onAddShape:add,onAddPlugin:async(manifest,shapeId)=>{await execute({kind:'plugin',manifest,shapeId});select([{rootId:controller.snapshot().nodes.at(-1).id,path:[]}]);},mountAI:root=>mounts.push(root.id),mountLayout:root=>mounts.push(root.id),getQuality:()=>structuredClone(quality),setQuality:next=>{quality=validateCadQuality(next);}});
+  const toolHost=document.createElement('div'),toolCanvas=document.createElement('canvas');
+  toolCanvas.hidden=true;toolHost.append(toolCanvas);document.body.append(toolHost);
+  tools=createCadToolsUI({controller,view:{canvas:toolCanvas,allows:()=>true,setEdges:()=>{},setInteraction:()=>{},clearPreview:()=>{},setPreview:()=>{},restoreView:()=>{},clearSource:()=>{},invalidate:()=>{},projectPoint:value=>value,camera:()=>null,fit:()=>{},groups:{measurements:{children:[]}}},marksView:{clearPreview:()=>{},draw:()=>{}},getSelection:()=>structuredClone(selection),getScene:()=>scene,select,execute,mutate,modal,safe,toast:()=>{},download:()=>{},getQuality:()=>structuredClone(quality.display),storage});
   try{
+    if (finishStepsOnly) {
+      const finishBodyId = 'finish-tree-body';
+      await execute({
+        kind: 'create',
+        recipe: { type: 'cylinder', size: [30, 30, 20] },
+        options: { id: finishBodyId, name: 'K02-Zylinder' },
+      });
+      for (const [stepId, rim, amount] of [
+        ['round-top', 'cylinder-rim-top', 3],
+        ['round-bottom', 'cylinder-rim-bottom', 1.5],
+      ]) {
+        const { edges } = await controller.query('edges', { nodeId: finishBodyId });
+        const edge = edges.find((entry) => entry.reference.origin.featureId === rim);
+        check(edge, 'Native cylinder rim: ' + rim);
+        await execute({
+          kind: 'finish',
+          target: finishBodyId,
+          step: { id: stepId, kind: 'round', amount, edges: [edge.reference] },
+        });
+      }
+      const neighborId = 'finish-tree-neighbor';
+      await execute({
+        kind: 'create',
+        recipe: { type: 'cylinder', size: [20, 20, 20] },
+        options: { id: neighborId, name: 'K02-Zylinder' },
+      });
+      await controller.open(controller.serialize());
+      let finishRow = document.querySelector(`[data-root-id="${finishBodyId}"][data-path="[]"]`);
+      const findNeighbor = () => document.querySelector(`[data-root-id="${neighborId}"][data-path="[]"]`);
+      check(finishRow && findNeighbor(), 'Both same-named cylinders have their own object-tree row');
+      const finishRevision = controller.revision(),
+        finishUndo = controller.state().undo;
+      finishRow.click();
+      const finishSteps = ui.getSelectedFinishSteps();
+      check(
+        JSON.stringify(finishSteps) === JSON.stringify([
+          { bodyId: finishBodyId, stepId: 'round-top', kind: 'round', amount: 3 },
+          { bodyId: finishBodyId, stepId: 'round-bottom', kind: 'round', amount: 1.5 },
+        ]),
+        'Selected body exposes both saved rounds in operation order',
+      );
+      finishRow = document.querySelector(`[data-root-id="${finishBodyId}"][data-path="[]"]`);
+      let stepRows = [...document.querySelectorAll('.finish-step-item')];
+      check(stepRows.length === 2, 'Selected body shows two separate step rows');
+      check(
+        finishRow?.nextElementSibling === stepRows[0] && stepRows[0].nextElementSibling === stepRows[1],
+        'Both step rows sit directly under their body in saved order',
+      );
+      check(
+        stepRows.every((row) => row.dataset.finishBodyId === finishBodyId),
+        'Step rows carry their body identity',
+      );
+      const finishStepIds = stepRows.map((row) => row.dataset.finishStepId);
+      check(
+        JSON.stringify(finishStepIds) === JSON.stringify(['round-top', 'round-bottom']) &&
+          new Set(stepRows.map((row) => row.dataset.treeKey)).size === 2,
+        'Each step row carries a different saved step ID',
+      );
+      const stepLabels = stepRows.map((row) => row.querySelector('.object-label')?.textContent);
+      check(
+        stepLabels[0] && stepLabels.every((label) => label === stepLabels[0]),
+        'Equal labels do not merge the step rows',
+      );
+      findNeighbor().dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
+      check(ui.getSelectedFinishSteps().length === 0, 'Multiple selected bodies yield no finish steps');
+      check(
+        document.querySelectorAll('.finish-step-item').length === 0,
+        'Multiple selection shows no foreign step rows',
+      );
+      findNeighbor().click();
+      check(ui.getSelectedFinishSteps().length === 0, 'Same-named neighbor has no finish steps');
+      check(
+        document.querySelectorAll('.finish-step-item').length === 0,
+        'Same-named neighbor shows no foreign step rows',
+      );
+      check(
+        controller.revision() === finishRevision && controller.state().undo === finishUndo,
+        'Read-only finish-step lookup leaves revision and Undo unchanged',
+      );
+      check(messages.length === 0, 'No object-tree errors: ' + JSON.stringify(messages));
+      finishRow = document.querySelector(`[data-root-id="${finishBodyId}"][data-path="[]"]`);
+      finishRow.click();
+      stepRows = [...document.querySelectorAll('.finish-step-item')];
+      check(
+        JSON.stringify(stepRows.map((row) => row.dataset.finishStepId)) === JSON.stringify(finishStepIds),
+        'Reselecting the body restores the same two row identities',
+      );
+      const openedRevision = controller.revision(), openedUndo = controller.state().undo, projectBeforeEditor = controller.serialize();
+      stepRows[1].click();
+      await sync();
+      const editor = tools.state(),
+        editorPanel = document.getElementById('cad-tools-panel');
+      check(
+        editor?.kind === 'edges' &&
+          editor.nodeId === finishBodyId &&
+          editor.bodyId === finishBodyId &&
+          editor.stepId === 'round-bottom' &&
+          editor.stepKind === 'round' &&
+          Math.abs(editor.stepAmount - 1.5) < 1e-9,
+        'Second saved step opens the existing edge editor with body and step identity',
+      );
+      check(
+        editorPanel && !editorPanel.hidden &&
+          editorPanel.dataset.edgeBodyId === finishBodyId &&
+          editorPanel.dataset.edgeStepId === 'round-bottom' &&
+          Math.abs(Number(editorPanel.dataset.edgeStepAmount) - 1.5) < 1e-9 &&
+          /1[,.]5 mm/.test(editorPanel.querySelector('[data-edge-saved]').textContent),
+        'Saved step shows the round-bottom measure 1,5 mm instead of round-top 3 mm',
+      );
+      check(
+        !editorPanel.querySelector('[data-edge-preview], [data-edge-apply], [data-edge-remove]'),
+        'Saved-step context contains no change, apply or remove action',
+      );
+      check(
+        document.querySelectorAll('#cad-tools-panel').length === 1,
+        'The existing edge editor is reused instead of a second editor',
+      );
+      check(tools.practiceEdgeState() === null, 'Saved step does not start edge selection');
+      for (const remove of [false, true]) {
+        await tools.previewEdges(remove).then(
+          () => { throw Error('Saved-step context allowed preview'); },
+          error => check(/zur Ansicht geöffnet/.test(error.message), 'Saved-step write rejected before preview'),
+        );
+      }
+      check(
+        controller.revision() === openedRevision && controller.state().undo === openedUndo,
+        'Opening the saved step changes neither revision nor Undo',
+      );
+      editorPanel.querySelector('[data-edge-close]').click();
+      await sync();
+      check(tools.state() === null, 'Closing the saved-step editor clears its state');
+      check(
+        controller.revision() === openedRevision && controller.state().undo === openedUndo,
+        'Closing the saved-step editor changes neither revision nor Undo',
+      );
+      await tools.openEdges('round');
+      check(
+        tools.state()?.kind === 'edges' &&
+          tools.state()?.nodeId === finishBodyId &&
+          tools.state()?.stepId === null,
+        'Normal new edge command opens without a saved-step identity',
+      );
+      check(
+        controller.revision() === openedRevision && controller.state().undo === openedUndo,
+        'Normal new edge command opening remains read-only',
+      );
+      tools.close();
+      await sync();
+      check(controller.serialize() === projectBeforeEditor, 'Opening and closing the editor leaves the model unchanged');
+      check(messages.length === 0, 'No saved-step editor errors: ' + JSON.stringify(messages));
+      return {
+        ready: true,
+        finishSteps,
+        finishStepIds,
+        neighborId,
+        finishRevision,
+        finishUndo,
+        openedStep: {
+          bodyId: editor.bodyId,
+          stepId: editor.stepId,
+          stepKind: editor.stepKind,
+          stepAmount: editor.stepAmount,
+        },
+        projectText: controller.serialize(),
+      };
+    }
     check(document.querySelectorAll('.shape-tile').length===23,'Palette count');check($('shape-count').textContent==='23','Shape count');
     document.querySelector('[data-type="box"]').click();await sync();const boxId=selection[0].rootId;check(controller.snapshot().nodes[0].name===CAD_SHAPES[0].name,'Original shape name');
     await mutate(draft=>{draft.nodes[0].transform=[-1.5,.2,0,0,.3,1.1,0,0,.1,.15,1.2,0,8,-3,15,1];},'Isolated affine placement');

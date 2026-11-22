@@ -1,8 +1,9 @@
 // The visible edge tool and practice replay must resolve the same screen hit.
-export function pickCadEdge(edges, projectPoint, { clientX, clientY }) {
+export function pickCadEdge(edges, projectPoint, { clientX, clientY }, { unique = false } = {}) {
   let best = null,
     distance = 12,
     depth = Infinity;
+  const hits = unique ? new Map() : null;
   for (const edge of edges)
     for (let i = 1; i < edge.points.length; i++) {
       const a = projectPoint(edge.points[i - 1]),
@@ -13,11 +14,18 @@ export function pickCadEdge(edges, projectPoint, { clientX, clientY }) {
         t = Math.max(0, Math.min(1, ((clientX - a.x) * dx + (clientY - a.y) * dy) / (dx * dx + dy * dy || 1)));
       const d = Math.hypot(clientX - a.x - t * dx, clientY - a.y - t * dy),
         z = a.z + t * (b.z - a.z);
+      if (hits && d <= 12) {
+        const previous = hits.get(edge.edgeToken);
+        if (!previous || d < previous.distance - 0.15 || (Math.abs(d - previous.distance) <= 0.15 && z < previous.depth))
+          hits.set(edge.edgeToken, { distance: d, depth: z });
+      }
       if (d < distance - 0.15 || (Math.abs(d - distance) <= 0.15 && z < depth)) {
         best = edge.edgeToken;
         distance = d;
         depth = z;
       }
     }
+  if (hits && [...hits].some(([token, hit]) => token !== best &&
+    Math.abs(hit.distance - distance) <= 0.15 && Math.abs(hit.depth - depth) <= 1e-4)) return null;
   return best;
 }

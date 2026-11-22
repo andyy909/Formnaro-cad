@@ -12,10 +12,10 @@ function temporary(t){
  t.after(()=>{assert.equal(path.dirname(fs.realpathSync(root)),fs.realpathSync(os.tmpdir()));assert(path.basename(root).startsWith('formnaro-benchmark-package-'));fs.rmSync(root,{recursive:true,force:true});});
  return root;
 }
-test('Portable package contains every pinned renderer source needed by both frozen benchmarks',t=>{
+test('Portable package contains every pinned renderer source needed by all frozen benchmark suites',t=>{
  const source=fileURLToPath(new URL('../',import.meta.url)),stage=temporary(t),copied=copyBenchmarkSources(source,stage);
  assert.deepEqual(copied.sort(),['cad-agent-ui-policy','cad-ai-analysis','cad-ai-result-checks','cad-bore-check-native','cad-drill-stock-native','cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref','cad-practice-controls','cad-practice-model-ui','cad-service'].map(n=>'src/'+n+'.js').sort());
- for(const suite of ['benchmark-core-v1.json','benchmark-advanced-v2.json'])for(const entry of JSON.parse(fs.readFileSync(path.join(source,'ai',suite))).dependencies.filter(e=>e.path.startsWith('src/'))){
+ for(const suite of ['benchmark-core-v1.json','benchmark-advanced-v2.json','benchmark-guided-v1.json'])for(const entry of JSON.parse(fs.readFileSync(path.join(source,'ai',suite))).dependencies.filter(e=>e.path.startsWith('src/'))){
   const bytes=fs.readFileSync(path.join(stage,entry.path));assert.deepEqual(bytes,fs.readFileSync(path.join(source,entry.path)));assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.sha256);
  }
  assert.equal(fs.existsSync(path.join(stage,'src/cad-main.js')),false);
@@ -38,7 +38,7 @@ test('Advanced drawing measurements load from the portable main-process layout',
 test('Wrong, conflicting or escaping benchmark pins fail before any source is copied',t=>{
  const root=temporary(t),source=path.join(root,'source'),stage=path.join(root,'stage');fs.mkdirSync(path.join(source,'ai'),{recursive:true});fs.mkdirSync(path.join(source,'src'));fs.writeFileSync(path.join(source,'src/a.js'),'a');fs.writeFileSync(path.join(source,'src/b.js'),'b');
  const pin={path:'src/a.js',sha256:createHash('sha256').update('a').digest('hex')};
- const manifests=(first,second)=>{for(const [name,dependencies] of [['core-v1',first],['advanced-v2',second]])fs.writeFileSync(path.join(source,'ai','benchmark-'+name+'.json'),JSON.stringify({dependencies}));};
+ const manifests=(first,second)=>{for(const [name,dependencies] of [['core-v1',first],['advanced-v2',second],['guided-v1',[pin]]])fs.writeFileSync(path.join(source,'ai','benchmark-'+name+'.json'),JSON.stringify({dependencies}));};
  manifests([pin,{path:'src/b.js',sha256:'0'.repeat(64)}],[pin]);assert.throws(()=>copyBenchmarkSources(source,stage),/Benchmark source changed/);assert.equal(fs.existsSync(stage),false);
  manifests([pin],[{...pin,sha256:'0'.repeat(64)}]);assert.throws(()=>copyBenchmarkSources(source,stage),/Conflicting benchmark source pin/);
  manifests([{...pin,path:'src/../../escape.js'}],[]);assert.throws(()=>copyBenchmarkSources(source,stage),/Invalid benchmark source pin/);assert.equal(fs.existsSync(stage),false);

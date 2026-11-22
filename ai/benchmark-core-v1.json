@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.22",
+  "version": "1.0.24",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -118,7 +118,7 @@
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "299fa8e267b53cda263603aa77174aedf8fbb8513831512e291b05f3abde5004"
+      "sha256": "6b099e1961753c1f2f30504f90e214353ef142e28319b2ce1717352c8d14cc2c"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -138,7 +138,7 @@
     },
     {
       "path": "backend/desktop-ai.cjs",
-      "sha256": "65359bf66a559b50842fef5ccedec6ea9d2b60a6559d7454dbd52a7dc882e273"
+      "sha256": "c6fd2379df70f20f007bd91a563e32972731d056159410739f98f321832a5a22"
     },
     {
       "path": "backend/ai-lab-storage.cjs",
@@ -162,7 +162,7 @@
     },
     {
       "path": "src/cad-ai-analysis.js",
-      "sha256": "b05d5d8f4ad02cfdc2597c151aa4fe0dc05fd0936ffbff38d667d3444730c1de"
+      "sha256": "9fc7907f23e85fc2da59b082733520231159286aa4a98544d82f7242becb9a2c"
     },
     {
       "path": "src/cad-ai-result-checks.js",
@@ -173,5 +173,5 @@
       "sha256": "6f5021d8c0879156ca11022879c222248496a0b681322b8fb86199563833f038"
     }
   ],
-  "revisionReason": "Use the selected Fusion workbench in the isolated practice window and resolve ribbon controls through its real sections. Benchmark tasks and native geometry predicates unchanged."
+  "revisionReason": "Resolve Mistral API aliases and route the selected reasoning level through the corresponding model ID. CAD tasks, checks, fixtures and budgets retain their definitions."
 }
