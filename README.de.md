@@ -16,7 +16,7 @@
 | --- | --- | --- | --- |
 | **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** | **0.144.0-r1** · reguläre Ausgabe | ca. 673 MB | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |
 | [Separate Quellarchive](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) | **0.144.0-r1** | siehe Release | Formnaro-, FreeCAD- und CAD-Kern-Quellen zum Weiterentwickeln. |
-| [Vorabversion und Quellen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.145.0-r1) | **0.145.0-r1** | siehe Release | Neue Laborprüfungen und OrcaSlicer-Anbindung. |
+| **[Windows-x64-ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.147.1-r2/Formnaro-v0.147.1-r2-Windows.zip)** · [Versionshinweise und Quellen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.147.1-r2) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.147.1-r2/SHA256SUMS.txt) | **0.147.1-r2** · Windows Nightly | ca. 741 MB | Solid-Befehlssuche, gezielte Auswahl überlagerter Körper und Bearbeitung gespeicherter Radien und Fasen. |
 
 Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgelieferte Beispiele, bis zu drei zuletzt verwendete Projekte und bei vorhandener Autosicherung eine eigene Wiederherstellungsschaltfläche. [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) · [Aktueller Prüfstand](docs/AKTUELLER-STAND.md)
 
