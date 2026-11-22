@@ -121,6 +121,11 @@ function installDesktopAI(win,{settingsFile=path.join(app.getPath('userData'),'a
   }
   return findCatalogModel(catalogs.get(catalogKey(config))?.details,config.model);
  }
+ function assertImageSupport(modelDetails,args){
+  if(modelDetails?.input_modalities&&!modelDetails.input_modalities.includes('image')&&(args.images?.length||args.history?.some(t=>t.images?.length))){
+   throw Error('Dieses Modell unterstützt keine Bilder. Bitte ein bildfähiges Modell auswählen.');
+  }
+ }
  handle('cad-ai:models',async value=>{
   if(value?.all!==true)return readModels(profiles.active(),value);
   const {displayTokenRates}=require('./ai-usage.cjs'),settings=publicSettings();
@@ -134,7 +139,23 @@ function installDesktopAI(win,{settingsFile=path.join(app.getPath('userData'),'a
   }));
   return {catalogs};
  });
- handle('cad-ai:generate',async args=>{if(!args||typeof args!=='object'||Array.isArray(args))throw Object.assign(Error('Ungültige KI-Anfrage.'),{code:'INVALID_AI_REQUEST'});if(controller)throw Error('An AI request is already running.');if(args?.requestId!==undefined&&(typeof args.requestId!=='string'||!/^[-a-zA-Z0-9]{1,80}$/.test(args.requestId)))throw Error('Invalid AI request ID.');const {config,key}=profiles.active();if(config.authMode==='mistral-vibe'&&mistral.publicStatus().pending)throw Error('Bitte die Mistral-Anmeldung zuerst abschließen oder abbrechen.');if(config.authMode==='chatgpt'&&chatgpt.publicStatus().pending)throw Error('Bitte die ChatGPT-Anmeldung zuerst abschließen oder abbrechen.');if(args.requestConfig&&['authMode','protocol','baseUrl','model','reasoningEffort','openAIReasoningEffort','mistralReasoningEffort','providerReasoningEffort','maxOutputTokens'].some(k=>(args.requestConfig[k]??(k==='authMode'?'api-key':['openAIReasoningEffort','mistralReasoningEffort','providerReasoningEffort'].includes(k)?'auto':null))!==(config[k]??null)))throw Error('KI-Anbieter, Modell, Denkstufe oder Antwortbudget wurde geändert. Bitte erneut senden.');controller=new AbortController();controller.requestId=args.requestId??null;const timeout=setTimeout(()=>controller?.abort(),1800000);try{let modelDetails=await requestModelDetails(config,key);const token=await credential(config,key,controller.signal);if(config.authMode==='chatgpt'){const available=await testConnection(config,token,controller.signal);modelDetails=available.details.find(m=>m.id===config.model);if(!available.models.includes(config.model))throw Error('Dieses Modell ist für dein ChatGPT-Konto nicht freigegeben. Bitte die Modellliste aktualisieren.');}if(modelDetails?.input_modalities&&!modelDetails.input_modalities.includes('image')&&(args.images?.length||args.history?.some(t=>t.images?.length)))throw Error('Dieses Modell unterstützt keine Bilder. Bitte ein bildfähiges Modell auswählen.');return await generate(config,token,{...args,modelingContext:modeling(config).context()},controller.signal,{modelDetails});}finally{clearTimeout(timeout);controller=null;}});
+ handle('cad-ai:generate',async args=>{if(!args||typeof args!=='object'||Array.isArray(args))throw Object.assign(Error('Ungültige KI-Anfrage.'),{code:'INVALID_AI_REQUEST'});if(controller)throw Error('An AI request is already running.');if(args?.requestId!==undefined&&(typeof args.requestId!=='string'||!/^[-a-zA-Z0-9]{1,80}$/.test(args.requestId)))throw Error('Invalid AI request ID.');const {config,key}=profiles.active();if(config.authMode==='mistral-vibe'&&mistral.publicStatus().pending)throw Error('Bitte die Mistral-Anmeldung zuerst abschließen oder abbrechen.');if(config.authMode==='chatgpt'&&chatgpt.publicStatus().pending)throw Error('Bitte die ChatGPT-Anmeldung zuerst abschließen oder abbrechen.');if(args.requestConfig&&['authMode','protocol','baseUrl','model','reasoningEffort','openAIReasoningEffort','mistralReasoningEffort','providerReasoningEffort','maxOutputTokens'].some(k=>(args.requestConfig[k]??(k==='authMode'?'api-key':['openAIReasoningEffort','mistralReasoningEffort','providerReasoningEffort'].includes(k)?'auto':null))!==(config[k]??null)))throw Error('KI-Anbieter, Modell, Denkstufe oder Antwortbudget wurde geändert. Bitte erneut senden.');
+  controller=new AbortController();
+  controller.requestId=args.requestId??null;
+  const timeout=setTimeout(()=>controller?.abort(),1800000);
+  try{
+   let modelDetails=await requestModelDetails(config,key);
+   if(config.authMode==='chatgpt')assertImageSupport(modelDetails,args);
+   const token=await credential(config,key,controller.signal);
+   if(config.authMode==='chatgpt'){
+    const available=await testConnection(config,token,controller.signal);
+    modelDetails=available.details.find(m=>m.id===config.model);
+    if(!available.models.includes(config.model))throw Error('Dieses Modell ist für dein ChatGPT-Konto nicht freigegeben. Bitte die Modellliste aktualisieren.');
+   }
+   assertImageSupport(modelDetails,args);
+   return await generate(config,token,{...args,modelingContext:modeling(config).context()},controller.signal,{modelDetails});
+  }finally{clearTimeout(timeout);controller=null;}
+ });
  handle('cad-ai:test',async()=>{const {config,key}=profiles.active();const signal=AbortSignal.timeout(20000);return config.authMode==='mistral-vibe'?mistral.catalog():testConnection(config,await credential(config,key,signal),signal);});handle('cad-ai:cancel',value=>{if(!value?.requestId&&freecadController)freecadController.abort();if(controller&&(value?.requestId??null)===controller.requestId){if(controller.kind==='agent')void rpc('ui',{action:'cancel'}).catch(()=>{});controller.abort();return true;}return false;});
  win.webContents.on('did-finish-load',()=>{syncBridge().catch(()=>{});});
  const releaseTaskLeases=()=>{controller?.abort();for(const item of pending.values()){clearTimeout(item.timer);item.reject(Error('CAD renderer changed.'));}pending.clear();try{taskStore?.releaseOwned();}catch(error){console.error('KI-Auftragssperren konnten nicht freigegeben werden:',error.message);}};
