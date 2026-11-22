@@ -1,3 +1,9 @@
-import {mergeConfig} from 'vite';
-import base from './vite.config.js';
-export default mergeConfig(base,{build:{outDir:'dist-android',target:'chrome120'}});
+import {defineConfig} from 'vite';
+import {fileURLToPath} from 'node:url';
+
+export default defineConfig({
+  root: fileURLToPath(new URL('.', import.meta.url)),
+  base: './',
+  build: {outDir: 'dist-android', emptyOutDir: true, target: 'chrome120'},
+  worker: {format: 'es'},
+});

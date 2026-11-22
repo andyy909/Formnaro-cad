@@ -28,7 +28,7 @@ die Projektregeln und den direkten Modellierauftrag.
 - `cad-kernel-build/runtime/` enthält den versionierten CAD-WASM-Kern.
   `python-runtime/` enthält die Web-Python-Laufzeit und Pakete. Die integrierte
   FreeCAD-Laufzeit und der native STL-Konverter werden separat vorbereitet.
-  `mini/` und `mini-cad/` sind eigenständige Teilprojekte.
+  `mini/` enthält den Web-Build und die Gradle-App für Formnaro Mini auf Android.
 
 ## Kompatibilität und lokale Daten
 

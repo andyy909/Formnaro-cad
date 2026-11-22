@@ -13,6 +13,6 @@ The main application is a portable Windows desktop app. Electron starts the loca
 
 Project files retain editable construction sources and model metadata. Native CAD operations use BReps. Mesh tools and the display also work with triangle data. The geometry package uses a versioned container and an independently versioned project model. [Geometry packages](FNPACK.md)
 
-[Mini Mesh](../mini) and [Mini CAD](../mini-cad) are separate applications. The former SolidCraft integration is documented under [parametric](../parametric) for older saved projects.
+The [Android Mini sources](../mini/ANDROID.md) are a separate project. The former SolidCraft integration is documented under [parametric](../parametric) for older saved projects.
 
 For dated development and verification notes, see the [technical project history](PROJEKTKONTEXT.md). For the portable Windows package, see the [current release](AKTUELLER-STAND.md).

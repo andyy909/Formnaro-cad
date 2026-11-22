@@ -63,7 +63,7 @@ lokale HTTPS-Origin. Die Nachrichtenanbindung ist auf deren Hauptfenster
 beschränkt (`WebViewCompat.addWebMessageListener`); externe Navigation und
 Frames sind gesperrt. Es gibt keinen allgemeinen Dateipfadzugriff aus JavaScript.
 Systemdateien werden ausschließlich über das Storage Access Framework geöffnet.
-Der Renderer und die Modelloperationen bleiben gemeinsame Mini-Quellen.
+Der Renderer und die Modelloperationen liegen im Mini-Quellcode unter `src/`.
 
 Voraussetzungen: Node >=22.16, JDK 17, Android SDK 35 und Buildtools,
 Gradle 8.11.1. `ANDROID_HOME` und bei Bedarf `FORMNARO_GRADLE` setzen.
@@ -81,7 +81,7 @@ npm run build:android
 
 Standardausgabe: `mini/work/android-output/Formnaro-Mini-Android-0.5.0-test1.apk`
 mit SHA256-Datei; `FORMNARO_ANDROID_OUTPUT` setzt ein anderes Ausgabeverzeichnis.
-Android-Build und Desktop-Build liegen getrennt unter `dist-android` und `dist`.
+`npm run build` erzeugt nur die Webdateien für Android unter `dist-android`.
 Für die Android-Prüfung startet man einen frischen eigenen Emulator, installiert
 die APK und startet `de.formnaro.mini/.MainActivity`. Anschließend:
 
