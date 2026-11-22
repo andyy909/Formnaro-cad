@@ -16,7 +16,11 @@ export function pickCadEdge(edges, projectPoint, { clientX, clientY }, { unique 
         z = a.z + t * (b.z - a.z);
       if (hits && d <= 12) {
         const previous = hits.get(edge.edgeToken);
-        if (!previous || d < previous.distance - 0.15 || (Math.abs(d - previous.distance) <= 0.15 && z < previous.depth))
+        if (
+          !previous ||
+          d < previous.distance - 0.15 ||
+          (Math.abs(d - previous.distance) <= 0.15 && z < previous.depth)
+        )
           hits.set(edge.edgeToken, { distance: d, depth: z });
       }
       if (d < distance - 0.15 || (Math.abs(d - distance) <= 0.15 && z < depth)) {
@@ -25,7 +29,13 @@ export function pickCadEdge(edges, projectPoint, { clientX, clientY }, { unique 
         depth = z;
       }
     }
-  if (hits && [...hits].some(([token, hit]) => token !== best &&
-    Math.abs(hit.distance - distance) <= 0.15 && Math.abs(hit.depth - depth) <= 1e-4)) return null;
+  if (
+    hits &&
+    [...hits].some(
+      ([token, hit]) =>
+        token !== best && Math.abs(hit.distance - distance) <= 0.15 && Math.abs(hit.depth - depth) <= 1e-4,
+    )
+  )
+    return null;
   return best;
 }

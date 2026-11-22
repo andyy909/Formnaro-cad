@@ -1173,7 +1173,8 @@ export function createCadController({
     // The confirmed model and Undo live in the transaction store.
     if (replaceProject) worker.trim();
     onBusy(true);
-    const ticket = ++previewSequence, opening = projectScope;
+    const ticket = ++previewSequence,
+      opening = projectScope;
     livePreviewSequence = livePreview ? ticket : null;
     endOnlySequence = intermediateDisplay === 'final' ? ticket : null;
     buildPreview = null;
@@ -1858,15 +1859,22 @@ export function createCadController({
   }
   async function queryPreviewEdges(previewId, options, { signal } = {}) {
     alive();
-    const proposal = previewRegistry.getPreview(previewId), revision = store.revision();
-    const isCurrent = () => store.revision() === revision &&
-      proposal?.revision === revision && previewScopes.get(proposal) === projectScope &&
+    const proposal = previewRegistry.getPreview(previewId),
+      revision = store.revision();
+    const isCurrent = () =>
+      store.revision() === revision &&
+      proposal?.revision === revision &&
+      previewScopes.get(proposal) === projectScope &&
       previewRegistry.getPreview(previewId) === proposal;
-    if (!isCurrent()) throw Object.assign(Error('Die Kantenvorschau ist nicht mehr aktuell.'), { code: 'STALE_REVISION' });
+    if (!isCurrent())
+      throw Object.assign(Error('Die Kantenvorschau ist nicht mehr aktuell.'), { code: 'STALE_REVISION' });
     const { project } = proposal;
-    const result = await worker.run({ job: 'query', project, query: { kind: 'edges', options } },
-      { revision: cadProjectRevision(project), progress, signal });
-    if (!isCurrent()) throw Object.assign(Error('Die Kantenvorschau ist nicht mehr aktuell.'), { code: 'STALE_REVISION' });
+    const result = await worker.run(
+      { job: 'query', project, query: { kind: 'edges', options } },
+      { revision: cadProjectRevision(project), progress, signal },
+    );
+    if (!isCurrent())
+      throw Object.assign(Error('Die Kantenvorschau ist nicht mehr aktuell.'), { code: 'STALE_REVISION' });
     return result;
   }
   async function checkPreview(previewId, checks, { collectFailures = false } = {}) {

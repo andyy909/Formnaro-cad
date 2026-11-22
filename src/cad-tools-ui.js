@@ -199,7 +199,10 @@ export function createCadToolsUI({
     panel.querySelector('[data-edge-preview]').disabled = s.computing || (!s.stepId && !s.selected.size);
     panel.querySelector('[data-edge-apply]').disabled = s.computing || !s.preview;
     const repair = panel.querySelector('[data-edge-repair]');
-    if (repair) { repair.hidden = !s.repairDraft; repair.disabled = s.computing || s.repairPicking; }
+    if (repair) {
+      repair.hidden = !s.repairDraft;
+      repair.disabled = s.computing || s.repairPicking;
+    }
   }
   function pickEdge(event) {
     return pickCadEdge(valid('edges').edges, (p) => view.projectPoint(p), event);
@@ -304,12 +307,15 @@ export function createCadToolsUI({
             result.push({ target, label: en ? 'Frame only' : 'Nur Rahmen', disabled: true });
             continue;
           }
-          const item = items.find(node => targetEqual(node.target, target));
+          const item = items.find((node) => targetEqual(node.target, target));
           if (!item || item.kind !== 'cad' || !item.solid || item.locked || item.hidden) continue;
-          const edges = target.rootId === s.nodeId ? s.edges : (await query('edges', { nodeId: target.rootId, ...quality() })).edges;
+          const edges =
+            target.rootId === s.nodeId
+              ? s.edges
+              : (await query('edges', { nodeId: target.rootId, ...quality() })).edges;
           if (!menuCurrent()) return [];
           const token = pickCadEdge(edges, view.projectPoint, point, { unique: true });
-          const edge = edges.find(candidate => candidate.edgeToken === token);
+          const edge = edges.find((candidate) => candidate.edgeToken === token);
           if (edge) result.push({ target, label: en ? 'Edge' : 'Kante', points: edge.points, edge });
         }
         return result;
@@ -323,8 +329,11 @@ export function createCadToolsUI({
           await openEdges(kind);
         }
         const updated = valid('edges');
-        const selectedEdge = updated.edges.find(candidate => candidate.edgeToken === edge.edgeToken &&
-          JSON.stringify(candidate.reference) === JSON.stringify(edge.reference));
+        const selectedEdge = updated.edges.find(
+          (candidate) =>
+            candidate.edgeToken === edge.edgeToken &&
+            JSON.stringify(candidate.reference) === JSON.stringify(edge.reference),
+        );
         if (updated.nodeId !== target.rootId || !selectedEdge)
           throw Error('Native Kante wurde geändert. Kante erneut wählen.');
         discardPreview();
@@ -342,8 +351,8 @@ export function createCadToolsUI({
     discardPreview();
     const token = generation,
       version = s.previewVersion,
-      current = () => token === generation && active === s && version === s.previewVersion &&
-        s.scope === controller.projectScope();
+      current = () =>
+        token === generation && active === s && version === s.previewVersion && s.scope === controller.projectScope();
     s.computing = true;
     updateEdgeButtons(s);
     s.repairDraft = null;
@@ -382,8 +391,9 @@ export function createCadToolsUI({
       return result;
     } catch (error) {
       if (status && current()) {
-        status.textContent = error.stepId ? 'Körper ' + (error.bodyId ?? s.nodeId) +
-          ' · Schritt ' + error.stepId + ' · ' + error.message : error.message;
+        status.textContent = error.stepId
+          ? 'Körper ' + (error.bodyId ?? s.nodeId) + ' · Schritt ' + error.stepId + ' · ' + error.message
+          : error.message;
         if (operation?.kind === 'editFinish') s.repairDraft = cadFinishRepairDraft(s.nodeId, operation.steps, error);
       }
       throw error;
@@ -396,11 +406,16 @@ export function createCadToolsUI({
     }
   }
   async function pickReplacement() {
-    const s = valid('edges'), repair = s.repairDraft;
+    const s = valid('edges'),
+      repair = s.repairDraft;
     if (!repair || s.computing) return;
     discardPreview();
-    const version = s.previewVersion, current = () => active === s && s.previewVersion === version &&
-      s.revision === controller.revision() && s.scope === controller.projectScope();
+    const version = s.previewVersion,
+      current = () =>
+        active === s &&
+        s.previewVersion === version &&
+        s.revision === controller.revision() &&
+        s.scope === controller.projectScope();
     const status = panel.querySelector('[data-edge-status]');
     s.computing = true;
     updateEdgeButtons(s);
@@ -410,27 +425,32 @@ export function createCadToolsUI({
       s.repairPicking = true;
       view.setPreview(result.meshes, result.prefix.project, [s.nodeId]);
       view.setEdges(result.edges);
-      status.textContent = 'Schritt ' + repair.steps[repair.index].id + ' · Eine eindeutige Ersatzkante am Zwischenkörper anklicken.';
-      view.setInteraction((_ray, event, hit) => run(async () => {
-        if (!current() || !s.repairPicking) return;
-        const hitId = hit?.object?.userData?.rootId ?? hit?.object?.userData?.id;
-        const projectPoint = point => view.projectPoint(point);
-        const wrongBody = hitId && hitId !== s.nodeId;
-        const token = !wrongBody && pickCadEdge(result.edges, projectPoint, event, { unique: true });
-        if (wrongBody || !token && pickCadEdge(result.edges, projectPoint, event)) {
-          discardPreview();
-          updateEdgeButtons(s);
-          status.textContent = wrongBody ? 'Ein anderer Körper wurde getroffen. Ersatzkantenwahl neu starten.' :
-            'Mehrdeutige Kantenlage. Ersatzkantenwahl aus einer anderen Ansicht neu starten.';
-          return;
-        }
-        const edge = result.edges.find(candidate => candidate.edgeToken === token);
-        if (!edge) {
-          status.textContent = 'Keine eindeutige Kante am Zwischenkörper getroffen. Ansicht ändern und erneut wählen.';
-          return;
-        }
-        await previewEdges(false, repairedCadFinishOperation(repair, edge));
-      }));
+      status.textContent =
+        'Schritt ' + repair.steps[repair.index].id + ' · Eine eindeutige Ersatzkante am Zwischenkörper anklicken.';
+      view.setInteraction((_ray, event, hit) =>
+        run(async () => {
+          if (!current() || !s.repairPicking) return;
+          const hitId = hit?.object?.userData?.rootId ?? hit?.object?.userData?.id;
+          const projectPoint = (point) => view.projectPoint(point);
+          const wrongBody = hitId && hitId !== s.nodeId;
+          const token = !wrongBody && pickCadEdge(result.edges, projectPoint, event, { unique: true });
+          if (wrongBody || (!token && pickCadEdge(result.edges, projectPoint, event))) {
+            discardPreview();
+            updateEdgeButtons(s);
+            status.textContent = wrongBody
+              ? 'Ein anderer Körper wurde getroffen. Ersatzkantenwahl neu starten.'
+              : 'Mehrdeutige Kantenlage. Ersatzkantenwahl aus einer anderen Ansicht neu starten.';
+            return;
+          }
+          const edge = result.edges.find((candidate) => candidate.edgeToken === token);
+          if (!edge) {
+            status.textContent =
+              'Keine eindeutige Kante am Zwischenkörper getroffen. Ansicht ändern und erneut wählen.';
+            return;
+          }
+          await previewEdges(false, repairedCadFinishOperation(repair, edge));
+        }),
+      );
     } catch (error) {
       if (current()) status.textContent = error.message;
       throw error;
@@ -1124,8 +1144,12 @@ export function createCadToolsUI({
     splitUI?.revisionChanged();
     extractUI?.revisionChanged();
     marksUI?.revisionChanged();
-    if (active && (active.revision !== controller.revision() ||
-      active.scope !== undefined && active.scope !== controller.projectScope())) close();
+    if (
+      active &&
+      (active.revision !== controller.revision() ||
+        (active.scope !== undefined && active.scope !== controller.projectScope()))
+    )
+      close();
     if (measurementResult && measurementResult.revision !== controller.revision()) {
       for (const id of ['point-distance', 'point-distance-apply']) if ($(id)) $(id).disabled = true;
       const status = document.querySelector('[data-point-status]');

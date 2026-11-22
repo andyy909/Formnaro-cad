@@ -167,7 +167,10 @@ export function aiFeedback(error, context = {}) {
       .slice(0, 32)
       .map((f) => aiFeedback({ code: f.code, message: f.message, feedback: { ...f, failures: undefined } }));
   if (Array.isArray(source.confirmedMeasurements))
-    out.confirmedMeasurements = source.confirmedMeasurements.slice(0, 14).map((value) => text(value, 320)).filter(Boolean);
+    out.confirmedMeasurements = source.confirmedMeasurements
+      .slice(0, 14)
+      .map((value) => text(value, 320))
+      .filter(Boolean);
   return out;
 }
 const safeKeys = new Set([

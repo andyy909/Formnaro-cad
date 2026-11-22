@@ -1702,13 +1702,7 @@ export function createCadCommandRouter({
               : Array.isArray(value)
                 ? value.some(references)
                 : !!value && typeof value === 'object' && Object.values(value).some(references);
-          for (const key of [
-            'projectParameters',
-            'contourLinks',
-            'joints',
-            'linkedPatterns',
-            'featureReferences',
-          ])
+          for (const key of ['projectParameters', 'contourLinks', 'joints', 'linkedPatterns', 'featureReferences'])
             if (references(project[key]))
               fail(
                 'CAD_DRILL_DEPENDENCIES_UNSUPPORTED',
@@ -1778,7 +1772,13 @@ export function createCadCommandRouter({
         fields(operation, byAmount ? ['kind', 'target', 'stepId', 'amount'] : ['kind', 'target', 'steps']);
         const context = address(project, operation.target, {});
         editable(context);
-        if (byAmount && (context.target.path.length || context.node.suppressed || containerFlags(project, context.root).hidden || context.root.hidden))
+        if (
+          byAmount &&
+          (context.target.path.length ||
+            context.node.suppressed ||
+            containerFlags(project, context.root).hidden ||
+            context.root.hidden)
+        )
           fail('INVALID_COMMAND', 'Eine sichtbare vollständige CAD-Wurzel mit gespeichertem Kantenschritt wählen.');
         if (!context.node.finish) fail('INVALID_COMMAND', 'Editierbare Kantenoperation fehlt.');
         const steps = byAmount
@@ -1788,10 +1788,19 @@ export function createCadCommandRouter({
         if (steps.length) {
           const node = context.node,
             drill = node.source === 'finish' ? node.children?.[0] : null;
-          if (project.drawings && !context.parent && drill?.drill && steps.length === node.finish.steps.length &&
-              steps.every((step, index) => step?.id === node.finish.steps[index].id)) {
+          if (
+            project.drawings &&
+            !context.parent &&
+            drill?.drill &&
+            steps.length === node.finish.steps.length &&
+            steps.every((step, index) => step?.id === node.finish.steps[index].id)
+          ) {
             drillDrawingPath = [drill.id];
-            drillDrawingRefresh = prepareCadDrillDrawingRefresh(project, node.id, drillDrawingPath, { oc, service, signal });
+            drillDrawingRefresh = prepareCadDrillDrawingRefresh(project, node.id, drillDrawingPath, {
+              oc,
+              service,
+              signal,
+            });
           }
           node.finish = { steps: structuredClone(steps) };
         } else if (['group', 'partition', 'extraction', 'modeling'].includes(context.node.source))
@@ -1991,7 +2000,8 @@ export function createCadCommandRouter({
         fail('INVALID_COMMAND', 'Unbekannter CAD-Auftrag.');
     }
     const rebuilt = await service.rebuild(project, { baseline, progress });
-    if (drillDrawingRefresh) rebuilt.drawings = refreshCadDrillDrawings(rebuilt, drillDrawingRefresh, drillDrawingPath, signal);
+    if (drillDrawingRefresh)
+      rebuilt.drawings = refreshCadDrillDrawings(rebuilt, drillDrawingRefresh, drillDrawingPath, signal);
     return { project: rebuilt };
   }
   function scene(input, selection = []) {

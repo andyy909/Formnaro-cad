@@ -84,7 +84,8 @@ export function createCadAIModelPicker({
     discoveryTicket = 0,
     adjustable = false,
     overviewError = '';
-  const selected = () => catalog?.models.find((model) => model.id === settings?.model || model.aliases?.includes(settings?.model));
+  const selected = () =>
+    catalog?.models.find((model) => model.id === settings?.model || model.aliases?.includes(settings?.model));
   const label = trigger.querySelector('span');
   const money = (value) =>
     new Intl.NumberFormat(language() === 'en' ? 'en-US' : 'de-DE', { maximumFractionDigits: 4 }).format(value);
@@ -151,18 +152,32 @@ export function createCadAIModelPicker({
       .filter(
         ({ model, entry }) =>
           (scope !== 'photo' || model.vision !== false) &&
-          [model.name, model.id, entry.provider?.label, ...(model.aliases ?? [])].join(' ').toLocaleLowerCase().includes(query),
+          [model.name, model.id, entry.provider?.label, ...(model.aliases ?? [])]
+            .join(' ')
+            .toLocaleLowerCase()
+            .includes(query),
       );
     const activeModel = ({ entry, model }) =>
       entry.providerId === settings?.providerId &&
       (model.id === settings.model || model.aliases?.includes(settings.model));
     const isMistralAPI = ({ entry }) => entry.providerId === 'https://api.mistral.ai';
     const mistralModels = rows.filter(isMistralAPI);
-    const models = rows.sort((a, b) => Number(activeModel(b)) - Number(activeModel(a)) || Number(b.entry.hasKey) - Number(a.entry.hasKey) || a.model.name.localeCompare(b.model.name));
+    const models = rows.sort(
+      (a, b) =>
+        Number(activeModel(b)) - Number(activeModel(a)) ||
+        Number(b.entry.hasKey) - Number(a.entry.hasKey) ||
+        a.model.name.localeCompare(b.model.name),
+    );
     const mistralPosition = models.findIndex(isMistralAPI);
     if (mistralPosition >= 0) {
       const otherModels = models.filter((row) => !isMistralAPI(row));
-      models.splice(0, models.length, ...otherModels.slice(0, mistralPosition), ...mistralModels, ...otherModels.slice(mistralPosition));
+      models.splice(
+        0,
+        models.length,
+        ...otherModels.slice(0, mistralPosition),
+        ...mistralModels,
+        ...otherModels.slice(mistralPosition),
+      );
     }
     el('#ai-model-chart-title').textContent = text(
       'KI-Benchmarks · 16 feste Versuche',

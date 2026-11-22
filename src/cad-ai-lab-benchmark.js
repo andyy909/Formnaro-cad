@@ -59,7 +59,7 @@ export function mountBenchmark({ host, api, status, refresh, getModeler, selectS
     busy = !!value?.busy || pending;
     const selected = (value?.lab?.benchmarks?.suites ?? []).find((s) => s.suiteId === el('suite').value);
     el('suite').disabled = busy;
-    for (const key of ['frontier','guidedladder','photoladder','stlladder']) el(key).disabled=busy;
+    for (const key of ['frontier', 'guidedladder', 'photoladder', 'stlladder']) el(key).disabled = busy;
     el('merge').disabled = busy;
     el('converter').disabled = busy;
     el('start').disabled = busy || selected?.available === false;
@@ -109,7 +109,9 @@ export function mountBenchmark({ host, api, status, refresh, getModeler, selectS
                     ' · ' +
                     new Date(r.createdAt).toLocaleString('de-DE') +
                     ' · ' +
-                    (r.plan.roles?.modeler?.model || 'Modell unbekannt') + ' · ' + r.plan.efforts[0],
+                    (r.plan.roles?.modeler?.model || 'Modell unbekannt') +
+                    ' · ' +
+                    r.plan.efforts[0],
                   r.id,
                 ),
             )
@@ -142,7 +144,12 @@ export function mountBenchmark({ host, api, status, refresh, getModeler, selectS
     }
   }
   el('supplemental').hidden = !selectSupplemental;
-  for(const [key,domain] of [['guidedladder','Vorführgrenze'],['photoladder','Fotogrenze'],['stlladder','STL-Grenze']]) el(key).onclick=()=>selectSupplemental?.(domain);
+  for (const [key, domain] of [
+    ['guidedladder', 'Vorführgrenze'],
+    ['photoladder', 'Fotogrenze'],
+    ['stlladder', 'STL-Grenze'],
+  ])
+    el(key).onclick = () => selectSupplemental?.(domain);
   el('frontier').onclick = () => selectSupplemental?.('Plattengrenze');
   el('merge').onclick = () => selectSupplemental?.('Modellbau');
   el('converter').onclick = () => selectSupplemental?.('Konverter');

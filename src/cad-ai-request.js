@@ -239,11 +239,17 @@ export async function runCadAIRequest({
     const rootId = error.rootId ?? error.feedback?.rootId ?? error.feedback?.target?.rootId;
     if (error.code === 'JOINT_REFERENCE_LOST' && typeof rootId === 'string' && /^[a-z0-9_-]{1,80}$/i.test(rootId)) {
       const alias = result?.commands?.some((command) => command.as === rootId);
-      return feedback + '\nMissing joint part: ' + rootId +
-        (alias ? '. To reference the part created earlier in this batch, use $' + rootId + '.' : '.');
+      return (
+        feedback +
+        '\nMissing joint part: ' +
+        rootId +
+        (alias ? '. To reference the part created earlier in this batch, use $' + rootId + '.' : '.')
+      );
     }
     if (result?.commands?.some((command) => command.op === 'drawing') && /Blatt aktualisieren/.test(error.message)) {
-      return feedback + '\nAfter updating the sheet definition, use {op:"drawing",action:"update",sheetId:the sheet ID}.';
+      return (
+        feedback + '\nAfter updating the sheet definition, use {op:"drawing",action:"update",sheetId:the sheet ID}.'
+      );
     }
     return feedback;
   }
@@ -933,8 +939,12 @@ export async function runCadAIRequest({
           const next = { requests: successfulRequests, ...measured };
           compactAIAnalysisResult([...analysisResults, next], extended ? 256000 : 32000);
           analysisResults.push(next);
-          if (benchmark?.acceptMeasurement && requests.every(({ id }) => measured.results?.some((result) =>
-            result.id === id && result.value != null && !result.error))) {
+          if (
+            benchmark?.acceptMeasurement &&
+            requests.every(({ id }) =>
+              measured.results?.some((result) => result.id === id && result.value != null && !result.error),
+            )
+          ) {
             benchmark.acceptMeasurement(requests.map(({ id, engine, kind }) => ({ id, engine, kind })));
           }
           const stalled = progress.analysis(requests, measured);

@@ -19,7 +19,9 @@ export function cadAIRequestScene(scene, { programHelpOnly = false } = {}) {
       }));
   return {
     revision: scene.revision,
-    ...(Array.isArray(scene.selection) && scene.selection.length ? { selection: structuredClone(scene.selection) } : {}),
+    ...(Array.isArray(scene.selection) && scene.selection.length
+      ? { selection: structuredClone(scene.selection) }
+      : {}),
     ...(selectionTargets.length
       ? { selectionTargets: structuredClone(selectionTargets), selectionDescription: descriptions }
       : {}),

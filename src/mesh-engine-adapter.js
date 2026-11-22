@@ -944,12 +944,14 @@ export function createMeshEngineAdapter({ kernel } = {}) {
     }
     if (kind === 'openingDirections') {
       const n = project.nodes.find((n) => n.id === id);
-      if (!n || n.kind !== 'mesh' || n.meshRole === 'hole') throw Error('Eine vorhandene Material-Netzvorlage auswählen.');
+      if (!n || n.kind !== 'mesh' || n.meshRole === 'hole')
+        throw Error('Eine vorhandene Material-Netzvorlage auswählen.');
       return { countersinks: directedCountersinks(n) };
     }
     if (kind === 'steppedBores') {
       const n = project.nodes.find((n) => n.id === id);
-      if (!n || n.kind !== 'mesh' || n.meshRole === 'hole') throw Error('Eine vorhandene Material-Netzvorlage auswählen.');
+      if (!n || n.kind !== 'mesh' || n.meshRole === 'hole')
+        throw Error('Eine vorhandene Material-Netzvorlage auswählen.');
       return { steps: measuredSteppedBores(n) };
     }
     if (kind === 'featureCatalog') {

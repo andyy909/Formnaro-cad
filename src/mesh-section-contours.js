@@ -102,7 +102,15 @@ function fittedLoop(points, tolerance) {
 /** A section at the requested plane. Measurements may keep closed cycles from
  * an incomplete cut. Sketch profiles still require all components to be closed. */
 export function meshSectionContours(node, options = {}) {
-  const allowed = ['normal', 'planePoint', 'fitTolerance', 'includePoints', 'loopIndices', 'geometryDigest', 'summaryOnly'];
+  const allowed = [
+    'normal',
+    'planePoint',
+    'fitTolerance',
+    'includePoints',
+    'loopIndices',
+    'geometryDigest',
+    'summaryOnly',
+  ];
   if (
     !options ||
     Object.getPrototypeOf(options) !== Object.prototype ||
@@ -167,8 +175,8 @@ export function meshSectionContours(node, options = {}) {
         const exactCenter = f.world([...circle.element.center, actual]),
           center = exactCenter.map((n) => Number(n.toFixed(6))),
           diameter = Number(circle.element.diameter.toFixed(6)),
-          rounding = Math.hypot(...exactCenter.map((n, i) => n - center[i])) +
-            Math.abs(circle.element.diameter - diameter) / 2;
+          rounding =
+            Math.hypot(...exactCenter.map((n, i) => n - center[i])) + Math.abs(circle.element.diameter - diameter) / 2;
         const fitErrorBound = Math.ceil((circle.error + rounding) * 1e6) / 1e6;
         if (fitErrorBound <= tolerance) {
           all.push({ ...label, kind: 'circle', center, diameter, fitErrorBound });
@@ -179,8 +187,19 @@ export function meshSectionContours(node, options = {}) {
     } else {
       const fit = fittedLoop(points, tolerance),
         elements = fit.elements.map((e, i) => ({ id: `s${index}e${i}`, ...e }));
-      all.push({ index, parentIndex, depth, role, area: g.area(points), pointCount: points.length,
-        complete: true, fitErrorBound: fit.error, elements, ...(options.includePoints ? { points } : {}), bounds });
+      all.push({
+        index,
+        parentIndex,
+        depth,
+        role,
+        area: g.area(points),
+        pointCount: points.length,
+        complete: true,
+        fitErrorBound: fit.error,
+        elements,
+        ...(options.includePoints ? { points } : {}),
+        bounds,
+      });
     }
   }
   if (diagnostics) {
@@ -202,7 +221,8 @@ export function meshSectionContours(node, options = {}) {
       }),
       sketch: null,
       sourcePreserved: true,
-      limitations: 'Closed cycles on this plane. Circle centers in world mm; outline bounds in section frame. An unknown role does not prove a hole.',
+      limitations:
+        'Closed cycles on this plane. Circle centers in world mm; outline bounds in section frame. An unknown role does not prove a hole.',
     };
   }
   const loops = selected.map((i) => all[i]),

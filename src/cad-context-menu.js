@@ -80,8 +80,13 @@ export function createCadContextMenu({
     return contextCommandAllowed(key, contexts) && canRun(key);
   }
   function current(s) {
-    return active === s && s.revision === getRevision() && s.scope === getProjectScope?.() &&
-      s.selection === signature() && (!s.pickTool || s.pickTool.current());
+    return (
+      active === s &&
+      s.revision === getRevision() &&
+      s.scope === getProjectScope?.() &&
+      s.selection === signature() &&
+      (!s.pickTool || s.pickTool.current())
+    );
   }
   function rejectStale(s) {
     if (active !== s) return;
@@ -108,7 +113,7 @@ export function createCadContextMenu({
     const hits = view.visualTargets(point);
     const candidates = pickTool
       ? await pickTool.candidates(hits, point, () => current(s))
-      : hits.map(hit => ({ ...hit, label: hit.simplified ? word('Rahmen', 'Frame') : word('Körper', 'Body') }));
+      : hits.map((hit) => ({ ...hit, label: hit.simplified ? word('Rahmen', 'Frame') : word('Körper', 'Body') }));
     if (!current(s)) return rejectStale(s);
     status.textContent = heading;
     for (const entry of candidates) {
@@ -124,14 +129,16 @@ export function createCadContextMenu({
         if (document.activeElement === candidate) highlight();
         else view.highlightPick(null);
       };
-      candidate.onclick = () => safe(() => {
-        if (!current(s)) return rejectStale(s);
-        close({ focus: true });
-        if (pickTool) return pickTool.apply(entry);
-        select([entry.target]);
-      });
+      candidate.onclick = () =>
+        safe(() => {
+          if (!current(s)) return rejectStale(s);
+          close({ focus: true });
+          if (pickTool) return pickTool.apply(entry);
+          select([entry.target]);
+        });
     }
-    if (!menu.querySelector('button')) menu.append(make('strong', word('Keine passenden Treffer.', 'No matching candidates.'), 'context-heading'));
+    if (!menu.querySelector('button'))
+      menu.append(make('strong', word('Keine passenden Treffer.', 'No matching candidates.'), 'context-heading'));
     const cancel = row(menu, 'pick-dismiss', word('Abbrechen', 'Cancel'));
     cancel.onfocus = () => view.highlightPick(null);
     cancel.onclick = () => close({ focus: true });
@@ -176,7 +183,11 @@ export function createCadContextMenu({
     parent.append(b);
     return b;
   }
-  function show(x, y, { background = false, focus = document.activeElement, canvas = false, target = null, beforeSelection = null } = {}) {
+  function show(
+    x,
+    y,
+    { background = false, focus = document.activeElement, canvas = false, target = null, beforeSelection = null } = {},
+  ) {
     close();
     const mode = getMode(),
       idle = isIdle(),

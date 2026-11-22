@@ -280,8 +280,8 @@ export function openStlWorkbench(
     $('converter-cancel').disabled = !locked || applying;
     $('converter-import').disabled =
       locked || sourceApplied || !!projectPreview || !result || (!converterImport && !importConverted);
-    $('converter-mesh-help').hidden = !meshHelpAvailable || !!result || !showMeshHelp ||
-      (!boundSource && !importMeshForHelp);
+    $('converter-mesh-help').hidden =
+      !meshHelpAvailable || !!result || !showMeshHelp || (!boundSource && !importMeshForHelp);
     $('converter-mesh-help').disabled = locked || !!projectPreview || sourceApplied;
     $('converter-apply').hidden = !projectPreview;
     $('converter-apply').disabled = locked || !projectPreview;
@@ -603,7 +603,8 @@ export function openStlWorkbench(
         current = () => alive() && dialog.open && ticket === sequence && !abort.signal.aborted;
       let id;
       try {
-        id = boundSource?.source.target.rootId ??
+        id =
+          boundSource?.source.target.rootId ??
           (await importMeshForHelp(selected, { unit, signal: abort.signal, current }));
         if (!current()) return;
       } catch (error) {

@@ -1110,7 +1110,8 @@ export function createCadReferenceToolsUI({
       node = (controller.readSnapshot?.() ?? controller.snapshot()).nodes.find((n) => n.id === selected.id),
       start = cadDrillEditStart(node);
     if (!start) throw Error('Ein Teil mit mitwachsender Bohrung auswählen.');
-    const drills = [], wrapped = start.path.length > 0;
+    const drills = [],
+      wrapped = start.path.length > 0;
     let current = start.node,
       path = [...start.path];
     while (current?.drill) {
@@ -1391,8 +1392,15 @@ export function createCadReferenceToolsUI({
   }
   function pickTool() {
     const s = active;
-    if (s?.kind !== 'drill' || s.stage !== 'target' || s.preview || s.computing ||
-        s.selectionPath.length || q('[data-drill-convert]').checked) return null;
+    if (
+      s?.kind !== 'drill' ||
+      s.stage !== 'target' ||
+      s.preview ||
+      s.computing ||
+      s.selectionPath.length ||
+      q('[data-drill-convert]').checked
+    )
+      return null;
     const en = document.documentElement.lang === 'en';
     const current = () => active === s && s.revision === controller.revision() && s.scope === controller.projectScope();
     return {

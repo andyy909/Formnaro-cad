@@ -25,7 +25,8 @@ export const CONVERTER_AI_CONTEXT = {
 const types = new Set(CONVERTER_AI_CONTEXT.commands[0].type);
 function regionBounds(analysis, faceIds) {
   if (!analysis.vertices?.length || !analysis.faces?.length) return;
-  const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+  const min = [Infinity, Infinity, Infinity],
+    max = [-Infinity, -Infinity, -Infinity];
   for (const faceId of faceIds) {
     for (const vertexId of analysis.faces[faceId] ?? []) {
       const point = analysis.vertices[vertexId];
@@ -40,8 +41,12 @@ function regionBounds(analysis, faceIds) {
 }
 
 export function stlBoundsMM(bounds) {
-  if (!Array.isArray(bounds) || bounds.length !== 2 ||
-      !bounds.every((point) => Array.isArray(point) && point.length === 3 && point.every(Number.isFinite))) return;
+  if (
+    !Array.isArray(bounds) ||
+    bounds.length !== 2 ||
+    !bounds.every((point) => Array.isArray(point) && point.length === 3 && point.every(Number.isFinite))
+  )
+    return;
   if (bounds[0].some((min, axis) => min > bounds[1][axis])) return;
   return bounds.map((point) => point.map((value) => Number(value.toFixed(2)) || 0));
 }

@@ -214,9 +214,9 @@ export function createCadSolidUI({
       ['measure', 'Messen', 'Measure'],
     ];
     const keys = [...new Set([...direct.map(([key]) => key), ...Object.values(tabCommands).flat(2)])];
-    const original = key => controls.get(key) || control(key);
-    const disabled = key => original(key).disabled || !canExecute(key);
-    const invoke = key => {
+    const original = (key) => controls.get(key) || control(key);
+    const disabled = (key) => original(key).disabled || !canExecute(key);
+    const invoke = (key) => {
       const node = original(key);
       if (disabled(key)) return;
       closePopup({ restoreFocus: true });
@@ -232,13 +232,19 @@ export function createCadSolidUI({
     }
     const input = appendCadCommandSearch(popup, {
       placeholder: word('Befehl suchen …', 'Search commands …'),
-      entries: () => keys.map(key => ({
-        key,
-        label: label(key),
-        aliases: [solidLabel(key, 'de'), solidLabel(key, 'en'), key, ...(direct.find(item => item[0] === key)?.slice(1) ?? [])],
-        disabled: disabled(key),
-      })),
-      choose: key => safe(() => invoke(key)),
+      entries: () =>
+        keys.map((key) => ({
+          key,
+          label: label(key),
+          aliases: [
+            solidLabel(key, 'de'),
+            solidLabel(key, 'en'),
+            key,
+            ...(direct.find((item) => item[0] === key)?.slice(1) ?? []),
+          ],
+          disabled: disabled(key),
+        })),
+      choose: (key) => safe(() => invoke(key)),
     });
     $('viewport').append(popup);
     input.focus();

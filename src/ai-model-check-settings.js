@@ -1,4 +1,9 @@
-import { aiToleranceFactorText, defaultModelCheckConfig, readModelCheckConfig, saveModelCheckConfig } from './ai-model-check-config.js';
+import {
+  aiToleranceFactorText,
+  defaultModelCheckConfig,
+  readModelCheckConfig,
+  saveModelCheckConfig,
+} from './ai-model-check-config.js';
 const rows = [
   ['size', 'Außenmaße', 'Angegebene Maße entlang der Objekt- oder Weltachsen.', 'Dimensions'],
   ['bounds', 'Lage und Begrenzungen', 'Minimum, Maximum, Mittelpunkt und Ausdehnung.', 'Position and bounds'],

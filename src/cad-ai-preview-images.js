@@ -85,7 +85,11 @@ export function renderAIPreviewImages(project, display, { benchmarkThumbnail = f
       images: [
         benchmarkThumbnail
           ? { name: 'Modell.webp', mimeType: 'image/webp', dataUrl: canvas.toDataURL('image/webp', 0.85) }
-          : { name: 'Formnaro-Entwurf-vier-Ansichten.png', mimeType: 'image/png', dataUrl: canvas.toDataURL('image/png') },
+          : {
+              name: 'Formnaro-Entwurf-vier-Ansichten.png',
+              mimeType: 'image/png',
+              dataUrl: canvas.toDataURL('image/png'),
+            },
       ],
       views: views.map((v) => v[0]),
       scope:

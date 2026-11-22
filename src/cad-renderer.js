@@ -19,7 +19,11 @@ import { createCadRotationHandles } from './cad-rotation-handles.js';
 import { cadAdaptiveBedSize, cadBedGrid, workplaneOnGround } from './cad-bed-grid.js';
 import { marqueeIntersectsMesh } from './cad-marquee-selection.js';
 import { cadEdgeRenderBuffers } from './cad-edge-rendering.js';
-import { cadDisplayGeometry as buildGeometry, cadVisibleRayHit, cadVisibleRayTargets } from './cad-renderer-geometry.js';
+import {
+  cadDisplayGeometry as buildGeometry,
+  cadVisibleRayHit,
+  cadVisibleRayTargets,
+} from './cad-renderer-geometry.js';
 import {
   createMeshSelectionOverlay,
   meshSelectionSurfaceHit,
@@ -1201,7 +1205,7 @@ export function createCadRenderer({
     clear(pickHighlight);
     if (!candidate) return;
     const { target, points } = candidate;
-    const item = getScene()?.objects?.find(entry => targetKey(entry.target) === targetKey(target));
+    const item = getScene()?.objects?.find((entry) => targetKey(entry.target) === targetKey(target));
     if (!item?.worldBounds || !allows(target.rootId)) return;
     const color = 0x24c6e4;
     const bounds = new THREE.Box3(point(item.worldBounds.min), point(item.worldBounds.max));

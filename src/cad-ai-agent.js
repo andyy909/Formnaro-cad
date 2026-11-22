@@ -178,7 +178,7 @@ export function createAIAgentChat({
       status(error.message, true);
     }
   };
-  el('ai-agent-cancel').onclick = () => cancelCurrent(requestId).catch(error => status(error.message, true));
+  el('ai-agent-cancel').onclick = () => cancelCurrent(requestId).catch((error) => status(error.message, true));
   const unsubscribe = desktop?.onAgentEvent?.((event) => {
     if (event.requestId !== requestId) return;
     if (event.type === 'text') {
@@ -218,8 +218,7 @@ export function createAIAgentChat({
   });
   function ensureIdle() {
     if (disposed) throw agentError('AGENT_UNAVAILABLE', 'Der Formnaro-Agent ist nicht verfügbar.');
-    if (busy || loading || isBusy())
-      throw agentError('AGENT_BUSY', 'Laufenden Formnaro-Auftrag zuerst abschließen.');
+    if (busy || loading || isBusy()) throw agentError('AGENT_BUSY', 'Laufenden Formnaro-Auftrag zuerst abschließen.');
   }
 
   async function cancelCurrent(id) {
@@ -265,7 +264,7 @@ export function createAIAgentChat({
     }
   }
 
-  el('ai-agent-form').onsubmit = event => {
+  el('ai-agent-form').onsubmit = (event) => {
     event.preventDefault();
     const prompt = el('ai-agent-prompt').value.trim();
     if (!prompt) return;
@@ -294,7 +293,7 @@ export function createAIAgentChat({
     return {
       busy,
       requestId,
-      provider: current.providers.find(p => p.id === current.providerId)?.label ?? 'Formnaro',
+      provider: current.providers.find((p) => p.id === current.providerId)?.label ?? 'Formnaro',
       model: current.model,
       ready: !!current.model && (current.hasKey || ['localhost', '127.0.0.1', '[::1]'].includes(host)),
       status: el('ai-agent-status').textContent,
@@ -312,8 +311,14 @@ export function createAIAgentChat({
     if (args.action === 'cancel' && keys.length === 2) {
       return { cancelled: await cancelCurrent(id) };
     }
-    if (args.action !== 'send' || keys.length !== 3 || typeof args.prompt !== 'string' ||
-        !args.prompt.trim() || args.prompt.length > 10000) throw invalid();
+    if (
+      args.action !== 'send' ||
+      keys.length !== 3 ||
+      typeof args.prompt !== 'string' ||
+      !args.prompt.trim() ||
+      args.prompt.length > 10000
+    )
+      throw invalid();
     const prompt = args.prompt.trim();
     if (accepted.has(id)) {
       if (accepted.get(id) !== prompt) throw invalid();

@@ -214,12 +214,14 @@ function throughBoreEntry(node) {
   });
   if (!anchor) return null;
   const inverse = inverseCadMatrix(stock.matrix),
-    normal = [0, 1, 2].map(k => anchor.normal.reduce((sum, coordinate, row) => sum + inverse[k * 4 + row] * coordinate, 0)),
+    normal = [0, 1, 2].map((k) =>
+      anchor.normal.reduce((sum, coordinate, row) => sum + inverse[k * 4 + row] * coordinate, 0),
+    ),
     length = Math.hypot(...normal);
   return {
     center: cadPoint(stock.matrix, anchor.point),
     radius: drill.diameter / 2 + drill.gap,
-    normal: normal.map(n => n / length),
+    normal: normal.map((n) => n / length),
   };
 }
 
@@ -242,7 +244,8 @@ function drawingSourceReferences(oc, nodes, inverse) {
     if (node.kind !== 'cad' || node.suppressed) return;
     const world = multiplyCadMatrices(parent, node.transform),
       bore = throughBoreEntry(node),
-      originalSource = node.source === 'step' ||
+      originalSource =
+        node.source === 'step' ||
         (node.source === 'native' && ['box', 'cylinder', 'sketch'].includes(node.recipe?.type));
     if (originalSource || bore) {
       const shape = readCadBrep(oc, node.brep.data),
@@ -250,7 +253,7 @@ function drawingSourceReferences(oc, nodes, inverse) {
       let edges = [];
       try {
         edges = uniqueCadEdgesNative(oc, shape);
-        const boreEdges = bore ? edges.filter(edge => isBoreEntry(cadNativeCurveDto(oc, edge), bore)) : null;
+        const boreEdges = bore ? edges.filter((edge) => isBoreEntry(cadNativeCurveDto(oc, edge), bore)) : null;
         const sourceEdges = boreEdges?.length === 1 ? boreEdges : boreEdges ? [] : edges;
         for (const edge of sourceEdges) {
           if (++count > 20000) {

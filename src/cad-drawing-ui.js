@@ -172,7 +172,9 @@ export function createCadDrawingUI({
     for (const element of panel.querySelectorAll(
       '[data-drawing-update],[data-drawing-apply],[data-drawing-export],[data-drawing-edit],[data-drawing-auto]',
     ))
-      element.disabled = active.running || (element.matches('[data-drawing-auto]') && stale) ||
+      element.disabled =
+        active.running ||
+        (element.matches('[data-drawing-auto]') && stale) ||
         (element.matches('[data-drawing-export]') && (stale || pending));
     const cancel = q('[data-drawing-stop]');
     if (cancel) {

@@ -285,14 +285,24 @@ export function createCadControllerAITask({
           } catch (error) {
             const section = request.options;
             if (
-              q.kind !== 'sectionContours' || error.code !== 'MESH_LID_SECTION' ||
-              !section || section.summaryOnly || section.includePoints || section.loopIndices
-            ) throw error;
+              q.kind !== 'sectionContours' ||
+              error.code !== 'MESH_LID_SECTION' ||
+              !section ||
+              section.summaryOnly ||
+              section.includePoints ||
+              section.loopIndices
+            )
+              throw error;
             // Keep the usable closed contours from this plane in the same analysis round.
             // An explicit request for sketch points or particular loops stays strict.
-            value = await meshQuery('toolsQuery', {
-              ...request, options: { ...section, summaryOnly: true },
-            }, { signal });
+            value = await meshQuery(
+              'toolsQuery',
+              {
+                ...request,
+                options: { ...section, summaryOnly: true },
+              },
+              { signal },
+            );
             if (!value.measurements?.length) throw error;
           }
         }

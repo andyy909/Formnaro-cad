@@ -293,8 +293,17 @@ function simpleContours(loops, eps) {
   const edges = loops.flatMap((p, loop) =>
     p.map((a, i) => {
       const b = p[(i + 1) % p.length];
-      return { a, b, loop, index: i, count: p.length, xMin: Math.min(a[0], b[0]), xMax: Math.max(a[0], b[0]),
-        yMin: Math.min(a[1], b[1]), yMax: Math.max(a[1], b[1]) };
+      return {
+        a,
+        b,
+        loop,
+        index: i,
+        count: p.length,
+        xMin: Math.min(a[0], b[0]),
+        xMax: Math.max(a[0], b[0]),
+        yMin: Math.min(a[1], b[1]),
+        yMax: Math.max(a[1], b[1]),
+      };
     }),
   );
   if (edges.length > 6000) fail('Zu viele Randsegmente für eine eindeutige Öffnungsprüfung.', 'MESH_LID_LIMIT');

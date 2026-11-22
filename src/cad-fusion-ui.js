@@ -276,14 +276,20 @@ export function createCadFusionUI({
     ];
     const input = appendCadCommandSearch(popup, {
       placeholder: word('Befehl suchen …', 'Search commands …'),
-      entries: () => keys.map(key => {
-        const original = controls.get(key) || extraControls.get(key);
-        return { key, label: label(key) === key ? original?.title || key : label(key), disabled: original?.disabled ?? false };
-      }),
-      choose: key => safe(() => {
-        closePopup();
-        return invoke(key);
-      }),
+      entries: () =>
+        keys.map((key) => {
+          const original = controls.get(key) || extraControls.get(key);
+          return {
+            key,
+            label: label(key) === key ? original?.title || key : label(key),
+            disabled: original?.disabled ?? false,
+          };
+        }),
+      choose: (key) =>
+        safe(() => {
+          closePopup();
+          return invoke(key);
+        }),
     });
     $('viewport').append(popup);
     input.focus();
