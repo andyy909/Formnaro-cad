@@ -13,6 +13,7 @@ export function usagePrice(raw,rates,at,billing){
   // A five-minute margin avoids assigning boundary-crossing requests a false exact rate.
   const minute=hour*60+d.getUTCMinutes(),offPeak=Number.isFinite(+d)&&(weekday===0||weekday===6||![[55,245],[355,605]].some(([a,b])=>minute>=a&&minute<=b));
   const multiplier=offPeak?1:rates.peakMultiplier??1;
-  value.cost={min:charge(cached??input),max:charge(cached??0)*multiplier};
+  const cachedCost=charge(cached??input),uncachedCost=charge(cached??0);
+  value.cost={min:Math.min(cachedCost,uncachedCost),max:Math.max(cachedCost,uncachedCost)*multiplier};
  }return value;
 }

@@ -15,4 +15,4 @@ Project files retain editable construction sources and model metadata. Native CA
 
 [Mini Mesh](../mini) and [Mini CAD](../mini-cad) are separate applications. The former SolidCraft integration is documented under [parametric](../parametric) for older saved projects.
 
-For dated development and verification notes, see the [technical project history](PROJEKTKONTEXT.md). For the packaged public preview, see the [current release](AKTUELLER-STAND.md).
+For dated development and verification notes, see the [technical project history](PROJEKTKONTEXT.md). For the portable Windows package, see the [current release](AKTUELLER-STAND.md).

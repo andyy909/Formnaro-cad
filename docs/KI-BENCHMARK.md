@@ -1,5 +1,30 @@
 # KI-Benchmark
 
+## Automatischer Grenztest für Plattenänderungen
+
+Im Reiter **Benchmark** stehen vier getrennte Leistungsreihen. Jede Live-Reihe benutzt die einstellbaren Denkstufen aus dem Modellkatalog. Bei Modellen mit abschaltbarer Denkphase enthält die Reihe auch Off. Mit **Nur Off** lässt sich diese Bedingung einzeln ausführen. DeepSeek Flash startet im Chat als DeepSeek-Vorauswahl. Standardmäßig startet jede Stufe drei frische Versuche mit derselben Aufgabe. Im Labor lassen sich ein bis acht einstellen. Eine gelöste Variante genügt für den Aufstieg, ausschließlich fachlich gescheiterte Versuche einer vollständig durchlaufenen Stufe markieren die erste ungelöste Stufe. Technische Ausfälle, Zeitbudget und ein vollständig bestandener endlicher Aufgabenkatalog lassen die Grenze offen. Das Standard-Zeitbudget beträgt vier Minuten je Denkstufe, sechs bei High und acht bei XHigh und Max. Für Vergleichsmessungen lässt sich ein einheitliches Zeitbudget setzen. Die Option **Ohne Zeitlimit** lässt jede Denkstufe ohne Zeitbudget laufen. Der Bericht enthält Einzelzeiten, Trefferzahl und Median der fachlich ausgewerteten Versuche. Ein Durchlauf mit 1/3 und einer mit 3/3 bleiben unterscheidbar. Für die Vorführung verweist der Bericht auf das eigene Protokoll des sichtbaren Übungsfensters.
+
+| Bereich | Anforderung und Prüfer |
+| --- | --- |
+| Direkter Modellbau | Platte erzeugen, mit festen Randabständen verlängern, ausgewählte Durchmesser ändern. Die Reihe erhöht die Bohrungszahl. Geprüft werden Außenmaße, Volumen, Durchgänge, gespeicherte Geometrie und Undo. |
+| Vorführen | Acht Übungsaufgaben vom Verschieben bis zur technischen Zeichnung, jeweils im eigenen Übungsfenster mit bestehendem nativem Prüfer, Modellkennung und regulärem Abschluss. |
+| Foto | Kalibrierte Frontalaufnahme, perspektivisch verzerrte Aufnahme und unterbestimmtes Einzelbild. Danach wachsen versetzte Öffnungsreihen von zwei auf bis zu 16 Fenster. Maßhaltigkeit, Öffnung und berechtigtes Nachfragen haben unterschiedliche Sollbefunde. Die Bilder sind synthetisch. Der bisherige rein technische Mehransichten-Check läuft weiterhin separat. |
+| STL zu CAD | Netz einer Bohrplatte, Senkungen, Gehäuse, Profilbohrung und Freiform. Danach entstehen neue STL-Vorlagen mit immer mehr versetzten Stufenbohrungen. Erst einen nativen Nachbau mit mindestens zwei einzeln adressierbaren nativen Quellmerkmalen, gemessener Volumenänderung bei einer Maßprobe, Undo und beidseitiger Stichprobe gegen die Vorlage prüfen. Andernfalls normale lokale Konvertierung mit STEP-Rücklesen. Erst wenn die Konvertierung scheitert, darf die KI konservative Netzbereinigung vorschlagen. Die ausgeführte Route und ihre Messwerte stehen im Bericht. Für den Aufstieg zählt der bearbeitbare Nachbau. |
+
+Der bestehende Grund- und Aufbaubenchmark bleiben Vergleichsreihen. Im Platten-Referenzmodus laufen zwei deterministische Stufen ohne Anbieter. **Aufgaben und Kontext patchen**: Die Plattentexte, ihr zusätzlicher Kontext, Version und Wiederholungszahl stehen in `ai/lab-plate-frontier.json`. Weitere Bereichsaufgaben und ihre Prüfer werden gemeinsam über den Laborpatch verteilt.
+
+**Einordnung der Methode.** CADTests verwendet ausführbare geometrische und topologische Kriterien. Parametric CAD Bench v3 trennt Erstellen, Folgeänderungen und Zeichnungen und prüft auch Modellierungshistorie. Autodesk nutzt bei neuralCAD-Edit fachlich erhobene Bearbeitungsaufträge. Für Formnaro ergänzen sich ein gleichbleibender Wiederholungsfall pro Stufe und zusätzliche zurückgehaltene Aufgaben für spätere Vergleiche. Fünf Wiederholungen eines einzigen Beispiels erlauben keine Aussage über alle Bauteile. [CADTests](https://arxiv.org/abs/2605.07807) · [Parametric CAD Bench v3](https://arxiv.org/abs/2611.02659) · [neuralCAD-Edit](https://autodeskailab.github.io/neuralCAD-Edit/) · [Erfolgs- und Zuverlässigkeitsmetriken](https://www.anthropic.com/research/demystifying-evals-for-ai-agents)
+
+## Aufgabenreihen mit steigenden Anforderungen
+
+Im Reiter **Benchmark** ist **Vormachen** eine eigene Serie. Acht Aufgaben reichen vom Verschieben eines Quaders über Bohrungen und Muster bis zur bearbeitbaren Skizze und technischen Zeichnung mit Schnitt und Bezugsmaßen. Jede Stufe läuft mit zwei frischen Projekten auf derselben Denkstufe. Die erste bestätigte Abweichung bleibt pro Aufgabe sichtbar.
+
+**Modellbau · Teilezahl steigern** öffnet die Reihe mit 2, 4, 8, 16, 32 und 64 vorgebohrten Segmenten. Ab acht Teilen muss der Verbund die angegebenen Untergruppen bewahren. Formnaro misst jede Bohrung am nativen Ergebnis und ändert anschließend eine erhaltene Bohrungsquelle. Das Schutzteil, die übrigen Bohrungen und die Wiederherstellung per Undo sind Pflichtprüfungen. Weitere Stufen verteilen 96, 160 und 240 Segmente auf sechs, zehn und fünfzehn getrennte Leisten. Bei 160 und 240 Segmenten muss die KI die zusammengehörigen Teile anhand ihrer Weltkoordinaten zuordnen. Die Hierarchie und die Bohrungen werden in jeder Leiste geprüft. Im Folgeauftrag muss das Modell 18 Bohrungen in einem bestehenden Verbund selbst gezielt ändern. Alle 96 Bohrungen werden erneut vermessen.
+
+**STL-Konverter · Flächenkorrektur** beginnt bei markierten Zylindern, nimmt dann die Vorauswahl weg und endet bei einer konischen Profilbohrung aus vier Flächenbereichen. Die Prüfer kontrollieren den Dreiecksschutz, lesen den erzeugten STEP-Körper wieder ein und messen die Öffnungen.
+
+Fest vorgegebene Antworten prüfen die Ausführung und die Messlogik. Ergebnisse mit dem aktuellen KI-Zugang gehören zum gewählten Modell und dessen Denkstufe. Ein vollständiger Durchlauf zeigt die Leistung bis zur höchsten geprüften Stufe. Wenn alle Stufen gelingen, liegt die Leistungsgrenze oberhalb dieser Reihe. Ausführungsfehler und offene Fälle werden gesondert ausgewiesen.
+
 ## Zwei getrennte 16er-Suiten ab 0.138.0
 
 Im Reiter **Benchmark → Aufgabenserie** ist der neue **Aufbaubenchmark 2.0.0** vorausgewählt. **Grundlagen 1.0.4** mit den bisherigen Aufgaben bleiben jederzeit wählbar. Öffnen, Umschalten und Vorschau führen keine KI-Anfrage aus; der Startknopf startet ausschließlich die gewählte Suite. Die bestehende lokale API verwendet ohne `suiteId` weiterhin den Grundbenchmark; den Aufbau-Benchmark ausdrücklich mit `suiteId: "formnaro-practice-advanced"` starten.
@@ -42,3 +67,23 @@ Suite1.0.1 präzisiert die Zeichnungsbedienung; Fixtures und native Prüfer sind
 Die historische Suite1.0.1 bleibt separat gespeichert. Suite1.0.2 aktualisiert ausschließlich Werkzeugauskunft und Übungsanweisung nach der Bedienreparatur0.136.1; Aufgaben, Ausgangsmodelle und native Prüfer bleiben unverändert. Die gezielten sechs Benchmark-Nachtests der Reparatur sind kein neuer16erLauf und werden nicht in die alte Serie eingerechnet.
 
 Im Benchmark-Reiter zeigt das Diagramm nur den ausgewählten einzelnen Lauf mit acht Säulen zu je zwei Versuchen. Die Modellauswahl vergleicht ausschließlich vollständige16erLäufe unter gleichen Suite-/Programmhashes, Denkstufen und Überwachungsbedingungen. Pro Modell gilt dessen neuester vollständiger Lauf innerhalb dieser Bedingungen; Übungs-/Reparatur-/Teilstände bleiben separat erhalten.
+
+## Benchmark im Einfach-Modus
+
+Im Reiter **Benchmark** das Modell aus den eingerichteten KI-Zugängen wählen und **Benchmark starten** drücken. Die Wahl wird auch im KI-Chat verwendet. Die Checkliste zeigt die vom Modell unterstützten Denkstufen. Alle sind zunächst ausgewählt. Der Benchmark startet mit mindestens einer gewählten Denkstufe und wechselt automatisch zwischen der Auswahl. Die vier Leistungsreihen laufen mit bis zu drei frischen Versuchen pro Stufe. Der erste Erfolg führt sofort zur nächsten Aufgabe derselben Denkstufe. Drei fachliche Fehlschläge beenden diese Stufenfolge. Das Budget beginnt im Einfach-Modus für jede Aufgabe neu. Es beträgt vier Minuten, bei High sechs und bei XHigh oder Max acht Minuten. Zeitablauf und technische Fehler bleiben als offene Grenze erkennbar.
+
+Modellbau und STL steigern die Zahl der Merkmale. Die Fotoreihe steigert zuerst die Zahl der Öffnungen, anschließend die Zahl unterschiedlicher Fotomotive. Die Vorführreihe ergänzt nach den Einzelübungen Folgen anspruchsvoller Übungen. Ergebnisse der vier Bereiche und Denkstufen stehen gemeinsam im Laufbericht. Bei einem Modell ohne Bildeingabe führt das Labor die übrigen Reihen aus und vermerkt den übersprungenen Fototest. Die bisherigen Einzelreihen und festen Vergleichstests lassen sich im selben Reiter aufklappen.
+
+### Schnellere Steigerung ab Leistungsreihen-Version 4
+
+Bei der Platte wächst die Zahl der Durchgangsbohrungen mit 2, 4, 8, 16, 32, 64 und 128. Beim STL-Nachbau folgen auf die fünf unterschiedlichen Grundformen Aufgaben mit 4, 8, 16, 32 und 64 Stufenbohrungen. Foto behält die einzelnen Einstiegsaufgaben und erhöht dann die Anzahl der Öffnungen je Platte von 2 bis 16 und anschließend die Zahl der Motive pro Aufgabe. Vorführen prüft drei Grundlagen und steigert danach den Umfang anspruchsvoller Folgen mit 2, 4, 8 und weiteren Übungen. Der Faktor ist in der lokalen Testkonfiguration abgelegt. Der Prüfbericht nennt den zuletzt gelösten und den ersten erfolglos geprüften Umfang. Dazwischen übersprungene Größen bleiben ungemessen. Am oberen Ende einer vollständig gelösten Reihe bleibt die Grenze offen. Gespeicherte ältere Aufgabenberichte werden weiter mit ihrem ursprünglichen Aufgabenumfang angezeigt.
+
+### Tokenverbrauch
+
+Die Benchmarkberichte zeigen gemeldete Eingabetokens, Ausgabetokens und den bereits in der Eingabe enthaltenen Anteil aus dem Cache. Die Werte stehen für Einzelversuche und im Einfach-Modus zusammengefasst je Bereich, Denkstufe und Gesamtlauf. Anbieterangaben zu fehlgeschlagenen Antworten werden mitgezählt. Fehlende Felder sind als unbekannt oder als Teilmenge gekennzeichnet. Die festen Vergleichstests zeigen den Verbrauch getrennt nach Modellieragent und Versuchsleiter, wenn letzterer mitläuft.
+
+### Säulendiagramme
+
+Unter **Benchmark → Säulendiagramme** zeigt **Einzelner Testlauf** die Trefferquote je Aufgabe und Denkstufe. **Modellvergleich · Durchschnitt** fasst mehrere vollständige Läufe je Modell für exakt dieselbe Aufgabenfassung, Denkstufe, Versuchsanzahl und Zeitvorgabe zusammen. Die Säule zeigt den Durchschnitt und die Zahl der Läufe. Technisch unvollständige Läufe bleiben in ihrer Einzelansicht sichtbar.
+
+Beim Vergleich bleibt die Erfolgsquote je Aufgabe des Einfach-Modus getrennt von Quoten je Versuch aus Reihen mit fester Versuchsanzahl.

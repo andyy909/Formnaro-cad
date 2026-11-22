@@ -4,10 +4,11 @@ import OCModule from 'replicad-opencascadejs';
 import {pathToFileURL} from 'node:url';
 import {createCadFinishNative,listCadEdgesNative,cadEdgesCorrespondNative} from '../src/cad-finish-native.js';
 import {createCadService} from '../src/cad-service.js';
+import {createCadCommandRouter} from '../src/cad-command-router.js';
 import {createCadTransactions} from '../src/cad-transactions.js';
 import {createCadProject,serializeCadProject,parseCadProject} from '../src/cad-project.js';
 import {cadIdentity} from '../src/cad-affine.js';
-import {cadBoolean,cadVolume,writeCadBrep,readCadBrep} from '../src/cad-native-kernel.js';
+import {cadBoolean,cadVolume,writeCadBrep,readCadBrep,transformCad,validateCadSolid} from '../src/cad-native-kernel.js';
 import {buildCadContours} from '../src/cad-recipes.js';
 
 const kernelLoader=process.env.FORMNARO_CAD_MODULE?(await import(pathToFileURL(process.env.FORMNARO_CAD_MODULE).href)).default:OCModule;
@@ -38,10 +39,59 @@ test('Native straight edges can be rounded and contradictory stored conic anchor
   const roundShape=cylinder();try{const circle=topOuter(roundShape,origin),contradiction=structuredClone(circle.reference);delete contradiction.anchor.edgeDomain;contradiction.anchor.samples[3][2]+=1;assert.throws(()=>createCadFinishNative({oc})(roundShape,definition(contradiction),{id:'group',source:'group'}),{code:'CAD_EDGE_RESOLVER_REQUIRED'});}finally{roundShape.delete();}
 });
 
-test('Coincident edges in separate native solids are ambiguous, never chosen by an explorer index',()=>{
-  const one=cylinder(),two=readCadBrep(oc,writeCadBrep(oc,one)),compound=new oc.TopoDS_Compound(),builder=new oc.TopoDS_Builder();
-  try{builder.MakeCompound(compound);builder.Add(compound,one);builder.Add(compound,two);const record=topOuter(compound,{rootId:'group',path:[]});assert.throws(()=>createCadFinishNative({oc})(compound,definition(record.reference),{id:'group',source:'group'}),{code:'AMBIGUOUS_CAD_EDGE'});}
-  finally{builder.delete();compound.delete();two.delete();one.delete();}
+test('Coincident native edges abort the second finish and preserve the confirmed project',async()=>{
+  const service=createCadService({oc,finish:createCadFinishNative({oc})});
+  const maker=new oc.BRepPrimAPI_MakeBox(10,10,10), firstBox=maker.Shape();
+  const translation=cadIdentity();
+  translation[12]=translation[13]=-10;
+  const secondBox=transformCad(oc,firstBox,translation), compound=new oc.TopoDS_Compound();
+  const builder=new oc.TopoDS_Builder(), bodyId='touching-boxes';
+  try {
+    builder.MakeCompound(compound);
+    builder.Add(compound,firstBox);
+    builder.Add(compound,secondBox);
+    const stats=validateCadSolid(oc,compound);
+    assert.equal(stats.solids,2);
+    const unrounded={id:bodyId,kind:'cad',name:'Touching boxes',source:'step',solid:true,transform:cadIdentity(),
+      brep:{format:'OpenCascade-BRep',data:writeCadBrep(oc,compound),triangulation:false},
+      stats:{bounds:{min:stats.bounds.min,max:stats.bounds.max},volume:stats.volume,solids:stats.solids}};
+    const router=createCadCommandRouter({oc,service});
+    const original=createCadProject({nodes:[unrounded]});
+    const nativeEdges=listCadEdgesNative(oc,compound,{origin:{rootId:bodyId,path:[]}});
+    const at=(edge,x,y)=>edge.geometry.kind==='line'&&[edge.geometry.start,edge.geometry.end].every(point=>
+      Math.abs(point[0]-x)<1e-7&&Math.abs(point[1]-y)<1e-7);
+    const outer=nativeEdges.find(edge=>at(edge,10,10));
+    const coincident=nativeEdges.filter(edge=>at(edge,0,0));
+    assert.ok(outer);
+    assert.equal(coincident.length,2);
+    const initial=(await router.run(original,{kind:'finish',target:bodyId,step:{
+      id:'unique-round',kind:'round',amount:.4,edges:[outer.reference],
+    }})).project;
+    const store=createCadTransactions({initial,build:async(project,{operation,baseline})=>
+      (await router.run(project,operation,{baseline})).project});
+    const confirmed=store.serialize(), state=store.state();
+    const kept=store.snapshot().nodes[0].finish.steps[0];
+    const operation={kind:'editFinish',target:bodyId,steps:[kept,{
+      id:'ambiguous-round',kind:'round',amount:.4,edges:[coincident[0].reference],
+    }]};
+    await assert.rejects(store.preview({project:store.snapshot(),revision:state.revision,operation}),error=>{
+      assert.equal(error.code,'AMBIGUOUS_CAD_EDGE');
+      assert.match(error.message,/Mehrere deckungsgleiche CAD-Kanten/);
+      assert.equal(error.bodyId,bodyId);
+      assert.equal(error.stepId,'ambiguous-round');
+      assert.equal(error.edgeIndex,0);
+      return true;
+    });
+    assert.equal(store.serialize(),confirmed);
+    assert.deepEqual(store.state(),state);
+  } finally {
+    builder.delete();
+    compound.delete();
+    secondBox.delete();
+    firstBox.delete();
+    maker.delete();
+    service.dispose();
+  }
 });
 
 test('Unknown source features require a resolver; callback descriptors still require a unique native match',()=>{

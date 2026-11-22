@@ -7,6 +7,7 @@ import {cadGeometryDigest} from '../src/cad-geometry-digest.js';
 import {createCadController} from '../src/cad-controller.js';
 import {createCadAutomationAccess} from '../src/cad-automation-access.js';
 import {runCadAIRequest} from '../src/cad-ai-request.js';
+import { captureAITaskProtection, verifyAITaskProtection } from '../src/cad-ai-task-requirements.js';
 
 async function setup(t){
  const cad=createCadController({createWorker:()=>{const w=new Worker(new URL('./fixtures/cad-node-worker.mjs',import.meta.url)),a={postMessage:v=>w.postMessage(v),terminate:()=>w.terminate()};w.on('message',data=>a.onmessage?.({data}));w.on('error',error=>a.onerror?.(error));return a;}});t.after(()=>cad.dispose());
@@ -62,6 +63,31 @@ test('A task-protected original is never exposed as an applicable draft even whe
  await assert.rejects(runCadAIRequest({input:{},requirements,maxSteps:24,visualReview:false,access,generate:async args=>{calls++;return {revision:args.scene.revision,commands:[{op:'update',target:original.id,set:{size:[6,4,5]}}]};}}),e=>e.code==='AI_TASK_STALLED'&&e.feedback.lastFailure.code==='AI_TASK_PROTECTION_VIOLATION');
  assert.equal(calls,3);assert.equal(cad.serialize(),before);assert.equal(cad.state().previews,0);
 });
+test('A native preview without its protected source fails the protection check when the signature throws', async t => {
+  const { cad, access } = await setup(t);
+  const confirmed = cad.snapshot();
+  const target = { rootId: confirmed.nodes[0].id, path: [] };
+  const protectedSources = captureAITaskProtection(confirmed, [target]);
+  verifyAITaskProtection(confirmed, protectedSources);
+
+  const proposal = await access.preview({
+    revision: cad.revision(),
+    commands: [{ op: 'delete', target: target.rootId }],
+  });
+  try {
+    const candidate = access.getPreview(proposal.previewId);
+    assert.equal(candidate.nodes.length, 0);
+    assert.throws(() => captureAITaskProtection(candidate, [target]), /Das CAD-Bezugsobjekt fehlt/);
+    assert.throws(() => verifyAITaskProtection(candidate, protectedSources), {
+      code: 'AI_TASK_PROTECTION_VIOLATION',
+      feedback: { retryable: true },
+    });
+    assert.deepEqual(cad.snapshot(), confirmed);
+  } finally {
+    access.discard(proposal.previewId);
+  }
+});
+
 test('Task protection also preserves the world placement of an unchanged retained source inside a moved group',async t=>{
  const {cad,access}=await setup(t),original=cad.snapshot().nodes[0];const result=await cad.execute({kind:'batch',commands:[{op:'create',type:'box',as:'sibling',size:[2,2,2],pos:[-30,0,0]},{op:'group',targets:[original.id,'$sibling'],as:'container'}]});
  // The access snapshot must match the newly confirmed group before the task.

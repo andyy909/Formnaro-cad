@@ -62,3 +62,49 @@ test('Real worker read-only analysis and mesh result checks coexist in one mixed
   await assert.rejects(access.preview({revision:cad.revision(),commands,checks:[checks[1],checks[0],{...checks[2],diameter:6}]}),error=>error.code==='AI_RESULT_MISMATCH'&&error.feedback.checkIndex===3&&error.feedback.checkKind==='clearance');assert.equal(cad.state().previews,0);assert.equal(cad.serialize(),before);
  }finally{cad.dispose();}
 });
+
+test('AI section batches retain circle measurements when a detailed cut has an open outline', async () => {
+  const kernel = await Module();
+  kernel.setup();
+  const node = lidHousing(kernel);
+  const { verts, triangles } = node.mesh;
+  const height = 10;
+  const face = Array.from({ length: triangles.length / 3 }, (_, i) => i * 3).find(i => {
+    const vertices = triangles.slice(i, i + 3);
+    const z = vertices.map(index => verts[index * 3 + 2]);
+    return vertices.every(index => verts[index * 3] === 0) && Math.min(...z) < height && Math.max(...z) > height;
+  });
+  assert.ok(Number.isInteger(face));
+  triangles.splice(face, 3);
+  const initial = createCadProject({ version: 8, nodes: [{ ...node, layerId: 'default', folderId: null }] });
+  const factory = file => () => {
+    const worker = new Worker(new URL(file, import.meta.url));
+    const port = { postMessage: value => worker.postMessage(value), terminate: () => worker.terminate() };
+    worker.on('message', data => port.onmessage?.({ data }));
+    worker.on('error', error => port.onerror?.(error));
+    return port;
+  };
+  const cad = createCadController({
+    initial, createWorker: factory('./fixtures/cad-node-worker.mjs'),
+    createMeshWorker: factory('./fixtures/mesh-engine-node-worker.mjs'),
+  });
+  const query = { id: 'cut', engine: 'mesh', kind: 'sectionContours', options: {
+    id: node.id, options: { normal: [0, 0, 1], planePoint: [0, 0, height], includePoints: false },
+  } };
+  try {
+    const before = cad.serialize();
+    const measured = await cad.analyze([query, { ...q[0], options: { id: node.id } }]);
+    const section = measured.results[0].value;
+    assert.equal(section.kind, 'meshSectionMeasurements');
+    assert.equal(section.complete, false);
+    assert.equal(section.sketch, null);
+    assert.ok(section.measurements.some(item => item.kind === 'circle' && Math.abs(item.diameter - 3.5) < .01));
+    assert.equal(measured.results[1].id, 'bounds');
+    assert.equal(cad.serialize(), before);
+    await assert.rejects(cad.analyze([{ ...query, options: { ...query.options, options: {
+      ...query.options.options, includePoints: true,
+    } } }]), { code: 'MESH_LID_SECTION' });
+  } finally {
+    cad.dispose();
+  }
+});

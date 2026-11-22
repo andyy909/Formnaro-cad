@@ -93,6 +93,44 @@ test('automatic small-hole repair closes a missing cube top through the existing
   assert.equal(engine.inspectSolid(repaired).volume,4000);
 });
 
+test('automatic repair preserves open STL imports independently of editable notes',async()=>{
+  const project=await cube(),mesh=node(project).mesh,maxZ=Math.max(...mesh.verts.filter((_,i)=>i%3===2));
+  mesh.triangles=Array.from({length:mesh.triangles.length/3},(_,i)=>mesh.triangles.slice(i*3,i*3+3))
+    .filter(face=>!face.every(index=>mesh.verts[index*3+2]===maxZ)).flat();
+  assert.equal(mesh.triangles.length/3,10);
+  const importedFile={name:'open.stl',type:'stl'},report=JSON.stringify({format:'FormnaroMeshImport'});
+  const scenarios=[
+    ['edited note',{importedFile,notes:'Keep the intentional opening.'},'unrepairable'],
+    ['empty note',{importedFile,notes:''},'unrepairable'],
+    ['other valid JSON',{importedFile,notes:'{}'},'unrepairable'],
+    ['intact import report',{importedFile,notes:report},'unrepairable'],
+    ['legacy report without file marker',{notes:report},'unrepairable'],
+    ['absent note',{importedFile},'unrepairable'],
+    ['ordinary mesh',{notes:'Repair this synthetic defect.'},'repaired'],
+    ['non-STL import',{importedFile:{name:'open.obj',type:'obj'},notes:'Repair this synthetic defect.'},'repaired'],
+  ];
+  for(const [name,metadata,status] of scenarios){
+    node(project).metadata=metadata;
+    const restored=parseCadProject(serializeCadProject(project)),before=structuredClone(restored),result=await query(restored);
+    assert.equal(result.status,status,name);
+    assert.deepEqual(node(restored).metadata,metadata,'metadata survives project roundtrip: '+name);
+    unchanged(restored,before);
+    if(status==='unrepairable'){
+      assert.equal(result.operation,undefined,name);
+      assert.equal(node(restored).mesh.triangles.length/3,10,name);
+    }else{
+      assert.equal(result.operation.type,'mesh-repair',name);
+      assert.equal((await applyChecked(restored,result)).mesh.triangles.length/3,12,name);
+    }
+  }
+  node(project).metadata={importedFile,notes:'Explicitly close this opening now.'};
+  const before=structuredClone(project),manual=await engine.edit({project,operation:{type:'mesh-repair',id:'body',fillSmallHoles:true}});
+  assert.equal(node(manual.project).mesh.triangles.length/3,12,'explicit hole repair remains available for STL imports');
+  assert.deepEqual(node(manual.project).meshSource.sources,[node(before)],'manual repair retains the complete source');
+  assert.deepEqual(parseCadProject(serializeCadProject(manual.project)),manual.project);
+  unchanged(project,before);
+});
+
 test('an irreparable open triangle has no operation and remains byte-for-byte unchanged',async()=>{
   const project=await cube();node(project).mesh={verts:[0,0,0,1,0,0,0,1,0],triangles:[0,1,2]};delete node(project).meshSource;
   const before=structuredClone(project),result=await query(project);

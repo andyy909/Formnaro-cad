@@ -1,0 +1,30 @@
+name: Bug report / Fehlerbericht
+description: Report a reproducible problem in Formnaro / Einen reproduzierbaren Fehler melden
+body:
+  - type: input
+    id: formnaro-version
+    attributes:
+      label: Formnaro version / Formnaro-Version
+      description: Use the full build label shown in the app / Vollständige Buildkennung aus dem Programm
+  - type: input
+    id: windows-and-mode
+    attributes:
+      label: Windows and mode / Windows und Arbeitsmodus
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce / Schritte zum Nachstellen
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Result / Ergebnis
+      description: Expected and actual result / Erwartetes und tatsächliches Ergebnis
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example or screenshot / Beispiel oder Screenshot
+      description: Remove credentials and personal data before attaching a file / Zugangsdaten und persönliche Daten vor dem Anhängen entfernen

@@ -17,19 +17,69 @@ app.whenReady().then(async()=>{let win;try{
   const result=role==='modeler'?{tool:'offlinecad_preview',arguments:{revision,commands:[{op:'create',type:'box',size:[1,2,3]}]}}:role==='supervisor'?{verdict:'continue',reasonCode:'none',confidence:.8,explanation:'Vorschlag formal gültig.',evidence:'Lokales Schema'}:{summary:'Drei getrennte Rollen erfolgreich geprüft.',findings:[],nextChecks:['Echten Modellvergleich gesondert ausführen.']};
   return {text:JSON.stringify(result),data:{model:c.model,usage:{input_tokens:100,output_tokens:10,input_tokens_details:{cached_tokens:0}}}};
  }},openChild:()=>({call:async(method)=>{if(method==='setup')return {scene:{revision,objects:[],selectionTargets:[]},context:{},validationContext:(await import('../src/cad-ai-context.js')).cadAIContext(),project:{nodes:[]}};if(method==='capture')return 'data:image/png;base64,AQID';return {};},cancel(){},close:async()=>({code:0,signal:null})})});
+ const developmentCalls=[],developmentRecords=[];
+ const uiState=()=>{const result=runner.state();return {...result,records:[...result.records,...developmentRecords]};};
  ipcMain.removeHandler('cad-ai:diagnostics');ipcMain.handle('cad-ai:diagnostics',async(_event,args)=>{
-  const methods={state:()=>runner.state(),read:()=>runner.read(args.id),labPreview:()=>runner.labPreview(args.plan),labRoleCatalog:()=>runner.labRoleCatalog(args),labRoleSave:()=>runner.labRoleSave(args),labReview:()=>runner.labReview(args),labReviewerSettings:()=>runner.labReviewerSettings(args.enabled),start:()=>runner.start(args)};
+  if(args.action==='start'&&args.plan.name.startsWith('Entwicklungscheck · ')){
+   const {plan}=args,effort=plan.efforts[0];
+   developmentCalls.push({effort,ids:plan.caseIds,model:plan.roles.modeler.model,deferReview:args.deferReview,monitor:plan.monitor.mode});
+   for(const [index,caseId] of plan.caseIds.entries()){
+    const passed=effort==='max'||(effort==='high'?index>0:index>2);
+    developmentRecords.push({id:effort+'-'+caseId,spec:{caseId,effort,seriesName:plan.name,workflow:'practice'},status:effort==='low'&&index===2?'needs-input':'completed',cleanExit:true,
+     modelIdentity:{exactMatch:true,requested:plan.roles.modeler.model},events:[{type:'usage',returnedModel:plan.roles.modeler.model},{type:'finished'}],verification:{passed}});
+   }
+   return {ok:true,value:uiState()};
+  }
+  const methods={state:uiState,read:()=>developmentRecords.find(r=>r.id===args.id)??runner.read(args.id),labPreview:()=>runner.labPreview(args.plan),labRoleCatalog:()=>runner.labRoleCatalog(args),labRoleSave:()=>runner.labRoleSave(args),labReview:()=>runner.labReview(args),labReviewerSettings:()=>runner.labReviewerSettings(args.enabled),start:()=>runner.start(args)};
   if(!methods[args.action])throw Error('Unexpected action '+args.action);try{return {ok:true,value:await methods[args.action]()};}catch(e){return {ok:false,error:e.message};}
  });
  const js=s=>win.webContents.executeJavaScript(s),until=async(fn,label)=>{for(let i=0;i<120;i++){if(await fn())return;await pause(100);}throw Error('Timeout: '+label);};
  await js("document.querySelector('#ai-diagnostic-open').click()");await until(()=>js("document.querySelectorAll('[data-lab-role] select').length===9&&!document.querySelector('[data-run]').disabled"),'role controls ready');
+ const hasValidPractice=()=>js("!document.querySelector('[data-run]').disabled && document.querySelector('[data-plan-count]').textContent.includes('isolierte Versuche')");
+ assert.equal(await js("document.querySelector('[data-pane=plan]').dataset.labView"),'simple');
+ assert.equal(await js("document.querySelectorAll('[data-quick-plans] button').length"),4);
+ await js("Array.from(document.querySelectorAll('[data-quick-plans] button')).find(b=>b.textContent.startsWith('Entwicklungscheck')).click()");
+ await until(()=>js("document.querySelector('[data-quick-details]').textContent.includes('15 auf Low')&&!document.querySelector('[data-run]').disabled"),'development check ready');
+ assert.equal(developmentCalls.length,0);
+ assert.equal(await js("document.querySelector('[data-campaign]').hidden"),true);
+ assert.equal(await js("document.querySelector('[data-development-max]').checked"),false);
+ await js("document.querySelector('[data-development-max]').click()");
+ await js("document.querySelector('[data-run]').click()");
+ await until(()=>js("!document.querySelector('[data-pane=results]').hidden&&document.querySelector('[data-development-results]').textContent.includes('Erste bestandene Stufe')"),'development results');
+ assert.deepEqual(developmentCalls.map(call=>[call.effort,call.ids.length]),[['low',15],['high',2],['max',1]]);
+ assert.deepEqual(developmentCalls.slice(1).map(call=>call.ids),[['thread','drill'],['thread']]);
+ assert.ok(developmentCalls.every(call=>call.model==='deepseek-flash'&&call.deferReview&&call.monitor==='off'));
+ assert.equal(runner.state().lab.reviewer.enabled,true);
+ await js("Array.from(document.querySelectorAll('[data-development-results] button')).find(b=>b.textContent==='Low-Gegenprobe vorbereiten').click()");
+ await until(()=>js("document.querySelector('[data-quick-details]').textContent.includes('2 isolierte Versuche')&&!document.querySelector('[data-run]').disabled"),'Low control preview');
+ assert.equal(developmentCalls.length,3);
+
+ developmentRecords.splice(0);
+ await js("document.querySelector('[data-tab=plan]').click()");
+
+ await js("document.querySelector('[data-advanced-view]').click()");
+ await js("Array.from(document.querySelectorAll('[data-presets] button')).find(b=>b.textContent==='Kleiner Pilot').click()");
+ await until(hasValidPractice,'advanced pilot ready');
+ await js("document.querySelector('[data-cases] input[value=practice-01]').click()");
+ await until(()=>js("document.querySelector('[data-plan-count]').textContent.includes('Funktionstests benötigen')"),'incompatible practice task rejected');
+ const campaignState=runner.state();
+ campaignState.lab.campaign={id:'older',phase:'Älterer Automatiklauf',status:'blocked',error:'Alte Rückmeldung',phases:[]};
+ win.webContents.send('cad-ai:diagnostic-event',{type:'state',state:campaignState});
+ await pause(150);
+ assert.match(await js("document.querySelector('[data-status]').textContent"),/Funktionstests benötigen/);
+ assert.equal(await js("document.querySelector('[data-run]').disabled"),true);
+ await js("Array.from(document.querySelectorAll('[data-presets] button')).find(b=>b.textContent==='30 Übungsfunktionen').click()");
+ await until(hasValidPractice,'compatible practice preset ready');
+ assert.doesNotMatch(await js("document.querySelector('[data-status]').textContent"),/Funktionstests benötigen/);
+ await js("Array.from(document.querySelectorAll('[data-presets] button')).find(b=>b.textContent==='Kleiner Pilot').click()");
+ await until(hasValidPractice,'pilot preset restored');
  const choose=async(role,field,value)=>{await js(`(()=>{const e=document.querySelector('[data-lab-role=${role}] [data-role-field=${field}]');e.value=${JSON.stringify(value)};e.dispatchEvent(new Event('change',{bubbles:true}));})()`);await until(()=>js(`!document.querySelector('[data-lab-role=${role}] [data-role-field=model]').disabled`),role+' ready');await pause(200);};
  await choose('modeler','provider',B);await choose('modeler','model','gpt-6.1-sol');await choose('modeler','effort','medium');
  await choose('supervisor','provider',C);await choose('supervisor','effort','low');
  await choose('reviewer','provider',A);await choose('reviewer','model','deepseek-v4-pro');await choose('reviewer','effort','high');
  const selections=runner.state().lab.roles.selections;assert.equal(selections.modeler.model,'gpt-6.1-sol');assert.equal(selections.modeler.effort,'medium');assert.equal(selections.supervisor.providerId,C);assert.equal(selections.reviewer.model,'deepseek-v4-pro');assert.equal(profiles[A].config.model,'deepseek-flash');assert.equal(calls.length,0);
- const p=require(asar+'/backend/ai-test-lab-plan.cjs').preset();Object.assign(p,{caseIds:['drill'],variants:['A'],roles:selections});
- await js(`document.querySelector('[data-plan-json]').value=${JSON.stringify(JSON.stringify(p))};document.querySelector('[data-import-plan]').click()`);await until(()=>js("!document.querySelector('[data-run]').disabled"),'plan ready');
+ const p=require(asar+'/backend/ai-test-lab-plan.cjs').preset();Object.assign(p,{name:'Rollenprüfung',caseIds:['drill'],variants:['A'],roles:selections});
+ await js(`document.querySelector('[data-plan-json]').value=${JSON.stringify(JSON.stringify(p))};document.querySelector('[data-import-plan]').click()`);await until(()=>js("!document.querySelector('[data-run]').disabled && document.querySelector('[data-name]').value==='Rollenprüfung' && document.querySelector('[data-plan-count]').textContent.startsWith('1 isolierte')"),'imported plan ready');
  await js("document.querySelector('[data-run]').click()");await until(()=>runner.state().lab.reviewer.reviews.some(r=>r.status==='completed'),'review complete');await pause(500);
  assert.deepEqual(calls.map(c=>[c.role,c.model,c.key]),[['modeler','gpt-6.1-sol','fixture-api'],['supervisor','gpt-6.1-sol','fixture-account'],['reviewer','deepseek-v4-pro','fixture-modeler']]);
  assert.equal(runner.state().records.length,1);assert.equal(runner.state().records[0].spec.effort,'medium');

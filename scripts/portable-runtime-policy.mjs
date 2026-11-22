@@ -2,6 +2,7 @@ import {zipSync} from 'fflate';
 import fs from 'node:fs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
+import {createRequire} from 'node:module';
 const profile=JSON.parse(fs.readFileSync(new URL('./portable-freecad-profile.json',import.meta.url),'utf8'));
 const nativeExclusions=new Map(profile.nativeExclusions.map(row=>[row.file.toLowerCase(),row]));
 for(const name of ['bin/freecad.exe','bin/freecadcmd.exe','bin/python.exe','bin/freecad.pyd','bin/python3.dll','bin/python311.dll','bin/opengl32sw.dll','lib/part.pyd','lib/sketcher.pyd','lib/mesh.pyd','lib/meshpart.pyd','lib/import.pyd','lib/surface.pyd','formnaro-container.exe'])if(nativeExclusions.has(name))throw Error('Core runtime cannot be excluded: '+name);
@@ -52,7 +53,7 @@ export function copyPortableCAD(from,to){
 }
 export function copyBenchmarkSources(source,stage){
  const required=new Map();
- for(const suite of ['benchmark-core-v1.json','benchmark-advanced-v2.json']){
+ for(const suite of ['benchmark-core-v1.json','benchmark-advanced-v2.json','benchmark-guided-v1.json']){
   for(const entry of JSON.parse(fs.readFileSync(path.join(source,'ai',suite),'utf8')).dependencies){
    if(!entry.path.startsWith('src/'))continue;
    if(!/^src\/[\w-]+\.js$/.test(entry.path)||!/^[a-f0-9]{64}$/.test(entry.sha256))throw Error('Invalid benchmark source pin: '+entry.path);
@@ -65,6 +66,12 @@ export function copyBenchmarkSources(source,stage){
   if(createHash('sha256').update(bytes).digest('hex')!==sha256)throw Error('Benchmark source changed: '+file);
   return {file,bytes};
  });
+ // The Advanced Lab drawing oracle imports plain modules in Electron's main process.
+ // Keep this runtime closure separate from the frozen benchmark source pins.
+ if(fs.existsSync(path.join(source,'backend','ai-benchmark-advanced-evaluate.cjs'))) for(const name of ['cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref']){
+  const file='src/'+name+'.js';
+  if(!required.has(file))checked.push({file,bytes:fs.readFileSync(path.join(source,file))});
+ }
  for(const {file,bytes} of checked){const target=path.join(stage,file);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,bytes);}
  return checked.map(({file})=>file);
 }
@@ -73,6 +80,20 @@ export function copyPortableApp(source,stage){
  for(const n of ['backend','ai','licenses','dist','electron.cjs','preload.cjs','package.json','LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.cpSync(path.join(source,n),path.join(stage,n),{recursive:true,filter:file=>n!=='backend'||!(/verification|fixture|^all-functions|^\./.test(path.basename(file))||file.endsWith('.cs'))});
  for(const n of docs){const input=path.join(source,'docs',n);if(fs.existsSync(input)){fs.mkdirSync(path.join(stage,'docs'),{recursive:true});fs.copyFileSync(input,path.join(stage,'docs',n));}}
  copyBenchmarkSources(source,stage);
+ // Both the Electron main process and the renderer check the same CAD parameter schema.
+ if(fs.existsSync(path.join(stage,'backend','practice-ui-policy.cjs'))){
+  fs.mkdirSync(path.join(stage,'src'),{recursive:true});
+  fs.copyFileSync(path.join(source,'src','parameters.js'),path.join(stage,'src','parameters.js'));
+ }
+ // The lab ZIP export runs in Electron's main process, outside the renderer bundle.
+ const require=createRequire(import.meta.url);
+ const fflate=path.dirname(require.resolve('fflate/package.json'));
+ const packaged=path.join(stage,'node_modules','fflate');
+ for(const file of ['package.json','LICENSE',path.relative(fflate,require.resolve('fflate'))]){
+  const target=path.join(packaged,file);
+  fs.mkdirSync(path.dirname(target),{recursive:true});
+  fs.copyFileSync(path.join(fflate,file),target);
+ }
  // The public bridge client and acceptance/build scripts stay in the source repository.
 }
 export function writeCADSourceAsset(from,directory){

@@ -1,6 +1,6 @@
 // UI localization keeps authored text separately from rendered translations.
 // Project names, user object names and plugin metadata are never rewritten.
-const pairs=`
+const pairs = `
 Mitwachsende Bohrung|Associative hole
 Bohrung bearbeiten|Edit hole
 Die Bohrungen werden aus der erhaltenen Originalquelle berechnet. „Gruppe auflösen“ würde die Bohrungen entfernen. Nutze „Bohrung bearbeiten“ für Maße und Muster.|The holes are calculated from the retained original source. Ungrouping would remove the holes. Use “Edit hole” to change dimensions and patterns.
@@ -297,6 +297,8 @@ Speichern unter …|Save as …
 Projekt öffnen …|Open project …
 Projektordner öffnen|Open project folder
 Zuletzt verwendet|Recently used
+Zuletzt verwendete Modelle|Recently used models
+Autosicherung wiederherstellen|Restore autosave
 Im Projektordner|In the project folder
 Das Projekt enthält alle Teile, Quellen, Layer, Notizen und die aktuelle Ansicht.|The project includes all parts, sources, layers, notes and the current view.
 Noch keine Projekte gespeichert oder geöffnet.|No projects saved or opened yet.
@@ -588,6 +590,7 @@ Metrische Vorlage wählen …|Choose metric preset …
 Metrische Gewindevorlage|Metric thread preset
 Scharf|Sharp
 Abrundung|Fillet
+Verrundung|Fillet
 Fase 45°|45° chamfer
 Kantenform|Edge shape
 Radius / Fasenmaß|Radius / chamfer size
@@ -1065,40 +1068,206 @@ Der native Flächenpunkt ist verloren oder mehrdeutig. Eindeutige Flächenstelle
 Die Markierung ist nicht mehr vorhanden.|The annotation no longer exists.
 Eine sichtbare native CAD-Fläche wählen.|Choose a visible native CAD face.
 Ein fertiges CAD-Teil oder keine Auswahl für alle Markierungen wählen.|Select one completed CAD part, or clear the selection for all annotations.
-`.trim().split('\n').map(line=>line.split('|'));
+`
+  .trim()
+  .split('\n')
+  .map((line) => line.split('|'));
 pairs.push(
-  ['Bedienmodus','Workspace mode'],['Normal','Normal'],['Bearbeiten','Edit'],
-  ['Anordnen','Arrange'],['CAD-Werkzeuge','CAD tools'],['Netz-Werkzeuge','Mesh tools'],
-  ['Umwandeln','Convert'],['Extras','Extras'],['Weitere','More'],['Weitere Werkzeuge','More tools'],
-  ['Unbekannter Bedienmodus.','Unknown workspace mode.'],
-  ['Ziehe eine Form von rechts auf die Arbeitsfläche oder klicke auf einen Grundkörper.','Drag a shape from the right onto the workplane or click a basic shape.']
+  ['Bedienmodus', 'Workspace mode'],
+  ['Normal', 'Normal'],
+  ['Bearbeiten', 'Edit'],
+  ['Anordnen', 'Arrange'],
+  ['CAD-Werkzeuge', 'CAD tools'],
+  ['Netz-Werkzeuge', 'Mesh tools'],
+  ['Umwandeln', 'Convert'],
+  ['Extras', 'Extras'],
+  ['Weitere', 'More'],
+  ['Weitere Werkzeuge', 'More tools'],
+  ['Unbekannter Bedienmodus.', 'Unknown workspace mode.'],
+  [
+    'Ziehe eine Form von rechts auf die Arbeitsfläche oder klicke auf einen Grundkörper.',
+    'Drag a shape from the right onto the workplane or click a basic shape.',
+  ],
 );
-pairs.push(['Alle Werkzeuge und Bereiche anpassen','Customize all tools and sections'],['Werkzeug','Tool'],['Bereich','Area'],['Dateileiste oben','Top file bar'],['Werkzeugleiste','Toolbar'],['← Früher','← Earlier'],['Später →','Later →'],['Werkzeug anzeigen','Show tool'],['Formen oben','Shapes first'],['Objekte oben','Objects first'],['Form bearbeiten oben','Object properties first'],['Arbeitsfläche oben','Workplane first']);
-pairs.push(['Arbeitsbereich','Workspace'],['Netz','Mesh'],['Nur CAD-Teile bearbeiten und neue CAD-Formen erstellen.','Edit only CAD parts and create new CAD shapes.'],['Nur Netzteile bearbeiten und neue Netzformen erstellen.','Edit only mesh parts and create new mesh shapes.'],['Diese Datei im CAD-Bereich importieren.','Import this file in the CAD workspace.'],['Diese Datei im Netz-Bereich importieren.','Import this file in the mesh workspace.'],['Sichtbare Netzteile','Visible mesh parts'],['Sichtbare CAD-Teile','Visible CAD parts'],['Exportiert nur die sichtbaren Netzteile dieses Arbeitsbereichs.','Exports only the visible mesh parts in this workspace.'],['Exportiert nur die sichtbaren CAD-Teile dieses Arbeitsbereichs.','Exports only the visible CAD parts in this workspace.'],['Zum Einfügen in den passenden CAD- oder Netz-Bereich wechseln.','Switch to the matching CAD or mesh workspace to paste.']);
-const EN=Object.fromEntries(pairs);
-export function translateText(text,language){
-  if(language!=='en')return text;const trimmed=text.trim();let result=EN[trimmed];
-  if(result===undefined){
-    const rules=[[/^Unbekanntes Maß: (.*)$/,(_,v)=>'Unknown dimension: '+v],[/^Zyklische Maßbeziehung: (.*)$/,(_,v)=>'Cyclic dimension relationship: '+v],[/^(width|depth|diameter|height): Maß muss zwischen 0,01 und 10000 mm liegen\.$/,(_,v)=>v+': dimension must be between 0.01 and 10000 mm.'],[/^CAD-Autosicherung konnte nicht geladen werden; automatische Sicherung bleibt gesperrt: (.*)$/s,(_,v)=>'CAD recovery could not be loaded; automatic saving remains disabled: '+translateText(v,language)],[/^Gewählt: (.*?)\. Versätze einstellen und Vorschau berechnen\.$/,(_,v)=>'Selected: '+translateText(v,language)+'. Set offsets and compute a preview.'],[/^Layoutdatei konnte nicht gelesen werden: (.*)$/s,(_,v)=>'Layout file could not be read: '+v],[/^(CAD-Kanten|Kantenvorschau)( · .*| …)$/,(_,v,suffix)=>EN[v]+suffix],[/^(\d+) von (\d+) Kanten ausgewählt$/,(_,n,total)=>n+' of '+total+' edges selected'],[/^Vorher: (.*) · Nachher: (.*)$/,(_,before,after)=>'Before: '+before+' · After: '+after],[/^((?:\d+\. (?:Radius|Fase) [\d,.]+ mm)(?: · \d+\. (?:Radius|Fase) [\d,.]+ mm)*)$/,(_,v)=>v.replaceAll('Fase','Chamfer')],[/^Aktiv: (.*)$/s,(_,v)=>'Active: '+v],[/^Arbeitsfläche (.*)$/s,(_,v)=>'Workspace '+v],[/^Auswahl: (.*) · Unterkante Z (.*)$/s,(_,v,z)=>'Selection: '+v+' · Bottom Z '+z],[/^(?:Feste Referenz|Referenz): (.*)$/s,(_,v)=>'Reference: '+v],[/^Ursprung (.*)$/s,(_,v)=>'Origin '+v],[/^Gruppe aus (\d+) Formen(.*)$/s,(_,v,x)=>'Group of '+v+' shapes'+translateText(x,language)],[/^(\d+) Formen ausgewählt$/,(_,v)=>v+' shapes selected'],[/^([UVNXYZ]): (Minimum|Mitte|Maximum) ausrichten$/,(_,a,v)=>a+': align '+(v==='Mitte'?'centre':v.toLowerCase())],[/^([UVNXYZ]) · Abstand$/,(_,v)=>v+' · Distance'],[/^Linealabstand ([UVNXYZ])$/,(_,v)=>'Ruler distance '+v],[/^Linealursprung ([UVNXYZ])$/,(_,v)=>'Ruler origin '+v],[/^(Breite|Tiefe|Höhe) direkt am Modell$/,(_,v)=>EN[v]+' on model'],[/^(Größe|Position|Drehung) ([XYZ])$/,(_,v,a)=>EN[v]+' '+a],[/^(.*) hinzufügen$/,(_,v)=>'Add '+translateText(v,language)],[/^(Körper|Loch) in der Modellhistorie bearbeiten$/,(_,v)=>'Edit '+EN[v].toLowerCase()+' in model history'],[/^(.*?) (\((?:mm|°)\))$/,(_,v,u)=>translateText(v,language)+' '+u]];
-    for(const [regex,replace]of rules){if(regex.test(trimmed)){result=trimmed.replace(regex,replace);break;}}
-    if(result===undefined&&trimmed.startsWith('Teilkreis Ø '))result=trimmed.replace('Teilkreis Ø ','Pitch Ø ').replace('Kopfkreis Ø ','Tip Ø ').replace('Fußkreis Ø ','Root Ø ').replace('Evolventenflanken; Fußübergang vereinfacht, ohne Wälzfräs-Unterschnitt. Modul gilt bei Originalgröße.','Involute flanks; simplified root transition, no generated undercut. Module applies at original size.');
-    if(result===undefined&&trimmed.startsWith('Leitweg '))result=trimmed.replace('Leitweg ','Lead ').replace('mm/Umdrehung','mm/revolution').replace('Profiltiefe','Profile depth').replace('Passungsspiel wirkt radial: außen kleiner, innen größer. Annäherung mit flacher Profilwurzel; keine ISO-Toleranzklasse. Gewindemaße gelten bei Originalgröße.','Clearance is radial: external smaller, internal larger. Approximation with flat roots; no ISO tolerance class. Thread dimensions apply at original size.');
-    if(result===undefined&&trimmed.startsWith('Als Lochform mit dem Zielkörper gruppieren. Senktiefe '))result=trimmed.replace('Als Lochform mit dem Zielkörper gruppieren. Senktiefe ','Group as a hole with the target solid. Countersink depth ').replace('; Senkung an der Oberseite.','; countersink on top.');
-    if(result!==undefined)result=result.replace(' Aktuell skaliert: „Originalgröße“ stellt die berechneten Maße wieder her.',' Currently scaled: “Original size” restores the calculated dimensions.');
-    if(result===undefined&&/^[-\d,.]+ bis [-\d,.]+(?: mm|°)?$/.test(trimmed))result=trimmed.replace(' bis ',' to ');
-    if(result===undefined&&trimmed.startsWith(' · '))result=' · '+translateText(trimmed.slice(3),language);
-    if(result===undefined&&trimmed.startsWith('Strg+'))result=trimmed.replaceAll('Strg','Ctrl').replaceAll('Umschalt','Shift');
+pairs.push(
+  ['Alle Werkzeuge und Bereiche anpassen', 'Customize all tools and sections'],
+  ['Werkzeug', 'Tool'],
+  ['Bereich', 'Area'],
+  ['Dateileiste oben', 'Top file bar'],
+  ['Werkzeugleiste', 'Toolbar'],
+  ['← Früher', '← Earlier'],
+  ['Später →', 'Later →'],
+  ['Werkzeug anzeigen', 'Show tool'],
+  ['Formen oben', 'Shapes first'],
+  ['Objekte oben', 'Objects first'],
+  ['Form bearbeiten oben', 'Object properties first'],
+  ['Arbeitsfläche oben', 'Workplane first'],
+);
+pairs.push(
+  ['Arbeitsbereich', 'Workspace'],
+  ['Netz', 'Mesh'],
+  ['Nur CAD-Teile bearbeiten und neue CAD-Formen erstellen.', 'Edit only CAD parts and create new CAD shapes.'],
+  ['Nur Netzteile bearbeiten und neue Netzformen erstellen.', 'Edit only mesh parts and create new mesh shapes.'],
+  ['Diese Datei im CAD-Bereich importieren.', 'Import this file in the CAD workspace.'],
+  ['Diese Datei im Netz-Bereich importieren.', 'Import this file in the mesh workspace.'],
+  ['Sichtbare Netzteile', 'Visible mesh parts'],
+  ['Sichtbare CAD-Teile', 'Visible CAD parts'],
+  [
+    'Exportiert nur die sichtbaren Netzteile dieses Arbeitsbereichs.',
+    'Exports only the visible mesh parts in this workspace.',
+  ],
+  [
+    'Exportiert nur die sichtbaren CAD-Teile dieses Arbeitsbereichs.',
+    'Exports only the visible CAD parts in this workspace.',
+  ],
+  [
+    'Zum Einfügen in den passenden CAD- oder Netz-Bereich wechseln.',
+    'Switch to the matching CAD or mesh workspace to paste.',
+  ],
+);
+const EN = Object.fromEntries(pairs);
+export function translateText(text, language) {
+  if (language !== 'en') return text;
+  const trimmed = text.trim();
+  let result = EN[trimmed];
+  if (result === undefined) {
+    const rules = [
+      [/^Unbekanntes Maß: (.*)$/, (_, v) => 'Unknown dimension: ' + v],
+      [/^Zyklische Maßbeziehung: (.*)$/, (_, v) => 'Cyclic dimension relationship: ' + v],
+      [
+        /^(width|depth|diameter|height): Maß muss zwischen 0,01 und 10000 mm liegen\.$/,
+        (_, v) => v + ': dimension must be between 0.01 and 10000 mm.',
+      ],
+      [
+        /^CAD-Autosicherung konnte nicht geladen werden; automatische Sicherung bleibt gesperrt: (.*)$/s,
+        (_, v) => 'CAD recovery could not be loaded; automatic saving remains disabled: ' + translateText(v, language),
+      ],
+      [
+        /^Gewählt: (.*?)\. Versätze einstellen und Vorschau berechnen\.$/,
+        (_, v) => 'Selected: ' + translateText(v, language) + '. Set offsets and compute a preview.',
+      ],
+      [/^Layoutdatei konnte nicht gelesen werden: (.*)$/s, (_, v) => 'Layout file could not be read: ' + v],
+      [/^(CAD-Kanten|Kantenvorschau)( · .*| …)$/, (_, v, suffix) => EN[v] + suffix],
+      [/^(\d+) von (\d+) Kanten ausgewählt$/, (_, n, total) => n + ' of ' + total + ' edges selected'],
+      [/^Vorher: (.*) · Nachher: (.*)$/, (_, before, after) => 'Before: ' + before + ' · After: ' + after],
+      [
+        /^((?:\d+\. (?:Radius|Fase) [\d,.]+ mm)(?: · \d+\. (?:Radius|Fase) [\d,.]+ mm)*)$/,
+        (_, v) => v.replaceAll('Fase', 'Chamfer'),
+      ],
+      [/^Aktiv: (.*)$/s, (_, v) => 'Active: ' + v],
+      [/^Arbeitsfläche (.*)$/s, (_, v) => 'Workspace ' + v],
+      [/^Auswahl: (.*) · Unterkante Z (.*)$/s, (_, v, z) => 'Selection: ' + v + ' · Bottom Z ' + z],
+      [/^(?:Feste Referenz|Referenz): (.*)$/s, (_, v) => 'Reference: ' + v],
+      [/^Ursprung (.*)$/s, (_, v) => 'Origin ' + v],
+      [/^Gruppe aus (\d+) Formen(.*)$/s, (_, v, x) => 'Group of ' + v + ' shapes' + translateText(x, language)],
+      [/^(\d+) Formen ausgewählt$/, (_, v) => v + ' shapes selected'],
+      [
+        /^([UVNXYZ]): (Minimum|Mitte|Maximum) ausrichten$/,
+        (_, a, v) => a + ': align ' + (v === 'Mitte' ? 'centre' : v.toLowerCase()),
+      ],
+      [/^([UVNXYZ]) · Abstand$/, (_, v) => v + ' · Distance'],
+      [/^Linealabstand ([UVNXYZ])$/, (_, v) => 'Ruler distance ' + v],
+      [/^Linealursprung ([UVNXYZ])$/, (_, v) => 'Ruler origin ' + v],
+      [/^(Breite|Tiefe|Höhe) direkt am Modell$/, (_, v) => EN[v] + ' on model'],
+      [/^(Größe|Position|Drehung) ([XYZ])$/, (_, v, a) => EN[v] + ' ' + a],
+      [/^(.*) hinzufügen$/, (_, v) => 'Add ' + translateText(v, language)],
+      [
+        /^(Körper|Loch) in der Modellhistorie bearbeiten$/,
+        (_, v) => 'Edit ' + EN[v].toLowerCase() + ' in model history',
+      ],
+      [/^(.*?) (\((?:mm|°)\))$/, (_, v, u) => translateText(v, language) + ' ' + u],
+    ];
+    for (const [regex, replace] of rules) {
+      if (regex.test(trimmed)) {
+        result = trimmed.replace(regex, replace);
+        break;
+      }
+    }
+    if (result === undefined && trimmed.startsWith('Teilkreis Ø '))
+      result = trimmed
+        .replace('Teilkreis Ø ', 'Pitch Ø ')
+        .replace('Kopfkreis Ø ', 'Tip Ø ')
+        .replace('Fußkreis Ø ', 'Root Ø ')
+        .replace(
+          'Evolventenflanken; Fußübergang vereinfacht, ohne Wälzfräs-Unterschnitt. Modul gilt bei Originalgröße.',
+          'Involute flanks; simplified root transition, no generated undercut. Module applies at original size.',
+        );
+    if (result === undefined && trimmed.startsWith('Leitweg '))
+      result = trimmed
+        .replace('Leitweg ', 'Lead ')
+        .replace('mm/Umdrehung', 'mm/revolution')
+        .replace('Profiltiefe', 'Profile depth')
+        .replace(
+          'Passungsspiel wirkt radial: außen kleiner, innen größer. Annäherung mit flacher Profilwurzel; keine ISO-Toleranzklasse. Gewindemaße gelten bei Originalgröße.',
+          'Clearance is radial: external smaller, internal larger. Approximation with flat roots; no ISO tolerance class. Thread dimensions apply at original size.',
+        );
+    if (result === undefined && trimmed.startsWith('Als Lochform mit dem Zielkörper gruppieren. Senktiefe '))
+      result = trimmed
+        .replace(
+          'Als Lochform mit dem Zielkörper gruppieren. Senktiefe ',
+          'Group as a hole with the target solid. Countersink depth ',
+        )
+        .replace('; Senkung an der Oberseite.', '; countersink on top.');
+    if (result !== undefined)
+      result = result.replace(
+        ' Aktuell skaliert: „Originalgröße“ stellt die berechneten Maße wieder her.',
+        ' Currently scaled: “Original size” restores the calculated dimensions.',
+      );
+    if (result === undefined && /^[-\d,.]+ bis [-\d,.]+(?: mm|°)?$/.test(trimmed))
+      result = trimmed.replace(' bis ', ' to ');
+    if (result === undefined && trimmed.startsWith(' · ')) result = ' · ' + translateText(trimmed.slice(3), language);
+    if (result === undefined && trimmed.startsWith('Strg+'))
+      result = trimmed.replaceAll('Strg', 'Ctrl').replaceAll('Umschalt', 'Shift');
   }
-  return result===undefined?text:text.replace(trimmed,result);
+  return result === undefined ? text : text.replace(trimmed, result);
 }
-export function createLocalization(getLanguage){
-  const texts=new WeakMap(),attributes=new WeakMap();let scheduled=false;
-  function excluded(element){return element?.closest('[data-no-translate],.object-label,#history-path,script,style,svg');}
-  function refresh(){scheduled=false;const language=getLanguage();document.documentElement.lang=language;
-    const walker=document.createTreeWalker(document,NodeFilter.SHOW_TEXT);let node;
-    while(node=walker.nextNode()){if(excluded(node.parentElement)||!node.nodeValue.trim())continue;const old=texts.get(node),source=old&&node.nodeValue===old.last?old.source:node.nodeValue,last=translateText(source,language);texts.set(node,{source,last});if(node.nodeValue!==last)node.nodeValue=last;}
-    for(const element of document.querySelectorAll('[title],[aria-label],[placeholder]')){if(excluded(element))continue;const state=attributes.get(element)||{};for(const name of ['title','aria-label','placeholder']){if(!element.hasAttribute(name))continue;const value=element.getAttribute(name),old=state[name],source=old&&value===old.last?old.source:value,last=translateText(source,language);state[name]={source,last};if(value!==last)element.setAttribute(name,last);}attributes.set(element,state);}
+export function createLocalization(getLanguage) {
+  const texts = new WeakMap(),
+    attributes = new WeakMap();
+  let scheduled = false;
+  function excluded(element) {
+    return element?.closest('[data-no-translate],.object-label,#history-path,script,style,svg');
   }
-  new MutationObserver(()=>{if(!scheduled){scheduled=true;requestAnimationFrame(refresh);}}).observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','aria-label','placeholder']});
-  return {refresh,t:text=>translateText(text,getLanguage())};
+  function refresh() {
+    scheduled = false;
+    const language = getLanguage();
+    document.documentElement.lang = language;
+    const walker = document.createTreeWalker(document, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (excluded(node.parentElement) || !node.nodeValue.trim()) continue;
+      const old = texts.get(node),
+        source = old && node.nodeValue === old.last ? old.source : node.nodeValue,
+        last = translateText(source, language);
+      texts.set(node, { source, last });
+      if (node.nodeValue !== last) node.nodeValue = last;
+    }
+    for (const element of document.querySelectorAll('[title],[aria-label],[placeholder]')) {
+      if (excluded(element)) continue;
+      const state = attributes.get(element) || {};
+      for (const name of ['title', 'aria-label', 'placeholder']) {
+        if (!element.hasAttribute(name)) continue;
+        const value = element.getAttribute(name),
+          old = state[name],
+          source = old && value === old.last ? old.source : value,
+          last = translateText(source, language);
+        state[name] = { source, last };
+        if (value !== last) element.setAttribute(name, last);
+      }
+      attributes.set(element, state);
+    }
+  }
+  new MutationObserver(() => {
+    if (!scheduled) {
+      scheduled = true;
+      requestAnimationFrame(refresh);
+    }
+  }).observe(document.documentElement, {
+    subtree: true,
+    childList: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ['title', 'aria-label', 'placeholder'],
+  });
+  return { refresh, t: (text) => translateText(text, getLanguage()) };
 }

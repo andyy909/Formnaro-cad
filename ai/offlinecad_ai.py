@@ -57,14 +57,14 @@ class Client:
                 or url.username or url.password or url.path or url.query or url.fragment
                 or not isinstance(token, str) or len(token) != 64):
             raise ValueError('Invalid Formnaro connection file.')
-        if method not in ('context', 'scene', 'project', 'screenshot', 'preview', 'analysis', 'discard', 'apply', 'export', 'assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info'):
+        if method not in ('context', 'scene', 'project', 'screenshot', 'preview', 'analysis', 'discard', 'apply', 'export', 'assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info', 'orca'):
             raise ValueError('Unknown CAD operation.')
         body = json.dumps(args, ensure_ascii=False).encode('utf-8') if args is not None else None
         req = urllib.request.Request(descriptor['url'] + '/v1/' + {'preview_start': 'preview/start', 'preview_result': 'preview/result'}.get(method, method), data=body,
                                      headers={'Authorization': 'Bearer ' + token,
                                               'Content-Type': 'application/json'})
         try:
-            with self.opener.open(req, timeout=650 if method in ('preview', 'analysis', 'export', 'save') else 60) as response:
+            with self.opener.open(req, timeout=650 if method in ('preview', 'analysis', 'export', 'save', 'orca') else 60) as response:
                 raw = response.read(MAX_BYTES + 1)
         except urllib.error.HTTPError as e:
             try:
@@ -165,6 +165,8 @@ def tool_definitions(client):
         if context.get('toolReference'):
             tools.append({'name': 'offlinecad_tool_info', 'description': 'Read registered tool purposes, prerequisites, actual UI fields/options and documented steps. No actions are executed.', 'inputSchema': {**object_schema({'tool': {'type': 'string', 'maxLength': 300}, 'query': {'type': 'string', 'maxLength': 300}}), 'oneOf': [{'required': ['tool']}, {'required': ['query']}]}, 'annotations': {'readOnlyHint': True, 'openWorldHint': False}})
         tools.append({'name': 'offlinecad_ui', 'description': 'Read Formnaro layout/UI state and local help; show bounded registered menus/views or run isolated practice. No OS input, URLs, file paths or arbitrary selectors. Guide/practice waits locally for actual completion.', 'inputSchema': {'type': 'object', **context['agentUI']['requestSchema']}, 'annotations': {'readOnlyHint': False, 'destructiveHint': False, 'openWorldHint': False}})
+    if context.get('orcaSlicerSchema'):
+        tools.append({'name': 'offlinecad_orca', 'description': 'Use status for Formnaro’s selected OrcaSlicer profiles. Use slice with the confirmed CAD revision to prepare a local print and report estimated time, filament and layers. Open the result in Formnaro > 3D-Druck. No printer connection.', 'inputSchema': context['orcaSlicerSchema'], 'annotations': {'readOnlyHint': False, 'openWorldHint': False}})
     if context.get('assemblyDisplaySchema'):
         tools.append({'name': 'offlinecad_assembly', 'description': 'Read or change only the workspace assembly display load set. only/load/all need the current model revision; only/load need root ids. No model edit or Undo. Visibility and exports stay independent. All geometry remains resident in this stage.', 'inputSchema': context['assemblyDisplaySchema'], 'annotations': {'readOnlyHint': False, 'destructiveHint': False, 'openWorldHint': False}})
     if context.get('programTools', {}).get('python'):
@@ -244,7 +246,7 @@ def mcp(client):
             elif method == 'tools/call':
                 try:
                     name = params.get('name', '')
-                    if name not in ['offlinecad_' + n for n in ('context', 'scene', 'project', 'screenshot', 'preview', 'analyze', 'discard', 'apply', 'export', 'assembly', 'python', 'ui', 'tool_info', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info')]:
+                    if name not in ['offlinecad_' + n for n in ('context', 'scene', 'project', 'screenshot', 'preview', 'analyze', 'discard', 'apply', 'export', 'assembly', 'python', 'ui', 'tool_info', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info', 'orca')]:
                         raise ValueError('Unknown CAD tool.')
                     op = name.removeprefix('offlinecad_')
                     arguments = params.get('arguments', {})
@@ -280,7 +282,7 @@ def mcp(client):
                             raise ValueError('Python preview needs revision and code.')
                         value = client.request('preview', {'revision': arguments['revision'], 'label': arguments.get('label', 'Python-Modellierung'), 'commands': [{'op': 'python', 'code': arguments['code']}]})
                     else:
-                        value = client.request(op, apply_arguments(arguments) if op == 'apply' else arguments if op in ('preview', 'discard', 'export', 'assembly', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info') else None)
+                        value = client.request(op, apply_arguments(arguments) if op == 'apply' else arguments if op in ('preview', 'discard', 'export', 'assembly', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info', 'orca') else None)
                     content = [{'type': 'image', 'data': value['dataBase64'], 'mimeType': 'image/png'}] if op == 'screenshot' else [{'type': 'text', 'text': json.dumps(value, ensure_ascii=False)}]
                     if op == 'screenshot' and value.get('previewId'):
                         content.append({'type': 'text', 'text': json.dumps({k: v for k, v in value.items() if k != 'dataBase64'}, ensure_ascii=False)})
@@ -313,7 +315,7 @@ def main():
     parser.add_argument('--connection', default=str(default), help='Connection file path shown in Formnaro AI settings')
     parser.add_argument('--profile', choices=['full', 'compact'], default='full', help='Legacy full or new compact discovery profile; validation stays identical')
     parser.add_argument('--mcp', action='store_true', help='Run an MCP stdio server')
-    parser.add_argument('command', nargs='?', choices=['context', 'scene', 'project', 'screenshot', 'preview', 'analysis', 'discard', 'apply', 'export', 'assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info'])
+    parser.add_argument('command', nargs='?', choices=['context', 'scene', 'project', 'screenshot', 'preview', 'analysis', 'discard', 'apply', 'export', 'assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info', 'orca'])
     parser.add_argument('input', nargs='?', help='JSON request file for preview/apply, or stl/obj for export')
     parser.add_argument('--out', help='Save JSON or decoded screenshot/export bytes to this file')
     args = parser.parse_args()
@@ -324,10 +326,10 @@ def main():
             return
         if not args.command:
             parser.error('Specify a command or --mcp.')
-        if args.command in ('preview', 'analysis', 'discard', 'apply', 'assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result'):
-            if not args.input and args.command not in ('assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info'):
+        if args.command in ('preview', 'analysis', 'discard', 'apply', 'assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'orca'):
+            if not args.input and args.command not in ('assembly', 'ui', 'save', 'status', 'cancel', 'preview_start', 'preview_result', 'command_info', 'orca'):
                 parser.error('preview/analysis/discard/apply requires a JSON file.')
-            request = json.loads(Path(args.input).read_text(encoding='utf-8-sig')) if args.input else ({} if args.command == 'status' else {'action': 'state'})
+            request = json.loads(Path(args.input).read_text(encoding='utf-8-sig')) if args.input else ({} if args.command == 'status' else {'action': 'status' if args.command == 'orca' else 'state'})
             if args.command == 'apply':
                 request = apply_arguments(request)
         elif args.command in ('context', 'scene', 'command_info', 'screenshot'):

@@ -31,7 +31,10 @@ die Oberfläche. Anschließend wird der Startfehler samt System-Theme im echten
 Electron-Fenster mit isolierten Daten geprüft. Der Paketbefehl führt diese
 Prüfungen erneut gegen eingefrorene Quellen und die vorhandenen 23 fachlichen
 EXE-Suiten sowie die neue Startprüfung gegen die tatsächliche neue EXE aus.
-Ein Paketlauf ist erst bei erfolgreicher Abnahme abgeschlossen.
+Ein Paketlauf ist erst bei erfolgreicher technischer Abnahme abgeschlossen.
+Der anschließende Start des entpackten Pakets mit frischem Windows-Profil
+und die Sichtprüfung werden separat belegt. Den veröffentlichten Prüfstand
+verzeichnet [AKTUELLER-STAND.md](AKTUELLER-STAND.md).
 
 Für den begrenzten letzten Nachlauf der Wartung 0.113.1 wurde eine geprüfte
 Basis wiederverwendet: scripts/release-test-scope.mjs vergleicht die eingefrorenen
@@ -40,27 +43,35 @@ protokolliert 687 Basistests sowie 82 neue gezielte Tests getrennt. Unbekannte
 Abweichungen blockieren diese Wiederverwendung. Alle 24 EXE-Läufe wurden am
 endgültigen Paket neu ausgeführt. Das ist keine allgemeine Skip-Option.
 
-Die umfassendere, dynamisch ermittelte Auswahl aller Node-Testdateien ist separat:
+Die Quell-CI gleicht die Testdateien mit dem Manifest ab und führt die
+zugeordneten Node-Tests aus:
 
 ```
-node scripts/test-all-functions.mjs --mode source --suite unit --output work/all-tests
+npm run test:all -- --verify-coverage
+npm run test:all
 ```
+
+Der separate [Funktionskatalog](../scripts/test-all-functions.mjs) bietet
+gezielte Läufe nach Funktion und für bereits gebaute Windows-Pakete.
 
 ## Laufzeiten und Werkzeuge
 
-Benötigt werden Windows x64, Node entsprechend package.json, der versionierte
-WASM-Kern unter cad-kernel-build/runtime und die folgenden lokalen Laufzeiten:
+Benötigt werden Windows x64, die Node-Version aus [`.node-version`](../.node-version),
+der versionierte WASM-Kern unter `cad-kernel-build/runtime` und die folgenden
+lokalen Laufzeiten:
 
-- converter/runtime-v010-security: nativer STL-Konverter einschließlich Lizenzen.
-  Der Build ist in converter/README.md beschrieben; Abhängigkeiten sind in
-  converter/uv.lock festgeschrieben. Dieser Ordner ist ein Buildartefakt und wird
-  bewusst nicht durch Git bereitgestellt.
+- Nativer STL-Konverter einschließlich Lizenzen. Der Paketbau verwendet den
+  in [converter/provenance.json](../converter/provenance.json) angegebenen
+  Laufzeitordner und prüft den Hash der Konverter-EXE. Der Build ist in
+  [converter/README.md](../converter/README.md) beschrieben. Seine Abhängigkeiten
+  sind in `converter/uv.lock` festgeschrieben. Der Laufzeitordner ist ein lokales
+  Buildartefakt.
 - Die integrierte CAD-Laufzeit mit `npm run setup:cad-runtime` vorbereiten.
   Dies lädt beim Bau das fest gepinnte offizielle FreeCAD-1.1.4-Paket und
   dessen Quellarchiv. Native Tests verwenden diese Laufzeit. Allgemeine
-  Paketläufe liefern sie ebenfalls mit; keine externe Installation als
-  unbemerkter Ersatz. Die saubere Windows-Abnahme von Paket 6a bleibt bis
-  zum protokollierten Abschluss offen. Details: INTEGRIERTE-CAD-LAUFZEIT.md.
+  Paketläufe liefern sie ebenfalls mit. Die gezielte Windows-Abnahme von
+  Paket 6a ist in [INTEGRIERTE-CAD-LAUFZEIT.md](INTEGRIERTE-CAD-LAUFZEIT.md)
+  dokumentiert.
 - Eine lokale deutsche Windows-Systemstimme für die synthetische Sprachprüfung.
   Die Testaufnahme wird pro Lauf erzeugt; keine Datei aus einem alten work-Ordner
   und keine Mikrofonaufnahme des Nutzers sind erforderlich.
@@ -80,100 +91,9 @@ Die oben beschriebene Laufzeitvorbereitung bleibt erforderlich; ein bytegleiches
 Nachbauen des veröffentlichten ZIPs wird dadurch nicht zugesichert.
 
 
-## Gezielte Paket-8-Ausgabe 0.115.0
+## Frühere Paketstände
 
-`npm run test:curved-remesh` prüft die neuen Netzwerkzeuge und ihre direkten
-Controller-/Quellen-/Schutzgrenzen. `npm run package:curved-remesh -- r1` friert
-eigene Quellen ein, prüft zusätzlich die betroffenen Speicher-/Katalogwege,
-baut eine separate Windows-Ausgabe und führt die drei gezielten Netz-/Pinsel-
-Desktopläufe aus. Die CAD-/Sprach-/Konverterlaufzeiten stammen aus der lokal
-vorhandenen abgenommenen 0.114.0-r7-Ausgabe; die CAD-Kopie wird vollständig
-SHA-geprüft. Die erste Paketierung erfordert genau diese Basisausgabe.
-Danach müssen Paketbilder und physische Exporte unabhängig geprüft und die
-Freigabe dokumentiert werden. Dies ersetzt nicht die allgemeine Abschlussabnahme.
-
-
-## Gezielte Paket-9-Ausgabe 0.116.0
-
-`npm run package:mesh-surgery -- r2` friert Quellen ein, führt die 112 gezielten
-Tests und vier echten Windows-Läufe aus. Vorausgesetzt ist die unveränderte
-abgenommene 0.115.0-r1-Ausgabe unter output/Gekruemmte-Netze-v0.115.0-r1;
-deren integrierte CAD-/Sprach-/Konverterlaufzeiten werden weiterverwendet.
-CAD-Laufzeit wird vollständig SHA-geprüft. Sichtprüfung, unabhängige
-Exportprüfung und dokumentierte Freigabe schließen die Abnahme ab.
-Die allgemeine gemeinsame Prüfung erfolgt nach Paket 10.
-
-
-## Gemeinsame Ausbauprüfung 0.117.0
-
-`node scripts/package-final-expansion.mjs rN` friert alle verfolgten Quellen und vorbereiteten lokalen Laufzeiteingaben ein, prüft sämtliche aktuellen Node-Testdateien frisch und baut eine Windows-EXE. Danach folgen der allgemeine Windows-Katalog und gezielte Erweiterungspfade. Grundlage ist die unveränderte akzeptierte 0.116.0-r2-Laufzeit. Visuelle Prüfung, unabhängige physische Exportleser, Archiv-Rücklesung und dokumentierte Freigabe ergänzen den automatischen Lauf. Persönliche Profile und Modelle gehören nicht zur Paketbasis.
-
-Für die finale Generation wurde der vollständige R5-Unit-Lauf bei SHA-belegter Gleichheit aller Funktionsdateien, Testdateien, Build-Ausgaben und Laufzeiteingaben referenziert. Die einzigen Änderungen sind drei ausdrücklich eingebettete Windows-Verifier-Korrekturen: Vorschau-Bereitschaft, aktuelle Netz-Importoption und nummerierte STL-Datei einschließlich bytegenauer Belegkopie. Alle Original-Receipts, TAP-Zahlen und Log-Prüfsummen wurden kontrolliert; keine fehlgeschlagenen oder fremden Unit-Ergebnisse übernommen. Alle Windows-Suiten laufen an der neuen finalen Paketidentität frisch. Ihre gewöhnliche lokale CAD-Laufzeitkopie wird vollständig geprüft; der Regressionstest kopiert daraus erneut in einen frischen physischen Ordner und verlinkt diesen für einen echten AppContainer-Auftrag. Beide Konverteraliase verwenden dieselbe akzeptierte Laufzeit. Das Python-SDK und der Verbindungsadapter liegen zusätzlich physisch neben der EXE, weil externes CPython nicht aus Electron-ASAR importieren kann.
-
-
-Die gemeinsame R7-Abnahme enthält zusätzlich fünf Spezialläufe mit vier extern korrigierten Prüfmodulen. Veraltete Zugriffe auf verborgene Headerknöpfe werden durch echte Mausklicks auf Solid-/Fusion-Extras-Menüeinträge ersetzt; die Laufzeitprüfung vergleicht kanonische physische Pfade über Windows-Verzeichnislinks hinweg. Die Prüfer werden vor dem isolierten Teststart einzeln und SHA-gebunden geladen; alle fachlichen Assertions und die Programmdateien bleiben unverändert. Exakte reversible Patches, Originalfehler und erfolgreiche neue Berichte sind lokal in externalsuiteprovenance-v2.json gebunden.
-
-Die vier exakten Prüferkorrekturen sind ohne persönliche Pfade in `ABNAHME-PRUEFER-0.117.json` versioniert. Für neue Paketbauten diese reinen Prüferkorrekturen vor dem nächsten Einfrieren in die Prüfquellen übernehmen. Die geprüfte R7-Anwendung bleibt unverändert.
-
-
-## MIT-Nachtrag 0.117.0-r8
-
-R8 ist ein belegter Lizenz-/Metadaten-Nachtrag zur vollständig geprüften R7-Modellbasis. Der eigene Code trägt SPDX MIT; originale Fremdtexte und native Laufzeitbytes bleiben erhalten. Ausschließlich die eigene FreeCAD-Quellnotiz und ihre Manifestzeile wurden neutralisiert und neu gepinnt. Die vier dokumentierten Verifierkorrekturen sind in den Prüfquellen enthalten. Neubuild, sieben echte DE/EN-Lizenz-UI-Prüfungen an der R8-ASAR sowie 95 gepackte EXE-Gruppen sichern den Nachtrag. Referenzumfang und Nachweisgrenzen: MIT-FREIGABE-0.117.md.
-
-
-## Gezielte Ausgabe 0.118.0
-
-Die getrennte lokale Ausgabe für große Netze, Zahnradkopplungen und
-KI-Modellstrenge wird mit folgendem gezielten Paketlauf gebaut:
-
-```
-node scripts/package-mechanism-tools.mjs r1 "<Ordner einer abgenommenen vollständigen Formnaro-Ausgabe>"
-```
-
-Der Lauf baut frisch, prüft 23 betroffene Testdateien, friert die Quellen ein,
-bündelt eine eigene Windows-EXE und übernimmt die vollständig geprüften
-CAD-/Konverter-/Sprachlaufzeiten aus der angegebenen Ausgabe. Drei isolierte
-EXE-Läufe prüfen die neuen Werkzeuge und die bisherigen Gelenk-/
-Vereinfachungsfunktionen. Neue Ausgabeverzeichnisse werden nicht überschrieben.
-Nach erfolgreichem Lauf sind die Paketbilder tatsächlich anzusehen; erst dann
-wird die lokale Freigabe bestätigt. Das ist keine vollständige allgemeine
-Gesamtabnahme und veröffentlicht nichts online.
-
-
-Für den gezielten STL-Farbfix 0.118.1 unterstützt derselbe Paketbauer eine getrennte Ausgabe STL-Farben-v0.118.1-rN. Er prüft neun betroffene Testdateien, die echte Netz-Anzeige samt Inspektorfarbe und einen Smoke-Test der Zahnrad-/KI-Einstellungen. Quellen, Laufzeitintegrität und vorherige Ausgabe werden wie oben gebunden; die Paketbilder müssen vor der Freigabe angesehen werden.
-
-
-Für 0.118.2 erzeugt derselbe Paketbauer Grosse-Projekte-v0.118.2-rN und prüft 20 betroffene Testdateien. Die isolierte Großprojektprüfung benötigt FORMNARO_VERIFY_LARGE_MESH_FILE als Pfad zur unveränderten lokalen GLB-Testdatei; sie wird weder in die Ausgabe noch in den gemeinsamen Projektkontext übernommen. Zwei große Netzinstanzen überschreiten absichtlich 50 MiB. Detailtreue 10/90, Vorschau, Übernehmen/Undo, physische FNPACK-Ausgabe/Wiederöffnen und Paket-Autosicherung werden tatsächlich geprüft. Netzfarben und Zahnrad-/KI-Regler erhalten gesonderte Prüfläufe.
-# Wartung 0.118.3
-
-Gezielter Paketbau mit `node scripts/package-mechanism-tools.mjs r1 <akzeptierter-Programmordner>`.
-Der Builder erkennt Version 0.118.3, erstellt eine frische Stage und übernimmt nur
-die geprüften Unterlaufzeiten, keine Daten-/Projektordner. Tests und isolierte
-Windows-Läufe decken Auditkorrekturen, FNPACK, Sprache, Navigation, große Projekte
-und bestehende Farben/Gelenkbedienung ab. Visuelle Freigabe folgt getrennt nach
-Prüfung tatsächlicher Paketbilder; der Builder erklärt das Paket nicht automatisch
-für freigegeben. Ausgabeberichte enthalten keine absoluten persönlichen Pfade.
-Für den vorhandenen Großnetz-Regressionsfall wird `FORMNARO_VERIFY_LARGE_MESH_FILE`
-nur lokal gesetzt; keine Fixture oder persönlichen Pfade in Auslieferungen kopieren.
-
-# Gezielte Menü-Hilfe 0.119.1
-
-Die Folgeausgabe baut die vorhandene 0.119.0-Basis mit engeren Kontext- und
-Bedienhilfebudgets neu. Die Abnahme ist eine Delta-Prüfung der geänderten
-KI-/Bedienhilfewege mit isolierten EXE-Läufen, eigenem Quellenmanifest und
-Sichtprüfung tatsächlicher Paketbilder. Frühere Modell-, Sprach- und
-Laufzeitnachweise bleiben als historische Basis erhalten. Live-DeepSeek-Tests
-verwenden ausschließlich künstliche Projekte und getrennte Testprofile;
-Zugangsdaten und Testprofile gehören nicht in Stage oder Auslieferung.
-
-# Bedienziele und Vorschau 0.119.2
-
-Die lokale Ausgabe prüft gezielt die Vorführungsänderung gegenüber 0.119.1.
-Grundformziele sind nur Zeigeziele, anschließend wird eine geprüfte Vorschau
-berechnet. Isolierte UI-Prüfungen erfassen Zielanzeige vor der Berechnung,
-Modell-/Undo-Erhalt, Abbruch und Wiedergabe; die komplette frühere Abnahme wird
-nicht als neuer vollständiger Regressionstest ausgegeben.
-
+Die [Build-Historie](BUILD-HISTORY.de.md#gezielte-paket-8-ausgabe-01150) enthält die versionsgebundenen Paketbefehle und Abnahmen von 0.115 bis 0.119.
 
 ## Formnaro-Programmsymbol
 

@@ -4,8 +4,8 @@ This guide covers the portable Windows application. The release page lists downl
 
 ## Start a project
 
-1. Extract the complete Windows ZIP into a folder and start `Formnaro.exe`. Keep the accompanying files and the `resources` directory with the executable.
-2. Choose **New** for a blank project or **Open** for an existing `.ocad` or `.fnpack` project. Start with a sample if you want to explore a finished model. [Example projects](https://github.com/andyy909/Formnaro-cad/tree/main/beispiele)
+1. Extract the complete Windows ZIP into a writable folder and open **Formnaro starten**. Keep the executable and its `resources` directory together under `Programmdateien`.
+2. Choose a sample from the welcome screen or select **Open** for an existing `.ocad` or `.fnpack` project. The welcome screen also provides access to recent projects and an autosave restore button when a recovery is available. [Example projects](https://github.com/andyy909/Formnaro-cad/tree/main/beispiele)
 3. Select a shape from the palette, place it on the workplane and edit its dimensions. Formnaro uses millimetres. Select an existing part in the model tree to inspect its properties or expand its editable construction sources.
 4. Save the project. Use **Save As** to keep a separate copy when exploring a sample or modifying a project from another release.
 
@@ -25,6 +25,6 @@ Modelling and file operations work offline. **Settings → AI / API** controls t
 
 Back up your project files and any portable `Daten`, `Layouts` and `Projekte` folders before switching installations. Extract the new release into its own folder and check that it opens your projects. You may have to re-enter Windows-protected credentials when moving to another computer.
 
-## STL conversion in Nightly r10
+## Convert STL to CAD
 
 Choose Import → reconstruct as CAD for a checked local STEP candidate. Optional AI refinement examines measured or selected regions. The converter also offers symmetry reconstruction from an overlapping side. Review the CAD preview and apply it with one Undo step. See the [converter guide](STL-TO-CAD.md) for steps, precision and size limits.

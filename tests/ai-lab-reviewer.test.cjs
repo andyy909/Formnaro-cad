@@ -1,4 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto');
+const { writeEmptyBenchmarkManifests } = require('./fixtures/portable-benchmark-manifests.cjs');
 const data=require('../backend/ai-lab-review-data.cjs'),{createLabReviewer,validateResult}=require('../backend/ai-lab-reviewer.cjs');
 const id=()=>crypto.randomUUID();
 function directory(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-review-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return dir;}
@@ -34,6 +35,26 @@ test('External archive round-trips hashes, original outcomes, image references a
  for(const f of manifest.files)assert.equal(crypto.createHash('sha256').update(entries[f.name]).digest('hex'),f.sha256);
  const raw=strFromU8(entries['Protokolle/run-'+r.id+'.json']);for(const secret of ['unknown-key','another-secret','test-private-secret-123456789','C:/Users/private'])assert.ok(!raw.includes(secret),secret);
  assert.equal(JSON.parse(raw).verification.passed,true);assert.match(JSON.parse(raw).events[1].image.imageFile,/^Bilder\//);assert.equal(entries['Bilder/'+r.id+'-1.png'].length,3);
+});
+test('The staged portable app exports a ZIP with its packaged compression runtime',async t=>{
+ const dir=directory(t),source=path.join(dir,'source'),stage=path.join(dir,'stage');
+ for(const name of ['backend','ai','licenses','dist'])fs.mkdirSync(path.join(source,name),{recursive:true});
+ for(const name of ['electron.cjs','preload.cjs','package.json','LICENSE.txt','LIES-MICH.txt','THIRD-PARTY-LICENSES.txt'])fs.writeFileSync(path.join(source,name),name==='package.json'?'{}':'');
+ writeEmptyBenchmarkManifests(source);
+ for(const name of ['ai-lab-review-data.cjs','ai-lab-storage.cjs','ai-task-atomic.cjs'])
+  fs.copyFileSync(require.resolve('../backend/'+name),path.join(source,'backend',name));
+ fs.mkdirSync(path.join(source,'src'));
+ for(const name of ['cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref']){
+  const file=name+'.js';
+  fs.copyFileSync(path.join(__dirname,'../src',file),path.join(source,'src',file));
+ }
+ const {copyPortableApp}=await import('../scripts/portable-runtime-policy.mjs');
+ copyPortableApp(source,stage);
+ const packaged=require(path.join(stage,'backend','ai-lab-review-data.cjs'));
+ const archive=packaged.exportPackage({directory:dir,scope:packaged.selectScope(dir,[row()])});
+ const {unzipSync,strFromU8}=require('fflate'),files=unzipSync(fs.readFileSync(archive.path));
+ assert.equal(JSON.parse(strFromU8(files['Manifest.json'])).summary.finished,1);
+ assert.deepEqual(fs.readdirSync(path.join(stage,'node_modules')),['fflate']);
 });
 test('Review schema rejects fabricated run IDs and executable patch fields',()=>{
  const r=row(),e={runs:[{id:r.id}]},good=result(r.id);assert.deepEqual(validateResult(JSON.stringify(good),e),good);

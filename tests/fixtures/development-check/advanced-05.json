@@ -1,0 +1,514 @@
+{
+  "id": "abf10443-731b-40d0-ac07-aa3fa7413355",
+  "spec": {
+    "caseId": "advanced-05",
+    "effort": "low",
+    "seriesName": "Entwicklungscheck · f14586d9-dfd7-48f6-8869-f7309ca43f20 · low"
+  },
+  "status": "completed",
+  "cleanExit": true,
+  "close": {
+    "code": 0,
+    "signal": null,
+    "shutdownMs": 505,
+    "windowCloseMs": 98,
+    "afterWindowCloseMs": 407,
+    "windowCloseSource": "ipc-received"
+  },
+  "verification": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+        "passed": true
+      },
+      {
+        "name": "Sichtbare Ausführung abgeschlossen",
+        "passed": true
+      },
+      {
+        "name": "Nur sichtbare gültige native Einzelkörper",
+        "passed": true
+      },
+      {
+        "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+        "passed": true,
+        "actual": {
+          "actual": {
+            "count": 1,
+            "bodies": [
+              {
+                "size": [
+                  60,
+                  40,
+                  30
+                ],
+                "center": [
+                  10,
+                  -5,
+                  18
+                ]
+              }
+            ]
+          },
+          "expected": {
+            "count": 1,
+            "size": [
+              60,
+              40,
+              30
+            ],
+            "center": [
+              10,
+              -5,
+              18
+            ]
+          }
+        }
+      },
+      {
+        "name": "Unabhängig berechnetes Materialvolumen",
+        "passed": true,
+        "actual": {
+          "actual": 22068.000000000007,
+          "expected": 22068
+        }
+      },
+      {
+        "name": "Oben offen, Boden3 mm und vier obere Wandränder erhalten",
+        "passed": true
+      },
+      {
+        "name": "Vordere Öffnung 10×12, seitliches Material und Rückwand erhalten",
+        "passed": true
+      }
+    ],
+    "scope": "Fester Aufbau-Benchmark: native Maße, Volumen, Durchbrüche/Blindböden, erhaltene Quellen und gemessene Zeichnungen."
+  },
+  "modelIdentity": {
+    "requested": "deepseek-flash",
+    "returned": "deepseek-flash",
+    "exactMatch": true
+  },
+  "firstReasoningMs": 2926,
+  "elapsedMs": 120862,
+  "events": [
+    {
+      "type": "start-context",
+      "user": "Current scene (data):\n{\"revision\":\"db49d191cf0cd56b\",\"objects\":[],\"selectionTargets\":[],\"practiceIsolated\":true}\nUser task:\nHöhle den Quader 60×40×30 mm, Weltmitte (10,−5,18), Z3 bis33, nach innen mit3 mm Wand und Boden aus. Die gesamte obere Fläche muss offen sein. Ergänze mittig in der vorderen Wand bei Y−25 eine rechteckige Öffnung10 mm breit in X und12 mm hoch in Z, Mittelpunkt X10,Z18. Nur diese vordere Wand durchbrechen; die Rückwand bleibt vollständig. Außenmaße, Lage, Boden und übrige Seitenwände erhalten. Alle unbeteiligten Teile einschließlich Schutzteil vollständig erhalten. Modellierung ausschließlich mit sichtbaren Übungswerkzeugen.\nDas unbeteiligte Teil unverändert erhalten."
+    },
+    {
+      "type": "request",
+      "round": 0,
+      "ms": 1524
+    },
+    {
+      "type": "reasoning",
+      "text": "We need parse task. Practice objects: only existing-1 \"Aufgabenteil\" kind cad. User asks hollow a box 60×40×30, world center (10,-5,18), Z3 to33, wall 3mm and bottom, open top. Add rectangular opening in front wall at Y-25? Wait front wall: box Y center -5, depth 40 => Y from -25 to +15. Front is -Y at Y=-25. Opening 10 mm wide X, 12 mm high Z, center X10,Z18, through only front wall. Preserve all else, keep uninvolved \"Schutzteil\" fully. But practiceObjects only one \"Aufgabenteil\". Hmm perhaps existing-1 is the box. Need shell tool with top open, thickness 3. Then cut opening in front wall.\n\nNeed plan using visible UI. But locked practice: must use existing alias existing-1, actual actions. We need know tool references for shell, drill? We can request toolReference? Reply must be plan or question. We have shell reference only. Need maybe drill reference. But final answer only JSON object. We can plan with known steps and possibly new hole via sketch? Need exact fields unknown. Could use shell via ui:tool:cad-shell, face top, thickness 3, preview apply. Then opening: could select existing? Drilling a rectangular opening isn't drill (cylindrical). Could create a rectangular box hole shape and group subtract. Need visible native shape drag, set dimensions/pos, role hole, group with existing-1. That may be permitted. Need know shape type box. We can create a box 10×?×12 positioned center X10,Y? Z18 extending through front wall from Y-25 to -22? But shell wall thickness 3 inward:"
+    },
+    {
+      "type": "usage",
+      "round": 0,
+      "usage": {
+        "input_tokens": 6611,
+        "input_tokens_details": {
+          "cached_tokens": 6272
+        },
+        "output_tokens": 2373,
+        "output_tokens_details": {
+          "reasoning_tokens": 2036
+        },
+        "total_tokens": 8984
+      },
+      "returnedModel": "deepseek-flash"
+    },
+    {
+      "type": "format-feedback",
+      "round": 0,
+      "error": "Schritt 4: size-2 ändert das ganze Bauteil und macht den geöffneten Werkzeugdialog ungültig. Für Werkzeugmaße ui:id:cad-modeling-thickness verwenden; eine beabsichtigte Bauteiländerung vor dem Öffnen ausführen oder den Dialog danach erneut öffnen.",
+      "attempt": 1,
+      "ms": 20310
+    },
+    {
+      "type": "request",
+      "round": 1,
+      "ms": 20310
+    },
+    {
+      "type": "usage",
+      "round": 1,
+      "usage": {
+        "input_tokens": 6752,
+        "input_tokens_details": {
+          "cached_tokens": 6144
+        },
+        "output_tokens": 3661,
+        "output_tokens_details": {
+          "reasoning_tokens": 3254
+        },
+        "total_tokens": 10413
+      },
+      "returnedModel": "deepseek-flash"
+    },
+    {
+      "type": "proposal",
+      "plan": {
+        "version": 1,
+        "title": "Quader aushöhlen und vordere Öffnung schneiden",
+        "actions": [
+          {
+            "kind": "shape",
+            "type": "box",
+            "as": "gehaeuse"
+          },
+          {
+            "kind": "set",
+            "field": "size-0",
+            "value": 60
+          },
+          {
+            "kind": "set",
+            "field": "size-1",
+            "value": 40
+          },
+          {
+            "kind": "set",
+            "field": "size-2",
+            "value": 30
+          },
+          {
+            "kind": "set",
+            "field": "pos-0",
+            "value": 10
+          },
+          {
+            "kind": "set",
+            "field": "pos-1",
+            "value": -5
+          },
+          {
+            "kind": "set",
+            "field": "pos-2",
+            "value": 18
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "menu:cad"
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:tool:cad-shell"
+          },
+          {
+            "kind": "face",
+            "target": "gehaeuse",
+            "side": "top"
+          },
+          {
+            "kind": "ui",
+            "action": "set",
+            "target": "ui:id:cad-modeling-thickness",
+            "value": "3"
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:id:cad-modeling-preview"
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:id:cad-modeling-apply"
+          },
+          {
+            "kind": "shape",
+            "type": "box",
+            "as": "oeffnung"
+          },
+          {
+            "kind": "set",
+            "field": "size-0",
+            "value": 10
+          },
+          {
+            "kind": "set",
+            "field": "size-1",
+            "value": 5
+          },
+          {
+            "kind": "set",
+            "field": "size-2",
+            "value": 12
+          },
+          {
+            "kind": "set",
+            "field": "pos-0",
+            "value": 10
+          },
+          {
+            "kind": "set",
+            "field": "pos-1",
+            "value": -23
+          },
+          {
+            "kind": "set",
+            "field": "pos-2",
+            "value": 18
+          },
+          {
+            "kind": "role",
+            "value": "hole"
+          },
+          {
+            "kind": "select",
+            "targets": [
+              "gehaeuse",
+              "oeffnung"
+            ]
+          },
+          {
+            "kind": "group",
+            "as": "gehaeuse_fertig"
+          }
+        ]
+      },
+      "ms": 47644
+    },
+    {
+      "type": "practice-ui-feedback",
+      "phase": "native-verification",
+      "round": 1,
+      "verification": {
+        "passed": false,
+        "checks": [
+          {
+            "name": "Alle unbeteiligten Quellen und Zustände erhalten",
+            "passed": true
+          },
+          {
+            "name": "Sichtbare Ausführung abgeschlossen",
+            "passed": true
+          },
+          {
+            "name": "Nur sichtbare gültige native Einzelkörper",
+            "passed": true
+          },
+          {
+            "name": "Genau ein Körper mit richtigen Außenmaßen und Lage",
+            "passed": false,
+            "actual": {
+              "actual": {
+                "count": 2,
+                "bodies": [
+                  {
+                    "size": [
+                      60,
+                      40,
+                      30
+                    ],
+                    "center": [
+                      10,
+                      -5,
+                      18
+                    ]
+                  },
+                  {
+                    "size": [
+                      60.0000002,
+                      40.0000002,
+                      30.000000200000002
+                    ],
+                    "center": [
+                      10,
+                      -5.000000000000001,
+                      18
+                    ]
+                  }
+                ]
+              },
+              "expected": {
+                "count": 1,
+                "size": [
+                  60,
+                  40,
+                  30
+                ],
+                "center": [
+                  10,
+                  -5,
+                  18
+                ]
+              }
+            }
+          },
+          {
+            "name": "Unabhängig berechnetes Materialvolumen",
+            "passed": false,
+            "actual": {
+              "actual": 71999.99999999999,
+              "expected": 22068
+            }
+          },
+          {
+            "name": "Oben offen, Boden3 mm und vier obere Wandränder erhalten",
+            "passed": false
+          },
+          {
+            "name": "Vordere Öffnung 10×12, seitliches Material und Rückwand erhalten",
+            "passed": false
+          }
+        ],
+        "scope": "Fester Aufbau-Benchmark: native Maße, Volumen, Durchbrüche/Blindböden, erhaltene Quellen und gemessene Zeichnungen."
+      },
+      "freshRevision": "db49d191cf0cd56b",
+      "ms": 85279
+    },
+    {
+      "type": "request",
+      "round": 2,
+      "ms": 85292
+    },
+    {
+      "type": "usage",
+      "round": 2,
+      "usage": {
+        "input_tokens": 7770,
+        "input_tokens_details": {
+          "cached_tokens": 6656
+        },
+        "output_tokens": 1028,
+        "output_tokens_details": {
+          "reasoning_tokens": 507
+        },
+        "total_tokens": 8798
+      },
+      "returnedModel": "deepseek-flash"
+    },
+    {
+      "type": "proposal",
+      "plan": {
+        "version": 1,
+        "title": "Vorhandenen Quader aushöhlen, Frontöffnung schneiden",
+        "actions": [
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "view:fit",
+            "text": "Diagnose: Der alte Lauf hat einen zweiten Quader erzeugt, statt den vorhandenen Aufgabenteil zu bearbeiten; dadurch blieben zwei Körper übrig und der Schnitt traf kein Material. Jetzt wird der vorhandene Körper direkt verwendet."
+          },
+          {
+            "kind": "select",
+            "targets": [
+              "existing-1"
+            ],
+            "text": "Vorhandenen Quader 60×40×30 bei (10,−5,18) auswählen."
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "menu:cad"
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:tool:cad-shell"
+          },
+          {
+            "kind": "face",
+            "target": "existing-1",
+            "side": "top",
+            "text": "Gesamte obere Fläche als Öffnung wählen."
+          },
+          {
+            "kind": "ui",
+            "action": "set",
+            "target": "ui:id:cad-modeling-thickness",
+            "value": "3"
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:id:cad-modeling-preview"
+          },
+          {
+            "kind": "ui",
+            "action": "click",
+            "target": "ui:id:cad-modeling-apply",
+            "text": "3 mm Wand und Boden, oben offen."
+          },
+          {
+            "kind": "shape",
+            "type": "box",
+            "as": "oeffnung",
+            "text": "Hilfskörper für die Frontöffnung."
+          },
+          {
+            "kind": "set",
+            "field": "size-0",
+            "value": 10
+          },
+          {
+            "kind": "set",
+            "field": "size-1",
+            "value": 5
+          },
+          {
+            "kind": "set",
+            "field": "size-2",
+            "value": 12
+          },
+          {
+            "kind": "set",
+            "field": "pos-0",
+            "value": 10
+          },
+          {
+            "kind": "set",
+            "field": "pos-1",
+            "value": -23
+          },
+          {
+            "kind": "set",
+            "field": "pos-2",
+            "value": 18,
+            "text": "Öffnung 10×12, Mitte X10/Z18, durchdringt nur die vordere Wand (Y −25 bis −22)."
+          },
+          {
+            "kind": "role",
+            "value": "hole"
+          },
+          {
+            "kind": "select",
+            "targets": [
+              "existing-1",
+              "oeffnung"
+            ]
+          },
+          {
+            "kind": "group",
+            "as": "gehaeuse_fertig",
+            "text": "Nur Frontwand durchbrechen; Rückwand, Boden, Seitenwände und Außenmaße bleiben."
+          }
+        ]
+      },
+      "ms": 93175
+    },
+    {
+      "type": "finished",
+      "status": "completed",
+      "elapsedMs": 120862,
+      "cleanExit": true,
+      "close": {
+        "code": 0,
+        "signal": null,
+        "shutdownMs": 505,
+        "windowCloseMs": 98,
+        "afterWindowCloseMs": 407,
+        "windowCloseSource": "ipc-received"
+      },
+      "ms": 120862
+    }
+  ]
+}

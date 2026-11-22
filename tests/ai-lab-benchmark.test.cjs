@@ -16,3 +16,112 @@ test('Integrated benchmark dispatch uses the selected model, never calls the dis
 });
 test('Benchmark export counts sixteen conditions separately from an interrupted raw attempt',()=>{const m=manifest(),rows=m.rows.map(s=>record(m,s));rows.unshift(record(m,m.rows[0],{status:'interrupted'}));const b=summarizeBenchmark(m,rows);const counts=require('../backend/ai-lab-review-data.cjs').summarize(rows,{planned:17,status:'completed',benchmark:b});assert.equal(counts.planned,16);assert.equal(counts.finished,16);assert.equal(counts.pending,0);assert.equal(counts.attempts.recorded,17);assert.equal(counts.attempts.interrupted,1);});
 test('Task descriptions are valid UTF8; native fixture and oracle definitions remain frozen',()=>{const bytes=fs.readFileSync(path.join(__dirname,'../backend/ai-practice-function-cases.cjs'));assert.ok(Buffer.from(bytes.toString('utf8')).equals(bytes));assert.ok(!require('../backend/ai-test-lab-cases.cjs').taskInstance('practice-14').prompt.includes('\ufffd'));assert.equal(verifySuite().planned,16);});
+test('Completed benchmark summary exposes the Wilson interval on the planned denominator',()=>{
+ const m=manifest(),s=summarizeBenchmark(m,m.rows.map(r=>record(m,r)));
+ assert.equal(s.status,'completed');assert.equal(s.planned,16);assert.equal(s.finished,16);assert.equal(s.pending,0);
+ assert.equal(Math.round(s.interval.low*1000),806);assert.equal(Math.round(s.interval.high*1000),1000);
+});
+test('Incomplete benchmark summary keeps progress/open conditions and no interval',()=>{
+ const m=manifest(),s=summarizeBenchmark(m,m.rows.slice(0,7).map(r=>record(m,r)));
+ assert.equal(s.status,'incomplete');assert.equal(s.planned,16);assert.equal(s.finished,7);assert.equal(s.pending,9);
+ assert.equal(s.byOutcome.pending,9);assert.equal(s.interval,null);
+});
+test('Report divides all request costs including the reviewer by two confirmed successes',async t=>{
+ const directory=temp(t),m=manifest();fs.writeFileSync(path.join(directory,'Benchmark-'+m.id+'.json'),JSON.stringify(m));
+ const rows=[record(m,m.rows[0]),record(m,m.rows[1])];
+ for(const row of rows){row.rates=row.events[1].rates;delete row.events[1].rates;}
+ const review={seriesIds:[m.id],requestCount:1,unsettledRequests:0,usageEvents:[{role:'reviewer',usage:{input_tokens:100,output_tokens:10},rates:{input:1,output:2,cached:1},at:'2026-11-17T10:00:00Z'}]};
+ const manager=createBenchmarks({directory,getRecords:()=>rows,getRoles:()=>roleSelection,getSource:()=>({hash:'source'}),runSeries:async()=>{},review:async()=>{},reviewEnabled:()=>false,getReviews:()=>[review]});
+ const report=await manager.report({id:m.id}),data=JSON.parse(fs.readFileSync(report.path,'utf8'));
+ assert.equal(data.summary.passed,2);assert.equal(data.costs.perSuccess.seconds,1);assert.equal(data.costs.perSuccess.priceUnknown,false);assert.equal(data.costs.total.unsettledRequests,0);
+ assert.ok(Math.abs(data.costs.perSuccess.costMin-0.000061)<1e-12,JSON.stringify(data.costs));assert.ok(Math.abs(data.costs.perSuccess.costMax-0.000071)<1e-12);assert.ok(Math.abs(data.costs.total.min-0.000122)<1e-12);assert.ok(Math.abs(data.costs.total.max-0.000142)<1e-12);
+});
+test('A request without a usage response makes the report cost sum unknown',async t=>{
+ const directory=temp(t),m=manifest();fs.writeFileSync(path.join(directory,'Benchmark-'+m.id+'.json'),JSON.stringify(m));
+ const rows=[record(m,m.rows[0]),record(m,m.rows[1]),record(m,m.rows[2],{status:'interrupted',events:[{type:'request'}]})];
+ const review={seriesIds:[m.id],requestCount:1,unsettledRequests:0,usageEvents:[{role:'reviewer',usage:{input_tokens:100,output_tokens:10},rates:{input:1,output:2,cached:1},at:'2026-11-17T10:00:00Z'}]};
+ const manager=createBenchmarks({directory,getRecords:()=>rows,getRoles:()=>roleSelection,getSource:()=>({hash:'source'}),runSeries:async()=>{},review:async()=>{},reviewEnabled:()=>false,getReviews:()=>[review]});
+ const report=await manager.report({id:m.id}),data=JSON.parse(fs.readFileSync(report.path,'utf8'));
+ assert.equal(data.summary.passed,2);assert.equal(data.costs.perSuccess.priceUnknown,true);assert.equal(data.costs.total.priceUnknown,true);assert.equal(data.costs.total.unsettledRequests,1);
+});
+test('An unanswered reviewer request makes total and per-success costs unknown',async t=>{
+ const directory=temp(t),m=manifest();fs.writeFileSync(path.join(directory,'Benchmark-'+m.id+'.json'),JSON.stringify(m));
+ const rows=[record(m,m.rows[0]),record(m,m.rows[1])];
+ const review={seriesIds:[m.id],requestCount:2,unsettledRequests:1,usageEvents:[{role:'reviewer',usage:{input_tokens:100,output_tokens:10},rates:{input:1,output:2,cached:1},at:'2026-11-17T10:00:00Z'}]};
+ const manager=createBenchmarks({directory,getRecords:()=>rows,getRoles:()=>roleSelection,getSource:()=>({hash:'source'}),runSeries:async()=>{},review:async()=>{},reviewEnabled:()=>false,getReviews:()=>[review]});
+ const report=await manager.report({id:m.id}),data=JSON.parse(fs.readFileSync(report.path,'utf8'));
+ assert.equal(data.summary.passed,2);
+ assert.equal(data.costs.total.unsettledRequests,1);
+ assert.equal(data.costs.total.priceUnknown,true);
+ assert.equal(data.costs.perSuccess.priceUnknown,true);
+});
+test('Duplicate usage in one attempt does not hide a missing usage response in another attempt',async t=>{
+ const directory=temp(t),m=manifest();fs.writeFileSync(path.join(directory,'Benchmark-'+m.id+'.json'),JSON.stringify(m));
+ const rows=[record(m,m.rows[0]),record(m,m.rows[1]),record(m,m.rows[2],{status:'interrupted',events:[{type:'request'}]})];
+ rows[0].events.splice(1,0,{type:'usage',returnedModel:'fixture',usage:{input_tokens:10,output_tokens:1},rates:{input:1,output:1,cached:0},ms:2});
+ const review={seriesIds:[m.id],requestCount:1,unsettledRequests:0,usageEvents:[{role:'reviewer',usage:{input_tokens:100,output_tokens:10},rates:{input:1,output:2,cached:1},at:'2026-11-17T10:00:00Z'}]};
+ const manager=createBenchmarks({directory,getRecords:()=>rows,getRoles:()=>roleSelection,getSource:()=>({hash:'source'}),runSeries:async()=>{},review:async()=>{},reviewEnabled:()=>false,getReviews:()=>[review]});
+ const report=await manager.report({id:m.id}),data=JSON.parse(fs.readFileSync(report.path,'utf8'));
+ assert.equal(data.summary.passed,2);
+ assert.equal(data.costs.total.unsettledRequests,1);
+ assert.equal(data.costs.total.priceUnknown,true);
+});
+test('Markdown report labels complete tariff amounts as USD estimates and uses the planned denominator',async t=>{
+ const directory=temp(t),m=manifest();fs.writeFileSync(path.join(directory,'Benchmark-'+m.id+'.json'),JSON.stringify(m));
+ const rows=m.rows.map(s=>record(m,s));
+ const review={seriesIds:[m.id],requestCount:1,unsettledRequests:0,usageEvents:[{role:'reviewer',usage:{input_tokens:100,output_tokens:10},rates:{input:1,output:2,cached:1},at:'2026-11-17T10:00:00Z'}]};
+ const manager=createBenchmarks({directory,getRecords:()=>rows,getRoles:()=>roleSelection,getSource:()=>({hash:'source'}),runSeries:async()=>{},review:async()=>{},reviewEnabled:()=>false,getReviews:()=>[review]});
+ const report=await manager.report({id:m.id,format:'md'}),text=fs.readFileSync(report.path,'utf8');
+ assert.match(text,/16\/16 vollständig bestätigt/);
+ assert.match(text,/Wilson-Bereich für diese Aufgaben: 80\.6–100\.0 % \(95 %, geplanter Nenner 16\)/);
+ assert.match(text,/Abdeckung: 16\/16 geplante Bedingungen \(0 offen\)/);
+ assert.match(text,/Kosten gesamt: [\d.]+–[\d.]+ USD \(Tarifschätzung\)/);
+ assert.match(text,/Kosten je Erfolg: [\d.]+–[\d.]+ USD \(Tarifschätzung\); 1\.00 s durchschnittlich je bestätigtem Erfolg/);
+ assert.doesNotMatch(text,/Preis vollständig/);
+});
+test('Markdown report hides complete amounts when one price is incomplete',async t=>{
+ const directory=temp(t),m=manifest();fs.writeFileSync(path.join(directory,'Benchmark-'+m.id+'.json'),JSON.stringify(m));
+ const rows=m.rows.map(s=>record(m,s));
+ delete rows[0].events[1].rates;
+ const review={seriesIds:[m.id],requestCount:1,unsettledRequests:0,usageEvents:[{role:'reviewer',usage:{input_tokens:100,output_tokens:10},rates:{input:1,output:2,cached:1},at:'2026-11-17T10:00:00Z'}]};
+ const manager=createBenchmarks({directory,getRecords:()=>rows,getRoles:()=>roleSelection,getSource:()=>({hash:'source'}),runSeries:async()=>{},review:async()=>{},reviewEnabled:()=>false,getReviews:()=>[review]});
+ const json=await manager.report({id:m.id}),data=JSON.parse(fs.readFileSync(json.path,'utf8'));
+ assert.equal(data.costs.total.priceUnknown,true);
+ assert.ok(data.costs.total.min>0);
+ const text=fs.readFileSync((await manager.report({id:m.id,format:'md'})).path,'utf8');
+ assert.match(text,/Kosten gesamt: unbekannt \(Tarifschätzung, USD; unvollständige Usage- oder Preisangaben\)/);
+ assert.match(text,/Kosten je Erfolg: unbekannt \(Tarifschätzung, USD; unvollständige Usage- oder Preisangaben\)/);
+ assert.doesNotMatch(text,/Kosten (?:gesamt|je Erfolg): [\d]/);
+});
+test('Markdown report treats unknown prices as unknown without a numeric amount',async t=>{
+ const directory=temp(t),m=manifest();fs.writeFileSync(path.join(directory,'Benchmark-'+m.id+'.json'),JSON.stringify(m));
+ const rows=m.rows.map(s=>record(m,s));
+ for(const row of rows)delete row.events[1].rates;
+ const review={seriesIds:[m.id],requestCount:1,unsettledRequests:0,usageEvents:[{role:'reviewer',usage:{input_tokens:100,output_tokens:10},at:'2026-11-17T10:00:00Z'}]};
+ const manager=createBenchmarks({directory,getRecords:()=>rows,getRoles:()=>roleSelection,getSource:()=>({hash:'source'}),runSeries:async()=>{},review:async()=>{},reviewEnabled:()=>false,getReviews:()=>[review]});
+ const json=await manager.report({id:m.id}),data=JSON.parse(fs.readFileSync(json.path,'utf8'));
+ assert.equal(data.costs.total.priceUnknown,true);
+ assert.equal(data.costs.total.min,0);
+ const text=fs.readFileSync((await manager.report({id:m.id,format:'md'})).path,'utf8');
+ assert.match(text,/Kosten gesamt: unbekannt \(Tarifschätzung, USD; unvollständige Usage- oder Preisangaben\)/);
+ assert.match(text,/Kosten je Erfolg: unbekannt \(Tarifschätzung, USD; unvollständige Usage- oder Preisangaben\)/);
+ assert.doesNotMatch(text,/Kosten (?:gesamt|je Erfolg): [\d]/);
+});
+test('Markdown report keeps no successes separate from unknown costs and uses the planned denominator',async t=>{
+ const directory=temp(t),m=manifest();m.rows=m.rows.slice(0,4);fs.writeFileSync(path.join(directory,'Benchmark-'+m.id+'.json'),JSON.stringify(m));
+ const rows=m.rows.map(s=>record(m,s,{verification:{passed:false}}));
+ const review={seriesIds:[m.id],requestCount:1,unsettledRequests:0,usageEvents:[{role:'reviewer',usage:{input_tokens:100,output_tokens:10},rates:{input:1,output:2,cached:1},at:'2026-11-17T10:00:00Z'}]};
+ const manager=createBenchmarks({directory,getRecords:()=>rows,getRoles:()=>roleSelection,getSource:()=>({hash:'source'}),runSeries:async()=>{},review:async()=>{},reviewEnabled:()=>false,getReviews:()=>[review]});
+ const json=await manager.report({id:m.id}),data=JSON.parse(fs.readFileSync(json.path,'utf8'));
+ assert.equal(data.summary.passed,0);
+ assert.equal(data.summary.planned,4);
+ assert.equal(data.costs.perSuccess,null);
+ assert.equal(data.costs.total.priceUnknown,false);
+ const text=fs.readFileSync((await manager.report({id:m.id,format:'md'})).path,'utf8');
+ assert.match(text,/0\/4 vollständig bestätigt/);
+ assert.match(text,/Wilson-Bereich für diese Aufgaben: 0\.0–49\.0 % \(95 %, geplanter Nenner 4\)/);
+ assert.match(text,/- B01 .*: 0\/1 richtig \(1\/1 beendet\)/);
+ assert.match(text,/Kosten gesamt: [\d.]+–[\d.]+ USD \(Tarifschätzung\)/);
+ assert.match(text,/Kosten je Erfolg: nicht berechenbar \(Nenner 0; Tarifschätzung, USD\)/);
+ assert.doesNotMatch(text,/keine bestätigten Erfolge/);
+});

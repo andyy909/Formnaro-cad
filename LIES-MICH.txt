@@ -1,3 +1,24 @@
+Formnaro – Schnellstart unter Windows x64
+
+Windows-ZIP vollständig in einen beschreibbaren Ordner entpacken.
+„Formnaro starten“ öffnen und alle Unterordner beisammenlassen.
+Die Startseite zeigt Beispiele und zuletzt verwendete Projekte. Eine
+vorhandene Autosicherung lässt sich über die eigene Schaltfläche öffnen.
+
+Aktuelle Ausgabe, Prüfsummen und separate Quellen
+https://github.com/andyy909/Formnaro-cad/releases/latest
+
+Anleitung
+https://github.com/andyy909/Formnaro-cad/blob/main/docs/USER-GUIDE.md
+
+Formnaro 0.144.0-r1 – KI-Labor, 18.11.2026
+
+Das KI-Labor bietet Einfach und Erweitert, den 15 Aufgaben umfassenden
+Entwicklungscheck, Zusatzprüfungen für CAD, STL und Foto sowie den Export
+der Versuche und Befunde.
+
+Frühere Versionshinweise
+
 Formnaro 0.122.0 – Kleinere portable CAD-Laufzeit, 31.10.2026
 
 FreeCAD-Kern und Python-Brücke bleiben eingebettet. Zusätzliche Python-OCC-

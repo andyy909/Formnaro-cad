@@ -109,3 +109,96 @@ test('Native candidate display preparation failure preserves confirmed CAD and b
   let rejectDisplay=false;const {cad}=fixture({prepareCommit:async project=>{if(rejectDisplay)throw Error('Controlled display allocation failure');const display=await cad.display(project);assert.ok(display.meshes.every(record=>record.mesh.normals.length===record.mesh.vertices.length));}});
   try{await cad.execute({kind:'create',recipe:{type:'box',size:[20,20,20]},options:{id:'body',name:'Confirmed body'}});await cad.execute({kind:'batch',commands:[{op:'transform',target:'body',translate:[3,0,0]}]});cad.undo();const saved=cad.serialize(),state=cad.state();rejectDisplay=true;await assert.rejects(cad.preview({kind:'batch',commands:[{op:'create',type:'sphere'}]}),/Controlled display allocation failure/);assert.equal(cad.serialize(),saved);assert.equal(cad.state().undo,state.undo);assert.equal(cad.state().redo,state.redo);assert.equal(cad.state().busy,false);rejectDisplay=false;cad.redo();assert.equal(cad.snapshot().nodes[0].transform[12],3);assert.equal(cad.snapshot().nodes.length,1);}finally{cad.dispose();}
 });
+
+test('An unchanged preview consumes only its own ID while a second preview of the same state remains usable for real Apply, retry and Dispose', async () => {
+  const { cad } = fixture();
+  let disposed = false;
+  try {
+    await cad.execute({ kind: 'create', recipe: { type: 'box', size: [20, 12, 6] }, options: { id: 'body' } });
+    const before = cad.serialize(),
+      revision = cad.revision(),
+      depth = cad.state().undo,
+      noop = await cad.preview(undefined, { project: cad.snapshot() }),
+      change = await cad.preview({
+        kind: 'batch',
+        commands: [{ op: 'create', type: 'box', size: [4, 3, 2], as: 'extra' }],
+      });
+    assert.equal(noop.revision, revision);
+    assert.equal(change.revision, revision);
+    assert.equal(cad.state().previews, 2);
+    const unchanged = cad.apply({ previewId: noop.previewId, revision: noop.revision });
+    assert.equal(unchanged.changed, false);
+    assert.equal(cad.serialize(), before);
+    assert.equal(cad.state().undo, depth);
+    assert.equal(cad.getPreview(noop.previewId), undefined);
+    assert.deepEqual(cad.getPreview(change.previewId), change);
+    assert.notEqual(cad.getPreview(change.previewId), change);
+    assert.equal(cad.state().previews, 1);
+    const applied = cad.apply({ previewId: change.previewId, revision: change.revision }),
+      after = cad.serialize();
+    assert.equal(applied.changed, true);
+    assert.equal(cad.state().undo, depth + 1);
+    assert.equal(cad.state().previews, 0);
+    assert.equal(cad.snapshot().nodes.length, 2);
+    assert.ok(cad.snapshot().nodes.some((node) => node.id === applied.aliases.extra));
+    assert.equal(cad.getPreview(change.previewId), undefined);
+    const retried = cad.apply({ previewId: change.previewId, revision: change.revision });
+    assert.equal(retried.alreadyApplied, true);
+    assert.equal(retried.changed, false);
+    assert.equal(cad.state().undo, depth + 1);
+    assert.equal(cad.serialize(), after);
+    const open = await cad.preview({
+      kind: 'batch',
+      commands: [{ op: 'create', type: 'box', size: [1, 1, 1], as: 'later' }],
+    });
+    assert.ok(cad.getPreview(open.previewId));
+    cad.dispose();
+    disposed = true;
+    assert.equal(cad.getPreview(open.previewId), undefined);
+  } finally {
+    if (!disposed) cad.dispose();
+  }
+});
+
+test('An unsuccessful saved edge edit reports the actual step through the native worker',async t=>{
+  const {cad}=fixture(),bodyId='finish-tree-body';
+  t.after(()=>cad.dispose());
+  await cad.execute({kind:'create',recipe:{type:'cylinder',size:[20,20,20]},options:{id:bodyId}});
+  const getEdges=async()=> (await cad.query('edges',{nodeId:bodyId})).edges;
+  const top=(await getEdges()).find(edge=>edge.reference.origin.featureId==='cylinder-rim-top');
+  assert.ok(top);
+  await cad.execute({kind:'finish',target:bodyId,step:{id:'round-top',kind:'round',amount:3,edges:[top.reference]}});
+  const prefix=cad.snapshot().nodes[0];
+  const edges=await getEdges();
+  const bottom=edges.find(edge=>edge.reference.origin.featureId==='cylinder-rim-bottom');
+  assert.ok(bottom);
+  assert.ok(edges.some(edge=>edge.curve.kind==='circle'&&!edge.curve.closed&&Math.abs(edge.curve.radii[0]-3)<1e-5));
+  assert.ok(Math.abs(bottom.curve.radii[0]-10)<1e-5);
+  await cad.execute({kind:'finish',target:bodyId,step:{id:'round-bottom',kind:'round',amount:1.5,edges:[bottom.reference]}});
+  const [first,second]=cad.snapshot().nodes[0].finish.steps;
+  const state=()=>({project:cad.serialize(),revision:cad.revision(),undo:cad.state().undo,redo:cad.state().redo});
+  const confirmed=state();
+  const propose=steps=>cad.preview({kind:'editFinish',target:bodyId,steps},{revision:confirmed.revision});
+  await assert.rejects(propose([first,{...second,amount:30}]),error=>{
+    assert.equal(error.code,'CAD_FINISH_FAILED');
+    assert.equal(error.bodyId,bodyId);
+    assert.equal(error.stepId,second.id);
+    assert.equal(error.edgeIndex,undefined);
+    return true;
+  });
+  assert.deepEqual(state(),confirmed);
+  await assert.rejects(propose([{...first,amount:4},{...second,edges:[first.edges[0]]}]),error=>{
+    assert.equal(error.code,'CAD_EDGE_LOST');
+    assert.match(error.message,/verloren/);
+    assert.equal(error.bodyId,bodyId);
+    assert.equal(error.stepId,second.id);
+    assert.equal(error.edgeIndex,0);
+    return true;
+  });
+  assert.deepEqual(state(),confirmed);
+  const restoredPrefix=await propose([first]);
+  assert.deepEqual(restoredPrefix.project.nodes[0].finish.steps,[first]);
+  assert.equal(restoredPrefix.project.nodes[0].brep.data,prefix.brep.data);
+  cad.discard(restoredPrefix.previewId);
+  assert.deepEqual(state(),confirmed);
+});

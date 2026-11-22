@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { inspectSuites, repinSuites } from '../scripts/repin-benchmark-suites.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SUITES = ['ai/benchmark-core-v1.json', 'ai/benchmark-advanced-v2.json'];
+const SUITES = ['ai/benchmark-core-v1.json', 'ai/benchmark-advanced-v2.json', 'ai/benchmark-guided-v1.json'];
 const VERSION_TEST = 'tests/ai-advanced-benchmark.test.cjs';
 const read = (root, file) => JSON.parse(fs.readFileSync(path.join(root, file), 'utf8'));
 
@@ -32,36 +32,39 @@ test('Unveränderter Stand: nichts zu tun, keine Datei wird angefasst', t => {
 });
 
 test('Geänderte gepinnte Datei: Hash, Patch-Version, Begründung und Versionstest werden angepasst', t => {
-  const root = sandbox(t), core = read(root, SUITES[0]), advanced = read(root, SUITES[1]);
+  const root = sandbox(t), oldSuites = SUITES.map(file => read(root, file));
   fs.appendFileSync(path.join(root, 'backend/ai-diagnostics.cjs'), '\n// changed');
   const open = inspectSuites(root);
-  assert.deepEqual(open.map(s => s.changed.map(c => c.path)), [['backend/ai-diagnostics.cjs'], ['backend/ai-diagnostics.cjs']]);
+  assert.deepEqual(open.map(s => s.changed.map(c => c.path)), SUITES.map(() => ['backend/ai-diagnostics.cjs']));
 
   const reason = 'Record truncated response text for replay. Tasks and native predicates unchanged.';
   repinSuites(root, reason);
-  const core2 = read(root, SUITES[0]), advanced2 = read(root, SUITES[1]);
+  const currentSuites = SUITES.map(file => read(root, file));
   const patch = v => Number(v.split('.')[2]);
-  assert.equal(patch(core2.version), patch(core.version) + 1);
-  assert.equal(patch(advanced2.version), patch(advanced.version) + 1);
-  assert.equal(core2.revisionReason, reason);
-  assert.deepEqual(core2.cases, core.cases, 'Aufgaben und taskHash bleiben unverändert');
-  assert.deepEqual(advanced2.cases, advanced.cases);
-  assert.deepEqual(core2.limits, core.limits);
-  assert.deepEqual(advanced2.calibration, advanced.calibration);
+  for (const [index, before] of oldSuites.entries()) {
+    const after = currentSuites[index];
+    assert.equal(patch(after.version), patch(before.version) + 1);
+    assert.equal(after.revisionReason, reason);
+    assert.deepEqual(after.cases, before.cases);
+    assert.deepEqual(after.limits, before.limits);
+    assert.deepEqual(after.calibration, before.calibration);
+  }
   assert(inspectSuites(root).every(s => !s.changed.length), 'Nach dem Neu-Binden stimmen alle Hashes');
 
   const versionTest = fs.readFileSync(path.join(root, VERSION_TEST), 'utf8');
-  assert(versionTest.includes("'" + core2.version + "'") && !versionTest.includes("'" + core.version + "'"));
-  assert(versionTest.includes("'" + advanced2.version + "'") && !versionTest.includes("'" + advanced.version + "'"));
+  for (const [index, before] of oldSuites.slice(0, 2).entries()) {
+    assert(versionTest.includes("'" + currentSuites[index].version + "'") && !versionTest.includes("'" + before.version + "'"));
+  }
   assert(fs.readFileSync(path.join(root, SUITES[0]), 'utf8').endsWith('}\n'), 'Dateiformat wie bisher');
 });
 
-test('Datei, die nur eine Suite pinnt, erhöht nur deren Version', t => {
-  const root = sandbox(t), core = read(root, SUITES[0]), advanced = read(root, SUITES[1]);
+test('Eine gemeinsame Datei ändert nur die Version ihrer beiden Suiten', t => {
+  const root = sandbox(t), [core, advanced, guided] = SUITES.map(file => read(root, file));
   fs.appendFileSync(path.join(root, 'backend/ai-test-lab-plan.cjs'), '\n// changed');
   repinSuites(root, 'Plan validation accepts one more field. Tasks unchanged.');
   assert.equal(read(root, SUITES[0]).version, core.version);
   assert.notEqual(read(root, SUITES[1]).version, advanced.version);
+  assert.notEqual(read(root, SUITES[2]).version, guided.version);
 });
 
 test('Ohne Begründung wird nichts geschrieben', t => {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Bindet die Benchmark-Suiten nach einer Änderung an einer gepinnten Datei neu.
 //
-// ai/benchmark-core-v1.json und ai/benchmark-advanced-v2.json halten unter
+// Die Basis-, Aufbau- und Vormachen-Manifeste halten unter
 // `dependencies` den SHA-256 jeder Datei fest, die Ablauf oder Prüfung berührt.
 // Weicht eine Datei ab, verweigert verifySuite() den Benchmark. Dieses Skript
 // übernimmt die neuen Hashes, erhöht die Patch-Version der betroffenen Suite,
@@ -20,7 +20,11 @@ import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
-const SUITES = ['ai/benchmark-core-v1.json', 'ai/benchmark-advanced-v2.json'];
+const SUITES = [
+  ['core', 'ai/benchmark-core-v1.json'],
+  ['advanced', 'ai/benchmark-advanced-v2.json'],
+  ['guided', 'ai/benchmark-guided-v1.json'],
+];
 const VERSION_TESTS = ['tests/ai-advanced-benchmark.test.cjs'];
 
 const sha256 = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -32,7 +36,7 @@ const bumpPatch = version => {
 
 // Ermittelt je Suite, welche gepinnten Hashes nicht mehr stimmen. Verändert nichts.
 export function inspectSuites(root) {
-  return SUITES.map(relative => {
+  return SUITES.map(([, relative]) => {
     const file = path.join(root, relative), suite = JSON.parse(fs.readFileSync(file, 'utf8')), changed = [];
     for (const dependency of suite.dependencies ?? []) {
       const target = path.join(root, dependency.path);
@@ -68,10 +72,10 @@ export function repinSuites(root, reason) {
   return results;
 }
 
-// Prüft mit dem echten Laborcode, dass beide Suiten wieder gültig sind.
+// Prüft mit dem echten Laborcode alle Suiten.
 export function verifySuites(root) {
   const benchmark = createRequire(path.join(root, 'package.json'))('./backend/ai-lab-benchmark.cjs');
-  return ['core', 'advanced'].map(id => { const s = benchmark.verifySuite(root, id); return { suiteId: s.suiteId, suiteVersion: s.suiteVersion }; });
+  return SUITES.map(([id]) => { const s = benchmark.verifySuite(root, id); return { suiteId: s.suiteId, suiteVersion: s.suiteVersion }; });
 }
 
 function main() {

@@ -23,10 +23,11 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
  let running=false,waiting=false,stopped=false,closing=false,paused=false,unpause=null,expectedInput=null,captionBeforePause='',completedSteps=[],pauseError=null,statusQueue=Promise.resolve(),pauseGeneration=0,mainGeneration=0;
  window.__formnaroPracticeSketch=spec=>locatePracticeSketchGesture(document,spec);
  installPracticeControlBridge(document,window,{onLocate:positionNotice});if(view){window.__formnaroPracticeGearPreferences=getPreferences;installPracticeGearDrag({controller,view});installPracticeFace({controller,view,getFacePickState,getDrillState,getInspectionState,getAlignmentState});installPracticeEdge({controller,view,getEdgeState});}
+ const background=new URLSearchParams(globalThis.location?.search).get('labBackground')==='1';
  const pause=ms=>new Promise(r=>setTimeout(r,ms));
  const overlay=document.createElement('div');overlay.id='practice-overlay';overlay.hidden=true;
  overlay.style.cssText='position:fixed;inset:0;z-index:2147483000;pointer-events:none;font-family:system-ui,sans-serif';
- overlay.innerHTML='<div id="practice-pointer" aria-hidden="true" style="position:fixed;left:0;top:0;width:30px;height:38px;filter:drop-shadow(1px 2px 2px #0008);transition:transform .65s ease;display:none"><svg width="30" height="38" viewBox="0 0 30 38"><path d="M2 2 L2 28 L9 22 L17 35 L22 32 L15 20 L27 19 Z" fill="white" stroke="#0075d3" stroke-width="3"/></svg></div><style>.practice-active-target{outline:3px solid #087fca!important;outline-offset:4px!important}</style><section style="pointer-events:auto;position:fixed;left:20px;bottom:54px;max-width:420px;background:white;border:2px solid #1686d6;border-radius:12px;box-shadow:0 4px 20px #0005;padding:12px;color:#15304a"><strong>Übungsmodus · eigenes Testprojekt</strong><strong id="practice-interaction-warning" role="note" aria-live="polite" style="display:block;margin:10px 0;padding:10px 12px;background:#fff0b3;border:2px solid #b87800;border-radius:7px;color:#503000;font-size:18px;font-weight:800;line-height:1.35">Vorführung läuft. Tempo, Pause und Stop kannst du jederzeit bedienen.</strong><span style="display:block;font-size:13px;font-weight:600">Wegklicken pausiert. Mit Weiter fortsetzen oder Übung beenden.</span><label style="display:block;margin:8px 0">Tempo <output id="practice-speed-output">50 %</output><input id="practice-speed" aria-label="Übungstempo in Prozent" type="range" min="10" max="300" step="5" value="50" style="display:block;width:100%;min-width:280px;padding:8px 0"><span style="display:flex;justify-content:space-between;font-size:12px"><span>10 % · langsam</span><span>300 % · schnell</span></span></label><div id="practice-caption" style="margin:7px 0"></div><button id="practice-pause" type="button">Pause</button> <button id="practice-stop" type="button">Übung beenden · Esc</button></section>';
+ overlay.innerHTML='<div id="practice-pointer" aria-hidden="true" style="position:fixed;left:0;top:0;width:30px;height:38px;filter:drop-shadow(1px 2px 2px #0008);transition:transform .65s ease;display:none"><svg width="30" height="38" viewBox="0 0 30 38"><path d="M2 2 L2 28 L9 22 L17 35 L22 32 L15 20 L27 19 Z" fill="white" stroke="#0075d3" stroke-width="3"/></svg></div><style>.practice-active-target{outline:3px solid #087fca!important;outline-offset:4px!important}</style><section style="pointer-events:auto;position:fixed;left:20px;bottom:54px;max-width:420px;background:white;border:2px solid #1686d6;border-radius:12px;box-shadow:0 4px 20px #0005;padding:12px;color:#15304a"><strong>Übungsmodus · eigenes Testprojekt</strong><strong id="practice-interaction-warning" role="note" aria-live="polite" style="display:block;margin:10px 0;padding:10px 12px;background:#fff0b3;border:2px solid #b87800;border-radius:7px;color:#503000;font-size:18px;font-weight:800;line-height:1.35">Vorführung läuft. Tempo, Pause und Stop kannst du jederzeit bedienen.</strong><span style="display:block;font-size:13px;font-weight:600">Wegklicken pausiert. Mit Weiter fortsetzen oder Übung beenden.</span><label style="display:block;margin:8px 0">Tempo der Vorführung <output id="practice-speed-output">50 %</output><input id="practice-speed" aria-label="Übungstempo in Prozent" aria-describedby="practice-tempo-note" type="range" min="10" max="300" step="5" value="50" style="display:block;width:100%;min-width:280px;padding:8px 0"><span style="display:flex;justify-content:space-between;font-size:12px"><span>10 % · langsam</span><span>300 % · schnell</span></span><span id="practice-tempo-note" style="font-size:12px">Steuert die Vorführung. Modellantwort und Berechnung haben eigene Wartezeiten.</span></label><div id="practice-caption" style="margin:7px 0"></div><button id="practice-pause" type="button">Pause</button> <button id="practice-stop" type="button">Übung beenden · Esc</button></section>';
  document.body.classList?.add('formnaro-practice');document.title='Formnaro · Übungsfenster';
  const sessionBar=document.createElement('aside');sessionBar.id='practice-session';sessionBar.style.cssText='position:fixed;left:12px;bottom:8px;z-index:2147482999;display:flex;gap:8px;align-items:center;background:white;color:#15304a;border:1px solid #1686d6;border-radius:8px;padding:6px 10px;font:13px system-ui';
  sessionBar.innerHTML='<style>body.formnaro-practice #ai-chat,body.formnaro-practice #ai-open,body.formnaro-practice [data-settings-tab="ai"],body.formnaro-practice [data-settings-page="ai"]{display:none!important}body.formnaro-practice #toast{pointer-events:none}</style><strong>Eigenes Übungsfenster</strong><span>KI-Zugang und Chat bleiben im Hauptfenster.</span><button id="practice-main" type="button">Zum Hauptfenster</button><button id="practice-end" type="button">Übung beenden</button>';
@@ -56,7 +57,8 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
  function enterPause(message){if((!running&&!waiting)||paused)return;captionBeforePause=caption.textContent;paused=true;pauseGeneration++;pauseButton.textContent='Weiter';if(message)caption.textContent=message;syncOverlayLayer();void notifyPause(true);}
  pauseButton.onclick=()=>{if(!running&&!waiting)return;if(!paused){enterPause('Übung pausiert. Mit Weiter fortsetzen.');return;}const generation=pauseGeneration;pauseButton.disabled=true;void (async()=>{await statusQueue;if(stopped||generation!==pauseGeneration)return;await notifyPause(false,mainGeneration);if(stopped||generation!==pauseGeneration)return;paused=false;pauseButton.textContent='Pause';if(captionBeforePause)caption.textContent=captionBeforePause;unpause?.();})().finally(()=>{pauseButton.disabled=false;});};
  function onFocusLost(event){if(Number.isSafeInteger(event?.generation))mainGeneration=Math.max(mainGeneration,event.generation);if(running||waiting){if(paused){syncOverlayLayer();pauseGeneration++;void notifyPause(true);caption.textContent='Pausiert: Übungsfenster wieder öffnen und Weiter wählen.';}else enterPause('Pausiert: Übungsfenster wieder öffnen und Weiter wählen.');}}
- window.addEventListener('blur',onFocusLost);desktop.onPracticeBlur?.(onFocusLost);
+ if(!background)window.addEventListener('blur',onFocusLost);
+ desktop.onPracticeBlur?.(onFocusLost);
  // Native injected input and user input both arrive as trusted events. Only
  // allow events at the currently sequenced target; a click elsewhere pauses the
  // exercise before it can change its selection or invalidate the next action.
@@ -94,17 +96,38 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
   await checkpoint();const gearDrag=spec.target==='gear-mesh',faceClick=spec.target==='cad-face',edgeClick=spec.target==='cad-edge',sketch=spec.target==='sketch-board',canvasInput=gearDrag||faceClick||edgeClick||sketch,target=sketch?document.getElementById('sketch-board'):canvasInput?document.querySelector('#canvas-host canvas'):spec.target?.startsWith('ui:')?practiceControl(document,spec.target):element(spec.target,spec.rootId);if(!target)throw Error('Bedienelement im Übungsfenster nicht verfügbar: '+spec.target);
   if(spec.action==='choose'&&['joint-parent','joint-child'].includes(target.id)&&modelUI.rootAlias(spec.value))spec={...spec,value:modelUI.rootAlias(spec.value)};
   if(spec.action==='choose')practiceOptionIndex(target,spec.value);
-  target.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});await playback.delay(500);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));await checkpoint();
+  target.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});if(!background)await playback.delay(500);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));await checkpoint();
   const box=sketch?locatePracticeSketchGesture(document,spec,{checkHit:false}):gearDrag?window.__formnaroPracticeGearDrag(spec):faceClick?await window.__formnaroPracticeFace(spec):edgeClick?window.__formnaroPracticeEdge(spec):target.getBoundingClientRect();
   const hitTarget=box.markerId?practiceReferenceMarker(document,box.markerId):target;
   if(!hitTarget)throw Error('Der sichtbare Bezugspunkt wurde geändert.');
-  pointer.style.display='block';pointer.style.transform=`translate(${Math.max(0,(canvasInput?box.x:box.left+box.width/2))}px,${Math.max(0,(canvasInput?box.y:box.top+box.height/2))}px)`;caption.textContent=text;positionNotice(canvasInput?{getBoundingClientRect:()=>({left:Math.min(box.x,box.to?.x??box.x)-12,right:Math.max(box.x,box.to?.x??box.x)+12,top:Math.min(box.y,box.to?.y??box.y)-12,bottom:Math.max(box.y,box.to?.y??box.y)+12})}:target);hitTarget.classList.add('practice-active-target');try{await playback.delay(1300);await checkpoint();
+  pointer.style.display='block';pointer.style.transform=`translate(${Math.max(0,(canvasInput?box.x:box.left+box.width/2))}px,${Math.max(0,(canvasInput?box.y:box.top+box.height/2))}px)`;caption.textContent=text;positionNotice(canvasInput?{getBoundingClientRect:()=>({left:Math.min(box.x,box.to?.x??box.x)-12,right:Math.max(box.x,box.to?.x??box.x)+12,top:Math.min(box.y,box.to?.y??box.y)-12,bottom:Math.max(box.y,box.to?.y??box.y)+12})}:target);hitTarget.classList.add('practice-active-target');try{if(!background)await playback.delay(1300);await checkpoint();
   // Electron may acknowledge the IPC before its queued native events reach the DOM.
   // Keep the registered target armed through the existing input-settle interval.
   if(spec.action==='drag'){let x,y;if(gearDrag||sketch){x=box.to.x;y=box.to.y;}else if(spec.target.startsWith('shape:')){const r=document.querySelector('#canvas-host canvas').getBoundingClientRect();x=r.left+r.width*.6;y=r.top+r.height*.4;}else{x=box.left+8+(Number(spec.value)-Number(target.min||0))/(Number(target.max||100)-Number(target.min||0))*(box.width-16);y=(gearDrag?box.y:box.top+box.height/2);}pointer.style.transitionDuration=(1.4*playback.multiplier())+'s';pointer.style.transform=`translate(${x}px,${y}px)`;}
   let actual;expectedInput=hitTarget;try{actual=await desktop.practiceInput({...spec,tempo:playback.multiplier()});await pause(300);syncOverlayLayer();}finally{expectedInput=null;}await checkpoint();return actual;}finally{hitTarget.classList.remove('practice-active-target');pointer.style.transitionDuration=(.65*playback.multiplier())+'s';}
  }
- const playback=createPracticePlayback({checkpoint});const speed=overlay.querySelector('#practice-speed');speed.oninput=()=>{playback.setTempo(100/Number(speed.value));const out=overlay.querySelector('#practice-speed-output');if(out)out.textContent=speed.value+' %';pointer.style.transitionDuration=(.65*playback.multiplier())+'s';};speed.onchange=speed.oninput;pointer.style.transitionDuration='1.3s';
+ const playback=createPracticePlayback({checkpoint}),speed=overlay.querySelector('#practice-speed'),
+  speedOutput=overlay.querySelector('#practice-speed-output'),speedNote=overlay.querySelector('#practice-tempo-note');
+ const updateTempo=()=>{
+  playback.setTempo(100/Number(speed.value));
+  speedOutput.textContent=speed.value+' %';
+  pointer.style.transitionDuration=(.65*playback.multiplier())+'s';
+ };
+ speed.oninput=updateTempo;
+ const tempoHint=speedNote.textContent;
+ speed.onchange=()=>{
+  updateTempo();
+  if(desktop.practiceTempo)void desktop.practiceTempo(Number(speed.value)).then(
+   ()=>{speedNote.textContent=tempoHint;},
+   ()=>{speedNote.textContent=tempoHint+' Das Tempo gilt nur für dieses Fenster.';}
+  );
+ };
+ updateTempo();
+ async function ready(){
+  const savedTempo=desktop.practiceTempo?await desktop.practiceTempo().catch(()=>null):null;
+  if(Number.isInteger(savedTempo)){speed.value=String(savedTempo);updateTempo();}
+  await desktop.practiceReady();
+ }
  const aliases=new Map(),modelUI=modelUIFactory({controller,access,input,waitFor,checkpoint,settled,document,aliases,frameConstruction});
  const setFields=new Set(['size-0','size-1','size-2','pos-0','pos-1','pos-2']);
  const fileButtons=new Map(),photoAliases=new Map();
@@ -221,7 +244,7 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
    }else if(action.kind==='model'){
     if(!access||!Array.isArray(action.commands)||!action.commands.length||action.commands.length>200)throw Error('Modellierauftrag oder lokale Übungsschnittstelle fehlt.');
     caption.textContent=prefix+(action.label??'Formnaro-Werkzeuge im Übungsprojekt ausführen.');pointer.style.display='none';let proposal;
-    const next=plan.actions[i+1],holdMotion=next?.kind==='model'&&next.commands?.every(c=>c.op==='joint'&&c.action==='move');const result=await modelUI.run(action,{holdMotion});checks.push({kind:'model',commands:action.commands.length,objectCount:project().nodes.length,joints:project().joints?.joints.length??0,couplings:project().joints?.gears?.length??0,...result});await playback.delay(650);await checkpoint();
+    const next=plan.actions[i+1],holdMotion=next?.kind==='model'&&next.commands?.every(c=>c.op==='joint'&&c.action==='move');const result=await modelUI.run(action,{holdMotion});checks.push({kind:'model',commands:action.commands.length,objectCount:project().nodes.length,joints:project().joints?.joints.length??0,couplings:project().joints?.gears?.length??0,...result});if(!background)await playback.delay(650);await checkpoint();
    }else if(action.kind==='sketch-gesture'){
     await input({target:'sketch-board',action:action.to?'drag':'click',point:action.point,to:action.to,add:action.add},action.text??prefix+'Auf der Skizzenfläche zeichnen oder auswählen.');
     // A polyline is intentionally open between points. The editor's message
@@ -494,5 +517,5 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
    catch{await desktop.practiceClose?.().catch(()=>{});}
   });
  });
- desktop.onPracticeCancel?.(endSession);void desktop.practiceReady();return {isRunning:()=>running,onBuildPreview:async({completed,total})=>{if(!running)return;caption.textContent='Live-Aufbau · Schritt '+completed+' / '+total;pointer.style.display='none';await playback.delay(650);}};
+ desktop.onPracticeCancel?.(endSession);void ready();return {isRunning:()=>running,onBuildPreview:async({completed,total})=>{if(!running)return;caption.textContent='Live-Aufbau · Schritt '+completed+' / '+total;pointer.style.display='none';if(!background)await playback.delay(650);}};
 }

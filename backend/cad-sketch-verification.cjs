@@ -1,4 +1,4 @@
-const fs=require('node:fs'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 async function verifyCadSketch(win,{output}={}){
  const js=code=>win.webContents.executeJavaScript(code),pause=ms=>new Promise(r=>setTimeout(r,ms)),checks=[];
  async function until(code){const start=Date.now();while(Date.now()-start<90000){if(await js(code))return;await pause(80);}if(output){fs.writeFileSync(output.replace(/\.json$/i,'-failure.png'),(await win.webContents.capturePage()).toPNG());fs.writeFileSync(output.replace(/\.json$/i,'-failure.json'),JSON.stringify(await js(`({state:window.__cadTest.sketchUI.state(),message:document.querySelector('#sketch-message')?.textContent,error:window.__cadError})`),null,2));}throw Error('Sketch UI timeout: '+code);}
@@ -30,7 +30,16 @@ async function verifyCadSketch(win,{output}={}){
  await proof('sketch-corrupt-cad7-recovery-preserves-old-and-new-autosave',`await a.resetProject();await a.settled();const old=a.serialize();a.storage.setItem('offlinecad-autosave-v5',old);a.storage.setItem('offlinecad-autosave-v7','broken-cad7');let rejected=false;try{await a.recovery.load(v=>a.controller.verify(v));}catch{rejected=true;}check(rejected&&a.recovery.blocked(),'corrupt new save fell back');await a.execute({kind:'batch',commands:[{op:'create',type:'box',size:[4,4,4]}]});await a.settled();await new Promise(r=>setTimeout(r,1700));check(a.storage.getItem('offlinecad-autosave-v7')==='broken-cad7'&&a.storage.getItem('offlinecad-autosave-v5')===old,'corrupt recovery overwritten');check(a.getModel().version===5,'ordinary project stopped using format5');`);
  const legacy=await js(`(()=>{const a=window.__cadTest,old=a.serialize();a.storage.setItem('offlinecad-autosave-v5',old);a.storage.removeItem('offlinecad-autosave-v7');a.storage.removeItem('offlinecad-autosave-v8');a.storage.setItem('offlinecad-recovery-kind','ocad');return old;})()`);
  async function reload(){await new Promise(resolve=>{win.webContents.once('did-finish-load',resolve);win.webContents.reload();});await until('!!window.__cadTest&&!window.__cadTest.recovery.isWriting()');}
- await reload();assert.equal(await js('window.__cadTest.serialize()'),legacy);
+ await reload();
+ assert.equal(await js('window.__cadTest.getModel().nodes.length'),0);
+ const dataDirectory=await js('window.__cadTest.storage.info().directory');
+ const legacyPath=path.join(dataDirectory,require('./program-data.json')['offlinecad-autosave-v5'].file);
+ assert.equal(fs.readFileSync(legacyPath,'utf8'),legacy);
+ await until(`(()=>{const button=document.querySelector('[data-restore-autosave]');return !!(button&&!button.hidden&&!button.disabled&&button.getClientRects().length);})()`);
+ await click('[data-restore-autosave]');
+ await until('window.__cadTest.getModel().nodes.length>0');
+ await js('window.__cadTest.settled()');
+ assert.equal(await js('window.__cadTest.serialize()'),legacy);
  await js(`window.__cadTest.storage.setItem('offlinecad-autosave-v7','broken-after-reload')`);await reload();
  assert.equal(await js('window.__cadTest.getModel().nodes.length'),0);assert.equal(await js('window.__cadTest.recovery.blocked()'),true);assert.equal(await js(`window.__cadTest.storage.getItem('offlinecad-autosave-v7')`),'broken-after-reload');assert.equal(await js(`window.__cadTest.storage.getItem('offlinecad-autosave-v5')`),legacy);checks.push('sketch-actual-startup-native-cad5-fallback-and-corrupt-cad7-retention');
  await js(`window.__cadTest.storage.setItem('offlinecad-settings-v1',JSON.stringify({...window.__cadTest.getSettings(),language:'en'}))`);await reload();await click('[data-action="sketch"]');assert.equal(await js(`document.querySelector('#modal-title').textContent`),'Editable sketch');await click('#sketch-preview');await until('!!window.__cadTest.sketchUI.state()?.preview&&!document.querySelector("#sketch-apply").disabled');assert.ok((await js(`document.querySelector('#sketch-message').textContent`)).includes('World bounds'));await pause(250);if(output)fs.writeFileSync(output.replace(/\.json$/i,'-english.png'),(await win.webContents.capturePage()).toPNG());await input('[data-sketch-dimension="height"]','1/0');await click('#sketch-preview');await until('document.querySelector("#sketch-message").textContent.includes("zero")');await click('#sketch-cancel');

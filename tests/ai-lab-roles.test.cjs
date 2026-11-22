@@ -71,3 +71,9 @@ test('Modeler, monitor and analyst use their own tokens and record separate mode
  const analysis=runner.state().lab.reviewer.reviews[0];assert.equal(analysis.status,'completed');assert.equal(analysis.role.model,'gpt-6.1-sol');assert.equal(analysis.usageEvents.length,1);
  const files=fs.readdirSync(dir).filter(n=>n.endsWith('.json'));const all=files.map(n=>fs.readFileSync(path.join(dir,n),'utf8')).join('\n');for(const key of calls.map(c=>c.key))assert.ok(!all.includes(key));
 });
+test('An unknown cache share gives ordered costs even when the cache rate is higher',async()=>{
+ const {usagePrice}=await import('../ai/diagnostic-costs.mjs');
+ const usage={input_tokens:100,output_tokens:0};
+ const rates={input:1,cached:2,output:0};
+ assert.deepEqual(usagePrice(usage,rates,'2026-11-07T10:00:00Z').cost,{min:0.0001,max:0.0002});
+});

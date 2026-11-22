@@ -9,3 +9,18 @@ test('Long context is priced per request and missing cache produces an explicit 
  const range=aiUsage({usage:{input_tokens:100000,output_tokens:10000}},config,1).estimatedCostUSD;assert.equal(range.min,.11);assert.equal(range.max,.3);assert.equal(range.cacheAssumed,true);
  assert.equal(aiUsage({},config,1).estimatedCostUSD,null);assert.equal(aiUsage({usage:{input_tokens:100,output_tokens:10}},{...config,model:'gpt-unknown'},1).estimatedCostUSD,null);assert.equal(aiUsage({usage:{input_tokens:100,output_tokens:10}},{...config,baseUrl:'https://proxy.example'},1).estimatedCostUSD,null);
 });
+
+test('Terra subscription rate prices uncached, cached and both cache-write tiers', () => {
+ const terra = { ...config, model: 'gpt-6.1-terra' };
+ const usage = {
+  input_tokens: 1000, output_tokens: 100,
+  input_tokens_details: {
+   cached_tokens: 400, cache_write_tokens: 200,
+   cache_write_tokens_details: { ttl_30m_tokens: 120, ttl_12h_tokens: 80 },
+  },
+ };
+ const cost = aiUsage({ model: terra.model, usage }, terra, 1).estimatedCostUSD;
+ assert.equal(cost.basis, 'api-equivalent');
+ assert.equal(cost.min, .00127);
+ assert.equal(cost.max, cost.min);
+});

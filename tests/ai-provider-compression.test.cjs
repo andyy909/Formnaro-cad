@@ -35,6 +35,14 @@ test('external verification reads the first contract line and resolves repeated 
  assert.deepEqual(contract.schema,{$ref:'#/commandSchema'});
 });
 
+test('external verification resolves the trimmed answer reference to the single command schema',()=>{
+ const {readVerificationContract}=require('../backend/provider-contract-verification.cjs');
+ const commandSchema={type:'object',properties:{commands:{type:'array',items:{oneOf:[{properties:{op:{const:'create'}}}]}},checks:{type:'array'}}};
+ const {contract}=readVerificationContract('Contract:\n'+JSON.stringify({commandSchema,requestSchema:{$ref:'#/commandSchema'},providerDefinitions:{d1:{type:'number'}}}));
+ assert.deepEqual(contract.requestSchema,commandSchema);
+ assert.equal(contract.requestSchema.properties.commands.items.oneOf.length,1);
+});
+
 test('external verification rejects broken or cyclic provider definitions',()=>{
  const {readVerificationContract}=require('../backend/provider-contract-verification.cjs');
  for(const providerDefinitions of [{},{d1:{$ref:'#/providerDefinitions/d1'}}]){

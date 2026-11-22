@@ -66,7 +66,7 @@ Anbindung im Hauptprozess, Knopf im Benchmark-Reiter und Referenzaufzeichnungen 
 
 ## Gepinnte Dateien neu binden
 
-Beide Benchmark-Suiten halten den SHA-256 von rund 30 Dateien fest, darunter `backend/ai-diagnostics.cjs` und `backend/desktop-ai.cjs`. Nach jeder Änderung an einer dieser Dateien verweigert `verifySuite()` den Benchmark, bis die Suite neu gebunden ist:
+Grundbenchmark, Aufbaubenchmark und Vormachen halten den SHA-256 ihrer Abhängigkeiten fest, darunter `backend/ai-diagnostics.cjs` und `backend/desktop-ai.cjs`. Nach jeder Änderung an einer dieser Dateien verweigert `verifySuite()` den Benchmark, bis die Suite neu gebunden ist:
 
 ```sh
 node scripts/repin-benchmark-suites.mjs --check

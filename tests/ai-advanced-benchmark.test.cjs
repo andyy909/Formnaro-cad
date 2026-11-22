@@ -34,7 +34,7 @@ test('Advanced resume keeps passed attempts, runs only eleven pending conditions
  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-advanced-run-'));t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));
  const records=[],calls=[],reviews=[];let cap=5;
  const manager=engine.createBenchmarks({directory,getRecords:()=>records,getRoles:()=>roles,getSource:()=>({hash:'fixed'}),reviewEnabled:()=>true,review:async(rows)=>{assert.equal(rows.length,16);reviews.push(rows);return {id:crypto.randomUUID(),status:'completed'};},runSeries:async(plan,ctx)=>{const rows=plans.expandPlan(plan).rows.map(r=>({...r,seriesId:ctx.id,benchmark:{suiteHash:ctx.suite.suiteHash,conditionId:engine.condition(r.caseId,r.repeat,ctx.suite.suiteId)}})).filter(r=>ctx.pending.includes(r.benchmark.conditionId));calls.push(rows.map(r=>r.benchmark.conditionId));records.push(...rows.slice(0,cap).map(record));}});
- assert.equal(manager.state().suites.length,2);manager.preview({suiteId:'advanced'});assert.equal(calls.length,0);
+ assert.deepEqual(manager.state().suites.map(s=>s.suiteId),['formnaro-practice-advanced','formnaro-practice-core','formnaro-practice-guided']);manager.preview({suiteId:'advanced'});assert.equal(calls.length,0);
  const first=await manager.start({suiteId:'advanced'});assert.equal(first.finished,5);assert.equal(reviews.length,0);const saved=JSON.stringify(records);
  cap=16;const second=await manager.start({id:first.id});assert.equal(second.passed,16);assert.equal(second.rawAttempts,16);assert.equal(second.cases[0].id,'A01');assert.equal(calls[1].length,11);assert.equal(JSON.stringify(records.slice(0,5)),saved);assert.equal(reviews.length,1);
  await assert.rejects(manager.start({id:first.id}),/vollständig/);assert.equal(manager.state().runs[0].suite.suiteId,'formnaro-practice-advanced');
@@ -52,3 +52,13 @@ test('Catalog labels core and advanced measurements separately and never pools t
 });
 
  test('A07 coordinate wording is explicit while every other task property stays unchanged',()=>{const old=require('./fixtures/benchmark-advanced-A07-2.0.2.json'),now=require('../backend/ai-benchmark-advanced-cases.cjs').advancedTask('advanced-07');const {prompt:previous,...a}=old,{prompt:current,...b}=now;assert.deepEqual(b,a);assert.match(current,/Z = \+4 mm/);assert.notEqual(current,previous);});
+
+test('Guided benchmark runs fixed ascending tasks under the same conditions',()=>{
+ const suite=engine.verifySuite(undefined,'guided');
+ const plan=engine.benchmarkPlan({suiteId:suite.suiteId,roles,effort:'low'}),rows=plans.expandPlan(plan).rows;
+ const ids=['practice-01','drill','pattern','advanced-01','advanced-03','advanced-05','advanced-07','advanced-08'];
+ assert.equal(suite.ladder,true);
+ assert.deepEqual(rows.map(row=>row.caseId),[...ids,...ids]);
+ assert.ok(rows.every(row=>row.effort==='low'&&row.workflow==='practice'&&row.sceneScope==='selection'));
+ assert.equal(engine.condition('advanced-08',1,suite.suiteId),'V08-r2');
+});
