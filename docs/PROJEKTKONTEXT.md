@@ -3,7 +3,10 @@
 Die Ausgabe 0.144.0-r1 bündelt den gestuften Entwicklungscheck, separat
 startbare CAD-, STL- und Foto-Prüfungen sowie die Befunde aller Stufen im
 KI-Labor. Den Download, die passenden Quellen und die Windows-Abnahme
-verzeichnet [AKTUELLER-STAND.md](AKTUELLER-STAND.md).
+verzeichnet [AKTUELLER-STAND.md](AKTUELLER-STAND.md). Dort stehen auch Download
+und Prüfstatus der Windows Nightly. Der [Beitragsleitfaden](../CONTRIBUTING.md)
+verlinkt die Einstiege für Fehlermeldungen, Quelländerungen und Prüfungen.
+Frühe Versionshinweise finden sich im [Dokumentationsarchiv](archive/README.md).
 
 Die Quell-CI läuft bei Pull Requests zu allen Zielbranches und bei Pushes
 auf `main` oder Tags. `npm run test:all -- --verify-coverage` gleicht

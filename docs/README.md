@@ -7,6 +7,7 @@ Einstiegspunkte im Repo-Stamm:
 - [README.md](../README.md) – Produktüberblick, Download- und Quellhinweise.
 - [README.de.md](../README.de.md) – deutsche Fassung des Produktüberblicks.
 - [LIES-MICH.txt](../LIES-MICH.txt) – Start- und Versionshinweise der portablen Windows-Ausgabe.
+- [CONTRIBUTING.md](../CONTRIBUTING.md) – Fehler melden, Änderungen prüfen und einreichen.
 - [AGENTS.md](../AGENTS.md) – verbindliche Arbeitsregeln für Änderungen am Repository.
 
 ## Benutzen
@@ -15,7 +16,7 @@ Anwenderdokumentation für die portable Windows-Ausgabe: Bedienwege, Werkzeuge, 
 
 | Dokument | Einordnung |
 | --- | --- |
-| [AKTUELLER-STAND.md](AKTUELLER-STAND.md) | Formnaro 0.144.0-r1 mit Download, Prüfsummen, Quellen und Abnahme. |
+| [AKTUELLER-STAND.md](AKTUELLER-STAND.md) | Reguläre Ausgabe und Windows Nightly mit Download, Prüfsummen, Quellen und Prüfstatus. |
 | [ARBEITSGESCHWINDIGKEIT.md](ARBEITSGESCHWINDIGKEIT.md) | Bedienhinweise zu den Geschwindigkeitsverbesserungen ab 0.80.0 bei Skizzen, Netzauswahl und Ansicht. |
 | [AUSHOEHLEN.md](AUSHOEHLEN.md) | Aushöhlen geschlossener Netzkörper mit Wandstärke, Auflösung und Ablauföffnungen (Paket 26). |
 | [AUSTAUSCHFORMATE-3MF-GLB-GLTF.md](AUSTAUSCHFORMATE-3MF-GLB-GLTF.md) | Import und Weitergabe von 3MF, GLB und glTF mit Farben, Einheiten und Anordnung. |
