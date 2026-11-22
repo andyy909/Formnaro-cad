@@ -12,6 +12,7 @@
   <a href="docs/USER-GUIDE.md">User guide</a> ·
   <a href="beispiele/README.md">Example models</a> ·
   <a href="docs/BUILD.md">Build from source</a> ·
+  <a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Support via PayPal</a> ·
   <a href="README.de.md">Deutsch</a>
 </p>
 
