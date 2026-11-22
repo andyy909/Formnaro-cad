@@ -10,6 +10,8 @@
 
 **Windows 64 Bit · portabel – Programm und separate Quellen:**
 
+[Formano Mini für Android](https://github.com/andyy909/Formnaro-Android) ist für eingeladene Tester verfügbar. Im Pilot-Repo steht, mit welchem Windows-Begleitbuild die APK geprüft wurde.
+
 | Download | Version | Größe | Inhalt |
 | --- | --- | --- | --- |
 | **[Programm herunterladen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** | **0.144.0-r1** · reguläre Ausgabe | ca. 673 MB | Portables Programm, benötigte Laufzeiten, Lizenzen und Startanleitung. |

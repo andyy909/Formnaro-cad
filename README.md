@@ -19,6 +19,8 @@
 
 Formnaro is portable on Windows x64. The modelling workspace works offline.
 
+[Formano Mini for Android](https://github.com/andyy909/Formnaro-Android) is available to invited testers. The pilot repository lists the tested Windows companion build.
+
 | Build | Best for | Download |
 | --- | --- | --- |
 | **0.144.0-r1** · stable release | AI Lab development checks and evidence | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** · [Separate sources and release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256 checksums](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) |
