@@ -140,7 +140,7 @@
     },
     {
       "path": "backend/desktop-ai.cjs",
-      "sha256": "c6fd2379df70f20f007bd91a563e32972731d056159410739f98f321832a5a22"
+      "sha256": "5c4e8516ead2d7f4f3aef2a8c8f464d9953ec7230e52e04f420ae1ecfd12f93d"
     },
     {
       "path": "backend/ai-lab-storage.cjs",
