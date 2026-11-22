@@ -18,12 +18,16 @@ const { failureClass } = require('./ai-lab-storage.cjs');
 const REPLAY_PREFIX = 'replay:';
 
 // Felder, die sich zwischen zwei identischen Abläufen ändern dürfen (Zeiten,
-// Pfade, Bilder, Kennung des frischen Übungsfensters). Nur exakte Namen und
+// Dateipfade, Bilder, Kennung des frischen Übungsfensters). Nur exakte Namen und
 // schreibungsabhängige CamelCase-Suffixe; fachliche Felder wie `params`,
 // `format`, `reason` oder `verification` bleiben erhalten.
 const VOLATILE_KEYS = new Set(['ms', 'at', 'time', 'timestamp', 'nonce', 'runId', 'resultRef', 'path', 'file', 'directory', 'dataBase64', 'image', 'images', 'screenshot', 'duration', 'freshRevision']);
 const VOLATILE_SUFFIX = /(?:Ms|At|Path|Seconds|Duration)$/;
-const volatileKey = key => VOLATILE_KEYS.has(key) || VOLATILE_SUFFIX.test(key);
+function volatileKey(key, value) {
+  // Native CAD targets carry an array of source IDs in path.
+  if (key === 'path' && Array.isArray(value)) return false;
+  return VOLATILE_KEYS.has(key) || VOLATILE_SUFFIX.test(key);
+}
 
 const hash = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
@@ -32,7 +36,7 @@ function normalize(value) {
   if (typeof value === 'string') return value.startsWith('data:image/') ? '<image>' : value;
   if (!value || typeof value !== 'object') return value;
   const out = {};
-  for (const key of Object.keys(value).sort()) if (!volatileKey(key)) out[key] = normalize(value[key]);
+  for (const key of Object.keys(value).sort()) if (!volatileKey(key, value[key])) out[key] = normalize(value[key]);
   return out;
 }
 

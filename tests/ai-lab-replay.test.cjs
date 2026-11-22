@@ -355,6 +355,25 @@ test('Andere native Prüfrückmeldung vor der nächsten Antwort gilt als Abweich
   assert.deepEqual([...replay.feedbackByRound(original).keys()], [0], 'practice-ui-feedback zählt je Runde');
 });
 
+test('Wiedergabe vergleicht CAD-Quellpfade und ignoriert wechselnde Dateipfade', () => {
+  const sceneFeedback = (sourceId, filePath) => feedbackRecord({
+    type: 'tool-result',
+    tool: 'offlinecad_scene',
+    result: {
+      selectionTargets: [{ rootId: 'assembly', path: [sourceId] }],
+      path: filePath,
+    },
+  });
+  const original = sceneFeedback('source-a', 'C:/original/report.json');
+  const sameTarget = sceneFeedback('source-a', 'D:/replay/report.json');
+  const otherTarget = sceneFeedback('source-b', 'D:/replay/report.json');
+
+  assert.equal(replay.compareReplay(original, sameTarget).outcome, 'reproduced');
+  const result = replay.compareReplay(original, otherTarget);
+  assert.equal(result.outcome, 'diverged');
+  assert.equal(result.divergedAtRound, 0);
+});
+
 test('freshRevision ist flüchtig, reason und phase aber entscheidungsrelevant', () => {
   const base = { phase: 'native-verification', verification: { passed: false, checks: [{ actual: 6 }] }, freshRevision: 'frisch-A' };
   assert.equal(replay.compareReplay(feedbackRecord(base), feedbackRecord({ ...base, freshRevision: 'frisch-B' })).outcome, 'reproduced', 'frisches Fenster allein ist keine Abweichung');
