@@ -19,9 +19,7 @@ This guide covers the portable Windows application. The release page lists downl
 
 ## Optional AI and speech
 
-Modelling and file operations work offline. **Settings → AI / API** controls the optional provider and local AI interface. Requests sent to a cloud provider may include model context. Review an AI preview before applying it. The local API can also be used by MCP-capable clients. Speech input can use Windows voice typing or optional Deepgram transcription. Both require internet access. [AI guide](AI-GUIDE.md) · [Speech input (German)](SPRACHEINGABE.md)
-
-Open **Settings → AI / API → AI test lab** to run the development check or view saved results. [AI Lab guide (German)](KI-TESTLABOR.md)
+Modelling and file operations work offline. **Settings → AI / API** controls the optional provider and local AI interface. Requests sent to a cloud provider may include model context. Review an AI preview before applying it. The local API can also be used by MCP-capable clients. Offline speech may require a one-time language model download. [AI guide](https://github.com/andyy909/Formnaro-cad/blob/main/docs/AI-GUIDE.md), [Speech input](https://github.com/andyy909/Formnaro-cad/blob/main/docs/SPRACHEINGABE.md)
 
 ## Move or update a portable installation
 

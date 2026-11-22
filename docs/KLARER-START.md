@@ -1,6 +1,4 @@
-# Formnaro 0.114.0-r7 mit übersichtlichem Startordner
-
-Dieser Bericht dokumentiert die Auslieferung von 0.114.0-r7. Den Einstieg in die jüngste Ausgabe findest du in der [aktuellen Download-Übersicht](AKTUELLER-STAND.md) und der [Bedienanleitung](USER-GUIDE.md).
+# Formnaro mit übersichtlichem Startordner
 
 Die ZIP **Formnaro-v0.114.0-r7-Windows-Klarer-Start.zip** enthält dieselbe Programmversion 0.114.0-r7 und drei zusätzliche, bearbeitbare CAD-Beispiele.
 

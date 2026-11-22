@@ -1,10 +1,14 @@
 import { generateDesktopAI } from './ai-desktop-client.js';
+
+export const STL_COORDINATES = 'boundsMM lists minimum and maximum [X,Y,Z] in millimetres of the imported mesh.';
+
 // Converter proposals use the desktop AI service and its existing provider profiles.
 // Only a bounded region summary leaves this workbench; geometry stays local.
 export const CONVERTER_AI_CONTEXT = {
   application: 'Formnaro',
   domain: 'converter',
-  version: 1,
+  version: 2,
+  coordinateConvention: STL_COORDINATES,
   instructions:
     'Return {revision,label,commands,message?}, {question} or {message}. Use only region IDs present in scene.regions. Commands prepare a local preview, never save, export, convert or change CAD objects. Types are recognition hints, not verified CAD geometry. Preserve protected regions. Do not infer exact dimensions from triangle counts. Only explicit Apply changes region corrections; conversion still performs native CAD/STEP checks.',
   commands: [
@@ -19,6 +23,29 @@ export const CONVERTER_AI_CONTEXT = {
   limits: { commands: 20, regions: 256 },
 };
 const types = new Set(CONVERTER_AI_CONTEXT.commands[0].type);
+function regionBounds(analysis, faceIds) {
+  if (!analysis.vertices?.length || !analysis.faces?.length) return;
+  const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+  for (const faceId of faceIds) {
+    for (const vertexId of analysis.faces[faceId] ?? []) {
+      const point = analysis.vertices[vertexId];
+      if (!Array.isArray(point) || point.length !== 3 || !point.every(Number.isFinite)) continue;
+      for (let axis = 0; axis < 3; axis++) {
+        min[axis] = Math.min(min[axis], point[axis]);
+        max[axis] = Math.max(max[axis], point[axis]);
+      }
+    }
+  }
+  if (min.every(Number.isFinite)) return stlBoundsMM([min, max]);
+}
+
+export function stlBoundsMM(bounds) {
+  if (!Array.isArray(bounds) || bounds.length !== 2 ||
+      !bounds.every((point) => Array.isArray(point) && point.length === 3 && point.every(Number.isFinite))) return;
+  if (bounds[0].some((min, axis) => min > bounds[1][axis])) return;
+  return bounds.map((point) => point.map((value) => Number(value.toFixed(2)) || 0));
+}
+
 export function converterAIScene({ analysis, options, selection, revision }) {
   if (!analysis?.state || !analysis.regions?.length) throw Error('Zuerst eine gültige Flächenanalyse abwarten.');
   if (options.mode !== 'auto') throw Error('KI-Flächenbearbeitung benötigt Automatisch erkennen.');
@@ -30,12 +57,14 @@ export function converterAIScene({ analysis, options, selection, revision }) {
     units: 'mm',
     toleranceMM: options.tolerance,
     sourceUnitMM: options.unit,
+    boundsMM: stlBoundsMM(analysis.bounds_mm),
     regionCount: analysis.regions.length,
     selection: chosen.filter((r) => selected.has(r.edit_id)).map((r) => r.edit_id),
     regions: chosen.map((r) => ({
       id: r.edit_id,
       type: r.type,
       triangles: r.faces.length,
+      boundsMM: regionBounds(analysis, r.faces),
       protectedTriangles: r.protected_faces ?? 0,
       ...Object.fromEntries(
         ['radius_mm', 'radius_min_mm', 'radius_max_mm'].filter((k) => Number.isFinite(r[k])).map((k) => [k, r[k]]),

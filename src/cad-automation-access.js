@@ -878,6 +878,18 @@ export function createCadAutomationAccess({
         return apply(args);
       case 'export': {
         const format = args?.format ?? 'stl';
+        const revision = args?.revision === undefined ? undefined : controller.revision();
+        const checkRevision = () => {
+          if (args?.revision !== undefined && args.revision !== controller.revision())
+            throw Object.assign(Error('Das Modell hat sich geändert. Lies die aktuelle CAD-Szene erneut.'), {
+              code: 'STALE_REVISION',
+            });
+        };
+        checkRevision();
+        if (args?.revision !== undefined && isBusy())
+          throw Object.assign(Error('Schließe die laufende CAD-Bearbeitung vor der Druckvorbereitung ab.'), {
+            code: 'CAD_BUSY',
+          });
         let result;
         if (args?.sheetId !== undefined && !String(format).startsWith('drawing-'))
           throw Error('Blattkennung nur für einen Zeichnungsexport verwenden.');
@@ -887,8 +899,10 @@ export function createCadAutomationAccess({
           const value = await exportCadProjectSvg(controller, { ids: args?.ids, quality: args?.quality });
           result = { mime: 'image/svg+xml', extension: 'svg', data: new TextEncoder().encode(value.svg) };
         } else result = await controller.exportModel({ format, ids: args?.ids, quality: args?.quality });
+        checkRevision();
         return {
           format,
+          ...(args?.revision === undefined ? {} : { revision }),
           mimeType: result.mime,
           filename: 'Formnaro.' + result.extension,
           dataBase64: base64(result.data),

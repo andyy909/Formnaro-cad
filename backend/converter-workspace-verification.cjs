@@ -1,5 +1,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 async function verifyConverterWorkspace(win,app,{directory,converter,fixtures,files}){
+ const meshHelpFixture=process.env.FORMNARO_VERIFY_MESH_HELP_STL;
+ if(meshHelpFixture)return require("./stl-mesh-help-verification.cjs").verifyStlMeshHelp(win,meshHelpFixture,directory);
  fixtures=path.join(__dirname,'../converter/examples');
  const js=code=>win.webContents.executeJavaScript(code),checks=[];
  const prepareProject=async()=>{

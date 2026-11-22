@@ -1,5 +1,320 @@
 # Technischer Projektkontext
 
+## Gespeicherte Kantenschritte ändern
+
+Im Objektbaum eines ausgewählten CAD-Wurzelkörpers öffnet die gespeicherte
+Verrundung oder Fase den Kanteneditor. Die native Vorschau berechnet die
+gesamte Schrittfolge mit dem neuen Maß für die ausgewählte Schritt-ID.
+„Übernehmen“ bestätigt die Vorschau in einem Undo-Schritt. Escape, eine
+ungültige Berechnung und ein zwischenzeitlicher Revisionswechsel lassen
+den bestätigten Projektstand erhalten.
+
+Ein verlorener Bezug nennt betroffenen Körper und Schritt. Die Ersatzkante
+wird am nativen Zwischenkörper vor diesem Schritt gewählt. Erst die
+vollständig neu berechnete Kette ist übernehmbar. Die lokale CAD-Schnittstelle
+verwendet editFinishAmount mit Körper-ID, Schritt-ID und Maß im bestehenden
+revisionsgebundenen Vorschauweg.
+
+## Erste Kantenoperation an einer mitwachsenden Bohrung
+
+Ein aktuelles technisches Blatt mit eindeutigem Durchmesserbezug kann beim
+ersten Kantenauftrag für eine einfache Quader-Durchgangsbohrung aktualisiert
+werden. Die Bohrung bleibt als Quelle im Kantenkörper erhalten. Der native
+Eintrittskreis erhält einen stabilen Zeichnungsbezug auf diesen Quellenpfad.
+Eine Maßänderung in der bestätigten Kantenfolge aktualisiert denselben
+belegten Blattfall. Die übrigen Verbraucher bleiben vom vorhandenen Schutz
+erfasst. Gesperrte Bohrungsquellen können nicht eingewickelt werden.
+
+## Kampagnen und gerichtete STL-Senkungen
+
+Die automatische Kampagne speichert je Phase ihren effektiven Versuchsplan.
+Die Modellierrolle verwendet die Denkstufen der Serie. Der persistierte
+Serienbeleg und die aufgezeichneten Versuche müssen zu genau diesem Plan
+gehören. Die Bestätigung von Variante C oder D setzt vollständige native
+Vergleichsergebnisse voraus. Bei gleich vielen Erfolgen entscheidet eine
+belegte kürzere Gesamtdauer. Ohne nativen Erfolg oder bei Gleichstand
+bleibt die Wahl offen.
+
+Beim bearbeitbaren STL-Nachbau kann der Mesh-Worker die Eintrittsrichtung
+durchgehender Kegelsenkungen messen. Der Modellaufruf erhält Weltkoordinaten,
+Durchmesser, Winkel, Toleranzen und einen Strahl zur Eintrittsfläche.
+`op:drill` mit `kind:countersink` und `associative:true` verwendet dafür
+`reference:{ray:referenceRay}`. Die unabhängige Prüfung misst weiterhin
+die Oberflächenabweichung und die Merkmale. Sie überprüft die Probeänderung
+und Undo sowie die Bearbeitbarkeit nach erneutem Öffnen. Geometrisch
+uneindeutige Öffnungen bleiben ohne Messhinweis.
+
+## KI-Labor · Stand und Bedienung
+
+Der Standardtest verwendet **Prüfplan 13**. Er umfasst
+**12 CAD-, 6 STL- und 7 Zeichnungsstufen**. Der Standardtest ist der
+Einstieg im Reiter **Benchmark**. Er steigert die fachlichen Anforderungen,
+etwa durch Passungen, mehrere Bearbeitungsrichtungen und abhängige
+Zeichnungen. Fotos stehen als separate Zusatzprüfung zur Verfügung.
+
+### Einen Lauf starten
+
+1. Unter **KI-Modelle vergleichen** das Modell mit seinem Zugang wählen.
+   Bei vorhandenen Ergebnissen bietet **Vorhandene Ergebnisse vergleichen**
+   anklickbare Modellbalken für die ausgewählte Vergleichsaufgabe.
+2. Eine oder mehrere der angebotenen **Denkstufen** markieren. Die Auswahl
+   richtet sich nach dem Modell und dem Zugang.
+3. Optional eine **Preisgrenze für den Lauf (EUR)** beziehungsweise bei
+   einem Abo einen **Abo-Richtwert** eintragen. Beide gelten für den
+   gesamten ausgewählten Lauf.
+4. **Standardtest** starten. Der Aufgabenbereich zeigt die aktuelle Vorlage.
+   Nach dem Abschluss lässt sich das Ergebnis als Benchmark-Paket speichern.
+
+Unter **Testumfang ändern** gibt es einen Kurztest mit vier
+Einstiegsaufgaben für Modellbau, Vorführen, STL und Zeichnen. Er verwendet
+genau eine Denkstufe und hat bis zu vier Minuten Prüfzeit und elf
+Modellanfragen. Einzelreihen, Fotoprüfungen und weitere Zusatzaufgaben
+sind separat erreichbar.
+
+### Ausführlicher Vergleichslauf mit Prüfplan 14
+
+Unter **Testumfang ändern** lässt sich zusätzlich der ausführliche
+Vergleichslauf wählen. Er prüft dieselben 25 Aufgaben mit einer Denkstufe.
+Jede Aufgabe hat ein eigenes Zeit- und Schrittbudget. Der nächste Versuch
+beginnt auch nach einem lokalen Fehlschlag. Für den gesamten Lauf gelten
+62 Minuten und maximal 63 tatsächliche Modellaufrufe, auch bei internen
+Folgeaufrufen und HTTP-Wiederholungen. Anschlüsse ohne sichtbare Rohanzahl
+wie Mistral Vibe verwenden den Standardtest.
+
+Vor dem ersten gültigen Bauvorschlag gibt es je bearbeitbarem
+STL-Nachbau einen Bonus für eine lokal erfolgreich ausgeführte reine
+Messrunde. Zeit, Tokens und Anbieteraufrufe zählen weiterhin. STL 4
+prüft die beiden Senkungen separat und dokumentiert den
+Oberflächenabstand in beiden Messrichtungen. Lokal gemessene
+Schnittprofile lassen sich für die gezielte STL-4-Gegenprobe zuschalten.
+Der reguläre Vergleichslauf verwendet den ursprünglichen STL-Kontext.
+
+Jede Aufgabe hat einen Versuch mit bis zu der im Prüfplan angegebenen
+Zahl von Modellschritten. Innerhalb dieses Versuchs können Messung und
+Korrektur weitere Schritte verbrauchen. Sobald die abschließende lokale
+Prüfung einen auswertbaren Erfolg oder Fehlschlag ergibt, ist die Aufgabe
+bewertet. Verbleibende Modellschritte verfallen. Bei CAD 10
+(`bore-final-fit`) genügt dafür beispielsweise ein einziger ausführbarer
+Bauvorschlag, wenn die native Geometrieprüfung einen eindeutigen Befund
+liefert.
+
+Im ZIP umfasst die Gesamtwertung alle 25 Aufgaben. Ein Aufgabenstopp
+ohne auswertbaren Befund bleibt offen. Das Einzelprotokoll enthält die
+gemeldete Antwort, den lokalen Vorschau- und Anwendungsstand,
+Prüfbefunde und die am Anbieter tatsächlich gesendete Denkstufe, soweit
+sie im Request enthalten war. Vergleiche jeweils Läufe mit demselben
+Prüfplan, derselben Denkstufe und identischen Aufgabenbedingungen.
+
+### CAD-Passung mit und ohne Skill
+
+Über **Testumfang ändern → CAD-Passung · Skill-Vergleich** den
+Langloch-Schlitten und einen Einsatz in einer versetzten Tasche jeweils
+mit dem bisherigen Geometriekontext und dem eingebauten Skill
+„Messen und Einpassen“ ausführen. Jede Stufe startet mit eigener nativer
+Ausgangsgeometrie. Der Skill verwendet die bestehende Messabfrage für
+Gruppenquellen. Er wird nur in den B-Stufen geladen.
+
+Eine Denkstufe, höchstens neun Minuten und zwölf Anbieteraufrufe gelten
+für den gesamten Vergleich. Die nativen Prüfer bewerten Freiraum, Lage,
+unveränderte Quellen und Undo. Im ZIP sind Variante, Modellschritte,
+gemeldeter Verbrauch, Skill-Version und die vor Anbieterformatierung
+gemessene Kontextgröße nachprüfbar.
+
+### Wie der Standardtest fortschreitet
+
+- **18 Minuten und bis zu 35 gezählte Modellschritte** gelten gemeinsam
+  für den gesamten Standardtest. Der Lauf verteilt sein verbleibendes
+  Budget auf die gewählten Denkstufen und dann auf CAD, STL und Zeichnen.
+  Ungenutzte Anfragen können späteren Reihen zugutekommen. Jede Stufe hat
+  zusätzlich ein eigenes Zeitlimit und eine Obergrenze für Modellschritte
+  je Versuch.
+- Jeder Versuch startet mit einem frischen Prüfstand. Formnaro verarbeitet
+  die Antwort, führt die vorgesehenen Aktionen aus und prüft das Ergebnis
+  lokal. CAD, STL und Zeichnen haben eigene Prüfkriterien. Eine
+  Bestätigung durch das Modell allein zählt nicht als Erfolg.
+- Der Standardtest setzt nach jeder Aufgabe die Reihe fort und sieht
+  pro Stufe einen Versuch vor. Ein Versuch kann mehrere Modellschritte
+  umfassen. Wenn das gemeinsame Anfragebudget ausreicht, bleibt für jede
+  spätere Stufe mindestens eine Anfrage reserviert.
+- Die Auswertung zeigt, wie viele Stufen versucht und gelöst wurden.
+  Ein verifizierter Fehlschlag und ein durch Zeit-, Anfrage- oder
+  Ausgabelimit offener Versuch werden getrennt ausgewiesen. Die
+  Leistungsgrenze lässt sich aus einem Einzelversuch je Stufe nicht ableiten.
+
+Plan und Ablauf stehen in
+[cad-lab-compact-plan.js](../src/cad-lab-compact-plan.js),
+[cad-lab-simple-run.js](../src/cad-lab-simple-run.js) und
+[cad-lab-frontiers.js](../src/cad-lab-frontiers.js).
+
+### Was die drei Reihen prüfen
+
+| Reihe | Schwerpunkt und wichtige Stufen |
+| --- | --- |
+| **CAD · 12 Stufen** | Führung, Schlittenpassung, Gelenke, Arbeitsstellungen, schräge und mehrstufige Bohrungen sowie abhängige Zeichnungen. Stufe 11 verlangt einen Endanschlag mit begrenztem Hub und geprüftem Abstand. Stufe 12 revidiert Langloch und Anschlag und aktualisiert zwei Zeichnungen. |
+| **STL · 6 Stufen** | Die ersten drei Aufgaben prüfen gezielten Flächenschutz, darunter die vier Segmente der konischen Bohrung in Stufe 3. Die folgenden Aufgaben prüfen einen bearbeitbaren CAD-Nachbau. Stufe 6 kombiniert obere Stufenbohrung, kreuzende Querbohrung und unteres Sackloch. Formnaro prüft die Innenmerkmale, die Formabweichung, die Änderung einer Konstruktionsquelle und das Rückgängigmachen. |
+| **Technisches Zeichnen · 7 Stufen** | Verknüpfte Ansichten, native Maße, versetzte Schnitte, Baugruppe, Detailblatt und Revision. Stufe 7 verlangt die Nachführung einer versetzten Stufenbohrung in drei verknüpften Zeichnungsblättern. Schnitte und Maße werden an das geänderte Modell gebunden. Das separate Blatt der Klemmleiste muss erhalten bleiben. |
+
+### Ergebnisse lesen und teilen
+
+Die Ergebnisansicht zeigt gelöste Stufen nach Denkstufe und trennt
+Modellwartezeit von lokaler Ausführung und Prüfung. Sie zählt Ein- und
+Ausgabetokens und weist gemeldete Cache-Treffer aus. Ein gemeldeter
+Cache-Wert von null ist ein Messwert. Fehlende Meldungen werden als
+unvollständiger Verbrauch gekennzeichnet.
+
+Der Aufgabenbereich bietet native Sollmodelle, die drehbare STL-Vorlage
+oder Sollzeichnungen. Ein Istbild steht bereit, wenn der Versuch ein
+darstellbares Ergebnis geliefert und Formnaro es aufgezeichnet hat.
+Die Vorschauen entstehen lokal. Unter **Abgeschlossene Läufe
+herunterladen** enthält das ZIP den Prüfplan, Einzelversuche, Messwerte
+und verfügbare Vorlagen.
+
+**Läufe mit gleichem Budget vergleichen** gruppiert gespeicherte Läufe
+nach Euro-Vorgabe, Prüfplanversion und gewählten Denkstufen. Die Tabelle
+zeigt Modell und Zugang, gelöste Stufen, Laufzeit, Tarifwert und
+Budgetstatus. Historische Läufe behalten ihre eigene Planversion.
+Für Vorher-nachher-Aussagen zu einer bestimmten Aufgabe sollten Vorlage,
+Denkstufe und Prüfkriterien übereinstimmen.
+
+## API-Tarife und Preisgrenzen im KI-Labor
+
+Bei bekanntem API-Tarif und Euro-Wechselkurs prüft Formnaro vor jedem
+tatsächlichen Anbieteraufruf die aufbereitete Eingabe und die verbleibende
+Preisreserve. Weitere interne Werkzeugrunden werden erst geprüft, wenn sie
+anstehen. Beim API-Zugang kann Formnaro das Ausgabelimit der nächsten
+Anfrage senken. Der Export nennt einen Reserve-Stopp ausdrücklich. Bei einem
+versendeten API-Aufruf ohne Verbrauchsdaten belastet Formnaro das
+Laufbudget vorläufig mit der Preisreserve für die Eingabe und das
+gesendete Ausgabelimit. Der Export kennzeichnet diesen geschätzten Höchstbetrag
+mit `costEstimated: true` im separaten Feld `priceReserveUSD`. Liegt eine
+abrechenbare Anbieterantwort vor, ersetzt ihr Tarifwert die Reserve.
+Ein v14-Preisstopp vor Abschluss der Aufgaben bleibt exportierbar und
+wird als unvollständiger Lauf angezeigt.
+Für ChatGPT- und Mistral-Vibe-Abos ist die Zahl der geschätzte
+API-Gegenwert. Das tatsächliche Abo-Kontingent verwaltet der Anbieter.
+
+Der [Tarifkatalog](../backend/ai-provider-rates.json) enthält Tarife mit
+Quelle und Prüfdatum für OpenAI, DeepSeek und Mistral. Eine validierte,
+datierte lokale Datei **KI-Tarife.json** kann beim Programmstart Tarife
+aktualisieren. Bei GPT‑6.1 Terra und Sol fließen gemeldete Cache-Lesezugriffe
+und die jeweiligen Cache-Schreibmengen für 30 Minuten und 12 Stunden ein.
+Die Auswertung kennzeichnet unvollständige Preise und zeigt den verwendeten
+Euro-Wechselkurs. Der technische Einstieg für die Budgetprüfung steht in
+[cad-lab-price-budget.js](../src/cad-lab-price-budget.js).
+
+## STL-Flächen im KI-Kontext
+
+Formnaro liefert schon beim ersten STL-KI-Aufruf die XYZ-Minima und
+-Maxima des Teils in Millimetern. Die manuelle und automatische
+Flächenkorrektur bekommen dazu die Grenzen der jeweils angebotenen
+Bereiche. Bei der Netzreparatur steht dieselbe Teileangabe in der Szene.
+Beim CAD-Nachbau enthält die normale Modellbeschreibung die räumlichen
+Grenzen der Netzvorlage. Das Dreiecksnetz bleibt bei diesen Anfragen
+lokal. Formnaro sendet die Koordinaten im vorhandenen Aufruf mit und
+prüft Flächenauswahl und Rekonstruktion nativ.
+
+Der Auslöser war STL-Stufe 3. Beim ursprünglichen Flash-High-Versuch
+wurden äußere Rundungen statt der vier inneren Wandsegmente geschützt.
+In den gezielten Live-Gegenproben mit Koordinaten lösten DeepSeek Flash
+High und GPT‑6.1 Sol High die Aufgabe jeweils zweimal direkt. Der
+zusätzliche Geometriehinweis wurde ebenfalls geprüft. In den Prüfplan
+ging die kürzere Variante mit gemessenen Koordinaten ein. Die
+Versionsnummer 12 kennzeichnet den vereinheitlichten Kontext.
+
+### Die wichtigsten Änderungen auf dem Weg zu v12
+
+| Stand | Änderung |
+| --- | --- |
+| **Frühe Überarbeitung** | Bedienhilfe und Fragen in die richtige Verbrauchskategorie eingeordnet, Modellbalken und verständlichere Namen ergänzt. Den Standardtest als Einstieg mit begrenztem Budget aufgebaut und den Kurztest sowie Zusatzreihen zugänglich gemacht. |
+| **Prüfplan 5–6** | CAD vom reinen Wiederholen ähnlicher Bohrungen auf Passung, Bewegung und Zeichnungsbezüge umgestellt. Den Anfragekontext je Aufgabe verkleinert. Den Fototeil im Standardtest durch eine eigene Zeichnungsreihe ersetzt. |
+| **Preis und Sichtbarkeit** | Euro-Preisgrenze, Abo-Richtwert und Vergleich unter gleichen Budgets ergänzt. Modell-, STL- und Zeichnungsvorschauen in die Versuchsanzeige und den ZIP-Export übernommen. Laufzeit, Tokens und gemeldete Cache-Nutzung sichtbar gemacht. |
+| **Prüfplan 7–10** | CAD anhand der Live-Proben neu geordnet. Der Kontext erklärt, wie mehrere Gruppenquellen in einer Messabfrage gemeinsam vermessen werden, wie neue Quellen in lokalen Gruppenkoordinaten platziert werden und wie weit ein schräger Schneidkörper am Eintritt überstehen muss. Anschlag und Langlochrevision ergänzen die beiden letzten CAD-Stufen. Der Standardtest erlaubt bis zu drei Versuche je Stufe. |
+| **Prüfplan 13** | Jede Aufgabe einmal, mit Fortsetzung nach ungelösten Aufgaben. Preisprüfung auf die jeweils anstehende Anbieteranfrage umgestellt. |
+| **Prüfplan 11–12** | STL-Stufe 6 und Zeichnungsstufe 7 ergänzt, Modellbudget von 32 auf 35 erhöht und den Terra-Tarif ergänzt. Die STL-Lageangaben über Flächenkorrektur, Reparatur und Nachbau abgeglichen. V12 als Sammelpatch in der Arbeitsversion installiert. |
+
+### Stand der Abnahme
+
+Die gezielten Live-Gegenproben zeigen die Wirkung der CAD- und
+STL-Kontextänderungen auf einzelne Aufgaben. Bei der Windows-Abnahme des
+v12-Pakets wurden vorgegebene Modellantworten eingesetzt. Die
+STL-Konusstufe bestand 10 Prüfungen, der STL 6-Nachbau wurde als
+bearbeitbar verifiziert und Zeichnungsstufe 7 bestand 20 Prüfungen.
+Geprüft wurden auch die Koordinaten in den betroffenen Anfragepfaden,
+der Terra-Tarif und der reguläre Programmabschluss. Der Hash des
+installierten Programmpakets entspricht dem Abnahmestand. Die neuen
+Höchststufen sind damit lokal technisch geprüft. Ein durchgängiger
+Live-Gesamtlauf auf v12 ist in diesen Abnahmebelegen noch offen.
+
+## Mistral-Modellauswahl
+
+Formnaro bündelt in **Mistral · API** die vom Anbieter ausgewiesenen Aliase
+unter einem Modellnamen. Bereits gespeicherte Kennungen bleiben zugeordnet.
+Der Katalog steht in der geschätzten Reihenfolge für Text-to-CAD. Der
+Denkaufwand bleibt separat wählbar. Falls der Anbieter eine Denkstufe nur
+unter einer anderen Kennung desselben Modells anbietet, verwendet Formnaro
+diese Kennung für die Anfrage.
+
+## Formnaro und OrcaSlicer
+
+Unter **3D-Druck** lässt sich die lokale Orca-Installation auswählen oder die
+passende portable Windows-Version von der offiziellen GitHub-Veröffentlichung
+einrichten. Formnaro prüft den SHA-256 des Archivs. Versionierte Programme
+liegen unter `tools/orca-slicer`, das gemeinsame portable Profil in
+`data_dir`. Formnaro startet die gewählte EXE mit ihrem Datenverzeichnis.
+Druckerauswahl und für den Agenten gemerkte Profile gelten pro Profilordner.
+Bei Orca 2.5 können ausgewählte Herstellerprofile in OPC-Dateien liegen.
+Die Druckvorbereitung überlässt Orca die Auflösung dieser Profile.
+
+
+Der Reiter **Formnaro Chat** im Orca-Hauptfenster öffnet denselben Agenten bereits auf der Startseite, auch ohne geladenes Modell. Die angedockte Seitenleiste gehört zu Orcas 3D-Ansicht. Nach dem Wiederherstellen des Fensters fragt der Chat den aktuellen Verlauf sofort bei Formnaro ab.
+
+Der **Formnaro Chat** ist ein lokales OrcaSlicer-Plugin mit einer Seitenleiste
+in Vorbereiten und Vorschau. Formnaro stellt die Plugin-Datei über
+**3D-Druck → Orca-Seitenleiste bereitstellen** in Orcas Pluginordner. Das
+Plugin wird in Orca im **Menü neben Datei → Plugins** aktiviert. Bei geschlossenem
+Panel öffnet die Aktion **Formnaro KI** im Schnellmenü die Seitenleiste.
+
+Bei eingeschalteter lokaler Formnaro-KI-Schnittstelle nutzt die Seitenleiste den
+vorhandenen Agenten-Chat, Modelle, Anmeldungen, Verlauf und Auftragsabbruch.
+Formnaro muss geöffnet sein. Der Python-Client liest die bestehende lokale
+Verbindungsdatei und spricht nur den daraus validierten Loopback-Port an. API-
+Schlüssel verbleiben in der bestehenden Anbieterverwaltung. Für Testprofile
+lässt sich der Pfad per `FORMNARO_ORCA_CONNECTION_FILE` setzen. Die
+Agentenroute läuft neben der CAD-Auftragswarteschlange, weil der Agent selbst
+die CAD- und Orca-Werkzeuge dieser Warteschlange aufruft.
+
+
+
+Unter **3D-Druck** übergibt die Windows-Desktop-Anwendung sichtbare oder ausgewählte
+Teile als 3MF an OrcaSlicer. **Modell in Orca öffnen** öffnet die Geometrie.
+**Slicen** nutzt Drucker, Prozess und Filament aus dem Dialog sowie optional
+eine Schichthöhe. Die per Platte berechnete Druckzeit, der Filamentbedarf und
+die Schichtzahl stehen in der Ergebnisliste. Dort lässt sich das Druckprojekt
+in Orca öffnen oder dauerhaft als 3MF speichern.
+
+**Profile für KI merken** speichert die Auswahl für den Agenten-Chat.
+Das optionale MCP-Werkzeug `offlinecad_orca` meldet die gewählten Profile
+und slict die bestätigte CAD-Revision. Weitere lokale Einstellungen sind
+Wandlinien, Fülldichte und Stützen. Formnaro überträgt die 3MF-Daten direkt an
+Orca. Die Werkzeugsantwort enthält eine Ergebniskennung und die geschätzten Werte.
+
+Der Adapter verwendet OrcaSlicer ab 2.5 mit der Kommandozeile, einem isolierten
+Profil und Kopien der Presets einschließlich ihrer Basen. Das Ergebnis verwendet
+ein Filamentprofil für den Auftrag. Die vier zusammengefassten Randstreifen
+des Kobra-3-Systemprofils werden im isolierten Profil als vier getrennte
+Sperrvolumen an Orca übergeben. Für die Live-Bedienung der Orca-Oberfläche
+öffnet der Anwender das Ergebnis in Orca. Druckerübertragung und Druckstart
+gehören zum anschließenden Orca-Workflow.
+
+
+Der private Laborpatch kann Aufgaben, KI-Kontext im Anwendungspaket, Prüflogik und Oberfläche gemeinsam aktualisieren. Der Builder erzeugt ein versionsgebundenes Differenzarchiv, ein lokales Basisprotokoll für Folgepatches sowie einen Windows-Starter. Die vorhandenen nativen Laufzeiten bleiben die Installationsbasis. Der neue adaptive Plattenbenchmark protokolliert erfolgreiche Stufen, bestätigte Abweichungen und technische Grenzen separat.
+
+Auftrag 09: Der normale CAD-Responses-Anfragepfad trennt den stabilen Werkzeugvertrag von den veränderlichen Anwendungsdaten. `programAssistant.state`, Laufzeitwerte aus `agentWorkflow`, `taskEvidence`, `viewFeedback`, Merkmalsreferenzen und Foto-Vergleichsdaten reisen im späten Nutzerblock; `instructions` bleibt für gleiche Revision und Modus bytegleich. Regeln und auflösbare Schema-Referenzen bleiben im Systemvertrag. Die nativen Auftragsprüfer lesen die Anwendungsdaten über `readVerificationContract(system, latest)`. Chat-, Übungs-, Navigations- und STL-Konverterpfade bleiben unverändert. Geprüft von `tests/ai-working-contract.test.mjs`; Benchmark-Pins unverändert.
+
+Auftrag 10: Der normale CAD-Responses-Anbieterpfad trägt den Antwortvertrag nur einmal. `requestSchema` verweist auf `commandSchema`; die externen Antwortsteuerfelder `intermediateDisplay`/`responseDetail` sowie Apply-, Save-, Export-, Job-, Discard-, Screenshot- und Command-/Kontextabfrage-Schemas reisen nicht mehr im Systemtext. Diese Verträge bleiben am öffentlichen Kontext-/API-/MCP-Einstieg sowie im unveränderten Chat-, Übungs-, Navigations-, STL- und Laborpfad erhalten. Am festen Fixture sinkt `instructions` von 287.895 auf 270.226 Byte (−17.669 Byte, −6,14 %). Geprüft von `tests/ai-working-contract.test.mjs`, `tests/ai-provider-compression.test.cjs`, `tests/cad-ai-feature-dependencies.test.mjs` und `tests/ai-integration-improvements.test.mjs`.
+
+Auftrag 11: Reine Bedienhilfe sendet nur die bestätigte Revision, die Auswahlbeschreibung und den registrierten Bedienzustand; die Geometriedatensätze der Szene bleiben dem normalen CAD-Pfad vorbehalten. Der Anfragezyklus behält die vollständige Szene für Revisions- und Auswahlprüfungen und baut sie vor einem Modellier- oder Messwechsel über den normalen UI-Einstieg erneut auf. Die unmittelbaren Werkzeugvoraussetzungen bleiben im Katalog verfügbar. Der angezeigte Toleranzfaktor ist lesbar formatiert, während die numerische Strengeprüfung den genauen Faktor verwendet. Die Electron-Prüfung erweitert die Fälle Verbrauch und ausgegraute Ausformung um eine kompakte Szene und einen Fallback zum Modellieren; die gezielten Node-Tests stehen in `tests/cad-ai-program-context.test.mjs`, `tests/program-assistant-budget.test.mjs` und `tests/ai-model-strictness.test.mjs`.
+
 Die Ausgabe 0.144.0-r1 bündelt den gestuften Entwicklungscheck, separat
 startbare CAD-, STL- und Foto-Prüfungen sowie die Befunde aller Stufen im
 KI-Labor. Den Download, die passenden Quellen und die Windows-Abnahme
@@ -15,6 +330,13 @@ pro Plattform. Die CI gleicht zusätzlich die tatsächlich erfolgreichen
 Dateien pro Gruppe mit der geprüften Auswahl ab. Dokumentierte
 Laufzeitausnahmen und entfernte Tests mit Status `obsolete` werden
 ausgewiesen.
+
+The private Windows patch builder supports the SHA-256-verified 0.144.0-r1
+release archive and executable and retains the packaged CAD kernel licenses.
+The development check supplies the
+geometry grouping reference for advanced-01 and advanced-03, counts native
+mismatches separately from open cases, and publishes complete export ZIPs
+with the existing local-path redaction applied to JSON and Markdown findings.
 
 EC-7.4: `developmentFindings()` in `ai/lab-development-findings.mjs` behält alle
 Versuche aller Stufen in `runs` (Feld `decisive` markiert je Aufgabe den zählenden
@@ -1425,6 +1747,12 @@ IDs und Herkunftsbezüge bleiben unabhängige Modelldaten; Gruppen mit finish
 behalten die Herkunfts-IDs im Schlüssel. Native Maßabfragen benutzen die bereits
 geprüften BRep-/Transformationsnachweise auch in beliebigen affinen Bezugsrahmen,
 niemals die Grenzen eines Anzeigegitters oder ungeprüfte gespeicherte Statistik.
+
+Beim fehlgeschlagenen nativen Kantenaufbau bleiben Körper-ID, gespeicherte
+Schritt-ID und bei der Kantenauflösung der Referenzindex bis zum Editor
+verfügbar. Verlorene und deckungsgleiche Kanten bleiben unterschiedliche
+Fehler. Die bestätigte Konstruktion bleibt bei einer fehlgeschlagenen Vorschau
+einschließlich Undo unverändert.
 
 STL vereinigt strikt getrennte native Körper in einem OCCT-Fuse. Trennung wird
 mit nativen Grenzen einschließlich Abstand zu tatsächlichen Formtoleranzen
@@ -6014,3 +6342,238 @@ Foto- und Multiview-Prüfdaten, Prüfregeln und Berichtsformate bleiben gleich.
 2026-11-18 Hidden practice windows now use Electron offscreen rendering. This keeps the render frames needed before trusted UI input moving while the window is hidden. Using the unchanged 300 percent tempo and the same 15 recorded plans, the hidden replay took 299.198 s versus 713.813 s before and 460.759 s visible. Median input spacing fell from 2012 ms to 717 ms. All native measurements and stored BReps matched the earlier runs, and the interruption test exited cleanly. The private Windows archives differed only in electron.cjs.
 
 2026-11-18 Supplemental Lab checks are selectable in the current plan form. Seven CAD cases cover the three everyday plate edits, a retained drawing dimension, a native STEP roundtrip, a stale preview and a measured 45-degree assembly limit. Five STL cases use the packaged converter and reopen native STEP. Four synthetic-photo cases check calibration, missing scale, perspective and multiview conflict handling. The quick selection runs seven cases. The full selection runs all sixteen. The default uses scripted responses. Live mode uses the current provider for applicable cases and records request counts per result. Result JSON is stored in the Lab diagnosis directory.
+
+2026-11-18 AI Lab adds isolated plugin checks for native package shapes, editable bores, function registration and native STEP readback. Benchmark tasks can be selected for guided practice, direct CAD modeling or STL region correction. The modeling series grows from 2 to 64 predrilled parts in one body, then to 96, 160 and 240 parts across six, ten and fifteen bodies; native duties include all bores, retained source hierarchy, source editing and Undo. A follow-up asks the model to edit 18 of 96 nested bore sources itself and checks every bore again. The guided series pins existing tasks and uses two fresh trials per stage. Local scripted calibration and live model outcomes are recorded separately.
+
+The private Windows AI Lab has independent difficulty ladders for direct modeling, guided practice, photo input and STL reconstruction. Each task defaults to five fresh trials per supported reasoning level, including explicit thinking-off when supported. The STL trial checks editable native features before exercising the converter fallback. See [KI-BENCHMARK.md](KI-BENCHMARK.md) for trial outcomes, timing and patch distribution. DeepSeek sessions open on Flash, with manual model selection available during the session. The desktop and Lab start with the operating system’s color scheme.
+
+The AI Lab benchmark opens in Kurztest mode. It runs the first native-checked
+task in each of the four areas at one selected reasoning level. Each area gets
+60 seconds, with at most 12 model requests across all four tasks. Timeouts,
+request limits and technical errors leave the affected task open. The separate
+Leistungsgrenze mode advances after the first confirmed success, with up to
+three attempts per difficulty and selectable reasoning levels. Charts keep the
+short test and progressive conditions distinct.
+
+The AI Lab model selector shows saved short and progressive benchmark results per
+model for a selected comparable task. Selecting a bar chooses the model for the
+next start. Planned tasks, development results, series filters and individual
+logs resolve their display names from the task catalogue. The usage panel groups
+recorded tokens by model and assigns new requests from navigation mode and
+explicit questions to guidance, without changing the persisted ledger format.
+
+The AI Lab defaults to a compact progressive benchmark across CAD, STL and
+photo input. Each selected reasoning level has its own progression and a
+share of one 18-minute, 32-model-step limit. Later probe areas retain time and
+request shares. The first native success advances immediately. Two native
+misses mark the first observed failing stage for that area. Stronger models can
+start the ten-stage CAD ladder with a drawing-linked edit and continue
+through side and oblique bores, opposing blind bores, compound angles and
+selective depth or counterbore edits. The final stages check retained webs and
+require both an edit to an existing bore and a new inclined stepped blind
+bore. Earlier basic CAD tasks remain available in supplemental checks. The STL ladder advances from region selection to
+geometry inference and editable features, with countersinks and a chamfered
+housing. The photo ladder advances through perspective, missing scale and
+reconstructing a single part from three related views. Timeout, exhausted
+budgets and technical errors keep the limit open. The compact report separates
+model-request time from local execution and verification and records which
+phase was active when the budget stopped a trial. The original standalone
+ladders remain available. Stage evidence keeps compact scores separate from
+older conditions and records token usage and tariff estimates.
+
+Compact benchmark version 5 mixes spatial bore edits with a native fixture
+whose stages add a fitted carriage, prismatic and revolute joints, coupled
+placements and source-specific drawing sheets. Each trial starts from a fixed
+reference. Local acceptance checks native shape, clearance, limits, current
+drawing projections and Undo. Compact CAD model requests use a reduced command
+contract. An optional whole-run EUR limit uses the known API token rates, the
+EUR conversion rate and a reserve before each model request. An unavailable
+quote or an exhausted budget leaves the skill boundary open. The export records
+the configured price limit alongside the benchmark plan.
+
+Compact benchmark version 6 and the quick benchmark run without photo cases.
+The separate expert photo ladder remains available. The compact drawing ladder
+checks linked orthographic views, geometry-backed dimensions, a section through
+an offset counterbore, and independent part and assembly sheets. Its model
+requests use a drawing-only command contract and compact scene data. The CAD
+geometry and motion cases use the relevant subset of command definitions.
+
+The audited API-rate catalog is backend/ai-provider-rates.json. It records
+standard USD rates per million tokens, the official price source and the date
+each provider was verified. For a price-only update, copy the reviewed catalog
+or a verified subset to Daten/KI-Tarife.json and restart Formnaro. A provider
+entry may add model IDs or override its bundled rates using the same format.
+Invalid files and entries older than the bundled provider snapshot are ignored.
+New estimates use the selected provider and model; historical invoices and
+saved estimates keep their original basis. A subscription estimate is labeled
+as API-equivalent. DeepSeek shows the applicable published price range.
+
+The standard benchmark can also limit a subscription run by its estimated
+API-equivalent value. The estimate uses reported requests and a reserve for
+the next call; hosted subscription endpoints control their own output limits
+and quotas. Price-limited requests skip Formnaro web research so they do not
+incur hidden follow-up model calls. Mistral Vibe uses its own research setting,
+which must be off for a priced run.
+The limiter can reduce the requested API output allowance to fit a small
+remaining budget before sending the next request.
+
+Finished cost-limited runs can be compared by the same configured EUR amount,
+benchmark version and reasoning levels. The comparison shows solved stages,
+elapsed time, estimated cost and the budget status, with subscription estimates
+marked as API equivalent. Reported OpenAI cache writes use the default TTL rate.
+
+Primary benchmark tasks display local model previews or drawings in the
+task sidebar. Drawing thumbnails come from the native sheet renderer.
+Where geometry is available, results can include separate observed images.
+These images never enter provider requests. Bounded thumbnails and source STL
+files are linked to their saved attempts and included in the benchmark ZIP.
+Older drawing and fixture stages can regenerate their target locally from the
+known task definition when selected. No old result image is reconstructed.
+
+Compact benchmark version 7 runs the slanted bore before the clearance slide.
+Its drawing ladder ends with two additional native checks. The first verifies a
+pair of section views and geometry-linked dimensions at enlarged scale. The
+second requires propagating a part revision into the assembly drawing and
+creating a revised part sheet while keeping the other drawing sheets intact.
+The standard benchmark keeps its existing shared time and request ceilings
+and its maximum of two attempts per stage.
+
+Compact benchmark version 8 groups independent CAD tasks by the measured
+first-pass results, using their functional progression within the fast group.
+The clearance slide and the compound bore edit come last. The prebuilt
+fixtures, task IDs and native checks stay stable. Stored runs retain their
+original task order and benchmark version.
+
+
+In compact benchmark version 9, the CAD context includes the native bounds
+query for group sources, the coordinate convention for adding a group source,
+and the entry extension rule for an oblique cutter. Task dimensions still come
+from the task and current model. Initial models and native checks retain their
+existing definitions.
+
+
+Compact benchmark version 10 moves the flag-and-hinge task close to the end
+of CAD, after the faster geometry, fit, motion and drawing cases. The standard
+benchmark allows three attempts per stage across CAD, STL and technical drawing.
+It advances after the first verified pass. The existing shared time and request
+ceilings and the configured price guard still apply. CAD receives enough of the
+request budget to reach the two new stages in a single-effort run.
+
+The two CAD extensions use prepared independent fixtures. The first adds and
+fixes a native end stop, then checks the revised travel limit and the actual
+2 mm clearance. The second revises the stop and slot in place, preserves source
+and sheet identities, verifies movement, and regenerates the assembly and slide
+drawings at revision B. Reference thumbnails are available for both extensions.
+
+### STL diagnosis v1
+
+Select STL-Diagnose (v1) under the benchmark scope. Five native source fixtures
+exercise countersink orientation, rotated part coordinates, intersecting blind
+holes, offset pocket levels and a grooved flange. Each source is tested through
+the local STL-to-STEP converter and through a separate editable CAD reconstruction.
+Each file can receive up to two independent attempts with a fresh per-attempt
+budget. The first confirmed pass advances the run to the next file. A STEP
+failure or timeout is recorded separately from the model stage. The
+model stage uses the same independent surface, feature and editability checks
+with every profile. Reference probes and original STL hashes are retained
+locally. The benchmark export also records per-request context and scene sizes
+in UTF-8 bytes before provider formatting.
+
+The fixed lab profile disables automatic model checks. The standard profile
+uses the normal geometric checks with photo and AI image review disabled.
+Surface deviation, FreeCAD and volume can each be enabled independently from
+that standard. The surface and volume toggles allow corresponding checks in
+the model response. A volume check requires an explicit expected volume.
+FreeCAD validates exported geometry with a second engine when available.
+Profiles apply only to this diagnostic run. The v14 comparison plan remains
+separately selectable with its original tasks and budgets.
+
+
+#### Kompakte Schnittmessung bei offenen STL-Netzen
+
+Die lesende KI-Abfrage mesh/sectionContours unterstützt zusätzlich
+summaryOnly:true. Die Messung gibt Mittelpunkte in Weltkoordinaten,
+Durchmesser und Anpassungsgrenzen für geschlossene Kreiszyklen zurück.
+Verzweigte und offene zusammenhängende Schnittsegmente werden ausgelassen
+und in rejectedComponents gezählt. complete:false kennzeichnet den
+unvollständigen Schnitt, role:unknown die dadurch ungeklärte Zuordnung
+als Außenkontur oder Bohrung. Die kompakte Ausgabe enthält keine Skizze.
+Die normale Konturabfrage verlangt weiterhin einen eindeutigen geschlossenen
+Schnitt. Die Variante mit gemessenen Schnittprofilen im KI-Labor kann bei
+unvollständigen oder zu umfangreichen Konturen die kompakte Messung verwenden.
+
+Schnittmessung ändert die Quelle nicht und bleibt auch dann verfügbar,
+wenn das STL-Netz nicht als geschlossener CAD-Körper importiert werden kann.
+Die Formabweichungsprüfung des Konverters bleibt für Reparatur und
+STEP-Übernahme maßgeblich.
+
+
+#### Netz-Hilfe nach einem Konverterfehler
+
+Die STL-Werkbank bietet bei nicht verfügbarer Flächenanalyse oder
+fehlgeschlagener Konvertierung «Mit Netz-Hilfe weiter» an. Ohne vorhandenes
+Projektobjekt importiert die Schaltfläche die Original-STL in der gewählten
+Einheit als Netzteil. Automatische Bereinigung und Vereinfachung sind für
+diese Messvorlage ausgeschaltet. Bei Netz → CAD bleibt das vorhandene
+Objekt die Vorlage. Der Netzinspektor zeigt die Fundstellen, und die
+KI kann das ausgewählte Netz über mesh/sectionContours vermessen. In
+Easy-Tinker wechselt die Schaltfläche in den gemeinsamen normalen
+Arbeitsbereich, damit die Messvorlage direkt sichtbar und die automatische
+Netzreparatur während der Messung ausgeschaltet ist. Die native
+Schließungs- und Toleranzprüfung gilt weiterhin für jedes STEP-Ergebnis.
+
+#### Korrekturen beim STL-Nachbau
+
+Fordert die KI eine unvollständige Schnittkontur ohne Skizzen- oder
+Punkteanforderung an, gibt die Analyse die geschlossenen Teilmessungen
+zurück, sofern welche vorliegen. Die offenen Stellen sind über complete
+und rejectedComponents erkennbar. Dadurch bleibt der Rest einer
+Messrunde verfügbar. Skizzenanforderungen bleiben an eine geschlossene
+Kontur gebunden.
+
+Das KI-Labor prüft den Ergebnisaufbau des STL-Nachbaus bereits bei der
+Kandidatenvorschau. Fehlen Konstruktionsquellen oder stehen lose Objekte
+neben dem Zielkörper, erhält das Modell die betroffenen Objekte und ihre
+Anzahl zur Korrektur. Die native Oberflächenprüfung vergleicht Vorschau und
+Original im selben Weltkoordinatensystem. Die vorhandenen Funktionsproben
+messen in einer separaten Arbeitskopie der Vorschau. Der bewertete Entwurf
+wird erst nach bestätigten Geometrie- und Merkmalsprüfungen übernommen.
+Fehler melden die Weltgrenzen, gegebenenfalls die Orte der größten
+Stichprobenabweichungen und die fehlgeschlagenen Funktionsproben an das
+Modell zurück. Die Korrektur nutzt das vorhandene Laborbudget. Die
+anschließende Prüfung der Editierbarkeit und von Undo bleibt erhalten.
+
+Die Rückmeldung listet auch bereits bestätigte Weltgrenzen und
+Funktionsproben auf. Bei einem Rückschritt erhält das Modell die Befehle
+des früheren Entwurfs und dessen offene Befunde als Referenz. Der
+bestätigte Projektzustand bleibt bis zur Abnahme frei von Testentwürfen.
+Technische Reparaturen und fehlgeschlagene Maßprüfungen haben eigene
+Versuchszähler. Das Zeit- und Anfragebudget des Labors gilt weiterhin.
+
+Die STL-Rekonstruktion misst Bohrungsstufen in einem begrenzten Satz
+paralleler Schnitte an planen Flächen. Zwei bestätigte kreisförmige
+Durchmesserbereiche belegen einen Stufenkandidaten. Die Rückgabe enthält
+getrennte Weltpunkte, Durchmesser, die Abstände zwischen den gemessenen
+Ebenen und die Einrückung der Schnitte. Offene Schnitte können einen
+bereits belegten Durchmesserbereich ergänzen und bleiben gekennzeichnet.
+
+## Solid-Suche und gezielte Auswahl in überlagerten Ansichten
+
+Solid öffnet mit S die vier üblichen Direktzugriffe und die Befehlssuche.
+Deutsche und englische Solid-Bezeichnungen werden gemeinsam gefunden.
+Solid und Fusion teilen das Eingabe- und Fokusverhalten der Suche und
+verwenden ihre eigenen Befehlslisten. Ausführen prüft den Befehlszustand
+und verwendet die vorhandenen Aktionen und Vorschauen.
+
+Rechtsklick im CAD-Viewport bietet „Andere auswählen“. Die Tiefenliste
+wird beim Aufruf aus sichtbaren Anzeigekörpern erstellt und nach Zielpfad
+zusammengefasst. Normale Klicks behalten den bisherigen vordersten Treffer.
+Der fokussierte Treffer erhält einen temporären Rahmen. Escape lässt die
+vor der Auswahl bestätigte Auswahl erhalten.
+
+Das Bohr- und das Kantenwerkzeug können native Flächen- oder Kantenbezüge
+aus derselben Auswahl bestimmen. Die Anzeige liefert nur die Körperkandidaten.
+Ein vereinfachter Baugruppenrahmen wird als solcher angezeigt und kann
+keinen nativen Flächen- oder Kantenbezug liefern. Projektöffnung und Revision
+binden einen Kandidaten an die aktuelle Sitzung. Die reguläre Vorschau und
+explizite Übernahme bleiben erforderlich.

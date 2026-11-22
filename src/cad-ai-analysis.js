@@ -52,7 +52,7 @@ export function pageAIAnalysisResult(value,report,budget=12000){
  const o=validateAnalysisReport(report);let raw=JSON.parse(JSON.stringify(value));
  // A truncated point/element list is a different contour. Geometry reports are
  // atomic; the caller selects complete loops in the query, never nested pages.
- if(raw?.kind==='meshSectionContours'){
+ if(raw?.kind==='meshSectionContours'||raw?.kind==='meshSectionMeasurements'){
   if(o.collection||o.offset)invalid('Schnittkonturen bleiben vollständig. Teilmengen über options.loopIndices auswählen.');
   if(JSON.stringify(raw).length>budget)invalid('Vollständige Schnittkonturen überschreiten das Berichtbudget. includePoints:false und weniger loopIndices wählen, oder sectionContours lokal im Python-/JavaScript-Programm verwenden.');
   return raw;

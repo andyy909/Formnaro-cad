@@ -4,7 +4,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {spawn} from 'node:child_process';
 const [exe,...args]=process.argv.slice(2);
-if(!exe||!args.some(a=>/^--verify-[a-z-]+=/.test(a)))throw Error('Expected packaged executable and explicit verification flag.');
+if(!exe||!args.some(a=>/^--verify-[a-z0-9-]+=/.test(a)))throw Error('Expected packaged executable and explicit verification flag.');
 const source=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const archive=path.join(path.dirname(path.resolve(exe)),'resources/app.asar');
 const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;

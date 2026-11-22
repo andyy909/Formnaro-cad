@@ -1,4 +1,4 @@
-const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{readVerificationContract}=require('./provider-contract-verification.cjs');
 exports.verifyTaskUI=async(win,{directory})=>{
  const js=code=>win.webContents.executeJavaScript(code),pause=ms=>new Promise(r=>setTimeout(r,ms)),checks=[],requests=[],original=global.fetch;let calls=0,interrupt=false,held=false,expectedPurpose='technical';
  const check=(ok,label)=>{assert(ok,label);checks.push(label);fs.writeFileSync(path.join(directory,'task-ui-progress.json'),JSON.stringify({checks,calls},null,2));};
@@ -11,7 +11,7 @@ exports.verifyTaskUI=async(win,{directory})=>{
  global.fetch=async(url,options)=>{
   if(!String(url).startsWith('https://api.deepseek.com/'))throw Error('No external task UI requests permitted');
   if(String(url).endsWith('/models'))return new Response(JSON.stringify({data:[{id:'deepseek-flash',input_modalities:['text']}]}));
-  calls++;const body=JSON.parse(options.body),content=body.messages.at(-1).content,text=typeof content==='string'?content:content.find(c=>c.type==='text').text,contract=JSON.parse(body.messages[0].content.split('Contract:\n').at(-1).split('\n',1)[0]),scene=JSON.parse(text.split('Current scene (data):\n')[1].split('\nUser task:\n')[0]);
+  calls++;const body=JSON.parse(options.body),content=body.messages.at(-1).content,text=typeof content==='string'?content:content.find(c=>c.type==='text').text,contract=readVerificationContract(body.messages[0].content,text).contract,scene=JSON.parse(text.split('Current scene (data):\n')[1].split('\nUser task:\n')[0]);
   assert.equal(contract.agentWorkflow.taskRequirements.purpose,expectedPurpose);if(expectedPurpose==='generative')assert.match(contract.agentWorkflow.qualityCriteria,/qualitatively/);assert.equal(contract.agentWorkflow.step,calls);assert.equal(contract.agentWorkflow.taskRequirements.checks[0].expected[0],60);assert.equal(contract.agentWorkflow.taskRequirements.protectedTargets.length,1);requests.push({step:calls,requirements:contract.agentWorkflow.taskRequirements});
   if(interrupt&&calls===2){held=true;return new Promise((resolve,reject)=>{const abort=()=>reject(Object.assign(Error('Synthetic provider cancelled'),{name:'AbortError'}));if(options.signal?.aborted)abort();else options.signal?.addEventListener('abort',abort,{once:true});});}
   return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({revision:scene.revision,label:'Gespeicherter fehlerhafter Prüfkörper',commands:[{op:'create',type:'box',as:'part',size:[40,40,6]}],checks:[{kind:'size',target:'$part',space:'worldAxes',expected:[40,40,6]}]})}}]}));

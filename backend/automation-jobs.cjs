@@ -1,7 +1,7 @@
 const {randomUUID}=require('node:crypto');
 const failure=(code,message)=>Object.assign(Error(message),{code});
-const computations=new Set(['preview','analysis','export','save','apply']);
-const cancelable=new Set(['preview','analysis','export']);
+const computations=new Set(['preview','analysis','export','save','apply','orca']);
+const cancelable=new Set(['preview','analysis','export','orca']);
 function createAutomationJobs({rpc,now=()=>Date.now(),limit=40,previewLifetime=15*60*1000}={}){
  const jobs=new Map(),closedPreviews=new Set();let observedRevision=null;let tail=Promise.resolve(),closed=false;
  const active=()=>[...jobs.values()].filter(j=>['queued','running','cancelling'].includes(j.state));

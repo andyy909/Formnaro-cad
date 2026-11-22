@@ -590,6 +590,7 @@ Metrische Vorlage wählen …|Choose metric preset …
 Metrische Gewindevorlage|Metric thread preset
 Scharf|Sharp
 Abrundung|Fillet
+Verrundung|Fillet
 Fase 45°|45° chamfer
 Kantenform|Edge shape
 Radius / Fasenmaß|Radius / chamfer size

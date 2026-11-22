@@ -53,7 +53,7 @@ export function copyPortableCAD(from,to){
 }
 export function copyBenchmarkSources(source,stage){
  const required=new Map();
- for(const suite of ['benchmark-core-v1.json','benchmark-advanced-v2.json']){
+ for(const suite of ['benchmark-core-v1.json','benchmark-advanced-v2.json','benchmark-guided-v1.json']){
   for(const entry of JSON.parse(fs.readFileSync(path.join(source,'ai',suite),'utf8')).dependencies){
    if(!entry.path.startsWith('src/'))continue;
    if(!/^src\/[\w-]+\.js$/.test(entry.path)||!/^[a-f0-9]{64}$/.test(entry.sha256))throw Error('Invalid benchmark source pin: '+entry.path);

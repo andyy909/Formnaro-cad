@@ -1,3 +1,4 @@
+import { cadFinishAmountOperation } from './cad-finish-command.js';
 import { CAD_PRECISE_TOOL_SCHEMAS } from './cad-precise-tools.js';
 import { rejectStaleCadReferences } from './cad-ai-reference-guard.js';
 import { rebindCadDrillsCoordinated } from './cad-drill-rebind-coordinated.js';
@@ -5,6 +6,7 @@ import { updateCadLinkedPatternWithConsumers } from './cad-pattern-consumers-nat
 import { rebindCadReferencesNative } from './cad-reference-rebind-native.js';
 import { planCadPatternDrawings } from './cad-linked-pattern-drawing-data.js';
 import { updateCadPatternDrawings } from './cad-linked-pattern-drawings-native.js';
+import { prepareCadDrillDrawingRefresh, refreshCadDrillDrawings } from './cad-drawing-drill-native.js';
 import { planCadPatternContours } from './cad-linked-pattern-contour-data.js';
 import { updateCadPatternContours, mergeCadContourBuildReports } from './cad-linked-pattern-contours-native.js';
 import { hasGeometryRefs, isGeometryRef } from './cad-geometry-ref.js';
@@ -198,14 +200,19 @@ export function createCadCommandRouter({
     return { locked, hidden };
   }
   function address(project, target, aliases) {
+    const bareAlias = typeof target === 'string' && Object.hasOwn(aliases, target) ? target : undefined;
     if (typeof target === 'string' && target.startsWith('$')) target = aliases[target.slice(1)];
     if (typeof target === 'string') target = { rootId: target, path: [] };
     fields(target, ['rootId', 'path']);
     if (typeof target.rootId !== 'string' || !Array.isArray(target.path) || target.path.length > 12)
       fail('UNKNOWN_CAD_OBJECT', 'Eindeutige Objektkennung und Quellenpfad erforderlich.');
     const root = project.nodes.find((node) => node.id === target.rootId);
-    if (!root)
-      fail('UNKNOWN_CAD_OBJECT', 'CAD-Objekt fehlt.', { target: { rootId: target.rootId, path: target.path } });
+    if (!root) {
+      const message = bareAlias
+        ? 'Für den Ergebnisalias „' + bareAlias + '“ verwende „$' + bareAlias + '“.'
+        : 'CAD-Objekt fehlt.';
+      fail('UNKNOWN_CAD_OBJECT', message, { target: { rootId: target.rootId, path: target.path } });
+    }
     let node = root,
       siblings = project.nodes,
       parent = null,
@@ -1452,6 +1459,7 @@ export function createCadCommandRouter({
     { baseline = input, progress, signal, freecadRun, collectConsumerChoices = false } = {},
   ) {
     const project = cadProjectSnapshot(input);
+    let drillDrawingRefresh, drillDrawingPath;
     if (!operation || typeof operation.kind !== 'string') fail('INVALID_COMMAND', 'CAD-Auftrag fehlt.');
     switch (operation.kind) {
       case 'referenceRebind':
@@ -1698,7 +1706,6 @@ export function createCadCommandRouter({
             'projectParameters',
             'contourLinks',
             'joints',
-            'drawings',
             'linkedPatterns',
             'featureReferences',
           ])
@@ -1711,8 +1718,17 @@ export function createCadCommandRouter({
             return !!source.locked || (source.children ?? []).some(lockedSource);
           }
           if (lockedSource(node)) fail('LOCKED_CAD_OBJECT', 'Die Bohrungsquelle oder eine ihrer Quellen ist gesperrt.');
+          if (references(project.drawings)) {
+            drillDrawingRefresh = prepareCadDrillDrawingRefresh(project, node.id, [], { oc, service, signal });
+            if (!drillDrawingRefresh)
+              fail(
+                'CAD_DRILL_DEPENDENCIES_UNSUPPORTED',
+                'Eine Kantenbearbeitung auf verknüpfter Bohrung mit bestehenden Bezügen wird noch nicht unterstützt.',
+              );
+          }
           const child = structuredClone(node);
           child.id = globalThis.crypto.randomUUID();
+          drillDrawingPath = [child.id];
           child.transform = cadIdentity();
           delete child.annotations;
           delete child.geometryIdentity;
@@ -1756,14 +1772,29 @@ export function createCadCommandRouter({
         }
         break;
       }
+      case 'editFinishAmount':
       case 'editFinish': {
-        fields(operation, ['kind', 'target', 'steps']);
+        const byAmount = operation.kind === 'editFinishAmount';
+        fields(operation, byAmount ? ['kind', 'target', 'stepId', 'amount'] : ['kind', 'target', 'steps']);
         const context = address(project, operation.target, {});
         editable(context);
+        if (byAmount && (context.target.path.length || context.node.suppressed || containerFlags(project, context.root).hidden || context.root.hidden))
+          fail('INVALID_COMMAND', 'Eine sichtbare vollständige CAD-Wurzel mit gespeichertem Kantenschritt wählen.');
         if (!context.node.finish) fail('INVALID_COMMAND', 'Editierbare Kantenoperation fehlt.');
-        if (!Array.isArray(operation.steps)) fail('INVALID_COMMAND', 'Kantenoperationen müssen eine Liste sein.');
-        if (operation.steps.length) context.node.finish = { steps: structuredClone(operation.steps) };
-        else if (['group', 'partition', 'extraction', 'modeling'].includes(context.node.source))
+        const steps = byAmount
+          ? cadFinishAmountOperation(context.node, operation.stepId, operation.amount).steps
+          : operation.steps;
+        if (!Array.isArray(steps)) fail('INVALID_COMMAND', 'Kantenoperationen müssen eine Liste sein.');
+        if (steps.length) {
+          const node = context.node,
+            drill = node.source === 'finish' ? node.children?.[0] : null;
+          if (project.drawings && !context.parent && drill?.drill && steps.length === node.finish.steps.length &&
+              steps.every((step, index) => step?.id === node.finish.steps[index].id)) {
+            drillDrawingPath = [drill.id];
+            drillDrawingRefresh = prepareCadDrillDrawingRefresh(project, node.id, drillDrawingPath, { oc, service, signal });
+          }
+          node.finish = { steps: structuredClone(steps) };
+        } else if (['group', 'partition', 'extraction', 'modeling'].includes(context.node.source))
           delete context.node.finish;
         else if (context.node.source === 'finish') {
           const wrapper = context.node,
@@ -1959,7 +1990,9 @@ export function createCadCommandRouter({
       default:
         fail('INVALID_COMMAND', 'Unbekannter CAD-Auftrag.');
     }
-    return { project: await service.rebuild(project, { baseline, progress }) };
+    const rebuilt = await service.rebuild(project, { baseline, progress });
+    if (drillDrawingRefresh) rebuilt.drawings = refreshCadDrillDrawings(rebuilt, drillDrawingRefresh, drillDrawingPath, signal);
+    return { project: rebuilt };
   }
   function scene(input, selection = []) {
     const project = cadProjectSnapshot(input),

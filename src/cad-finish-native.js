@@ -339,7 +339,9 @@ function verifyCurrentSourceDomain(oc, reference, node, expected, tolerance) {
     if (matches.length !== 1)
       fail(
         matches.length ? 'AMBIGUOUS_CAD_SOURCE_FEATURE' : 'CAD_SOURCE_FEATURE_LOST',
-        'Die vollständige native Quellenkurve ist verloren oder mehrdeutig.',
+        matches.length
+          ? 'Die vollständige native Quellenkurve ist mehrdeutig.'
+          : 'Die vollständige native Quellenkurve ist verloren.',
       );
   } finally {
     edges.forEach((edge) => edge.delete());
@@ -484,8 +486,11 @@ export function createCadFinishNative({ oc, tolerance = 1e-6, resolveSourceFeatu
       fail('INVALID_CAD_FINISH', 'Editierbare CAD-Quellen und Kantenoperationen erforderlich.');
     let current = readCadBrep(oc, writeCadBrep(oc, input));
     const operationHistory = [];
+    let stepId, edgeIndex;
     try {
       for (const step of definition.steps) {
+        stepId = step?.id;
+        edgeIndex = undefined;
         if (
           !['round', 'chamfer'].includes(step.kind) ||
           !Number.isFinite(step.amount) ||
@@ -502,7 +507,8 @@ export function createCadFinishNative({ oc, tolerance = 1e-6, resolveSourceFeatu
         let builder, next;
         try {
           for (const edge of edges) records.push({ ...describeEdge(oc, edge), edge });
-          for (const reference of step.edges) {
+          for (const [index, reference] of step.edges.entries()) {
+            edgeIndex = index;
             if (
               reference?.kind !== 'edge' ||
               reference.origin?.rootId !== node.id ||
@@ -544,12 +550,15 @@ export function createCadFinishNative({ oc, tolerance = 1e-6, resolveSourceFeatu
             if (candidates.length !== 1)
               fail(
                 candidates.length ? 'AMBIGUOUS_CAD_EDGE' : 'CAD_EDGE_LOST',
-                'CAD-Kante ist nicht eindeutig vorhanden; Operation entfernen oder Kante neu auswählen.',
+                candidates.length
+                  ? 'Mehrere deckungsgleiche CAD-Kanten gefunden. Kante neu auswählen.'
+                  : 'Die gespeicherte CAD-Kante ist verloren. Kante neu auswählen.',
               );
             if (chosen.some((record) => record.edge.IsSame(candidates[0].edge)))
               fail('AMBIGUOUS_CAD_EDGE', 'Eine CAD-Kante wurde mehrfach angegeben.');
             chosen.push({ ...candidates[0], reference });
           }
+          edgeIndex = undefined;
           builder =
             step.kind === 'round'
               ? new oc.BRepFilletAPI_MakeFillet(current, oc.ChFi3d_FilletShape.ChFi3d_Rational)
@@ -594,6 +603,11 @@ export function createCadFinishNative({ oc, tolerance = 1e-6, resolveSourceFeatu
       return current;
     } catch (error) {
       current.delete();
+      if (error instanceof Error && !(error instanceof WebAssembly.RuntimeError) && typeof stepId === 'string') {
+        error.bodyId = node.id;
+        error.stepId = stepId;
+        if (edgeIndex !== undefined) error.edgeIndex = edgeIndex;
+      }
       throw error;
     }
   };

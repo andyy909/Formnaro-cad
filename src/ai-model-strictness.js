@@ -1,4 +1,4 @@
-import { readModelCheckConfig, saveModelCheckConfig } from './ai-model-check-config.js';
+import { aiToleranceFactorText, readModelCheckConfig, saveModelCheckConfig } from './ai-model-check-config.js';
 import { openModelCheckSettings } from './ai-model-check-settings.js';
 export const AI_MODEL_STRICTNESS_KEY = 'formnaro-ai-model-strictness-v1';
 export const readAIModelChecksEnabled = () => readModelCheckConfig().mode === 'checked';
@@ -19,7 +19,8 @@ export function readAIModelStrictness(storage) {
 }
 export function aiModellingPolicy(value = 100) {
   const strictness = validateAIModelStrictness(value),
-    toleranceScale = strictness ? 100 / strictness : null;
+    toleranceScale = strictness ? 100 / strictness : null,
+    toleranceText = aiToleranceFactorText(strictness, 'en');
   return {
     version: 1,
     strictness,
@@ -28,7 +29,7 @@ export function aiModellingPolicy(value = 100) {
     instructions:
       strictness === 0
         ? 'The user selected free modelling (0/100). Dimensional checks and photo differences are advisory and must remain visible as measured; do not retry solely to satisfy them. You may approximate the requested shape and dimensions within the task and disclose assumptions. Keep file/schema validity, inherited locks, protected sources, original archives, unrelated parts, revision checks and explicit Apply. Never claim an unmet requirement passed.'
-        : `The user selected modelling strictness ${strictness}/100. Dimensional acceptance allows ${toleranceScale} times the original tolerance; retain original expected values and measured failures in reports. Surface deviation allows the same scale of its threshold. Discrete body counts and checks without numeric evidence remain strict. At 100 enforce explicit user dimensions and existing dimensions to preserve. Unspecified dimensions and design choices stay free at every strictness under context.designFreedom; null components of expected size/bounds vectors impose no dimensional requirement. Never loosen this user-selected policy yourself. Data integrity, protected sources and explicit Apply always remain active.`,
+        : `The user selected modelling strictness ${strictness}/100. Dimensional acceptance allows ${toleranceText} times the original tolerance; retain original expected values and measured failures in reports. Surface deviation allows the same scale of its threshold. Discrete body counts and checks without numeric evidence remain strict. At 100 enforce explicit user dimensions and existing dimensions to preserve. Unspecified dimensions and design choices stay free at every strictness under context.designFreedom; null components of expected size/bounds vectors impose no dimensional requirement. Never loosen this user-selected policy yourself. Data integrity, protected sources and explicit Apply always remain active.`,
   };
 }
 export function aiStrictnessDecision(verification, value = 100) {
@@ -92,7 +93,11 @@ export function mountAIModelStrictness(host, { storage, id = 'ai-model-strictnes
       ? '0: free requirements · 100: strict specified dimensions. Missing design dimensions, including doors/windows, are chosen freely at every setting. File integrity, protected parts and explicit Apply remain active.'
       : '0: freie Vorgaben · 100: strenge angegebene Maße. Fehlende Entwurfsmaße, auch für Türen/Fenster, wählt die KI bei jeder Einstellung selbst. Dateiintegrität, geschützte Teile und ausdrückliches Übernehmen bleiben aktiv.';
   const refresh = () => {
-    output.textContent = input.value + ' / 100';
+    const factor = aiToleranceFactorText(Number(input.value), language());
+    output.textContent =
+      input.value +
+      ' / 100' +
+      (factor ? (language() === 'en' ? ` · tolerance factor ${factor}` : ` · Toleranzfaktor ${factor}`) : '');
     input.setAttribute('aria-valuetext', output.textContent);
   };
   refresh();

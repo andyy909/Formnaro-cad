@@ -331,7 +331,7 @@ export function createCadInterfaceSettings({
     modal(
       'Einstellungen',
       `<div class="settings-tabs"><button data-settings-tab="general" class="active">Allgemein</button><button data-settings-tab="modeling">Modellieren</button>${workflowSettings ? '<button data-settings-tab="files">Dateien</button>' : ''}<button data-settings-tab="layout">Oberfläche</button><button data-settings-tab="plugins">Plugins</button><button data-settings-tab="ai">KI / API</button></div>
-      <section data-settings-page="general"><label class="dialog-label">Sprache<select id="settings-language"><option value="de">Deutsch</option><option value="en">English</option></select></label><label class="dialog-label">Darstellung<select id="settings-theme"><option value="light">Hell</option><option value="dark">Dunkel</option><option value="system">Wie Windows</option></select></label><label class="dialog-label">STL-Ansicht<select id="settings-meshDisplayStyle">${Object.entries(
+      <section data-settings-page="general"><label class="dialog-label">Sprache<select id="settings-language"><option value="de">Deutsch</option><option value="en">English</option></select></label><label class="dialog-label">Darstellung für diese Sitzung<select id="settings-theme"><option value="light">Hell</option><option value="dark">Dunkel</option><option value="system">Wie Windows (Startstandard)</option></select></label><label class="dialog-label">STL-Ansicht<select id="settings-meshDisplayStyle">${Object.entries(
         MESH_DISPLAY_STYLES,
       )
         .map(([id, s]) => `<option value="${id}">${s.label}</option>`)

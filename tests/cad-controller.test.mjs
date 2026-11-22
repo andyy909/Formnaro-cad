@@ -159,3 +159,46 @@ test('An unchanged preview consumes only its own ID while a second preview of th
     if (!disposed) cad.dispose();
   }
 });
+
+test('An unsuccessful saved edge edit reports the actual step through the native worker',async t=>{
+  const {cad}=fixture(),bodyId='finish-tree-body';
+  t.after(()=>cad.dispose());
+  await cad.execute({kind:'create',recipe:{type:'cylinder',size:[20,20,20]},options:{id:bodyId}});
+  const getEdges=async()=> (await cad.query('edges',{nodeId:bodyId})).edges;
+  const top=(await getEdges()).find(edge=>edge.reference.origin.featureId==='cylinder-rim-top');
+  assert.ok(top);
+  await cad.execute({kind:'finish',target:bodyId,step:{id:'round-top',kind:'round',amount:3,edges:[top.reference]}});
+  const prefix=cad.snapshot().nodes[0];
+  const edges=await getEdges();
+  const bottom=edges.find(edge=>edge.reference.origin.featureId==='cylinder-rim-bottom');
+  assert.ok(bottom);
+  assert.ok(edges.some(edge=>edge.curve.kind==='circle'&&!edge.curve.closed&&Math.abs(edge.curve.radii[0]-3)<1e-5));
+  assert.ok(Math.abs(bottom.curve.radii[0]-10)<1e-5);
+  await cad.execute({kind:'finish',target:bodyId,step:{id:'round-bottom',kind:'round',amount:1.5,edges:[bottom.reference]}});
+  const [first,second]=cad.snapshot().nodes[0].finish.steps;
+  const state=()=>({project:cad.serialize(),revision:cad.revision(),undo:cad.state().undo,redo:cad.state().redo});
+  const confirmed=state();
+  const propose=steps=>cad.preview({kind:'editFinish',target:bodyId,steps},{revision:confirmed.revision});
+  await assert.rejects(propose([first,{...second,amount:30}]),error=>{
+    assert.equal(error.code,'CAD_FINISH_FAILED');
+    assert.equal(error.bodyId,bodyId);
+    assert.equal(error.stepId,second.id);
+    assert.equal(error.edgeIndex,undefined);
+    return true;
+  });
+  assert.deepEqual(state(),confirmed);
+  await assert.rejects(propose([{...first,amount:4},{...second,edges:[first.edges[0]]}]),error=>{
+    assert.equal(error.code,'CAD_EDGE_LOST');
+    assert.match(error.message,/verloren/);
+    assert.equal(error.bodyId,bodyId);
+    assert.equal(error.stepId,second.id);
+    assert.equal(error.edgeIndex,0);
+    return true;
+  });
+  assert.deepEqual(state(),confirmed);
+  const restoredPrefix=await propose([first]);
+  assert.deepEqual(restoredPrefix.project.nodes[0].finish.steps,[first]);
+  assert.equal(restoredPrefix.project.nodes[0].brep.data,prefix.brep.data);
+  cad.discard(restoredPrefix.previewId);
+  assert.deepEqual(state(),confirmed);
+});

@@ -5,6 +5,7 @@ async function invoke(name,value){try{practiceWindowOnly(name);const response=aw
 function invokeSync(name,value){practiceWindowOnly(name);const response=ipcRenderer.sendSync(name,value);if(!response?.ok)throw Error(response?.error||'Portable Daten konnten nicht geladen werden.');return response.value;}
 function automationFailure(id,error){const errorCode=typeof error.code==='string'&&/^[A-Z][A-Z0-9_]{0,79}$/.test(error.code)?error.code:undefined;ipcRenderer.send('cad-ai:reply',{id,error:String(error.message),...(error.feedback?{feedback:error.feedback}:{}),...(errorCode?{errorCode}:{})});}
 contextBridge.exposeInMainWorld('offlinecadDesktop',{
+ ...(!process.argv.includes('--formnaro-practice')?{orcaRequest:value=>invoke('cad-orca:request',value)}:{}),
  developmentEvidence:value=>invoke('cad-ai:development-evidence',value),
  diagnostics:value=>invoke('cad-ai:diagnostics',value),onDiagnosticEvent:callback=>{const fn=(_event,value)=>callback(value);ipcRenderer.on('cad-ai:diagnostic-event',fn);return ()=>ipcRenderer.removeListener('cad-ai:diagnostic-event',fn);},
  ...(!process.argv.includes('--formnaro-practice')?{openAboutLink:key=>invoke('cad-about:open',key)}:{}),

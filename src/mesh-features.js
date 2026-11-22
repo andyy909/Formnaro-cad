@@ -18,7 +18,7 @@ export function validateFeatureQuery(o = {}) {
     fail('Eine endliche Schnittebene mit Punkt und Richtung wählen.');
   return o;
 }
-function planes(s) {
+export function meshPlanarPatches(s) {
   const groups = new Map(),
     tol = Math.max(1e-6, s.extent * 1e-7);
   for (let i = 0; i < s.indices.length; i += 3) {
@@ -162,7 +162,7 @@ export function measuredProfiles(s, normal, planePoint) {
 export function analyzeMeshFeatures(node, options = {}) {
   validateFeatureQuery(options);
   const s = g.source(node),
-    flat = planes(s),
+    flat = meshPlanarPatches(s),
     directions = [];
   function add(n, point) {
     n = g.unit(n);

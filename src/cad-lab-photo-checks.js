@@ -1,9 +1,9 @@
 import { runCadAIRequest } from './cad-ai-request.js';
 import { createCadAutomationAccess } from './cad-automation-access.js';
-import { cadBytesDigest } from './cad-geometry-digest.js';
+import { cadBytesDigest, cadSourceGeometryDigest } from './cad-geometry-digest.js';
 import { photoEvidence } from './cad-photo-data.js';
-import { analyzePhotoSet, photoSetViewDefault } from './cad-photo-multiview-data.js';
-import { reviewPhotoSet } from './cad-photo-multiview-review.js';
+import { analyzePhotoSet, photoSetDigest, photoSetViewDefault } from './cad-photo-multiview-data.js';
+import { reviewPhotoSet, reviewStoredPhotoSet } from './cad-photo-multiview-review.js';
 import { createPhotoTask } from './cad-photo-task.js';
 
 const width = 600;
@@ -123,14 +123,17 @@ const plateCommands = (plateWidth) => [
   { op: 'group', targets: ['$plate', '$opening'], as: 'result', name: 'Fotoplatte mit Öffnung' },
 ];
 
-async function runPhotoRequest(controller, { prompt, photo, useReference, generate, signal }) {
+async function runPhotoRequest(controller, { prompt, photo, photos = [photo], useReference, generate, signal, showReference }) {
   signal?.throwIfAborted();
+  showReference?.({ photos });
   const scene = await controller.describe();
   const access = createCadAutomationAccess({ controller, getScene: () => scene });
-  const image = { ...photo.image, name: 'Synthetisches-Pruefbild.png' };
+  const images = photos.map((item) => ({
+    ...item.image, name: photos.length === 1 ? 'Synthetisches-Pruefbild.png' : item.reference.view + '.png',
+  }));
   const corrections = [];
   const outcome = await runCadAIRequest({
-    input: { prompt, images: [image], ...(useReference ? { photoReferences: [photo.reference] } : {}) },
+    input: { prompt, images, ...(useReference ? { photoReferences: photos.map((item) => item.reference) } : {}) },
     generate,
     access,
     visualReview: false,
@@ -171,7 +174,7 @@ async function openingRays(controller, id, bounds) {
   );
 }
 
-async function calibratedPlate(controller, { tilted, generate, signal }) {
+async function calibratedPlate(controller, { tilted, generate, signal, showReference }) {
   const photo = platePhoto({ tilted });
   const evidence = photoEvidence(photo.reference);
   const base = controller.serialize(),
@@ -190,7 +193,7 @@ async function calibratedPlate(controller, { tilted, generate, signal }) {
     photo,
     useReference: true,
     generate: generate ?? replay,
-    signal,
+    signal, showReference,
   });
   const measurement = evidence.dimensions[0];
   const report = outcome.proposal?.photoComparison?.[0];
@@ -257,7 +260,7 @@ async function calibratedPlate(controller, { tilted, generate, signal }) {
   return { checks };
 }
 
-async function missingScale(controller, { generate, signal }) {
+async function missingScale(controller, { generate, signal, showReference }) {
   const photo = platePhoto({ calibrated: false }),
     image = { ...photo.image, name: 'Synthetisches-Pruefbild.png' };
   const base = controller.serialize(),
@@ -270,6 +273,7 @@ async function missingScale(controller, { generate, signal }) {
     rejectionCode = error.code;
   }
   const { access, outcome } = await runPhotoRequest(controller, {
+    showReference,
     prompt: 'Mach daraus ein maßgenaues 3D-Modell.',
     photo,
     useReference: false,
@@ -393,9 +397,10 @@ function threeViews() {
   return { version: 2, items, reconstructions: [plan] };
 }
 
-async function multiview(controller, { signal }) {
+async function multiview(controller, { signal, showReference }) {
   const photos = threeViews(),
     plan = photos.reconstructions[0];
+  showReference?.({ photos: photos.items });
   await controller.open({ ...controller.snapshot(), photos });
   signal?.throwIfAborted();
   const base = controller.serialize(),
@@ -464,21 +469,196 @@ async function multiview(controller, { signal }) {
   return { checks };
 }
 
-export async function runPhotoDevelopmentCheck(id, { createController, generate, signal }) {
+async function modelFromThreeViews(controller, { generate, signal, showReference }) {
+  const photos = threeViews();
+  const plan = photos.reconstructions[0];
+  await controller.open({ ...controller.snapshot(), photos });
+  const before = controller.serialize();
+  const prompt = 'Baue den Halter aus diesen drei zueinander gehörenden orthogonalen Ansichten nach. ' +
+    'Bild 1 zeigt vorne (X/Z), Bild 2 rechts (Y/Z), Bild 3 oben (X/Y). ' +
+    'Der Maßstab beträgt in allen Bildern 10 Pixel/mm. Die linke vordere Unterkante des Körpers liegt bei (70, 0, 5) mm. ' +
+    'Das erkennbare Fenster in der Vorderansicht geht vollständig durch. Erzeuge einen nativen Volumenkörper.';
+  const reference = async () => ({
+    revision: controller.revision(),
+    commands: [
+      { op: 'create', type: 'box', size: [40, 20, 20], pos: [90, 10, 15], as: 'base' },
+      { op: 'create', type: 'box', size: [20, 20, 10], pos: [80, 10, 30], as: 'step' },
+      { op: 'create', type: 'box', size: [5, 24, 5], pos: [77.5, 10, 12.5], solid: false, as: 'window' },
+      { op: 'group', targets: ['$base', '$step', '$window'], as: 'holder' },
+    ],
+  });
+  const { access, outcome } = await runPhotoRequest(controller, {
+    prompt, photos: photos.items, useReference: false, generate: generate ?? reference, signal, showReference,
+  });
+  const checks = [check('Vorschau lässt die drei Originalansichten unverändert', controller.serialize() === before)];
+  if (!outcome.proposal) {
+    checks.push(check('Native Modellvorschau aus den drei Ansichten vorhanden', false));
+    return { checks };
+  }
+  await access.apply({ previewId: outcome.proposal.previewId, revision: outcome.proposal.revision });
+  const [body, ...others] = controller.snapshot().nodes;
+  const single = !others.length && body?.kind === 'cad' && body.stats?.solids === 1;
+  checks.push(check('Ein nativer Volumenkörper mit richtigem Restvolumen', single && closeTo(body.stats.volume, 19500, 0.05),
+    body?.stats?.volume));
+  if (single) {
+    const link = { rootId: body.id, sourceDigest: cadSourceGeometryDigest(body), planDigest: photoSetDigest(plan) };
+    const result = await reviewStoredPhotoSet(controller, { ...plan, result: link }, { signal });
+    const review = result.photoReconstructionReview;
+    checks.push(
+      check('Alle drei Projektionen stimmen mit den registrierten Fotos überein',
+        review.views.length === 3 && review.views.every((view) => view.matches),
+        review.views.map(({ view, iou }) => ({ view, iou }))),
+      check('Native Außenmaße und freies Fenster stimmen', review.native.passed && review.nativeExtras.passed),
+    );
+  }
+  controller.undo();
+  checks.push(check('Undo stellt das Projekt mit allen drei Fotos wieder her', controller.serialize() === before));
+  return { checks, input: { prompts: [prompt] } };
+}
+
+async function multipleOpenings(controller, { count, generate, signal, photoVariant = 0, showReference }) {
+  const span = count * 20,
+    scale = 480 / span;
+  // Dense plates keep enough pixels inside each opening after rasterization.
+  const plateHeight = count >= 12 ? 28 : 20;
+  const holeWidth = count >= 12 ? 12 : 10;
+  const holeHeight = count >= 12 ? 14 : 8;
+  const halfWidth = holeWidth / 2;
+  const halfHeight = holeHeight / 2;
+  const pixel = ([x, z]) => [60 + x * scale, 200 - z * scale];
+  const rect = (x, z, w, h) =>
+    [
+      [x, z],
+      [x + w, z],
+      [x + w, z + h],
+      [x, z + h],
+    ].map(pixel);
+  const coords = Array.from({ length: count }, (_, i) => ({
+    x: 10 + i * 20 + (photoVariant ? ((i * (photoVariant + 5) + photoVariant) % 7) - 3 : 0),
+    z: photoVariant ? ((i * 3 + photoVariant) % 9) - 4 : i % 2 ? 2 : -2,
+  }));
+  const photo = syntheticPhoto({
+    name: 'Kalibrierte Fensterreihe',
+    view: 'front',
+    outline: rect(0, -plateHeight / 2, span, plateHeight),
+    holes: coords.map((p) => rect(p.x - halfWidth, p.z - halfHeight, holeWidth, holeHeight)),
+    scale: {
+      points: [pixel([0, 0]), pixel([span, 0])],
+      mm: span,
+      note: 'Bekannte Breite der synthetischen Prüfplatte',
+      referenceErrorMm: 0.01,
+      pickErrorPx: 0.5,
+      source: 'user',
+    },
+    dimensions: [
+      { name: 'Breite', source: 'measured', points: [pixel([0, 0]), pixel([span, 0])] },
+      { name: 'Tiefe', source: 'user', mm: 4, note: 'Vorgegebene Dicke der Prüfplatte' },
+    ],
+  });
+  const prompt =
+    'Baue die Platte aus dieser kalibrierten Frontansicht mit allen sichtbaren Durchbrüchen nach. Die Tiefe beträgt 4 mm.';
+  const replay = async () => ({
+    revision: controller.revision(),
+    commands: [
+      { op: 'create', type: 'box', size: [span, 4, plateHeight], pos: [span / 2, 0, plateHeight / 2], as: 'base' },
+      ...coords.map((p, i) => ({
+        op: 'create',
+        type: 'box',
+        size: [holeWidth, 8, holeHeight],
+        pos: [p.x, 0, plateHeight / 2 + p.z],
+        solid: false,
+        as: 'hole' + i,
+      })),
+      { op: 'group', targets: ['$base', ...coords.map((_, i) => '$hole' + i)] },
+    ],
+  });
+  const { access, outcome } = await runPhotoRequest(controller, {
+    prompt,
+    photo,
+    useReference: true,
+    generate: generate ?? replay,
+    signal, showReference,
+  });
+  const proposal = outcome.proposal,
+    review = proposal?.photoComparison?.[0],
+    checks = [
+      check(
+        count >= 12 ? 'Rasterkontur und Anzahl der markierten Öffnungen' : 'Alle Öffnungen im Bildvergleich',
+        review?.openings?.length === count &&
+          // With dense openings, raster edge rounding can exceed 5% even on the exact solid.
+          // The per-opening native measurements below decide whether each opening is clear.
+          (count >= 12 ? review.iou >= 0.9 : review.matches && review.openings.every((h) => h.blockedFraction <= 0.05)),
+        { openings: review?.openings?.length ?? 0, iou: review?.iou, blocked: review?.openings?.map((h) => h.blockedFraction) },
+      ),
+    ];
+  if (!proposal || !checks[0].passed) return { checks };
+  await access.apply({ previewId: proposal.previewId, revision: proposal.revision });
+  const nodes = controller.snapshot().nodes,
+    body = nodes[0],
+    bounds = body?.stats?.bounds;
+  const size = bounds?.max.map((v, i) => v - bounds.min[i]);
+  checks.push(
+    check(
+      'Maße und Materialvolumen',
+      nodes.length === 1 &&
+        body?.stats?.solids === 1 &&
+        [span, 4, plateHeight].every((x, i) => closeTo(size?.[i], x, 0.15)) &&
+        closeTo(body.stats.volume, (span * plateHeight - count * holeWidth * holeHeight) * 4, 1),
+    ),
+  );
+  if (!checks.at(-1).passed) return { checks };
+  for (const [i, p] of coords.entries()) {
+    let passed = true;
+    for (const [dx, dz, open] of [
+      [0, 0, true],
+      [-halfWidth + 0.2, 0, true],
+      [halfWidth - 0.2, 0, true],
+      [0, -halfHeight + 0.2, true],
+      [0, halfHeight - 0.2, true],
+      [-halfWidth - 0.2, 0, false],
+      [halfWidth + 0.2, 0, false],
+      [0, -halfHeight - 0.2, false],
+      [0, halfHeight + 0.2, false],
+    ]) {
+      const hit = await controller.query(
+        'rayPick',
+        {
+          ids: [body.id],
+          ray: {
+            origin: [bounds.min[0] + p.x + dx, bounds.min[1] - 2, bounds.min[2] + plateHeight / 2 + p.z + dz],
+            direction: [0, 1, 0],
+            far: 12,
+          },
+        },
+        { signal },
+      );
+      if ((hit === null) !== open) passed = false;
+    }
+    checks.push(check('Lage und Rand des Fensters ' + (i + 1), passed));
+  }
+  return { checks, input: { prompt, count } };
+}
+
+export async function runPhotoDevelopmentCheck(id, { createController, generate, signal, photoVariant, showReference }) {
   signal?.throwIfAborted();
   const controller = createController();
   const cancel = () => controller.cancel();
   signal?.addEventListener('abort', cancel, { once: true });
   try {
+    const match = /^photo-openings-([0-9]+)$/.exec(id);
+    if (match && +match[1] >= 2 && +match[1] <= 16)
+      return await multipleOpenings(controller, { count: +match[1], generate, signal, photoVariant, showReference });
     switch (id) {
       case 'photo-calibrated':
-        return await calibratedPlate(controller, { generate, signal, tilted: false });
+        return await calibratedPlate(controller, { generate, signal, tilted: false, showReference });
       case 'photo-missing-scale':
-        return await missingScale(controller, { generate, signal });
+        return await missingScale(controller, { generate, signal, showReference });
       case 'photo-perspective':
-        return await calibratedPlate(controller, { generate, signal, tilted: true });
+        return await calibratedPlate(controller, { generate, signal, tilted: true, showReference });
       case 'photo-multiview':
-        return await multiview(controller, { signal });
+        return await multiview(controller, { signal, showReference });
+      case 'photo-multiview-live':
+        return await modelFromThreeViews(controller, { generate, signal, showReference });
       default:
         throw Error('Unbekannte Foto-Prüfung.');
     }

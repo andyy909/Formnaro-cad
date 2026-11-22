@@ -146,3 +146,36 @@ test('Model node aliases, direct catalogs, target shorthand and proven closure h
   await assert.rejects(cad.preview(batch([mesh({type:'mesh-role',id:'a',target:'other',role:'hole'})])),/eindeutiges/);
  }finally{cad.dispose();}
 });
+
+test('Native preview diagnoses the first bare alias and preserves real matching object IDs', async () => {
+  const cad = fixture();
+  const box = { op: 'create', type: 'box', as: 'blank', size: [8, 8, 8], pos: [0, 0, 4] };
+  const update = (target, name) => ({ op: 'update', target, set: { name } });
+  try {
+    const before = cad.serialize();
+    await assert.rejects(cad.preview(batch([box, update('blank', 'Changed')])), (error) => {
+      assert.equal(error.code, 'UNKNOWN_CAD_OBJECT');
+      assert.match(error.message, /„blank“.*„\$blank“/);
+      assert.equal(error.feedback.commandIndex, 2);
+      assert.equal(error.feedback.applied, false);
+      return true;
+    });
+    assert.equal(cad.serialize(), before);
+    assert.equal(cad.state().undo, 0);
+    assert.equal(cad.state().previews, 0);
+
+    await cad.execute(batch([box]));
+    const project = cad.snapshot();
+    project.nodes[0].id = 'blank';
+    await cad.open(project);
+    const proposal = await cad.preview(batch([
+      { ...box, pos: [15, 0, 4] },
+      update('blank', 'Existing object'),
+      update('$blank', 'New object'),
+    ]));
+    assert.equal(proposal.project.nodes.find((node) => node.id === 'blank').name, 'Existing object');
+    assert.equal(proposal.project.nodes.find((node) => node.id === proposal.aliases.blank).name, 'New object');
+  } finally {
+    cad.dispose();
+  }
+});

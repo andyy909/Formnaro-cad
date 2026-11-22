@@ -21,6 +21,12 @@ export const defaultModelCheckConfig = () => ({
   autoCorrect: true,
   maxCorrections: 2,
 });
+export function aiToleranceFactorText(strictness, language = 'de') {
+  if (strictness === 0) return null;
+  return (100 / strictness).toLocaleString(language === 'en' ? 'en-US' : 'de-DE', {
+    maximumFractionDigits: 2,
+  });
+}
 export function validateModelCheckConfig(value) {
   const defaults = defaultModelCheckConfig(),
     plain = (v) => v && typeof v === 'object' && !Array.isArray(v);

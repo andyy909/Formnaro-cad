@@ -68,6 +68,7 @@ export function createImportExport({
       asMesh = false,
       preparedMesh,
       importSignal,
+      forMeshHelp = false,
       autoMeshRepair = true,
       simplifyLarge = true,
       importMaxError = 0.02,
@@ -76,7 +77,7 @@ export function createImportExport({
   ) {
     const importDomain = activeEasyKind(),
       domainRevision = state.easyDomainRevision,
-      policy = easyImportPolicy(file.name.split('.').at(-1), importDomain);
+      policy = forMeshHelp ? null : easyImportPolicy(file.name.split('.').at(-1), importDomain);
     if (policy) {
       asMesh = policy.asMesh;
       reconstruct = policy.reconstruct;

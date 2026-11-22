@@ -1,6 +1,6 @@
 const labels = {
   auto: ['Automatisch · Modellstandard', 'Automatic · model default'],
-  none: ['none · Ohne Denkphase', 'none · No reasoning'],
+  none: ['Off · Ohne Denkphase', 'Off · No reasoning'],
   minimal: ['minimal · Minimal', 'minimal · Minimal'],
   low: ['low · Schnell', 'low · Fast'],
   medium: ['medium · Ausgewogen', 'medium · Balanced'],
@@ -14,7 +14,7 @@ export function renderReasoningSelect(select, config, model, language = 'de') {
     mistral = host === 'api.mistral.ai',
     deepseek = host === 'api.deepseek.com',
     en = language === 'en';
-  const choices = deepseek ? ['low', 'high', 'max'] : ['auto', ...(model?.reasoningEfforts || [])];
+  const choices = deepseek ? ['none', 'low', 'high', 'max'] : ['auto', ...(model?.reasoningEfforts || [])];
   select.replaceChildren();
   for (const value of choices)
     select.add(

@@ -29,6 +29,7 @@ import { cadGeometryDigest, cadSourceGeometryDigest } from './cad-geometry-diges
 import { writeCadBrep, transformCad } from './cad-native-kernel.js';
 import { identifyCadBoxFaceAnchor, remapCadBoxFaceAnchor } from './cad-box-face-anchor.js';
 import { findAssociativeDrillBox } from './cad-associative-drill.js';
+import { cadDrillEditStart } from './cad-drill-source-data.js';
 import { cadDrillPatternAnchors } from './cad-drill-pattern.js';
 import { reassignCadDrillReferences } from './cad-drill-rebind-native.js';
 import { cadProjectParameterProblems } from './cad-project-parameters-data.js';
@@ -890,9 +891,12 @@ export function createCadToolsNative({ oc, service, transactions } = {}) {
     editableDrillSource(p, rootNode);
     if (!Array.isArray(path) || path.length > 12 || path.some((part) => typeof part !== 'string' || !part))
       fail('INVALID_CAD_DRILL', 'Ungültiger Bohrungsquellenpfad.');
-    let node = rootNode,
-      world = node.transform;
-    for (const part of path) {
+    const start = cadDrillEditStart(rootNode);
+    if (!start || (start.path.length && path[0] !== start.path[0]))
+      fail('INVALID_CAD_DRILL', 'Die gewählte Bohrung ist nicht mehr vorhanden.');
+    let node = start.node,
+      world = start.path.length ? multiplyCadMatrices(rootNode.transform, node.transform) : node.transform;
+    for (const part of path.slice(start.path.length)) {
       if (!node.drill || node.children?.length !== 1 || node.children[0].id !== part)
         fail('INVALID_CAD_DRILL', 'Die gewählte Bohrung ist nicht mehr vorhanden.');
       node = node.children[0];
