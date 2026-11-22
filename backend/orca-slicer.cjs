@@ -458,4 +458,3 @@ function installOrcaSlicer(window, { ipcMain, dialog, dataDirectory, profileDire
 }
 
 module.exports = { createOrcaSlicer, installOrcaSlicer, sliceSchema, readSliceStatistics };
-

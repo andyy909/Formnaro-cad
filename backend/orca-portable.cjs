@@ -103,4 +103,3 @@ function isNewer(candidate, current) {
 }
 
 module.exports = { latest, install, versionPattern, systemVersion, isNewer };
-
