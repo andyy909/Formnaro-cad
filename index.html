@@ -7,7 +7,7 @@
   <title>Formnaro | 3D-CAD für Windows</title>
   <link rel="alternate" hreflang="en" href="https://formnaro.de/en/">
   <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="home.css?v=3">
+  <link rel="stylesheet" href="home.css?v=5">
 </head>
 <body>
 <header>
@@ -53,25 +53,23 @@
       </div>
       <div class="rig" role="group" aria-label="Interaktive Vorschau der Portalfräse ATLAS-5">
         <div class="stage">
+          <img id="frame2" class="frame-b" src="atlas-5-frames/000.webp" width="540" height="490" alt="" aria-hidden="true">
           <img id="frame" src="atlas-5-frames/000.webp" width="540" height="490" alt="Fünfachsige Portalfräse ATLAS-5 in Formnaro; die gewählte Achse bewegt sich">
-          <span class="readout" id="readout">Achse X: Querfahrt</span>
+          <span class="readout" id="readout">Grundstellung</span>
         </div>
         <div class="controls">
-          <div class="axes" role="group" aria-label="Achse wählen">
-            <button class="axis" data-seg="0" aria-pressed="true"><b>X</b>Querfahrt</button>
-            <button class="axis" data-seg="1" aria-pressed="false"><b>Y</b>Tischvorschub</button>
-            <button class="axis" data-seg="2" aria-pressed="false"><b>Z</b>Zustellung</button>
-            <button class="axis" data-seg="3" aria-pressed="false"><b>A</b>Schwenkwiege</button>
-            <button class="axis" data-seg="4" aria-pressed="false"><b>C</b>Rundtisch</button>
-            <button class="axis" data-seg="5" aria-pressed="false"><b>5</b>Alle zusammen</button>
+          <div class="axis-sliders" role="group" aria-label="Achsen der ATLAS-5">
+            <div class="axis-row"><label for="ax-0"><b>X</b> Querfahrt</label><input id="ax-0" class="axis-range" data-axis="0" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="axis-row"><label for="ax-1"><b>Y</b> Tischvorschub</label><input id="ax-1" class="axis-range" data-axis="1" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="axis-row"><label for="ax-2"><b>Z</b> Werkzeugzustellung</label><input id="ax-2" class="axis-range" data-axis="2" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="axis-row"><label for="ax-3"><b>A</b> Schwenkwiege</label><input id="ax-3" class="axis-range" data-axis="3" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="axis-row"><label for="ax-4"><b>C</b> Rundtisch</label><input id="ax-4" class="axis-range" data-axis="4" type="range" min="-100" max="100" step="1" value="0"></div>
           </div>
-          <div class="scrub">
-            <button class="btn play" id="play" aria-label="Bewegung abspielen">
-              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path id="playIcon" d="M3 1.5v11l9-5.5z" fill="currentColor"/></svg>
-            </button>
-            <input id="pos" type="range" min="0" max="23" value="0" aria-label="Position der Achse">
+          <div class="axis-actions">
+            <button class="btn play-all" id="play" type="button"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path id="playIcon" d="M3 1.5v11l9-5.5z" fill="currentColor"/></svg><span id="playLabel">Alle Achsen vorführen</span></button>
+            <button class="btn ghost" id="home" type="button">Grundstellung</button>
           </div>
-          <p class="rig-note">144 Bauteile, 78 Gelenke. Die Wiege treibt das Ritzel im Verhältnis 48:20 mit. Aufgenommen in Formnaro. <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad">Modell laden</a></p>
+          <p class="rig-note">144 Bauteile, 78 Gelenke. Die Wiege treibt das Ritzel im Verhältnis 48:20 mit. Die Aufnahme aus Formnaro zeigt jeweils eine Achse; beim Ziehen eines Reglers fahren die anderen in die Grundstellung. <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad">Modell laden</a></p>
         </div>
       </div>
     </div>
@@ -210,8 +208,9 @@
 <script type="application/json" id="home-data">
 {
   "base": "",
-  "play": "Bewegung abspielen",
-  "pause": "Bewegung anhalten",
+  "play": "Alle Achsen vorführen",
+  "pause": "Vorführung anhalten",
+  "home": "Grundstellung",
   "levelLabel": "Funktionsumfang",
   "axes": ["Achse X: Querfahrt", "Achse Y: Tischvorschub", "Achse Z: Werkzeugzustellung", "Achse A: Schwenkwiege", "Achse C: Rundtisch", "Alle fünf Achsen gemeinsam"],
   "modes": {
@@ -222,6 +221,6 @@
   }
 }
 </script>
-<script src="home.js?v=2" defer></script>
+<script src="home.js?v=3" defer></script>
 </body>
 </html>

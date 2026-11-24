@@ -5,41 +5,68 @@
   const base = data.base || '';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ATLAS-5: Abschnitte der Aufnahme (Startbild, Anzahl) für X, Y, Z, A, C und alle zusammen.
+  // ATLAS-5: fünf Achsregler. Jede Achse ist in der Aufnahme als Abschnitt gespeichert:
+  // Grundstellung -> Endlage + -> Grundstellung -> Endlage - -> Grundstellung (Sinusverlauf).
   const segs = [[0, 24], [24, 24], [48, 24], [72, 24], [96, 24], [120, 32]];
-  const img = document.getElementById('frame'), pos = document.getElementById('pos');
-  const readout = document.getElementById('readout'), play = document.getElementById('play'), icon = document.getElementById('playIcon');
+  const img = document.getElementById('frame'), imgB = document.getElementById('frame2');
+  const readout = document.getElementById('readout'), play = document.getElementById('play');
+  const icon = document.getElementById('playIcon'), playLabel = document.getElementById('playLabel');
+  const sliders = [...document.querySelectorAll('.axis-range')];
   const src = i => base + 'atlas-5-frames/' + String(i).padStart(3, '0') + '.webp';
   const cache = [];
   const load = seg => { const [s, n] = segs[seg]; for (let i = s; i < s + n; i++) if (!cache[i]) { cache[i] = new Image(); cache[i].src = src(i); } };
-  let seg = 0, timer = null;
-  const show = () => { img.src = src(segs[seg][0] + +pos.value); };
-  const stop = () => {
+  // Bildposition (gebrochen) innerhalb eines Abschnitts für einen Reglerwert v in [-1, 1].
+  const framePos = (seg, v) => {
+    const n = segs[seg][1], q = Math.asin(Math.max(-1, Math.min(1, Math.abs(v)))) / (2 * Math.PI) * (n - 1);
+    return v >= 0 ? q : (n - 1) / 2 + q;
+  };
+  const showPos = (seg, p) => {
+    const s = segs[seg][0], a = Math.floor(p), t = p - a;
+    img.src = src(s + a);
+    imgB.src = src(s + Math.min(a + 1, segs[seg][1] - 1));
+    imgB.style.opacity = t.toFixed(2);
+  };
+  const label = i => document.querySelector(`label[for="ax-${i}"]`).textContent.trim();
+  let timer = null, anim = null;
+  const stopDemo = () => {
     clearInterval(timer); timer = null;
-    icon.setAttribute('d', 'M3 1.5v11l9-5.5z'); play.setAttribute('aria-label', data.play);
+    icon.setAttribute('d', 'M3 1.5v11l9-5.5z'); playLabel.textContent = data.play;
   };
-  const start = () => {
-    icon.setAttribute('d', 'M2.5 1.5h3v11h-3zM8.5 1.5h3v11h-3z'); play.setAttribute('aria-label', data.pause);
-    timer = setInterval(() => { pos.value = (+pos.value + 1) % segs[seg][1]; show(); }, 80);
+  // Andere Regler weich in die Grundstellung zurückfahren.
+  const homeOthers = active => {
+    cancelAnimationFrame(anim);
+    const others = sliders.filter((r, i) => i !== active && +r.value !== 0);
+    if (!others.length) return;
+    const t0 = performance.now(), from = others.map(r => +r.value);
+    const step = now => {
+      const k = Math.min(1, (now - t0) / 250);
+      others.forEach((r, j) => { r.value = Math.round(from[j] * (1 - k)); });
+      if (k < 1) anim = requestAnimationFrame(step);
+    };
+    anim = requestAnimationFrame(step);
   };
-  document.querySelectorAll('.axis').forEach(b => b.addEventListener('click', () => {
-    document.querySelectorAll('.axis').forEach(x => x.setAttribute('aria-pressed', x === b));
-    seg = +b.dataset.seg; load(seg);
-    pos.max = segs[seg][1] - 1; pos.value = 0; readout.textContent = data.axes[seg]; show();
-    if (!timer && !reduce) start();
+  sliders.forEach((r, i) => r.addEventListener('input', () => {
+    stopDemo(); load(i); homeOthers(i);
+    const v = +r.value / 100;
+    showPos(i, framePos(i, v));
+    readout.textContent = v === 0 ? data.home : label(i) + ' ' + (v > 0 ? '+' : '−') + Math.abs(+r.value) + ' %';
   }));
-  pos.addEventListener('input', () => { stop(); show(); });
-  play.addEventListener('click', () => (timer ? stop() : start()));
-  // Erst laden und abspielen, wenn die Fräse in Sichtweite kommt; außer Sicht anhalten.
-  let userPaused = false;
-  play.addEventListener('click', () => { userPaused = !timer; });
-  pos.addEventListener('input', () => { userPaused = true; });
-  new IntersectionObserver(([entry]) => {
-    if (entry.isIntersecting) {
-      segs.forEach((_, i) => load(i));
-      if (!reduce && !userPaused && !timer) start();
-    } else if (timer) stop();
-  }, { rootMargin: '200px 0px' }).observe(img);
+  document.getElementById('home').addEventListener('click', () => {
+    stopDemo(); sliders.forEach(r => { r.value = 0; }); showPos(0, 0); readout.textContent = data.home;
+  });
+  // "Alle Achsen vorführen": den gemeinsamen Abschnitt abspielen, Regler zeigen Grundstellung.
+  const startDemo = () => {
+    load(5); sliders.forEach(r => { r.value = 0; });
+    icon.setAttribute('d', 'M2.5 1.5h3v11h-3zM8.5 1.5h3v11h-3z'); playLabel.textContent = data.pause;
+    readout.textContent = data.axes[5];
+    let f = 0;
+    timer = setInterval(() => { f = (f + 1) % segs[5][1]; showPos(5, f); }, 80);
+  };
+  play.addEventListener('click', () => (timer ? stopDemo() : startDemo()));
+  // Bilder erst laden, wenn die Fräse in Sichtweite kommt.
+  new IntersectionObserver(([entry], obs) => {
+    if (entry.isIntersecting) { segs.forEach((_, i) => load(i)); obs.disconnect(); }
+  }, { rootMargin: '300px 0px' }).observe(img);
 
   // Modi
   const tabs = [...document.querySelectorAll('.tab')];

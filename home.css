@@ -46,6 +46,8 @@ h3 { font-size: var(--step-1); font-weight: 700 }
 p { margin: 0; max-width: 62ch }
 .lead { color: var(--stahl) }
 section { padding-block: clamp(3.5rem, 8vw, 6.5rem) }
+.hero { padding-block: clamp(1.5rem, 3.5vw, 2.75rem) clamp(2rem, 4vw, 3rem) }
+.atlas { padding-block: clamp(2rem, 4vw, 3rem) }
 section + section { border-top: 1px solid var(--linie) }
 
 /* Kopfzeile */
@@ -63,9 +65,10 @@ nav a:hover { color: var(--werkstueck) }
 @media (max-width: 760px) { nav { display: none } }
 
 /* Start */
-.hero .wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(2rem, 5vw, 4rem); align-items: center }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(2rem, 5vw, 4rem); align-items: start }
+.hero-art { padding-top: 1.2rem }
 .hero h1 { font-size: var(--step-4); font-weight: 800 }
-.hero-text { display: grid; gap: 1.4rem; min-width: 0 }
+.hero-text { display: grid; gap: 1.1rem; min-width: 0 }
 .facts { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .4rem 1.1rem; font-size: var(--step--1); color: var(--stahl) }
 .facts li { display: flex; align-items: center; gap: .4rem }
 .facts li::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--werkstueck) }
@@ -74,12 +77,15 @@ nav a:hover { color: var(--werkstueck) }
 .dl-meta { font-size: var(--step--1); color: var(--stahl) }
 .hero-art { margin: 0; min-width: 0 }
 .hero-art img { display: block; width: 100%; height: auto; border-radius: 10px }
-.atlas .wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); gap: clamp(2rem, 5vw, 4rem); align-items: center }
+.atlas .wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); gap: clamp(2rem, 5vw, 4rem); align-items: start }
+.atlas-text { padding-top: 1rem }
 .atlas-text { display: grid; gap: 1.2rem; min-width: 0 }
 
 .rig { background: var(--plate); border: 1px solid var(--linie); border-radius: 10px; overflow: hidden; min-width: 0 }
 .stage { background: var(--stage); aspect-ratio: 540 / 490; position: relative; max-width: 100% }
 .stage img { width: 100%; height: 100%; object-fit: contain; display: block }
+.stage .frame-b { position: absolute; inset: 0; opacity: 0; z-index: 1; pointer-events: none }
+.readout { z-index: 2 }
 .readout { position: absolute; left: .9rem; top: .8rem; background: #1D2329; color: #E6EAEE; font-size: .8rem; padding: .3rem .6rem; border-radius: 4px; font-stretch: 110% }
 .controls { padding: 1rem 1.1rem 1.1rem; display: grid; gap: .9rem }
 .axes { display: flex; flex-wrap: wrap; gap: .4rem }
@@ -90,6 +96,15 @@ nav a:hover { color: var(--werkstueck) }
 .play { width: 2.3rem; height: 2.3rem; justify-content: center; background: var(--graphit); color: var(--alu); border-radius: 50% }
 input[type=range] { width: 100%; accent-color: var(--werkstueck) }
 .rig-note { font-size: .8rem; color: var(--stahl) }
+.axis-sliders { display: grid; gap: .55rem }
+.axis-row { display: grid; grid-template-columns: 11.5rem minmax(0, 1fr); align-items: center; gap: .8rem }
+.axis-row label { font-size: var(--step--1); white-space: nowrap }
+.axis-row label b { display: inline-block; width: 1.4rem; font-stretch: 125%; font-weight: 800; color: var(--werkstueck) }
+.axis-range { margin: 0 }
+.axis-actions { display: flex; flex-wrap: wrap; gap: .5rem }
+.play-all { padding: .5rem .9rem; background: var(--graphit); color: var(--alu); font-size: var(--step--1) }
+.btn.ghost { padding: .5rem .9rem; background: transparent; color: var(--graphit); border: 1px solid var(--linie); font-size: var(--step--1) }
+@media (max-width: 440px) { .axis-row { grid-template-columns: 1fr; gap: .1rem } }
 
 /* Modi */
 .modes-head { display: grid; gap: 1rem; margin-bottom: 2rem }
