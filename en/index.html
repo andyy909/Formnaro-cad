@@ -3,127 +3,213 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Formnaro is a local 3D CAD workshop for Windows, with practice mode, STL-to-STEP conversion, and moving assemblies.">
+  <meta name="description" content="Formnaro is a local 3D CAD workshop for Windows: free, open source, with moving assemblies, STL-to-STEP conversion and optional AI.">
   <title>Formnaro | 3D CAD for Windows</title>
-  <link rel="stylesheet" href="../style.css?v=13">
+  <link rel="alternate" hreflang="de" href="https://formnaro.de/">
+  <link rel="preload" href="../fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../home.css?v=1">
 </head>
-<body class="home-page">
-  <header class="wrap top">
-    <a class="brand" href="../"><img src="../logo.png" alt="" width="38" height="38">Formnaro</a>
-    <nav aria-label="Language and project">
-      <a href="ai/">AI connections</a>
-      <a href="ai-lab/">AI lab</a>
-      <a href="development/">Development</a>
+<body>
+<header>
+  <div class="wrap">
+    <a class="logo" href="./"><img src="../logo.png" alt="" width="30" height="30">Formnaro</a>
+    <nav aria-label="Main navigation">
+      <a href="#modes">Modes</a>
+      <a href="#ai">AI</a>
+      <a href="#tasks">Tools</a>
+      <a href="#facts">Requirements</a>
       <a href="../" lang="de" hreflang="de">Deutsch</a>
     </nav>
-  </header>
-  <main class="wrap">
-    <section class="hero" aria-labelledby="title">
-      <div>
-        <h1 id="title">3D CAD for<br>your workshop.</h1>
-        <p class="intro">Design parts, repair meshes and build moving assemblies. Formnaro runs locally on Windows.</p>
-        <div class="home-cta">
-          <a class="download" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Windows download ↗</a>
-          <a class="download support-button" href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Support via PayPal ↗</a>
-        </div>
-        <p class="version"><a href="development/#update-01440">0.144.0-r1 · Release notes</a> · <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip">Windows Nightly 0.148.0-r5 ↗</a></p>
+    <a class="btn btn-dl small" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Download for Windows</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="title">
+    <div class="wrap">
+      <div class="hero-text">
+        <h1 id="title">3D CAD for your workshop.</h1>
+        <p class="lead">Design parts, repair meshes and build assemblies that actually move. Formnaro runs locally on Windows, and you don’t need an internet connection to model.</p>
+        <div><a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Download for Windows</a></div>
+        <ul class="facts">
+          <li>Free and open source (MIT)</li>
+          <li>Portable, no installation</li>
+          <li>No account</li>
+          <li>FreeCAD kernel included</li>
+        </ul>
+        <p class="small-links">Current: 0.144.0-r1. <a href="development/#update-01440">Release notes</a> and <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip">Windows Nightly 0.148.0-r5</a></p>
       </div>
-      <img class="hero-art" src="../cad-hero-lagerbaugruppe.webp" width="2400" height="1060" alt="Exploded view of a bearing assembly created in Formnaro">
-    </section>
-    <section class="start" aria-labelledby="beispielmodelle">
-      <h2 id="beispielmodelle">Example models and workbenches</h2>
-      <section class="spotlight" aria-labelledby="bewegung">
-        <div class="spotlight-copy">
-          <p class="eyebrow">Sample project · Mechanisms</p>
-          <h3 id="bewegung">ATLAS-5 in motion</h3>
-          <p>This five-axis gantry mill shows what joints and couplings can do. The tool head travels, the rotary table turns, and the pinion follows the tilting cradle through a 48:20 gear coupling.</p>
-          <ul class="facts" aria-label="The mill in numbers">
-            <li><strong>144</strong> parts</li><li><strong>78</strong> joints</li><li><strong>5</strong> axes</li>
+
+      <div class="rig" role="group" aria-label="Interactive preview of the ATLAS-5 gantry mill">
+        <div class="stage">
+          <img id="frame" src="../atlas-5-frames/000.webp" width="540" height="490" alt="ATLAS-5 five-axis gantry mill in Formnaro; the selected axis is moving">
+          <span class="readout" id="readout">X axis: cross travel</span>
+        </div>
+        <div class="controls">
+          <div class="axes" role="group" aria-label="Choose an axis">
+            <button class="axis" data-seg="0" aria-pressed="true"><b>X</b>Cross travel</button>
+            <button class="axis" data-seg="1" aria-pressed="false"><b>Y</b>Table feed</button>
+            <button class="axis" data-seg="2" aria-pressed="false"><b>Z</b>Tool feed</button>
+            <button class="axis" data-seg="3" aria-pressed="false"><b>A</b>Tilting cradle</button>
+            <button class="axis" data-seg="4" aria-pressed="false"><b>C</b>Rotary table</button>
+            <button class="axis" data-seg="5" aria-pressed="false"><b>5</b>All together</button>
+          </div>
+          <div class="scrub">
+            <button class="btn play" id="play" aria-label="Play motion">
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path id="playIcon" d="M3 1.5v11l9-5.5z" fill="currentColor"/></svg>
+            </button>
+            <input id="pos" type="range" min="0" max="23" value="0" aria-label="Axis position">
+          </div>
+          <p class="rig-note">144 parts, 78 joints. The cradle drives the pinion through a 48:20 coupling. Recorded in Formnaro. <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad">Download the model</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="modes" aria-labelledby="modes-title">
+    <div class="wrap">
+      <div class="modes-head">
+        <h2 id="modes-title">Which mode suits you?</h2>
+        <p class="lead">One program, four interfaces. Switch at any time; your model stays the same.</p>
+        <div class="tabs" role="tablist" aria-label="Interface modes">
+          <button class="tab" role="tab" id="t-easy" aria-controls="p-mode" aria-selected="true" data-mode="easy">Easy Tinker</button>
+          <button class="tab" role="tab" id="t-normal" aria-controls="p-mode" aria-selected="false" data-mode="normal" tabindex="-1">Normal</button>
+          <button class="tab" role="tab" id="t-solid" aria-controls="p-mode" aria-selected="false" data-mode="solid" tabindex="-1">Solid</button>
+          <button class="tab" role="tab" id="t-fusion" aria-controls="p-mode" aria-selected="false" data-mode="fusion" tabindex="-1">Fusion</button>
+        </div>
+      </div>
+      <div class="mode" id="p-mode" role="tabpanel" aria-labelledby="t-easy">
+        <figure class="shot"><img id="m-img" src="../gallery-easy.webp" width="1538" height="817" alt="Easy Tinker: bearing bracket with the shape palette"></figure>
+        <div class="mode-text">
+          <div class="level" id="m-level" aria-label="Feature depth 1 / 4"><span class="on"></span><span></span><span></span><span></span>&nbsp;Feature depth</div>
+          <p class="who" id="m-who">For your first bracket on a weekend.</p>
+          <ul id="m-list">
+            <li>Basic shapes in one click: box, cylinder, gear, text</li>
+            <li>Move, resize and rotate right on the model</li>
+            <li>A good start for 3D printing</li>
           </ul>
-          <p class="fine">The clip shows the joints moving in Formnaro. Open the sample project to move the axes yourself.</p>
-          <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad">Download the editable sample ↗</a>
+          <a id="m-link" href="../modelle/lagerhalter.ocad">Download example: bearing bracket (.ocad)</a>
         </div>
-        <figure class="clip clip-atlas">
-          <video controls playsinline preload="none" poster="../atlas-5-motion.webp" width="800" height="624" aria-label="ATLAS-5: motion of the five axes and coupled pinion">
-            <source src="../atlas-5-motion.mp4" type="video/mp4">
-            <a href="../atlas-5-motion.mp4">Open the ATLAS-5 video</a>
-          </video>
-          <figcaption>Cross travel, table feed, tool feed, tilting cradle, and rotary table.</figcaption>
-        </figure>
-      </section>
-      <section class="start" aria-labelledby="beispiele">
-        <h3 id="beispiele">Four modes in practice</h3>
-        <p>Captured in a Formnaro development build. Click an image to see its toolbar at full size.</p>
-        <div class="gallery">
-          <figure>
-            <a class="gallery-image" href="../gallery-easy.webp"><img loading="lazy" src="../gallery-easy.webp" width="1538" height="817" alt="Bearing bracket and shape palette in Easy Tinker with the dark theme"></a>
-            <figcaption><strong>Easy Tinker</strong> · Bearing bracket<span class="gallery-theme">Dark</span>
-              <a class="gallery-model" href="../modelle/lagerhalter.ocad" download aria-label="Sample model (.ocad) · Bearing bracket">Sample model (.ocad) ↗</a>
-            </figcaption>
-          </figure>
-          <figure>
-            <a class="gallery-image" href="../gallery-normal.webp"><img loading="lazy" src="../gallery-normal.webp" width="1538" height="817" alt="Precision vise and tools in Normal mode with the dark theme"></a>
-            <figcaption><strong>Normal</strong> · Precision vise<span class="gallery-theme">Dark</span>
-              <a class="gallery-model" href="../modelle/solid-schraubstock.ocad" download aria-label="Sample model (.ocad) · Precision vise">Sample model (.ocad) ↗</a>
-            </figcaption>
-          </figure>
-          <figure>
-            <a class="gallery-image" href="../gallery-solid.webp"><img loading="lazy" src="../gallery-solid.webp" width="1538" height="817" alt="ATLAS-5 and the new Solid toolbar with the light theme"></a>
-            <figcaption><strong>Solid</strong> · ATLAS-5 gantry mill<span class="gallery-theme">Light</span>
-              <a class="gallery-model" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad" aria-label="Sample model (.ocad) · ATLAS-5 gantry mill">Sample model (.ocad) ↗</a>
-            </figcaption>
-          </figure>
-          <figure>
-            <a class="gallery-image" href="../gallery-fusion.webp"><img loading="lazy" src="../gallery-fusion.webp" width="1538" height="817" alt="Helical gearbox and the new Fusion toolbar with the light theme"></a>
-            <figcaption><strong>Fusion</strong> · 6:1 helical gearbox<span class="gallery-theme">Light</span>
-              <a class="gallery-model" href="../modelle/schraeggetriebe-6zu1.ocad" download aria-label="Sample model (.ocad) · 6:1 helical gearbox">Sample model (.ocad) ↗</a>
-            </figcaption>
-          </figure>
-        </div>
-      </section>
-    </section>
-    <section class="start spotlight home-demo" aria-labelledby="uebung">
-      <div class="spotlight-copy">
-        <h2 id="uebung">Practice Show Mode</h2>
-        <p>See how AI makes a change to the model you are working on. The demonstration runs step by step on a separate project copy. Review the preview and choose whether to apply the result to your open model.</p>
       </div>
-      <figure class="clip clip-thread">
-        <video controls playsinline preload="none" poster="../practice-solid-tr16x4.jpg" width="1920" height="1080" aria-label="Solid demonstration of the Tr 16×4 lead screw">
+    </div>
+  </section>
+
+  <section id="ai" class="ki" aria-labelledby="ai-title">
+    <div class="wrap">
+      <div class="ki-text">
+        <h2 id="ai-title">The AI shows you. You decide.</h2>
+        <p class="lead">Describe a change to your model. Formnaro plays it back step by step without touching your model. AI is optional; modelling works without it.</p>
+        <ol class="steps">
+          <li><strong>You describe the change</strong><span>For example: replace the X shaft with a Tr 16×4 lead screw.</span></li>
+          <li><strong>Formnaro works on a copy</strong><span>Your open project stays unchanged.</span></li>
+          <li><strong>You apply or discard</strong><span>The result reaches your model only after you approve it.</span></li>
+        </ol>
+        <p class="small-links"><a href="ai/">Set up an AI connection</a> and <a href="ai-lab/">see results in the AI lab</a></p>
+      </div>
+      <figure class="single" style="border:0">
+        <video controls playsinline preload="none" poster="../practice-solid-tr16x4.jpg" width="1920" height="1080" aria-label="Practice show mode: the AI replaces the ATLAS-5 X shaft with a Tr 16×4 lead screw">
           <source src="../practice-solid-tr16x4.mp4" type="video/mp4">
           <a href="../practice-solid-tr16x4.mp4">Open video</a>
         </video>
-        <figcaption>ATLAS-5’s X-axis shaft is replaced with a continuous 548 mm Tr 16×4 lead screw in Solid. 53 seconds at 100% practice speed, with waiting time cut.</figcaption>
+        <figcaption class="cap">ATLAS-5’s X shaft is replaced with a continuous 548 mm Tr 16×4 lead screw in Solid. 53 seconds, waiting time cut.</figcaption>
       </figure>
-    </section>
-    <section class="start home-more" aria-labelledby="entdecken">
-      <h2 id="entdecken">Explore Formnaro</h2>
-      <details>
-        <summary>STL-to-STEP and design tools</summary>
-        <section class="start converter" aria-labelledby="konverter">
-          <p class="eyebrow">STL to CAD · STL → STEP</p>
-          <h2 id="konverter">Keep designing from an STL.</h2>
-          <p>Have a bracket as an STL and need to add another hole? An STL describes the surface with triangles. The local converter tries to reconstruct CAD surfaces such as planes and cylinders, so you can edit suitable models as solids.</p>
-          <ol class="converter-steps">
-            <li><span class="step-no" aria-hidden="true">01</span><h3>Check locally first</h3><p>Formnaro prepares a locally checked STEP candidate. A valid CAD preview can be ready without an AI request.</p></li>
-            <li><span class="step-no" aria-hidden="true">02</span><h3>Compare the result</h3><p>Overlay the original and the result to inspect the displayed deviations in millimeters. The converter also checks the resulting STEP by reading it back.</p></li>
-            <li><span class="step-no" aria-hidden="true">03</span><h3>Continue in CAD</h3><p>Save the result as STEP or preview it before bringing it into your Formnaro project. Conversion runs locally.</p></li>
-          </ol>
-          <p class="fine">The STL does not contain the original sketches or feature history. Open or damaged meshes may need repair first.</p>
-          <a href="https://github.com/andyy909/Formnaro-cad/blob/main/docs/STL-TO-CAD.md">Converter guide on GitHub ↗</a>
-        </section>
-        <section class="start" aria-labelledby="funktionen">
-          <h2 id="funktionen">Tools for your project</h2>
-          <ul class="tools">
-            <li><strong>Design parts</strong><span>Draw dimensioned sketches and extrude them into solids or cutouts. Add holes, fillets, chamfers, and patterns. Loft between profiles or sweep a profile along a path. Control dimensions with parameters and formulas.</span></li>
-            <li><strong>Edit meshes</strong><span>Find open edges in imported meshes and close suitable holes. Select individual triangles or entire surface regions, reduce the triangle count, or smooth selected areas. Protect regions from changes and compare the result with the original.</span></li>
-            <li><strong>Drawings and bills of materials</strong><span>Create views, sections, and dimensions, then export drawings as PDF, SVG, or DXF. Record material and mass in a CSV bill of materials and show how an assembly fits together in an exploded view.</span></li>
-            <li><strong>Exchange models</strong><span>Use STEP to exchange CAD solids, STL and 3MF for 3D printing, and OBJ and GLB/glTF to continue working with meshes and 3D views.</span></li>
-          </ul>
-        </section>
-      </details>
-      <p class="home-links"><a href="https://github.com/andyy909/Formnaro-cad/blob/main/README.md#quick-start">Getting started ↗</a><a href="https://github.com/andyy909/Formnaro-cad">Source code on GitHub ↗</a></p>
-    </section>
-  </main>
-  <footer class="wrap foot"><span>Formnaro</span><a href="development/">Release notes</a><a href="legal-notice/">Legal notice</a></footer>
+    </div>
+  </section>
+
+  <section id="tasks" aria-labelledby="tasks-title">
+    <div class="wrap">
+      <div class="tasks-head">
+        <h2 id="tasks-title">What you get done with it</h2>
+        <p class="lead">The jobs most people open Formnaro for.</p>
+      </div>
+      <article class="task">
+        <div class="task-text">
+          <h3>Convert STL to STEP</h3>
+          <p class="lead">An STL is made of triangles only, so curves come out faceted. The local converter rebuilds planes and cylinders from it. Compare the result with the original and keep working on it as a CAD solid.</p>
+          <p class="small-links"><a href="https://github.com/andyy909/Formnaro-cad/blob/main/docs/STL-TO-CAD.md">Converter guide</a></p>
+        </div>
+        <div class="compare" style="aspect-ratio: 660 / 480">
+          <img src="../bock-stl.webp" width="660" height="480" alt="Pillow block as a coarse triangle mesh, as in an STL file" loading="lazy">
+          <img class="after" src="../bock-step.webp" width="660" height="480" alt="The same pillow block as a CAD solid with smooth curves" loading="lazy">
+          <span class="bar"></span>
+          <span class="tag l">STL mesh</span><span class="tag r">CAD solid</span>
+          <input type="range" min="0" max="100" value="50" aria-label="Compare STL mesh and CAD solid">
+        </div>
+      </article>
+      <article class="task">
+        <div class="task-text">
+          <h3>Fillet edges</h3>
+          <p class="lead">Pick the edges, enter a radius, check the preview. Here the outer edges of a vise jaw are rounded with 3&nbsp;mm fillets.</p>
+        </div>
+        <div class="compare" style="aspect-ratio: 960 / 570">
+          <img src="../backe-vorher.webp" width="960" height="570" alt="Vise jaw with sharp edges" loading="lazy">
+          <img class="after" src="../backe-nachher.webp" width="960" height="570" alt="Vise jaw with filleted outer edges" loading="lazy">
+          <span class="bar"></span>
+          <span class="tag l">Before</span><span class="tag r">After</span>
+          <input type="range" min="0" max="100" value="50" aria-label="Compare before and after">
+        </div>
+      </article>
+      <article class="task">
+        <div class="task-text">
+          <h3>Move assemblies</h3>
+          <p class="lead">Check joints, couplings and gear ratios before you print or mill. The ATLAS-5 above is one of those models.</p>
+        </div>
+        <figure class="single"><img src="../gallery-solid.webp" width="1538" height="817" alt="ATLAS-5 model tree with 144 objects in Solid mode" loading="lazy"></figure>
+      </article>
+      <ul class="tools">
+        <li><strong>Design parts</strong><span>Dimensioned sketches, extrude, holes, fillets, chamfers, patterns, loft and sweep. Drive dimensions with parameters and formulas.</span></li>
+        <li><strong>Edit meshes</strong><span>Find open edges, close holes, reduce triangles and smooth areas. Compare the result with the original.</span></li>
+        <li><strong>Drawings and bills of materials</strong><span>Views, sections and dimensions as PDF, SVG or DXF. Bills of materials as CSV, assemblies as exploded views.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="facts" aria-labelledby="facts-title">
+    <div class="wrap">
+      <h2 id="facts-title">Good to know</h2>
+      <dl class="spec">
+        <div><dt>System</dt><dd>Windows (x64), as a portable ZIP</dd></div>
+        <div><dt>Installation</dt><dd>None. FreeCAD and Python are included.</dd></div>
+        <div><dt>Internet</dt><dd>Not needed for modelling</dd></div>
+        <div><dt>File formats</dt><dd>STEP, STL, OBJ, 3MF, GLB/glTF</dd></div>
+        <div><dt>License</dt><dd>MIT, <a href="https://github.com/andyy909/Formnaro-cad">source code on GitHub</a></dd></div>
+        <div><dt>Cost</dt><dd>Free. <a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Donations via PayPal</a> support development.</dd></div>
+      </dl>
+      <div class="closing">
+        <a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Download for Windows</a>
+        <a href="https://github.com/andyy909/Formnaro-cad/blob/main/README.md#quick-start">Getting started</a>
+        <a href="development/">Release notes</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="sp">Formnaro</span>
+    <a href="development/">Development</a>
+    <a href="ai-lab/">AI lab</a>
+    <a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Support via PayPal</a>
+    <a href="../" lang="de" hreflang="de">Deutsch</a>
+    <a href="legal-notice/">Legal notice</a>
+  </div>
+</footer>
+
+<script type="application/json" id="home-data">
+{
+  "base": "../",
+  "play": "Play motion",
+  "pause": "Pause motion",
+  "levelLabel": "Feature depth",
+  "axes": ["X axis: cross travel", "Y axis: table feed", "Z axis: tool feed", "A axis: tilting cradle", "C axis: rotary table", "All five axes together"],
+  "modes": {
+    "easy": { "level": 1, "img": "gallery-easy.webp", "alt": "Easy Tinker: bearing bracket with the shape palette", "who": "For your first bracket on a weekend.", "list": ["Basic shapes in one click: box, cylinder, gear, text", "Move, resize and rotate right on the model", "A good start for 3D printing"], "example": "Download example: bearing bracket (.ocad)", "href": "modelle/lagerhalter.ocad" },
+    "normal": { "level": 2, "img": "gallery-normal.webp", "alt": "Normal: precision vise with the toolbar", "who": "For precise work with help close at hand.", "list": ["CAD and mesh tools in one toolbar", "AI chat in the sidebar that points out tools", "Layers and folders for larger projects"], "example": "Download example: precision vise (.ocad)", "href": "modelle/solid-schraubstock.ocad" },
+    "solid": { "level": 3, "img": "gallery-solid.webp", "alt": "Solid: ATLAS-5 gantry mill with the model tree", "who": "For assemblies with many parts and real joints.", "list": ["Model tree with parts and assemblies", "Joints, couplings and motion", "Patterns, mirroring, aligning to references"], "example": "Download example: ATLAS-5 gantry mill (.ocad)", "href": "https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad" },
+    "fusion": { "level": 4, "img": "gallery-fusion.webp", "alt": "Fusion: 6:1 helical gearbox with the design timeline", "who": "For parametric design with traceable steps.", "list": ["Extrude, fillet, chamfer, work planes", "Timeline with every design step", "Sketches with dimension formulas"], "example": "Download example: 6:1 helical gearbox (.ocad)", "href": "modelle/schraeggetriebe-6zu1.ocad" }
+  }
+}
+</script>
+<script src="../home.js?v=1" defer></script>
 </body>
 </html>
