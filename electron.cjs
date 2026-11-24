@@ -18,7 +18,8 @@ const toolVerificationErrors=[],toolVerificationExternal=[];
 app.setName('Formnaro');
 // Chromium cache and the transient local Codex connection keep the compatible PC profile.
 // Authored settings/library/autosave use the portable data store below.
-const profilePath=practiceChild?path.join(practiceDirectory,'profile'):verifyPath?path.join(path.dirname(verifyPath),'offlinecad-verification-profile'):diagnosticHost?path.join(diagnosticHome,'profile'):path.join(app.getPath('appData'),'offlinecad');
+const companion=process.argv.includes('--tablet-companion');
+const profilePath=practiceChild?path.join(practiceDirectory,'profile'):verifyPath?path.join(path.dirname(verifyPath),'offlinecad-verification-profile'):diagnosticHost?path.join(diagnosticHome,'profile'):path.join(app.getPath('appData'),companion?'formnaro-tablet-companion':'offlinecad');
 fs.mkdirSync(profilePath,{recursive:true});
 app.setPath('userData',profilePath);
 app.setPath('sessionData',profilePath);
@@ -45,7 +46,7 @@ app.whenReady().then(async () => {
   }else require('./backend/practice-runner.cjs').installPracticeRunner(win,{ipcMain:require('electron').ipcMain,app,auditDirectory,
     ...(diagnosticChild&&process.env.FORMNARO_LAB_HIDE_PRACTICE==='1'?{spawnChild:labPracticeWindow.spawnHiddenChild}:{}),
     windowTraceFile:auditDirectory?path.join(path.dirname(verifyPath),'practice-window-events.jsonl'):undefined});
-  const {dataDirectory,installProgramStorage,cadOnlyForVersion}=require('./backend/program-storage.cjs'),dataPath=practiceChild?path.join(practiceDirectory,'data'):diagnosticHost?path.join(diagnosticHome,'data'):dataDirectory(app,{verificationPath:verifyPath}),legacyAIFile=path.join(profilePath,'ai-settings.json');
+  const {dataDirectory,installProgramStorage,cadOnlyForVersion}=require('./backend/program-storage.cjs'),dataPath=practiceChild?path.join(practiceDirectory,'data'):diagnosticHost?path.join(diagnosticHome,'data'):dataDirectory(app,{verificationPath:verifyPath,root:companion?profilePath:undefined}),legacyAIFile=path.join(profilePath,'ai-settings.json');
   if(practiceChild&&!diagnosticChild)require('./backend/practice-tempo.cjs').installPracticeTempo(win,{
     directory:dataDirectory(app),ipcMain:require('electron').ipcMain,
   });
@@ -68,7 +69,7 @@ app.whenReady().then(async () => {
     writeAtomic:require('./backend/program-storage.cjs').writeAtomicSync,
   });
   require('./backend/ai-rate-catalog.cjs').loadLocalRates(path.join(dataPath,'KI-Tarife.json'));
-  require('./backend/desktop-ai.cjs').installDesktopAI(win,{settingsFile:path.join(dataPath,'ai-settings.json'),toolLibraryStatus:()=>toolLibrary.status(),fallbackFile:fs.existsSync(path.join(dataPath,'profil.json'))?undefined:legacyAIFile,initialSettings});
+  const desktopAI=require('./backend/desktop-ai.cjs').installDesktopAI(win,{settingsFile:path.join(dataPath,'ai-settings.json'),toolLibraryStatus:()=>toolLibrary.status(),fallbackFile:fs.existsSync(path.join(dataPath,'profil.json'))?undefined:legacyAIFile,initialSettings});
   if(!practiceChild) require('./backend/ai-lab-development-evidence.cjs').installDevelopmentEvidence(win,path.join(dataPath,'KI-Diagnose'));
   const speechService=require('./backend/speech.cjs').installSpeech(win,{settingsDirectory:dataPath});
   let speechQuitting=false;app.on('before-quit',event=>{if(!speechService.hasActive())return;event.preventDefault();if(speechQuitting)return;speechQuitting=true;speechService.dispose().finally(()=>app.quit());});
@@ -85,7 +86,15 @@ app.whenReady().then(async () => {
   const {installProjects,projectDirectory}=require('./backend/projects.cjs');
   const performanceFixtures=cadMiniPerformanceVerifyArg&&process.env.FORMNARO_PERFORMANCE_FIXTURES;
   const performanceDialogs=performanceFixtures?require('./backend/mixed-project-verification.cjs').verificationDialogs(path.dirname(verifyPath)):null;
-  const projectStore=installProjects(win,{directory:projectDirectory(app,{verificationPath:verifyPath}),...(fnpackVerifyArg?{onPackRead:event=>packReads.push(event)}:{}),...((performanceDialogs??mixedDialogs)?{dialog:(performanceDialogs??mixedDialogs).projectDialog}:{})});
+  const projects=companion&&!verifyPath&&!diagnosticHost?path.join(profilePath,'Projekte'):projectDirectory(app,{verificationPath:verifyPath});
+  const projectStore=installProjects(win,{directory:projects,...(fnpackVerifyArg?{onPackRead:event=>packReads.push(event)}:{}),...((performanceDialogs??mixedDialogs)?{dialog:(performanceDialogs??mixedDialogs).projectDialog}:{})});
+  if(!practiceChild) {
+    const {ipcMain,dialog,shell,clipboard}=require('electron');
+    require('./backend/tablet-transfer.cjs').installTabletTransfer(win,{ipcMain,dialog,shell,clipboard,
+      directory:path.join(projects,'Tablet-Eingang'),getTarget:desktopAI.tabletTarget,
+      peerDirectory:dataPath,protection:require('electron').safeStorage,
+      provider:desktopAI.tabletProvider,live:desktopAI.tabletLive});
+  }
   let quittingSources=false,sourceCleanupDone=false;app.on('before-quit',event=>{if(!win.isDestroyed()||!projectStore.hasPackageSources()||sourceCleanupDone)return;event.preventDefault();if(quittingSources)return;quittingSources=true;projectStore.close().catch(error=>console.error('Private package source cleanup: '+error.message)).finally(()=>{sourceCleanupDone=true;app.quit();});});
   const {installLayouts,layoutDirectory}=require('./backend/layouts.cjs');
   const layoutRoot=practiceChild?practiceDirectory:diagnosticHost?diagnosticHome:undefined;

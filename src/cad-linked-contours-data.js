@@ -805,7 +805,7 @@ export function cadContourSourceClosure(project, targets) {
           cadProjectParameterTarget(project, link.source);
         } catch (error) {
           fail(
-            'Benötigte Originalquelle fehlt. Bezug erneut wählen oder die Verknüpfung ausdrücklich lösen.',
+            'Benötigte Originalquelle „' + [link.source.rootId, ...link.source.path].join(' / ') + '“ fehlt. Bezug erneut wählen oder die Verknüpfung ausdrücklich lösen.',
             'CONTOUR_REFERENCE_LOST',
             { linkId: link.id, source: link.source, target: link.target },
           );

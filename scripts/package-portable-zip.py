@@ -14,6 +14,7 @@ parser.add_argument('--version', required=True)
 parser.add_argument('--revision', required=True)
 parser.add_argument('--output', required=True)
 parser.add_argument('--report', required=True)
+parser.add_argument('--nightly', action='store_true')
 args = parser.parse_args()
 if not re.fullmatch(r'\d+\.\d+\.\d+', args.version) or not re.fullmatch(r'r\d+', args.revision):
     raise SystemExit('Invalid version/revision')
@@ -66,7 +67,8 @@ for example in example_manifest['examples']:
     rows.append({'source': str(file), 'name': 'Programmdateien/Projekte/Beispiele/' + file.name,
                  'bytes': file.stat().st_size, 'sha256': example['sha256']})
 readme = (
-    f'Formnaro {args.version}-{args.revision} – Portable Windows x64\n\n'
+    f'Formnaro {args.version}-{args.revision} – '
+    f'{"Nightly-Vorabversion · " if args.nightly else ""}Portable Windows x64\n\n'
     'ZIP vollständig in einen beschreibbaren Ordner entpacken.\n'
     'Danach „Formnaro starten“ öffnen. FreeCAD, Python und die Anwendungs-\n'
     'laufzeit sind enthalten; keine zusätzliche Installation erforderlich.\n\n'

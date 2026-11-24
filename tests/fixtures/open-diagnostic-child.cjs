@@ -1,52 +1,40 @@
-const { Module, registerHooks } = require('node:module');
+const { mkdtempSync, rmdirSync } = require('node:fs');
+const { Module } = require('node:module');
+const { tmpdir } = require('node:os');
 const { join } = require('node:path');
 const { performance: hostPerformance } = require('node:perf_hooks');
-const { pathToFileURL } = require('node:url');
 
 const diagnosticPath = require.resolve('../../backend/ai-diagnostic-child.cjs');
-const diagnosticUrl = pathToFileURL(diagnosticPath).href;
 
-function loadDiagnosticChild(spawn, performance) {
-  const dependencies = [
+function loadDiagnosticChild(t, spawn, performance) {
+  const previous = require.cache[diagnosticPath];
+  const requireModule = Module.prototype.require;
+  const dependencies = new Map([
     ['node:child_process', { spawn }],
-    ['node:fs', { mkdirSync() {} }],
     ['node:perf_hooks', { performance }]
-  ];
-  const files = [diagnosticPath];
-  const modules = new Map(dependencies.map(([specifier, exports], index) => {
-    const file = join(__dirname, `.diagnostic-test-module-${index}.cjs`);
-    const stub = new Module(file);
-    stub.exports = exports;
-    stub.loaded = true;
-    files.push(file);
-    return [specifier, { file, url: pathToFileURL(file).href, stub }];
-  }));
-  const cached = files.map(file => [file, require.cache[file]]);
-  const hooks = registerHooks({
-    resolve(specifier, context, nextResolve) {
-      const mock = context.parentURL === diagnosticUrl && modules.get(specifier);
-      if (mock) return { url: mock.url, format: 'commonjs', shortCircuit: true };
-      return nextResolve(specifier, context);
-    }
+  ]);
+  // Capture the dependencies only while loading the real diagnostic module.
+  const hook = t.mock.method(Module.prototype, 'require', function (name) {
+    if (this.filename === diagnosticPath && dependencies.has(name)) return dependencies.get(name);
+    return requireModule.call(this, name);
   });
   try {
     delete require.cache[diagnosticPath];
-    for (const { file, stub } of modules.values()) require.cache[file] = stub;
     return require(diagnosticPath);
   } finally {
-    hooks.deregister();
-    for (const [file, previous] of cached) {
-      if (previous) require.cache[file] = previous;
-      else delete require.cache[file];
-    }
+    hook.mock.restore();
+    if (previous) require.cache[diagnosticPath] = previous;
+    else delete require.cache[diagnosticPath];
   }
 }
 
 function openDiagnosticFixture(t, {
-  spawn, executable = process.execPath, directory = 'unused',
-  performance = hostPerformance, clock, normal = 200, grace = 800, forced = 200
+  spawn, executable = process.execPath, performance = hostPerformance, clock,
+  normal = 200, grace = 800, forced = 200
 }) {
-  const { openDiagnosticChild } = loadDiagnosticChild(spawn, performance);
+  const { openDiagnosticChild } = loadDiagnosticChild(t, spawn, performance);
+  const directory = mkdtempSync(join(tmpdir(), 'formnaro-diagnostic-test-'));
+  t.after(() => rmdirSync(directory));
   if (clock) t.mock.method(Date, 'now', () => clock.now());
   const hostSetTimeout = globalThis.setTimeout;
   const delays = [];

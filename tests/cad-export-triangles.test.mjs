@@ -8,6 +8,9 @@ import {createCadFinishNative,listCadEdgesNative} from '../src/cad-finish-native
 import {createCadProject,serializeCadProject} from '../src/cad-project.js';
 import {cadExportMesh,validateCadSolid,writeCadBrep,readCadBrep} from '../src/cad-native-kernel.js';
 import {STLLoader} from 'three/addons/loaders/STLLoader.js';
+import {unzipSync,strFromU8} from 'fflate';
+import {DOMParser} from '@xmldom/xmldom';
+import {cadIdentity} from '../src/cad-affine.js';
 const oc=await loadCadKernel({print:()=>{},printErr:()=>{}});
 
 test('Export cleanup preserves all positive triangles, coordinates, winding and native face IDs',()=>{
@@ -44,4 +47,58 @@ test('Rounded and scaled native box/pyramid union exports without pole triangles
    assert.equal(serializeCadProject(project),before);assert.equal(writeCadBrep(oc,shape),brep);assert.deepEqual(validateCadSolid(oc,shape),proof);
  }}finally{shape.delete();}
  }finally{service.dispose();}
+});
+
+test('3MF export joins the exact face seams of a native plate with two through holes', async () => {
+  const service = createCadService({ oc });
+  try {
+    const plate = service.nativeNode({ type: 'box', size: [60, 30, 2] }, { id: 'plate' });
+    const holes = [-14, 14].map((x, index) => {
+      const hole = service.nativeNode({ type: 'cylinder', size: [13, 13, 8] }, { id: 'hole-' + index, solid: false });
+      hole.transform[12] = x;
+      hole.transform[14] = -3;
+      return hole;
+    });
+    const group = {
+      ...plate,
+      id: 'drilled-plate',
+      source: 'group',
+      operation: 'union',
+      children: [plate, ...holes],
+      transform: cadIdentity(),
+    };
+    delete group.recipe;
+    const project = await service.rebuild(createCadProject({ nodes: [group] }));
+    const source = serializeCadProject(project);
+    const original = service.exportMeshes(project)[0].mesh;
+    const result = service.exportModel(project, { format: '3mf', ids: [group.id] });
+    const model = strFromU8(unzipSync(result.data)['3D/3dmodel.model']);
+    const document = new DOMParser().parseFromString(model, 'application/xml');
+    assert.equal(document.getElementsByTagName('object').length, 1);
+    const points = Array.from(document.getElementsByTagName('vertex'), (vertex) =>
+      ['x', 'y', 'z'].map((axis) => Number(vertex.getAttribute(axis))),
+    );
+    const triangles = Array.from(document.getElementsByTagName('triangle'), (face) =>
+      ['v1', 'v2', 'v3'].map((index) => Number(face.getAttribute(index))),
+    );
+    const edges = new Map();
+    for (const [a, b, c] of triangles) {
+      for (const [from, to] of [[a, b], [b, c], [c, a]]) {
+        const key = [Math.min(from, to), Math.max(from, to)].join(',');
+        const directions = edges.get(key) ?? [];
+        directions.push(from < to);
+        edges.set(key, directions);
+      }
+    }
+
+    const expected = original.triangles.map((id) =>
+      original.vertices.slice(id * 3, id * 3 + 3).map((value) => value === 0 ? 0 : value),
+    );
+    assert.deepEqual(triangles.flat().map((id) => points[id]), expected);
+    const invalidEdges = [...edges.values()].filter((faces) => faces.length !== 2 || faces[0] === faces[1]);
+    assert.equal(invalidEdges.length, 0, '3MF must use the same vertex indices on both faces sharing an edge');
+    assert.equal(serializeCadProject(project), source);
+  } finally {
+    service.dispose();
+  }
 });

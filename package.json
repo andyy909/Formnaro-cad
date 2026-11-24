@@ -159,6 +159,8 @@
   "dependencies": {
     "fflate": "0.8.3",
     "opentype.js": "2.0.0",
+    "qrcode-generator": "2.0.4",
+    "selfsigned": "5.5.0",
     "three": "0.186.1"
   },
   "devDependencies": {

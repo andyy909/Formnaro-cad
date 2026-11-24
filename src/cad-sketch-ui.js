@@ -184,7 +184,7 @@ export function createCadSketchUI({
     onPart.id = 'sketch-on-part-start';
     onPart.textContent = 'Diese Skizze auf Teilfläche verwenden …';
     $('sketch-kind').parentElement.before(onPart);
-    onPart.hidden = !!attachment || s.linked;
+    onPart.hidden = !!attachment || s.linked || !!s.imported?.profileOnly;
     try {
       const selected = getSelection(),
         c =
@@ -361,6 +361,7 @@ export function createCadSketchUI({
         ['diameter', 'Durchmesser'],
         ['height', 'Extrusionshöhe'],
       ]) {
+        if (key === 'height' && s.imported?.profileOnly) continue;
         if (
           key !== 'height' &&
           (s.linked ||
@@ -743,6 +744,23 @@ export function createCadSketchUI({
               : 'Native Skizze wird berechnet …',
       );
       try {
+        if (s.imported?.profileOnly) {
+          const project = controller.snapshot();
+          if (!project.attachedSketch) throw Error('Die gebundene Skizze fehlt.');
+          project.attachedSketch.sketch = resolved.sketch;
+          const proposal = await controller.preview(undefined, {
+            project, revision: s.revision, label: 'Tablet-Skizzenmaße bearbeiten', signal: s.abort.signal,
+          });
+          if (state !== s || ticket !== s.ticket) {
+            controller.discard(proposal.previewId);
+            return;
+          }
+          s.proposal = proposal;
+          $('sketch-apply').disabled = false;
+          $('sketch-apply').textContent = 'Skizzenmaße übernehmen';
+          s.message('Geprüfte Kontur · ' + resolved.size.slice(0, 2).join(' × ') + ' mm');
+          return proposal;
+        }
         const attachmentOperation = s.attachment
           ? {
               ...(mesh ? { type: 'mesh-sketch-attachment' } : { kind: 'sketchAttachment' }),
@@ -891,12 +909,12 @@ export function createCadSketchUI({
       s.applying = true;
       try {
         const proposal = s.proposal,
-          target = s.resultTarget ?? proposalTarget(proposal),
+          target = s.imported?.profileOnly ? null : s.resultTarget ?? proposalTarget(proposal),
           result = controller.apply({ previewId: proposal.previewId, revision: proposal.revision });
         s.proposal = null;
         close();
         $('modal').close();
-        if (result.changed) select([target]);
+        if (result.changed && target) select([target]);
       } finally {
         s.applying = false;
       }

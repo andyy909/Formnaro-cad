@@ -1,6 +1,6 @@
 // Read-only native surface measurements. Face indices live only within this
 // query/revision; saved models never acquire display or measurement data.
-import { cadRayHits } from './cad-native-kernel.js';
+import { cadClassifyPoint, cadRayHits } from './cad-native-kernel.js';
 const xyz = (p) => [p.X(), p.Y(), p.Z()],
   value = (e) => e?.value ?? e;
 function faces(oc, shape) {
@@ -34,7 +34,7 @@ function faces(oc, shape) {
   }
 }
 export function createCadClickMeasureNative({ oc, service }) {
-  function info(face) {
+  function info(face, hit) {
     const adapter = new oc.BRepAdaptor_Surface(face, false);
     let surface, axis, location, direction;
     try {
@@ -45,12 +45,15 @@ export function createCadClickMeasureNative({ oc, service }) {
         axis = surface.Axis();
         location = axis.Location();
         direction = axis.Direction();
+        const center = xyz(location);
+        const radialNormal = hit.normal.reduce((sum, normal, i) => sum + normal * (hit.point[i] - center[i]), 0);
         return {
           kind: 'cylinder',
           radius: surface.Radius(),
           diameter: surface.Radius() * 2,
           axis: xyz(direction),
-          center: xyz(location),
+          center,
+          inner: radialNormal < -1e-7,
         };
       }
       if (type === value(types.GeomAbs_Plane)) return { kind: 'plane' };
@@ -96,13 +99,33 @@ export function createCadClickMeasureNative({ oc, service }) {
       list = faces(oc, shape);
       const face = list[best.faceIndex - 1];
       if (!face) throw Error('CAD-Fläche nicht mehr verfügbar.');
-      return { ...best, surface: info(face) };
+      return { ...best, surface: info(face, best) };
     } finally {
       list.forEach((f) => f.delete());
       shape.delete();
     }
   }
-  function distance({ project, from, to }) {
+  function wallThickness(shape, from, to, { point, normal }) {
+    if (from.objectId !== to.objectId || from.faceIndex === to.faceIndex) return null;
+    const tolerance = 1e-7;
+    const offset = 1e-5;
+    if (Math.abs(Math.hypot(...normal) - 1) > tolerance ||
+        cadClassifyPoint(oc, shape, point, { tolerance }) !== 'boundary') return null;
+    const direction = normal.map((value) => -value);
+    const along = (distance) => point.map((value, i) => value + direction[i] * distance);
+    if (cadClassifyPoint(oc, shape, along(offset), { tolerance }) !== 'inside') return null;
+    const hits = cadRayHits(oc, shape, { origin: point, direction, near: offset, far: 1e9, tolerance });
+    hits.sort((a, b) => a.t - b.t);
+    const exit = hits[0];
+    if (!exit || exit.faceIndex !== to.faceIndex || exit.t <= 2 * offset ||
+        hits.slice(1).some((hit) => hit.faceIndex !== exit.faceIndex && Math.abs(hit.t - exit.t) <= offset) ||
+        exit.normal.reduce((sum, value, i) => sum + value * direction[i], 0) <= tolerance) return null;
+    if (cadClassifyPoint(oc, shape, along(exit.t / 2), { tolerance }) !== 'inside' ||
+        cadClassifyPoint(oc, shape, along(exit.t + offset), { tolerance }) !== 'outside') return null;
+    return { value: exit.t, from: point, to: exit.point };
+  }
+
+  function distance({ project, from, to, wallEntry }) {
     const shapes = [],
       lists = [];
     let measure;
@@ -126,7 +149,15 @@ export function createCadClickMeasureNative({ oc, service }) {
       const a = measure.PointOnShape1(1),
         b = measure.PointOnShape2(1);
       try {
-        return { distance: measure.Value(), from: xyz(a), to: xyz(b), kind: 'cad-face-distance' };
+        const result = { distance: measure.Value(), from: xyz(a), to: xyz(b), kind: 'cad-face-distance' };
+        if (wallEntry) {
+          try {
+            result.thickness = wallThickness(shapes[0], from, to, wallEntry);
+          } catch {
+            result.thickness = null;
+          }
+        }
+        return result;
       } finally {
         a.delete();
         b.delete();

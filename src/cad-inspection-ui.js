@@ -160,6 +160,12 @@ export function createCadInspectionUI({
         ) +
         '</p>',
     );
+    const wallLabel = document.createElement('label');
+    const wall = document.createElement('input');
+    wall.type = 'checkbox';
+    wall.id = 'inspection-wall';
+    wallLabel.append(wall, tr('Wandstärke am ersten Klick prüfen', 'Check wall thickness at the first click'));
+    $('inspection-instruction').after(wallLabel);
     const reset = () => {
       s.ticket++;
       s.points = [];
@@ -167,6 +173,7 @@ export function createCadInspectionUI({
       $('inspection-result').textContent = '';
       line([]);
       const mode = $('inspection-measure-mode').value;
+      wallLabel.hidden = mode !== 'faces';
       $('inspection-instruction').textContent =
         mode === 'auto'
           ? tr(
@@ -205,7 +212,7 @@ export function createCadInspectionUI({
     };
     viewLabel.append(viewSelect);
     panel.insertBefore(viewLabel, $('inspection-instruction'));
-    $('inspection-measure-mode').onchange = reset;
+    $('inspection-measure-mode').onchange = wall.onchange = reset;
     $('inspection-reset').onclick = reset;
     $('inspection-legacy').onclick = () => {
       close();
@@ -291,13 +298,21 @@ export function createCadInspectionUI({
           const result = await controller.query('clickSurfaceDistance', {
             from: { objectId: a.objectId, faceIndex: a.faceIndex },
             to: { objectId: b.objectId, faceIndex: b.faceIndex },
+            ...(wall.checked ? { wallEntry: { point: a.point, normal: a.normal } } : {}),
           });
           if (!valid(s, ticket)) return;
           s.result = result;
-          line([result.from, result.to]);
+          const path = result.thickness ?? result;
+          line([path.from, path.to]);
         } else {
           const delta = b.point.map((v, k) => v - a.point[k]);
           s.result = { kind: 'point-distance', distance: Math.hypot(...delta), delta, from: a.point, to: b.point };
+        }
+        let extra = s.result.delta ? '\nΔX / ΔY / ΔZ: ' + s.result.delta.map(fmt).join(' / ') + ' mm' : '';
+        if (s.result.thickness) {
+          extra += '\n' + tr('Wandstärke am Klickpunkt', 'Wall thickness at click') + ': ' + fmt(s.result.thickness.value) + ' mm';
+        } else if (s.result.thickness === null) {
+          extra += '\n' + tr('Kein eindeutiger Materialweg.', 'No unambiguous material path.');
         }
         $('inspection-result').textContent =
           (mode === 'faces'
@@ -305,8 +320,7 @@ export function createCadInspectionUI({
             : tr('Punktabstand', 'Point distance')) +
           ': ' +
           fmt(s.result.distance) +
-          ' mm' +
-          (s.result.delta ? '\nΔX / ΔY / ΔZ: ' + s.result.delta.map(fmt).join(' / ') + ' mm' : '');
+          ' mm' + extra;
         status(
           tr(
             'Messung fertig · der nächste Klick beginnt ein neues Paar.',
@@ -543,11 +557,26 @@ export function createCadInspectionUI({
         }
       : null;
   }
+  function tabletMeasurement() {
+    if (active?.kind !== 'measure' || !valid(active)) return null;
+    const result = active.result;
+    if (result?.kind === 'diameter') return { kind: result.inner ? 'bore' : 'cylinder', value: result.diameter, objectIds: [result.objectId] };
+    if (result?.kind === 'cad-face-distance') {
+      return {
+        kind: 'face-distance',
+        value: result.distance,
+        objectIds: active.points.map((hit) => hit.objectId),
+        thickness: result.thickness?.value ?? null,
+      };
+    }
+    return null;
+  }
   return {
     openMeasure,
     openSection,
     close,
     state,
+    tabletMeasurement,
     sectionState: () => sectionState,
     storedSection: () => (sectionState ? structuredClone(sectionState.config) : null),
     revisionChanged: () => {

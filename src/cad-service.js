@@ -16,7 +16,9 @@ import {createCadCache} from './cad-worker-client.js';
 import {importCadStep,importCadStepAssembly,exportCadStep} from './cad-step-io.js';
 import {cadColorPartsNative} from './cad-analysis-native.js';
 import {encodeCadMeshes} from './cad-mesh-formats.js';
-import {rebindCadWorkplaneNative} from './cad-topology-native.js';
+import {compactCadMesh} from './cad-mesh-copy-data.js';
+import {cadSketchRecipe} from './cad-sketch.js';
+import {projectCadPlanarFaceNative,rebindCadWorkplaneNative} from './cad-topology-native.js';
 import {analyzeStlHousing,buildStlHousingCad} from './cad-stl-housing.js';
 import {repairStlMesh} from './cad-stl-repair.js';
 import {partitionCadNative} from './cad-partition-native.js';
@@ -208,6 +210,27 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     bounds.min=bounds.min.map((v,k)=>v+world[12+k]);bounds.max=bounds.max.map((v,k)=>v+world[12+k]);bounds.center=bounds.center.map((v,k)=>v+world[12+k]);
     return result;
   }
+  function checkAttachedSketchFace(project, baseline) {
+    const attachment=project.attachedSketch;
+    if(!attachment)return project;
+    if(JSON.stringify(attachment.sketch)!==JSON.stringify(baseline?.attachedSketch?.sketch)){
+      const profile=buildCadRecipe(oc,cadSketchRecipe(attachment.sketch));
+      profile.delete();
+    }
+    const reference=attachment.workplane.reference;
+    if(!reference)return project;
+    const support=project.nodes.find(node=>node.id===reference.objectId);
+    if(isGeometryRef(support.brep))return project;
+    const previous=baseline?.nodes.find(node=>node.id===support.id);
+    if(previous?.brep.data===support.brep.data &&
+        JSON.stringify(baseline.attachedSketch?.workplane.reference)===JSON.stringify(reference))return project;
+    const {point,normal}=reference.topology.anchor, shape=readCadBrep(oc,support.brep.data);
+    try {
+      if(projectCadPlanarFaceNative(oc,shape,point,{normal,tolerance:1e-6}).length!==1)
+        throw Object.assign(Error('Die Bezugsfläche der gebundenen Skizze wurde geändert. Wähle die Fläche erneut.'),{code:'CAD_SKETCH_FACE_LOST'});
+    } finally {shape.delete();}
+    return project;
+  }
   async function rebuild(project,{signal,progress,baseline,catalogOnly=false,restoreUnresolvedSources=false}={}){
     alive(signal);const draft=cadProjectSnapshot(project),total=draft.nodes.length;let completed=0;
     function visit(node,parent){
@@ -222,7 +245,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
       try{return snapshotNode(node,entry);}finally{release();}
     }
     const nodes=[];for(const node of draft.nodes){if(hasGeometryRefs(node)){if(!catalogOnly&&!sameDeferredGeometry(baseline?.nodes.find(n=>n.id===node.id),node))throw Object.assign(Error('Geänderte Geometrie vor dem Aufbau laden.'),{code:'GEOMETRY_NOT_LOADED'});nodes.push(node);progress?.(++completed/Math.max(1,total));continue;}const built=visit(node,cadIdentity());if(built.kind==='cad'){const checked=inspect(built);if([...checked.worldBounds.min,...checked.worldBounds.max].some(v=>Math.abs(v)>100000)||checked.worldBounds.size.some(v=>v<.01||v>10000))throw Error('CAD-Körper überschreitet den zulässigen Arbeitsbereich.');}nodes.push(annotationValidator.rebindRoot(built));progress?.(++completed/Math.max(1,total));await Promise.resolve();}
-    return rebindCadWorkplaneNative(oc,{...draft,nodes},{baseline});
+    return checkAttachedSketchFace(rebindCadWorkplaneNative(oc,{...draft,nodes},{baseline}),baseline);
   }
   /** Explicit parameter updates visit only selected source branches. Every
    * geometry edit is already collected before this single bottom-up traversal.
@@ -268,7 +291,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     let completed=0;for(let i=0;i<draft.nodes.length;i++)if(roots.has(draft.nodes[i].id)){if(nodeOrder===undefined)draft.nodes[i]=await visit(draft.nodes[i],cadIdentity(),{rootId:draft.nodes[i].id,path:[]});const checked=inspect(draft.nodes[i]);if([...checked.worldBounds.min,...checked.worldBounds.max].some(v=>Math.abs(v)>100000)||checked.worldBounds.size.some(v=>v<.01||v>10000))throw Error('CAD-Körper überschreitet den zulässigen Arbeitsbereich.');draft.nodes[i]=annotationValidator.rebindRoot(draft.nodes[i]);progress?.(++completed/Math.max(1,roots.size));await Promise.resolve();}
     function precision(node,parent){if(node.kind!=='cad')return;const world=multiplyCadMatrices(parent,node.transform),used=budgets.get(node.id),required=nodeTolerance(node,world);if(used!==undefined&&used>required*(1+1e-12))throw Error('Das fertige CAD-Maß benötigt eine feinere Konstruktion als das einmalig gebaute Ergebnis.');for(const child of node.children??[])precision(child,node.extraction?.constructionFrame??world);}
     for(const root of draft.nodes)if(roots.has(root.id))precision(root,cadIdentity());
-    return rebindCadWorkplaneNative(oc,draft,{baseline:before});
+    return checkAttachedSketchFace(rebindCadWorkplaneNative(oc,draft,{baseline:before}),before);
   }
   function display(project,quality={deflection:.02,angleDegrees:8},{colored=false,knownMeshes,ids,timings}={}){
     alive();cadNativeMemory(oc).check('display');const draft=cadProjectSnapshot(project),result=[];
@@ -377,6 +400,14 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
       // glTF position attributes are float32. Reserve half of the requested
       // world tolerance for centered-buffer quantization and verify it below.
       const meshQuality=['gltf','glb'].includes(format)?{...quality,deflection:quality.deflection/2}:quality;parts=exportMeshes(project,meshQuality,{ids});
+      // Native tessellation indexes vertices per BRep face. 3MF needs shared
+      // indices at coincident face seams within each exported CAD part.
+      if (format === '3mf') {
+        for (const part of parts) {
+          const { verts, triangles } = compactCadMesh(part.mesh);
+          part.mesh = { vertices: verts, triangles };
+        }
+      }
       parts.push(...meshExportParts(project,{ids,includeReferences:['3mf','gltf','glb'].includes(format),meshColorParts}));
     }
     return {data:encodeCadMeshes(parts,format,{roundingBudget:quality.deflection/2}),extension:format==='obj'?'zip':format,mime:{stl:'model/stl',obj:'application/zip','3mf':'model/3mf',gltf:'model/gltf+json',glb:'model/gltf-binary'}[format]};

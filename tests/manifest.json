@@ -591,6 +591,8 @@
   {"file":"tests/speech-online.test.cjs","referencedBy":["scripts/package-freecad-python.mjs"],"kind":"node","status":"pass","seconds":0.234},
   {"file":"tests/speech.test.mjs","referencedBy":["scripts/legacy/package-chatgpt.mjs","scripts/legacy/package-provider-context.mjs","scripts/legacy/package-solid.mjs","scripts/legacy/package-speech.mjs","scripts/package-freecad-python.mjs","test:speech"],"kind":"node","status":"pass","seconds":0.179},
   {"file":"tests/startup-options.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.166,"textCoupled":true,"note":"Checks parser integration and profile/verification wiring in electron.cjs alongside behavioral startup-option cases."},
+  {"file":"tests/tablet-known-pcs.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.388},
+  {"file":"tests/tablet-transfer.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.518},
   {"file":"tests/step-assembly.test.mjs","referencedBy":["scripts/legacy/package-group-performance.mjs","scripts/legacy/package-step-thickness.mjs","test:part-properties","test:step-thickness"],"kind":"node","status":"pass","seconds":2.754},
   {"file":"tests/stl-converter.test.cjs","referencedBy":["scripts/legacy/package-converter-autopilot.mjs","scripts/legacy/package-security.mjs","test:converter-workspace"],"kind":"node","status":"pass","seconds":0.644},
   {"file":"tests/stl-trimesh-repair.test.py","referencedBy":[],"kind":"python"},

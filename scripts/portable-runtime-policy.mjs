@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
+import {execFileSync} from 'node:child_process';
 const profile=JSON.parse(fs.readFileSync(new URL('./portable-freecad-profile.json',import.meta.url),'utf8'));
 const nativeExclusions=new Map(profile.nativeExclusions.map(row=>[row.file.toLowerCase(),row]));
 for(const name of ['bin/freecad.exe','bin/freecadcmd.exe','bin/python.exe','bin/freecad.pyd','bin/python3.dll','bin/python311.dll','bin/opengl32sw.dll','lib/part.pyd','lib/sketcher.pyd','lib/mesh.pyd','lib/meshpart.pyd','lib/import.pyd','lib/surface.pyd','formnaro-container.exe'])if(nativeExclusions.has(name))throw Error('Core runtime cannot be excluded: '+name);
@@ -93,6 +94,17 @@ export function copyPortableApp(source,stage){
   const target=path.join(packaged,file);
   fs.mkdirSync(path.dirname(target),{recursive:true});
   fs.copyFileSync(path.join(fflate,file),target);
+ }
+ // Pairing generates its QR code in the Electron main process.
+ if(fs.existsSync(path.join(stage,'backend','tablet-transfer.cjs'))){
+  const entry=require.resolve('qrcode-generator');
+  const moduleRoot=path.dirname(path.dirname(entry));
+  const target=path.join(stage,'node_modules','qrcode-generator');
+  fs.mkdirSync(path.join(target,'dist'),{recursive:true});
+  fs.copyFileSync(path.join(moduleRoot,'package.json'),path.join(target,'package.json'));
+  fs.copyFileSync(entry,path.join(target,'dist','qrcode.js'));
+  execFileSync(process.execPath,[path.join(source,'scripts','build-tablet-runtime.mjs'),stage],
+   {stdio:'inherit',windowsHide:true});
  }
  // The public bridge client and acceptance/build scripts stay in the source repository.
 }

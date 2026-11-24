@@ -1730,7 +1730,50 @@ export function createCadRenderer({
     }
   }
   const cameraStep = createCadCameraStep({ getCamera: () => camera, orbit });
+  const tabletSpotlight = new THREE.Group();
+  tabletSpotlight.name = 'Tablet companion spotlight';
+  scene.add(tabletSpotlight);
+  let tabletSpotlightTimer;
+  function clearTabletSpotlight() {
+    clearTimeout(tabletSpotlightTimer);
+    clear(tabletSpotlight);
+    invalidate('tablet-spotlight');
+  }
+  function showTabletSpotlight(rootId, bounds, current) {
+    clearTabletSpotlight();
+    const box = new THREE.Box3(new THREE.Vector3(...bounds.min), new THREE.Vector3(...bounds.max));
+    box.expandByScalar(Math.max(0.15, box.getSize(new THREE.Vector3()).length() * 0.025));
+    const marker = new THREE.Box3Helper(box, 0x30d9ef);
+    marker.userData = { rootId, current };
+    marker.material.depthTest = false;
+    marker.material.depthWrite = false;
+    marker.renderOrder = 45;
+    tabletSpotlight.add(marker);
+    tabletSpotlightTimer = setTimeout(clearTabletSpotlight, 1400);
+    invalidate('tablet-spotlight');
+  }
+  async function captureTabletView() {
+    const source = renderer.domElement;
+    if (!source.width || !source.height || !host.clientWidth || !host.clientHeight)
+      throw Error('Die Modellansicht am PC ist gerade nicht sichtbar.');
+    const buffer = document.createElement('canvas');
+    const scale = Math.min(1, 1024 / Math.max(source.width, source.height));
+    buffer.width = Math.max(1, Math.round(source.width * scale));
+    buffer.height = Math.max(1, Math.round(source.height * scale));
+    await scheduler.paint();
+    buffer.getContext('2d').drawImage(source, 0, 0, buffer.width, buffer.height);
+    const image = buffer.toDataURL('image/jpeg', 0.82);
+    if (!image.startsWith('data:image/jpeg;base64,') || image.length > 270000)
+      throw Error('Die Modellansicht ist für den Skizzenblock zu groß.');
+    return { image, width: buffer.width, height: buffer.height, view: viewState() };
+  }
   function draw() {
+    const marker = tabletSpotlight.children[0];
+    if (marker) {
+      const { rootId, current } = marker.userData;
+      marker.visible = current() && allows(rootId) &&
+        bodies.children.some((body) => body.visible && body.userData.rootId === rootId);
+    }
     const scale = cornerPreview ?? (handleDrag?.moved && !handleDrag.lift ? handleDrag : pendingScale);
     if (scale && (scale !== pendingScale || scale.revision === getScene()?.revision))
       drawCornerPreview(scale, { showDimensions: scale !== pendingScale });
@@ -1774,6 +1817,7 @@ export function createCadRenderer({
         meshSelectionMarks,
         meshProtectionMarks,
         meshInspectionMarks,
+        tabletSpotlight,
         rotationHandles.group,
         gizmo.getHelper(),
       ],
@@ -1941,6 +1985,8 @@ export function createCadRenderer({
     },
     allows,
     sectionPreview,
+    showTabletSpotlight,
+    captureTabletView,
     setThickness,
     clearThickness,
     setMode: (value) => {
@@ -2145,6 +2191,7 @@ export function createCadRenderer({
       stagedBytes: stagedDisplay?.nextBytes ?? 0,
     }),
     dispose: () => {
+      clearTabletSpotlight();
       explosionView.clear();
       assemblyBoxes.clear();
       jointView.clear();

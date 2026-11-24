@@ -1,5 +1,6 @@
 import { cadPoint } from './cad-affine.js';
 import { flags } from './organization.js';
+import {hasGeometryRefs} from './cad-geometry-ref.js';
 
 export function validateCadLoadSet(value) {
   if (value === null) return null;
@@ -115,12 +116,12 @@ export function createCadAssemblyDisplay() {
       });
   }
   function displayIds(project, confirmed = project) {
-    if (loaded === null) return null;
+    if (loaded === null && !hasGeometryRefs(project)) return null;
     const existing = rootIds(confirmed);
     // New preview results must be visible before their explicit Apply. Existing
     // omitted roots keep their boxes until the user requests loading them.
     return project.nodes
-      .filter((n) => (loaded.has(n.id) || !existing.has(n.id)) && !flags(n, project).hidden && !n.suppressed)
+      .filter((n) => (loaded === null || loaded.has(n.id) || !existing.has(n.id)) && !flags(n, project).hidden && !n.suppressed)
       .map((n) => n.id);
   }
   return {

@@ -287,7 +287,8 @@ test('electron.cjs importiert den Parser und führt Weiche/Verify-Pfade unverän
 
   // Profil-, Fenster- und Verify-Weiche bleiben beim Aufrufer.
   assert.ok(electron.includes("path.join(path.dirname(verifyPath),'offlinecad-verification-profile')"));
-  assert.ok(electron.includes('dataDirectory(app,{verificationPath:verifyPath})'));
+  assert.ok(electron.includes('dataDirectory(app,{verificationPath:verifyPath,root:companion?profilePath:undefined})'));
+  assert.ok(electron.includes("companion&&!verifyPath&&!diagnosticHost?path.join(profilePath,'Projekte')"));
   assert.ok(electron.includes('projectDirectory(app,{verificationPath:verifyPath})'));
   assert.ok(electron.includes('const layoutRoot=practiceChild?practiceDirectory:diagnosticHost?diagnosticHome:undefined;'));
   assert.ok(electron.includes('layoutDirectory(app,{root:layoutRoot,verificationPath:verifyPath})'));

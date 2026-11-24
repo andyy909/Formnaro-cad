@@ -98,7 +98,7 @@
     },
     {
       "path": "src/cad-service.js",
-      "sha256": "3949ce0a6eaa8aa9fff8cebbd2b883bc91eb0b0ee48a59d4ba1b0a86f54afd48"
+      "sha256": "6c5465b80bf36e05c5a729a69e3128849ecfa6d127cdab861d295b1cd9750cb6"
     },
     {
       "path": "src/cad-drill-stock-native.js",
@@ -138,7 +138,7 @@
     },
     {
       "path": "backend/desktop-ai.cjs",
-      "sha256": "5c4e8516ead2d7f4f3aef2a8c8f464d9953ec7230e52e04f420ae1ecfd12f93d"
+      "sha256": "0eaa2972f616b6ffe9aeb0a5941f43c17c29a011f630f4a190f4624d9b4e17f7"
     },
     {
       "path": "backend/ai-lab-storage.cjs",
