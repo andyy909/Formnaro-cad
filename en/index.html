@@ -7,17 +7,17 @@
   <title>Formnaro | 3D CAD for Windows</title>
   <link rel="alternate" hreflang="de" href="https://formnaro.de/">
   <link rel="preload" href="../fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../home.css?v=1">
+  <link rel="stylesheet" href="../home.css?v=2">
 </head>
 <body>
 <header>
   <div class="wrap">
-    <a class="logo" href="./"><img src="../logo.png" alt="" width="30" height="30">Formnaro</a>
+    <a class="logo" href="./"><img src="../logo.png" alt="" width="40" height="40">Formnaro</a>
     <nav aria-label="Main navigation">
       <a href="#modes">Modes</a>
-      <a href="#ai">AI</a>
-      <a href="#tasks">Tools</a>
-      <a href="#facts">Requirements</a>
+      <a href="ai/">AI connections</a>
+      <a href="ai-lab/">AI lab</a>
+      <a href="development/">Development</a>
       <a href="../" lang="de" hreflang="de">Deutsch</a>
     </nav>
     <a class="btn btn-dl small" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Download for Windows</a>
@@ -30,16 +30,27 @@
       <div class="hero-text">
         <h1 id="title">3D CAD for your workshop.</h1>
         <p class="lead">Design parts, repair meshes and build assemblies that actually move. Formnaro runs locally on Windows, and you don’t need an internet connection to model.</p>
-        <div><a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Download for Windows</a></div>
+        <div class="download-box">
+          <a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Download Formnaro 0.144 for Windows</a>
+          <p class="dl-meta">Windows x64, portable ZIP of about 640 MB. Unzip and run, no installation.</p>
+        </div>
         <ul class="facts">
           <li>Free and open source (MIT)</li>
-          <li>Portable, no installation</li>
           <li>No account</li>
           <li>FreeCAD kernel included</li>
         </ul>
-        <p class="small-links">Current: 0.144.0-r1. <a href="development/#update-01440">Release notes</a> and <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip">Windows Nightly 0.148.0-r5</a></p>
+        <p class="small-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip">Try Nightly 0.148.0-r5</a> (about 640 MB, newest features) and <a href="development/#update-01440">release notes</a></p>
       </div>
+      <figure class="hero-art"><img src="../cad-hero-lagerbaugruppe.webp" width="2400" height="1060" alt="Exploded view of a bearing assembly with gears, created in Formnaro" fetchpriority="high"></figure>
+    </div>
+  </section>
 
+  <section id="atlas" class="atlas" aria-labelledby="atlas-title">
+    <div class="wrap">
+      <div class="atlas-text">
+        <h2 id="atlas-title">ATLAS-5 in motion</h2>
+        <p class="lead">This five-axis gantry mill shows what joints and couplings can do. Pick an axis and drag the slider: the tool head travels, the rotary table turns, and the pinion follows the tilting cradle through a 48:20 coupling.</p>
+      </div>
       <div class="rig" role="group" aria-label="Interactive preview of the ATLAS-5 gantry mill">
         <div class="stage">
           <img id="frame" src="../atlas-5-frames/000.webp" width="540" height="490" alt="ATLAS-5 five-axis gantry mill in Formnaro; the selected axis is moving">
@@ -187,8 +198,9 @@
 <footer>
   <div class="wrap">
     <span class="sp">Formnaro</span>
-    <a href="development/">Development</a>
+    <a href="ai/">AI connections</a>
     <a href="ai-lab/">AI lab</a>
+    <a href="development/">Development</a>
     <a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Support via PayPal</a>
     <a href="../" lang="de" hreflang="de">Deutsch</a>
     <a href="legal-notice/">Legal notice</a>
@@ -210,6 +222,6 @@
   }
 }
 </script>
-<script src="../home.js?v=1" defer></script>
+<script src="../home.js?v=2" defer></script>
 </body>
 </html>

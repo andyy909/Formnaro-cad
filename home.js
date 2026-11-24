@@ -30,8 +30,16 @@
   }));
   pos.addEventListener('input', () => { stop(); show(); });
   play.addEventListener('click', () => (timer ? stop() : start()));
-  load(0);
-  addEventListener('load', () => { segs.forEach((_, i) => load(i)); if (!reduce) start(); });
+  // Erst laden und abspielen, wenn die Fräse in Sichtweite kommt; außer Sicht anhalten.
+  let userPaused = false;
+  play.addEventListener('click', () => { userPaused = !timer; });
+  pos.addEventListener('input', () => { userPaused = true; });
+  new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      segs.forEach((_, i) => load(i));
+      if (!reduce && !userPaused && !timer) start();
+    } else if (timer) stop();
+  }, { rootMargin: '200px 0px' }).observe(img);
 
   // Modi
   const tabs = [...document.querySelectorAll('.tab')];

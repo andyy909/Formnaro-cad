@@ -7,17 +7,17 @@
   <title>Formnaro | 3D-CAD für Windows</title>
   <link rel="alternate" hreflang="en" href="https://formnaro.de/en/">
   <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="home.css?v=1">
+  <link rel="stylesheet" href="home.css?v=2">
 </head>
 <body>
 <header>
   <div class="wrap">
-    <a class="logo" href="./"><img src="logo.png" alt="" width="30" height="30">Formnaro</a>
+    <a class="logo" href="./"><img src="logo.png" alt="" width="40" height="40">Formnaro</a>
     <nav aria-label="Hauptnavigation">
       <a href="#modi">Modi</a>
-      <a href="#ki">KI</a>
-      <a href="#aufgaben">Werkzeuge</a>
-      <a href="#fakten">Systemanforderungen</a>
+      <a href="ki/">KI-Anbindung</a>
+      <a href="ki-labor/">KI-Labor</a>
+      <a href="entwicklung/">Entwicklung</a>
       <a href="en/" lang="en" hreflang="en">English</a>
     </nav>
     <a class="btn btn-dl small" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Für Windows laden</a>
@@ -30,16 +30,27 @@
       <div class="hero-text">
         <h1 id="title">3D-CAD für deine Werkstatt.</h1>
         <p class="lead">Konstruiere Bauteile, repariere Netze und baue Baugruppen, die sich wirklich bewegen. Formnaro läuft lokal unter Windows, und zum Modellieren brauchst du kein Internet.</p>
-        <div><a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Für Windows laden</a></div>
+        <div class="download-box">
+          <a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Formnaro 0.144 für Windows laden</a>
+          <p class="dl-meta">Windows x64, portable ZIP mit ca. 640 MB. Entpacken und starten, keine Installation.</p>
+        </div>
         <ul class="facts">
           <li>Kostenlos und Open Source (MIT)</li>
-          <li>Portable, ohne Installation</li>
           <li>Kein Konto</li>
           <li>FreeCAD-Kern enthalten</li>
         </ul>
-        <p class="small-links">Aktuell: 0.144.0-r1. <a href="entwicklung/#update-01440">Versionsverlauf</a> und <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip">Windows Nightly 0.148.0-r5</a></p>
+        <p class="small-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip">Nightly 0.148.0-r5 testen</a> (ca. 640 MB, neueste Funktionen) und <a href="entwicklung/#update-01440">Versionsverlauf</a></p>
       </div>
+      <figure class="hero-art"><img src="cad-hero-lagerbaugruppe.webp" width="2400" height="1060" alt="In Formnaro erstellte Explosionsansicht einer Lagerbaugruppe mit Getriebe" fetchpriority="high"></figure>
+    </div>
+  </section>
 
+  <section id="atlas" class="atlas" aria-labelledby="atlas-title">
+    <div class="wrap">
+      <div class="atlas-text">
+        <h2 id="atlas-title">ATLAS-5 in Bewegung</h2>
+        <p class="lead">Bei der fünfachsigen Portalfräse zeigt sich, was Gelenke und Kopplungen bringen. Wähle eine Achse und zieh am Regler: Der Werkzeugkopf verfährt, der Rundtisch dreht sich, und beim Schwenken der Wiege läuft das Ritzel im Verhältnis 48:20 mit.</p>
+      </div>
       <div class="rig" role="group" aria-label="Interaktive Vorschau der Portalfräse ATLAS-5">
         <div class="stage">
           <img id="frame" src="atlas-5-frames/000.webp" width="540" height="490" alt="Fünfachsige Portalfräse ATLAS-5 in Formnaro; die gewählte Achse bewegt sich">
@@ -187,8 +198,9 @@
 <footer>
   <div class="wrap">
     <span class="sp">Formnaro</span>
-    <a href="entwicklung/">Entwicklung</a>
+    <a href="ki/">KI-Anbindung</a>
     <a href="ki-labor/">KI-Labor</a>
+    <a href="entwicklung/">Entwicklung</a>
     <a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Mit PayPal unterstützen</a>
     <a href="en/" lang="en" hreflang="en">English</a>
     <a href="impressum/">Impressum</a>
@@ -210,6 +222,6 @@
   }
 }
 </script>
-<script src="home.js?v=1" defer></script>
+<script src="home.js?v=2" defer></script>
 </body>
 </html>
