@@ -22,14 +22,21 @@ Formnaro is portable on Windows x64. The modelling workspace works offline.
 
 [Formano Mini for Android](https://github.com/andyy909/Formnaro-Android) is new and under active development. The Android repository offers early APK builds and lists the tested Windows companion build.
 
-| Build | Best for | Download |
+| Build | Highlights | Download |
 | --- | --- | --- |
-| **0.144.0-r1** · stable release | AI Lab development checks and evidence | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** · [Separate sources and release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256 checksums](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) |
-| **0.147.1-r2** · Windows Nightly | Solid command search, selection of overlapping bodies, and editing saved rounds and chamfers | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.147.1-r2/Formnaro-v0.147.1-r2-Windows.zip)** · [Release notes and sources](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.147.1-r2) · [SHA-256 checksums](https://github.com/andyy909/Formnaro-cad/releases/download/v0.147.1-r2/SHA256SUMS.txt) |
+| **0.144.0-r1** · stable release | AI Lab development checks and evidence | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** · [Release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256 checksums](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) |
+| **0.148.0-r5** · Windows Nightly | Tablet pairing, direct part transfer with Android Pilot 35 r32, and the Orca 3MF seam fix | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip)** · [Release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.148.0-r5) · [SHA-256 checksums](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/SHA256SUMS.txt) |
+
+### Source archives
+
+| Version | Formnaro | FreeCAD | CAD kernel |
+| --- | --- | --- | --- |
+| **0.144.0-r1** | [Formnaro](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-Quellcode-v0.144.0-r1.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD kernel](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-CAD-Quellen.zip) |
+| **0.148.0-r5** | [Formnaro](https://github.com/andyy909/Formnaro-cad/archive/refs/tags/v0.148.0-r5.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD kernel](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-CAD-Quellen.zip) |
 
 Formnaro starts with an empty workspace. The welcome screen shows three bundled examples, up to three recent projects and a restore button when an autosave is available. [Windows releases and verification](docs/AKTUELLER-STAND.md)
 
-Extract the whole application ZIP into a writable folder and open the **Formnaro starten** shortcut. FreeCAD and Python are bundled. Source archives are separate downloads. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
+Extract the whole application ZIP into a writable folder and open the **Formnaro starten** shortcut. FreeCAD and Python are bundled. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
 ## AI Lab
 
@@ -59,7 +66,7 @@ The sample contains one to three runs per model and reasoning setting. Plan v14 
 
 *Actual application screenshots: Easy Tinker and Normal in dark mode from 0.117.0-r8; Solid with ATLAS-5 in light mode from 0.120.0-r4; Fusion in light mode from 0.119.0-r2. Click an image to enlarge it.*
 
-[Application sources for 0.144.0-r1](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-Quellcode-v0.144.0-r1.zip) · [STL-to-CAD guide](docs/STL-TO-CAD.md)
+[STL-to-CAD guide](docs/STL-TO-CAD.md)
 
 ## Quick start
 

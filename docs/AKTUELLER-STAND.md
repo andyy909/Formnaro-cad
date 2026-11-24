@@ -1,7 +1,7 @@
 # Öffentliche Windows-Ausgaben / Public Windows releases
 
 - [Formnaro 0.144.0-r1](#formnaro-01440-r1) – reguläre Ausgabe / stable release
-- [Windows Nightly 0.147.1-r2](#windows-nightly-01471-r2) – Vorabversion / pre-release
+- [Windows Nightly 0.148.0-r5](#windows-nightly-01480-r5) – Vorabversion / pre-release
 
 ## Formnaro 0.144.0-r1
 
@@ -31,12 +31,14 @@ The package passed 999 executable checks. Source CI passed 544 test files each o
 
 [Release acceptance / Abnahme](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Abnahmebericht.md) · [PR-CI](https://github.com/andyy909/Formnaro-cad/actions/runs/44264685374) · [main-CI](https://github.com/andyy909/Formnaro-cad/actions/runs/44267318443) · [Tag-CI](https://github.com/andyy909/Formnaro-cad/actions/runs/44267368075) · [Release history / Frühere Ausgaben](https://github.com/andyy909/Formnaro-cad/releases)
 
-## Windows Nightly 0.147.1-r2
+## Windows Nightly 0.148.0-r5
 
-Vorabversion vom 22. November 2026 · Pre-release dated 22 November 2026.
+[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip) · [SHA-256](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/SHA256SUMS.txt) · [Release notes and sources / Versionshinweise und Quellen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.148.0-r5)
 
-[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.147.1-r2/Formnaro-v0.147.1-r2-Windows.zip) · [SHA-256](https://github.com/andyy909/Formnaro-cad/releases/download/v0.147.1-r2/SHA256SUMS.txt) · [Release notes and sources / Versionshinweise und Quellen](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.147.1-r2)
+Das ZIP vollständig entpacken und **Formnaro starten** öffnen. FreeCAD und der STL-Konverter sind enthalten. Die Windows-EXE ist unsigniert. Die Korrektur für Nahtdaten im Orca-3MF-Export aus 0.148.0-r3 ist enthalten.
 
-ZIP vollständig entpacken und **Formnaro starten** öffnen. FreeCAD und STL-Konverter sind enthalten. Geprüft wurden unter anderem der Start, das Wiederöffnen von OCAD und FNPACK und der STEP-Export. Die Quell-CI für den Nightly-Tag meldet Fehler. [Quellprüfungen](https://github.com/andyy909/Formnaro-cad/actions/runs/45047074517)
+Im Projektmenü öffnet **Tablet verbinden** den Windows-Begleitmodus. Formnaro erzeugt das TLS-Zertifikat für die lokale Verbindung selbst, ohne externes OpenSSL. Am frisch entpackten Paket wurden QR-Kopplung, Wiederverbindung und der direkte Teiletransfer als Vorschau mit Übernahme und Rückgängig geprüft. Der Transfer wurde mit dem separaten Android-Pilot 35 r32 geprüft. Für die öffentliche APK dokumentiert das Android-Release seinen eigenen Windows-Teststand. [Öffentlicher Android-Pilot 32](https://github.com/andyy909/Formnaro-Android/releases/tag/v0.1.0-pilot.32)
 
-Extract the entire ZIP and open **Formnaro starten**. FreeCAD and the STL converter are included. Package checks covered launch, reopening OCAD and FNPACK projects, and STEP export. The Nightly tag has failing source CI checks. [Source checks](https://github.com/andyy909/Formnaro-cad/actions/runs/45047074517)
+Extract the entire ZIP and open **Formnaro starten**. FreeCAD and the STL converter are included. The Windows executable is unsigned. This build includes the Orca 3MF seam data export fix from 0.148.0-r3.
+
+In the project menu, **Tablet verbinden** opens Windows companion mode. Formnaro generates the TLS certificate for the local connection without external OpenSSL. Checks on the freshly extracted package covered QR pairing, reconnecting, and sending a part directly to the PC for preview, apply and undo. Direct transfer was tested with the separate Android Pilot 35 r32 build. The public APK release records its own tested Windows build. [Public Android Pilot 32](https://github.com/andyy909/Formnaro-Android/releases/tag/v0.1.0-pilot.32)
