@@ -7,30 +7,36 @@
   <title>Entwicklung | Formnaro</title>
   <link rel="canonical" href="https://formnaro.de/entwicklung/">
   <link rel="alternate" hreflang="en" href="../en/development/">
-  <link rel="stylesheet" href="../style.css?v=14">
+  <link rel="stylesheet" href="../style.css?v=15">
 </head>
 <body>
-  <header class="wrap top">
-    <a class="brand" href="../"><img src="../logo.png" alt="" width="38" height="38">Formnaro</a>
-    <nav aria-label="Sprache und Projekt">
-      <a href="../ki/">KI-Anbindung</a>
-      <a href="../ki-labor/">KI-Labor</a>
-      <a href="./" aria-current="page">Entwicklung</a>
-      <a href="../en/development/" lang="en" hreflang="en">English</a>
-    </nav>
+  <header class="site-head">
+    <div class="wrap">
+      <a class="logo" href="../"><img src="../logo.png" alt="" width="40" height="40">Formnaro</a>
+      <nav aria-label="Hauptnavigation"><a href="../ki/">KI-Anbindung</a><a href="../ki-labor/">KI-Labor</a><a href="../entwicklung/" aria-current="page">Entwicklung</a><a href="../en/development/" lang="en" hreflang="en">English</a></nav>
+      <a class="btn-dl small" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Für Windows laden</a>
+    </div>
   </header>
   <main class="wrap history-page">
     <h1>Entwicklung</h1>
     <p class="intro">Hier siehst du, wo Formnaro heute steht und was sich von Version zu Version geändert hat.</p>
+    <div class="channels">
+    <section class="release-current" id="update-01440" aria-labelledby="current">
+      <p class="channel"><span class="chip stable">Stabil</span> <span>0.144.0-r1</span> <time datetime="2026-11-18">18.11.2026</time></p>
+      <h2 id="current">Entwicklungscheck im KI-Labor</h2>
+      <p>Das KI-Labor bietet Einfach und Erweitert. Der Entwicklungscheck beginnt mit 15 Aufgaben auf Low. Fachlich fehlgeschlagene Fälle können auf High und optional Max erneut laufen. Das Übungsfenster kann im Hintergrund laufen.</p>
+      <p>Zusatzprüfungen für CAD-Alltag, STL-Konvertierung und Foto lassen sich getrennt starten. Die Ergebnisse unterscheiden den ersten Versuch von Erfolgen nach Prüferhinweisen. Der Export enthält frühere Stufen, Kontextlücken und wiederkehrende Muster.</p>
+      <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Windows-x64-ZIP ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1">Versionshinweise ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt">SHA-256-Prüfsummen ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Abnahmebericht.md">Abnahmebericht ↗</a></p>
+    </section>
     <section class="release-current" id="windows-nightly" aria-labelledby="nightly-heading">
-      <p class="eyebrow">Windows-Nightly · 0.148.0-r5</p>
+      <p class="channel"><span class="chip nightly">Nightly</span> <span>0.148.0-r5</span></p>
       <h2 id="nightly-heading">Tablet-Begleitmodus und direkte Teileübergabe</h2>
       <p>Formnaro erstellt das TLS-Zertifikat für die Tablet-Kopplung unter Windows ohne separates OpenSSL. Die direkte Teileübergabe vom Tablet an den PC wurde mit einem Android-Testbuild im Emulator geprüft.</p>
       <p>Das Windows-x64-ZIP vollständig entpacken und „Formnaro starten“ öffnen. FreeCAD und STL-Konverter sind enthalten. Die Nightly ist unsigniert.</p>
       <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip">Windows-Nightly herunterladen ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.148.0-r5">Versionshinweise ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/SHA256SUMS.txt">SHA-256-Prüfsummen ↗</a></p>
     </section>
     <section class="release-current" id="orca-slicer" aria-labelledby="orca-heading">
-      <p class="eyebrow">Vorabversion · 0.145.0-r1 · <time datetime="2026-11-20">20.11.2026</time></p>
+      <p class="channel"><span class="chip preview">Vorabversion</span> <span>0.145.0-r1</span> <time datetime="2026-11-20">20.11.2026</time></p>
       <h2 id="orca-heading">Von Formnaro direkt zu OrcaSlicer</h2>
       <p>Modell in Formnaro ändern, mit Orca slicen und denselben KI-Chat im Slicer fortsetzen. Der Agent kann Schichthöhe, Wände, Füllung und Stützen setzen und nennt Druckzeit und Filamentbedarf. Den Druck startest du in Orca.</p>
       <figure>
@@ -39,13 +45,7 @@
       </figure>
       <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.145.0-r1">Vorabversion auf GitHub ↗</a></p>
     </section>
-    <section class="release-current" id="update-01440" aria-labelledby="current">
-      <p class="eyebrow">Stabile Version · 0.144.0-r1 · <time datetime="2026-11-18">18.11.2026</time></p>
-      <h2 id="current">Entwicklungscheck im KI-Labor</h2>
-      <p>Das KI-Labor bietet Einfach und Erweitert. Der Entwicklungscheck beginnt mit 15 Aufgaben auf Low. Fachlich fehlgeschlagene Fälle können auf High und optional Max erneut laufen. Das Übungsfenster kann im Hintergrund laufen.</p>
-      <p>Zusatzprüfungen für CAD-Alltag, STL-Konvertierung und Foto lassen sich getrennt starten. Die Ergebnisse unterscheiden den ersten Versuch von Erfolgen nach Prüferhinweisen. Der Export enthält frühere Stufen, Kontextlücken und wiederkehrende Muster.</p>
-      <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Windows-x64-ZIP ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1">Versionshinweise ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt">SHA-256-Prüfsummen ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Abnahmebericht.md">Abnahmebericht ↗</a></p>
-    </section>
+    </div>
     <section aria-labelledby="history">
       <h2 id="history">Versionsverlauf</h2>
       <nav class="hero-links" aria-label="Zum Monat springen"><a href="#november">November 2026</a><a href="#october">Oktober 2026</a></nav>
@@ -69,7 +69,7 @@
               <li>Die neue Trapezgewinde-Grundform akzeptiert Längen bis 3.000 mm. Wiederverwendete Gewindeperioden beschleunigen die Berechnung langer eingängiger Außengewinde.</li>
             </ul>
             <p>Das portable Windows-x64-Paket wurde lokal geprüft. Ein durchgehendes Tr 16×4 über 548 mm wurde in Normal erstellt und über den Übungsmodus in Solid und Fusion erfolgreich aus der Projektkopie ins Modell übernommen.</p>
-            <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1">Windows-Download und vollständige Versionshinweise ↗</a><a href="../#uebung">Solid-Vorführung ansehen →</a></p>
+            <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1">Windows-Download und vollständige Versionshinweise ↗</a><a href="../#ki">Solid-Vorführung ansehen</a></p>
           </div>
         </li>
         <li class="release-entry" id="update-01391">
@@ -237,6 +237,8 @@
       </ol>
     </section>
   </main>
-  <footer class="wrap foot"><a href="../">Zur Formnaro-Startseite</a><a href="https://github.com/andyy909/Formnaro-cad/releases">Alle Ausgaben auf GitHub ↗</a><a href="../impressum/">Impressum</a></footer>
+  <footer class="site-foot">
+    <div class="wrap"><span class="sp">Formnaro</span><a href="../ki/">KI-Anbindung</a><a href="../ki-labor/">KI-Labor</a><a href="../entwicklung/" aria-current="page">Entwicklung</a><a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Mit PayPal unterstützen</a><a href="../en/development/" lang="en" hreflang="en">English</a><a href="../impressum/">Impressum</a></div>
+  </footer>
 </body>
 </html>

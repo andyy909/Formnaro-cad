@@ -6,29 +6,26 @@
   <meta name="description" content="Connect AI to Formnaro through browser sign-in, a provider API, or local MCP for external agents.">
   <title>AI connections and model selection | Formnaro</title>
   <link rel="alternate" hreflang="de" href="../../ki/">
-  <link rel="stylesheet" href="../../style.css?v=14">
+  <link rel="stylesheet" href="../../style.css?v=15">
 </head>
 <body>
-  <header class="wrap top">
-    <a class="brand" href="../"><img src="../../logo.png" alt="" width="38" height="38">Formnaro</a>
-    <nav aria-label="Language and project">
-      <a href="../">Home</a>
-      <a class="nav-lab" href="../ai-lab/">AI lab</a>
-      <a href="../../ki/" lang="de" hreflang="de">Deutsch</a>
-      <a href="../development/">Development</a>
-      <a href="https://github.com/andyy909/Formnaro-cad">GitHub ↗</a>
-    </nav>
+  <header class="site-head">
+    <div class="wrap">
+      <a class="logo" href="../"><img src="../../logo.png" alt="" width="40" height="40">Formnaro</a>
+      <nav aria-label="Main navigation"><a href="../ai/" aria-current="page">AI connections</a><a href="../ai-lab/">AI lab</a><a href="../development/">Development</a><a href="../../ki/" lang="de" hreflang="de">Deutsch</a></nav>
+      <a class="btn-dl small" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Download for Windows</a>
+    </div>
   </header>
   <main class="wrap">
     <section class="hero ai-hero" aria-labelledby="title">
       <div>
-        <p class="eyebrow">Formnaro · AI and CAD</p>
+        
         <h1 id="title">Connect your AI to Formnaro</h1>
         <p class="intro">Get help designing a part, analyzing a reference photo, or learning a modeling step. Sign in with an existing account, set up a provider API, or connect your own agent through MCP.</p>
         <nav class="hero-links" aria-label="On this page">
-          <a href="#access">Connection options ↓</a>
-          <a href="#models">Model examples ↓</a>
-          <a href="#workflow">How it works ↓</a>
+          <a href="#access">Connection options</a>
+          <a href="#models">Model examples</a>
+          <a href="#workflow">How it works</a>
         </nav>
       </div>
       <figure class="ai-menu">
@@ -39,24 +36,20 @@
     <section class="start" id="benchmarks">
       <h2 id="vergleich">How do the models perform on CAD tasks?</h2>
       <p>The comparison covers results, elapsed time, estimated costs and output tokens for 25 CAD, STL and drawing tasks across eight runs.</p>
-      <p><a href="../ai-lab/#benchmark-v13">View the v13 model comparison in the AI Lab →</a></p>
+      <p><a href="../ai-lab/#benchmark-v13">View the v13 model comparison in the AI Lab</a></p>
     </section>
     <section class="start" aria-labelledby="access">
       <h2 id="access">Three ways to connect</h2>
-      <div class="features">
-        <article>
-          <h3>Sign in through your browser</h3>
-          <p>Choose the ChatGPT connection in <strong>Settings → AI / API</strong> and sign in with your existing account. Mistral Vibe also offers browser sign-in once Vibe is installed. Account sign-in and provider APIs are separate connections.</p>
-        </article>
-        <article>
-          <h3>Use a provider API</h3>
-          <p>Add an API key for OpenAI, Mistral, DeepSeek, Claude, Gemini, Grok, Groq, Qwen, Kimi, GLM, or MiniMax. You can also enter a compatible endpoint, for example to use a model running locally.</p>
-        </article>
-        <article>
-          <h3>Connect Codex or another agent via MCP</h3>
-          <p>Sign in to Codex as usual and add the local Formnaro MCP adapter. Other clients that support local MCP, such as OpenCode, can use Formnaro tools the same way. The agent uses its own model and provider connection.</p>
-        </article>
-      </div>
+      <div class="table-wrap" role="region" aria-label="Connection options compared" tabindex="0">
+      <table class="compare-table">
+        <thead><tr><th scope="col">Option</th><th scope="col">What you need</th><th scope="col">Models</th><th scope="col">Setup</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Sign in through your browser</th><td>An existing ChatGPT account, or Mistral Vibe installed</td><td>Whatever your account can access</td><td><strong>Settings → AI / API</strong>, choose the ChatGPT connection and sign in. Account sign-in and provider APIs are separate connections.</td></tr>
+          <tr><th scope="row">Your own provider API</th><td>An API key or a compatible endpoint, for example a model running locally</td><td>OpenAI, Mistral, DeepSeek, Claude, Gemini, Grok, Groq, Qwen, Kimi, GLM, MiniMax</td><td>Add the key under <strong>Settings → AI / API</strong>.</td></tr>
+          <tr><th scope="row">Your own agent via MCP</th><td>Codex, OpenCode or another client with local MCP</td><td>Your agent’s own model and connection</td><td>Turn on the local AI interface in Formnaro and add the Formnaro MCP adapter to your agent.</td></tr>
+        </tbody>
+      </table>
+    </div>
       <p><a href="https://github.com/andyy909/Formnaro-cad/blob/main/ai/LIES-MICH-KI.txt">Set up the local interface (German) ↗</a></p>
     </section>
     <section class="start" aria-labelledby="models">
@@ -73,12 +66,19 @@
       <h2 id="workflow">From request to CAD preview</h2>
       <p>Ask for a plate with a centered hole, for example. The Formnaro chat creates a preview you can inspect and apply. An agent with the local interface enabled can read the scene, calculate previews, check dimensions, and apply the requested changes.</p>
       <p>Formnaro runs the CAD calculations locally. When you use a cloud model, your message and the context needed for the task go to the selected provider.</p>
-      <a href="../#uebung">See practice mode in action ↗</a>
+      <a href="../#ai">See practice mode in action ↗</a>
     </section>
-  <p id="update-01420"><a href="../development/#update-01420">Solid and Fusion practice mode · Release notes for 0.142.0-r1 →</a></p>
-    <section class="start" id="update-01391"><p class="eyebrow">0.139.1-r1 · 14.11.2026</p><h2>A more reliable AI laboratory</h2><p>Atomic results, clearer tool feedback, exact legacy sketch references and corrected process shutdown and AI reply handling. 128 standard tests, 152 focused regressions and four new drawing/drilling trials passed. One live trial recovered after a format correction. These are targeted checks, not a fresh full benchmark.</p><p class="fine">Still open: broader image, supervisor and Sol comparisons, and the native cause of slow process teardown. Earlier benchmarks retain their original versions and results.</p><p><a href="../../benchmarks/lab-targeted-01391-2026-11-14.json">Targeted test evidence</a> · <a href="../../benchmarks/lab-campaign-audit-2026-11-14.json">Earlier campaign audit</a> · <a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1">Download and sources</a></p></section>
-<section class="start" id="update-01382"><p class="eyebrow">0.138.2-r4 · 09.11.2026</p><h2>Advanced tasks: repairs confirmed</h2><p>New in 0.138.2-r4: corrected body selection, planar drill references, checkbox states and sketch replacement/height feedback. The original advanced DeepSeek benchmark remains 5/16 on 0.138.0-r1. Separate targeted retests confirmed all 16 original conditions across several builds; this is not a fresh complete 16/16 run. The final A07 repeat with the new EXE passed 8/8 native checks in 144.199 seconds. All earlier Sol/DeepSeek results and successful retests remain unchanged.</p><p><a href="../../benchmarks/advanced-deepseek-2026-11-09.json">Results and separate retests (JSON)</a> · <a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.138.2-r4">Download and sources</a></p></section>
-</main>
-  <footer class="wrap foot"><a href="../">Back to Formnaro home</a><a href="https://github.com/andyy909/Formnaro-cad/releases">All releases ↗</a><a href="../legal-notice/">Legal notice</a></footer>
+    <section class="start notes" aria-labelledby="ai-notes">
+      <h2 id="ai-notes">AI release notes</h2>
+      <ul class="note-list">
+        <li id="update-01420"><a href="../development/#update-01420">0.142.0-r1: Practice mode in Solid and Fusion</a></li>
+        <li id="update-01391"><a href="../development/#update-01391">0.139.1-r1: A more reliable AI lab</a> with <a href="../../benchmarks/lab-targeted-01391-2026-11-14.json">targeted test evidence</a> and <a href="../../benchmarks/lab-campaign-audit-2026-11-14.json">campaign audit</a></li>
+        <li id="update-01382"><a href="../development/#update-01382">0.138.2-r4: Retests for advanced tasks</a> with <a href="../../benchmarks/advanced-deepseek-2026-11-09.json">results (JSON)</a></li>
+      </ul>
+    </section>
+  </main>
+  <footer class="site-foot">
+    <div class="wrap"><span class="sp">Formnaro</span><a href="../ai/" aria-current="page">AI connections</a><a href="../ai-lab/">AI lab</a><a href="../development/">Development</a><a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Support via PayPal</a><a href="../../ki/" lang="de" hreflang="de">Deutsch</a><a href="../legal-notice/">Legal notice</a></div>
+  </footer>
 </body>
 </html>

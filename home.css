@@ -150,3 +150,9 @@ footer .sp { margin-right: auto; color: var(--graphit); font-weight: 700 }
 @media (max-width: 860px) {
   .hero .wrap, .atlas .wrap, .ki .wrap, .mode, .task { grid-template-columns: minmax(0, 1fr) }
 }
+@media (max-width: 440px) {
+  header .wrap { gap: .75rem }
+  .logo { font-size: 1.1rem; gap: .45rem }
+  .logo img { width: 32px; height: 32px }
+  .btn-dl.small { padding: .45rem .7rem }
+}

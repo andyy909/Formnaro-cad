@@ -7,30 +7,36 @@
   <title>Development | Formnaro</title>
   <link rel="canonical" href="https://formnaro.de/en/development/">
   <link rel="alternate" hreflang="de" href="../../entwicklung/">
-  <link rel="stylesheet" href="../../style.css?v=14">
+  <link rel="stylesheet" href="../../style.css?v=15">
 </head>
 <body>
-  <header class="wrap top">
-    <a class="brand" href="../"><img src="../../logo.png" alt="" width="38" height="38">Formnaro</a>
-    <nav aria-label="Language and project">
-      <a href="../ai/">AI connections</a>
-      <a href="../ai-lab/">AI lab</a>
-      <a href="./" aria-current="page">Development</a>
-      <a href="../../entwicklung/" lang="de" hreflang="de">Deutsch</a>
-    </nav>
+  <header class="site-head">
+    <div class="wrap">
+      <a class="logo" href="../"><img src="../../logo.png" alt="" width="40" height="40">Formnaro</a>
+      <nav aria-label="Main navigation"><a href="../ai/">AI connections</a><a href="../ai-lab/">AI lab</a><a href="../development/" aria-current="page">Development</a><a href="../../entwicklung/" lang="de" hreflang="de">Deutsch</a></nav>
+      <a class="btn-dl small" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Download for Windows</a>
+    </div>
   </header>
   <main class="wrap history-page">
     <h1>Development</h1>
     <p class="intro">See where Formnaro stands today and what changed in each public release.</p>
+    <div class="channels">
+    <section class="release-current" id="update-01440" aria-labelledby="current">
+      <p class="channel"><span class="chip stable">Stable</span> <span>0.144.0-r1</span> <time datetime="2026-11-18">18 Nov 2026</time></p>
+      <h2 id="current">Development checks in AI Lab</h2>
+      <p>AI Lab offers Simple and Advanced views. The development check starts with 15 tasks at Low, then retries cases that fail validation at High and optionally Max. The practice window can run in the background.</p>
+      <p>Run supplemental CAD, STL conversion and photo checks separately. Results distinguish first-attempt passes from those after verifier feedback. Exported findings include earlier stages, context gaps and recurring patterns.</p>
+      <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Windows x64 ZIP ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1">Release notes ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt">SHA-256 checksums ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Abnahmebericht.md">Acceptance report ↗</a></p>
+    </section>
     <section class="release-current" id="windows-nightly" aria-labelledby="nightly-heading">
-      <p class="eyebrow">Windows Nightly · 0.148.0-r5</p>
+      <p class="channel"><span class="chip nightly">Nightly</span> <span>0.148.0-r5</span></p>
       <h2 id="nightly-heading">Tablet companion mode and direct part transfer</h2>
       <p>Formnaro creates the TLS certificate for tablet pairing on Windows without a separate OpenSSL installation. Direct part transfer from tablet to PC was tested in an emulator with an Android test build.</p>
       <p>Extract the entire Windows x64 ZIP and open “Formnaro starten”. FreeCAD and the STL converter are included. This Nightly is unsigned.</p>
       <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip">Download the Windows Nightly ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.148.0-r5">Release notes ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/SHA256SUMS.txt">SHA-256 checksums ↗</a></p>
     </section>
     <section class="release-current" id="orca-slicer" aria-labelledby="orca-heading">
-      <p class="eyebrow">Preview release · 0.145.0-r1 · <time datetime="2026-11-20">20 Nov 2026</time></p>
+      <p class="channel"><span class="chip preview">Preview</span> <span>0.145.0-r1</span> <time datetime="2026-11-20">20 Nov 2026</time></p>
       <h2 id="orca-heading">From Formnaro straight to OrcaSlicer</h2>
       <p>Edit the model in Formnaro, slice it with Orca, and continue the same AI chat in the slicer. The agent can set layer height, walls, infill, and supports, and report print time and filament estimates. Start the print in Orca.</p>
       <figure>
@@ -39,13 +45,7 @@
       </figure>
       <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.145.0-r1">Preview release on GitHub ↗</a></p>
     </section>
-    <section class="release-current" id="update-01440" aria-labelledby="current">
-      <p class="eyebrow">Stable release · 0.144.0-r1 · <time datetime="2026-11-18">18 Nov 2026</time></p>
-      <h2 id="current">Development checks in AI Lab</h2>
-      <p>AI Lab offers Simple and Advanced views. The development check starts with 15 tasks at Low, then retries cases that fail validation at High and optionally Max. The practice window can run in the background.</p>
-      <p>Run supplemental CAD, STL conversion and photo checks separately. Results distinguish first-attempt passes from those after verifier feedback. Exported findings include earlier stages, context gaps and recurring patterns.</p>
-      <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Windows x64 ZIP ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1">Release notes ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt">SHA-256 checksums ↗</a><a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Abnahmebericht.md">Acceptance report ↗</a></p>
-    </section>
+    </div>
     <section aria-labelledby="history">
       <h2 id="history">Release history</h2>
       <nav class="hero-links" aria-label="Jump to month"><a href="#november">November 2026</a><a href="#october">October 2026</a></nav>
@@ -69,7 +69,7 @@
               <li>The new trapezoidal thread shape accepts lengths up to 3,000 mm. Reusing short thread periods speeds up the calculation of long single-start external threads.</li>
             </ul>
             <p>The portable Windows x64 build was checked locally. A continuous 548 mm Tr 16×4 was created in Normal, demonstrated in Solid and Fusion, and successfully applied to a project copy.</p>
-            <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1">Windows download and full release notes ↗</a><a href="../#uebung">Watch the Solid demonstration →</a></p>
+            <p class="release-links"><a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.142.0-r1">Windows download and full release notes ↗</a><a href="../#ai">Watch the Solid demonstration</a></p>
           </div>
         </li>
         <li class="release-entry" id="update-01391">
@@ -237,6 +237,8 @@
       </ol>
     </section>
   </main>
-  <footer class="wrap foot"><a href="../">Formnaro home</a><a href="https://github.com/andyy909/Formnaro-cad/releases">All releases on GitHub ↗</a><a href="../legal-notice/">Legal notice</a></footer>
+  <footer class="site-foot">
+    <div class="wrap"><span class="sp">Formnaro</span><a href="../ai/">AI connections</a><a href="../ai-lab/">AI lab</a><a href="../development/" aria-current="page">Development</a><a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Support via PayPal</a><a href="../../entwicklung/" lang="de" hreflang="de">Deutsch</a><a href="../legal-notice/">Legal notice</a></div>
+  </footer>
 </body>
 </html>

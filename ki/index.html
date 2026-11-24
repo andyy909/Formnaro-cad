@@ -6,29 +6,26 @@
   <meta name="description" content="KI in Formnaro mit Browseranmeldung, eigener Anbieter-API oder lokalem MCP für externe Agenten.">
   <title>KI-Anbindung und Modellauswahl | Formnaro</title>
   <link rel="alternate" hreflang="en" href="../en/ai/">
-  <link rel="stylesheet" href="../style.css?v=14">
+  <link rel="stylesheet" href="../style.css?v=15">
 </head>
 <body>
-  <header class="wrap top">
-    <a class="brand" href="../"><img src="../logo.png" alt="" width="38" height="38">Formnaro</a>
-    <nav aria-label="Sprache und Projekt">
-      <a href="../">Startseite</a>
-      <a class="nav-lab" href="../ki-labor/">KI-Labor</a>
-      <a href="../en/ai/" lang="en" hreflang="en">English</a>
-      <a href="../entwicklung/">Entwicklung</a>
-      <a href="https://github.com/andyy909/Formnaro-cad">GitHub ↗</a>
-    </nav>
+  <header class="site-head">
+    <div class="wrap">
+      <a class="logo" href="../"><img src="../logo.png" alt="" width="40" height="40">Formnaro</a>
+      <nav aria-label="Hauptnavigation"><a href="../ki/" aria-current="page">KI-Anbindung</a><a href="../ki-labor/">KI-Labor</a><a href="../entwicklung/">Entwicklung</a><a href="../en/ai/" lang="en" hreflang="en">English</a></nav>
+      <a class="btn-dl small" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip">Für Windows laden</a>
+    </div>
   </header>
   <main class="wrap">
     <section class="hero ai-hero" aria-labelledby="title">
       <div>
-        <p class="eyebrow">Formnaro · KI und CAD</p>
+        
         <h1 id="title">Dein KI-Zugang für Formnaro</h1>
         <p class="intro">Lass dir beim Konstruieren helfen, ein Referenzfoto auswerten oder einen Modellierschritt zeigen. Du kannst dich mit einem bestehenden Konto anmelden, eine Anbieter-API einrichten oder deinen eigenen Agenten per MCP verbinden.</p>
         <nav class="hero-links" aria-label="Auf der Seite">
-          <a href="#zugang">Zugangswege ↓</a>
-          <a href="#modelle">Modellbeispiele ↓</a>
-          <a href="#ablauf">So läuft ein Auftrag ↓</a>
+          <a href="#zugang">Zugangswege</a>
+          <a href="#modelle">Modellbeispiele</a>
+          <a href="#ablauf">So läuft ein Auftrag</a>
         </nav>
       </div>
       <figure class="ai-menu">
@@ -39,24 +36,20 @@
     <section class="start" id="benchmarks">
       <h2 id="vergleich">Wie schneiden die Modelle im CAD-Benchmark ab?</h2>
       <p>Der Vergleich zeigt Ergebnisse, Laufzeit, geschätzte Kosten und Ausgabetokens für 25 CAD-, STL- und Zeichnungsaufgaben in acht Läufen.</p>
-      <p><a href="../ki-labor/#benchmark-v13">KI-Modellvergleich v13 im KI-Labor ansehen →</a></p>
+      <p><a href="../ki-labor/#benchmark-v13">KI-Modellvergleich v13 im KI-Labor ansehen</a></p>
     </section>
     <section class="start" aria-labelledby="zugang">
       <h2 id="zugang">Drei Wege zur KI</h2>
-      <div class="features">
-        <article>
-          <h3>Im Browser anmelden</h3>
-          <p>Wähle unter <strong>Einstellungen → KI / API</strong> den ChatGPT-Zugang und melde dich mit deinem bestehenden Konto an. Für Mistral Vibe gibt es ebenfalls eine Browseranmeldung, sobald Vibe installiert ist. Die Anmeldung und die Anbieter-API sind getrennte Zugänge.</p>
-        </article>
-        <article>
-          <h3>Eigene Anbieter-API</h3>
-          <p>Hinterlege einen API-Schlüssel für OpenAI, Mistral, DeepSeek, Claude, Gemini, Grok, Groq, Qwen, Kimi, GLM oder MiniMax. Du kannst auch einen kompatiblen Endpunkt eintragen, etwa für ein lokal laufendes Modell.</p>
-        </article>
-        <article>
-          <h3>Codex und andere Agenten per MCP</h3>
-          <p>Melde dich in Codex wie gewohnt an und binde den lokalen Formnaro-MCP-Adapter ein. Auch andere Clients mit lokalem MCP, etwa OpenCode, können so auf Formnaro-Werkzeuge zugreifen. Der Agent nutzt sein eigenes Modell und seinen eigenen Anbieterzugang.</p>
-        </article>
-      </div>
+      <div class="table-wrap" role="region" aria-label="Zugangswege im Vergleich" tabindex="0">
+      <table class="compare-table">
+        <thead><tr><th scope="col">Weg</th><th scope="col">Was du brauchst</th><th scope="col">Modelle</th><th scope="col">Einrichtung</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Im Browser anmelden</th><td>Ein bestehendes ChatGPT-Konto, oder Mistral Vibe installiert</td><td>Was dein Konto freigibt</td><td><strong>Einstellungen → KI / API</strong>, ChatGPT-Zugang wählen und anmelden. Anmeldung und Anbieter-API sind getrennte Zugänge.</td></tr>
+          <tr><th scope="row">Eigene Anbieter-API</th><td>Einen API-Schlüssel oder einen kompatiblen Endpunkt, etwa für ein lokal laufendes Modell</td><td>OpenAI, Mistral, DeepSeek, Claude, Gemini, Grok, Groq, Qwen, Kimi, GLM, MiniMax</td><td>Schlüssel unter <strong>Einstellungen → KI / API</strong> hinterlegen.</td></tr>
+          <tr><th scope="row">Eigener Agent per MCP</th><td>Codex, OpenCode oder einen anderen Client mit lokalem MCP</td><td>Das Modell und der Zugang deines Agenten</td><td>Lokale KI-Schnittstelle in Formnaro einschalten und den Formnaro-MCP-Adapter im Agenten eintragen.</td></tr>
+        </tbody>
+      </table>
+    </div>
       <p><a href="https://github.com/andyy909/Formnaro-cad/blob/main/ai/LIES-MICH-KI.txt">Einrichtung der lokalen Schnittstelle ↗</a></p>
     </section>
     <section class="start" aria-labelledby="modelle">
@@ -73,12 +66,19 @@
       <h2 id="ablauf">Vom Auftrag zur CAD-Vorschau</h2>
       <p>Beschreibe zum Beispiel eine Platte mit einer mittigen Bohrung. Der Formnaro-Chat erstellt eine Vorschau, die du im Modell ansehen und übernehmen kannst. Ein Agent mit aktivierter lokaler Schnittstelle kann die Szene lesen, Vorschauen berechnen, Maße prüfen und beauftragte Änderungen anwenden.</p>
       <p>Die CAD-Berechnung läuft in Formnaro. Bei einem Cloudmodell gehen deine Nachricht und der für den Auftrag benötigte Kontext an den gewählten Anbieter.</p>
-      <a href="../#uebung">Den Übungsmodus in Aktion sehen ↗</a>
+      <a href="../#ki">Den Übungsmodus in Aktion sehen ↗</a>
     </section>
-  <p id="update-01420"><a href="../entwicklung/#update-01420">Übungsmodus in Solid und Fusion · Versionshinweise zu 0.142.0-r1 →</a></p>
-    <section class="start" id="update-01391"><p class="eyebrow">0.139.1-r1 · 14.11.2026</p><h2>Ein zuverlässigeres KI-Labor</h2><p>Sichere Ergebnisse, klarere Werkzeugrückmeldungen, kompatible alte Skizzenkanten und korrigierte Prozessabschlüsse sowie KI-Antwortbehandlung. 128 Standardtests, 152 gezielte Regressionen und vier neue Zeichnungs-/Bohrungsversuche bestanden. Ein Liveversuch gelang nach einer Formatkorrektur. Das sind gezielte Prüfungen, kein neuer Vollbenchmark.</p><p class="fine">Noch offen: weitere Bild-, Überwacher- und Sol-Vergleiche sowie die native Ursache langsamen Prozessabbaus. Frühere Benchmarks behalten ihre ursprünglichen Versionen und Ergebnisse.</p><p><a href="../benchmarks/lab-targeted-01391-2026-11-14.json">Gezielte Testnachweise</a> · <a href="../benchmarks/lab-campaign-audit-2026-11-14.json">Bisherige Kampagnenauswertung</a> · <a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.139.1-r1">Download und Quellen</a></p></section>
-<section class="start" id="update-01382"><p class="eyebrow">0.138.2-r4 · 09.11.2026</p><h2>Aufbauaufgaben: Reparaturen bestätigt</h2><p>Neu in 0.138.2-r4: korrigierte Körperauswahl, ebene Bohrflächen, Checkbox-Zustände und Rückmeldungen zum Skizzenersatz und zur Höhe. Der ursprüngliche DeepSeek-Aufbaubenchmark bleibt 5/16 auf 0.138.0-r1. Getrennte gezielte Nachtests bestätigen alle 16 ursprünglichen Bedingungen über mehrere Programmstände; das ist kein neuer vollständiger 16/16-Lauf. Der letzte A07-Test mit der neuen EXE bestand 8/8 native Kriterien in 144,199 Sekunden. Alle bisherigen Sol-/DeepSeek-Ergebnisse und erfolgreichen Nachtests bleiben erhalten.</p><p><a href="../benchmarks/advanced-deepseek-2026-11-09.json">Ergebnisse und getrennte Nachtests (JSON)</a> · <a href="https://github.com/andyy909/Formnaro-cad/releases/tag/v0.138.2-r4">Download und Quellen</a></p></section>
-</main>
-  <footer class="wrap foot"><a href="../">Zur Formnaro-Startseite</a><a href="https://github.com/andyy909/Formnaro-cad/releases">Alle Versionen ↗</a><a href="../impressum/">Impressum</a></footer>
+    <section class="start notes" aria-labelledby="ki-hinweise">
+      <h2 id="ki-hinweise">Versionshinweise zur KI</h2>
+      <ul class="note-list">
+        <li id="update-01420"><a href="../entwicklung/#update-01420">0.142.0-r1: Übungsmodus in Solid und Fusion</a></li>
+        <li id="update-01391"><a href="../entwicklung/#update-01391">0.139.1-r1: Ein zuverlässigeres KI-Labor</a> mit <a href="../benchmarks/lab-targeted-01391-2026-11-14.json">gezielten Testnachweisen</a> und <a href="../benchmarks/lab-campaign-audit-2026-11-14.json">Kampagnenauswertung</a></li>
+        <li id="update-01382"><a href="../entwicklung/#update-01382">0.138.2-r4: Nachtests zu den Aufbauaufgaben</a> mit <a href="../benchmarks/advanced-deepseek-2026-11-09.json">Ergebnissen (JSON)</a></li>
+      </ul>
+    </section>
+  </main>
+  <footer class="site-foot">
+    <div class="wrap"><span class="sp">Formnaro</span><a href="../ki/" aria-current="page">KI-Anbindung</a><a href="../ki-labor/">KI-Labor</a><a href="../entwicklung/">Entwicklung</a><a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Mit PayPal unterstützen</a><a href="../en/ai/" lang="en" hreflang="en">English</a><a href="../impressum/">Impressum</a></div>
+  </footer>
 </body>
 </html>
