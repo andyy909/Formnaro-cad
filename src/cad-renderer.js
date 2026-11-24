@@ -1771,8 +1771,8 @@ export function createCadRenderer({
     const marker = tabletSpotlight.children[0];
     if (marker) {
       const { rootId, current } = marker.userData;
-      marker.visible = current() && allows(rootId) &&
-        bodies.children.some((body) => body.visible && body.userData.rootId === rootId);
+      marker.visible =
+        current() && allows(rootId) && bodies.children.some((body) => body.visible && body.userData.rootId === rootId);
     }
     const scale = cornerPreview ?? (handleDrag?.moved && !handleDrag.lift ? handleDrag : pendingScale);
     if (scale && (scale !== pendingScale || scale.revision === getScene()?.revision))

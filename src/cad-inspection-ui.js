@@ -310,7 +310,12 @@ export function createCadInspectionUI({
         }
         let extra = s.result.delta ? '\nΔX / ΔY / ΔZ: ' + s.result.delta.map(fmt).join(' / ') + ' mm' : '';
         if (s.result.thickness) {
-          extra += '\n' + tr('Wandstärke am Klickpunkt', 'Wall thickness at click') + ': ' + fmt(s.result.thickness.value) + ' mm';
+          extra +=
+            '\n' +
+            tr('Wandstärke am Klickpunkt', 'Wall thickness at click') +
+            ': ' +
+            fmt(s.result.thickness.value) +
+            ' mm';
         } else if (s.result.thickness === null) {
           extra += '\n' + tr('Kein eindeutiger Materialweg.', 'No unambiguous material path.');
         }
@@ -320,7 +325,8 @@ export function createCadInspectionUI({
             : tr('Punktabstand', 'Point distance')) +
           ': ' +
           fmt(s.result.distance) +
-          ' mm' + extra;
+          ' mm' +
+          extra;
         status(
           tr(
             'Messung fertig · der nächste Klick beginnt ein neues Paar.',
@@ -560,7 +566,8 @@ export function createCadInspectionUI({
   function tabletMeasurement() {
     if (active?.kind !== 'measure' || !valid(active)) return null;
     const result = active.result;
-    if (result?.kind === 'diameter') return { kind: result.inner ? 'bore' : 'cylinder', value: result.diameter, objectIds: [result.objectId] };
+    if (result?.kind === 'diameter')
+      return { kind: result.inner ? 'bore' : 'cylinder', value: result.diameter, objectIds: [result.objectId] };
     if (result?.kind === 'cad-face-distance') {
       return {
         kind: 'face-distance',

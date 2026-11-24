@@ -109,19 +109,30 @@ export function createCadClickMeasureNative({ oc, service }) {
     if (from.objectId !== to.objectId || from.faceIndex === to.faceIndex) return null;
     const tolerance = 1e-7;
     const offset = 1e-5;
-    if (Math.abs(Math.hypot(...normal) - 1) > tolerance ||
-        cadClassifyPoint(oc, shape, point, { tolerance }) !== 'boundary') return null;
+    if (
+      Math.abs(Math.hypot(...normal) - 1) > tolerance ||
+      cadClassifyPoint(oc, shape, point, { tolerance }) !== 'boundary'
+    )
+      return null;
     const direction = normal.map((value) => -value);
     const along = (distance) => point.map((value, i) => value + direction[i] * distance);
     if (cadClassifyPoint(oc, shape, along(offset), { tolerance }) !== 'inside') return null;
     const hits = cadRayHits(oc, shape, { origin: point, direction, near: offset, far: 1e9, tolerance });
     hits.sort((a, b) => a.t - b.t);
     const exit = hits[0];
-    if (!exit || exit.faceIndex !== to.faceIndex || exit.t <= 2 * offset ||
-        hits.slice(1).some((hit) => hit.faceIndex !== exit.faceIndex && Math.abs(hit.t - exit.t) <= offset) ||
-        exit.normal.reduce((sum, value, i) => sum + value * direction[i], 0) <= tolerance) return null;
-    if (cadClassifyPoint(oc, shape, along(exit.t / 2), { tolerance }) !== 'inside' ||
-        cadClassifyPoint(oc, shape, along(exit.t + offset), { tolerance }) !== 'outside') return null;
+    if (
+      !exit ||
+      exit.faceIndex !== to.faceIndex ||
+      exit.t <= 2 * offset ||
+      hits.slice(1).some((hit) => hit.faceIndex !== exit.faceIndex && Math.abs(hit.t - exit.t) <= offset) ||
+      exit.normal.reduce((sum, value, i) => sum + value * direction[i], 0) <= tolerance
+    )
+      return null;
+    if (
+      cadClassifyPoint(oc, shape, along(exit.t / 2), { tolerance }) !== 'inside' ||
+      cadClassifyPoint(oc, shape, along(exit.t + offset), { tolerance }) !== 'outside'
+    )
+      return null;
     return { value: exit.t, from: point, to: exit.point };
   }
 

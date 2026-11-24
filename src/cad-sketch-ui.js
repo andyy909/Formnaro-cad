@@ -749,7 +749,10 @@ export function createCadSketchUI({
           if (!project.attachedSketch) throw Error('Die gebundene Skizze fehlt.');
           project.attachedSketch.sketch = resolved.sketch;
           const proposal = await controller.preview(undefined, {
-            project, revision: s.revision, label: 'Tablet-Skizzenmaße bearbeiten', signal: s.abort.signal,
+            project,
+            revision: s.revision,
+            label: 'Tablet-Skizzenmaße bearbeiten',
+            signal: s.abort.signal,
           });
           if (state !== s || ticket !== s.ticket) {
             controller.discard(proposal.previewId);
@@ -909,7 +912,7 @@ export function createCadSketchUI({
       s.applying = true;
       try {
         const proposal = s.proposal,
-          target = s.imported?.profileOnly ? null : s.resultTarget ?? proposalTarget(proposal),
+          target = s.imported?.profileOnly ? null : (s.resultTarget ?? proposalTarget(proposal)),
           result = controller.apply({ previewId: proposal.previewId, revision: proposal.revision });
         s.proposal = null;
         close();

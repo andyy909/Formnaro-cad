@@ -127,13 +127,22 @@ export function projectCadFaceAnchorNative(oc, shape, anchor, { tolerance = 1e-6
 /** Resolve a display hit against the actual trimmed BRep plane, including in
  * WASM builds that do not expose the native ray/normal adapter. */
 export function projectCadPlanarFaceNative(oc, shape, point, { normal: displayNormal, tolerance = 1e-4 } = {}) {
-  if (!Array.isArray(point) || point.length !== 3 || !point.every(Number.isFinite) ||
-      !Number.isFinite(tolerance) || tolerance <= 0 || tolerance > 0.005)
+  if (
+    !Array.isArray(point) ||
+    point.length !== 3 ||
+    !point.every(Number.isFinite) ||
+    !Number.isFinite(tolerance) ||
+    tolerance <= 0 ||
+    tolerance > 0.005
+  )
     throw Error('Ungültiger Punkt für die CAD-Flächenwahl.');
   const expected = displayNormal === undefined ? null : new Vector3(...unit(displayNormal));
-  const enumValue = value => value?.value ?? value;
+  const enumValue = (value) => value?.value ?? value;
   const matches = [];
-  let nativePoint, maker, vertex, list = [];
+  let nativePoint,
+    maker,
+    vertex,
+    list = [];
   try {
     nativePoint = new oc.gp_Pnt(...point);
     maker = new oc.BRepBuilderAPI_MakeVertex(nativePoint);
@@ -152,7 +161,8 @@ export function projectCadPlanarFaceNative(oc, shape, point, { normal: displayNo
         frame = plane.Position();
         xAxis = frame.XDirection();
         yAxis = frame.YDirection();
-        const x = new Vector3(xAxis.X(), xAxis.Y(), xAxis.Z()), y = new Vector3(yAxis.X(), yAxis.Y(), yAxis.Z());
+        const x = new Vector3(xAxis.X(), xAxis.Y(), xAxis.Z()),
+          y = new Vector3(yAxis.X(), yAxis.Y(), yAxis.Z());
         const direction = new Vector3().crossVectors(x, y).normalize();
         if (enumValue(face.Orientation()) === enumValue(oc.TopAbs_Orientation.TopAbs_REVERSED)) direction.negate();
         if (expected && direction.dot(expected) < 0.999) continue;

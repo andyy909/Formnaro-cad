@@ -10,7 +10,11 @@ import {
 } from './cad-linked-contours-data.js';
 import { captureCadProjectParameterClipboard } from './cad-project-parameters-clipboard.js';
 import { copyCadProjectParameterReferences } from './cad-project-parameters-references.js';
-import { mergeCadProjectParameters, refreshCadProjectParameterCorrespondence, stampCadProjectParameters } from './cad-project-parameters-data.js';
+import {
+  mergeCadProjectParameters,
+  refreshCadProjectParameterCorrespondence,
+  stampCadProjectParameters,
+} from './cad-project-parameters-data.js';
 import { remapCadJoints, validateCadJoints, mergeCadJoints } from './cad-joints-data.js';
 
 const within = (target, family) =>
@@ -98,7 +102,9 @@ export function insertCadLinkedClipboard(draft, clipboard, { scope, offset = [10
   }
   if (importParameters && source.parameterData) {
     const prior = draft.projectParameters,
-      { data: merged, mapping: parameterMapping } = mergeCadProjectParameters(prior, source.parameterData, { nodeIds: mapping });
+      { data: merged, mapping: parameterMapping } = mergeCadProjectParameters(prior, source.parameterData, {
+        nodeIds: mapping,
+      });
     parameterNames = parameterMapping.names;
     if (prior?.applied) merged.applied = structuredClone(prior.applied);
     draft.projectParameters = merged;
