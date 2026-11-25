@@ -87,7 +87,7 @@ nav a:hover { color: var(--werkstueck) }
 .stage .frame-b { position: absolute; inset: 0; opacity: 0; z-index: 1; pointer-events: none }
 .readout { z-index: 2 }
 .readout { position: absolute; left: .9rem; top: .8rem; background: #1D2329; color: #E6EAEE; font-size: .8rem; padding: .3rem .6rem; border-radius: 4px; font-stretch: 110% }
-.controls { padding: 1rem 1.1rem 1.1rem; display: grid; gap: .9rem }
+.controls { display: grid; gap: .9rem; border-top: 1px solid var(--linie); padding-top: 1.1rem }
 .axes { display: flex; flex-wrap: wrap; gap: .4rem }
 .axis { font: inherit; font-size: var(--step--1); padding: .4rem .75rem; border-radius: 5px; border: 1px solid var(--linie); background: transparent; color: var(--graphit); cursor: pointer; display: flex; gap: .45rem; align-items: baseline }
 .axis b { font-stretch: 125%; font-weight: 800 }
@@ -164,6 +164,11 @@ footer .sp { margin-right: auto; color: var(--graphit); font-weight: 700 }
 
 @media (max-width: 860px) {
   .hero .wrap, .atlas .wrap, .ki .wrap, .mode, .task { grid-template-columns: minmax(0, 1fr) }
+  /* Einspaltig: Fräse zwischen Text und Reglern, damit sie beim Ziehen sichtbar bleibt */
+  .atlas .wrap { gap: 1.2rem }
+  .atlas-text { display: contents }
+  .atlas .rig { order: 1 }
+  .atlas .controls { order: 2 }
 }
 @media (max-width: 440px) {
   header .wrap { gap: .75rem }
