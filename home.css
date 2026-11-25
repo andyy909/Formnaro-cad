@@ -26,7 +26,7 @@
   --font: "Archivo", "Segoe UI", system-ui, sans-serif;
   --step--1: .875rem; --step-0: 1.0625rem; --step-1: 1.3rem; --step-2: 1.7rem; --step-3: 2.4rem; --step-4: clamp(2.6rem, 6vw, 4.4rem);
 }
-@media (prefers-color-scheme: dark) {
+@media all { /* immer dunkles Design */
   :root {
     color-scheme: dark;
     --alu: #24292F; --plate: #2D333A; --graphit: #E6EAEE; --stahl: #A3ADB7; --werkstueck: #7FA9D6; --on-werkstueck: #10161C;
@@ -66,7 +66,7 @@ nav a:hover { color: var(--werkstueck) }
 
 /* Start */
 .hero .wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(2rem, 5vw, 4rem); align-items: start }
-.hero-art { padding-top: 1.2rem }
+.hero-art { padding-top: clamp(2rem, 6vw, 5rem) }
 .hero h1 { font-size: var(--step-4); font-weight: 800 }
 .hero-text { display: grid; gap: 1.1rem; min-width: 0 }
 .facts { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .4rem 1.1rem; font-size: var(--step--1); color: var(--stahl) }
@@ -76,13 +76,15 @@ nav a:hover { color: var(--werkstueck) }
 .download-box { display: grid; gap: .55rem; justify-items: start }
 .dl-meta { font-size: var(--step--1); color: var(--stahl) }
 .hero-art { margin: 0; min-width: 0 }
-.hero-art img { display: block; width: 100%; height: auto; border-radius: 10px }
+.hero { overflow-x: clip }
+.hero-art img { display: block; width: calc(100% + clamp(0px, (100vw - 1180px) / 2, 260px) + 8%); max-width: none; height: auto; margin-left: -4% }
+@media (max-width: 860px) { .hero-art img { width: 100%; margin-left: 0 } }
 .atlas .wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); gap: clamp(2rem, 5vw, 4rem); align-items: start }
 .atlas-text { padding-top: 1rem }
 .atlas-text { display: grid; gap: 1.2rem; min-width: 0 }
 
-.rig { background: var(--plate); border: 1px solid var(--linie); border-radius: 10px; overflow: hidden; min-width: 0 }
-.stage { background: var(--stage); aspect-ratio: 540 / 490; position: relative; max-width: 100% }
+.rig { background: var(--alu); min-width: 0 }
+.stage { background: var(--alu); aspect-ratio: 540 / 490; position: relative; max-width: 100% }
 .stage img { width: 100%; height: 100%; object-fit: contain; display: block }
 .stage .frame-b { position: absolute; inset: 0; opacity: 0; z-index: 1; pointer-events: none }
 .readout { z-index: 2 }

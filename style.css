@@ -17,7 +17,7 @@
   background: var(--bg);
   color: var(--fg);
 }
-@media (prefers-color-scheme: dark) {
+@media all { /* immer dunkles Design */
   :root { color-scheme: dark; --bg: #24292F; --surface: #2D333A; --fg: #E6EAEE; --muted: #A3ADB7; --line: #3C444D; --accent: #7FA9D6; --on-accent: #10161C; --hover: #34404C; --messing: #D9A04A; }
 }
 * { box-sizing: border-box; }
