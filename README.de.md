@@ -30,6 +30,14 @@ Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgeliefe
 
 Das Programm-ZIP vollständig in einen beschreibbaren Ordner entpacken und **Formnaro starten** öffnen. FreeCAD und Python sind enthalten. [Alle Ausgaben](https://github.com/andyy909/Formnaro-cad/releases) · [Paketregel](docs/PORTABLE-PAKETE.md)
 
+## Vom Tablet zum PC
+
+Auf dem Tablet entsteht eine Skizze für eine Platte mit fünf Bohrungen. Das fertige 3D-Teil geht über das lokale Netzwerk an Formnaro unter Windows. Die Aufnahme zeigt einen Entwicklungsbuild der Android-App.
+
+[![Eine Platte mit fünf Bohrungen kommt als CAD-Teil von der Tablet-Skizze auf den PC](https://formnaro.de/tablet-an-pc.webp)](https://formnaro.de/#tablet)
+
+[Video ansehen](https://formnaro.de/#tablet) · [Videodatei auf GitHub](https://github.com/andyy909/Formnaro-cad/blob/gh-pages/tablet-an-pc.webm)
+
 ## KI-Labor
 
 Öffne **Einstellungen → KI / API → KI-Testlabor**. In der regulären Ausgabe 0.144.0-r1 startet unter **Einfach** der Entwicklungscheck mit 15 Aufgaben auf Low, gezielten Wiederholungen auf High und optional Max. CAD-Alltag, STL-Konvertierung und Fotomodus lassen sich separat prüfen. Unter **Erweitert** kannst du eigene Versuche zusammenstellen.

@@ -38,6 +38,14 @@ Formnaro starts with an empty workspace. The welcome screen shows three bundled 
 
 Extract the whole application ZIP into a writable folder and open the **Formnaro starten** shortcut. FreeCAD and Python are bundled. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
+## From tablet to PC
+
+Draw a plate with five holes on the tablet, turn it into a 3D part and send it over the local network to Formnaro on Windows. The recording uses a development build of the Android app.
+
+[![A five-hole plate goes from a tablet sketch to a CAD part on the PC](https://formnaro.de/tablet-an-pc.webp)](https://formnaro.de/en/#tablet)
+
+[Watch the video](https://formnaro.de/en/#tablet) · [Video file on GitHub](https://github.com/andyy909/Formnaro-cad/blob/gh-pages/tablet-an-pc.webm)
+
 ## AI Lab
 
 Open **Settings → AI / API → AI test lab**. In stable release 0.144.0-r1, **Simple** runs a 15-task development check at Low, with targeted retries at High and optional Max. Everyday CAD, STL conversion and photo mode can be checked separately. Use **Advanced** to set up custom trials.
