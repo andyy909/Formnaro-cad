@@ -106,6 +106,14 @@ input[type=range] { width: 100%; accent-color: var(--werkstueck) }
 .btn.ghost { padding: .5rem .9rem; background: transparent; color: var(--graphit); border: 1px solid var(--linie); font-size: var(--step--1) }
 @media (max-width: 440px) { .axis-row { grid-template-columns: 1fr; gap: .1rem } }
 
+/* Tablet zu PC */
+.tablet-flow { padding-block: clamp(1rem, 3vw, 2rem) clamp(2rem, 4vw, 3rem) }
+.tablet-flow .wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); gap: clamp(2rem, 5vw, 4rem); align-items: center }
+.tablet-text { display: grid; gap: 1.2rem; min-width: 0 }
+.tablet-video { margin: 0; min-width: 0 }
+.tablet-video video { display: block; width: 100%; height: auto; border-radius: 10px; background: #161c24; aspect-ratio: 16 / 9 }
+@media (max-width: 860px) { .tablet-flow .wrap { grid-template-columns: minmax(0, 1fr) } }
+
 /* Modi */
 .modes-head { display: grid; gap: 1rem; margin-bottom: 2rem }
 .tabs { display: flex; flex-wrap: wrap; border: 1px solid var(--linie); border-radius: 8px; width: fit-content; max-width: 100%; overflow: hidden; background: var(--plate) }
