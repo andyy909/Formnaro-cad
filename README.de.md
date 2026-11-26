@@ -12,18 +12,18 @@
 
 Formnaro ist portabel unter Windows x64. Die Modellierung funktioniert offline.
 
-[Formano Mini für Android](https://github.com/andyy909/Formnaro-Android) ist frisch und wird aktiv weiterentwickelt. Im Android-Repo gibt es die APK als Vorabversion. Dort steht auch, mit welchem Windows-Begleitbuild sie geprüft wurde.
+[Formnaro CAD 0.4.0 für Android](https://github.com/andyy909/Formnaro-Android/releases/tag/v0.4.0) läuft auf Android 10 oder neuer. Mit Formnaro 0.150.0-r2 für Windows kannst du Skizzen übertragen und denselben Agenten-Chat auf beiden Geräten fortsetzen. [Android-APK](https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk)
 
 | Version | Inhalt | Download |
 | --- | --- | --- |
-| **0.144.0-r1** · reguläre Ausgabe | Entwicklungschecks und Nachweise im KI-Labor | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) |
+| **0.150.0-r2** · reguläre Ausgabe | Direkte Skizzenmaße, Tablet-Übertragung und gemeinsamer Agenten-Chat | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip)** · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.150.0-r2) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/SHA256SUMS.txt) |
 | **0.148.0-r5** · Windows Nightly | Tablet-Kopplung, direkter Teiletransfer mit Android-Pilot 35 r32 und Korrektur der Orca-3MF-Naht | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip)** · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.148.0-r5) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/SHA256SUMS.txt) |
 
 ### Quellarchive
 
 | Version | Formnaro | FreeCAD | CAD-Kern |
 | --- | --- | --- | --- |
-| **0.144.0-r1** | [Formnaro](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-Quellcode-v0.144.0-r1.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD-Kern](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-CAD-Quellen.zip) |
+| **0.150.0-r2** | [Formnaro](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-Quellcode-v0.150.0-r2.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD-Kern](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-CAD-Quellen.zip) |
 | **0.148.0-r5** | [Formnaro](https://github.com/andyy909/Formnaro-cad/archive/refs/tags/v0.148.0-r5.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD-Kern](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-CAD-Quellen.zip) |
 
 Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgelieferte Beispiele, bis zu drei zuletzt verwendete Projekte und bei vorhandener Autosicherung eine eigene Wiederherstellungsschaltfläche. [Windows-Ausgaben und Abnahme](docs/AKTUELLER-STAND.md)
@@ -40,7 +40,7 @@ Auf dem Tablet entsteht eine Skizze für eine Platte mit fünf Bohrungen. Das fe
 
 ## KI-Labor
 
-Öffne **Einstellungen → KI / API → KI-Testlabor**. In der regulären Ausgabe 0.144.0-r1 startet unter **Einfach** der Entwicklungscheck mit 15 Aufgaben auf Low, gezielten Wiederholungen auf High und optional Max. CAD-Alltag, STL-Konvertierung und Fotomodus lassen sich separat prüfen. Unter **Erweitert** kannst du eigene Versuche zusammenstellen.
+Öffne **Einstellungen → KI / API → KI-Testlabor**. In Ausgabe 0.144.0-r1 startet unter **Einfach** der Entwicklungscheck mit 15 Aufgaben auf Low, gezielten Wiederholungen auf High und optional Max. CAD-Alltag, STL-Konvertierung und Fotomodus lassen sich separat prüfen. Unter **Erweitert** kannst du eigene Versuche zusammenstellen.
 
 Unter **Ergebnisse** siehst du Erfolge im ersten Versuch und nach Prüferhinweisen. Der Export dokumentiert auch frühere Stufen, Kontextlücken, wiederkehrende Muster und Erstreaktionen.
 

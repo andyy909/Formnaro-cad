@@ -20,18 +20,18 @@
 
 Formnaro is portable on Windows x64. The modelling workspace works offline.
 
-[Formano Mini for Android](https://github.com/andyy909/Formnaro-Android) is new and under active development. The Android repository offers early APK builds and lists the tested Windows companion build.
+[Formnaro CAD 0.4.0 for Android](https://github.com/andyy909/Formnaro-Android/releases/tag/v0.4.0) runs on Android 10 or later. With Formnaro 0.150.0-r2 for Windows, you can transfer sketches and continue the same agent conversation on both devices. [Android APK](https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk)
 
 | Build | Highlights | Download |
 | --- | --- | --- |
-| **0.144.0-r1** · stable release | AI Lab development checks and evidence | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** · [Release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256 checksums](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) |
+| **0.150.0-r2** · stable release | Direct sketch dimensions, tablet transfer and a shared agent conversation | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip)** · [Release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.150.0-r2) · [SHA-256 checksums](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/SHA256SUMS.txt) |
 | **0.148.0-r5** · Windows Nightly | Tablet pairing, direct part transfer with Android Pilot 35 r32, and the Orca 3MF seam fix | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip)** · [Release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.148.0-r5) · [SHA-256 checksums](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/SHA256SUMS.txt) |
 
 ### Source archives
 
 | Version | Formnaro | FreeCAD | CAD kernel |
 | --- | --- | --- | --- |
-| **0.144.0-r1** | [Formnaro](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-Quellcode-v0.144.0-r1.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD kernel](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-CAD-Quellen.zip) |
+| **0.150.0-r2** | [Formnaro](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-Quellcode-v0.150.0-r2.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD kernel](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-CAD-Quellen.zip) |
 | **0.148.0-r5** | [Formnaro](https://github.com/andyy909/Formnaro-cad/archive/refs/tags/v0.148.0-r5.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD kernel](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-CAD-Quellen.zip) |
 
 Formnaro starts with an empty workspace. The welcome screen shows three bundled examples, up to three recent projects and a restore button when an autosave is available. [Windows releases and verification](docs/AKTUELLER-STAND.md)
@@ -48,7 +48,7 @@ Draw a plate with five holes on the tablet, turn it into a 3D part and send it o
 
 ## AI Lab
 
-Open **Settings → AI / API → AI test lab**. In stable release 0.144.0-r1, **Simple** runs a 15-task development check at Low, with targeted retries at High and optional Max. Everyday CAD, STL conversion and photo mode can be checked separately. Use **Advanced** to set up custom trials.
+Open **Settings → AI / API → AI test lab**. In release 0.144.0-r1, **Simple** runs a 15-task development check at Low, with targeted retries at High and optional Max. Everyday CAD, STL conversion and photo mode can be checked separately. Use **Advanced** to set up custom trials.
 
 **Results** shows first-attempt passes and passes after verifier feedback. The export also records earlier stages, gaps in context, recurring patterns and initial reactions.
 

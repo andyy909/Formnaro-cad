@@ -1,7 +1,17 @@
-# Öffentliche Windows-Ausgaben / Public Windows releases
+# Öffentliche Windows- und Android-Ausgaben / Public Windows and Android releases
 
-- [Formnaro 0.144.0-r1](#formnaro-01440-r1) – reguläre Ausgabe / stable release
+- [Formnaro für Windows 0.150.0-r2 und Formnaro CAD für Android 0.4.0](#formnaro-windows-01500-r2--android-040) – aktuelle Ausgaben / current releases
+- [Formnaro 0.144.0-r1](#formnaro-01440-r1) – frühere reguläre Ausgabe / previous stable release
 - [Windows Nightly 0.148.0-r5](#windows-nightly-01480-r5) – Vorabversion / pre-release
+
+## Formnaro Windows 0.150.0-r2 · Android 0.4.0
+
+Die Ausgaben wurden zusammen am Samsung Galaxy Tab S7 Plus geprüft. Eine Tablet-Skizze lässt sich auf eine ausgewählte Windows-Fläche übertragen. Ein Agenten-Chat kann auf beiden Geräten fortgesetzt werden. Die Verbindung zum KI-Anbieter bleibt auf dem PC.
+
+The releases were tested together on a Samsung Galaxy Tab S7 Plus. You can send a tablet sketch to a selected Windows face and continue the same agent conversation on either device. The AI provider connection stays on the PC.
+
+- Windows · [ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip) · [Release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.150.0-r2) · [SHA-256](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/SHA256SUMS.txt) · [Anwendungsquellen / Application source](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-Quellcode-v0.150.0-r2.zip) · [Abnahme / Validation](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Abnahmebericht.md)
+- Android 10+ · [APK](https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk) · [Release](https://github.com/andyy909/Formnaro-Android/releases/tag/v0.4.0) · [SHA-256](https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk.sha256)
 
 ## Formnaro 0.144.0-r1
 
