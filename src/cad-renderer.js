@@ -770,7 +770,13 @@ export function createCadRenderer({
     pendingScale = null;
   function setCornerDimensions(data) {
     cornerDimensions = data;
-    if (data) scaleDimensions.update({ bounds: data.item.localBounds, worldMatrix: data.item.worldMatrix, sizes: data.sizes, controls: data.controls });
+    if (data)
+      scaleDimensions.update({
+        bounds: data.item.localBounds,
+        worldMatrix: data.item.worldMatrix,
+        sizes: data.sizes,
+        controls: data.controls,
+      });
     else scaleDimensions.hide();
     invalidate('corner-dimensions');
   }
@@ -797,7 +803,12 @@ export function createCadRenderer({
     const next = multiplyCadMatrices(parent, resized.transform),
       delta = matrix(multiplyCadMatrices(next, inverseCadMatrix(data.item.worldMatrix)));
     if (showDimensions)
-      scaleDimensions.update({ bounds: data.item.localBounds, worldMatrix: next, sizes, controls: data === cornerPreview ? cornerDimensions?.controls : undefined });
+      scaleDimensions.update({
+        bounds: data.item.localBounds,
+        worldMatrix: next,
+        sizes,
+        controls: data === cornerPreview ? cornerDimensions?.controls : undefined,
+      });
     for (const [mesh, original] of data.matrices) {
       mesh.matrix.copy(delta).multiply(original);
       mesh.matrixWorldNeedsUpdate = true;
@@ -1306,7 +1317,9 @@ export function createCadRenderer({
     (event) => {
       if (event.button !== 0 || gizmo.dragging) return;
       if (cornerDimensions) {
-        cornerClick = freeCornerSpace(event) ? { x: event.clientX, y: event.clientY, id: event.pointerId, session: cornerDimensions } : null;
+        cornerClick = freeCornerSpace(event)
+          ? { x: event.clientX, y: event.clientY, id: event.pointerId, session: cornerDimensions }
+          : null;
         event.preventDefault();
         event.stopImmediatePropagation();
         return;
@@ -1526,7 +1539,11 @@ export function createCadRenderer({
     if (cornerClick?.id === event.pointerId && event.button === 0) {
       const click = cornerClick;
       cornerClick = null;
-      if (cornerDimensions === click.session && Math.hypot(event.clientX - click.x, event.clientY - click.y) < 4 && freeCornerSpace(event)) {
+      if (
+        cornerDimensions === click.session &&
+        Math.hypot(event.clientX - click.x, event.clientY - click.y) < 4 &&
+        freeCornerSpace(event)
+      ) {
         if (!scaleDimensions.commit() && !cornerDimensions.controls.isApplying()) cornerDimensions.controls.cancel();
       }
       return;

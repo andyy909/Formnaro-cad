@@ -1112,8 +1112,7 @@ export async function updateCadAssociative(
         if (automaticViews.has(JSON.stringify([sheet.id, viewId])))
           updatedAutomaticViews.push({ sheetId: sheet.id, viewId });
       }
-      if (sheet.views.some((view) => view.kind === 'detail'))
-        sheet = updateCadDrawingDetailViews(sheet).sheet;
+      if (sheet.views.some((view) => view.kind === 'detail')) sheet = updateCadDrawingDetailViews(sheet).sheet;
       result.project.drawings.sheets[index] = sheet;
       drawingReport.updatedSheetIds.push(sheet.id);
     }

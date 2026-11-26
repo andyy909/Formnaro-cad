@@ -226,8 +226,14 @@ export function cadDrawingAnnotationGeometry(sheet, a, options) {
       overshoot = 2,
       r = c.radius * viewScale + overshoot;
     lines.push(
-      [[center[0] - r, center[1]], [center[0] + r, center[1]]],
-      [[center[0], center[1] - r], [center[0], center[1] + r]],
+      [
+        [center[0] - r, center[1]],
+        [center[0] + r, center[1]],
+      ],
+      [
+        [center[0], center[1] - r],
+        [center[0], center[1] + r],
+      ],
     );
     return { text: '', position: center, lines, arcs: [] };
   } else if (a.kind === 'centerline') {
@@ -341,9 +347,10 @@ export function cadDrawingSvg(value, options = {}) {
       g = cadDrawingAnnotationGeometry(sheet, a, options);
     } catch (error) {
       if (!options.allowStale) throw error;
-      g = a.kind === 'balloon'
-        ? { text: '?', position: a.position, lines: [], arcs: [], radius: 3.2, lost: true }
-        : { text: 'Bezug verloren', position: a.position, lines: [], arcs: [] };
+      g =
+        a.kind === 'balloon'
+          ? { text: '?', position: a.position, lines: [], arcs: [], radius: 3.2, lost: true }
+          : { text: 'Bezug verloren', position: a.position, lines: [], arcs: [] };
     }
     const lines = g.lines.map(([p, q]) => `<path d="M${pathPoint(p)} L${pathPoint(q)}"/>`).join(''),
       arcs = g.arcs.map((c) => curveSvg({ kind: 'arc', ...c }, 0.01)).join(''),
@@ -687,7 +694,11 @@ export function cadDrawingDxf(value, options = {}) {
           'ANNOTATIONS',
         );
       if (a.kind === 'balloon') {
-        writeCurve({ kind: 'circle', center: toModel(g.position), radius: g.radius / viewScale }, [0, 0], 'ANNOTATIONS');
+        writeCurve(
+          { kind: 'circle', center: toModel(g.position), radius: g.radius / viewScale },
+          [0, 0],
+          'ANNOTATIONS',
+        );
         label(g.text, toModel(g.position), 'ANNOTATIONS', 3.5 / viewScale, true);
       } else if (g.text) label(g.text, toModel(g.position));
     }
@@ -706,10 +717,7 @@ export function cadDrawingDxf(value, options = {}) {
         let x = left;
         for (const column of CAD_DRAWING_PARTS_LIST_COLUMNS) {
           const value = row ? partsListCell(row, column.key) : column.label,
-            cellX =
-              column.align === 'middle'
-                ? x + column.width / 2 - value.length * 0.6
-                : x + 1.2;
+            cellX = column.align === 'middle' ? x + column.width / 2 - value.length * 0.6 : x + 1.2;
           label(value, paper([cellX, baseline]), 'ANNOTATIONS', row ? 2.5 : 2.6);
           x += column.width;
         }

@@ -10,8 +10,13 @@ import { createSketchCanvasDimensions } from './sketch-canvas-dimensions.js';
 import { createSketchMoveReadout } from './sketch-move-readout.js';
 import { sketchMoveDelta } from './sketch-move-delta.js';
 import {
-  assertSketchScaleMaintained, prepareSketchScale, resizeSketchScaleTarget, sketchScaleDrag,
-  sketchScaleHandles, sketchScaleMeasurement, sketchScaleTarget,
+  assertSketchScaleMaintained,
+  prepareSketchScale,
+  resizeSketchScaleTarget,
+  sketchScaleDrag,
+  sketchScaleHandles,
+  sketchScaleMeasurement,
+  sketchScaleTarget,
 } from './sketch-scale-target.js';
 import { parseSketchDirectMeasure } from './sketch-direct-measure.js';
 import { alignSketchPoints, sketchContourHandles } from './sketch-align.js';
@@ -295,7 +300,11 @@ export function createCadSketchUI({
     alignment.hidden = true;
     const alignAxes = document.createElement('select');
     alignAxes.setAttribute('aria-label', t('Ausrichtungsachse'));
-    for (const [value, label] of [['xy', 'X und Y'], ['x', 'Nur X'], ['y', 'Nur Y']])
+    for (const [value, label] of [
+      ['xy', 'X und Y'],
+      ['x', 'Nur X'],
+      ['y', 'Nur Y'],
+    ])
       alignAxes.add(new Option(t(label), value));
     const alignHint = document.createElement('span');
     alignHint.setAttribute('role', 'status');
@@ -305,7 +314,10 @@ export function createCadSketchUI({
     modeSwitch.className = 'sketch-workspace-mode';
     modeSwitch.setAttribute('role', 'group');
     modeSwitch.setAttribute('aria-label', t('Skizzenmodus'));
-    for (const [value, label] of [['simple', 'Einfach'], ['advanced', 'Erweitert']]) {
+    for (const [value, label] of [
+      ['simple', 'Einfach'],
+      ['advanced', 'Erweitert'],
+    ]) {
       const button = document.createElement('button');
       button.type = 'button';
       button.dataset.sketchModeChoice = value;
@@ -600,8 +612,7 @@ export function createCadSketchUI({
           handle.classList.toggle('selected', selected.has(Number(handle.dataset.pointIndex)));
       constraintsUI?.render(data.geometry, data.handles, [...selected], extent);
       const anchor = s.drawPoints[alignmentSource];
-      if (anchor)
-        svg('circle', { cx: anchor[0], cy: -anchor[1], r: 8 / boardScale(), class: 'sketch-align-anchor' });
+      if (anchor) svg('circle', { cx: anchor[0], cy: -anchor[1], r: 8 / boardScale(), class: 'sketch-align-anchor' });
       measurements.render(heldDimension);
       if (editTarget) positionDimensionEditor();
     }
@@ -619,7 +630,8 @@ export function createCadSketchUI({
     const tolerance = () => 9 / boardScale();
     function snapResult(p, exclude = []) {
       const pointSnap = $('sketch-point-snap').checked;
-      const midpoints = pointSnap && [2, 3, 4].includes(s.sketch.version) ? draftView.read(s.sketch).midpoints : undefined;
+      const midpoints =
+        pointSnap && [2, 3, 4].includes(s.sketch.version) ? draftView.read(s.sketch).midpoints : undefined;
       return sketchSnap(p, {
         points: pointSnap ? (s.drawPoints ?? []) : [],
         midpoints,
@@ -639,7 +651,8 @@ export function createCadSketchUI({
     function positionDimensionEditor() {
       const label = editTarget.anchor.getBoundingClientRect();
       const surface = board.getBoundingClientRect();
-      const width = dimensionEditor.offsetWidth, height = dimensionEditor.offsetHeight;
+      const width = dimensionEditor.offsetWidth,
+        height = dimensionEditor.offsetHeight;
       dimensionEditor.style.left = Math.max(surface.left, Math.min(label.left, surface.right - width)) + 'px';
       dimensionEditor.style.top = Math.max(surface.top, Math.min(label.top, surface.bottom - height)) + 'px';
     }
@@ -684,16 +697,28 @@ export function createCadSketchUI({
       if (values.radius !== undefined)
         svg('circle', { cx: from[0], cy: -from[1], r: values.radius, class: 'sketch-drawing-preview' });
       else if (values.x !== undefined)
-        svg('rect', { x: Math.min(from[0], end[0]), y: -Math.max(from[1], end[1]), width: values.x, height: values.y,
-          class: 'sketch-drawing-preview' });
+        svg('rect', {
+          x: Math.min(from[0], end[0]),
+          y: -Math.max(from[1], end[1]),
+          width: values.x,
+          height: values.y,
+          class: 'sketch-drawing-preview',
+        });
       measurements.render({ shape, start: from, end, values });
     }
     function showDrawnMeasure(target) {
       const shape = target.ids ? $('sketch-profile-shape').value : s.sketch.kind;
-      if (state !== s || start || tool !== 'draw' || (shape !== target.shape && !(shape === 'circle3' && target.shape === 'circle'))) return;
+      if (
+        state !== s ||
+        start ||
+        tool !== 'draw' ||
+        (shape !== target.shape && !(shape === 'circle3' && target.shape === 'circle'))
+      )
+        return;
       const data = draftView.read(s.sketch);
       const measured = drawnMeasurement(target, data);
-      if (!measured?.values || Object.values(measured.values).some((value) => !Number.isFinite(value) || value <= 0)) return;
+      if (!measured?.values || Object.values(measured.values).some((value) => !Number.isFinite(value) || value <= 0))
+        return;
       const ticket = s.ticket;
       heldDimension = {
         ...measured,
@@ -729,7 +754,13 @@ export function createCadSketchUI({
       if (tool !== 'scale' || !scaleSelection) return;
       const radius = 5 * (1 / boardScale());
       for (const [x, y] of sketchScaleHandles(scaleSelection, draftView.read(s.sketch))) {
-        svg('rect', { x: x - radius, y: -y - radius, width: 2 * radius, height: 2 * radius, class: 'sketch-scale-handle' });
+        svg('rect', {
+          x: x - radius,
+          y: -y - radius,
+          width: 2 * radius,
+          height: 2 * radius,
+          class: 'sketch-scale-handle',
+        });
       }
     }
     function startScaleGesture(gesture) {
@@ -742,9 +773,14 @@ export function createCadSketchUI({
         return;
       }
       const measured = drawnMeasurement(target, data);
-      const canDrag = target.shape === 'circle'
-        ? Math.abs(Math.hypot(gesture.p[0] - measured.start[0], gesture.p[1] - measured.start[1]) - measured.values.radius) <= tolerance()
-        : sketchScaleHandles(target, data).some(([x, y]) => Math.hypot(x - gesture.p[0], y - gesture.p[1]) <= tolerance());
+      const canDrag =
+        target.shape === 'circle'
+          ? Math.abs(
+              Math.hypot(gesture.p[0] - measured.start[0], gesture.p[1] - measured.start[1]) - measured.values.radius,
+            ) <= tolerance()
+          : sketchScaleHandles(target, data).some(
+              ([x, y]) => Math.hypot(x - gesture.p[0], y - gesture.p[1]) <= tolerance(),
+            );
       gesture.scale = { target, data, canDrag, group: Symbol('sketch scale') };
       draw();
     }
@@ -760,7 +796,9 @@ export function createCadSketchUI({
       if (draft.version >= 3) {
         const expected = draftView.read(draft);
         return constraintsUI.solve({
-          draft, affected: target.ids, historyGroup: group,
+          draft,
+          affected: target.ids,
+          historyGroup: group,
           validate: (solved) => assertSketchScaleMaintained(expected, draftView.read(solved)),
         });
       }
@@ -802,7 +840,12 @@ export function createCadSketchUI({
       }
       if (placement.preview) {
         const { center, radius } = placement.preview;
-        svg('circle', { cx: center[0], cy: -center[1], r: radius, class: 'sketch-circle-placement sketch-drawing-preview' });
+        svg('circle', {
+          cx: center[0],
+          cy: -center[1],
+          r: radius,
+          class: 'sketch-circle-placement sketch-drawing-preview',
+        });
       }
     }
     function movedDraft(gesture, delta) {
@@ -831,7 +874,8 @@ export function createCadSketchUI({
           const draft = movedDraft(gesture, next);
           if (draft.version >= 3) {
             const accepted = await constraintsUI.solve({
-              draft, historyGroup: gesture,
+              draft,
+              historyGroup: gesture,
               validate: (solved) => {
                 const actual = movementDelta(gesture.anchor, next, solved);
                 if (actual.some((distance, axis) => Math.abs(distance - next[axis]) > 1e-5))
@@ -882,7 +926,8 @@ export function createCadSketchUI({
         if (['move', 'scale', 'align'].includes(option.value)) option.hidden = !advanced;
     }
     function nearestPoint(p, radius = tolerance()) {
-      let best = radius, nearest;
+      let best = radius,
+        nearest;
       for (const [index, q] of (s.drawPoints ?? []).entries()) {
         const distance = Math.hypot(q[0] - p[0], q[1] - p[1]);
         if (distance <= radius && (nearest === undefined || distance < best)) {
@@ -893,23 +938,25 @@ export function createCadSketchUI({
       return nearest;
     }
     function contourIndices(anchor) {
-      if (s.sketch.version >= 2)
-        return sketchContourHandles(s.sketch, draftView.read(s.sketch).handles, anchor);
+      if (s.sketch.version >= 2) return sketchContourHandles(s.sketch, draftView.read(s.sketch).handles, anchor);
       return s.sketch.kind === 'polygon' ? (s.drawPoints ?? []).map((_, index) => index) : [];
     }
     function outerContourAnchor() {
       if (s.sketch.version < 2) return s.sketch.kind === 'polygon' ? 0 : undefined;
       const outer = s.sketch.loops.find((loop) => loop.role === 'outer');
       if (!outer) return undefined;
-      const index = draftView.read(s.sketch).handles.findIndex((handle) =>
-        handle.references.some(({ id }) => outer.elements.includes(id)),
-      );
+      const index = draftView
+        .read(s.sketch)
+        .handles.findIndex((handle) => handle.references.some(({ id }) => outer.elements.includes(id)));
       return index < 0 ? undefined : index;
     }
     function syncAlignHint() {
       alignment.hidden = tool !== 'align';
-      alignHint.textContent = t(alignmentSource === undefined ? 'Punkt an der zu verschiebenden Kontur wählen.'
-        : 'Bezugspunkt oder Ursprung wählen.');
+      alignHint.textContent = t(
+        alignmentSource === undefined
+          ? 'Punkt an der zu verschiebenden Kontur wählen.'
+          : 'Bezugspunkt oder Ursprung wählen.',
+      );
     }
     async function alignAt(p) {
       const hit = nearestPoint(p);
@@ -927,13 +974,16 @@ export function createCadSketchUI({
       const target = hit ?? (Math.hypot(...p) <= tolerance() ? [0, 0] : undefined);
       const indices = selected.size > 1 && selected.has(source) ? [...selected] : contourIndices(source);
       try {
-        const result = alignSketchPoints(s.sketch,
-          { points: s.drawPoints, source, target, axes: alignAxes.value, selected: indices }, cadSketchExpression);
+        const result = alignSketchPoints(
+          s.sketch,
+          { points: s.drawPoints, source, target, axes: alignAxes.value, selected: indices },
+          cadSketchExpression,
+        );
         selected.clear();
         alignmentSource = undefined;
         if (result.sketch.version >= 3) {
           const anchor = movementAnchor(source);
-          if (!await constraintsUI.solve({ draft: result.sketch })) {
+          if (!(await constraintsUI.solve({ draft: result.sketch }))) {
             alignHint.textContent = t('Ausrichtung passt nicht zu den vorhandenen Skizzenbedingungen.');
             return;
           }
@@ -994,8 +1044,7 @@ export function createCadSketchUI({
       if (['select', 'move', 'scale', 'align'].includes(value)) {
         if (value !== 'select') setWorkspaceMode('advanced');
         setTool(value);
-      }
-      else {
+      } else {
         if (['arc', 'circle3', 'construction'].includes(value) || s.sketch.version < 2) setWorkspaceMode('advanced');
         const initial = s.sketch.version < 2;
         if (initial) {
@@ -1146,7 +1195,11 @@ export function createCadSketchUI({
         return;
       }
       if (start.tool === 'scale') {
-        if (!start.scale?.canDrag || (!start.moved && Math.hypot(e.clientX - start.screen[0], e.clientY - start.screen[1]) < 3)) return;
+        if (
+          !start.scale?.canDrag ||
+          (!start.moved && Math.hypot(e.clientX - start.screen[0], e.clientY - start.screen[1]) < 3)
+        )
+          return;
         const { target, data } = start.scale;
         try {
           const values = sketchScaleDrag(target, data, point(e), start.p);
@@ -1236,9 +1289,13 @@ export function createCadSketchUI({
         if (shape === 'circle3') drawCirclePlacement();
         const solved = added && s.sketch.version >= 3 ? constraintsUI.solve() : null;
         if (Array.isArray(added) && ['line', 'construction', 'circle', 'circle3', 'rectangle'].includes(shape)) {
-          const direction = end.map((value, axis) => value < origin[axis] ? -1 : 1);
-          const measure = () => showDrawnMeasure({ shape: shape === 'circle3' ? 'circle' : shape, ids: added, direction });
-          if (solved) void solved.then((accepted) => { if (accepted) measure(); });
+          const direction = end.map((value, axis) => (value < origin[axis] ? -1 : 1));
+          const measure = () =>
+            showDrawnMeasure({ shape: shape === 'circle3' ? 'circle' : shape, ids: added, direction });
+          if (solved)
+            void solved.then((accepted) => {
+              if (accepted) measure();
+            });
           else measure();
         }
         return;

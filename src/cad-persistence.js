@@ -93,7 +93,10 @@ function library(value) {
         throw Error('Projekte mit Format 38 benötigen Bibliotheksversion 38.');
       if (project.version >= DRAWING_CENTERMARK_PROJECT_VERSION && value.version < DRAWING_CENTERMARK_PROJECT_VERSION)
         throw Error('Mittelpunktmarken in Zeichnungen benötigen Bibliotheksversion 37.');
-      if (project.version >= COMPONENT_DEFINITION_PROJECT_VERSION && value.version < COMPONENT_DEFINITION_PROJECT_VERSION)
+      if (
+        project.version >= COMPONENT_DEFINITION_PROJECT_VERSION &&
+        value.version < COMPONENT_DEFINITION_PROJECT_VERSION
+      )
         throw Error('Bauteildefinitionen benötigen Bibliotheksversion 36.');
       if (project.version >= PART_NUMBER_PROJECT_VERSION && value.version < PART_NUMBER_PROJECT_VERSION)
         throw Error('Teilenummern benötigen Bibliotheksversion 35.');

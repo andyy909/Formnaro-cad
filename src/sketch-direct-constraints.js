@@ -24,7 +24,6 @@ export function selectedConstraintRefs(handles, selected) {
     .filter((r, i, a) => a.findIndex((x) => x.element === r.element && x.point === r.point) === i);
 }
 
-
 const round = (element) => ['arc', 'circle'].includes(element?.type);
 const line = (element) => element?.type === 'line';
 

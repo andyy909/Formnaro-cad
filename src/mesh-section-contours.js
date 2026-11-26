@@ -249,7 +249,7 @@ export function meshSectionContours(node, options = {}) {
       : null;
   const hasRejected = (diagnostics?.rejectedComponents ?? 0) > 0;
   const outerLoops = hasRejected ? [] : loops.filter((l) => l.role === 'outer'),
-    outerProfile = hasRejected ? null : outerLoops[0] ?? null,
+    outerProfile = hasRejected ? null : (outerLoops[0] ?? null),
     innerLoops = loops.filter((l) => l.role === 'hole'),
     innerCircles = [];
   for (const l of loops) {
@@ -329,8 +329,5 @@ export function worldPointToPlane(point3d, frameOrSection) {
   const dx = point3d[0] - frame[12],
     dy = point3d[1] - frame[13],
     dz = point3d[2] - frame[14];
-  return [
-    dx * frame[0] + dy * frame[1] + dz * frame[2],
-    dx * frame[4] + dy * frame[5] + dz * frame[6],
-  ];
+  return [dx * frame[0] + dy * frame[1] + dz * frame[2], dx * frame[4] + dy * frame[5] + dz * frame[6]];
 }

@@ -4,7 +4,10 @@ import { partRowIdentity, validateExplosion } from './cad-part-properties.js';
 
 const projectionViews = ['front', 'side', 'top', 'section', 'exploded'];
 
-export const cadDrawingPaperPoint = (view, scale, p) => [view.position[0] + p[0] * scale, view.position[1] - p[1] * scale];
+export const cadDrawingPaperPoint = (view, scale, p) => [
+  view.position[0] + p[0] * scale,
+  view.position[1] - p[1] * scale,
+];
 
 // Drawing data is deliberately kernel-free. Validation, paper layout and text
 // movement never schedule a projection or alter a confirmed source body.
@@ -239,10 +242,7 @@ export function validateCadDrawingPartsList(value) {
  * changes; new identities receive the next free number. Identities that are no
  * longer present are kept as non-exported reservations so hiding and showing
  * the same part again never assigns a different number. */
-export function createCadDrawingPartsList(
-  rows,
-  { id: tableId, title = 'Stückliste', position, previous = null } = {},
-) {
+export function createCadDrawingPartsList(rows, { id: tableId, title = 'Stückliste', position, previous = null } = {}) {
   const old = previous ? validateCadDrawingPartsList(previous) : null,
     reservations = new Map(
       [...(old?.rows ?? []), ...(old?.retainedPositions ?? [])].map((row) => [row.identityKey, row.position]),
@@ -368,9 +368,7 @@ function clipDetailCircle(curve, R) {
     distance = Math.hypot(cx, cy);
   if (distance + radius <= R + DETAIL_EPS) return [{ kind: 'circle' }];
   const intersections = circleIntersections(cx, cy, radius, R),
-    angles = [...new Set(intersections.map((p) => modAngle(Math.atan2(p[1] - cy, p[0] - cx))))].sort(
-      (a, b) => a - b,
-    );
+    angles = [...new Set(intersections.map((p) => modAngle(Math.atan2(p[1] - cy, p[0] - cx))))].sort((a, b) => a - b);
   if (angles.length < 2) return [];
   const out = [];
   for (let i = 0; i < angles.length; i++) {
@@ -415,7 +413,11 @@ function clipDetailPolyline(curve, R) {
   for (let i = 1; i < curve.points.length; i++) {
     const pieces = clipDetailLine({ a: curve.points[i - 1], b: curve.points[i] }, R);
     for (const piece of pieces) {
-      if (current.length && pointRadius(current.at(-1), R) && Math.hypot(current.at(-1)[0] - piece[0][0], current.at(-1)[1] - piece[0][1]) <= DETAIL_EPS)
+      if (
+        current.length &&
+        pointRadius(current.at(-1), R) &&
+        Math.hypot(current.at(-1)[0] - piece[0][0], current.at(-1)[1] - piece[0][1]) <= DETAIL_EPS
+      )
         current.push(piece[1]);
       else {
         current = [piece[0], piece[1]];
@@ -450,7 +452,9 @@ function clipDetailCurve(curve, R) {
     // is inside. Unsupported cut spans fail visibly instead of being guessed.
     if (curve.poles.every((p) => pointRadius(p, R))) return [{ ...curve }];
   }
-  detailText('Der Detailausschnitt schneidet eine nicht unterstützte Kurvenart. Unterstützt sind Gerade, Kreis, Kreisbogen, Linienzug sowie vollständig innenliegende Ellipsen und Béziers.');
+  detailText(
+    'Der Detailausschnitt schneidet eine nicht unterstützte Kurvenart. Unterstützt sind Gerade, Kreis, Kreisbogen, Linienzug sowie vollständig innenliegende Ellipsen und Béziers.',
+  );
 }
 export function validateCadDrawingCutout(value) {
   record(value, ['sourceViewId', 'center', 'radius']);
@@ -716,7 +720,18 @@ export function validateCadDrawingSheet(value) {
   for (const key of ['title', 'number', 'revision', 'author', 'date'])
     out.titleBlock[key] = text(value.titleBlock[key] ?? '', key === 'title' ? 500 : 200);
   out.views = list(value.views, CAD_DRAWING_LIMITS.views, 'Ansichten').map((v) => {
-    record(v, ['id', 'kind', 'sourceIds', 'position', 'scale', 'section', 'cutout', 'explosion', 'assemblyViewId', 'projection']);
+    record(v, [
+      'id',
+      'kind',
+      'sourceIds',
+      'position',
+      'scale',
+      'section',
+      'cutout',
+      'explosion',
+      'assemblyViewId',
+      'projection',
+    ]);
     const view = {
       id: id(v.id),
       kind: enumeration(v.kind, [...projectionViews, 'detail']),
@@ -762,8 +777,7 @@ export function validateCadDrawingSheet(value) {
     if (view.kind === 'detail' && view.projection) {
       const parent = viewById.get(view.cutout.sourceViewId);
       if (parent && parent.kind === 'detail') fail('Ein Detail einer Detailansicht wird nicht unterstützt.');
-      if (parent && view.projection.view !== parent.kind)
-        fail('Projektion gehört zu einer anderen Ansichtsart.');
+      if (parent && view.projection.view !== parent.kind) fail('Projektion gehört zu einer anderen Ansichtsart.');
     }
   out.annotations = list(value.annotations, CAD_DRAWING_LIMITS.annotations, 'Beschriftungen').map((a) => {
     if (a?.kind === 'label') {
@@ -823,7 +837,8 @@ export function validateCadDrawingSheet(value) {
       const upper = number(a.tolerance.upper, -1e6, 1e6);
       const lower = number(a.tolerance.lower, -1e6, 1e6);
       if (lower > upper) fail('Untere Toleranzgrenze darf nicht größer als die obere sein.');
-      const mode = a.tolerance.mode !== undefined ? enumeration(a.tolerance.mode, ['deviation', 'limits']) : 'deviation';
+      const mode =
+        a.tolerance.mode !== undefined ? enumeration(a.tolerance.mode, ['deviation', 'limits']) : 'deviation';
       item.tolerance = { upper, lower, mode };
     }
     if (a.curveReferences !== undefined)
@@ -849,7 +864,11 @@ export function validateCadDrawingSheet(value) {
     } else if (a.axis !== undefined || a.anchors !== undefined) fail('Maßpunkte nur für Abstandsmaße.');
     if (item.curveReferences && item.curveReferences.length !== item.curveIds.length)
       fail('Stabile Maßbezüge passen nicht zu den gewählten Kanten.');
-    if (item.kind === 'distance' ? !item.curveIds.length : item.curveIds.length !== (['angle', 'centerline'].includes(item.kind) ? 2 : 1))
+    if (
+      item.kind === 'distance'
+        ? !item.curveIds.length
+        : item.curveIds.length !== (['angle', 'centerline'].includes(item.kind) ? 2 : 1)
+    )
       fail('Unpassende Anzahl der Maßbezüge.');
     unique(item.curveIds, 'Maßbezüge');
     return item;
@@ -889,9 +908,18 @@ export function cadDrawingViewFrame(kind, section, explosion) {
   if (kind === 'exploded') {
     // Prefer the isometric direction that preserves the most exploded travel
     // on paper. The tie order keeps principal-axis explosions predictable.
-    const a = 1 / Math.sqrt(2), b = 1 / Math.sqrt(6), c = 1 / Math.sqrt(3);
-    let right = 1, front = 1, leastHidden = Infinity;
-    for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+    const a = 1 / Math.sqrt(2),
+      b = 1 / Math.sqrt(6),
+      c = 1 / Math.sqrt(3);
+    let right = 1,
+      front = 1,
+      leastHidden = Infinity;
+    for (const [sx, sy] of [
+      [1, 1],
+      [-1, 1],
+      [1, -1],
+      [-1, -1],
+    ]) {
       const hidden = (explosion?.parts ?? []).reduce((sum, part) => {
         const [x, y, z] = part.direction;
         return sum + (sx * x - sy * y + z) ** 2;
@@ -993,7 +1021,11 @@ export function cadDrawingBalloon(sheet, annotation, { sourceSignatures } = {}) 
         : curve.kind === 'bezier'
           ? curve.poles[0]
           : cadDrawingCurvePoint(curve, 'maxX');
-  return { row: rows[0], curveId: curve.id, target: cadDrawingPaperPoint(view, cadDrawingViewScale(view, sheet), target) };
+  return {
+    row: rows[0],
+    curveId: curve.id,
+    target: cadDrawingPaperPoint(view, cadDrawingViewScale(view, sheet), target),
+  };
 }
 
 export function createCadDrawingBalloon(sheet, { id: annotationId, viewId, curveId, position }, options) {
@@ -1084,8 +1116,12 @@ export function cadDrawingProblems(sheet, { sourceSignatures } = {}) {
     }
     if (v.assemblyViewId) {
       const assembly = sheet.views.find((view) => view.id === v.assemblyViewId);
-      if (!assembly || !['front', 'side', 'top'].includes(assembly.kind) ||
-          assembly.sourceIds.length !== v.sourceIds.length || v.sourceIds.some((id) => !assembly.sourceIds.includes(id)))
+      if (
+        !assembly ||
+        !['front', 'side', 'top'].includes(assembly.kind) ||
+        assembly.sourceIds.length !== v.sourceIds.length ||
+        v.sourceIds.some((id) => !assembly.sourceIds.includes(id))
+      )
         problems.push({
           code: 'STALE_SOURCE',
           viewId: v.id,
@@ -1241,7 +1277,9 @@ export function updateCadDrawingProjection(sheet, viewId, projection) {
   if (view.kind === 'exploded' && !sameDrawingValue(view.explosion, next.explosion))
     fail('Projektion gehört zu einer anderen Explosionsdarstellung.');
   view.projection = next;
-  for (const balloon of out.annotations.filter((annotation) => annotation.kind === 'balloon' && annotation.viewId === viewId))
+  for (const balloon of out.annotations.filter(
+    (annotation) => annotation.kind === 'balloon' && annotation.viewId === viewId,
+  ))
     try {
       balloon.curveId = cadDrawingBalloon(out, balloon).curveId;
     } catch {

@@ -376,9 +376,7 @@ export function createCadPartPropertiesUI({
       s.revision = controller.revision();
       await refresh();
       renderMode();
-      status(
-        $('part-mode').value === 'definition' ? 'Bauteildefinition übernommen.' : 'Teileigenschaften übernommen.',
-      );
+      status($('part-mode').value === 'definition' ? 'Bauteildefinition übernommen.' : 'Teileigenschaften übernommen.');
     } finally {
       if (active === s) s.applying = false;
     }

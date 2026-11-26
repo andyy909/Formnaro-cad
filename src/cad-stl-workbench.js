@@ -573,7 +573,8 @@ export function openStlWorkbench(
     controls();
   }
   const save = async () => {
-    if (!result?.bytes) throw Error('Kein STEP-Ergebnis vorhanden. Bitte die Reparatur speichern oder erneut konvertieren.');
+    if (!result?.bytes)
+      throw Error('Kein STEP-Ergebnis vorhanden. Bitte die Reparatur speichern oder erneut konvertieren.');
     const saved = await downloadOne(result.bytes, filename('.step'), 'model/step');
     if (!alive()) return;
     status.textContent = saved?.saved

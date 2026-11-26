@@ -1199,7 +1199,10 @@ export function translateText(text, language) {
       [/^Linealursprung ([UVNXYZ])$/, (_, v) => 'Ruler origin ' + v],
       [/^(Breite|Tiefe|Höhe) direkt am Modell$/, (_, v) => EN[v] + ' on model'],
       [/^(Größe|Position|Drehung) ([XYZ])$/, (_, v, a) => EN[v] + ' ' + a],
-      [/^(.* · )(\d+) Platzierung(?:en)?$/, (_, prefix, count) => prefix + count + (count === '1' ? ' placement' : ' placements')],
+      [
+        /^(.* · )(\d+) Platzierung(?:en)?$/,
+        (_, prefix, count) => prefix + count + (count === '1' ? ' placement' : ' placements'),
+      ],
       [/^(.*) hinzufügen$/, (_, v) => 'Add ' + translateText(v, language)],
       [
         /^(Körper|Loch) in der Modellhistorie bearbeiten$/,

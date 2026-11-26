@@ -80,8 +80,7 @@ const viewSchema = {
       type: 'number',
       minimum: 0.001,
       maximum: 1000,
-      description:
-        'Own paper scale of this view. Detail views require it; other views fall back to the sheet scale.',
+      description: 'Own paper scale of this view. Detail views require it; other views fall back to the sheet scale.',
     },
     cutout: {
       type: 'object',
@@ -100,7 +99,10 @@ const viewSchema = {
       required: ['axis', 'offset'],
       properties: { axis: { enum: [0, 1, 2] }, offset: { type: 'number', minimum: -100000, maximum: 100000 } },
     },
-    assemblyViewId: { ...idSchema, description: 'Optional assembly view whose saved part selection this explosion shares.' },
+    assemblyViewId: {
+      ...idSchema,
+      description: 'Optional assembly view whose saved part selection this explosion shares.',
+    },
     explosion: {
       type: 'object',
       additionalProperties: false,
@@ -225,7 +227,10 @@ const sheetSchema = {
     },
     views: { type: 'array', maxItems: 32, items: viewSchema },
     annotations: { type: 'array', maxItems: 1000, items: annotationSchema },
-    partsList: { type: 'object', description: 'Saved drawing parts list. Retain it when editing a sheet with item balloons.' },
+    partsList: {
+      type: 'object',
+      description: 'Saved drawing parts list. Retain it when editing a sheet with item balloons.',
+    },
   },
 };
 export const CAD_DRAWING_COMMAND_SCHEMAS = [
@@ -348,13 +353,13 @@ export async function previewCadDrawingCommands(
           continue;
         }
         const same =
-            old &&
-            old.viewId === annotation.viewId &&
-            JSON.stringify(old.curveIds) === JSON.stringify(annotation.curveIds) &&
-            old.axis === annotation.axis &&
-            JSON.stringify(old.anchors) === JSON.stringify(annotation.anchors) &&
-            (annotation.sourceSignatures === undefined ||
-              JSON.stringify(old.sourceSignatures) === JSON.stringify(annotation.sourceSignatures));
+          old &&
+          old.viewId === annotation.viewId &&
+          JSON.stringify(old.curveIds) === JSON.stringify(annotation.curveIds) &&
+          old.axis === annotation.axis &&
+          JSON.stringify(old.anchors) === JSON.stringify(annotation.anchors) &&
+          (annotation.sourceSignatures === undefined ||
+            JSON.stringify(old.sourceSignatures) === JSON.stringify(annotation.sourceSignatures));
         for (const field of ['curveReferences', 'unresolved']) {
           if (
             annotation[field] !== undefined &&

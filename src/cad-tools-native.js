@@ -146,10 +146,10 @@ export function cadBoreCutter(source, { stage = null, lengthMM } = {}) {
     if (!Number.isFinite(lengthMM) || lengthMM <= 0)
       fail('BORE_SOURCE_LENGTH', 'Offene axiale Enden: Schnittlänge der Schneidquelle angeben.');
     length = lengthMM;
-    from = vector(source.point, 'Bohrquellenpunkt').map((value, i) => value - axis[i] * length / 2);
+    from = vector(source.point, 'Bohrquellenpunkt').map((value, i) => value - (axis[i] * length) / 2);
   }
   if (!(length > 0.05)) fail('BORE_SOURCE_LENGTH', 'Schneidquelle benötigt eine positive Länge.');
-  const center = from.map((value, i) => value + axis[i] * length / 2),
+  const center = from.map((value, i) => value + (axis[i] * length) / 2),
     orientation = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), new Vector3(...axis)),
     transform = new Matrix4().compose(new Vector3(...center), orientation, new Vector3(1, 1, 1)).toArray();
   return {
