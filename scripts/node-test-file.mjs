@@ -2,9 +2,11 @@ import { execFile, spawn } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 
 const windows = process.platform === 'win32';
-const timeoutMs = 120_000;
+const defaultTimeoutMs = 120_000;
 
 export function runNodeTest(file, cwd) {
+  // Validating all 627 native font glyphs can exceed the default on Windows CI.
+  const timeoutMs = windows && file === 'tests/cad-original-font-corpus.test.mjs' ? 180_000 : defaultTimeoutMs;
   const started = performance.now();
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ['--test', '--test-concurrency=1', file], {
