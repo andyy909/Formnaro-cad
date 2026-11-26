@@ -12,7 +12,7 @@
   const readout = document.getElementById('readout'), play = document.getElementById('play');
   const icon = document.getElementById('playIcon'), playLabel = document.getElementById('playLabel');
   const sliders = [...document.querySelectorAll('.axis-range')];
-  const src = i => base + 'atlas-5-frames/' + String(i).padStart(3, '0') + '.webp?v=2';
+  const src = i => base + 'atlas-5-frames/' + String(i).padStart(3, '0') + '.webp?v=3';
   const cache = [];
   const load = seg => { const [s, n] = segs[seg]; for (let i = s; i < s + n; i++) if (!cache[i]) { cache[i] = new Image(); cache[i].src = src(i); } };
   // Bildposition (gebrochen) innerhalb eines Abschnitts für einen Reglerwert v in [-1, 1].
