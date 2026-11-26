@@ -8,6 +8,12 @@
   <link rel="alternate" hreflang="en" href="https://formnaro.de/en/">
   <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="home.css?v=8">
+  <script async src="https://cloud.umami.is/script.js" crossorigin="anonymous" referrerpolicy="no-referrer"
+          data-website-id="28e63b9a-0cab-43bb-a065-15a43fd99cff"
+          data-domains="formnaro.de,www.formnaro.de"
+          data-exclude-search="true" data-exclude-hash="true"
+          data-do-not-track="true"></script>
+  <script defer src="download-events.js"></script>
 </head>
 <body>
 <header>
@@ -20,7 +26,7 @@
       <a href="entwicklung/">Entwicklung</a>
       <a href="en/" lang="en" hreflang="en">English</a>
     </nav>
-    <a class="btn btn-dl small" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip">Für Windows laden</a>
+    <a class="btn btn-dl small" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip" data-download-event="download-windows">Für Windows laden</a>
   </div>
 </header>
 
@@ -31,11 +37,11 @@
         <h1 id="title">3D-CAD für deine Werkstatt.</h1>
         <p class="lead">Konstruiere Bauteile, repariere Netze und baue Baugruppen, die sich wirklich bewegen. Formnaro läuft lokal unter Windows, und zum Modellieren brauchst du kein Internet.</p>
         <div class="download-box">
-          <a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip">Formnaro 0.150.0-r2 für Windows laden</a>
+          <a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip" data-download-event="download-windows">Formnaro 0.150.0-r2 für Windows laden</a>
           <p class="dl-meta">Windows x64, portables ZIP mit ca. 742 MB. Vollständig entpacken und „Formnaro starten“ öffnen.</p>
         </div>
         <div class="download-box">
-          <a class="btn ghost" href="https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk">Formnaro CAD 0.4.0 für Android laden</a>
+          <a class="btn ghost" href="https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk" data-download-event="download-android">Formnaro CAD 0.4.0 für Android laden</a>
           <p class="dl-meta">Für Tablets ab Android 10, APK mit ca. 19 MB. <a href="https://github.com/andyy909/Formnaro-Android/releases/tag/v0.4.0">Versionshinweise</a></p>
         </div>
         <ul class="facts">
@@ -43,7 +49,7 @@
           <li>Kein Konto</li>
           <li>FreeCAD-Kern enthalten</li>
         </ul>
-        <p class="small-links"><a href="entwicklung/#current-release">Was ist neu?</a> · <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip">Windows-Nightly 0.148.0-r5</a></p>
+        <p class="small-links"><a href="entwicklung/#current-release">Was ist neu?</a> · <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip" data-download-event="download-windows-nightly">Windows-Nightly 0.148.0-r5</a></p>
       </div>
       <figure class="hero-art"><img src="cad-hero-lagerbaugruppe.webp?v=2" width="2151" height="793" alt="In Formnaro erstellte Explosionsansicht einer Lagerbaugruppe mit Getriebe" fetchpriority="high"></figure>
     </div>
@@ -66,7 +72,7 @@
             <button class="btn play-all" id="play" type="button"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path id="playIcon" d="M3 1.5v11l9-5.5z" fill="currentColor"/></svg><span id="playLabel">Alle Achsen vorführen</span></button>
             <button class="btn ghost" id="home" type="button">Grundstellung</button>
           </div>
-          <p class="rig-note">144 Bauteile, 78 Gelenke. Die Wiege treibt das Ritzel im Verhältnis 48:20 mit. Die Aufnahme aus Formnaro zeigt jeweils eine Achse; beim Ziehen eines Reglers fahren die anderen in die Grundstellung. <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad">Modell laden</a></p>
+          <p class="rig-note">144 Bauteile, 78 Gelenke. Die Wiege treibt das Ritzel im Verhältnis 48:20 mit. Die Aufnahme aus Formnaro zeigt jeweils eine Achse; beim Ziehen eines Reglers fahren die anderen in die Grundstellung. <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad" data-download-event="download-example-model">Modell laden</a></p>
         </div>
       </div>
       <div class="rig" role="group" aria-label="Interaktive Vorschau der Portalfräse ATLAS-5">
@@ -116,7 +122,7 @@
             <li>Verschieben, Größe, Drehen direkt am Modell</li>
             <li>Ideal für 3D-Druck-Einsteiger</li>
           </ul>
-          <a id="m-link" href="modelle/lagerhalter.ocad">Beispiel laden: Lagerhalter (.ocad)</a>
+          <a id="m-link" href="modelle/lagerhalter.ocad" data-download-event="download-example-model">Beispiel laden: Lagerhalter (.ocad)</a>
         </div>
       </div>
     </div>
@@ -204,7 +210,7 @@
         <div><dt>Kosten</dt><dd>Kostenlos. <a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Spenden per PayPal</a> helfen bei der Entwicklung.</dd></div>
       </dl>
       <div class="closing">
-        <a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip">Für Windows laden</a>
+        <a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip" data-download-event="download-windows">Für Windows laden</a>
         <a href="https://github.com/andyy909/Formnaro-cad/blob/main/README.de.md#schnell-starten">Erste Schritte</a>
         <a href="entwicklung/">Versionsverlauf</a>
       </div>
@@ -221,6 +227,7 @@
     <a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Mit PayPal unterstützen</a>
     <a href="en/" lang="en" hreflang="en">English</a>
     <a href="impressum/">Impressum</a>
+    <a href="impressum/#webanalyse">Datenschutz zur Webanalyse</a>
   </div>
 </footer>
 

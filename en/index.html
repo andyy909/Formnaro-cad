@@ -8,6 +8,12 @@
   <link rel="alternate" hreflang="de" href="https://formnaro.de/">
   <link rel="preload" href="../fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../home.css?v=8">
+  <script async src="https://cloud.umami.is/script.js" crossorigin="anonymous" referrerpolicy="no-referrer"
+          data-website-id="28e63b9a-0cab-43bb-a065-15a43fd99cff"
+          data-domains="formnaro.de,www.formnaro.de"
+          data-exclude-search="true" data-exclude-hash="true"
+          data-do-not-track="true"></script>
+  <script defer src="../download-events.js"></script>
 </head>
 <body>
 <header>
@@ -20,7 +26,7 @@
       <a href="development/">Development</a>
       <a href="../" lang="de" hreflang="de">Deutsch</a>
     </nav>
-    <a class="btn btn-dl small" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip">Download for Windows</a>
+    <a class="btn btn-dl small" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip" data-download-event="download-windows">Download for Windows</a>
   </div>
 </header>
 
@@ -31,11 +37,11 @@
         <h1 id="title">3D CAD for your workshop.</h1>
         <p class="lead">Design parts, repair meshes and build assemblies that actually move. Formnaro runs locally on Windows, and you don’t need an internet connection to model.</p>
         <div class="download-box">
-          <a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip">Download Formnaro 0.150.0-r2 for Windows</a>
+          <a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip" data-download-event="download-windows">Download Formnaro 0.150.0-r2 for Windows</a>
           <p class="dl-meta">Windows x64, portable ZIP of about 742 MB. Extract the entire ZIP and open “Formnaro starten”.</p>
         </div>
         <div class="download-box">
-          <a class="btn ghost" href="https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk">Download Formnaro CAD 0.4.0 for Android</a>
+          <a class="btn ghost" href="https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk" data-download-event="download-android">Download Formnaro CAD 0.4.0 for Android</a>
           <p class="dl-meta">For tablets running Android 10 or later, approximately 19 MB. <a href="https://github.com/andyy909/Formnaro-Android/releases/tag/v0.4.0">Release notes</a></p>
         </div>
         <ul class="facts">
@@ -43,7 +49,7 @@
           <li>No account</li>
           <li>FreeCAD kernel included</li>
         </ul>
-        <p class="small-links"><a href="development/#current-release">What’s new?</a> · <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip">Windows Nightly 0.148.0-r5</a></p>
+        <p class="small-links"><a href="development/#current-release">What’s new?</a> · <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip" data-download-event="download-windows-nightly">Windows Nightly 0.148.0-r5</a></p>
       </div>
       <figure class="hero-art"><img src="../cad-hero-lagerbaugruppe.webp?v=2" width="2151" height="793" alt="Exploded view of a bearing assembly with gears, created in Formnaro" fetchpriority="high"></figure>
     </div>
@@ -66,7 +72,7 @@
             <button class="btn play-all" id="play" type="button"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path id="playIcon" d="M3 1.5v11l9-5.5z" fill="currentColor"/></svg><span id="playLabel">Run all axes</span></button>
             <button class="btn ghost" id="home" type="button">Home position</button>
           </div>
-          <p class="rig-note">144 parts, 78 joints. The cradle drives the pinion through a 48:20 coupling. The Formnaro recording shows one axis at a time; when you drag a slider, the others return to home. <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad">Download the model</a></p>
+          <p class="rig-note">144 parts, 78 joints. The cradle drives the pinion through a 48:20 coupling. The Formnaro recording shows one axis at a time; when you drag a slider, the others return to home. <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.120.0-r4/atlas-5.ocad" data-download-event="download-example-model">Download the model</a></p>
         </div>
       </div>
       <div class="rig" role="group" aria-label="Interactive preview of the ATLAS-5 gantry mill">
@@ -116,7 +122,7 @@
             <li>Move, resize and rotate right on the model</li>
             <li>A good start for 3D printing</li>
           </ul>
-          <a id="m-link" href="../modelle/lagerhalter.ocad">Download example: bearing bracket (.ocad)</a>
+          <a id="m-link" href="../modelle/lagerhalter.ocad" data-download-event="download-example-model">Download example: bearing bracket (.ocad)</a>
         </div>
       </div>
     </div>
@@ -204,7 +210,7 @@
         <div><dt>Cost</dt><dd>Free. <a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Donations via PayPal</a> support development.</dd></div>
       </dl>
       <div class="closing">
-        <a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip">Download for Windows</a>
+        <a class="btn btn-dl" href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip" data-download-event="download-windows">Download for Windows</a>
         <a href="https://github.com/andyy909/Formnaro-cad/blob/main/README.md#quick-start">Getting started</a>
         <a href="development/">Release notes</a>
       </div>
@@ -221,6 +227,7 @@
     <a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Support via PayPal</a>
     <a href="../" lang="de" hreflang="de">Deutsch</a>
     <a href="legal-notice/">Legal notice</a>
+    <a href="legal-notice/#web-analytics">Analytics privacy</a>
   </div>
 </footer>
 
