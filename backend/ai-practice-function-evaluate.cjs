@@ -1,4 +1,4 @@
-const near=(a,b,t=.03)=>Number.isFinite(a)&&Math.abs(a-b)<=t,vec=(a,b,t)=>Array.isArray(a)&&a.length===b.length&&a.every((v,i)=>near(v,b[i],t));
+const near=(a,b,t=.03)=>Number.isFinite(a)&&Math.abs(a-b)<=t,vec=(a,b,t)=>Array.isArray(a)&&a.length===b.length&&a.every((v,i)=>near(v,b[i],t)),same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const stableJSON=v=>JSON.stringify(v,(_key,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.keys(x).sort().map(k=>[k,x[k]])):x);
 const nodeEqual=(a,b)=>!!a&&!!b&&stableJSON({...a,hidden:!!a.hidden,locked:!!a.locked})===stableJSON({...b,hidden:!!b.hidden,locked:!!b.locked});
 const nodesEqualCanonical=(a,b)=>a.length===b.length&&a.every((n,i)=>nodeEqual(n,b[i]));
@@ -6,7 +6,7 @@ async function evaluateFunction(task,before,after,lookup,replay){
  const num=task.number,checks=[],check=(name,passed,actual)=>checks.push({name,passed:!!passed,...(actual===undefined?{}:{actual})});
  const fixed=before.project.nodes.find(n=>n.name==='Unbeteiligtes Teil'),original=before.project.nodes.find(n=>n.name==='Aufgabenteil'),target=original?.id;
  check('Schutzteil vollständig erhalten',!!fixed&&nodeEqual(fixed,after.project.nodes.find(n=>n.id===fixed.id)));
- const roots=after.scene.objects.filter(o=>!o.target.path.length&&o.id!==fixed?.id&&!o.suppressed),body=roots.find(o=>o.id===target)??roots[0];
+ const roots=after.scene.objects.filter(o=>!o.target.path.length&&o.id!==fixed?.id&&!o.suppressed),body=roots.find(o=>o.id===target)??roots[0],bounds=body?.worldBounds;
  const trace=(replay?.steps??[]).map(s=>s.observation).filter(Boolean),nodesEqual=()=>nodesEqualCanonical(before.project.nodes,after.project.nodes),size=(n,s)=>vec(n?.worldBounds?.size,s),center=(n,p)=>vec(n?.worldBounds?.center,p),vol=(n,v)=>near(n?.volume,v,.15),native=()=>roots.length>0&&roots.every(o=>o.kind==='cad'&&o.solid&&o.solids===1);
  check('Tatsächlicher sichtbarer Ablauf abgeschlossen',replay?.ok===true&&trace.length>0);
  if([1,2,3,4,5,6,7,8,9,10,12,13,15,16,18,20,29,30].includes(num))check('Gültige native Körper',native());

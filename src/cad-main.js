@@ -19,6 +19,7 @@ import {createCadAIFeatureUI} from './cad-ai-feature-ui.js';
 import {createCadReferenceRebindUI} from './cad-reference-rebind-ui.js';
 import {captureCadAIFeatureScope} from './cad-ai-feature-automation.js';
 import {reviewPhotoSet,reviewStoredPhotoSet} from './cad-photo-multiview-review.js';
+import {photoProfileCommand} from './cad-photo-profile.js';
 import {createCadProgramAssistant} from './cad-program-assistant.js';
 import {captureCadPracticeCopy} from './cad-practice-project-copy.js';
 import {measurePracticePhoto,practiceFileObject} from './cad-practice-files.js';
@@ -28,11 +29,11 @@ import {createFnpackRecovery,PACK_RECOVERY_KIND} from './cad-fnpack-recovery.js'
 import {createThemeBinding} from './theme.js';
 import {createCadRecoveryEncoder} from './cad-recovery-encoder.js';
 import {runCadAIScript} from './cad-ai-sandbox.js';
-import {isGeometryRef} from './cad-geometry-ref.js';
+import {hasGeometryRefs,isGeometryRef} from './cad-geometry-ref.js';
 import './cad-assembly-display.css';
 import {createCadAssemblyDisplay} from './cad-assembly-display.js';
 import {createCadJointsUI} from './cad-joints-ui.js';
-import {formatUiNumber,preserveUiNumber} from './ui-numbers.js';
+import {preserveUiNumber} from './ui-numbers.js';
 import {createCadThicknessUI} from './cad-thickness-ui.js';
 import './mesh-import.css';
 import {combinedPlacementBounds,modelPlacementDelta} from './model-placement.js';
@@ -52,7 +53,7 @@ import {createCadMeshInspectorUI} from './cad-mesh-inspector-ui.js';
 
 import {meshCadInput} from './cad-mesh-to-cad-data.js';
 
-import {flags} from './organization.js';
+import {ancestors,flags} from './organization.js';
 
 import {createCadMeshSelectionUI} from './cad-mesh-selection-ui.js';
 
@@ -64,7 +65,7 @@ import {createCadMeshExtraTools} from './cad-mesh-extra-tools.js';
 
 import {meshTextPaths} from './mesh-contours.js';
 
-import {commonBounds,meshMagnetTransform} from './common-tool-operations.js';
+import {commonFrame,commonBounds,meshMagnetTransform} from './common-tool-operations.js';
 
 import {aiFeedback} from './ai-feedback.js';
 
@@ -96,17 +97,20 @@ import {createCadAutomationAccess} from './cad-automation-access.js';
 
 import {createCadAIUI} from './cad-ai-ui.js';
 
-import {cadProjectNeedsPackage,createCadProject,parseCadProject} from './cad-project.js';
+import {cadProjectNeedsPackage,createCadProject,createCadWorkspaceSerializer,parseCadProject} from './cad-project.js';
 
 import {exchangeMainFile} from './exchange-formats.js';
 
 import {createCadProjectsUI} from './cad-projects-ui.js';
+import {createCadTabletPartUI} from './cad-tablet-part-ui.js';
 
 import {createCadIsolation,cadPermanentlyVisible} from './cad-isolation.js';
 
 import {renderCadProjectThumbnail} from './cad-project-thumbnail.js';
 
 import { createWorkspaceIO } from './app/workspace-io.js';
+import {createTabletViewPresets} from './tablet-view-presets.js';
+import {createTabletProjectNotes,renderTabletProjectNote} from './tablet-project-notes.js';
 
 import {createFunctionPlugins} from './cad-function-plugins.js';
 
@@ -145,6 +149,7 @@ import {createLocalization} from './i18n.js';
 
 import {createCadRecovery} from './cad-recovery.js';
 
+import {createCadTabletSketchUI} from './cad-tablet-sketch-ui.js';
 import {createCadSketchUI} from './cad-sketch-ui.js';
 import {createCadModelingUI} from './cad-modeling-ui.js';
 import {createAdvancedFreeCADUI} from './cad-freecad-advanced-ui.js';
@@ -178,7 +183,7 @@ const packFiles=createFnpackFiles(window.offlinecadDesktop);
 const recoveryEncoder=window.offlinecadDesktop?.changeRecoveryData?createCadRecoveryEncoder():null;
 const recovery=createFnpackRecovery({desktop:window.offlinecadDesktop,storage,files:packFiles,legacy:createCadRecovery(storage),getProject:()=>controller.readSnapshot(),preferPack:()=>preferredProjectFormat==='fnpack'||cadProjectNeedsPackage(controller.readSnapshot())});
 
-let partPropertiesUI,jointsUI,sketchUI,modelingUI,advancedFreeCADUI,drawingUI,projectParametersUI,meshTools,meshExtras,meshCopyUI,meshSelectionUI,meshInspectorUI,meshRepairUI,meshReduceUI,meshRemeshUI,meshSmoothUI,meshSculptUI,meshEraseFillUI,meshMakeSolidUI,meshHollowUI,meshFeaturesUI,meshHoleFillUI,workplaneUI,modalSequence=0;
+let tabletPartUI,tabletSketchUI,partPropertiesUI,jointsUI,sketchUI,modelingUI,advancedFreeCADUI,drawingUI,projectParametersUI,meshTools,meshExtras,meshCopyUI,meshSelectionUI,meshInspectorUI,meshRepairUI,meshReduceUI,meshRemeshUI,meshSmoothUI,meshSculptUI,meshEraseFillUI,meshMakeSolidUI,meshHollowUI,meshFeaturesUI,meshHoleFillUI,workplaneUI,modalSequence=0;
 
 const fontLibrary=createCadFontLibrary(storage);
 
@@ -214,7 +219,7 @@ const progress=document.createElement('button');progress.id='cad-cancel';progres
 const {toast,safe,modal,download,setBusy}=createUiHelpers({$,t,errorReporter,beforeModal:()=>{cornerSession?.finish();freecadImportReader?.dispose();freecadImportReader=null;meshHoleFillUI?.close();meshRepairUI?.close();meshReduceUI?.close();meshRemeshUI?.close();meshSmoothUI?.close();meshSculptUI?.close();meshEraseFillUI?.close();meshMakeSolidUI?.close();meshHollowUI?.close();meshFeaturesUI?.close();meshInspectorUI?.cancel();meshSelectionUI?.cancel();modalSequence++;},getBusy:()=>busy,setBusyState:value=>{busy=value;},updateState,progress,document,window});
 
 const assemblyDisplay=createCadAssemblyDisplay();let assemblyOpening=false,assemblyScope=null,assemblyKnownIds=new Set();
-const controller=createCadController({canWrite:()=>!partPropertiesUI?.exploded(),resolveGeometry:packFiles.resolve,getDisplayIds:candidate=>assemblyDisplay.displayIds(candidate,assemblyOpening?candidate:controller.readSnapshot()),getProgramResources:()=>({fonts:fontLibrary.list(),formPackages:plugins.filter(p=>p.enabled).map(p=>p.manifest),functions:functionPlugins.list().filter(p=>p.enabled).map(p=>p.manifest)}),onError:(error,context)=>errorReporter.report(error,context),getFonts:fontLibrary.resources,createWorker:()=>new Worker(new URL('./cad-worker.js',import.meta.url),{type:'module'}),displayQuality:quality.get().display,onBusy:setBusy,onBuildPreview:showBuildPreview,onBuildPreviewFailure:({ticket})=>{if(activePreview?.aiInProgress&&activePreview.buildPreviewTicket===ticket)clearPreview();},onOperationProgress:value=>{const id=externalAutomation?.currentRequestId();if(id!==null&&id!==undefined)window.offlinecadDesktop?.automationProgress?.({id,...value});},onProgress:value=>{progress.textContent='Berechnung abbrechen · '+Math.round(value*100)+' %';},reuseTranslations:true,prepareCommit:async (candidate,{preparedView,quality:preparedQuality}={})=>{const displayQuality=JSON.stringify(quality.get().display),prepared=preparedView&&JSON.stringify(preparedQuality)===displayQuality,display=prepared?preparedView:await controller.display(candidate);const scene=prepared?preparedView.scene:await controller.describe(candidate);view.validateDisplay(display,candidate);preparedDisplay={display,quality:displayQuality,scene};return {meshes:display.meshes,scene,revision:scene.revision};},onChange:(_next,_state,hints)=>{if(cornerSession&&!cornerSession.ownsRevision())cornerSession.finish({abort:false});window.offlinecadDesktop?.automationState?.({revision:_state.revision});const scope=controller.projectScope();if(scope!==assemblyScope){if(!assemblyOpening)assemblyDisplay.restore(_next.workspace?.loadSet??null,_next);assemblyScope=scope;}else{const added=_next.nodes.filter(n=>!assemblyKnownIds.has(n.id)).map(n=>n.id);if(added.length&&assemblyDisplay.ids(_next)!==null)assemblyDisplay.load(added,_next);}assemblyDisplay.sync(_next);assemblyKnownIds=new Set(_next.nodes.map(n=>n.id));if(hints?.drawingsOnly&&nativeScene){nativeScene={...nativeScene,revision:controller.revision(),projectVersion:_next.version};lastDisplayed=controller.revision();preparedDisplay=null;if(sourceDisplayKey)sourceDisplayKey=sourceViewKey();}clearPreview();partPropertiesUI?.revisionChanged();featureUI?.revisionChanged();referenceRebindUI?.revisionChanged();aiUI?.chat.refreshFeatureReferences();jointsUI?.revisionChanged();drawingUI?.revisionChanged();projectParametersUI?.revisionChanged();meshHoleFillUI?.revisionChanged();meshRepairUI?.revisionChanged();meshReduceUI?.revisionChanged();meshRemeshUI?.revisionChanged();meshSmoothUI?.revisionChanged();meshSculptUI?.revisionChanged();meshEraseFillUI?.revisionChanged();meshMakeSolidUI?.revisionChanged();meshHollowUI?.revisionChanged();meshFeaturesUI?.revisionChanged();meshInspectorUI?.revisionChanged();meshSelectionUI?.revisionChanged();meshCopyUI?.revisionChanged();tools?.revisionChanged();inspectionUI?.revisionChanged();thicknessUI?.revisionChanged();meshTools?.revisionChanged();meshExtras?.revisionChanged();workplaneUI?.revisionChanged();sketchUI?.revisionChanged();modelingUI?.revisionChanged();advancedFreeCADUI?.revisionChanged();functionsUI?.revisionChanged();scheduleRefresh();}});
+const controller=createCadController({canWrite:()=>!partPropertiesUI?.exploded(),resolveGeometry:packFiles.resolve,getDisplayIds:candidate=>assemblyDisplay.displayIds(candidate,assemblyOpening?candidate:controller.readSnapshot()),getProgramResources:()=>({fonts:fontLibrary.list(),formPackages:plugins.filter(p=>p.enabled).map(p=>p.manifest),functions:functionPlugins.list().filter(p=>p.enabled).map(p=>p.manifest)}),onError:(error,context)=>errorReporter.report(error,context),getFonts:fontLibrary.resources,createWorker:()=>new Worker(new URL('./cad-worker.js',import.meta.url),{type:'module'}),displayQuality:quality.get().display,onBusy:setBusy,onBuildPreview:showBuildPreview,onBuildPreviewFailure:({ticket})=>{if(activePreview?.aiInProgress&&activePreview.buildPreviewTicket===ticket)clearPreview();},onOperationProgress:value=>{const id=externalAutomation?.currentRequestId();if(id!==null&&id!==undefined)window.offlinecadDesktop?.automationProgress?.({id,...value});},onProgress:value=>{progress.textContent='Berechnung abbrechen · '+Math.round(value*100)+' %';},reuseTranslations:true,prepareCommit:async (candidate,{preparedView,quality:preparedQuality}={})=>{const displayQuality=JSON.stringify(quality.get().display),prepared=preparedView&&JSON.stringify(preparedQuality)===displayQuality,display=prepared?preparedView:await controller.display(candidate);const scene=prepared?preparedView.scene:await controller.describe(candidate);view.validateDisplay(display,candidate);preparedDisplay={display,quality:displayQuality,scene};return {meshes:display.meshes,scene,revision:scene.revision};},onChange:(_next,_state,hints)=>{if(cornerSession&&!cornerSession.ownsRevision())cornerSession.finish({abort:false});window.offlinecadDesktop?.automationState?.({revision:_state.revision});const scope=controller.projectScope();if(scope!==assemblyScope){if(!assemblyOpening)assemblyDisplay.restore(_next.workspace?.loadSet??null,_next);assemblyScope=scope;}else{const added=_next.nodes.filter(n=>!assemblyKnownIds.has(n.id)).map(n=>n.id);if(added.length&&assemblyDisplay.ids(_next)!==null)assemblyDisplay.load(added,_next);}assemblyDisplay.sync(_next);assemblyKnownIds=new Set(_next.nodes.map(n=>n.id));if(hints?.drawingsOnly&&nativeScene){nativeScene={...nativeScene,revision:controller.revision(),projectVersion:_next.version};lastDisplayed=controller.revision();preparedDisplay=null;if(sourceDisplayKey)sourceDisplayKey=sourceViewKey();}clearPreview();tabletPartUI?.refresh();tabletSketchUI?.refresh();partPropertiesUI?.revisionChanged();featureUI?.revisionChanged();referenceRebindUI?.revisionChanged();aiUI?.chat.refreshFeatureReferences();jointsUI?.revisionChanged();drawingUI?.revisionChanged();projectParametersUI?.revisionChanged();meshHoleFillUI?.revisionChanged();meshRepairUI?.revisionChanged();meshReduceUI?.revisionChanged();meshRemeshUI?.revisionChanged();meshSmoothUI?.revisionChanged();meshSculptUI?.revisionChanged();meshEraseFillUI?.revisionChanged();meshMakeSolidUI?.revisionChanged();meshHollowUI?.revisionChanged();meshFeaturesUI?.revisionChanged();meshInspectorUI?.revisionChanged();meshSelectionUI?.revisionChanged();meshCopyUI?.revisionChanged();tools?.revisionChanged();inspectionUI?.revisionChanged();thicknessUI?.revisionChanged();meshTools?.revisionChanged();meshExtras?.revisionChanged();workplaneUI?.revisionChanged();sketchUI?.revisionChanged();modelingUI?.revisionChanged();advancedFreeCADUI?.revisionChanged();functionsUI?.revisionChanged();scheduleRefresh();}});
 
 let refreshQueued=false;
 
@@ -223,6 +228,8 @@ const {duplicate,copySelection,paste,isPasteDisabled}=createClipboard({controlle
 const { workspace, workspaceSignature, serializeWorkspace, save, saveFromAutomation, openEncoded, openFile, openProject, openWelcomeExample } = createWorkspaceIO({
   window, fetch: (...args) => fetch(...args), $, t, controller, project, getSelection, quality, assemblyDisplay, packFiles,
   readyForFile, confirmProjectChange, cacheWelcomePackageThumbnail, download, toast, updateState,
+  onProjectSaved: (prior, next)=>{if(prior&&next&&prior!==next)tabletNotes.copy(prior,next);},
+  refreshTablet: ()=>{tabletPartUI?.refresh();tabletSketchUI?.refresh();},
   scheduleRefresh, updateIsolation: () => updateIsolation(), setQuality, setPreferences, setMode, select, activeEasyKind,
   // The entry, file actions and autosave all share the same live session.
   runtime: {
@@ -350,7 +357,24 @@ async function refresh(){
 function scheduleRefresh(){if(refreshQueued)return refreshTask;refreshQueued=true;refreshTask=refreshTask.catch(()=>{}).then(()=>{refreshQueued=false;return refresh();});void safe(()=>refreshTask);return refreshTask;}
 
 function assertReferenceRebindIdle(){if(referenceRebindUI?.state())throw Error('Bezugsneuzuordnung zuerst übernehmen oder abbrechen.');}
-async function mutate(fn,label='CAD bearbeiten',{revision=controller.revision()}={}){assertReferenceRebindIdle();if(partPropertiesUI?.editing())throw Error('Teileeigenschaften zuerst übernehmen oder schließen.');if(meshSculptUI?.state())throw Error('Modellierpinsel zuerst übernehmen oder abbrechen.');const draft=controller.snapshot();await fn(draft);const proposal=await controller.preview(undefined,{project:draft,revision,label});const result=controller.apply({previewId:proposal.previewId,revision:proposal.revision});await refreshTask;if(result.warnings?.length)toast(result.warnings.join(' '));return result;}
+function assertProjectOpening(opening){
+  if(opening!==undefined&&opening!==controller.projectScope())throw Error('Am PC ist ein anderes Projekt geöffnet.');
+}
+async function mutate(fn,label='CAD bearbeiten',{revision=controller.revision(),opening}={}){
+  assertReferenceRebindIdle();
+  if(partPropertiesUI?.editing())throw Error('Teileeigenschaften zuerst übernehmen oder schließen.');
+  if(meshSculptUI?.state())throw Error('Modellierpinsel zuerst übernehmen oder abbrechen.');
+  const draft=controller.snapshot();
+  await fn(draft);
+  assertProjectOpening(opening);
+  const proposal=await controller.preview(undefined,{project:draft,revision,label});
+  try {assertProjectOpening(opening);}
+  catch(error){controller.discard(proposal.previewId);throw error;}
+  const result=controller.apply({previewId:proposal.previewId,revision:proposal.revision});
+  await refreshTask;
+  if(result.warnings?.length)toast(result.warnings.join(' '));
+  return result;
+}
 
 async function execute(operation,options={}){assertReferenceRebindIdle();if(partPropertiesUI?.editing())throw Error('Teileeigenschaften zuerst übernehmen oder schließen.');if(meshSculptUI?.state())throw Error('Modellierpinsel zuerst übernehmen oder abbrechen.');const result=await controller.execute(operation,options);await refreshTask;if(result.warnings?.length)toast(result.warnings.join(' '));return result;}
 
@@ -408,17 +432,12 @@ async function resize({target,size,corner,revision}){
 function scalingPending(){return !!cornerSession||scaleApplyPending||view.isScalePending();}
 function dimensions({target,corner,item}){
  const sizes=item.localBounds.size.map((v,k)=>v*Math.hypot(item.transform[k*4],item.transform[k*4+1],item.transform[k*4+2]));
- modal('Eckmaße','<p>Die gegenüberliegende Ecke und der lokale Boden bleiben stehen.</p><div class="input-row">'+sizes.map((value,k)=>'<label>'+['X','Y','Z'][k]+'<input id="corner-size-'+k+'" type="text" inputmode="decimal" value="'+formatUiNumber(value,preferences.language)+'"></label>').join('')+'</div><div class="modal-actions"><button id="corner-apply" class="primary">Übernehmen</button></div>',{modeless:true});
- const revision=controller.revision(),scope=controller.projectScope(),dialog=$('modal'),button=$('corner-apply');
- const inputs=sizes.map((_,k)=>$('corner-size-'+k));
- const inputSize=()=>inputs.map((input,k)=>preserveUiNumber(Number(input.value.trim().replace(',','.')),sizes[k]));
+ const revision=controller.revision(),scope=controller.projectScope();
+ const sizeFor=(axis,value)=>sizes.map((original,k)=>axis===k?preserveUiNumber(value,original):original);
  const equalSize=(left,right)=>left.every((value,k)=>value===right[k]);
- const valid=size=>size.every(value=>Number.isFinite(value)&&value>=.01&&value<=10000);
  const ownsRevision=()=>scope===controller.projectScope()&&revision===controller.revision();
- let sequence=0,timer=null,running=null,latest=null,prepared=null,failure=null,exactShown=false,closed=false;
- const dialogSequence=modalSequence;
- dialog.classList.add('cad-corner-dialog');
- const current=()=>!closed&&cornerSession===session&&dialog.open&&dialogSequence===modalSequence&&ownsRevision();
+ let sequence=0,timer=null,running=null,latest=null,prepared=null,failure=null,exactShown=false,closed=false,applying=false;
+ const current=()=>!closed&&cornerSession===session&&ownsRevision();
  function discardPrepared(){
   if(exactShown&&ownsRevision())view.clearPreview();
   exactShown=false;
@@ -453,34 +472,27 @@ function dimensions({target,corner,item}){
  function requestSize(size){
   sequence++;clearTimeout(timer);timer=null;latest=null;failure=null;requestedSize=null;
   discardPrepared();
-  if(!current()||!valid(size)||equalSize(size,sizes)){view.clearCornerPreview();return;}
+  if(!current()||!size||equalSize(size,sizes)){view.clearCornerPreview();return;}
   requestedSize=size;
   view.previewCornerSize({item,corner,size});
   latest={size,sequence};
   timer=setTimeout(()=>{timer=null;startLatest();},150);
  }
- function finish({abort=true,close=true}={}){
+ function finish({abort=true}={}){
   if(closed)return;
   closed=true;sequence++;clearTimeout(timer);timer=null;latest=null;
   if(cornerSession===session)cornerSession=null;
-  discardPrepared();view.clearCornerPreview();
+  discardPrepared();view.setCornerDimensions(null);view.clearCornerPreview();
   if(abort&&running&&ownsRevision()&&controller.cancel()){lastDisplayed=null;preparedDisplay=null;void safe(scheduleRefresh);}
-  dialog.classList.remove('cad-corner-dialog');
-  if(close&&dialog.open&&dialogSequence===modalSequence)dialog.close();
   updateState();
  }
- const session={finish,ownsRevision};cornerSession=session;
- dialog.addEventListener('close',()=>finish({close:false}),{once:true});
- updateState();
- button.onclick=()=>safe(async()=>{
-  if(button.disabled)return;
-  const size=inputSize();
-  if(equalSize(size,sizes)){dialog.close();return;}
-  if(!valid(size))throw Error('Ungültige Eckmaße.');
-  if(!current())throw Error('Das Projekt wurde inzwischen geändert.');
+ const apply=(axis,value)=>safe(async()=>{
+  if(applying||!current())return;
+  const size=sizeFor(axis,value);
+  if(equalSize(size,sizes)){finish();return;}
   if(!requestedSize||!equalSize(size,requestedSize)||failure)requestSize(size);
   clearTimeout(timer);timer=null;startLatest();
-  button.disabled=true;for(const input of inputs)input.disabled=true;
+  applying=true;
   try{
    while(running)await running;
    if(!current())return;
@@ -490,12 +502,14 @@ function dimensions({target,corner,item}){
    scaleApplyPending=true;
    try{await applyProposal(proposal);}finally{scaleApplyPending=false;}
    finish({abort:false});
-  }finally{button.disabled=false;for(const input of inputs)input.disabled=false;}
+  }finally{applying=false;}
  });
- for(const input of inputs){
-  input.oninput=()=>requestSize(inputSize());
-  input.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();button.click();}};
- }
+ const session={finish,ownsRevision};cornerSession=session;
+ view.setCornerDimensions({item,sizes,controls:{
+  preview:(axis,value)=>{if(current()&&!applying)requestSize(value===null?null:sizeFor(axis,value));},
+  apply,cancel:()=>finish(),isApplying:()=>applying,
+ }});
+ updateState();
 }
 
 const view=createCadRenderer({host:$('canvas-host'),viewport:$('viewport'),getProject:project,getScene,getSelection,select,canEdit:()=>!!window.__cadReady&&!cornerSession&&!scaleApplyPending&&(!partPropertiesUI?.editing()||partPropertiesUI?.picking())&&!partPropertiesUI?.exploded()&&(!referenceRebindUI?.state()||referenceRebindUI.state().picking)&&!jointsUI?.state()&&!busy&&nativeSceneScope===controller.projectScope()&&nativeScene?.revision===controller.revision()&&(!selection.some(t=>t.path.length)||sourceDisplayKey===sourceViewKey()),onGesture:gesture,onSnapGesture:previewGearGesture,onResize:resize,onDimensions:dimensions,onError:error=>safe(()=>{throw error;}),getPreferences:()=>preferences,onViewUpdate:()=>{alignmentMarks?.draw();tools?.draw?.();marksView?.draw();}});
@@ -509,7 +523,7 @@ const isolationButton=document.createElement('button');isolationButton.dataset.a
 const { updateIsolation, endIsolation, isolateSelection } = createIsolation({
   isolation, isolationNotice, view, project, activeEasyKind, readyForFile, getSelection, escape,
   getLiveSelection: () => selection, getScene,
-  refreshMarkerVisibility: () => marksView?.visibilityChanged(), refreshUi: () => ui?.refresh(),
+  refreshMarkerVisibility: () => {marksView?.visibilityChanged();tabletSketchUI?.refresh();}, refreshUi: () => ui?.refresh(),
 });
 
 function framePracticeConstruction(rootId){
@@ -543,7 +557,7 @@ function updateSaveState(signature=workspaceSignature()){
 
 if($('gear-snap'))$('gear-snap').onchange=()=>safe(()=>setPreferences({...preferences,gearSnap:$('gear-snap').checked}));
 if($('gear-snap-angle'))$('gear-snap-angle').onchange=()=>safe(()=>setPreferences({...preferences,gearSnapAngle:Number($('gear-snap-angle').value)}));
-function updateState(){const attachmentNode=selection.length===1&&!selection[0].path.length?project().nodes.find(n=>n.id===selection[0].rootId):null;for(const b of document.querySelectorAll('[data-action=sketch-on-part]'))b.disabled=busy||!attachmentNode||!['cad','mesh'].includes(attachmentNode.kind)||flags(attachmentNode,project()).hidden||flags(attachmentNode,project()).locked||!view.allows(attachmentNode.id)||(attachmentNode.kind==='cad'?!attachmentNode.solid:attachmentNode.meshRole==='hole');const centerButton=document.querySelector('[data-action="center"]');if(centerButton)centerButton.disabled=busy||!selection.length||selection.some(target=>{try{const c=context(target);return c.locked||c.hidden||!domainAllowsId(target.rootId);}catch{return true;}});easyRepair?.schedule();const repairButton=document.querySelector('[data-action="mesh-repair"]'),repairSource=selection.length===1&&!selection[0].path.length?project().nodes.find(n=>n.id===selection[0].rootId):null;if(repairButton)repairButton.disabled=busy||!repairSource||repairSource.kind!=='mesh'||flags(repairSource,project()).hidden||flags(repairSource,project()).locked||!view.allows(repairSource.id);const holeButton=document.querySelector('[data-action="mesh-close-hole"]');if(holeButton)holeButton.disabled=repairButton?.disabled??true;const p=project(),state=controller.state(),inspectionButton=document.querySelector('[data-action="mesh-inspector"]'),inspectionNode=selection.length===1&&!selection[0].path.length?p.nodes.find(n=>n.id===selection[0].rootId):null;if(inspectionButton)inspectionButton.disabled=busy||!inspectionNode||inspectionNode.kind!=='mesh'||flags(inspectionNode,p).hidden||!view.allows(inspectionNode.id);const surfaceButton=document.querySelector('[data-action="mesh-select"]'),surfaceSource=selection.length===1&&!selection[0].path.length?p.nodes.find(n=>n.id===selection[0].rootId):null;if(surfaceButton){const allowed=!!surfaceSource&&surfaceSource.kind==='mesh'&&!flags(surfaceSource,p).hidden&&!flags(surfaceSource,p).locked&&view.allows(surfaceSource.id);surfaceButton.disabled=busy||!allowed;surfaceButton.title=allowed?'Dreiecke, Oberflächen und Öffnungsränder auswählen':'Ein sichtbares, entsperrtes vollständiges Netzteil auswählen';}const reduceButton=document.querySelector('[data-action="mesh-reduce"]');if(reduceButton)reduceButton.disabled=busy||!surfaceSource||surfaceSource.kind!=='mesh'||flags(surfaceSource,p).hidden||flags(surfaceSource,p).locked||!view.allows(surfaceSource.id);const largeReduceButton=document.querySelector('[data-action="mesh-large-reduce"]');if(largeReduceButton)largeReduceButton.disabled=reduceButton?.disabled??true;const curvedButton=document.querySelector('[data-action="mesh-curved-reduce"]');if(curvedButton)curvedButton.disabled=reduceButton?.disabled??true;const remeshButton=document.querySelector('[data-action="mesh-remesh"]');if(remeshButton)remeshButton.disabled=reduceButton?.disabled??true;const smoothButton=document.querySelector('[data-action="mesh-smooth"]');if(smoothButton)smoothButton.disabled=reduceButton?.disabled??true;const sculptButton=document.querySelector('[data-action="mesh-sculpt"]');if(sculptButton)sculptButton.disabled=reduceButton?.disabled??true;const eraseFillButton=document.querySelector('[data-action="mesh-erase-fill"]');if(eraseFillButton)eraseFillButton.disabled=reduceButton?.disabled??true;const makeSolidButton=document.querySelector('[data-action="mesh-make-solid"]');if(makeSolidButton)makeSolidButton.disabled=reduceButton?.disabled??true;const hollowButton=document.querySelector('[data-action="mesh-hollow"]');if(hollowButton)hollowButton.disabled=reduceButton?.disabled??true;const featuresButton=document.querySelector('[data-action="mesh-features"]');if(featuresButton)featuresButton.disabled=(reduceButton?.disabled??true)||surfaceSource?.meshRole==='hole';const meshCadButton=document.querySelector('[data-action="mesh-to-cad"]');if(meshCadButton){const n=selection.length===1&&!selection[0].path.length?p.nodes.find(n=>n.id===selection[0].rootId):null;meshCadButton.disabled=busy||!hasLocalStlConverter()||!n||n.kind!=='mesh'||n.meshRole==='hole'||flags(n,p).hidden||flags(n,p).locked;}const copyButton=document.querySelector('[data-action="cad-to-mesh"]'),copySource=selection.length===1&&!selection[0].path.length?p.nodes.find(n=>n.id===selection[0].rootId):null;if(copyButton)copyButton.disabled=busy||!copySource||copySource.kind!=='cad'||!copySource.solid||!!copySource.suppressed||flags(copySource,p).hidden||flags(copySource,p).locked;updateEmptyHint();workbenchUI?.refreshDomain();contextMenuUI?.refresh();const sourceEdit=$('easy-edit-source'),sourceNode=selection.length===1&&!selection[0].path.length?p.nodes.find(node=>node.id===selection[0].rootId):null;if(sourceEdit){sourceEdit.hidden=!sourceNode||sourceNode.kind!=='mesh'||!sourceNode.meshSource;sourceEdit.disabled=busy||!!sourceNode&&flags(sourceNode,p).locked;}updateSaveState();document.querySelector('[data-action="undo"]').disabled=busy||!state.undo;document.querySelector('[data-action="redo"]').disabled=busy||!state.redo;document.querySelector('[data-action="paste"]').disabled=isPasteDisabled(busy);$('magnet-mode').disabled=busy||selection.length!==1||selection[0]?.path.length||!p.nodes.some(node=>node.id===selection[0]?.rootId&&['cad','mesh'].includes(node.kind));const chosen=selection.length===1&&!selection[0].path.length?nativeScene?.objects.find(n=>n.id===selection[0].rootId&&!n.target.path.length):null;for(const action of ['reference-place','drill','split','extract'])document.querySelectorAll('[data-action="'+action+'"]').forEach(button=>{button.disabled=busy||!chosen||(chosen.kind!=='cad'&&chosen.kind!=='mesh')||chosen.hidden||chosen.locked||action==='drill'&&(chosen.kind==='cad'?!chosen.solid:chosen.meshRole==='hole');});const modelingNodes=selection.filter(v=>!v.path.length).map(v=>p.nodes.find(n=>n.id===v.rootId)),modelingValid=selection.length===modelingNodes.length&&modelingNodes.length>0&&modelingNodes.every(n=>n&&n.kind==='cad'&&n.solid&&!flags(n,p).hidden&&!flags(n,p).locked&&view.allows(n.id));for(const action of ['cad-contour','cad-face-offset','cad-shell','cad-loft','cad-sweep'])for(const b of document.querySelectorAll('[data-action="'+action+'"]'))b.disabled=busy||!modelingValid||(action==='cad-loft'?(modelingNodes.length<2||modelingNodes.length>8):modelingNodes.length!==1)||['cad-loft','cad-sweep'].includes(action)&&modelingNodes.some(n=>n.source!=='native'||n.recipe?.type!=='sketch');for(const action of ['cad-draft','cad-defeature','cad-revolution','cad-helix'])for(const b of document.querySelectorAll('[data-action="'+action+'"]'))b.disabled=busy||action!=='cad-helix'&&(!modelingValid||modelingNodes.length!==1);for(const action of ['cad-surface-fill','cad-surface-transition','cad-surface-sew','cad-surface-relief'])for(const b of document.querySelectorAll('[data-action="'+action+'"]'))b.disabled=busy||action!=='cad-surface-fill'&&(!modelingValid||modelingNodes.length>8);for(const b of document.querySelectorAll('[data-action=cad-edit-modeling]'))b.disabled=busy||!modelingValid||modelingNodes.length!==1||modelingNodes[0].source!=='modeling'||!['face-offset','shell','sweep','loft'].includes(modelingNodes[0].modeling?.kind);let contourSource=null;try{if(selection.length===1)contourSource=context(selection[0],p);}catch{ /* Leave the optional contour source unset when the selection cannot be resolved. */ }for(const b of document.querySelectorAll('[data-action=cad-contour]'))b.disabled=busy||!contourSource||contourSource.node.kind!=='cad'||!contourSource.node.solid||contourSource.locked||contourSource.hidden||contourSource.chain.some(node=>node.suppressed)||!view.allows(contourSource.root.id);for(const b of document.querySelectorAll('[data-action=linked-contours]'))b.disabled=busy;}
+function updateState(){const attachmentNode=selection.length===1&&!selection[0].path.length?project().nodes.find(n=>n.id===selection[0].rootId):null;for(const b of document.querySelectorAll('[data-action=sketch-on-part]'))b.disabled=busy||!attachmentNode||!['cad','mesh'].includes(attachmentNode.kind)||flags(attachmentNode,project()).hidden||flags(attachmentNode,project()).locked||!view.allows(attachmentNode.id)||(attachmentNode.kind==='cad'?!attachmentNode.solid:attachmentNode.meshRole==='hole');const centerButton=document.querySelector('[data-action="center"]');if(centerButton)centerButton.disabled=busy||!selection.length||selection.some(target=>{try{const c=context(target);return c.locked||c.hidden||!domainAllowsId(target.rootId);}catch{return true;}});easyRepair?.schedule();const repairButton=document.querySelector('[data-action="mesh-repair"]'),repairSource=selection.length===1&&!selection[0].path.length?project().nodes.find(n=>n.id===selection[0].rootId):null;if(repairButton)repairButton.disabled=busy||!repairSource||repairSource.kind!=='mesh'||flags(repairSource,project()).hidden||flags(repairSource,project()).locked||!view.allows(repairSource.id);const holeButton=document.querySelector('[data-action="mesh-close-hole"]');if(holeButton)holeButton.disabled=repairButton?.disabled??true;const p=project(),state=controller.state(),inspectionButton=document.querySelector('[data-action="mesh-inspector"]'),inspectionNode=selection.length===1&&!selection[0].path.length?p.nodes.find(n=>n.id===selection[0].rootId):null;if(inspectionButton)inspectionButton.disabled=busy||!inspectionNode||inspectionNode.kind!=='mesh'||flags(inspectionNode,p).hidden||!view.allows(inspectionNode.id);const surfaceButton=document.querySelector('[data-action="mesh-select"]'),surfaceSource=selection.length===1&&!selection[0].path.length?p.nodes.find(n=>n.id===selection[0].rootId):null;if(surfaceButton){const allowed=!!surfaceSource&&surfaceSource.kind==='mesh'&&!flags(surfaceSource,p).hidden&&!flags(surfaceSource,p).locked&&view.allows(surfaceSource.id);surfaceButton.disabled=busy||!allowed;surfaceButton.title=allowed?'Dreiecke, Oberflächen und Öffnungsränder auswählen':'Ein sichtbares, entsperrtes vollständiges Netzteil auswählen';}const reduceButton=document.querySelector('[data-action="mesh-reduce"]');if(reduceButton)reduceButton.disabled=busy||!surfaceSource||surfaceSource.kind!=='mesh'||flags(surfaceSource,p).hidden||flags(surfaceSource,p).locked||!view.allows(surfaceSource.id);const largeReduceButton=document.querySelector('[data-action="mesh-large-reduce"]');if(largeReduceButton)largeReduceButton.disabled=reduceButton?.disabled??true;const curvedButton=document.querySelector('[data-action="mesh-curved-reduce"]');if(curvedButton)curvedButton.disabled=reduceButton?.disabled??true;const remeshButton=document.querySelector('[data-action="mesh-remesh"]');if(remeshButton)remeshButton.disabled=reduceButton?.disabled??true;const smoothButton=document.querySelector('[data-action="mesh-smooth"]');if(smoothButton)smoothButton.disabled=reduceButton?.disabled??true;const sculptButton=document.querySelector('[data-action="mesh-sculpt"]');if(sculptButton)sculptButton.disabled=reduceButton?.disabled??true;const eraseFillButton=document.querySelector('[data-action="mesh-erase-fill"]');if(eraseFillButton)eraseFillButton.disabled=reduceButton?.disabled??true;const makeSolidButton=document.querySelector('[data-action="mesh-make-solid"]');if(makeSolidButton)makeSolidButton.disabled=reduceButton?.disabled??true;const hollowButton=document.querySelector('[data-action="mesh-hollow"]');if(hollowButton)hollowButton.disabled=reduceButton?.disabled??true;const featuresButton=document.querySelector('[data-action="mesh-features"]');if(featuresButton)featuresButton.disabled=(reduceButton?.disabled??true)||surfaceSource?.meshRole==='hole';const meshCadButton=document.querySelector('[data-action="mesh-to-cad"]');if(meshCadButton){const n=selection.length===1&&!selection[0].path.length?p.nodes.find(n=>n.id===selection[0].rootId):null;meshCadButton.disabled=busy||!hasLocalStlConverter()||!n||n.kind!=='mesh'||n.meshRole==='hole'||flags(n,p).hidden||flags(n,p).locked;}const copyButton=document.querySelector('[data-action="cad-to-mesh"]'),copySource=selection.length===1&&!selection[0].path.length?p.nodes.find(n=>n.id===selection[0].rootId):null;if(copyButton)copyButton.disabled=busy||!copySource||copySource.kind!=='cad'||!copySource.solid||!!copySource.suppressed||flags(copySource,p).hidden||flags(copySource,p).locked;updateEmptyHint();workbenchUI?.refreshDomain();contextMenuUI?.refresh();const sourceEdit=$('easy-edit-source'),sourceNode=selection.length===1&&!selection[0].path.length?p.nodes.find(node=>node.id===selection[0].rootId):null;if(sourceEdit){sourceEdit.hidden=!sourceNode||sourceNode.kind!=='mesh'||!sourceNode.meshSource;sourceEdit.disabled=busy||!!sourceNode&&flags(sourceNode,p).locked;}updateSaveState();document.querySelector('[data-action="undo"]').disabled=busy||!state.undo;document.querySelector('[data-action="redo"]').disabled=busy||!state.redo;document.querySelector('[data-action="paste"]').disabled=isPasteDisabled(busy);$('magnet-mode').disabled=busy||selection.length!==1||selection[0]?.path.length||!p.nodes.some(node=>node.id===selection[0]?.rootId&&['cad','mesh'].includes(node.kind));const chosen=selection.length===1&&!selection[0].path.length?nativeScene?.objects.find(n=>n.id===selection[0].rootId&&!n.target.path.length):null;for(const action of ['reference-place','drill','split','extract'])document.querySelectorAll('[data-action="'+action+'"]').forEach(button=>{button.disabled=busy||!chosen||(chosen.kind!=='cad'&&chosen.kind!=='mesh')||chosen.hidden||chosen.locked||action==='drill'&&(chosen.kind==='cad'?!chosen.solid:chosen.meshRole==='hole');});const modelingNodes=selection.filter(v=>!v.path.length).map(v=>p.nodes.find(n=>n.id===v.rootId)),modelingValid=selection.length===modelingNodes.length&&modelingNodes.length>0&&modelingNodes.every(n=>n&&n.kind==='cad'&&n.solid&&!flags(n,p).hidden&&!flags(n,p).locked&&view.allows(n.id));for(const action of ['cad-contour','cad-face-offset','cad-shell','cad-loft','cad-sweep'])for(const b of document.querySelectorAll('[data-action="'+action+'"]'))b.disabled=busy||!modelingValid||(action==='cad-loft'?(modelingNodes.length<2||modelingNodes.length>8):modelingNodes.length!==1)||['cad-loft','cad-sweep'].includes(action)&&modelingNodes.some(n=>n.source!=='native'||n.recipe?.type!=='sketch');for(const action of ['cad-draft','cad-defeature','cad-revolution','cad-helix'])for(const b of document.querySelectorAll('[data-action="'+action+'"]'))b.disabled=busy||action!=='cad-helix'&&(!modelingValid||modelingNodes.length!==1);for(const action of ['cad-surface-fill','cad-surface-transition','cad-surface-sew','cad-surface-relief'])for(const b of document.querySelectorAll('[data-action="'+action+'"]'))b.disabled=busy||action!=='cad-surface-fill'&&(!modelingValid||modelingNodes.length>8);for(const b of document.querySelectorAll('[data-action=cad-edit-modeling]'))b.disabled=busy||!modelingValid||modelingNodes.length!==1||modelingNodes[0].source!=='modeling'||!['face-offset','shell','sweep','loft'].includes(modelingNodes[0].modeling?.kind);let contourSource=null;try{if(selection.length===1)contourSource=context(selection[0],p);}catch{}for(const b of document.querySelectorAll('[data-action=cad-contour]'))b.disabled=busy||!contourSource||contourSource.node.kind!=='cad'||!contourSource.node.solid||contourSource.locked||contourSource.hidden||contourSource.chain.some(node=>node.suppressed)||!view.allows(contourSource.root.id);for(const b of document.querySelectorAll('[data-action=linked-contours]'))b.disabled=busy;}
 
 const themeBinding=createThemeBinding({document,media:matchMedia('(prefers-color-scheme: dark)'),setViewTheme:dark=>view.setTheme(dark)});
 themeBinding.set(preferences.theme);
@@ -576,7 +590,40 @@ const programAssistant=createCadProgramAssistant({access,getSelection,showPrevie
 const agentUIAccess=createAgentUIAccess({assistant:programAssistant,getRevision:()=>controller.revision(),isBusy:()=>access.isBusy(),beforeGuide:()=>{const chat=document.getElementById('ai-agent-chat'),restore=!!chat?.open;chat?.close();return ()=>{if(restore&&chat?.isConnected&&!document.querySelector('dialog[open]'))chat.showModal();};}});
 featureUI=createCadAIFeatureUI({controller,view,getSelection,select,language:()=>preferences.language,prepare:()=>{if(aiUI?.isBusy())throw Error('Laufenden KI-Auftrag zuerst abschließen oder abbrechen.');escape();},toast,openReferenceRebind:initial=>referenceRebindUI.open(initial),onAttach:reference=>aiUI?.chat.addFeatureReference(reference),onHighlight:id=>aiUI?.chat.highlightFeatureReference(id)});
 let practiceVerificationQuality;
-aiUI=createCadAIUI({prepareSketchPracticePreview:(project,revision)=>controller.restoreAITaskCandidate(project,{revision,label:'Änderungen aus der Skizzenübung'}),getPracticeQuality:()=>practiceVerificationQuality,getPracticeWorkbench:()=>workbenchUI?.mode(),capturePracticeCopy:options=>captureCadPracticeCopy(controller,getSelection,{...options,getScene}),featureStore:{open:()=>featureUI.open(),pickForChat:()=>featureUI.open({pickForChat:true}),highlight:reference=>featureUI.highlight(reference),project:()=>controller.readSnapshot(),state:()=>featureUI.state(),clearHighlight:()=>featureUI.clearHighlight(),scope:references=>captureCadAIFeatureScope(controller.readSnapshot(),references.map(r=>r.id),references)},photoStore:{practice:new URL(location.href).searchParams.has('practice'),read:()=>({revision:controller.revision(),photos:controller.snapshot().photos}),save:async(photos,{revision})=>{readyForFile();const proposal=await controller.previewPhotos(photos,{revision});return controller.apply(proposal);},reconstruct:async(plan,options)=>{readyForFile();const proposal=await controller.previewPhotoReconstruction(plan,{...options,review:reviewPhotoSet});await showPreview(proposal,[proposal.photoReconstructionReport.rootId]);view.fit([],{includePreview:true});return proposal;},reviewReconstruction:(plan,options)=>reviewStoredPhotoSet(controller,plan,options),setView:key=>view.setView(key),download,applyReconstruction:async proposal=>{const result=controller.apply(proposal);clearPreview();await scheduleRefresh();return result;},discardReconstruction:id=>{controller.discard(id);if(activePreview?.previewId===id)clearPreview();}},openTaskBasis:async(basis,binding)=>{readyForFile();if(!await confirmProjectChange())return false;fileBusy=true;try{const checked=await packFiles.registerTaskBasis(basis,binding);await openEncoded(checked.project,null,{allowCatalog:true});select(checked.selection);await scheduleRefresh();return true;}finally{fileBusy=false;}},captureCanvas:async()=>{await view.renderReady();return new Promise((resolve,reject)=>view.canvas.toBlob(blob=>blob?resolve(new File([blob],'Modellbild.png',{type:'image/png'})):reject(Error('Modellbild konnte nicht erstellt werden.')),'image/png'));},access,programAssistant,modal,download,language:()=>preferences.language,showPreview:async proposal=>{await showPreview(proposal,undefined,controller.readSnapshot().nodes.map(n=>n.id));if(activePreview?.previewId===proposal.previewId)view.fit([],{includePreview:true});},clearPreview,cancelComputation:()=>controller.cancel(),settingsOpen:()=>{ui.settings.open();document.querySelector('[data-settings-tab="ai"]')?.click();}});
+const photoProfileStore = {
+ async previewProfile(imageId, height, {revision}) {
+  readyForFile();
+  const p = project(), scope = controller.projectScope(), reference = p.photos?.items.find(item=>item.reference.imageId===imageId)?.reference;
+  if(!reference)throw Error('Die gespeicherte Fotoreferenz fehlt.');
+  const command = photoProfileCommand(reference,height,activeFrame(p));
+  const proposal = await controller.preview({kind:'batch',commands:[command]},{revision,label:'CAD-Körper aus Fotokontur'});
+  const camera = view.viewState();
+  try {
+   const rootId = proposal.aliases.photo_profile;
+   const body = proposal.project.nodes.find(node=>node.id===rootId);
+   if(body?.kind!=='cad'||body.stats.solids!==1||!(body.stats.volume>0))throw Error('Die Kontur ergibt keinen geschlossenen CAD-Körper.');
+   await showPreview(proposal,[rootId]);
+   view.setView('iso');
+   view.fit([],{includePreview:true});
+   return {proposal,rootId,image:await view.captureDataURL()};
+  } catch(error) {
+   controller.discard(proposal.previewId);
+   throw error;
+  } finally {
+   if(activePreview?.previewId===proposal.previewId)clearPreview();
+   if(controller.projectScope()===scope)view.restoreView(camera);
+  }
+ },
+ async applyProfile({proposal,rootId}) {
+  readyForFile();
+  await applyProposal(proposal);
+  if(activeEasyKind()==='mesh'&&easyDomain.set('cad'))changedEasyDomain();
+  select([{rootId,path:[]}]);
+  view.fit([{rootId,path:[]}]);
+ },
+ discardProfile:id=>controller.discard(id),
+};
+aiUI=createCadAIUI({prepareSketchPracticePreview:(project,revision)=>controller.restoreAITaskCandidate(project,{revision,label:'Änderungen aus der Skizzenübung'}),getPracticeQuality:()=>practiceVerificationQuality,getPracticeWorkbench:()=>workbenchUI?.mode(),capturePracticeCopy:options=>captureCadPracticeCopy(controller,getSelection,{...options,getScene}),featureStore:{open:()=>featureUI.open(),pickForChat:()=>featureUI.open({pickForChat:true}),highlight:reference=>featureUI.highlight(reference),project:()=>controller.readSnapshot(),state:()=>featureUI.state(),clearHighlight:()=>featureUI.clearHighlight(),scope:references=>captureCadAIFeatureScope(controller.readSnapshot(),references.map(r=>r.id),references)},photoStore:{...photoProfileStore,practice:new URL(location.href).searchParams.has('practice'),read:()=>({revision:controller.revision(),photos:controller.snapshot().photos}),save:async(photos,{revision})=>{readyForFile();const proposal=await controller.previewPhotos(photos,{revision});return controller.apply(proposal);},reconstruct:async(plan,options)=>{readyForFile();const proposal=await controller.previewPhotoReconstruction(plan,{...options,review:reviewPhotoSet});await showPreview(proposal,[proposal.photoReconstructionReport.rootId]);view.fit([],{includePreview:true});return proposal;},reviewReconstruction:(plan,options)=>reviewStoredPhotoSet(controller,plan,options),setView:key=>view.setView(key),download,applyReconstruction:async proposal=>{const result=controller.apply(proposal);clearPreview();await scheduleRefresh();return result;},discardReconstruction:id=>{controller.discard(id);if(activePreview?.previewId===id)clearPreview();}},openTaskBasis:async(basis,binding)=>{readyForFile();if(!await confirmProjectChange())return false;fileBusy=true;try{const checked=await packFiles.registerTaskBasis(basis,binding);await openEncoded(checked.project,null,{allowCatalog:true});select(checked.selection);await scheduleRefresh();return true;}finally{fileBusy=false;}},captureCanvas:async()=>{await view.renderReady();return new Promise((resolve,reject)=>view.canvas.toBlob(blob=>blob?resolve(new File([blob],'Modellbild.png',{type:'image/png'})):reject(Error('Modellbild konnte nicht erstellt werden.')),'image/png'));},access,programAssistant,modal,download,language:()=>preferences.language,showPreview:async proposal=>{await showPreview(proposal,undefined,controller.readSnapshot().nodes.map(n=>n.id));if(activePreview?.previewId===proposal.previewId)view.fit([],{includePreview:true});},clearPreview,cancelComputation:()=>controller.cancel(),settingsOpen:()=>{ui.settings.open();document.querySelector('[data-settings-tab="ai"]')?.click();}});
 
 partPropertiesUI=createCadPartPropertiesUI({controller,view,getSelection,getScene,isLoaded:assemblyDisplay.isLoaded,meshSelection:()=>meshSelectionUI?.snapshot(),prepare:escape,showPreview,clearPreview,refresh:scheduleRefresh,download,onWorkspaceChange:updateSaveState,toast});
 const partPropertiesButton=document.createElement('button');partPropertiesButton.type='button';partPropertiesButton.id='part-properties-open';partPropertiesButton.textContent='Teile & Material';partPropertiesButton.onclick=()=>safe(()=>partPropertiesUI.open());document.querySelector('.file-actions').append(partPropertiesButton);
@@ -610,7 +657,7 @@ meshExtras=createCadMeshExtraTools({controller,view,getSelection,select,prepare:
 
 meshInspectorUI=createCadMeshInspectorUI({getProject:project,getSelection,view,prepare:escape,toast});
 
-meshSelectionUI=createCadMeshSelectionUI({getProject:project,getSelection,getScene,view,select,prepare:escape,onWorkspaceChange:()=>{updateSaveState();},onProtectionCommit:async({objectId,regions,signal,current})=>{const revision=controller.revision(),draft=controller.snapshot(),node=draft.nodes.find(n=>n.id===objectId);if(!node||node.kind!=='mesh')throw Error('Die Netzquelle fehlt.');node.metadata??={};if(regions.length)node.metadata.meshProtection={format:'FormnaroMeshProtection',version:1,regions};else{delete node.metadata.meshProtection;if(!Object.keys(node.metadata).length)delete node.metadata;}const proposal=await controller.preview(undefined,{project:draft,revision,label:'Netz-Schutzbereiche bearbeiten'});if(signal.aborted||!current()){controller.discard(proposal.previewId);return;}controller.apply({previewId:proposal.previewId,revision:proposal.revision});},onSessionChange:()=>updateState(),toast,pick:({ray,hit,node})=>view.meshSelectionHit(ray,hit,node)});
+meshSelectionUI=createCadMeshSelectionUI({getProject:project,materialize:controller.materialize,getSelection,getScene,view,select,prepare:escape,onWorkspaceChange:()=>{updateSaveState();},onProtectionCommit:async({objectId,regions,signal,current})=>{const revision=controller.revision(),draft=controller.snapshot(),node=draft.nodes.find(n=>n.id===objectId);if(!node||node.kind!=='mesh')throw Error('Die Netzquelle fehlt.');node.metadata??={};if(regions.length)node.metadata.meshProtection={format:'FormnaroMeshProtection',version:1,regions};else{delete node.metadata.meshProtection;if(!Object.keys(node.metadata).length)delete node.metadata;}const proposal=await controller.preview(undefined,{project:draft,revision,label:'Netz-Schutzbereiche bearbeiten'});if(signal.aborted||!current()){controller.discard(proposal.previewId);return;}controller.apply({previewId:proposal.previewId,revision:proposal.revision});},onSessionChange:()=>updateState(),toast,pick:({ray,hit,node})=>view.meshSelectionHit(ray,hit,node)});
 
 workplaneUI=createCadWorkplaneUI({controller,view,prepare:escape,applyProposal,toast});
 
@@ -705,7 +752,7 @@ const { importFile, importDialog, exportModel, exportDialog, saveDrawingExport }
     },
   },
 });
-drawingUI=createCadDrawingUI({controller,view,getSelection,prepare:escape,toast,t,exportDrawing:saveDrawingExport});
+drawingUI=createCadDrawingUI({controller,view,getSelection,getExplosion:partPropertiesUI.storedExplosion,prepare:escape,toast,t,exportDrawing:saveDrawingExport});
 projectParametersUI=createCadProjectParametersUI({controller,view,getSelection,prepare:escape,refresh:scheduleRefresh,toast,t});
 
 for(const action of ['lay-on-face','reference-place','sketch','split','extract']){document.querySelector('[data-action="'+action+'"]').hidden=false;document.querySelector('[data-action="'+action+'"]').disabled=false;}
@@ -819,22 +866,22 @@ function magnet(){
 
 }
 
-function escape(){cornerSession?.finish();partPropertiesUI?.close();partPropertiesUI?.suspendExplosion();if($('modal').open&&$('modal').classList.contains('freecad-document-modal'))$('modal').close();featureUI?.close();referenceRebindUI?.close();if(jointsUI?.close())$('modal').close();projectParametersUI?.close();if(thicknessUI?.comparison.close())return;drawingUI?.close();meshHoleFillUI?.close();meshRepairUI?.close();meshReduceUI?.close();meshRemeshUI?.close();meshSmoothUI?.close();meshSculptUI?.close();meshEraseFillUI?.close();meshMakeSolidUI?.close();meshHollowUI?.close();meshFeaturesUI?.close();meshInspectorUI?.cancel();meshSelectionUI?.cancel();modelingUI?.close();advancedFreeCADUI?.close();if(sketchUI?.close())$('modal').close();if(functionsUI?.cancel())return;if(localStlTask){++localStlSequence;void localStlTask.cancel().catch(()=>{});localStlTask=null;setBusy(false);}const cancelled=controller.cancel();if(activePreview)controller.discard(activePreview.previewId);view.cancel();magnetSession=null;alignment=null;++alignmentTicket;alignmentMarks?.hide();view.setAlignmentReference(null);$('align-panel').hidden=true;$('mirror-panel').hidden=true;meshCopyUI?.close();inspectionUI?.close();thicknessUI?.close();tools?.escape();meshTools?.escape();meshExtras?.close();workplaneUI?.escape();clearPreview();$('magnet-mode').setAttribute('aria-pressed','false');ui?.refresh();if(cancelled){lastDisplayed=null;preparedDisplay=null;void scheduleRefresh().catch(error=>{if(error.name!=='AbortError')toast(error.message);});}}
+function escape(){tabletPartUI?.close();tabletSketchUI?.stopPicking();cornerSession?.finish();partPropertiesUI?.close();partPropertiesUI?.suspendExplosion();if($('modal').open&&$('modal').classList.contains('freecad-document-modal'))$('modal').close();featureUI?.close();referenceRebindUI?.close();if(jointsUI?.close())$('modal').close();projectParametersUI?.close();if(thicknessUI?.comparison.close())return;drawingUI?.close();meshHoleFillUI?.close();meshRepairUI?.close();meshReduceUI?.close();meshRemeshUI?.close();meshSmoothUI?.close();meshSculptUI?.close();meshEraseFillUI?.close();meshMakeSolidUI?.close();meshHollowUI?.close();meshFeaturesUI?.close();meshInspectorUI?.cancel();meshSelectionUI?.cancel();modelingUI?.close();advancedFreeCADUI?.close();if(sketchUI?.close())$('modal').close();if(functionsUI?.cancel())return;if(localStlTask){++localStlSequence;void localStlTask.cancel().catch(()=>{});localStlTask=null;setBusy(false);}const cancelled=controller.cancel();if(activePreview)controller.discard(activePreview.previewId);view.cancel();magnetSession=null;alignment=null;++alignmentTicket;alignmentMarks?.hide();view.setAlignmentReference(null);$('align-panel').hidden=true;$('mirror-panel').hidden=true;meshCopyUI?.close();inspectionUI?.close();thicknessUI?.close();tools?.escape();meshTools?.escape();meshExtras?.close();workplaneUI?.escape();clearPreview();$('magnet-mode').setAttribute('aria-pressed','false');ui?.refresh();if(cancelled){lastDisplayed=null;preparedDisplay=null;void scheduleRefresh().catch(error=>{if(error.name!=='AbortError')toast(error.message);});}}
 
 function setMode(mode){escape();view.setMode(mode);document.querySelectorAll('[data-mode]').forEach(button=>button.classList.toggle('active',button.dataset.mode===mode));}
 
 async function loadDemo(){if(activeEasyKind())throw Error('Beispiele im normalen Modus laden.');isolation.end();updateIsolation();const proposal=await controller.preview({kind:'batch',commands:[{op:'create',type:'box',name:'Platte',size:[60,40,6],pos:[0,0,3],as:'plate'},...[[-22,-12],[22,-12],[-22,12],[22,12]].map(([x,y],index)=>({op:'create',type:'cylinder',name:'Bohrung '+(index+1),size:[5,5,10],pos:[x,y,3],solid:false,as:'hole'+index})),{op:'group',targets:['$plate','$hole0','$hole1','$hole2','$hole3'],as:'result',name:'Platte mit vier Bohrungen'}]},{project:createCadProject(),label:'CAD-Beispiel laden'});await applyProposal(proposal);select([{rootId:proposal.aliases.result,path:[]}]);view.fit();}
 
 function meshPartitionDraft(){return ['split','bodies','connectors'].includes(meshTools?.state()?.kind);}
-function readyForFile(){if(!window.__cadReady)throw Error('Projektstart wird noch abgeschlossen.');if(partPropertiesUI?.editing()||partPropertiesUI?.state()?.hasPreview||partPropertiesUI?.state()?.busy||featureUI?.state()||referenceRebindUI?.state()||jointsUI?.state()||projectParametersUI?.state()||drawingUI?.state()||busy||meshPartitionDraft()||meshHoleFillUI?.state()||meshRepairUI?.state()||(meshReduceUI?.state()||meshRemeshUI?.state()||(meshSmoothUI?.state()||meshSculptUI?.state())||meshEraseFillUI?.state()||meshMakeSolidUI?.state()||(meshHollowUI?.state()||meshFeaturesUI?.state()))||meshSelectionUI?.state()||meshSelectionUI?.isChecking()||activePreview||meshCopyUI?.state()||tools?.state()?.preview||modelingUI?.state()||advancedFreeCADUI?.state()||sketchUI?.state()||meshExtras?.state()||workplaneUI?.state()||view.isEditing()||layoutUI.isActive()||layoutUI.isSaving())throw Error('Bearbeitung zuerst abschließen oder abbrechen.');if(fileBusy)throw Error('Ein Projekt wird bereits gespeichert oder geöffnet.');}
+function readyForFile({allowPartPreview=false}={}){const blockedPreview=activePreview&&(!allowPartPreview||activePreview.previewId!==tabletPartUI?.previewId());if(!window.__cadReady)throw Error('Projektstart wird noch abgeschlossen.');if(partPropertiesUI?.editing()||partPropertiesUI?.state()?.hasPreview||partPropertiesUI?.state()?.busy||featureUI?.state()||referenceRebindUI?.state()||jointsUI?.state()||projectParametersUI?.state()||drawingUI?.state()||busy||meshPartitionDraft()||meshHoleFillUI?.state()||meshRepairUI?.state()||(meshReduceUI?.state()||meshRemeshUI?.state()||(meshSmoothUI?.state()||meshSculptUI?.state())||meshEraseFillUI?.state()||meshMakeSolidUI?.state()||(meshHollowUI?.state()||meshFeaturesUI?.state()))||meshSelectionUI?.state()||meshSelectionUI?.isChecking()||blockedPreview||meshCopyUI?.state()||tools?.state()?.preview||modelingUI?.state()||advancedFreeCADUI?.state()||sketchUI?.state()||meshExtras?.state()||workplaneUI?.state()||view.isEditing()||layoutUI.isActive()||layoutUI.isSaving())throw Error('Bearbeitung zuerst abschließen oder abbrechen.');if(fileBusy)throw Error('Ein Projekt wird bereits gespeichert oder geöffnet.');}
 
-function confirmProjectChange(){
+function confirmProjectChange({allowPartPreview=false}={}){
 
   if(!recoveredProject&&controller.revision()===cleanRevision&&workspaceSignature()===cleanWorkspaceSignature)return Promise.resolve(true);
 
   return new Promise(resolve=>{modal('Projekt wechseln','<p>'+(recoveredProject?'Wiederhergestelltes Projekt vor dem Wechsel als Projektdatei speichern?':'Aktuelle Änderungen vor dem Wechsel speichern?')+'</p><div class="modal-actions"><button id="project-change-cancel">Abbrechen</button><button id="project-change-discard">Ohne Speichern wechseln</button><button id="project-change-save" class="primary">Speichern und wechseln</button></div>');
 
-    const dialog=$('modal'),finish=value=>{dialog.removeEventListener('close',closed);dialog.close();resolve(value);},closed=()=>finish(false);dialog.addEventListener('close',closed,{once:true});$('project-change-cancel').onclick=()=>finish(false);$('project-change-discard').onclick=()=>finish(true);$('project-change-save').onclick=()=>safe(async()=>{const result=await save();if(result?.saved)finish(true);});
+    const dialog=$('modal'),finish=value=>{dialog.removeEventListener('close',closed);dialog.close();resolve(value);},closed=()=>finish(false);dialog.addEventListener('close',closed,{once:true});$('project-change-cancel').onclick=()=>finish(false);$('project-change-discard').onclick=()=>finish(true);$('project-change-save').onclick=()=>safe(async()=>{const result=await save({allowPartPreview});if(result?.saved)finish(true);});
 
   });
 
@@ -866,7 +913,184 @@ async function projectThumbnail(encoded,signal){
   signal.removeEventListener('abort',cancel);worker.dispose();
  }
 }
-const projectsUI=createCadProjectsUI({desktop:window.offlinecadDesktop,modal,open:openProject,save,safe,t,thumbnail:projectThumbnail});
+async function serializeTabletWorkspace(state){
+  const p=project();
+  return hasGeometryRefs(p)?createCadWorkspaceSerializer(await controller.materialize())(state):serializeWorkspace(state);
+}
+async function privateTabletTarget(args) {
+  const target={id:controller.projectScope(),name:project().name,revision:controller.revision()};
+  if (args?.snapshotIfRevisionDiffers && args.snapshotIfRevisionDiffers!==target.revision) {
+    const state=workspace();
+    target.text=await serializeTabletWorkspace(state);
+    if (target.id!==controller.projectScope() || target.revision!==controller.revision())
+      throw Error('Der PC-Stand wurde während der Übergabe geändert. Bitte erneut senden.');
+  }
+  return target;
+}
+const tabletViews=createTabletViewPresets(storage);
+const tabletNotes=createTabletProjectNotes(storage);
+async function openTabletNotes(){
+  const id=activeProjectFile?.id;
+  modal(t('Tablet-Notizen'),'<div id="tablet-project-notes" class="tablet-project-notes"></div>');
+  const host=$('tablet-project-notes'),items=tabletNotes.list(id);
+  if(!items.length){host.textContent=id?t('Für dieses Projekt gibt es noch keine Tablet-Notizen.'):t('Zuerst ein gespeichertes Projekt öffnen.');return;}
+  for(const {note,savedAt} of items){
+    const row=document.createElement('details'),title=document.createElement('summary');
+    title.textContent=t('Seite')+' '+note.page+' · '+new Date(savedAt).toLocaleString();
+    if(note.picture)title.textContent+=' · '+note.picture.project.name;
+    row.append(title);
+    row.addEventListener('toggle',async()=>{
+      if(!row.open||row.querySelector('canvas'))return;
+      const canvas=document.createElement('canvas');
+      canvas.setAttribute('aria-label',t('Skizzenblockseite'));
+      row.append(canvas);
+      try{await renderTabletProjectNote(canvas,note);}
+      catch(error){canvas.remove();toast(error.message);}
+    });
+    host.append(row);
+  }
+}
+async function privateTabletLive(command) {
+  const p=project(),opening=controller.projectScope(),domain=activeEasyKind();
+  const allowed=node=>easyDomainAllows(node,domain);
+  const canIsolate=node=>allowed(node)&&cadPermanentlyVisible(node,p)&&assemblyDisplay.isLoaded(node.id);
+  const visible=node=>canIsolate(node)&&view.allows(node.id);
+  const active=!!(activeProjectFile||recoveredProject||p.nodes.length);
+  if(command!==undefined) {
+    if(command.action==='tablet-part')return tabletPartUI.receive(command);
+    if(command.action==='tablet-sketch'){
+      if(domain)throw Error('Tablet-Skizzen sind in der normalen CAD-Oberfläche verfügbar.');
+      return tabletSketchUI.receive(command);
+    }
+    if(!active||command?.opening!==opening)throw Error('Am PC ist ein anderes Projekt geöffnet.');
+    if(command.action==='save-note')return tabletNotes.save(activeProjectFile?.id,command.receipt,command.note);
+    if(command.action==='spotlight'){
+      const node=p.nodes.find(node=>node.id===command.value);
+      const revision=controller.revision();
+      const item=nativeScene?.revision===revision&&nativeScene.objects.find(
+        item=>item.target.rootId===node?.id&&!item.target.path.length);
+      if(!node||!visible(node)||!item?.worldBounds)throw Error('Dieses Teil ist am PC gerade nicht sichtbar.');
+      view.showTabletSpotlight(node.id,item.worldBounds,()=>controller.revision()===revision&&controller.projectScope()===opening);
+      return true;
+    }
+    readyForFile();
+    if(command.action==='capture-view'){
+      const revision=controller.revision();
+      if(nativeScene?.revision!==revision)throw Error('Die aktuelle Modellansicht wird noch aufgebaut.');
+      const capture=await view.captureTabletView();
+      if(controller.projectScope()!==opening||controller.revision()!==revision)
+        throw Error('Die Ansicht gehört zu einem inzwischen geänderten Stand. Bitte neu aufnehmen.');
+      return {...capture,project:{opening,revision,name:p.name}};
+    }
+    if(command.action==='view'&&['top','front','right','iso'].includes(command.value)) {
+      view.setView(command.value);
+      return true;
+    }
+    if(['view-save','view-restore','view-remove'].includes(command.action)) {
+      const camera=tabletViews.apply(activeProjectFile?.id,command.action,command.value,view.viewState());
+      if(camera){
+        view.restoreView(camera);
+        $('projection').textContent=t(camera.projection==='perspective'?'Perspektive':'Orthografisch');
+      }
+      return true;
+    }
+    if(command.action==='end-isolation'){
+      if(isolation.state())endIsolation();
+      return true;
+    }
+    if(command.action==='folder-visibility'&&typeof command.hidden==='boolean'){
+      if(!p.folders.some(folder=>folder.id===command.value))throw Error('Der Ordner ist am PC nicht mehr verfügbar.');
+      await ui.setContainerHidden(command.value,command.hidden,{opening});
+      return true;
+    }
+    const node=p.nodes.find(node=>node.id===command.value);
+    if(!node||!allowed(node))throw Error('Das Teil ist am PC nicht mehr verfügbar.');
+    const target={rootId:node.id,path:[]};
+    if(command.action==='visibility'&&typeof command.hidden==='boolean'){
+      await ui.setObjectHidden(target,command.hidden,{opening});
+      return true;
+    }
+    if(command.action==='isolate'&&canIsolate(node)){escape();isolation.start(p,[target]);updateIsolation();}
+    else if(command.action!=='select'||!visible(node))throw Error('Das Teil ist am PC nicht sichtbar.');
+    select([target]);
+    return true;
+  }
+  const partTarget=domain?null:tabletPartUI.advertised();
+  const canReceiveDirectPart=!domain;
+  const directPartTarget=canReceiveDirectPart?tabletPartUI.advertisedDirect():null;
+  const directPart={
+    canReceiveDirectPart, ...(canReceiveDirectPart?{directPartOpening:opening}:{}),
+    ...(directPartTarget?{directPartTarget}:{}),
+  };
+  if(!active&&!tabletPartUI.hasTarget())return {project:null,parts:[],folders:[],...directPart};
+  const selected=new Set(selection.map(value=>value.rootId));
+  const activeRoot=selection.length===1&&!selection[0].path.length?
+    p.nodes.find(node=>node.id===selection[0].rootId):null;
+  const bounds=activeRoot&&visible(activeRoot)&&nativeScene?.revision===controller.revision()?
+    nativeScene?.objects.find(item=>item.target.rootId===activeRoot.id&&!item.target.path.length)?.worldBounds?.size:null;
+  const dimensions=Array.isArray(bounds)&&bounds.length===3&&bounds.every(Number.isFinite)?
+    {name:activeRoot.name,size:bounds}:null;
+  const measured=inspectionUI?.tabletMeasurement();
+  const measuredNodes=measured?[...new Set(measured.objectIds)].map(id=>p.nodes.find(node=>node.id===id)):null;
+  const measurement=measuredNodes?.every(node=>node&&visible(node))?
+    {kind:measured.kind,value:measured.value,names:measuredNodes.map(node=>node.name),thickness:measured.thickness}:null;
+  let namedViews;
+  try{namedViews=tabletViews.list(activeProjectFile?.id);}catch{namedViews=null;}
+  const canReceiveSketch=!domain&&!tabletPartUI.isOpen();
+  return {project:{opening,name:p.name},namedViews,canReceiveSketch,sketchTarget:canReceiveSketch?tabletSketchUI.advertised():null,
+    ...directPart,
+    ...(partTarget?{partTarget}:{}),
+    displayActions:true,folderActions:true,spotlight:true,canCaptureView:true,isolationIds:isolation.state(),dimensions,measurement,
+    folders:p.folders.map(({id,name,parentId,hidden})=>({id,name,parentId,hidden})),
+    parts:p.nodes.map(node=>({id:node.id,name:node.name,folderId:node.folderId??null,
+      visible:visible(node),selected:selected.has(node.id),hidden:!!node.hidden,
+      inheritedHidden:ancestors(node,p).some(container=>container.hidden),suppressed:!!node.suppressed,
+      loaded:assemblyDisplay.isLoaded(node.id),canSetVisibility:allowed(node),canIsolate:canIsolate(node)}))};
+}
+function privateTabletAgent({request,target}){
+  const ensureTarget=()=>{
+    if(target!==controller.projectScope())throw Error('Am PC ist ein anderes Projekt geöffnet.');
+  };
+  if(request.action!=='cancel')ensureTarget();
+  return aiUI.externalAgentRequest(request,request.action==='cancel'?undefined:ensureTarget);
+}
+const tabletRpc={privateTabletTarget,privateTabletLive,privateTabletAgent};
+tabletSketchUI=createCadTabletSketchUI({
+  controller, view, ready:()=>{
+    if(activeEasyKind())throw Error('Tablet-Skizzen sind in der normalen CAD-Oberfläche verfügbar.');
+    if(tabletPartUI?.isOpen())throw Error('Den Tablet-Teilempfang zuerst schließen.');
+    readyForFile();
+  }, prepare:escape,
+  edit: imported=>sketchUI.openImported(imported),
+  visible: id=>{const p=project(),node=p.nodes.find(item=>item.id===id);return !!node&&cadPermanentlyVisible(node,p)&&assemblyDisplay.isLoaded(id)&&view.allows(id)&&!activeEasyKind();},
+  usable: id=>{
+    const p=project(),node=p.nodes.find(item=>item.id===id);
+    return node?.kind==='cad'&&node.solid&&!node.suppressed&&!flags(node,p).locked&&
+      cadPermanentlyVisible(node,p)&&assemblyDisplay.isLoaded(id)&&view.allows(id)&&!activeEasyKind();
+  },
+});
+tabletPartUI=createCadTabletPartUI({controller,view,prepare:()=>{escape();tabletSketchUI.hide();},showPreview,
+  clearPreview:id=>{if(activePreview?.previewId===id)clearPreview();},
+  onApplied:id=>{
+    select([{rootId:id,path:[]}]);
+    toast('Tablet-Teil übernommen.');
+  },
+  ready:()=>{
+    if(activeEasyKind())throw Error('Tablet-Teile sind in der normalen CAD-Oberfläche verfügbar.');
+    readyForFile();
+    if($('modal').open)throw Error('Den offenen Dialog am PC zuerst schließen.');
+    if(tabletSketchUI.hasPending())throw Error('Die Tablet-Skizze zuerst übernehmen oder verwerfen.');
+    const p=project(), placement=flags({layerId:p.activeLayerId,folderId:p.activeFolderId},p);
+    if(placement.hidden||placement.locked)throw Error('Zum Empfangen eine sichtbare, entsperrte Ablage wählen.');
+  },
+});
+const projectsUI=createCadProjectsUI({desktop:window.offlinecadDesktop,modal,open:openProject,save,safe,t,openTabletNotes,
+  openTabletSketch:()=>{
+    $('modal').close();
+    if(!tabletPartUI.hasPending())tabletPartUI.close();
+    tabletSketchUI.open();
+  },
+  openTabletPart:()=>{$('modal').close();tabletPartUI.open();},thumbnail:projectThumbnail});
 
 async function placeImportedProposal(proposal,checkImport,metadata){
   const original=proposal,existing=new Set(project().nodes.map(n=>n.id)),ids=proposal.project.nodes.filter(n=>!existing.has(n.id)).map(n=>n.id);
@@ -897,7 +1121,7 @@ function help(){modal('Formnaro bedienen','<p>Formen anklicken oder auf eine CAD
   bindCadAboutLinks($('modal-body'),safe);
 }
 
-const actions={'cad-surface-fill':()=>advancedFreeCADUI.open('surface-fill'),'cad-surface-transition':()=>advancedFreeCADUI.open('surface-transition'),'cad-surface-sew':()=>advancedFreeCADUI.open('surface-sew'),'cad-surface-relief':()=>advancedFreeCADUI.open('surface-relief'),'cad-draft':()=>advancedFreeCADUI.open('draft'),'cad-defeature':()=>advancedFreeCADUI.open('defeature'),'cad-revolution':()=>advancedFreeCADUI.open('revolution'),'cad-helix':()=>advancedFreeCADUI.open('helix'),joints:()=>jointsUI.open(),'linked-contours':()=>modelingUI.openLinks(),'project-parameters':()=>projectParametersUI.open(),drawing:()=>drawingUI.open(),'cad-edit-modeling':()=>modelingUI.openEdit(),'cad-contour':()=>modelingUI.open('contour'),'cad-face-offset':()=>modelingUI.open('face-offset'),'cad-shell':()=>modelingUI.open('shell'),'cad-loft':()=>modelingUI.open('loft'),'cad-sweep':()=>modelingUI.open('sweep'),'sketch-templates':()=>ui.library.open(),'model-compare':()=>thicknessUI.comparison.open(),'sketch-on-part':()=>sketchUI.openOnPart(),thickness:()=>thicknessUI.open(),...ui.actions,...tools.actions,...meshTools.actions,'mesh-close-hole':()=>meshHoleFillUI.open(),'mesh-repair':()=>meshRepairUI.open(),'mesh-reduce':()=>meshReduceUI.open(),'mesh-curved-reduce':()=>meshReduceUI.open('curved-v1'),'mesh-large-reduce':()=>meshReduceUI.open('large-v1'),'mesh-remesh':()=>meshRemeshUI.open(),'mesh-smooth':()=>meshSmoothUI.open(),'mesh-sculpt':()=>meshSculptUI.open(),'mesh-erase-fill':()=>meshEraseFillUI.open(),'mesh-make-solid':()=>meshMakeSolidUI.open(),'mesh-hollow':()=>meshHollowUI.open(),'mesh-features':()=>meshFeaturesUI.open(),'mesh-inspector':()=>meshInspectorUI.open(),'mesh-select':()=>meshSelectionUI.open(),'mesh-more':()=>meshExtras.open(),measure:()=>inspectionUI.openMeasure(),legacyMeasure:()=>!selection.length||selection.some(t=>project().nodes.find(n=>n.id===t.rootId)?.kind!=='cad')?meshExtras.open('measure'):tools.actions.measure(),ruler:()=>project().nodes.some(n=>n.kind==='mesh'&&domainAllowsId(n.id))?meshExtras.open('ruler'):tools.actions.ruler(),section:()=>inspectionUI.openSection(),inspect:()=>selection.some(t=>project().nodes.find(n=>n.id===t.rootId)?.kind!=='cad')||!selection.length&&project().nodes.some(n=>n.kind==='mesh'&&domainAllowsId(n.id))?meshExtras.open('inspect'):tools.actions.inspect(),array:()=>selection.some(t=>project().nodes.find(n=>n.id===t.rootId)?.kind!=='cad')?meshExtras.open('array'):tools.actions.array(),'general-fit':()=>meshSelection()?meshExtras.open('fit'):tools.actions['general-fit'](),'lay-on-face':()=>meshSelection()?meshExtras.open('floor'):tools.actions['lay-on-face'](),'reference-place':()=>meshSelection()?meshExtras.open('reference'):tools.actions['reference-place'](),'edge-finish':()=>meshTools.open('finish'),'face-floor':()=>meshExtras.open('floor'),'split-plane':()=>meshTools.open('split'),'extract-bodies':()=>meshTools.open('bodies'),'hole-wizard':()=>meshTools.open('drill'),split:()=>meshSelection()?meshTools.open('split'):tools.actions.split(),extract:()=>meshSelection()?meshTools.open('bodies'):tools.actions.extract(),drill:()=>meshSelection()?meshTools.open('drill'):tools.actions.drill(),edges:()=>meshSelection()?meshTools.open('finish'):tools.actions.edges(),round:()=>meshSelection()?meshTools.actions['mesh-round']():tools.actions.round(),chamfer:()=>meshSelection()?meshTools.actions['mesh-chamfer']():tools.actions.chamfer(),sketch:()=>sketchUI.open(false,activeEasyKind()==='mesh'||meshSelection()),'edit-sketch':()=>sketchUI.open(true,meshSelection()),isolate:isolateSelection,'end-isolation':endIsolation,'cad-to-mesh':()=>meshCopyUI.open(),'mesh-to-cad':()=>{escape();readyForFile();if(selection.length!==1)throw Error('Genau ein Netzteil auswählen.');const revision=controller.revision(),input=meshCadInput(project(),selection[0],revision);functionsUI.converter(input.file,{boundSource:{source:input.source,current:()=>controller.revision()===revision}});},functions:()=>functionsUI.show(),'stl-to-step':()=>functionsUI.choose(),undo:async()=>{if(meshSelectionUI?.state()){meshSelectionUI.undo();return;}controller.undo();await refreshTask;},redo:async()=>{if(meshSelectionUI?.state()){meshSelectionUI.redo();return;}controller.redo();await refreshTask;},duplicate,copy:copySelection,paste,delete:remove,group,intersect:()=>group('intersection'),ungroup,align:alignPanel,mirror:mirrorPanel,drop,center:centerSelection,'workplane-set':workplanePick,'workplane-top':planeTop,'reset-plane':()=>mutate(draft=>{draft.workplane={origin:[0,0,0],orientation:[0,0,0,1],reference:null};},'Grundebene wiederherstellen'),fit:()=>view.fit(),projection:()=>{$('projection').textContent=view.toggleProjection();},demo:loadDemo,new:async()=>{readyForFile();if(!await confirmProjectChange())return;partPropertiesUI?.close();partPropertiesUI?.suspendExplosion();await controller.open(createCadProject(),{label:'Neues CAD-Projekt'});partPropertiesUI?.restoreExplosion(null);nextImportIndex=0;isolation.end();updateIsolation();activeProjectFile=null;preferredProjectFormat='ocad';savedRevision=null;savedWorkspaceSignature=null;cleanRevision=controller.revision();recoveredProject=false;select([]);await refreshTask;cleanWorkspaceSignature=workspaceSignature();updateSaveState();},open:()=>openProject(),projects:projectsUI.show,save,'save-as':()=>save({saveAs:true}),import:()=>$('import-file').click(),export:exportDialog,help};
+const actions={'cad-surface-fill':()=>advancedFreeCADUI.open('surface-fill'),'cad-surface-transition':()=>advancedFreeCADUI.open('surface-transition'),'cad-surface-sew':()=>advancedFreeCADUI.open('surface-sew'),'cad-surface-relief':()=>advancedFreeCADUI.open('surface-relief'),'cad-draft':()=>advancedFreeCADUI.open('draft'),'cad-defeature':()=>advancedFreeCADUI.open('defeature'),'cad-revolution':()=>advancedFreeCADUI.open('revolution'),'cad-helix':()=>advancedFreeCADUI.open('helix'),joints:()=>jointsUI.open(),'linked-contours':()=>modelingUI.openLinks(),'project-parameters':()=>projectParametersUI.open(),drawing:()=>drawingUI.open(),'cad-edit-modeling':()=>modelingUI.openEdit(),'cad-contour':()=>modelingUI.open('contour'),'cad-face-offset':()=>modelingUI.open('face-offset'),'cad-shell':()=>modelingUI.open('shell'),'cad-loft':()=>modelingUI.open('loft'),'cad-sweep':()=>modelingUI.open('sweep'),'sketch-templates':()=>ui.library.open(),'model-compare':()=>thicknessUI.comparison.open(),'sketch-on-part':()=>sketchUI.openOnPart(),thickness:()=>thicknessUI.open(),...ui.actions,...tools.actions,...meshTools.actions,'mesh-close-hole':()=>meshHoleFillUI.open(),'mesh-repair':()=>meshRepairUI.open(),'mesh-reduce':()=>meshReduceUI.open(),'mesh-curved-reduce':()=>meshReduceUI.open('curved-v1'),'mesh-large-reduce':()=>meshReduceUI.open('large-v1'),'mesh-remesh':()=>meshRemeshUI.open(),'mesh-smooth':()=>meshSmoothUI.open(),'mesh-sculpt':()=>meshSculptUI.open(),'mesh-erase-fill':()=>meshEraseFillUI.open(),'mesh-make-solid':()=>meshMakeSolidUI.open(),'mesh-hollow':()=>meshHollowUI.open(),'mesh-features':()=>meshFeaturesUI.open(),'mesh-inspector':()=>meshInspectorUI.open(),'mesh-select':()=>meshSelectionUI.open(),'mesh-more':()=>meshExtras.open(),measure:()=>inspectionUI.openMeasure(),legacyMeasure:()=>!selection.length||selection.some(t=>project().nodes.find(n=>n.id===t.rootId)?.kind!=='cad')?meshExtras.open('measure'):tools.actions.measure(),ruler:()=>project().nodes.some(n=>n.kind==='mesh'&&domainAllowsId(n.id))?meshExtras.open('ruler'):tools.actions.ruler(),section:()=>inspectionUI.openSection(),inspect:()=>selection.some(t=>project().nodes.find(n=>n.id===t.rootId)?.kind!=='cad')||!selection.length&&project().nodes.some(n=>n.kind==='mesh'&&domainAllowsId(n.id))?meshExtras.open('inspect'):tools.actions.inspect(),array:()=>selection.some(t=>project().nodes.find(n=>n.id===t.rootId)?.kind!=='cad')?meshExtras.open('array'):tools.actions.array(),'general-fit':()=>meshSelection()?meshExtras.open('fit'):tools.actions['general-fit'](),'lay-on-face':()=>meshSelection()?meshExtras.open('floor'):tools.actions['lay-on-face'](),'reference-place':()=>meshSelection()?meshExtras.open('reference'):tools.actions['reference-place'](),'edge-finish':()=>meshTools.open('finish'),'face-floor':()=>meshExtras.open('floor'),'split-plane':()=>meshTools.open('split'),'extract-bodies':()=>meshTools.open('bodies'),'hole-wizard':()=>meshTools.open('drill'),split:()=>meshSelection()?meshTools.open('split'):tools.actions.split(),extract:()=>meshSelection()?meshTools.open('bodies'):tools.actions.extract(),drill:()=>meshSelection()?meshTools.open('drill'):tools.actions.drill(),edges:()=>meshSelection()?meshTools.open('finish'):tools.actions.edges(),round:()=>meshSelection()?meshTools.actions['mesh-round']():tools.actions.round(),chamfer:()=>meshSelection()?meshTools.actions['mesh-chamfer']():tools.actions.chamfer(),sketch:()=>sketchUI.open(false,activeEasyKind()==='mesh'||meshSelection()),'edit-sketch':()=>sketchUI.open(true,meshSelection()),isolate:isolateSelection,'end-isolation':endIsolation,'cad-to-mesh':()=>meshCopyUI.open(),'mesh-to-cad':()=>{escape();readyForFile();if(selection.length!==1)throw Error('Genau ein Netzteil auswählen.');const revision=controller.revision(),input=meshCadInput(project(),selection[0],revision);functionsUI.converter(input.file,{boundSource:{source:input.source,current:()=>controller.revision()===revision}});},functions:()=>functionsUI.show(),'stl-to-step':()=>functionsUI.choose(),undo:async()=>{if(meshSelectionUI?.state()){meshSelectionUI.undo();return;}controller.undo();await refreshTask;},redo:async()=>{if(meshSelectionUI?.state()){meshSelectionUI.redo();return;}controller.redo();await refreshTask;},duplicate,copy:copySelection,paste,delete:remove,group,intersect:()=>group('intersection'),ungroup,align:alignPanel,mirror:mirrorPanel,drop,center:centerSelection,'workplane-set':workplanePick,'workplane-top':planeTop,'reset-plane':()=>mutate(draft=>{draft.workplane={origin:[0,0,0],orientation:[0,0,0,1],reference:null};},'Grundebene wiederherstellen'),fit:()=>view.fit(),projection:()=>{$('projection').textContent=view.toggleProjection();},demo:loadDemo,new:async()=>{readyForFile({allowPartPreview:true});if(!await confirmProjectChange({allowPartPreview:true}))return;partPropertiesUI?.close();partPropertiesUI?.suspendExplosion();await controller.open(createCadProject(),{label:'Neues CAD-Projekt'});tabletPartUI?.refresh();partPropertiesUI?.restoreExplosion(null);nextImportIndex=0;isolation.end();updateIsolation();activeProjectFile=null;preferredProjectFormat='ocad';savedRevision=null;savedWorkspaceSignature=null;cleanRevision=controller.revision();recoveredProject=false;select([]);await refreshTask;cleanWorkspaceSignature=workspaceSignature();updateSaveState();},open:()=>openProject(),projects:projectsUI.show,save,'save-as':()=>save({saveAs:true}),import:()=>$('import-file').click(),export:exportDialog,help};
 
 const scaleNavigation=new Set(['fit','projection','help']);
 const scaleInterruptions=new Set(['new','open','undo','redo']);
@@ -916,7 +1140,7 @@ document.addEventListener('click',event=>{
   if(event.target.closest('button,input,select,textarea,[role="button"]')){event.preventDefault();event.stopImmediatePropagation();}
   return;
  }
- if(!scalingPending()||event.target.closest('.cad-corner-dialog'))return;
+ if(!scalingPending()||event.target.closest('.cad-scale-dimensions[data-editable]'))return;
  if(scaleNavigation.has(name)||scaleInterruptions.has(name))return;
  if(event.target.closest('button,input,select,textarea,[role="button"]')){event.preventDefault();event.stopImmediatePropagation();}
 },true);
@@ -932,17 +1156,17 @@ document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>view
 for(const name of Object.keys(actions))if(!['measure','section','fit','projection','save','save-as','export','copy'].includes(name)&&typeof actions[name]==='function'){
  const action=actions[name];actions[name]=(...args)=>{inspectionUI?.close();thicknessUI?.close();return action(...args);};
 }
-$('ai-open').onclick=()=>safe(()=>aiUI.openChat());$('magnet-mode').onclick=()=>safe(magnet);$('modal-close').onclick=()=>{if(cornerSession){cornerSession.finish();return;}functionsUI?.cancel();if($("modal").classList.contains("ai-modal")){$("modal").close();return;}if(localStlTask)escape();$('modal').close();if(activePreview)escape();};$('modal').addEventListener('cancel',()=>{if(!$('modal').classList.contains('ai-modal'))escape();});$('open-file').onchange=()=>safe(async()=>{const file=$('open-file').files[0];$('open-file').value='';if(file)await openFile(file);});$('import-file').onchange=()=>safe(()=>{const files=Array.from($('import-file').files);$('import-file').value='';if(files.length)return importDialog(exchangeMainFile(files,{freecad:true}),{files});});
+$('ai-open').onclick=()=>safe(()=>aiUI.openChat());$('magnet-mode').onclick=()=>safe(magnet);$('modal-close').onclick=()=>{functionsUI?.cancel();if($("modal").classList.contains("ai-modal")){$("modal").close();return;}if(localStlTask)escape();$('modal').close();if(activePreview)escape();};$('modal').addEventListener('cancel',()=>{if(!$('modal').classList.contains('ai-modal'))escape();});$('open-file').onchange=()=>safe(async()=>{const file=$('open-file').files[0];$('open-file').value='';if(file)await openFile(file);});$('import-file').onchange=()=>safe(()=>{const files=Array.from($('import-file').files);$('import-file').value='';if(files.length)return importDialog(exchangeMainFile(files,{freecad:true}),{files});});
 
 for(const [id,key]of [['toggle-left','library'],['toggle-right','inspector']])$(id).onclick=()=>safe(()=>layoutUI.togglePanel(key));
 
 $('viewport').addEventListener('dragover',event=>{event.preventDefault();event.dataTransfer.dropEffect='copy';});$('viewport').addEventListener('drop',event=>{event.preventDefault();void safe(async()=>{if(event.dataTransfer.files.length){const files=Array.from(event.dataTransfer.files);return importDialog(exchangeMainFile(files,{freecad:true}),{files});}const plugin=event.dataTransfer.getData('application/x-offlinecad-plugin');if(plugin){const [id,shapeId]=JSON.parse(plugin),pack=plugins.find(pack=>pack.manifest.id===id);if(!pack)throw Error('Plugin fehlt.');return addPlugin(pack.manifest,shapeId,event);}const type=event.dataTransfer.getData('text/plain');if(type)return addShape(type,event);});});
 
-document.addEventListener('keydown',event=>{if(!window.__cadReady)return;if(event.key==='Escape'){if(functionsUI?.state()?.projectPreview)event.preventDefault();escape();return;}if(event.target.closest('input,textarea,select,[contenteditable="true"]')||$('modal').open&&!cornerSession||layoutUI.isActive()||drawingUI?.state()||projectParametersUI?.state())return;const ctrl=event.ctrlKey||event.metaKey,key=event.key.toLowerCase();if(scalingPending()){const action=ctrl?{z:event.shiftKey?'redo':'undo',y:'redo',o:'open'}[key]:key==='f'?'fit':null;if(action){event.preventDefault();void safe(actions[action]);}return;}if(referenceRebindUI?.state()){if(!ctrl&&key==='f'){event.preventDefault();view.fit();return;}event.preventDefault();toast('Bezugsneuzuordnung zuerst übernehmen oder abbrechen.');return;}if(partPropertiesUI?.editing()){if(!ctrl&&key==='f'){event.preventDefault();view.fit();return;}if(ctrl||['delete','backspace','arrowleft','arrowright','arrowup','arrowdown','pageup','pagedown','t','s','r','l','m','d','w'].includes(key)){event.preventDefault();toast('Teileeigenschaften zuerst übernehmen oder schließen.');return;}}if(meshHoleFillUI?.state()||meshRepairUI?.state()||(meshReduceUI?.state()||meshRemeshUI?.state()||(meshSmoothUI?.state()||meshSculptUI?.state())||meshEraseFillUI?.state()||meshMakeSolidUI?.state()||(meshHollowUI?.state()||meshFeaturesUI?.state()))||meshPartitionDraft()){if(!ctrl&&key==='f'){event.preventDefault();view.fit();return;}if(ctrl||['delete','backspace','arrowleft','arrowright','arrowup','arrowdown','pageup','pagedown','t','s','r','l','m','d','w'].includes(key)){event.preventDefault();toast('Netzbearbeitung zuerst übernehmen oder abbrechen.');return;}}if(meshSelectionUI?.state()){if(ctrl&&['z','y'].includes(key)){event.preventDefault();void safe(()=>key==='y'||event.shiftKey?meshSelectionUI.redo():meshSelectionUI.undo());return;}if(!ctrl&&key==='f'){event.preventDefault();view.fit();return;}if(ctrl||['delete','backspace','arrowleft','arrowright','arrowup','arrowdown','pageup','pagedown','t','s','r','l','m','d','w'].includes(key)){event.preventDefault();toast('Netz-Flächenauswahl zuerst übernehmen oder abbrechen.');return;}}if(modelingUI?.state()||advancedFreeCADUI?.state()){if(!ctrl&&key==='f'){event.preventDefault();view.fit();return;}if(ctrl||['delete','backspace','arrowleft','arrowright','arrowup','arrowdown','pageup','pagedown','t','s','r','l','m','d','w'].includes(key)){event.preventDefault();toast('CAD-Bearbeitung zuerst übernehmen oder abbrechen.');return;}}if(ctrl&&key==="a"){event.preventDefault();select((nativeScene?.objects??[]).filter(item=>!item.target.path.length&&!item.hidden&&view.allows(item.target.rootId)).map(item=>item.target));return;}if(!ctrl&&["t","s","r"].includes(key)){event.preventDefault();setMode({t:"translate",s:"scale",r:"rotate"}[key]);return;}let action;if(ctrl)action={z:event.shiftKey?'redo':'undo',y:'redo',d:'duplicate',c:'copy',v:'paste',g:event.shiftKey?'ungroup':'group',s:event.shiftKey?'save-as':'save',o:'open'}[key];else action={delete:'delete',backspace:'delete',f:'fit',l:'align',m:'mirror',d:'drop',w:'workplane-set'}[key];if(action){event.preventDefault();void safe(actions[action]);return;}if(['arrowleft','arrowright','arrowup','arrowdown','pageup','pagedown'].includes(key)){event.preventDefault();const step=preferences.snap||1,delta={arrowleft:[-step,0,0],arrowright:[step,0,0],arrowup:[0,step,0],arrowdown:[0,-step,0],pageup:[0,0,step],pagedown:[0,0,-step]}[key],frame=activeFrame(),world=new THREE.Vector3(...delta).transformDirection(new THREE.Matrix4().fromArray(frame)).multiplyScalar(step);void safe(()=>gesture({targets:selected({editable:true}).map(value=>value.target),delta:translate(world.toArray()),revision:controller.revision()}));}});
+document.addEventListener('keydown',event=>{if(!window.__cadReady)return;if(event.key==='Escape'){if(functionsUI?.state()?.projectPreview)event.preventDefault();escape();return;}if(event.target.closest('input,textarea,select,[contenteditable="true"]')||$('modal').open||layoutUI.isActive()||drawingUI?.state()||projectParametersUI?.state())return;const ctrl=event.ctrlKey||event.metaKey,key=event.key.toLowerCase();if(scalingPending()){const action=ctrl?{z:event.shiftKey?'redo':'undo',y:'redo',o:'open'}[key]:key==='f'?'fit':null;if(action){event.preventDefault();void safe(actions[action]);}return;}if(referenceRebindUI?.state()){if(!ctrl&&key==='f'){event.preventDefault();view.fit();return;}event.preventDefault();toast('Bezugsneuzuordnung zuerst übernehmen oder abbrechen.');return;}if(partPropertiesUI?.editing()){if(!ctrl&&key==='f'){event.preventDefault();view.fit();return;}if(ctrl||['delete','backspace','arrowleft','arrowright','arrowup','arrowdown','pageup','pagedown','t','s','r','l','m','d','w'].includes(key)){event.preventDefault();toast('Teileeigenschaften zuerst übernehmen oder schließen.');return;}}if(meshHoleFillUI?.state()||meshRepairUI?.state()||(meshReduceUI?.state()||meshRemeshUI?.state()||(meshSmoothUI?.state()||meshSculptUI?.state())||meshEraseFillUI?.state()||meshMakeSolidUI?.state()||(meshHollowUI?.state()||meshFeaturesUI?.state()))||meshPartitionDraft()){if(!ctrl&&key==='f'){event.preventDefault();view.fit();return;}if(ctrl||['delete','backspace','arrowleft','arrowright','arrowup','arrowdown','pageup','pagedown','t','s','r','l','m','d','w'].includes(key)){event.preventDefault();toast('Netzbearbeitung zuerst übernehmen oder abbrechen.');return;}}if(meshSelectionUI?.state()){if(ctrl&&['z','y'].includes(key)){event.preventDefault();void safe(()=>key==='y'||event.shiftKey?meshSelectionUI.redo():meshSelectionUI.undo());return;}if(!ctrl&&key==='f'){event.preventDefault();view.fit();return;}if(ctrl||['delete','backspace','arrowleft','arrowright','arrowup','arrowdown','pageup','pagedown','t','s','r','l','m','d','w'].includes(key)){event.preventDefault();toast('Netz-Flächenauswahl zuerst übernehmen oder abbrechen.');return;}}if(modelingUI?.state()||advancedFreeCADUI?.state()){if(!ctrl&&key==='f'){event.preventDefault();view.fit();return;}if(ctrl||['delete','backspace','arrowleft','arrowright','arrowup','arrowdown','pageup','pagedown','t','s','r','l','m','d','w'].includes(key)){event.preventDefault();toast('CAD-Bearbeitung zuerst übernehmen oder abbrechen.');return;}}if(ctrl&&key==="a"){event.preventDefault();select((nativeScene?.objects??[]).filter(item=>!item.target.path.length&&!item.hidden&&view.allows(item.target.rootId)).map(item=>item.target));return;}if(!ctrl&&["t","s","r"].includes(key)){event.preventDefault();setMode({t:"translate",s:"scale",r:"rotate"}[key]);return;}let action;if(ctrl)action={z:event.shiftKey?'redo':'undo',y:'redo',d:'duplicate',c:'copy',v:'paste',g:event.shiftKey?'ungroup':'group',s:event.shiftKey?'save-as':'save',o:'open'}[key];else action={delete:'delete',backspace:'delete',f:'fit',l:'align',m:'mirror',d:'drop',w:'workplane-set'}[key];if(action){event.preventDefault();void safe(actions[action]);return;}if(['arrowleft','arrowright','arrowup','arrowdown','pageup','pagedown'].includes(key)){event.preventDefault();const step=preferences.snap||1,delta={arrowleft:[-step,0,0],arrowright:[step,0,0],arrowup:[0,step,0],arrowdown:[0,-step,0],pageup:[0,0,step],pagedown:[0,0,-step]}[key],frame=activeFrame(),world=new THREE.Vector3(...delta).transformDirection(new THREE.Matrix4().fromArray(frame)).multiplyScalar(step);void safe(()=>gesture({targets:selected({editable:true}).map(value=>value.target),delta:translate(world.toArray()),revision:controller.revision()}));}});
 
 const externalAutomation=createCadAutomationSession({onStart:(method,id)=>window.offlinecadDesktop?.automationProgress?.({id,phase:method,revision:controller.revision()}),dispatch:(method,args)=>access.dispatch(method,args),cancel:method=>{controller.cancel();if(method==='preview')clearPreview();},discard:id=>access.discard(id),completedPreview:async(result,id)=>{if(!activePreview||activePreview.aiInProgress&&activePreview.automationRequestId===id)await showPreview(result);},failedPreview:id=>{if(activePreview?.aiInProgress&&activePreview.automationRequestId===id)clearPreview();}});
 window.offlinecadDesktop?.onAutomationCancel?.(id=>externalAutomation.cancel(id));
-window.offlinecadDesktop?.onAutomation(async(method,args,id)=>{try{if(!window.__cadReady)throw Error('CAD kernel is not ready.');return {format:'FormnaroAutomationReply',version:1,ok:true,value:await (method==='agent_chat'&&window.offlinecadDesktop.orcaRequest?aiUI.externalAgentRequest(args):externalAutomation.run(method,args,id))};}catch(error){return {format:'FormnaroAutomationReply',version:1,ok:false,error:{message:String(error.message),...(typeof error.code==='string'?{code:error.code}:{}),feedback:aiFeedback(error)}};}});
+window.offlinecadDesktop?.onAutomation(async(method,args,id)=>{try{if(!window.__cadReady)throw Error('CAD kernel is not ready.');return {format:'FormnaroAutomationReply',version:1,ok:true,value:await (Object.hasOwn(tabletRpc,method)?tabletRpc[method](args):method==='agent_chat'&&window.offlinecadDesktop.orcaRequest?aiUI.externalAgentRequest(args):externalAutomation.run(method,args,id))};}catch(error){return {format:'FormnaroAutomationReply',version:1,ok:false,error:{message:String(error.message),...(typeof error.code==='string'?{code:error.code}:{}),feedback:aiFeedback(error)}};}});
 
 // View-only changes also belong to recovery, without writing a large BRep on
 

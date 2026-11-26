@@ -12,7 +12,7 @@
     },
     {
       "file": "stlstep/advanced_regions.py",
-      "sha256": "a6b1e285124a40d6e838001d8ec5a3816b4bb28547193863711946b69994fab8"
+      "sha256": "017c04408474c882c22469ea1b9747071a6dab35a4815b8cc9777c0e3ff77d9a"
     },
     {
       "file": "stlstep/chamfer_profiles.py",
@@ -48,7 +48,7 @@
     },
     {
       "file": "stlstep/engine.py",
-      "sha256": "1f31df51a5630bf4c6f4b5e0fa342ca15d1acf058ecdf233ed105df18832d9dd"
+      "sha256": "3b9425eb591f780407d85bdd8913ae59ed0965ed4b16e8d82332c2e0768c9247"
     },
     {
       "file": "stlstep/fillets.py",
@@ -60,7 +60,7 @@
     },
     {
       "file": "stlstep/freeform_verification.py",
-      "sha256": "6b8f6aaa64ff45ad4c7c936b510c4060ea91378e02376903b24bf9642e44a044"
+      "sha256": "260950f1f8d82764a7ba790afbe85950b10e66f4eddf32682d229d7d22baa48b"
     },
     {
       "file": "stlstep/gui.py",
@@ -108,7 +108,7 @@
     },
     {
       "file": "stlstep/repair.py",
-      "sha256": "d25b1c43d7c84e1e52759eb7ea8e844ca1d65172368dcbc85ab53355e2d40539"
+      "sha256": "478b3a6524d501cc9be60dd517e630dddc45dd15b4c6767c3795bad138a8e304"
     },
     {
       "file": "stlstep/revolved.py",
@@ -137,6 +137,18 @@
     {
       "file": "uv.lock",
       "sha256": "cbe66b8c1d5cc07a266b8b8a879c2f95e787df4a3d8b6c03420e52b43ca86c93"
+    },
+    {
+      "file": "stlstep/outer_skin.py",
+      "sha256": "20026f81167c70d8fd8d769d153a109d75ac32117837276623b1d514fd5f62ed"
+    },
+    {
+      "file": "stlstep/repair_budget.py",
+      "sha256": "87d20f2bdcfd3b413bda4ec38769ece6f41e90f2b63fb51e1e48f28938473474"
+    },
+    {
+      "file": "stlstep/surface_check.py",
+      "sha256": "196be2ddb820f97b0a163d9c02619b5f5e040a8416bab16957cf1539aca0f141"
     }
   ],
   "upstreamAcceptance": {
@@ -145,9 +157,9 @@
     "zipSha256": "dd924bdbe2bcb065acdddf0577a4d2f50abfe4c62881197fa160f58c9f399f36"
   },
   "bridgeProtocol": 2,
-  "bridgeSourceSha256": "0ac0284c50976980a31685b477bd31d5d46a36734742401ff5ff14242b73c70b",
-  "headlessExeSha256": "7ab28f0d75f61a9e0f80111f5f5f2c8543fae7ac4f3193d25cdb9b754d7719ea",
-  "runtimeDirectory": "runtime-v010-minimal",
+  "bridgeSourceSha256": "877a171ce6136258ee0f802fcb7a8aa6d6a145d690ad966f9616a22dc2ee05a7",
+  "headlessExeSha256": "0dc768623b199fa94773a60f5d27e29ee19d6bf8beb3557c350a212785d8057c",
+  "runtimeDirectory": "runtime-v010-outerskin",
   "runtimeSecurity": {
     "previousBuild": {
       "headlessExeSha256": "0a82abeca93a30f5ddbdf3698dd094326bf247aba87b25e958a033fc922fd464",
@@ -195,5 +207,147 @@
     "headlessVtkBridgeSHA256": "ca65392a4481b8d3fef220f6c8e349a2c71bae2d6d549a0a732675583cefcb90",
     "freezeSpecSHA256": "9d483391f3e2ed078fc9b6a297782ccf69e67d002599863fd30fe80acb8f4f59",
     "scope": "Fixed headless converter protocol only. General VTK umbrella replaced by retained real core types; direct CadQuery VTK imports use normal dependency hooks. No general viewer/VR/JIT API. Engine algorithms unchanged."
+  },
+  "outerSkinEngine": {
+    "previous": {
+      "runtimeDirectory": "runtime-v010-minimal",
+      "headlessExeSha256": "7ab28f0d75f61a9e0f80111f5f5f2c8543fae7ac4f3193d25cdb9b754d7719ea"
+    },
+    "sourceCommit": "47d4e87",
+    "engineSourceChanges": [
+      {
+        "file": "stlstep/advanced_regions.py",
+        "previousSha256": "a6b1e285124a40d6e838001d8ec5a3816b4bb28547193863711946b69994fab8",
+        "sha256": "017c04408474c882c22469ea1b9747071a6dab35a4815b8cc9777c0e3ff77d9a",
+        "reason": "N06 freeform BSpline wall edge pcurves",
+        "commits": [
+          "b496801 Fix freeform BSpline wall edge pcurves for STEP BOP validity (N06)"
+        ]
+      },
+      {
+        "file": "stlstep/engine.py",
+        "previousSha256": "1f31df51a5630bf4c6f4b5e0fa342ca15d1acf058ecdf233ed105df18832d9dd",
+        "sha256": "3b9425eb591f780407d85bdd8913ae59ed0965ed4b16e8d82332c2e0768c9247",
+        "reason": "N03 budget, N04-B repaired mesh on STEP failure",
+        "commits": [
+          "47d4e87 N04-B: Reparatur bei fehlgeschlagenem STEP ausgeben",
+          "86232e2 N03: Abweichungsbudget 0,15 mm (N03-01..04)"
+        ]
+      },
+      {
+        "file": "stlstep/freeform_verification.py",
+        "previousSha256": "6b8f6aaa64ff45ad4c7c936b510c4060ea91378e02376903b24bf9642e44a044",
+        "sha256": "260950f1f8d82764a7ba790afbe85950b10e66f4eddf32682d229d7d22baa48b",
+        "reason": "N06 freeform BSpline wall edge pcurves",
+        "commits": [
+          "b496801 Fix freeform BSpline wall edge pcurves for STEP BOP validity (N06)"
+        ]
+      },
+      {
+        "file": "stlstep/repair.py",
+        "previousSha256": "d25b1c43d7c84e1e52759eb7ea8e844ca1d65172368dcbc85ab53355e2d40539",
+        "sha256": "478b3a6524d501cc9be60dd517e630dddc45dd15b4c6767c3795bad138a8e304",
+        "reason": "N03 budget, N03-C outer skin in the repair path",
+        "commits": [
+          "69d0fd6 N03-C: Au\u00c3\u0178enhaut im Reparaturpfad anwenden",
+          "86232e2 N03: Abweichungsbudget 0,15 mm (N03-01..04)"
+        ]
+      },
+      {
+        "file": "stlstep/outer_skin.py",
+        "previousSha256": null,
+        "sha256": "20026f81167c70d8fd8d769d153a109d75ac32117837276623b1d514fd5f62ed",
+        "reason": "N03-B outer-skin-v1 Python port (new file)",
+        "commits": [
+          "d983370 N03-B: Au\u00c3\u0178enhaut in die \u00c3\u0153bernahmepr\u00c3\u00bcfung"
+        ]
+      },
+      {
+        "file": "stlstep/repair_budget.py",
+        "previousSha256": null,
+        "sha256": "87d20f2bdcfd3b413bda4ec38769ece6f41e90f2b63fb51e1e48f28938473474",
+        "reason": "N03 deviation budget, N03-B/N03-C outer-skin admission (new file)",
+        "commits": [
+          "69d0fd6 N03-C: Au\u00c3\u0178enhaut im Reparaturpfad anwenden",
+          "d983370 N03-B: Au\u00c3\u0178enhaut in die \u00c3\u0153bernahmepr\u00c3\u00bcfung",
+          "86232e2 N03: Abweichungsbudget 0,15 mm (N03-01..04)"
+        ]
+      },
+      {
+        "file": "stlstep/surface_check.py",
+        "previousSha256": null,
+        "sha256": "196be2ddb820f97b0a163d9c02619b5f5e040a8416bab16957cf1539aca0f141",
+        "reason": "N03 two-sided surface sampling (new file)",
+        "commits": [
+          "86232e2 N03: Abweichungsbudget 0,15 mm (N03-01..04)"
+        ]
+      }
+    ],
+    "bridgeChange": {
+      "previousSha256": "0ac0284c50976980a31685b477bd31d5d46a36734742401ff5ff14242b73c70b",
+      "sha256": "877a171ce6136258ee0f802fcb7a8aa6d6a145d690ad966f9616a22dc2ee05a7",
+      "reason": "N04-B repaired artefacts on STEP failure",
+      "commits": [
+        "47d4e87 N04-B: Reparatur bei fehlgeschlagenem STEP ausgeben"
+      ]
+    },
+    "dependencyBinariesIdenticalToBaseline": true,
+    "baseline": "converter",
+    "binariesChecked": 364,
+    "osRuntimeFilesFromBaseline": [
+      "_internal/MSVCP140.dll",
+      "_internal/api-ms-win-core-console-l1-1-0.dll",
+      "_internal/api-ms-win-core-datetime-l1-1-0.dll",
+      "_internal/api-ms-win-core-debug-l1-1-0.dll",
+      "_internal/api-ms-win-core-errorhandling-l1-1-0.dll",
+      "_internal/api-ms-win-core-file-l1-1-0.dll",
+      "_internal/api-ms-win-core-file-l1-2-0.dll",
+      "_internal/api-ms-win-core-file-l2-1-0.dll",
+      "_internal/api-ms-win-core-handle-l1-1-0.dll",
+      "_internal/api-ms-win-core-heap-l1-1-0.dll",
+      "_internal/api-ms-win-core-interlocked-l1-1-0.dll",
+      "_internal/api-ms-win-core-libraryloader-l1-1-0.dll",
+      "_internal/api-ms-win-core-localization-l1-2-0.dll",
+      "_internal/api-ms-win-core-memory-l1-1-0.dll",
+      "_internal/api-ms-win-core-namedpipe-l1-1-0.dll",
+      "_internal/api-ms-win-core-processenvironment-l1-1-0.dll",
+      "_internal/api-ms-win-core-processthreads-l1-1-0.dll",
+      "_internal/api-ms-win-core-processthreads-l1-1-1.dll",
+      "_internal/api-ms-win-core-profile-l1-1-0.dll",
+      "_internal/api-ms-win-core-rtlsupport-l1-1-0.dll",
+      "_internal/api-ms-win-core-string-l1-1-0.dll",
+      "_internal/api-ms-win-core-synch-l1-1-0.dll",
+      "_internal/api-ms-win-core-synch-l1-2-0.dll",
+      "_internal/api-ms-win-core-sysinfo-l1-1-0.dll",
+      "_internal/api-ms-win-core-timezone-l1-1-0.dll",
+      "_internal/api-ms-win-core-util-l1-1-0.dll",
+      "_internal/api-ms-win-crt-conio-l1-1-0.dll",
+      "_internal/api-ms-win-crt-convert-l1-1-0.dll",
+      "_internal/api-ms-win-crt-environment-l1-1-0.dll",
+      "_internal/api-ms-win-crt-filesystem-l1-1-0.dll",
+      "_internal/api-ms-win-crt-heap-l1-1-0.dll",
+      "_internal/api-ms-win-crt-locale-l1-1-0.dll",
+      "_internal/api-ms-win-crt-math-l1-1-0.dll",
+      "_internal/api-ms-win-crt-private-l1-1-0.dll",
+      "_internal/api-ms-win-crt-process-l1-1-0.dll",
+      "_internal/api-ms-win-crt-runtime-l1-1-0.dll",
+      "_internal/api-ms-win-crt-stdio-l1-1-0.dll",
+      "_internal/api-ms-win-crt-string-l1-1-0.dll",
+      "_internal/api-ms-win-crt-time-l1-1-0.dll",
+      "_internal/api-ms-win-crt-utility-l1-1-0.dll",
+      "_internal/ucrtbase.dll"
+    ],
+    "python": "3.13.3",
+    "pyinstaller": "6.22.3",
+    "versions": {
+      "cadquery": "2.8.0",
+      "cadquery-ocp": "7.9.3.1.1",
+      "vtk": "9.6.2",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "pillow": "13.0.0",
+      "setuptools": "84.2.1"
+    },
+    "scope": "Engine change: N03 deviation budget, outer-skin-v1 admission (N03-B/N03-C), repaired mesh on STEP failure (N04-B), N06 freeform pcurves. Dependencies, freeze spec and headless VTK bridge unchanged. Released runtimes untouched; converter/provenance.json not switched."
   }
 }

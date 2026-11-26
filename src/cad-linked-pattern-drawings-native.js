@@ -1,6 +1,12 @@
 import { cadProjectSnapshot } from './cad-project.js';
 import { createCadDrawingNative } from './cad-drawing-native.js';
-import { updateCadDrawingProjection, cadDrawingDimension } from './cad-drawing-data.js';
+import {
+  updateCadDrawingProjection,
+  cadDrawingDimension,
+  cadDrawingViewScale,
+  cadDrawingProjectionOptions,
+  updateCadDrawingDetailViews,
+} from './cad-drawing-data.js';
 import { cadDrawingUpdatedPosition } from './cad-drawing-layout.js';
 import { cadProjectParameterExportProblems } from './cad-project-parameters-export.js';
 import { cadContourLinkProblems } from './cad-linked-contours-data.js';
@@ -20,6 +26,7 @@ export function updateCadPatternDrawings(project, views, { oc, service, signal }
   const draft = cadProjectSnapshot(project),
     projectView = createCadDrawingNative({ oc, service }),
     updated = [],
+    touchedSheets = new Set(),
     unresolved = [],
     deferredViews = [],
     states = new Map(
@@ -35,6 +42,8 @@ export function updateCadPatternDrawings(project, views, { oc, service, signal }
       sheet = draft.drawings.sheets[index],
       view = sheet?.views.find((view) => view.id === target.viewId);
     if (!view) throw Error('Die betroffene Muster-Zeichnungsansicht fehlt.');
+    touchedSheets.add(sheet.id);
+    if (view.kind === 'detail') continue;
     const options = { ids: view.sourceIds, format: 'step', includeHidden: true },
       problems = [
         ...cadProjectParameterExportProblems(draft, options),
@@ -76,12 +85,13 @@ export function updateCadPatternDrawings(project, views, { oc, service, signal }
       deferredViews.push({ ...target, inactiveSourceIds: inactive });
       continue;
     }
-    const projection = projectView(draft, {
-        ids: view.sourceIds,
-        view: view.kind,
-        ...(view.kind === 'section' ? { section: view.section } : {}),
-      }),
-      position = cadDrawingUpdatedPosition(view.position, view.projection, projection, sheet.scale),
+    const projection = projectView(draft, cadDrawingProjectionOptions(view)),
+      position = cadDrawingUpdatedPosition(
+        view.position,
+        view.projection,
+        projection,
+        cadDrawingViewScale(view, sheet),
+      ),
       next = updateCadDrawingProjection(sheet, view.id, projection);
     next.views.find((v) => v.id === view.id).position = position;
     if (view.sourceIds.some((id) => !projection.sourceSignatures.some((source) => source.id === id)))
@@ -89,7 +99,7 @@ export function updateCadPatternDrawings(project, views, { oc, service, signal }
         code: 'PATTERN_DRAWING_SOURCE_LOST',
       });
     for (const annotation of next.annotations)
-      if (annotation.kind !== 'label' && annotation.viewId === view.id)
+      if (!['label', 'balloon'].includes(annotation.kind) && annotation.viewId === view.id)
         try {
           cadDrawingDimension(next, annotation);
         } catch {
@@ -105,6 +115,11 @@ export function updateCadPatternDrawings(project, views, { oc, service, signal }
         unresolved.push({ ...target, annotationId: annotation.id });
     draft.drawings.sheets[index] = next;
     updated.push(target);
+  }
+  for (const sheetId of touchedSheets) {
+    const index = draft.drawings.sheets.findIndex((sheet) => sheet.id === sheetId);
+    if (index >= 0 && draft.drawings.sheets[index].views.some((view) => view.kind === 'detail'))
+      draft.drawings.sheets[index] = updateCadDrawingDetailViews(draft.drawings.sheets[index]).sheet;
   }
   return {
     project: cadProjectSnapshot(draft),

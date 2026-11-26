@@ -6,6 +6,11 @@ import {
   cadDrawingPaperSize,
   cadDrawingProblems,
   cadDrawingDimension,
+  cadDrawingBalloon,
+  createCadDrawingBalloon,
+  cadDrawingViewScale,
+  cadDrawingProjectionOptions,
+  updateCadDrawingDetailViews,
   updateCadDrawingProjection,
 } from './cad-drawing-data.js';
 import { cadDrawingSvg, cadDrawingDxf } from './cad-drawing-export.js';
@@ -68,19 +73,62 @@ const viewSchema = {
   required: ['id', 'kind', 'sourceIds', 'position'],
   properties: {
     id: idSchema,
-    kind: { enum: ['front', 'side', 'top', 'section'] },
+    kind: { enum: ['front', 'side', 'top', 'section', 'detail', 'exploded'] },
     sourceIds: { type: 'array', minItems: 1, maxItems: 128, uniqueItems: true, items: idSchema },
     position: pointSchema,
+    scale: {
+      type: 'number',
+      minimum: 0.001,
+      maximum: 1000,
+      description:
+        'Own paper scale of this view. Detail views require it; other views fall back to the sheet scale.',
+    },
+    cutout: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['sourceViewId', 'center', 'radius'],
+      description: 'Required for detail views and rejected on every other view kind.',
+      properties: {
+        sourceViewId: idSchema,
+        center: pointSchema,
+        radius: { type: 'number', minimum: 0, maximum: 1e6 },
+      },
+    },
     section: {
       type: 'object',
       additionalProperties: false,
       required: ['axis', 'offset'],
       properties: { axis: { enum: [0, 1, 2] }, offset: { type: 'number', minimum: -100000, maximum: 100000 } },
     },
+    assemblyViewId: { ...idSchema, description: 'Optional assembly view whose saved part selection this explosion shares.' },
+    explosion: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['version', 'distance', 'parts'],
+      description: 'The saved workspace explosion restricted to this exploded view’s source IDs.',
+      properties: {
+        version: { const: 1 },
+        distance: { type: 'number', exclusiveMinimum: 0, maximum: 1000 },
+        parts: {
+          type: 'array',
+          minItems: 1,
+          maxItems: 128,
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'direction'],
+            properties: {
+              id: idSchema,
+              direction: { type: 'array', minItems: 3, maxItems: 3, items: { type: 'number' } },
+            },
+          },
+        },
+      },
+    },
     projection: {
       type: 'object',
       description:
-        'Read-only cached native projection. Omit on put: the confirmed cache of the same view kind is retained, and changed source/cut settings mark it stale until explicit update. Supplied caches must equal a previously confirmed native result.',
+        'Read-only cached native projection. Omit on put: the confirmed cache of the same view kind is retained, and changed source, cut or explosion settings mark it stale until explicit update. Supplied caches must equal a previously confirmed native result.',
     },
   },
 };
@@ -106,6 +154,20 @@ const annotationSchema = {
         id: idSchema,
         kind: { const: 'label' },
         text: { type: 'string', maxLength: 1000 },
+        position: pointSchema,
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['id', 'kind', 'viewId', 'curveId', 'instanceId', 'sourceReferences', 'position'],
+      properties: {
+        id: idSchema,
+        kind: { const: 'balloon' },
+        viewId: idSchema,
+        curveId: idSchema,
+        instanceId: idSchema,
+        sourceReferences: curveReferencesSchema.items.properties.sourceReferences,
         position: pointSchema,
       },
     },
@@ -163,6 +225,7 @@ const sheetSchema = {
     },
     views: { type: 'array', maxItems: 32, items: viewSchema },
     annotations: { type: 'array', maxItems: 1000, items: annotationSchema },
+    partsList: { type: 'object', description: 'Saved drawing parts list. Retain it when editing a sheet with item balloons.' },
   },
 };
 export const CAD_DRAWING_COMMAND_SCHEMAS = [
@@ -257,14 +320,34 @@ export async function previewCadDrawingCommands(
         if (
           sameKind &&
           old.projection &&
+          old.scale === undefined &&
           prior.scale !== sheet.scale &&
           view.position.every((value, k) => value === old.position[k])
         )
           view.position = cadDrawingRescaledPosition(view.position, old.projection, prior.scale, sheet.scale);
       }
       for (const annotation of sheet.annotations.filter((annotation) => annotation.kind !== 'label')) {
-        const old = prior?.annotations.find((item) => item.id === annotation.id && item.kind === annotation.kind),
-          same =
+        const old = prior?.annotations.find((item) => item.id === annotation.id && item.kind === annotation.kind);
+        if (annotation.kind === 'balloon') {
+          if (
+            !old ||
+            old.viewId !== annotation.viewId ||
+            old.curveId !== annotation.curveId ||
+            old.instanceId !== annotation.instanceId ||
+            JSON.stringify(old.sourceReferences) !== JSON.stringify(annotation.sourceReferences)
+          ) {
+            const checked = createCadDrawingBalloon(sheet, annotation, {
+              sourceSignatures: cadDrawingSourceSignatures(initial, [annotation.instanceId]),
+            });
+            if (
+              checked.instanceId !== annotation.instanceId ||
+              JSON.stringify(checked.sourceReferences) !== JSON.stringify(annotation.sourceReferences)
+            )
+              fail('Positionsballons benötigen die bestätigte Platzierung und die nativen Kantenbezüge.');
+          }
+          continue;
+        }
+        const same =
             old &&
             old.viewId === annotation.viewId &&
             JSON.stringify(old.curveIds) === JSON.stringify(annotation.curveIds) &&
@@ -307,20 +390,26 @@ export async function previewCadDrawingCommands(
         }).sheet;
       } else if (command.action === 'remove') drawings.sheets.splice(index, 1);
       else if (joined) updateIds.add(command.sheetId);
-      else
-        for (const viewId of drawings.sheets[index].views.map((view) => view.id)) {
+      else {
+        for (const viewId of drawings.sheets[index].views
+          .filter((view) => view.kind !== 'detail')
+          .map((view) => view.id)) {
           const sheet = drawings.sheets[index],
             view = sheet.views.find((view) => view.id === viewId),
-            projection = await controller.query('drawingProjection', {
-              ids: view.sourceIds,
-              view: view.kind,
-              ...(view.kind === 'section' ? { section: view.section } : {}),
-            });
+            projection = await controller.query('drawingProjection', cadDrawingProjectionOptions(view));
           current();
-          const position = cadDrawingUpdatedPosition(view.position, view.projection, projection, sheet.scale);
+          const position = cadDrawingUpdatedPosition(
+            view.position,
+            view.projection,
+            projection,
+            cadDrawingViewScale(view, sheet),
+          );
           drawings.sheets[index] = updateCadDrawingProjection(sheet, viewId, projection);
           drawings.sheets[index].views.find((view) => view.id === viewId).position = position;
         }
+        if (drawings.sheets[index].views.some((view) => view.kind === 'detail'))
+          drawings.sheets[index] = updateCadDrawingDetailViews(drawings.sheets[index]).sheet;
+      }
     }
   }
   current();
@@ -450,9 +539,13 @@ export function cadDrawingPreviewSummary(project) {
       const value = { ...annotation };
       if (annotation.kind !== 'label')
         try {
-          const measured = cadDrawingDimension(sheet, annotation);
-          value.value = measured.value;
-          value.text = measured.text;
+          if (annotation.kind === 'balloon') {
+            value.text = String(cadDrawingBalloon(sheet, annotation, { sourceSignatures: signatures }).row.position);
+          } else {
+            const measured = cadDrawingDimension(sheet, annotation);
+            value.value = measured.value;
+            value.text = measured.text;
+          }
         } catch (error) {
           value.problem = error.message;
         }

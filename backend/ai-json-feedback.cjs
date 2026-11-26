@@ -7,7 +7,7 @@ function jsonSyntaxFeedback(text){
   if(char==='"'){quoted=true;continue;}
   if(char==='{'||char==='[')stack.push(char==='{'?'}':']');
   else if(char==='}'||char===']'){if(stack.pop()!==char)return 'Invalid JSON: mismatched object/array closing delimiter. Return one complete JSON object, preserving the task and revision.';}
-  if(!quoted&&!stack.length&&char==='}'&&text.slice(index+1).trim()){try{JSON.parse(text.slice(0,index+1));return 'Invalid JSON: extra content after the complete JSON object. Stop immediately after one object. Only the application supplies tool results; no action from this rejected response was executed.';}catch{ /* Continue with the delimiter diagnostics if the prefix cannot be parsed. */ }}
+  if(!quoted&&!stack.length&&char==='}'&&text.slice(index+1).trim()){try{JSON.parse(text.slice(0,index+1));return 'Invalid JSON: extra content after the complete JSON object. Stop immediately after one object. Only the application supplies tool results; no action from this rejected response was executed.';}catch{}}
  }
  if(quoted)return 'Invalid JSON: unterminated string. Return one complete JSON object, preserving the task and revision.';
  if(stack.length)return 'Invalid JSON: response ended with '+stack.length+' unclosed object/array level(s). Expected closing delimiters at the end: '+stack.slice(-8).reverse().join('')+'. Return the COMPLETE corrected JSON object; no actions were executed.';

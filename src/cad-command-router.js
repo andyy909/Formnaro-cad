@@ -4,15 +4,20 @@ import { rejectStaleCadReferences } from './cad-ai-reference-guard.js';
 import { rebindCadDrillsCoordinated } from './cad-drill-rebind-coordinated.js';
 import { updateCadLinkedPatternWithConsumers } from './cad-pattern-consumers-native.js';
 import { rebindCadReferencesNative } from './cad-reference-rebind-native.js';
+import { planCadPatternDrawings } from './cad-linked-pattern-drawing-data.js';
+import { updateCadPatternDrawings } from './cad-linked-pattern-drawings-native.js';
 import { prepareCadDrillDrawingRefresh, refreshCadDrillDrawings } from './cad-drawing-drill-native.js';
-import { hasGeometryRefs } from './cad-geometry-ref.js';
+import { planCadPatternContours } from './cad-linked-pattern-contour-data.js';
+import { updateCadPatternContours, mergeCadContourBuildReports } from './cad-linked-pattern-contours-native.js';
+import { hasGeometryRefs, isGeometryRef } from './cad-geometry-ref.js';
 import {
   validateCadLinkedPattern,
+  materializeCadLinkedPattern,
   stampCadLinkedPattern,
   cadLinkedPatternProblems,
   assertCadLinkedPatternCopyReady,
 } from './cad-linked-pattern-data.js';
-import { remapCadJoints, mergeCadJoints } from './cad-joints-data.js';
+import { remapCadJoints, validateCadJoints, mergeCadJoints } from './cad-joints-data.js';
 import { prepareConstrainedSketch } from './sketch-constraints-solver.js';
 import { prepareSketchAttachment, checkSketchAttachment, attachmentNativeCommands } from './sketch-attachment.js';
 import { meshToCadNative } from './cad-mesh-to-cad-native.js';
@@ -25,7 +30,7 @@ import { aiFeedback } from './ai-feedback.js';
 import { cadSelectionContext, cadInterfaceLocalBounds, cadResizeForm } from './cad-interface-state.js';
 import { resolveCadAnnotationNative } from './cad-annotations-native.js';
 import { validateCadAnnotations, cadAnnotationWorld } from './cad-annotations-data.js';
-import { cadRayHits } from './cad-native-kernel.js';
+import { readCadBrep, cadRayHits } from './cad-native-kernel.js';
 import { cadPartitionWorldPlane } from './cad-partition-frame.js';
 import { cloneCadSources } from './cad-source-clone.js';
 import {
@@ -40,6 +45,7 @@ import {
   multiplyCadMatrices,
   inverseCadMatrix,
   cadFrameSources,
+  dissolveCadGroup,
   resizeCadAtCorner,
 } from './cad-affine.js';
 import { createCadTransactions } from './cad-transactions.js';
@@ -1563,7 +1569,7 @@ export function createCadCommandRouter({
         project.nodes.push(service.nativeNode(operation.recipe, operation.options));
         break;
       case 'meshToCad': {
-        fields(operation, ['kind', 'target', 'sourceDigest', 'bytes', 'id', 'notes']);
+        fields(operation, ['kind', 'target', 'sourceDigest', 'bytes', 'id', 'notes', 'repair']);
         if (cadProjectRevision(project) !== cadProjectRevision(baseline))
           fail('UNCONFIRMED_PROJECT', 'Die CAD-Kopie benötigt das bestätigte Quellnetz.');
         project.nodes.push(meshToCadNative(service, project, operation));

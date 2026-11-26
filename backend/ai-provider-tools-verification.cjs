@@ -23,7 +23,7 @@ exports.verifyProviderTools=async(win,{directory,helperRevision})=>{
    check(records.slice(-2).every(r=>r.hasScientificTools&&r.hasSharedLibrary)&&records.at(-1).analysisReceived,model+' receives complete common tools, saved helper source access and measured follow-up feedback');
    check(await run('window.__cadTest.serialize()')===before&&await run('window.__cadTest.undoDepth()')===depth,model+' reuses the shared helper without applying or changing the original project');
    if(model==='gpt-6.1-sol'){
-    check(await run("document.getElementById('ai-chat-usage').textContent.includes('Geschätzter API-Gegenwert: 0,2960 USD')"),'Actual GPT chat displays the summed API equivalent with cached-token pricing');
+    check(await run("document.getElementById('ai-chat-usage').textContent.includes('Geschätzte Kosten: 0,2960 USD')"),'Actual GPT API-key chat displays the summed estimated cost with cached-token pricing');
     fs.writeFileSync(path.join(directory,'gpt-api-equivalent.png'),(await win.webContents.capturePage()).toPNG());
    }
    await run("document.getElementById('ai-chat-discard').click();void 0");

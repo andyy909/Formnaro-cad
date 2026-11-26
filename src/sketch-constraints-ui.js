@@ -6,6 +6,7 @@ import {
   DIMENSION_TYPES,
   constraintAnchor,
   constraintsForElements,
+  quickConstraintRefs,
   selectedConstraintRefs,
 } from './sketch-direct-constraints.js';
 import { isCadCurve, curveBeziers } from './cad-curves.js';
@@ -27,6 +28,19 @@ const types = {
   angle: 'Winkel',
   radius: 'Radius',
 };
+const quickTypes = {
+  horizontal: ['Horizontal', 'Eine Linie wählen'],
+  vertical: ['Vertikal', 'Eine Linie wählen'],
+  coincident: ['Punkte verbinden', 'Zwei einzelne Punkte wählen'],
+  parallel: ['Parallel', 'Zwei Linien wählen'],
+  perpendicular: ['Rechtwinklig', 'Zwei Linien wählen'],
+  tangent: ['Tangente', 'Eine Linie und einen Kreis oder Bogen oder zwei runde Elemente wählen'],
+  equalLength: ['Gleiche Länge', 'Zwei Linien wählen'],
+  equalRadius: ['Gleicher Radius', 'Zwei Kreise oder Bögen wählen'],
+  concentric: ['Konzentrisch', 'Zwei Kreise oder Bögen wählen'],
+  fixed: ['Fixieren', 'Ein Element oder einen einzelnen Punkt wählen'],
+};
+
 export function installSketchConstraintsUI({
   s,
   properties,
@@ -45,11 +59,22 @@ export function installSketchConstraintsUI({
     root = document.createElement('fieldset');
   root.id = 'sketch-constraints';
   root.innerHTML =
-    '<legend>Dauerhafte Skizzenbedingungen</legend><button id="sketch-constraints-enable">Bedingungen einschalten</button><div id="sketch-constraints-controls" hidden><p class="small-note">Beim Loslassen oder Setzen lösen. Formeln bleiben verbindlich. Bei Widerspruch bleibt der letzte gültige Entwurf. Maximal 128 Elemente und 256 Bedingungen.</p><label>Beziehung<select id="sketch-constraint-type"></select></label><label>Erster Bezug<select id="sketch-constraint-a"></select></label><label>Zweiter Bezug<select id="sketch-constraint-b"></select></label><label>Symmetrieachse<select id="sketch-constraint-axis"></select></label><label>Maß / Formel<input id="sketch-constraint-value" value="10" maxlength="200"></label><label>Tangente<select id="sketch-constraint-mode"><option value="external">Außen</option><option value="internal">Innen (Kreis / Kreis)</option></select></label><button id="sketch-constraint-add">Bedingung setzen</button><button id="sketch-constraints-solve">Jetzt lösen</button><p id="sketch-constraints-status" role="status"></p><ul id="sketch-constraints-list"></ul></div>';
+    '<legend>Dauerhafte Skizzenbedingungen</legend><button id="sketch-constraints-enable">Bedingungen einschalten</button><div id="sketch-constraints-controls" hidden><div id="sketch-constraint-quick" class="sketch-constraint-quick" role="group" aria-label="Direkte Skizzenbedingungen"></div><p class="small-note">Im Auswahlwerkzeug Geometrie wählen. Umschalt ergänzt die Auswahl.</p><label>Beziehung<select id="sketch-constraint-type"></select></label><label>Erster Bezug<select id="sketch-constraint-a"></select></label><label>Zweiter Bezug<select id="sketch-constraint-b"></select></label><label>Symmetrieachse<select id="sketch-constraint-axis"></select></label><label>Maß / Formel<input id="sketch-constraint-value" value="10" maxlength="200"></label><label>Tangente<select id="sketch-constraint-mode"><option value="external">Außen</option><option value="internal">Innen (Kreis / Kreis)</option></select></label><button id="sketch-constraint-add">Bedingung setzen</button><button id="sketch-constraints-solve">Jetzt lösen</button><p id="sketch-constraints-status" role="status"></p><ul id="sketch-constraints-list"></ul></div>';
   properties.after(root);
   for (const [value, label] of Object.entries(types)) {
     $('sketch-constraint-type').add(new Option(label, value));
   }
+  const quickButtons = Object.entries(quickTypes).map(([type, [label, hint]]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.quickConstraint = type;
+    button.textContent = label;
+    button.title = hint;
+    button.disabled = true;
+    button.onclick = () => void applyQuickConstraint(type);
+    $('sketch-constraint-quick').append(button);
+    return { type, button, hint };
+  });
   const editor = document.createElement('div');
   editor.className = 'sketch-constraint-direct-editor';
   editor.hidden = true;
@@ -58,6 +83,9 @@ export function installSketchConstraintsUI({
   board.after(editor);
   let editId = null,
     highlighted = [],
+    elementSelection = [],
+    pointSelection = [],
+    geometryReady = false,
     conflictElements = [],
     selectionSignature = '';
   $('sketch-direct-cancel').onclick = () => {
@@ -101,6 +129,7 @@ export function installSketchConstraintsUI({
     epoch++;
     client.cancel();
     busy = false;
+    refreshQuickActions();
   }
   function openDimension(c) {
     if (busy) {
@@ -113,13 +142,14 @@ export function installSketchConstraintsUI({
     $('sketch-direct-value').focus();
     $('sketch-direct-value').select();
   }
-  async function solve({ affected } = {}) {
-    if (s.sketch.version < 3) return true;
-    const candidate = structuredClone(s.sketch),
+  async function solve({ draft = s.sketch, affected, historyGroup, validate } = {}) {
+    if (draft.version < 3) return true;
+    const candidate = structuredClone(draft),
       baseline = lastValid,
       stamp = ++epoch;
     client.cancel();
     busy = true;
+    refreshQuickActions();
     // Newly drawn closed loops receive the same explicit joins as v2 upgrades.
     try {
       const { scalar } = sketchConstraintValues(candidate),
@@ -148,9 +178,7 @@ export function installSketchConstraintsUI({
               ],
             });
         }
-    } catch {
-      /* Continue solving if automatic joins cannot be inferred from the current geometry. */
-    }
+    } catch {}
     if (!affected && JSON.stringify(candidate.variables) === JSON.stringify(baseline.variables))
       affected = candidate.elements
         .filter((e) => JSON.stringify(e) !== JSON.stringify(baseline.elements?.find((b) => b.id === e.id)))
@@ -200,10 +228,11 @@ export function installSketchConstraintsUI({
         return false;
       }
       conflictElements = [];
+      validate?.(result.sketch);
       s.sketch = result.sketch;
       lastValid = structuredClone(s.sketch);
       fields();
-      changed({ solved: true });
+      changed({ solved: true, historyGroup });
       $('sketch-constraints-status').textContent =
         result.degreesOfFreedom +
         ' freie Koordinaten in der betroffenen Gruppe · ' +
@@ -235,24 +264,39 @@ export function installSketchConstraintsUI({
     }
   };
   const ref = (id) => JSON.parse($(id).value);
-  $('sketch-constraint-add').onclick = async () => {
+  function directRefs(type) {
+    if (!geometryReady || s.linked || s.sketch.version < 3 || board.dataset.tool !== 'select') return null;
+    return quickConstraintRefs(type, s.sketch.elements, elementSelection, pointSelection);
+  }
+  function existingDirectConstraint(type, refs) {
+    return s.sketch.constraints?.some(
+      (c) =>
+        c.type === type &&
+        (type !== 'tangent' || c.mode !== 'internal') &&
+        c.refs.length === refs.length &&
+        refs.every((ref) => c.refs.some((candidate) => candidate.element === ref.element && candidate.point === ref.point)),
+    );
+  }
+  function refreshQuickActions() {
+    for (const { type, button, hint } of quickButtons) {
+      const refs = directRefs(type);
+      const exists = refs && existingDirectConstraint(type, refs);
+      button.disabled = busy || !refs || exists;
+      button.title = exists ? 'Diese Bedingung ist bereits gesetzt' : hint;
+    }
+  }
+  async function addConstraint(type, refs, options = {}) {
+    if (busy || !isCurrent()) return;
     const before = structuredClone(lastValid);
     try {
-      const type = $('sketch-constraint-type').value,
-        a = ref('sketch-constraint-a'),
-        b = ref('sketch-constraint-b'),
-        refs = [a];
-      if (!['horizontal', 'vertical', 'fixed', 'length', 'angle', 'radius'].includes(type)) refs.push(b);
-      if (type === 'symmetric') refs.push(ref('sketch-constraint-axis'));
-      const c = { id: 'condition-' + crypto.randomUUID(), type, refs };
-      if (['length', 'distance', 'angle', 'radius'].includes(type)) c.value = $('sketch-constraint-value').value;
-      if (type === 'tangent') c.mode = $('sketch-constraint-mode').value;
+      const c = { id: 'condition-' + crypto.randomUUID(), type, refs, ...options };
       if (type === 'fixed') {
+        const [{ element, point }] = refs;
         const e = resolveSketchProfile(s.sketch, sketchExpression, { geometryOnly: true }).elements.find(
-          (e) => e.id === a.element,
+          (candidate) => candidate.id === element,
         );
-        c.value = a.point
-          ? [...e[a.point]]
+        c.value = point
+          ? [...e[point]]
           : Object.fromEntries([
               ...sketchPointFields(e).map((field) => [field, [...e[field]]]),
               ...(e.type === 'circle' ? [['diameter', e.radius * 2]] : []),
@@ -267,8 +311,32 @@ export function installSketchConstraintsUI({
       changed({ record: false });
       message(error.message, true);
     }
+  }
+  async function applyQuickConstraint(type) {
+    const refs = directRefs(type);
+    if (!refs || existingDirectConstraint(type, refs)) return;
+    await addConstraint(type, refs, type === 'tangent' ? { mode: 'external' } : {});
+  }
+  $('sketch-constraint-add').onclick = async () => {
+    if (busy) return;
+    try {
+      const type = $('sketch-constraint-type').value;
+      const refs = [ref('sketch-constraint-a')];
+      if (!['horizontal', 'vertical', 'fixed', 'length', 'angle', 'radius'].includes(type)) {
+        refs.push(ref('sketch-constraint-b'));
+      }
+      if (type === 'symmetric') refs.push(ref('sketch-constraint-axis'));
+      const options = {};
+      if (DIMENSION_TYPES.has(type)) options.value = $('sketch-constraint-value').value;
+      if (type === 'tangent') options.mode = $('sketch-constraint-mode').value;
+      await addConstraint(type, refs, options);
+    } catch (error) {
+      message(error.message, true);
+    }
   };
-  $('sketch-constraints-solve').onclick = () => void solve();
+  $('sketch-constraints-solve').onclick = () => {
+    if (!busy) void solve();
+  };
   function labelRef(r) {
     const index = (s.sketch.elements ?? []).findIndex((e) => e.id === r.element),
       e = s.sketch.elements?.[index];
@@ -352,6 +420,7 @@ export function installSketchConstraintsUI({
       remove.textContent = 'Entfernen';
       remove.setAttribute('aria-label', types[c.type] + ' entfernen');
       remove.onclick = () => {
+        if (busy) return;
         s.sketch.constraints = s.sketch.constraints.filter((x) => x.id !== c.id);
         changed({ record: false });
         void solve();
@@ -361,9 +430,17 @@ export function installSketchConstraintsUI({
     }
   }
   function render(geometry, handles, selected, extent) {
+    geometryReady = Boolean(geometry);
+    pointSelection = geometry ? selected.map((index) => selectedConstraintRefs(handles, [index])) : [];
+    if (geometry) {
+      const live = new Set(geometry.elements.map(({ id }) => id));
+      elementSelection = elementSelection.filter((id) => live.has(id));
+      highlighted = highlighted.filter((id) => live.has(id));
+    }
+    refreshQuickActions();
     if (s.linked || s.sketch.version < 3 || !geometry) return;
     const selectedRefs = selectedConstraintRefs(handles, selected),
-      ids = [...new Set([...selectedRefs.map((r) => r.element), ...highlighted, ...conflictElements])],
+      ids = [...new Set([...selectedRefs.map((r) => r.element), ...elementSelection, ...highlighted, ...conflictElements])],
       related = new Set(constraintsForElements(s.sketch.constraints, ids));
     for (const li of root.querySelectorAll('[data-constraint-id]'))
       li.classList.toggle('selected', related.has(li.dataset.constraintId));
@@ -428,11 +505,12 @@ export function installSketchConstraintsUI({
           event.preventDefault();
           event.stopPropagation();
           if (!event.ctrlKey && !event.shiftKey) clearPointSelection();
-          highlighted =
+          highlighted = [];
+          elementSelection =
             event.ctrlKey || event.shiftKey
-              ? highlighted.includes(e.id)
-                ? highlighted.filter((id) => id !== e.id)
-                : [...highlighted, e.id]
+              ? elementSelection.includes(e.id)
+                ? elementSelection.filter((id) => id !== e.id)
+                : [...elementSelection, e.id]
               : [e.id];
           redraw();
         };
@@ -479,17 +557,17 @@ export function installSketchConstraintsUI({
       };
     }
     const type = $('sketch-constraint-type').value,
-      signature = JSON.stringify([type, selectedRefs, highlighted]);
+      signature = JSON.stringify([type, selectedRefs, elementSelection]);
     if (signature !== selectionSignature) {
       selectionSignature = signature;
-      if (selectedRefs.length || highlighted.length) {
+      if (selectedRefs.length || elementSelection.length) {
         const pointType = ['coincident', 'distance', 'symmetric'].includes(type),
           refs = pointType
             ? selectedRefs
             : [
                 ...new Map(
                   [
-                    ...highlighted.map((element) => ({ element })),
+                    ...elementSelection.map((element) => ({ element })),
                     ...selectedRefs.map((r) => ({ element: r.element })),
                   ].map((r) => [r.element, r]),
                 ).values(),
@@ -503,6 +581,7 @@ export function installSketchConstraintsUI({
   }
   const modal = $('modal');
   const onChange = (event) => {
+    if (event.target.id === 'sketch-tool') refreshQuickActions();
     if (
       s.sketch.version >= 3 &&
       event.target.matches('#sketch-profile-fields input,#sketch-variables input,#sketch-dimensions input')
@@ -523,8 +602,13 @@ export function installSketchConstraintsUI({
     busy: () => busy,
     clearElementSelection: () => {
       highlighted = [];
+      elementSelection = [];
     },
     restore: () => {
+      highlighted = [];
+      elementSelection = [];
+      pointSelection = [];
+      conflictElements = [];
       dirty();
       lastValid = structuredClone(s.sketch);
     },

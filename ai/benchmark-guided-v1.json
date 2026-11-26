@@ -1,7 +1,7 @@
 {
   "id": "formnaro-practice-guided",
   "label": "Vormachen",
-  "version": "1.0.5",
+  "version": "1.0.2",
   "ladder": true,
   "knownDevelopmentTasks": true,
   "limits": {
@@ -64,7 +64,7 @@
   "dependencies": [
     {
       "path": "backend/ai-practice-function-evaluate.cjs",
-      "sha256": "90452716fc547e8c60146c71bd81b92d2073b04f4b5b4ef9b109d62f7d68be75"
+      "sha256": "a0da5955d43f03bfb87aaae7de1631b1380c336c206cfe7fd644144b6555e039"
     },
     {
       "path": "backend/ai-diagnostic-evaluate.cjs",
@@ -100,7 +100,7 @@
     },
     {
       "path": "src/cad-service.js",
-      "sha256": "3949ce0a6eaa8aa9fff8cebbd2b883bc91eb0b0ee48a59d4ba1b0a86f54afd48"
+      "sha256": "6c5465b80bf36e05c5a729a69e3128849ecfa6d127cdab861d295b1cd9750cb6"
     },
     {
       "path": "src/cad-drill-stock-native.js",
@@ -112,15 +112,15 @@
     },
     {
       "path": "src/cad-practice-model-ui.js",
-      "sha256": "4477f9799f5bcf005e1881ce83d2fac7d76ff35d0302bea055c6c0f60f0793f2"
+      "sha256": "55d30ce556637d5e0726e99e925db25e5f0ae78ede320fd873fd61faf3df2f53"
     },
     {
       "path": "backend/ai-lab-review-data.cjs",
-      "sha256": "3f904f71cbcca685ddc5cdfe226ac9cee29b7bc80b5221675ec1d30ed35858b6"
+      "sha256": "3a358282058513f87f33a2c4474508445fce10c8d0c346e0675d5e37608cc301"
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "fc0584e797e65f98383b30bd45db4984a680e06e003a9b73256c033c43c64650"
+      "sha256": "6b099e1961753c1f2f30504f90e214353ef142e28319b2ce1717352c8d14cc2c"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -128,11 +128,11 @@
     },
     {
       "path": "backend/practice-child.cjs",
-      "sha256": "ad5b0ff4dcdee629b69305b737dd268f612ce964ed261120d5f2d303892122bb"
+      "sha256": "d878eaa3a8b9ff392408ba667115dfe5d1308ae13d085a625720dbc3ca545bfa"
     },
     {
       "path": "backend/practice-runner.cjs",
-      "sha256": "3ebdaec1f9a12d3f8d1f4faa75d2cd1de21ecb6abcaca056db2aa01df5800131"
+      "sha256": "134612e1f114b59b0cc8291ec6c9736780c9ab32829d2ea7c6e9a4ba4b009899"
     },
     {
       "path": "src/cad-agent-ui-policy.js",
@@ -140,7 +140,7 @@
     },
     {
       "path": "backend/desktop-ai.cjs",
-      "sha256": "52f01d74434deee87d6575d2c0b8a3eb40505b244ef0bc7a98046aa9fdf152d4"
+      "sha256": "3b3f261cbb51587f0eb642054fe758083fa9fc138034c5e51e8ec2cdbd5ec1e1"
     },
     {
       "path": "backend/ai-lab-storage.cjs",
@@ -156,7 +156,7 @@
     },
     {
       "path": "backend/ai-lab-reviewer.cjs",
-      "sha256": "169c5f328adeb81e993fc3755c85abdaa5cf1f873a6993656aae0e75f8c4be83"
+      "sha256": "e8f0db854572518bcbd96a661d86e8a80e10067ff7c516b976ca5e6913ee38aa"
     },
     {
       "path": "backend/ai-diagnostic-child.cjs",
@@ -194,6 +194,5 @@
       "path": "ai/benchmark-advanced-calibration-v2.json",
       "sha256": "247f9e5ef32075370b1af42d5125d45c235fa35d3f5d1d8e66975b3449648ad8"
     }
-  ],
-  "revisionReason": "Lint cleanup preserves benchmark tasks, limits and native grading."
+  ]
 }

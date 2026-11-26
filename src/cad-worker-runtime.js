@@ -23,6 +23,7 @@ import {updateCadProjectParameters} from './cad-project-parameters-native.js';
 import {updateCadParameterPatterns} from './cad-linked-pattern-update-native.js';
 import {planCadParameterPatterns} from './cad-linked-pattern-update-data.js';
 import {createCadLinkedContoursNative,updateCadAssociative} from './cad-linked-contours-native.js';
+import {cadSketchFaceHit} from './cad-sketch-attachment-native.js';
 import {createCadClickMeasureNative} from './cad-click-measure-native.js';
 import {createCadAIReferencesNative} from './cad-ai-feature-references-native.js';
 import {editCadAIFeaturesNative} from './cad-ai-feature-edits-native.js';
@@ -105,6 +106,13 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
             const node=project.nodes.find(n=>n.id===request.query.options?.id);if(node?.kind!=='cad'||!node.solid)throw Error('Vollständiger CAD-Materialkörper erforderlich.');
             result=service.display({...project,nodes:[node],workplane:{...project.workplane,reference:null}},request.query.options.quality,{colored:false})[0];
             if(result.mesh.triangles.length/3>200000)throw Error('Mehr als 200.000 Anzeigedreiecke. Anzeigequalität reduzieren.');break;
+          }
+          if(request.query?.kind==='tabletSketchPlane'){
+            const {id,point,normal}=request.query.options;
+            const support=project.nodes.find(node=>node.id===id&&node.kind==='cad'&&node.solid&&!node.suppressed);
+            if(!support)throw Error('Der CAD-Bezugskörper ist nicht mehr verfügbar.');
+            result=cadSketchFaceHit(kernel,service,support,point,normal);
+            break;
           }
           if(['clickSurface','clickSurfaceDistance'].includes(request.query?.kind)){const measurement=createCadClickMeasureNative({oc:kernel,service});result=measurement[request.query.kind==='clickSurface'?'pick':'distance']({...request.query.options,project});break;}
           if(request.query?.kind==='fontInfo'){result=await cadFontInfo(request.query.options?.base64);break;}

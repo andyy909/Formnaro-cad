@@ -95,8 +95,8 @@ function installDesktopAI(win,{settingsFile=path.join(app.getPath('userData'),'a
   const active=new AbortController();active.requestId=args.requestId;active.kind='agent';controller=active;const timer=setTimeout(()=>active.abort(),1800000);
   const recordUsage=usage=>{usageLedger.record({usage,config,provider:providerId(config),taskId:args.requestId,args:{prompt:args.prompt,assistantKind:'mcp-agent'}});sendAgentEvent({type:'usage',requestId:args.requestId,usage});};
   try{const result=config.authMode==='mistral-vibe'?await mistral.sendAgent({...args,model:config.model,reasoningEffort:config.mistralReasoningEffort},active.signal):await mcpAgent.run(config,await credential(config,key,active.signal),{...args,modelDetails:await requestModelDetails(config,key),onUsage:recordUsage},active.signal);
-   const usages=result.usages??[require('./ai-usage.cjs').aiUsage({usage:result.usage,model:result.model,vibeCostUSD:result.costUSD,vibeConfirmedEffort:result.confirmedEffort},config,0)];if(config.authMode==='mistral-vibe')for(const usage of usages)recordUsage(usage);try{profiles.markUsed(config);}catch{ /* A failed recent-use update does not invalidate the completed agent result. */ }return {...result,usages};
-  }catch(error){if(error.agentApplyUncertain)sendAgentEvent({type:'notice',requestId:args.requestId,text:'Der Übernahmestatus ist unklar. Prüfe den aktuellen Modellstand vor weiteren Änderungen.'});if(error.agentApplied)sendAgentEvent({type:'notice',requestId:args.requestId,text:error.agentApplied+' Änderungsschritte wurden bereits übernommen. Rückgängig ist in Formnaro verfügbar.'});throw error;}finally{clearTimeout(timer);try{await rpc('ui',{action:'cancel'});}catch{ /* The renderer may have closed before cancellation reaches it. */ }if(controller===active)controller=null;}
+   const usages=result.usages??[require('./ai-usage.cjs').aiUsage({usage:result.usage,model:result.model,vibeCostUSD:result.costUSD,vibeConfirmedEffort:result.confirmedEffort},config,0)];if(config.authMode==='mistral-vibe')for(const usage of usages)recordUsage(usage);try{profiles.markUsed(config);}catch{}return {...result,usages};
+  }catch(error){if(error.agentApplyUncertain)sendAgentEvent({type:'notice',requestId:args.requestId,text:'Der Übernahmestatus ist unklar. Prüfe den aktuellen Modellstand vor weiteren Änderungen.'});if(error.agentApplied)sendAgentEvent({type:'notice',requestId:args.requestId,text:error.agentApplied+' Änderungsschritte wurden bereits übernommen. Rückgängig ist in Formnaro verfügbar.'});throw error;}finally{clearTimeout(timer);try{await rpc('ui',{action:'cancel'});}catch{}if(controller===active)controller=null;}
  });
  handle('cad-ai:chatgpt-cancel',()=>chatgpt.cancel());
  handle('cad-ai:chatgpt-logout',async()=>{requireIdle();catalogs.clear();return chatgpt.logout();});
@@ -163,7 +163,59 @@ function installDesktopAI(win,{settingsFile=path.join(app.getPath('userData'),'a
  win.webContents.on('did-start-navigation',(_event,_url,inPlace,mainFrame)=>{if(mainFrame&&!inPlace)releaseTaskLeases();});
  // One owner for AI shutdown: keep cancellation/disposal together instead of
  // consuming three BrowserWindow close listeners for the same subsystem.
- win.on('closed',()=>{diagnostics.cancel();freecadController?.abort();releaseTaskLeases();try{taskStore?.close();}catch{ /* Continue disposing the other AI services if closing the task store fails. */ }chatgpt.dispose();mistral.dispose();mcpAgent.dispose();controller?.abort();for(const item of pending.values()){clearTimeout(item.timer);item.reject(Error('CAD window closed.'));}pending.clear();bridge?.close().catch(()=>{});});
- return {publicSettings,syncBridge};
+ win.on('closed',()=>{diagnostics.cancel();freecadController?.abort();releaseTaskLeases();try{taskStore?.close();}catch{}chatgpt.dispose();mistral.dispose();mcpAgent.dispose();controller?.abort();for(const item of pending.values()){clearTimeout(item.timer);item.reject(Error('CAD window closed.'));}pending.clear();bridge?.close().catch(()=>{});});
+ function tabletProviderDescriptor(config=profiles.active().config){
+  const provider=providerId(config),model=config.model;
+  if(!model?.trim())throw Object.assign(Error('Am PC zuerst ein KI-Modell wählen.'),{status:409});
+  const profile=require('node:crypto').createHash('sha256').update(JSON.stringify([provider,model,config.baseUrl,config.authMode,config.protocol,config.reasoningEffort,config.maxOutputTokens])).digest('hex');
+  return {provider,model,profile};
+ }
+ function tabletThickness(question,part){
+  if(!part||!/\b(?:dick|dicke|thick|thickness)\b/i.test(question))return null;
+  const axes=['X','Y','Z'];
+  const requested=[...new Set((question.match(/\b[xyz]\b/gi)??[]).map(axis=>axis.toUpperCase()))];
+  if(requested.length>1)return null;
+  const index=requested.length?axes.indexOf(requested[0]):part.size.indexOf(Math.min(...part.size));
+  return {axis:axes[index],value:part.size[index],unit:'mm'};
+ }
+ const tabletProvider={
+  describe:()=>tabletProviderDescriptor(),
+  answer:async({profile,question,context},signal)=>{
+   if(controller)throw Object.assign(Error('Am PC läuft bereits eine KI-Anfrage.'),{status:409});
+   const {config,key}=profiles.active();
+   if(tabletProviderDescriptor(config).profile!==profile)
+    throw Object.assign(Error('Am PC wurde der Anbieter geändert. Daten erneut prüfen.'),{status:409});
+   const active=new AbortController(), combined=AbortSignal.any([signal,active.signal,AbortSignal.timeout(100000)]);
+   controller=active;
+   try{
+    combined.throwIfAborted();
+    const token=await credential(config,key,combined);
+    const measurement=tabletThickness(question,context.part);
+    const scene={revision:context.revision,unit:context.unit,objects:context.part?[context.part]:[],
+      ...(measurement?{confirmedMeasurement:measurement}:{})};
+    const result=await generate(config,token,{prompt:question,chat:true,scene,context:{units:'mm',tabletReadOnly:true}},combined,{});
+    const text=result.commands||result.analysis||result.assistant?null:result.message??result.question;
+    if(typeof text!=='string'||!text.trim())
+     throw Error('Der Anbieter hat einen Modellbefehl geliefert. In diesem Dialog sind Antworten als Text möglich.');
+    if(measurement){
+     const stated=[...text.matchAll(/(-?\d+(?:[.,]\d+)?)\s*mm\b/gi)].map(match=>Number(match[1].replace(',','.')));
+     if(!stated.some(value=>Math.abs(value-measurement.value)<1e-6))
+      throw Error('Die Antwort enthält das bestätigte Maß nicht. Verwende die lokale CAD-Auskunft für dieses Maß.');
+    }
+    return profiles.redact(text).slice(0,2800);
+   }catch(failure){
+    if(combined.aborted)throw Object.assign(Error('KI-Anfrage beendet.'),{status:408});
+    throw Object.assign(Error(profiles.redact(String(failure.message))),{status:502});
+   }finally{if(controller===active)controller=null;}
+  },
+ };
+ return {publicSettings,syncBridge,tabletTarget:(request)=>rpc('privateTabletTarget',request),
+  tabletLive:request=>rpc('privateTabletLive',request),tabletProvider,
+  tabletAgent:async(request,target)=>{
+   if(request.action==='send'&&!bridge)throw Error('Am PC zuerst die lokale KI-Schnittstelle aktivieren.');
+   const result=await rpc('privateTabletAgent',{request,target});
+   return request.action==='state'&&!bridge?{...result,ready:false,
+     status:'Am PC zuerst die lokale KI-Schnittstelle aktivieren.'}:result;
+  }};
 }
 module.exports={installDesktopAI};

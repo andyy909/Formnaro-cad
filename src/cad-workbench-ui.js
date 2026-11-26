@@ -486,7 +486,7 @@ export function createCadWorkbenchUI({
       : originalHint;
     if (editing) return;
     if (['solid', 'fusion'].includes(mode)) {
-      for (const [, node] of controls) hidden.append(node);
+      for (const [key, node] of controls) hidden.append(node);
       for (const key of ['new', 'open', 'save', 'projects', 'import', 'export', 'settings']) {
         const node = controls.get(key);
         if (node) header.append(node);
@@ -502,7 +502,7 @@ export function createCadWorkbenchUI({
       (mode === 'solid' ? solid : fusion).mount();
       hint.textContent = t('Skizze oder extrudierten Aufsatz starten. Maße festlegen, Vorschau prüfen und übernehmen.');
     } else if (easy) {
-      for (const [, node] of controls) hidden.append(node);
+      for (const [key, node] of controls) hidden.append(node);
       const order = [...layout.zones.header, ...layout.zones.toolbar, ...layout.zones.view];
       for (const key of order.filter((key) => fileActions.includes(key))) {
         const node = controls.get(key);

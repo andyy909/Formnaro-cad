@@ -27,6 +27,32 @@ exports.verifySketchUpgrade=async(win,{directory,files}={})=>{
   win.showInactive();await pause();await run(`a.sketchUI.open();document.getElementById('sketch-expand').click();`);await pause();fs.writeFileSync(path.join(directory,'sketch-workspace.png'),(await win.webContents.capturePage()).toPNG());win.hide();await run(`document.getElementById('sketch-cancel').click();`);
   const rich=await require('./sketch-profile-verification.cjs').verifySketchProfile(win,{directory,files});checks.push(...rich.checks);
   const tools=await require('./sketch-tools-verification.cjs').verifySketchTools(win,{directory});checks.push(...tools.checks);
+  const tabletFile=path.join(directory,'Tablet-Dreipunktkreis.ocad');
+  if(fs.existsSync(tabletFile)){
+   files.save=tabletFile;
+   await run(`await a.resetProject();await a.openProject();await a.settled();const node=a.getModel().nodes[0];
+    check(node?.recipe?.sketch?.elements[0]?.type==='circle','tablet circle source missing');
+    a.select([{rootId:node.id,path:[]}]);await a.settled();a.sketchUI.open(true);
+    document.querySelector('[data-sketch-quick-tool=scale]').click();`);
+   await mouse(0,0);
+   await proof('opens the tablet OCAD, edits its circle and saves a return OCAD',`
+    const label=document.querySelector('[data-sketch-canvas-dimension=diameter][data-editable]');
+    check(label?.textContent==='Ø 10 mm','tablet diameter missing');
+    label.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+    const entry=document.querySelector('.sketch-dimension-entry:popover-open');
+    entry.querySelector('input').value='14';entry.requestSubmit();
+    const until=Date.now()+5000;
+    while(document.querySelector('[data-sketch-canvas-dimension=diameter]')?.textContent!=='Ø 14 mm'){
+      check(Date.now()<until,'exact tablet diameter edit');await new Promise(r=>setTimeout(r,25));
+    }
+    await a.sketchUI.preview();await a.sketchUI.apply();await a.settled();
+    const node=a.getModel().nodes[0],element=node.recipe.sketch.elements[0];
+    check(element.center.map(Number).join(',')==='0,0','tablet circle moved');
+    check(Math.abs(node.stats.volume-98*Math.PI)<0.001,'resized tablet originally native solid');
+   `);
+   files.save=path.join(directory,'PC-Dreipunktkreis.ocad');
+   await run(`check((await a.save({saveAs:true})).saved,'return OCAD save');`);
+  }
   const technical=await require('./mesh-technical-verification.cjs').verifyMeshTechnical(win,{directory});checks.push(...technical.checks);
   const attachments=await require('./sketch-attachment-verification.cjs').verifySketchAttachment(win,{directory});checks.push(...attachments.checks);
   const comparison=await require('./model-deviation-verification.cjs').verifyModelComparison(win,{directory});checks.push(...comparison.checks);

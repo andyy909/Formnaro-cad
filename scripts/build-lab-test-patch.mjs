@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {createPackage,extractFile,listPackage,statFile} from '@electron/asar';
 import {makeLabDelta} from './lab-asar-delta.mjs';
-import {copyPortableApp} from './portable-runtime-policy.mjs';
+import {benchmarkDrawingRuntimeSources,copyPortableApp} from './portable-runtime-policy.mjs';
 
 const [runtimeArg,outputArg,baseCommit,previousReceipt]=process.argv.slice(2);
 assert(runtimeArg&&outputArg&&/^[a-f0-9]{40}$/.test(baseCommit??''),'Usage: node scripts/build-lab-test-patch.mjs <portable-program-folder> <output.zip> <base-source-commit>');
@@ -78,7 +78,7 @@ try{
  await createPackage(stage,target);
  const binaries=archive=>files(archive).filter(n=>/\.(?:wasm|node|exe|dll|pyd)$/i.test(n)).map(n=>n+':'+sha(entry(archive,n))).sort();
  assert.deepEqual(binaries(target),binaries(base),'Native program bytes changed.');
- for(const file of ['cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref']){
+ for(const file of benchmarkDrawingRuntimeSources){
   const name='src/'+file+'.js';
   assert.equal(sha(entry(target,name)),sha(fs.readFileSync(path.join(root,name))),name);
  }

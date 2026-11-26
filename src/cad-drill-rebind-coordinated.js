@@ -108,7 +108,7 @@ export async function rebindCadDrillsCoordinated(
     link.selector = picked.selector;
   }
   for (const p of patterns) {
-    cadDependencyAffected(planned.graph, [cadDependencyNodeId('pattern', p.id)]);
+    const affected = cadDependencyAffected(planned.graph, [cadDependencyNodeId('pattern', p.id)]);
     for (const rootId of [p.sourceId, ...p.instances.filter((i) => !p.excluded.includes(i.index)).map((i) => i.id)]) {
       const root = project.nodes.find((n) => n.id === rootId);
       if (!root) fail('PATTERN_INSTANCE_CONFLICT', 'Musterquelle oder bestätigte Kopie fehlt.');

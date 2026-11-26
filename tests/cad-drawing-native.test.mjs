@@ -5,12 +5,13 @@ import loader from '../cad-kernel-build/runtime/formnaro_cad.js';
 import {createCadService} from '../src/cad-service.js';
 import {createCadProject,serializeCadProject,cadProjectRevision} from '../src/cad-project.js';
 import {createCadDrawingNative,cadDrawingViewFrame} from '../src/cad-drawing-native.js';
-import {cadIdentity} from '../src/cad-affine.js';
+import {cadIdentity,cadPoint,inverseCadMatrix} from '../src/cad-affine.js';
 import {cadSourceGeometryDigest} from '../src/cad-geometry-digest.js';
 import {createCadWorkerClient} from '../src/cad-worker-client.js';
 import {buildCadContours} from '../src/cad-recipes.js';
 import {validateCadSolid,writeCadBrep} from '../src/cad-native-kernel.js';
-import {cadDrawingDimension,createCadDrawingSheet,updateCadDrawingProjection,validateCadDrawingProjection} from '../src/cad-drawing-data.js';
+import {cadDrawingDimension,createCadDrawingSheet,updateCadDrawingProjection,validateCadDrawingProjection,cadDrawingBalloon,createCadDrawingBalloon,createCadDrawingPartsList} from '../src/cad-drawing-data.js';
+import {summarizeParts} from '../src/cad-part-properties.js';
 const oc=await loader({print:()=>{},printErr:()=>{}});
 const near=(a,b,tolerance=1e-6)=>assert.ok(Math.abs(a-b)<=tolerance,`${a} != ${b}`);
 const size=projection=>projection.bounds.max.map((v,k)=>v-projection.bounds.min[k]);
@@ -29,6 +30,78 @@ test('drawing orthographic frames keep model millimetres and native sources exac
   }
   assert.equal(serializeCadProject(project),before);
  }finally{service.dispose();}
+});
+
+test('B07-02 projects the same native part IDs in their assembly and exploded positions', () => {
+  const service = createCadService({ oc });
+  try {
+    const ids = ['left', 'right'];
+    const at = (x) => {
+      const matrix = cadIdentity();
+      matrix[12] = x;
+      matrix[14] = 10;
+      return matrix;
+    };
+    const recipe = { type: 'box', size: [8, 8, 8] };
+    const project = createCadProject({
+      nodes: [
+        service.nativeNode(recipe, { id: ids[0], transform: at(-30) }),
+        service.nativeNode(recipe, { id: ids[1], transform: at(30) }),
+      ],
+    });
+    const explosion = {
+      version: 1,
+      distance: 20,
+      parts: [{ id: ids[0], direction: [-1, 0, 0] }, { id: ids[1], direction: [0, 0, 1] }],
+    };
+    const before = serializeCadProject(project);
+    const projectDrawing = createCadDrawingNative({ oc, service });
+    const assembly = projectDrawing(project, { ids, view: 'top' });
+    const exploded = projectDrawing(project, { ids, view: 'exploded', explosion });
+    assert.deepEqual(assembly.sourceSignatures.map((source) => source.id), ids);
+    assert.deepEqual(exploded.sourceSignatures, assembly.sourceSignatures);
+    assert.deepEqual(validateCadDrawingProjection(exploded), exploded);
+    assert.deepEqual(exploded.explosion, explosion);
+    for (const [projection, positions] of [
+      [assembly, [[-30, 0, 10], [30, 0, 10]]],
+      [exploded, [[-50, 0, 10], [30, 0, 30]]],
+    ]) {
+      for (const [index, id] of ids.entries()) {
+        const points = projection.curves
+          .filter((curve) => curve.sourceReferences?.some((reference) => reference.source.rootId === id))
+          .flatMap((curve) => [curve.a, curve.b]);
+        assert.ok(points.length >= 8, id);
+        const expected = cadPoint(inverseCadMatrix(projection.frame), positions[index]);
+        for (const axis of [0, 1]) {
+          const coordinates = points.map((point) => point[axis]);
+          near((Math.min(...coordinates) + Math.max(...coordinates)) / 2, expected[axis]);
+        }
+      }
+    }
+    assert.equal(serializeCadProject(project), before);
+
+    // A displacement parallel to the default isometric viewing axis must
+    // remain visible on the sheet instead of projecting to zero travel.
+    const diagonal = 1 / Math.sqrt(3);
+    const diagonalExplosion = {
+      ...explosion,
+      parts: [{ id: ids[0], direction: [diagonal, -diagonal, diagonal] }],
+    };
+    const diagonalView = projectDrawing(project, { ids, view: 'exploded', explosion: diagonalExplosion });
+    const toDrawing = inverseCadMatrix(diagonalView.frame);
+    const leftOnSheet = cadPoint(toDrawing, [-30, 0, 10]);
+    const offsetOnSheet = cadPoint(toDrawing, [-30 + 20 * diagonal, -20 * diagonal, 10 + 20 * diagonal]);
+    assert.ok(Math.hypot(offsetOnSheet[0] - leftOnSheet[0], offsetOnSheet[1] - leftOnSheet[1]) > 18);
+    assert.notDeepEqual(diagonalView.frame, exploded.frame);
+    assert.deepEqual(projectDrawing(project, { ids, view: 'top' }), assembly);
+    assert.throws(() => projectDrawing(project, { ids, view: 'exploded' }), { code: 'INVALID_DRAWING_PROJECTION' });
+    assert.throws(
+      () => projectDrawing(project, { ids: [ids[0]], view: 'exploded', explosion }),
+      { code: 'INVALID_DRAWING_PROJECTION' },
+    );
+  } finally {
+    service.dispose();
+  }
 });
 
 test('an exact native straight edge retains its drawing dimension after nonuniform model scaling',()=>{
@@ -102,4 +175,44 @@ test('persistent worker exposes revision-bound drawing query and remains reusabl
   await assert.rejects(client.run(request(),{revision:'stale'}),{code:'STALE_REVISION'});
   const abort=new AbortController(),pending=client.run(request(),{revision,signal:abort.signal});abort.abort();await assert.rejects(pending,{name:'AbortError'});const next=await client.run(request(),{revision});assert.deepEqual(next,result);assert.equal(workers,2);
  }finally{client.dispose();}
+});
+
+test('B06 native helical screw head retains its exact edge and balloon after placement movement', () => {
+  const service = createCadService({ oc });
+  try {
+    const screw = service.nativeNode({
+      type: 'thread',
+      size: [13, 13, 4.5],
+      params: { head: 'hex', headDiameter: 13, headHeight: 4, diameter: 8, length: 0.5, pitch: 1.25, leadIn: 0 },
+    }, { id: 'screw' });
+    const project = createCadProject({ nodes: [screw] }),
+      query = createCadDrawingNative({ oc, service }),
+      projectTop = () => query(project, { ids: ['screw'], view: 'top' }),
+      sheet = createCadDrawingSheet({ sourceIds: ['screw'] }),
+      view = sheet.views.find((item) => item.kind === 'top');
+    sheet.views = [view];
+    view.projection = projectTop();
+    const edge = view.projection.curves.find((curve) =>
+      !curve.hidden && curve.sourceReferences?.length && curve.sourceReferences.every(({ source, role, geometrySignature }) =>
+        source.rootId === 'screw' && !source.path.length && role.startsWith('screw.edge.exact.') && geometrySignature,
+      ),
+    );
+    assert.ok(edge);
+    const rows = summarizeParts([{ id: 'screw', name: 'Screw', partNumber: 'M8-trial' }], { mode: 'grouped' }).rows;
+    sheet.partsList = createCadDrawingPartsList(rows);
+    const balloon = createCadDrawingBalloon(sheet, { id: 'balloon', viewId: view.id, curveId: edge.id, position: [100, 100] });
+    sheet.annotations = [balloon];
+    const target = cadDrawingBalloon(sheet, balloon).target;
+
+    project.nodes[0].transform[12] += 6;
+    const updated = updateCadDrawingProjection(sheet, view.id, projectTop()),
+      moved = cadDrawingBalloon(updated, updated.annotations[0]);
+    assert.equal(moved.row.position, 1);
+    assert.equal(updated.annotations[0].instanceId, screw.id);
+    assert.notEqual(moved.curveId, edge.id);
+    near(moved.target[0] - target[0], 6);
+    near(moved.target[1], target[1]);
+  } finally {
+    service.dispose();
+  }
 });

@@ -1,4 +1,4 @@
-const fs=require('node:fs/promises'),sync=require('node:fs'),path=require('node:path'),{spawn}=require('node:child_process');
+const fs=require('node:fs/promises'),sync=require('node:fs'),path=require('node:path'),os=require('node:os'),{spawn}=require('node:child_process');
 const failure=(message,code='FREECAD_PYTHON_INVALID')=>Object.assign(Error(message),{code});
 function validateModules(modules={}){
  if(!modules||Object.getPrototypeOf(modules)!==Object.prototype||Object.keys(modules).length>32||JSON.stringify(modules).length>4000000)throw failure('Ungültige FreeCAD-Python-Module.');
@@ -47,7 +47,7 @@ async function runPythonJob({job,exe,script,inputs,inspectOnly,signal,timeout,do
  let worker=path.join(job,'worker.py');if(script.gui){exe=path.join(path.dirname(exe),'FreeCAD.exe');worker=path.join(job,'worker.FCMacro');await fs.writeFile(worker,"from pathlib import Path\nimport FreeCADGui\nfrom PySide import QtCore\ntry:\n exec(compile((Path.cwd()/'worker.py').read_text(encoding='utf-8'),str(Path.cwd()/'worker.py'),'exec'),{'__file__':str(Path.cwd()/'worker.py'),'__name__':'__main__'})\nfinally:\n QtCore.QTimer.singleShot(0,FreeCADGui.getMainWindow().close)\n");}
  const containerName='formnaro.cad.'+require('node:crypto').randomUUID().replaceAll('-','');
  try{await execute(path.join(host,'container.exe'),[exe,job,worker,containerName],{cwd:job,env,signal,timeout});}
-  catch(error){try{const f=path.join(job,'process.log'),stat=await fs.lstat(f);if(stat.isFile()&&!stat.isSymbolicLink()&&stat.size<=64000&&path.dirname(await fs.realpath(f))===await fs.realpath(job))error.message+='\n'+(await fs.readFile(f,'utf8')).slice(-12000);}catch{ /* Keep the execution error if additional worker diagnostics cannot be read. */ }throw error;}
+  catch(error){try{const f=path.join(job,'process.log'),stat=await fs.lstat(f);if(stat.isFile()&&!stat.isSymbolicLink()&&stat.size<=64000&&path.dirname(await fs.realpath(f))===await fs.realpath(job))error.message+='\n'+(await fs.readFile(f,'utf8')).slice(-12000);}catch{}throw error;}
  finally{await execute(path.join(host,'container.exe'),['--cleanup',containerName],{cwd:host,env,timeout:10000}).catch(()=>{});}
  }finally{await fs.rm(host,{recursive:true,force:true,maxRetries:3,retryDelay:50}).catch(()=>{});}
 }

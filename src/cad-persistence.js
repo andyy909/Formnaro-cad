@@ -1,4 +1,4 @@
-import { remapCadJoints, mergeCadJoints } from './cad-joints-data.js';
+import { validateCadJoints, remapCadJoints, mergeCadJoints } from './cad-joints-data.js';
 import {
   cadLinkedPatternProblems,
   stampCadLinkedPattern,
@@ -18,9 +18,21 @@ import {
   stampCadProjectParameters,
   refreshCadProjectParameterCorrespondence,
 } from './cad-project-parameters-data.js';
-import { cadProjectSnapshot, parseCadProject, serializeCadProject, cadProjectRevision } from './cad-project.js';
+import {
+  cadProjectSnapshot,
+  parseCadProject,
+  serializeCadProject,
+  cadProjectRevision,
+  PART_NUMBER_PROJECT_VERSION,
+  COMPONENT_DEFINITION_PROJECT_VERSION,
+  DRAWING_CENTERMARK_PROJECT_VERSION,
+  DRAWING_DETAIL_PROJECT_VERSION,
+  DRAWING_PARTS_LIST_PROJECT_VERSION,
+  DRAWING_EXPLOSION_PROJECT_VERSION,
+  DRAWING_BALLOON_PROJECT_VERSION,
+} from './cad-project.js';
 import { validateCadTemplateData, cadTemplateVariables } from './cad-template-data.js';
-import { createCadRecovery } from './cad-recovery.js';
+import { createCadRecovery, CAD_AUTOSAVE_KEY } from './cad-recovery.js';
 
 export { CAD_AUTOSAVE_KEY, CAD_LEGACY_AUTOSAVE_KEY } from './cad-recovery.js';
 export const MIXED_LIBRARY_KEY = 'offlinecad-library-common-v8';
@@ -44,14 +56,15 @@ function library(value) {
     Array.isArray(value) ||
     Object.keys(value).some((k) => !['format', 'version', 'items'].includes(k)) ||
     value.format !== LIBRARY_FORMAT ||
-    ![5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32].includes(
-      value.version,
-    ) ||
+    ![
+      5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 35, 36, 37,
+      38, 39, 40, 41,
+    ].includes(value.version) ||
     !Array.isArray(value.items) ||
     value.items.length > 500
   )
     throw Error(
-      'Nur Teilebibliotheken Version 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 und 31 sind kompatibel.',
+      'Nur Teilebibliotheken Version 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 35, 36, 37, 38, 39, 40 und 41 sind kompatibel.',
     );
   const ids = new Set();
   return {
@@ -70,6 +83,20 @@ function library(value) {
       if (ids.has(id)) throw Error('Doppelte CAD-Vorlagenkennung.');
       ids.add(id);
       let project = parseCadProject(item.project);
+      if (project.version >= DRAWING_BALLOON_PROJECT_VERSION && value.version < DRAWING_BALLOON_PROJECT_VERSION)
+        throw Error('Positionsballons in Zeichnungen benötigen Bibliotheksversion 41.');
+      if (project.version >= DRAWING_EXPLOSION_PROJECT_VERSION && value.version < DRAWING_EXPLOSION_PROJECT_VERSION)
+        throw Error('Explosionsansichten in Zeichnungen benötigen Bibliotheksversion 40.');
+      if (project.version >= DRAWING_PARTS_LIST_PROJECT_VERSION && value.version < DRAWING_PARTS_LIST_PROJECT_VERSION)
+        throw Error('Stücklistentabellen in Zeichnungen benötigen Bibliotheksversion 39.');
+      if (project.version >= DRAWING_DETAIL_PROJECT_VERSION && value.version < DRAWING_DETAIL_PROJECT_VERSION)
+        throw Error('Projekte mit Format 38 benötigen Bibliotheksversion 38.');
+      if (project.version >= DRAWING_CENTERMARK_PROJECT_VERSION && value.version < DRAWING_CENTERMARK_PROJECT_VERSION)
+        throw Error('Mittelpunktmarken in Zeichnungen benötigen Bibliotheksversion 37.');
+      if (project.version >= COMPONENT_DEFINITION_PROJECT_VERSION && value.version < COMPONENT_DEFINITION_PROJECT_VERSION)
+        throw Error('Bauteildefinitionen benötigen Bibliotheksversion 36.');
+      if (project.version >= PART_NUMBER_PROJECT_VERSION && value.version < PART_NUMBER_PROJECT_VERSION)
+        throw Error('Teilenummern benötigen Bibliotheksversion 35.');
       if (project.version >= 32 && value.version < 32) throw Error('Prüfstände benötigen Bibliotheksversion 32.');
       if (project.version >= 31 && value.version < 31)
         throw Error('Antriebskopplungen benötigen Bibliotheksversion 31.');

@@ -138,17 +138,28 @@ function frame(s, normal) {
   return { ...s, points, n, u, v, hi, lo, world, epsilon: Math.max(1e-7, s.extent * 1e-8) };
 }
 function simplify(p, eps) {
-  let out = p;
-  for (let pass = 0; pass < 3; pass++) {
-    const next = out.filter((b, i) => {
+  const out = [...p];
+  // Re-evaluate after every removal. Filtering all points against the old
+  // neighbours removes whole runs of locally flat points at a corner, which
+  // can erase a real bend while each individual point is still within eps.
+  for (let changed = true; changed && out.length > 3; ) {
+    changed = false;
+    for (let i = 0; i < out.length && out.length > 3; ) {
       const a = out[(i + out.length - 1) % out.length],
+        b = out[i],
         c = out[(i + 1) % out.length],
         ab = sub(b, a),
-        ac = sub(c, a);
-      return Math.abs(ab[0] * ac[1] - ab[1] * ac[0]) > eps * Math.hypot(...ac) || dot(ab, sub(b, c)) > 0;
-    });
-    if (next.length < 3 || next.length === out.length) break;
-    out = next;
+        ac = sub(c, a),
+        keep =
+          Math.abs(ab[0] * ac[1] - ab[1] * ac[0]) > eps * Math.hypot(...ac) || dot(ab, sub(b, c)) > 0;
+      if (keep) {
+        i++;
+        continue;
+      }
+      out.splice(i, 1);
+      changed = true;
+      break;
+    }
   }
   return out;
 }

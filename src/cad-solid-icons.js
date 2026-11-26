@@ -21,6 +21,8 @@ const mesh =
 const pin = circle(16, 15, 4, 'accent') + circle(16, 15, 1.1, 'paper');
 const arrow = line('M16 18V5m-4 4 4-4 4 4', 'blue-line');
 const filePair = translate(-1, 0, paper, 0.8) + translate(10, 7, paper, 0.8);
+const network =
+  line('M9 9l14 2-6 13-8-15') + circle(9, 9, 2.5, 'ref') + circle(23, 11, 2.5, 'accent') + circle(17, 24, 2.5, 'ref');
 const compare =
   translate(0, 0, block('ref', 'front', 'side'), 0.61) + translate(13, 10, block('accent', 'gold', 'ochre'), 0.61);
 const surface = line('M4 15Q10 6 17 11t11 2v9Q21 27 15 21T4 25Z', 'ref');

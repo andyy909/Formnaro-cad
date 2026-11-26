@@ -28,7 +28,8 @@ const fail = (code, message) => {
   error.code = code;
   throw error;
 };
-const dot = (a, b) => a.reduce((s, v, k) => s + v * b[k], 0),
+const xyz = (p) => [p.X(), p.Y(), p.Z()],
+  dot = (a, b) => a.reduce((s, v, k) => s + v * b[k], 0),
   near = (a, b, t) => Math.hypot(...a.map((v, k) => v - b[k])) <= t;
 function vector(value) {
   if (!Array.isArray(value) || value.length !== 3 || !value.every(Number.isFinite))

@@ -19,24 +19,8 @@ const vector = (value) => {
 };
 export const cadWorkspaceStoredProjectVersion = (version, workspace) =>
   workspace?.version === 6 ? Math.max(25, version) : workspace?.version === 5 && version < 8 ? 8 : version;
-export function validateCadWorkspace(value) {
-  object(value, [
-    'version',
-    'view',
-    'selection',
-    'mode',
-    'snap',
-    'quality',
-    'layout',
-    ...(value?.version >= 2 ? ['tree'] : []),
-    ...(value?.version >= 3 ? ['section'] : []),
-    ...(value?.version >= 4 ? ['meshSelection'] : []),
-    ...(value?.version >= 5 ? ['loadSet'] : []),
-    ...(value?.version >= 6 ? ['explosion'] : []),
-  ]);
-  if (![1, 2, 3, 4, 5, 6].includes(value.version)) throw Error('Unbekannte Arbeitsplatzversion.');
-  object(value.view, ['projection', 'position', 'target', 'up', 'zoom']);
-  const v = value.view;
+export function validateCadView(v) {
+  object(v, ['projection', 'position', 'target', 'up', 'zoom']);
   if (
     !['perspective', 'orthographic'].includes(v.projection) ||
     !Number.isFinite(v.zoom) ||
@@ -53,6 +37,25 @@ export function validateCadWorkspace(value) {
   };
   if (Math.hypot(...view.up) < 1e-7 || Math.hypot(...view.position.map((n, k) => n - view.target[k])) < 1e-7)
     throw Error('Ungültige gespeicherte Kamerarichtung.');
+  return view;
+}
+export function validateCadWorkspace(value) {
+  object(value, [
+    'version',
+    'view',
+    'selection',
+    'mode',
+    'snap',
+    'quality',
+    'layout',
+    ...(value?.version >= 2 ? ['tree'] : []),
+    ...(value?.version >= 3 ? ['section'] : []),
+    ...(value?.version >= 4 ? ['meshSelection'] : []),
+    ...(value?.version >= 5 ? ['loadSet'] : []),
+    ...(value?.version >= 6 ? ['explosion'] : []),
+  ]);
+  if (![1, 2, 3, 4, 5, 6].includes(value.version)) throw Error('Unbekannte Arbeitsplatzversion.');
+  const view = validateCadView(value.view);
   if (
     !['translate', 'scale', 'rotate'].includes(value.mode) ||
     ![0, 0.1, 0.25, 0.5, 1, 2, 5].includes(value.snap) ||

@@ -4,7 +4,7 @@ const nextActions=new Set(['repeat','change_input','fix_prerequisite','stop']);
 function toolFeedback(tool,report,{isError,imageAttached,args,availableTools}){
  const envelope={tool,isError,result:report,...(imageAttached?{imageAttached:true}:{})};
  if(isError){
-  let data;try{data=JSON.parse(report);}catch{ /* The tool can report a plain-text error without structured feedback. */ }
+  let data;try{data=JSON.parse(report);}catch{}
   const feedback=data?.feedback;
   const code=feedback?.code??data?.code;
   if(typeof code==='string'&&/^[A-Z0-9_]{1,80}$/.test(code)){

@@ -60,9 +60,47 @@ function intersections(a,b){
 }
 function parameter(e,p){if(e.type==='line'){const u=e.end.map((v,k)=>v-e.start[k]),axis=Math.abs(u[0])>Math.abs(u[1])?0:1;return (p[axis]-e.start[axis])/u[axis];}return (e.sweep>0?mod(Math.atan2(p[1]-e.center[1],p[0]-e.center[0])-e.startAngle):mod(e.startAngle-Math.atan2(p[1]-e.center[1],p[0]-e.center[0])))/Math.abs(e.sweep);}
 function curveAt(e,t){return e.type==='line'?e.start.map((v,k)=>v+t*(e.end[k]-v)):e.center.map((v,k)=>v+e.radius*(k===0?Math.cos:Math.sin)(e.startAngle+t*e.sweep));}
+function independentSketchMeasure(value) {
+  try {
+    sketchExpression(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+export function pickSketchEditElement(elements, point, tolerance, {lineOnly=false, exclude}={}){
+ const candidates=[];
+ for(const element of elements){
+  if(element.id===exclude||!(lineOnly?element.type==='line':['line','arc','circle'].includes(element.type)))continue;
+  let separation;
+  if(element.type==='line'){
+   const delta=element.end.map((value,index)=>value-element.start[index]);
+   const squared=delta[0]**2+delta[1]**2;
+   if(!squared)continue;
+   const projected=delta.reduce((sum,value,index)=>sum+value*(point[index]-element.start[index]),0)/squared;
+   separation=distance(curveAt(element,Math.max(0,Math.min(1,projected))),point);
+  }else{
+   const radial=Math.abs(distance(element.center,point)-element.radius);
+   separation=element.type==='circle'||parameter(element,point)<=1
+    ?radial:Math.min(distance(element.start,point),distance(element.end,point));
+  }
+  if(separation<=tolerance)candidates.push({element,separation});
+ }
+ candidates.sort((a,b)=>a.separation-b.separation);
+ const hit=candidates[0]?.element;
+ if(!hit)return null;
+ return {id:hit.id,end:hit.type==='line'&&distance(hit.start,point)<distance(hit.end,point)?'start':'end'};
+}
 export function trimExtendSketch(s,{id,cutterId,mode='trim',end='end'}={}){
  if(id===cutterId||!['trim','extend'].includes(mode)||!['start','end'].includes(end))throw Error('Element, Schnittgrenze und Ende wählen.');const a=element(s,id),b=element(s,cutterId),out=structuredClone(s),stored=out.elements.find(e=>e.id===id),eps=1e-7;
  if(![a,b].every(e=>['line','arc','circle'].includes(e.type)))throw Error('Trimmen und Verlängern unterstützen zunächst nur Linien, Kreise und Kreisbögen.');
+ const changedPoints=a.type==='circle'?['center']:a.type==='arc'?[end,'through']:[end];
+ if(changedPoints.some(key=>!stored[key].every(independentSketchMeasure))||(a.type==='circle'&&!independentSketchMeasure(stored.diameter)))
+  throw Error('Die betroffenen Formeln verwenden benannte Maße. Ändere zuerst die Formel.');
+ const orientationOnly=new Set(['horizontal','vertical','parallel','perpendicular']);
+ if(s.constraints?.some(condition=>condition.refs.some(ref=>ref.element===id&&
+   (a.type==='circle'||(ref.point?changedPoints.includes(ref.point):a.type!=='line'||!orientationOnly.has(condition.type))))))
+  throw Error('Vor dem Bearbeiten die betroffenen Skizzenbedingungen entfernen.');
  const candidates=intersections(a,b).filter(p=>{const t=parameter(b,p);return b.type==='circle'||t>=-eps&&t<=1+eps;}).map(p=>({p,t:parameter(a,p)}));
  if(a.type==='circle'){
   if(mode!=='trim'||candidates.length!==2)throw Error('Vollkreis benötigt zwei Schnittpunkte zum Trimmen.');const ts=candidates.map(c=>c.t).sort((a,b)=>a-b),start=end==='end'?ts[0]:ts[1],finish=end==='end'?ts[1]:ts[0]+1;delete stored.center;delete stored.diameter;Object.assign(stored,{type:'arc',start:pair(curveAt(a,start)),through:pair(curveAt(a,(start+finish)/2)),end:pair(curveAt(a,finish))});

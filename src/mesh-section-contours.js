@@ -110,6 +110,7 @@ export function meshSectionContours(node, options = {}) {
     'loopIndices',
     'geometryDigest',
     'summaryOnly',
+    'allowIncomplete',
   ];
   if (
     !options ||
@@ -119,6 +120,7 @@ export function meshSectionContours(node, options = {}) {
     Math.hypot(...options.normal) < 1e-12 ||
     !vector(options.planePoint) ||
     (options.summaryOnly !== undefined && typeof options.summaryOnly !== 'boolean') ||
+    (options.allowIncomplete !== undefined && typeof options.allowIncomplete !== 'boolean') ||
     (options.summaryOnly && options.includePoints) ||
     (options.includePoints !== undefined && typeof options.includePoints !== 'boolean') ||
     !Number.isFinite(options.fitTolerance ?? 0.02) ||
@@ -133,7 +135,7 @@ export function meshSectionContours(node, options = {}) {
         options.loopIndices.some((i) => !Number.isInteger(i) || i < 0 || i > 31)))
   )
     fail(
-      'Schnittkonturen: normal, planePoint, optional fitTolerance 0–0,1 mm, includePoints, loopIndices, summaryOnly und aktueller geometryDigest.',
+      'Schnittkonturen: normal, planePoint, optional fitTolerance 0–0,1 mm, includePoints, loopIndices, summaryOnly, allowIncomplete und aktueller geometryDigest.',
     );
   const s = g.source(node);
   if (options.geometryDigest && options.geometryDigest !== s.geometryDigest)
@@ -143,7 +145,7 @@ export function meshSectionContours(node, options = {}) {
     shift = f.epsilon * 2.231,
     actual = plane + shift;
   if (actual <= f.lo || actual >= f.hi) fail('Die Schnittebene muss innerhalb der Vorlage liegen.');
-  const diagnostics = options.summaryOnly ? { rejectedComponents: 0 } : undefined;
+  const diagnostics = options.summaryOnly || options.allowIncomplete ? { rejectedComponents: 0 } : undefined;
   const contours = g.section(f, plane, diagnostics);
   if (!g.simpleContours(contours, f.epsilon * 8))
     fail('Berührende oder überschneidende Schnittkonturen sind nicht eindeutig.');
@@ -168,9 +170,9 @@ export function meshSectionContours(node, options = {}) {
         min: [0, 1].map((k) => Math.min(...points.map((p) => p[k]))),
         max: [0, 1].map((k) => Math.max(...points.map((p) => p[k]))),
       };
-    if (diagnostics) {
+    if (options.summaryOnly) {
       const circle = fittedCircle(points, tolerance);
-      const label = { index, depth, role: diagnostics.rejectedComponents ? 'unknown' : role };
+      const label = { index, depth, role: diagnostics?.rejectedComponents ? 'unknown' : role };
       if (circle) {
         const exactCenter = f.world([...circle.element.center, actual]),
           center = exactCenter.map((n) => Number(n.toFixed(6))),
@@ -202,18 +204,22 @@ export function meshSectionContours(node, options = {}) {
       });
     }
   }
-  if (diagnostics) {
+  if (options.summaryOnly) {
+    const isComplete = diagnostics?.rejectedComponents === 0 && selected.length === all.length;
     return {
       version: 1,
       kind: 'meshSectionMeasurements',
       geometryDigest: s.geometryDigest,
       units: 'mm',
       measurementPlanePoint: origin,
+      nominalPlanePoint: options.planePoint,
       normal: f.n,
       frame,
       fitTolerance: tolerance,
-      complete: diagnostics.rejectedComponents === 0 && selected.length === all.length,
-      rejectedComponents: diagnostics.rejectedComponents,
+      complete: isComplete,
+      status: isComplete ? 'complete' : 'incomplete',
+      closed: diagnostics?.rejectedComponents === 0,
+      rejectedComponents: diagnostics?.rejectedComponents ?? 0,
       totalLoops: all.length,
       measurements: selected.map((i) => {
         const { depth, ...measurement } = all[i];
@@ -241,6 +247,27 @@ export function meshSectionContours(node, options = {}) {
           loops: loops.map((l) => ({ id: 's' + l.index, role: l.role, elements: l.elements.map((e) => e.id) })),
         }
       : null;
+  const hasRejected = (diagnostics?.rejectedComponents ?? 0) > 0;
+  const outerLoops = hasRejected ? [] : loops.filter((l) => l.role === 'outer'),
+    outerProfile = hasRejected ? null : outerLoops[0] ?? null,
+    innerLoops = loops.filter((l) => l.role === 'hole'),
+    innerCircles = [];
+  for (const l of loops) {
+    if (l.elements.length === 1 && l.elements[0].type === 'circle') {
+      const el = l.elements[0];
+      const exactCenter = f.world([...el.center, actual]);
+      innerCircles.push({
+        index: l.index,
+        role: 'hole',
+        planeCenter: el.center,
+        center: exactCenter.map((n) => Number(n.toFixed(6))),
+        diameter: Number(el.diameter.toFixed(6)),
+        fitErrorBound: l.fitErrorBound,
+        closed: true,
+      });
+    }
+  }
+  const isComplete = !hasRejected && selected.length === all.length;
   return {
     version: 1,
     kind: 'meshSectionContours',
@@ -248,13 +275,27 @@ export function meshSectionContours(node, options = {}) {
     sectionId: 'section-' + cadGeometryDigest(JSON.stringify([s.geometryDigest, options])).slice(0, 24),
     units: 'mm',
     normal: f.n,
+    uAxis: f.u,
+    vAxis: f.v,
+    origin,
+    plane: { origin, normal: f.n, uAxis: f.u, vAxis: f.v },
     nominalPlanePoint: options.planePoint,
     measurementPlanePoint: origin,
     sectionShift: shift,
     frame,
     totalLoops: all.length,
     returnedLoops: loops.length,
-    complete: selected.length === all.length,
+    complete: isComplete,
+    status: isComplete ? 'complete' : 'incomplete',
+    closed: !hasRejected,
+    rejectedComponents: diagnostics?.rejectedComponents ?? 0,
+    openProfile: hasRejected
+      ? { role: 'outer', status: 'incomplete', closed: false, uncertainty: 'Unterbrochener oder offener Schnitt' }
+      : null,
+    outerLoops,
+    outerProfile,
+    innerLoops,
+    innerCircles,
     loops,
     sketch,
     sketchUnavailable: sketch
@@ -267,4 +308,29 @@ export function meshSectionContours(node, options = {}) {
     limitations:
       'Complete ordered closed contours of original triangles at the disclosed measurement plane. Circle/arc/line fitting bounds apply only to these 2D polylines. No shape or tolerance guarantee between sections, no automatic repair. Sketch height is a placeholder of 1 mm; choose the required extrusion height and construction plane explicitly.',
   };
+}
+
+/** Map a 2D section plane point [u, v] to a 3D world coordinate [x, y, z] using the section frame. */
+export function planePointToWorld(point2d, frameOrSection) {
+  const frame = Array.isArray(frameOrSection) ? frameOrSection : frameOrSection?.frame;
+  if (!Array.isArray(frame) || frame.length !== 16) throw Error('Gültigen 4x4-Ebenenrahmen übergeben.');
+  const [u, v] = point2d;
+  return [
+    frame[12] + u * frame[0] + v * frame[4],
+    frame[13] + u * frame[1] + v * frame[5],
+    frame[14] + u * frame[2] + v * frame[6],
+  ];
+}
+
+/** Map a 3D world coordinate [x, y, z] to the 2D section plane [u, v]. */
+export function worldPointToPlane(point3d, frameOrSection) {
+  const frame = Array.isArray(frameOrSection) ? frameOrSection : frameOrSection?.frame;
+  if (!Array.isArray(frame) || frame.length !== 16) throw Error('Gültigen 4x4-Ebenenrahmen übergeben.');
+  const dx = point3d[0] - frame[12],
+    dy = point3d[1] - frame[13],
+    dz = point3d[2] - frame[14];
+  return [
+    dx * frame[0] + dy * frame[1] + dz * frame[2],
+    dx * frame[4] + dy * frame[5] + dz * frame[6],
+  ];
 }

@@ -27,6 +27,14 @@
     "file": "einstellungen.json",
     "limit": 65536
   },
+  "offlinecad-tablet-views-v1": {
+    "file": "tablet-blickwinkel.json",
+    "limit": 262144
+  },
+  "offlinecad-tablet-notes-v1": {
+    "file": "tablet-projektnotizen.json",
+    "limit": 16777216
+  },
   "offlinecad-fonts-v1": {
     "file": "schriften.json",
     "limit": 29360128

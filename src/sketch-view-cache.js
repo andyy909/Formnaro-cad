@@ -24,9 +24,7 @@ export function createSketchViewCache({ resolve, expression }) {
         geometry = resolved ?? resolveSketchProfile(sketch, expression, { geometryOnly: true });
         handles = profileGeometryHandles(geometry.elements);
         midpoints = profileGeometryMidpoints(geometry.elements, handles);
-      } catch {
-        /* Keep the fallback sketch display when profile geometry cannot be resolved. */
-      }
+      } catch {}
     }
     return (cached = { sketch, resolved, error, geometry, handles, midpoints });
   }

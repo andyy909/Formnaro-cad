@@ -1,4 +1,5 @@
 import { conversionSummary } from './cad-stl-converter.js';
+import { repairFassungFromReport } from './mesh-repair-fassung.js';
 import { meshCadSource } from './cad-mesh-to-cad-data.js';
 import { projectObjectGeometryDigest } from './project-objects.js';
 import { flags } from './organization.js';
@@ -62,6 +63,7 @@ export function createCadConverterImport({
       throw Error('Für die CAD-Übernahme einen sichtbaren entsperrten Layer und Ordner wählen.');
     }
     const valid = () => active === s && sequence === token && current() && controller.revision() === revision;
+    const repair = repairFassungFromReport(result.report);
     try {
       if (!valid()) throw aborted();
       const operation = source
@@ -72,6 +74,7 @@ export function createCadConverterImport({
             target: source.target,
             sourceDigest: source.digest,
             notes: conversionSummary(result.report).slice(0, 4000),
+            ...(repair ? { repair } : {}),
           }
         : {
             kind: 'importStep',
@@ -86,6 +89,7 @@ export function createCadConverterImport({
               metadata: {
                 importedFile: { name: file.name, type: 'stl' },
                 notes: conversionSummary(result.report).slice(0, 4000),
+                ...(repair ? { meshRepair: repair } : {}),
               },
             },
           };

@@ -2,6 +2,22 @@ import * as THREE from 'three';
 import { MESH_INSPECTION_CATEGORIES } from './mesh-inspector.js';
 
 export function meshInspectionFindingPoints(result, node, kind, index = 0) {
+  if (kind === 'group' || kind === 'defectGroup') {
+    const g = result?.defectGroups?.[index];
+    if (!g || node?.id !== result.objectId || !node.mesh) return [];
+    const vertices = g.vertices;
+    if (
+      !vertices?.length ||
+      vertices.some((id) => !Number.isSafeInteger(id) || id < 0 || id >= node.mesh.verts.length / 3)
+    )
+      return [];
+    return vertices.map((id) =>
+      new THREE.Vector3()
+        .fromArray(node.mesh.verts, id * 3)
+        .applyMatrix4(new THREE.Matrix4().fromArray(node.transform))
+        .toArray(),
+    );
+  }
   const c = result?.categories?.[kind];
   if (!c || node?.id !== result.objectId || !node.mesh) return [];
   const vertices = c.edges.length
@@ -24,7 +40,7 @@ export function meshInspectionFindingPoints(result, node, kind, index = 0) {
 export function createMeshInspectionOverlay(
   result,
   node,
-  { enabled = Object.keys(MESH_INSPECTION_CATEGORIES), through = false } = {},
+  { enabled = Object.keys(MESH_INSPECTION_CATEGORIES), through = false, activeGroupIndex = null } = {},
 ) {
   const group = new THREE.Group();
   if (!result) return group;
@@ -112,6 +128,47 @@ export function createMeshInspectionOverlay(
             new THREE.PointsMaterial({
               color,
               size: 8,
+              sizeAttenuation: false,
+              depthTest: !through,
+              depthWrite: false,
+            }),
+          ),
+        );
+    }
+    if (activeGroupIndex !== null && result?.defectGroups?.[activeGroupIndex]) {
+      const activeGroup = result.defectGroups[activeGroupIndex];
+      const groupLines = [],
+        groupDots = [];
+      for (const bIdx of activeGroup.boundaryIndices ?? []) {
+        const edge = result.categories.boundary?.edges?.[bIdx];
+        if (edge) groupLines.push(...point(edge.vertices[0]), ...point(edge.vertices[1]));
+      }
+      for (const mIdx of activeGroup.nonmanifoldEdgeIndices ?? []) {
+        const edge = result.categories.nonmanifoldEdge?.edges?.[mIdx];
+        if (edge) groupLines.push(...point(edge.vertices[0]), ...point(edge.vertices[1]));
+      }
+      for (const vId of activeGroup.vertices ?? []) {
+        groupDots.push(...point(vId));
+      }
+      const addActive = (object) => {
+        object.userData.meshInspection = 'activeGroup';
+        object.renderOrder = 55;
+        group.add(object);
+      };
+      if (groupLines.length)
+        addActive(
+          new THREE.LineSegments(
+            geometry(groupLines),
+            new THREE.LineBasicMaterial({ color: '#ffea00', depthTest: !through, depthWrite: false }),
+          ),
+        );
+      if (groupDots.length)
+        addActive(
+          new THREE.Points(
+            geometry(groupDots),
+            new THREE.PointsMaterial({
+              color: '#ffea00',
+              size: 10,
               sizeAttenuation: false,
               depthTest: !through,
               depthWrite: false,

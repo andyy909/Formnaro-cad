@@ -2,18 +2,23 @@ import {
   validateCadDrawingSheet,
   cadDrawingProblems,
   cadDrawingDimension,
+  cadDrawingBalloon,
   cadDrawingPaperSize,
   cadDrawingId,
+  cadDrawingViewScale,
   CAD_DRAWING_LIMITS,
 } from './cad-drawing-data.js';
-import { cadDrawingCurvePoint } from './cad-drawing-measure.js';
+import { cadDrawingCurveBounds, cadDrawingCurvePoint } from './cad-drawing-measure.js';
 import { cadDrawingAnnotationGeometry } from './cad-drawing-export.js';
 
 const EPS = 1e-7,
   near = (a, b) => Math.abs(a - b) <= EPS,
   round = (n) => Math.round(n / EPS),
   clone = (value) => structuredClone(value);
-const paper = (sheet, view, p) => [view.position[0] + p[0] * sheet.scale, view.position[1] - p[1] * sheet.scale];
+const paper = (sheet, view, p) => {
+  const scale = cadDrawingViewScale(view, sheet);
+  return [view.position[0] + p[0] * scale, view.position[1] - p[1] * scale];
+};
 const overlaps = (a, b) => a.min.every((v, k) => v < b.max[k] && a.max[k] > b.min[k]);
 function crossesBox([a, b], box) {
   let lo = 0,
@@ -55,7 +60,7 @@ function linearKey(view, axis, points) {
   ]);
 }
 function key(sheet, a) {
-  if (a.kind === 'label' || a.unresolved) return null;
+  if (a.kind === 'label' || a.kind === 'balloon' || a.unresolved) return null;
   try {
     const d = cadDrawingDimension(sheet, a),
       v = d.view;
@@ -198,7 +203,12 @@ export function autoDimensionCadDrawing(
   obstacles.push({ min: [width - 10 - Math.min(180, width - 20), height - 40], max: [width - 10, height - 10] });
   const occupied = sheet.annotations.map((a) => {
       try {
-        return textBox(a.kind === 'label' ? a.text : cadDrawingDimension(sheet, a).text, a.position);
+        const text = a.kind === 'label'
+          ? a.text
+          : a.kind === 'balloon'
+            ? String(cadDrawingBalloon(sheet, a).row.position)
+            : cadDrawingDimension(sheet, a).text;
+        return textBox(text, a.position);
       } catch {
         return textBox('Bezug verloren', a.position);
       }

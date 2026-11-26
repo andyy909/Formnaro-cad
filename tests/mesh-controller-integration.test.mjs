@@ -58,3 +58,46 @@ test('archived mesh source schema rejects malformed nested native sources and cy
   const cyclic=cad.snapshot();cyclic.nodes[0].meshSource.sources[0].meshSource=cyclic.nodes[0].meshSource;await assert.rejects(()=>cad.open(cyclic));
  }finally{cad.dispose();}
 });
+
+test('nested overlapping box unions stay closed and retain the exact source groups', async () => {
+  const cad = fixture();
+  try {
+    const ids = ['cube-a', 'cube-b', 'cube-c', 'cube-d'];
+    for (const [index, id] of ids.entries()) {
+      await cad.execute({
+        type: 'mesh-create',
+        id,
+        shape: 'box',
+        position: [index * 5, 0, 5],
+        size: [10, 10, 10],
+      });
+    }
+    await cad.execute({type:'mesh-group', ids:ids.slice(0, 2), operation:'union', resultId:'left'});
+    await cad.execute({type:'mesh-group', ids:ids.slice(2), operation:'union', resultId:'right'});
+    const before = cad.serialize(), sources = cad.snapshot().nodes;
+    const nested = await cad.preview({type:'mesh-group', ids:['left','right'], operation:'union', resultId:'nested'});
+    assert.equal(cad.serialize(), before);
+    cad.apply(nested);
+    const result = cad.snapshot().nodes[0];
+    assert.equal(result.id, 'nested');
+    assert.deepEqual(result.meshSource.sources, sources);
+    const proof = await cad.meshQuery('inspectSolid', {id:result.id});
+    assert.equal(proof.ok, true);
+    assert.ok(Math.abs(proof.volume - 2500) < 1e-6);
+    const bounds = await cad.query('bounds', {targets:[{rootId:result.id, path:[]}]});
+    assert.deepEqual(bounds.min, [-5,-5,0]);
+    assert.deepEqual(bounds.max, [20,5,10]);
+    const committed = cad.serialize();
+    cad.undo();
+    assert.equal(cad.serialize(), before);
+    cad.redo();
+    assert.equal(cad.serialize(), committed);
+
+    await cad.execute({type:'mesh-dissolve', id:result.id});
+    assert.deepEqual(cad.snapshot().nodes, sources);
+    cad.undo();
+    assert.equal(cad.serialize(), committed);
+  } finally {
+    cad.dispose();
+  }
+});

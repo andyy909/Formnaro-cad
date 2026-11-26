@@ -48,9 +48,7 @@ export function importCadStepAssembly(oc, bytes) {
   } finally {
     try {
       oc.FS.unlink(path);
-    } catch {
-      /* The temporary STEP input may already have been removed. */
-    }
+    } catch {}
   }
 }
 
@@ -119,9 +117,7 @@ export function importCadStep(oc, bytes) {
     objects.close();
     try {
       oc.FS.unlink(path);
-    } catch {
-      /* The temporary STEP file may already have been removed. */
-    }
+    } catch {}
   }
 }
 
@@ -205,8 +201,6 @@ export function exportCadStep(oc, parts) {
     objects.close();
     try {
       oc.FS.unlink(path);
-    } catch {
-      /* The temporary STEP file may already have been removed. */
-    }
+    } catch {}
   }
 }

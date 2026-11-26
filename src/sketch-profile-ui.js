@@ -1,23 +1,27 @@
+import { sketchCircleFromThreePoints } from './sketch-three-point-circle.js';
 import { isCadCurve, curveBeziers, curveControlKeys, profilePointFields } from './cad-curves.js';
 import { installSketchToolsUI } from './sketch-tools-ui.js';
-import { editSketchCoordinate } from './sketch-tools.js';
+import { editSketchCoordinate, pickSketchEditElement } from './sketch-tools.js';
 import { cadSketchExpression, resolveCadSketch } from './cad-sketch.js';
 import {
   profileFromLegacy,
   profilePrimitive,
   appendProfileLoop,
   closeProfileGap,
+  circleThrough,
   profileGaps,
   resolveSketchProfile,
   profileHandles,
   profileId,
 } from './sketch-profile.js';
-export function installSketchProfileUI({ s, board, svg, fields, changed, message, controller, isCurrent }) {
+export function installSketchProfileUI({
+  s, board, svg, fields, changed, message, controller, isCurrent, desktop = true, prepareLineEdit,
+}) {
   const $ = (id) => document.getElementById(id),
     root = document.createElement('section');
   root.id = 'sketch-profile-tools';
   root.innerHTML =
-    '<button id="sketch-profile-enable">Konturen mit Öffnungen …</button><div id="sketch-profile-controls" hidden><p class="small-note">Form aufziehen. Linien anklicken und anschließend schließen; Bogen: Start, Zwischenpunkt, Ende. Bézier: Start, zwei Kontrollpunkte, Ende. B-Spline: Kontrollpunkte anklicken, dann fertigstellen. Offene Konturen bleiben Entwürfe.</p><div class="sketch-canvas-toolbar"><label>Zeichenform<select id="sketch-profile-shape"><option value="circle">Kreis</option><option value="line">Linienzug</option><option value="arc">Dreipunktbogen</option><option value="bezier">Bézier · 4 Punkte</option><option value="bspline">B-Spline · 4–16 Punkte</option><option value="rectangle">Rechteck</option><option value="roundrect">Rundrechteck</option><option value="slot">Langloch</option><option value="construction">Konstruktionslinie</option></select></label><label>Kontur<select id="sketch-profile-role"><option value="hole">Innenöffnung hinzufügen</option><option value="outer">Außenkontur ersetzen</option></select></label><label>Eckradius (mm)<input id="sketch-profile-radius" type="number" value="2" min="0.01" step="0.1"></label><button id="sketch-curve-finish">B-Spline fertigstellen</button><button id="sketch-profile-close">Linienzug schließen</button></div></div>';
+    '<button id="sketch-profile-enable">Konturen mit Öffnungen …</button><div id="sketch-profile-controls" hidden><p class="small-note">Form aufziehen. Linien anklicken und anschließend schließen; Bogen: Start, Zwischenpunkt, Ende. Bézier: Start, zwei Kontrollpunkte, Ende. B-Spline: Kontrollpunkte anklicken, dann fertigstellen. Offene Konturen bleiben Entwürfe.</p><div class="sketch-canvas-toolbar"><label>Zeichenform<select id="sketch-profile-shape"><option value="circle">Kreis</option><option value="line">Linienzug</option><option value="circle3">Kreis durch 3 Punkte</option><option value="arc">Dreipunktbogen</option><option value="bezier">Bézier · 4 Punkte</option><option value="bspline">B-Spline · 4–16 Punkte</option><option value="rectangle">Rechteck</option><option value="roundrect">Rundrechteck</option><option value="slot">Langloch</option><option value="construction">Konstruktionslinie</option></select></label><label>Kontur<select id="sketch-profile-role"><option value="hole">Innenöffnung hinzufügen</option><option value="outer">Außenkontur ersetzen</option></select></label><label>Eckradius (mm)<input id="sketch-profile-radius" type="number" value="2" min="0.01" step="0.1"></label><button id="sketch-curve-finish">B-Spline fertigstellen</button><button id="sketch-profile-close">Linienzug schließen</button></div></div>';
   board.before(root);
   const properties = document.createElement('fieldset');
   properties.id = 'sketch-profile-properties';
@@ -28,7 +32,28 @@ export function installSketchProfileUI({ s, board, svg, fields, changed, message
   let pending = [],
     activeLoop = null,
     activeId = null,
+    lineEdit = null,
     toolsUI;
+  const commandBar = root.querySelector('.sketch-canvas-toolbar');
+  const finish = document.createElement('button');
+  finish.type = 'button';
+  finish.id = 'sketch-profile-finish-open';
+  finish.textContent = 'Offen beenden';
+  finish.onclick = finishOpen;
+  commandBar.insertBefore(finish, $('sketch-profile-close'));
+  const lineEditButtons = new Map();
+  if (desktop) {
+    for (const [mode, label] of [['trim', 'Linie trimmen'], ['extend', 'Linie verlängern']]) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'sketch-profile-canvas-' + mode;
+      button.textContent = label;
+      button.setAttribute('aria-pressed', 'false');
+      button.onclick = () => startLineEdit(mode);
+      commandBar.append(button);
+      lineEditButtons.set(mode, button);
+    }
+  }
   const select = $('sketch-kind'),
     option = document.createElement('option');
   option.value = 'profile';
@@ -152,12 +177,99 @@ export function installSketchProfileUI({ s, board, svg, fields, changed, message
     fields();
     changed();
   };
+  function resetLineEdit() {
+    lineEdit = null;
+    delete board.dataset.lineEdit;
+    board.querySelector('.sketch-line-edit-target')?.remove();
+    for (const button of lineEditButtons.values()) button.setAttribute('aria-pressed', 'false');
+  }
+  function clearPreview() {
+    board.querySelector('.sketch-line-preview')?.remove();
+  }
+  function refreshFinish() {
+    finish.disabled = !(pending.length && $('sketch-profile-shape').value === 'line');
+  }
   const reset = () => {
     pending = [];
     activeLoop = null;
+    clearPreview();
+    resetLineEdit();
+    refreshFinish();
   };
+  function finishOpen() {
+    if (!pending.length || $('sketch-profile-shape').value !== 'line') return false;
+    const committed = !!activeLoop;
+    reset();
+    if (committed) message('Linienzug offen beendet.');
+    return true;
+  }
+  function cancelDrawing() {
+    if (!lineEdit && !pending.length) return false;
+    reset();
+    return true;
+  }
+  function drawPreview(end, _extent, origin) {
+    clearPreview();
+    const mode = $('sketch-profile-shape').value;
+    const start = mode === 'line' ? pending[0] ?? origin : origin;
+    if (lineEdit || !['line', 'construction'].includes(mode) || !start || !end ||
+        Math.hypot(end[0] - start[0], end[1] - start[1]) < 1e-7) return;
+    svg('line', {
+      x1: start[0], y1: -start[1], x2: end[0], y2: -end[1],
+      class: 'sketch-line-preview', stroke: '#79e0e7', 'stroke-width': 1.5,
+      'stroke-dasharray': '6 4', 'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none',
+    });
+  }
+  function drawLineEditTarget(elements) {
+    board.querySelector('.sketch-line-edit-target')?.remove();
+    const target = elements.find((element) => element.id === lineEdit?.target?.id);
+    if (!target) return;
+    svg('line', {
+      x1: target.start[0], y1: -target.start[1], x2: target.end[0], y2: -target.end[1],
+      class: 'sketch-line-edit-target', stroke: '#ffc853', 'stroke-width': 2,
+      'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none',
+    });
+  }
+  function startLineEdit(mode) {
+    if (!desktop || s.linked || !lineEditButtons.has(mode) || ![2, 3, 4].includes(s.sketch.version)) return false;
+    const wasActive = lineEdit?.mode === mode;
+    reset();
+    if (wasActive) return false;
+    prepareLineEdit?.();
+    lineEdit = { mode, target: null };
+    board.dataset.lineEdit = mode;
+    lineEditButtons.get(mode).setAttribute('aria-pressed', 'true');
+    message('Die Linie nahe dem Ende anklicken, das geändert werden soll.');
+    return true;
+  }
+  function handleLineEdit(point, tolerance) {
+    if (!lineEdit) return false;
+    try {
+      const { elements } = resolveSketchProfile(s.sketch, cadSketchExpression, { geometryOnly: true });
+      const { target, mode } = lineEdit;
+      const pick = pickSketchEditElement(elements, point, tolerance, { lineOnly: !target, exclude: target?.id });
+      if (!pick) {
+        message(target ? 'Eine andere Linie, einen Kreis oder Kreisbogen als Grenze anklicken.' : 'Eine Linie anklicken.', true);
+      } else if (!target) {
+        lineEdit.target = pick;
+        activeId = pick.id;
+        refresh();
+        drawLineEditTarget(elements);
+        message('Jetzt die Schnittgrenze anklicken.');
+      } else {
+        const ok = toolsUI.editLine({ id: target.id, end: target.end, mode, cutterId: pick.id });
+        if (ok) resetLineEdit();
+      }
+    } catch (error) {
+      message(error.message, true);
+    }
+    return true;
+  }
   $('sketch-profile-shape').onchange = () => {
     pending = [];
+    clearPreview();
+    resetLineEdit();
+    refreshFinish();
     if (!['line', 'arc', 'bezier', 'bspline'].includes($('sketch-profile-shape').value)) activeLoop = null;
   };
   $('sketch-profile-role').onchange = reset;
@@ -192,24 +304,17 @@ export function installSketchProfileUI({ s, board, svg, fields, changed, message
       activeLoop = unfinished?.id ?? null;
     }
     if (!activeLoop) {
-      if (role === 'outer') {
-        const old = s.sketch.loops.find((l) => l.role === 'outer'),
-          remove = new Set(old?.elements ?? []);
-        s.sketch.elements = s.sketch.elements.filter((e) => !remove.has(e.id));
-        s.sketch.loops = s.sketch.loops.filter((l) => l.role !== 'outer');
-      }
-      activeLoop = profileId('loop');
-      s.sketch.loops.push({ id: activeLoop, role, elements: [] });
+      s.sketch = appendProfileLoop(s.sketch, [element], role);
+      activeLoop = s.sketch.loops.at(-1).id;
+    } else {
+      s.sketch.elements.push(element);
+      s.sketch.loops.find((l) => l.id === activeLoop).elements.push(element.id);
     }
-    s.sketch.elements.push(element);
-    s.sketch.loops.find((l) => l.id === activeLoop).elements.push(element.id);
     activeId = element.id;
   }
   function finishCurve(type) {
     if (pending.length < 4 || pending.length > 16 || (type === 'bezier' && pending.length !== 4))
       throw Error('Bézier benötigt vier, B-Spline vier bis sechzehn Kontrollpunkte.');
-    s.sketch.version = 4;
-    s.sketch.constraints ??= [];
     const element = {
       id: profileId(type),
       type,
@@ -219,6 +324,8 @@ export function installSketchProfileUI({ s, board, svg, fields, changed, message
     };
     pending.slice(1, -1).forEach((p, i) => (element['control' + (i + 1)] = [...p]));
     appendChain(element);
+    s.sketch.version = 4;
+    s.sketch.constraints ??= [];
     pending = [];
     fields();
     changed();
@@ -227,6 +334,7 @@ export function installSketchProfileUI({ s, board, svg, fields, changed, message
     try {
       if ($('sketch-profile-shape').value !== 'bspline') throw Error('Zum Fertigstellen eine B-Spline zeichnen.');
       finishCurve('bspline');
+      void s.solveConstraints();
     } catch (error) {
       message(error.message, true);
     }
@@ -239,68 +347,108 @@ export function installSketchProfileUI({ s, board, svg, fields, changed, message
       reset();
       fields();
       changed();
+      if (added && s.sketch.version >= 3) void s.solveConstraints();
     } catch (error) {
       message(error.message, true);
     }
   };
   function pointerUp(origin, end) {
+    clearPreview();
     try {
       const shape = $('sketch-profile-shape').value,
         role = $('sketch-profile-role').value,
         dragged = Math.hypot(...origin.map((v, k) => v - end[k])) > 1e-6;
+      let ids;
       if (['bezier', 'bspline'].includes(shape)) {
         pending.push([...end]);
         if (pending.length > 16) {
           pending.pop();
           throw Error('Höchstens sechzehn Kontrollpunkte.');
         }
-        if (shape === 'bezier' && pending.length === 4) finishCurve(shape);
+        if (shape === 'bezier' && pending.length === 4) {
+          try {
+            finishCurve(shape);
+          } catch (error) {
+            pending.pop();
+            throw error;
+          }
+          return true;
+        }
         else
           message(
             shape === 'bezier'
               ? 'Bézier: ' + (4 - pending.length) + ' weitere Punkte anklicken.'
               : 'B-Spline: ' + pending.length + ' Kontrollpunkte; ab vier Punkten fertigstellen.',
           );
-        return;
+        return false;
       }
       if (shape === 'line') {
         if (!pending.length) {
           pending = [dragged ? origin : end];
-          if (!dragged) return;
+          refreshFinish();
+          if (!dragged) return false;
         }
         const start = pending[0];
-        appendChain({ id: profileId('line'), type: 'line', start: [...start], end: [...end], construction: false });
+        if (Math.hypot(start[0] - end[0], start[1] - end[1]) <= 1e-7) return false;
+        const id = profileId('line');
+        appendChain({ id, type: 'line', start: [...start], end: [...end], construction: false });
+        ids = [id];
         pending = [[...end]];
-      } else if (shape === 'arc') {
-        pending.push(end);
-        if (pending.length < 3) {
-          message('Bogen: ' + (3 - pending.length) + ' weitere Punkte anklicken.');
+        const loop = s.sketch.loops.find((item) => item.id === activeLoop);
+        if (loop.elements.length >= 3 && distancePoints(loop.elements[0], 'start', activeId, 'end') < 1e-7) reset();
+      } else if (shape === 'circle3') {
+        if (pending.some((point) => Math.hypot(point[0] - end[0], point[1] - end[1]) <= 1e-7))
+          throw Error('Einen anderen Punkt auf dem Kreisrand wählen.');
+        if (pending.length < 2) {
+          pending.push(end);
+          message('Kreis: ' + (3 - pending.length) + ' weitere Punkte auf dem Rand wählen.');
           return;
         }
+        const { center, radius } = sketchCircleFromThreePoints(pending[0], pending[1], end);
+        if (radius < 0.005 || radius > 5000)
+          throw Error('Kreisdurchmesser außerhalb 0,01–10000 mm. Einen anderen Punkt wählen.');
+        const entities = profilePrimitive('circle', center, [center[0] + radius, center[1]]);
+        s.sketch = appendProfileLoop(s.sketch, entities, role);
+        activeId = entities[0].id;
+        ids = [activeId];
+        reset();
+      } else if (shape === 'arc') {
+        if (pending.length < 2) {
+          if (pending.some((point) => Math.hypot(point[0] - end[0], point[1] - end[1]) <= 1e-7)) return false;
+          pending.push(end);
+          message('Bogen: ' + (3 - pending.length) + ' weitere Punkte anklicken.');
+          return false;
+        }
+        circleThrough(pending[0], pending[1], end);
         appendChain({
           id: profileId('arc'),
           type: 'arc',
           start: pending[0],
           through: pending[1],
-          end: pending[2],
+          end,
           construction: false,
         });
         pending = [];
       } else {
         if (!dragged) throw Error('Die Form mit gedrückter Maustaste aufziehen.');
+        if (shape === 'rectangle' && origin.some((value, index) => Math.abs(value - end[index]) <= 1e-7))
+          throw Error('Rechteck benötigt Breite und Höhe.');
         const entities = profilePrimitive(shape === 'construction' ? 'line' : shape, origin, end, {
           radius: Number($('sketch-profile-radius').value),
           construction: shape === 'construction',
         });
         if (shape === 'construction') s.sketch.elements.push(...entities);
         else s.sketch = appendProfileLoop(s.sketch, entities, role);
+        ids = entities.map((entity) => entity.id);
         activeId = entities[0].id;
         reset();
       }
       fields();
       changed();
+      return ids ?? true;
     } catch (error) {
       message(error.message, true);
+      return false;
     }
   }
   function refresh() {
@@ -310,6 +458,7 @@ export function installSketchProfileUI({ s, board, svg, fields, changed, message
     properties.hidden = !active;
     $('modal').classList.toggle('sketch-profile-active', active);
     if (!active) return;
+    refreshFinish();
     select.value = 'profile';
     const list = $('sketch-profile-element');
     list.replaceChildren();
@@ -450,6 +599,7 @@ export function installSketchProfileUI({ s, board, svg, fields, changed, message
         else svg('line', { x1: e.start[0], y1: -e.start[1], x2: e.end[0], y2: -e.end[1], class: 'construction' });
       }
       const handles = geometry ? geometry.handles : profileHandles(s.sketch, cadSketchExpression);
+      drawLineEditTarget(r.elements);
       for (let i = 0; i < handles.length; i++) {
         const p = handles[i].point;
         svg('circle', { cx: p[0], cy: -p[1], r: extent / 100, class: 'vertex', 'data-point-index': i });
@@ -483,5 +633,25 @@ export function installSketchProfileUI({ s, board, svg, fields, changed, message
     getId: () => activeId,
     isCurrent,
   });
-  return { refresh, pointerUp, render, enable, reset, removeLast, asCopy: () => toolsUI.asCopy() };
+  return {
+    refresh, pointerUp, render, enable, reset, removeLast, drawPreview,
+    circlePlacement(cursor) {
+      if ($('sketch-profile-shape').value !== 'circle3') return null;
+      let preview;
+      if (cursor && pending.length === 2) {
+        try {
+          const circle = sketchCircleFromThreePoints(...pending, cursor);
+          if (circle.radius >= 0.005 && circle.radius <= 5000) preview = circle;
+        } catch {
+          // The user can choose another point until a valid circle is possible.
+        }
+      }
+      return { points: pending, preview };
+    },
+    lineStart: (origin) => pending[0] ?? origin,
+    updateLineEnd(id, point) {
+      if (activeId === id && activeLoop && pending.length === 1) pending = [[...point]];
+    },
+    finishOpen, cancelDrawing, startLineEdit, handleLineEdit, asCopy: () => toolsUI.asCopy(),
+  };
 }

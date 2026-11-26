@@ -6,6 +6,8 @@ import {createCadController} from '../src/cad-controller.js';
 import {createCadProject,parseCadProject} from '../src/cad-project.js';
 import {validateConnectorOptions,validateConnectorReference,connectorDefaultReference} from '../src/mesh-connectors.js';
 import {meshSelectionGeometryDigest} from '../src/mesh-selection-data.js';
+import {createFnpackResolver,encodeFnpackProject} from '../src/cad-fnpack-data.js';
+import {geometryRefs} from '../src/cad-geometry-ref.js';
 const worker=file=>()=>{const w=new Worker(new URL(file,import.meta.url)),a={postMessage:m=>w.postMessage(m),terminate:()=>w.terminate()};w.on('message',data=>a.onmessage?.({data}));w.on('error',e=>a.onerror?.(e));return a;};
 const make=()=>createCadController({initial:createCadProject(),createWorker:worker('./fixtures/cad-node-worker.mjs'),createMeshWorker:worker('./fixtures/mesh-engine-node-worker.mjs')});
 async function fixture(c){for(const [id,z]of [['lower',5],['upper',15]])await c.execute({type:'mesh-create',id,shape:'box',name:id,position:[0,0,z],size:[40,30,10],color:id==='lower'?'#cc6633':'#3399aa'});}
@@ -21,3 +23,83 @@ test('Protected, inherited locked, hidden, hole-role and open targets cannot cre
 test('Saved connectors reject corrupt options and pair mapping while source replay remains usable after common affine movement',async()=>{const c=make();try{await fixture(c);await c.execute(op());const saved=c.snapshot();for(const corrupt of [n=>n.meshSource.operation.options.gap=-1,n=>n.meshSource.operation.part=2,n=>n.meshSource.sources.pop(),n=>n.meshSource.sources[1].id=n.meshSource.sources[0].id,n=>n.meshSource.operation.reference.normal=[0,0,0]]){const d=structuredClone(saved);corrupt(d.nodes[0]);assert.throws(()=>parseCadProject(JSON.stringify(d)));}for(const n of saved.nodes){n.transform[12]+=3;n.transform[13]+=4;n.transform[14]+=5;}await c.open(saved);const p=await c.preview({type:'mesh-source-edit',id:'lower',path:[],set:{name:'Umbenannt'}});assert.equal(p.project.nodes[0].name,'Umbenannt');c.discard(p.previewId);await assert.rejects(()=>c.preview({type:'mesh-source-edit',id:'lower',path:['lower'],set:{size:[50,30,10]}}),/beide Teile/);}finally{c.dispose();}});
 test('Discard and stale revisions revoke authority and do not create model history',async()=>{const c=make();try{await fixture(c);const before=c.serialize(),depth=c.state().undo,p=await c.preview(op());c.discard(p.previewId);assert.throws(()=>c.apply(p));assert.equal(c.serialize(),before);assert.equal(c.state().undo,depth);const q=await c.preview(op());const d=c.snapshot();d.name='Neuer Stand';await c.open(d);assert.throws(()=>c.apply(q),{code:'STALE_REVISION'});}finally{c.dispose();}});
 test('Default reference follows the full world placement and points from first source to second',async()=>{const c=make();try{await fixture(c);const [a,b]=c.snapshot().nodes;assert.deepEqual(connectorDefaultReference([a,b]),{point:[0,0,10],normal:[0,0,1]});assert.deepEqual(connectorDefaultReference([b,a]),{point:[0,0,10],normal:[0,0,-1]});}finally{c.dispose();}});
+
+test('FNPACK connectors check hidden neighbor meshes without loading or changing their source history', async () => {
+  const setup = make();
+  let seed;
+  try {
+    await fixture(setup);
+    for (const [id, x] of [['left', 200], ['right', 200.5]]) {
+      await setup.execute({
+        type: 'mesh-create',
+        id,
+        shape: 'cylinder',
+        position: [x, 0, 11],
+        size: [1, 1, 1],
+      });
+    }
+    await setup.execute({type:'mesh-group', ids:['left', 'right'], operation:'union', resultId:'neighbor'});
+    await setup.execute({kind:'create', recipe:{type:'box', size:[1, 1, 1]}, options:{id:'unrelated-cad'}});
+    seed = setup.snapshot();
+    seed.nodes.find((node) => node.id === 'neighbor').hidden = true;
+    seed.nodes.find((node) => node.id === 'unrelated-cad').transform[12] = 300;
+  } finally {
+    setup.dispose();
+  }
+
+  for (const colliding of [false, true]) {
+    const project = structuredClone(seed);
+    const neighbor = project.nodes.find((node) => node.id === 'neighbor');
+    if (colliding) neighbor.transform[12] = -6;
+    const encoded = encodeFnpackProject(project);
+    const blocks = new Map(encoded.blocks.map(({ sha256, bytes }) => [sha256, bytes]));
+    const reads = [];
+    const resolver = createFnpackResolver({readBlock: async (hash) => {
+      reads.push(hash);
+      return blocks.get(hash);
+    }});
+    const c = createCadController({
+      initial: encoded.project,
+      resolveGeometry: resolver.hydrate,
+      createWorker: worker('./fixtures/cad-node-worker.mjs'),
+      createMeshWorker: worker('./fixtures/mesh-engine-node-worker.mjs'),
+    });
+    try {
+      const before = c.serialize(), revision = c.revision(), undo = c.state().undo;
+      const catalogNeighbor = encoded.project.nodes.find((node) => node.id === 'neighbor');
+      const catalogCad = encoded.project.nodes.find((node) => node.id === 'unrelated-cad');
+      const selectedHash = encoded.project.nodes.find((node) => node.id === 'lower').mesh.sha256;
+      const neighborHash = catalogNeighbor.mesh.sha256;
+      const historyHashes = [...geometryRefs(catalogNeighbor.meshSource).keys()];
+      assert.ok(historyHashes.some((hash) => hash !== selectedHash && hash !== neighborHash));
+
+      const pending = c.preview(op({count:2, spacing:12}));
+      if (colliding) {
+        await assert.rejects(pending, /kollidiert mit „.*“/);
+      } else {
+        const proposal = await pending;
+        assert.equal(proposal.report.count, 2);
+        assert.equal(proposal.report.materialEnvelopeVerified, true);
+        assert.equal(c.serialize(), before);
+        assert.deepEqual(proposal.project.nodes.find((node) => node.id === 'neighbor'), catalogNeighbor);
+        assert.deepEqual(proposal.project.nodes.find((node) => node.id === 'unrelated-cad'), catalogCad);
+        c.apply(proposal);
+        assert.equal(c.state().undo, undo + 1);
+        assert.deepEqual(c.snapshot().nodes.find((node) => node.id === 'neighbor'), catalogNeighbor);
+        const after = c.serialize();
+        c.undo();
+        assert.equal(c.serialize(), before);
+        c.redo();
+        assert.equal(c.serialize(), after);
+        c.undo();
+      }
+
+      assert.deepEqual(new Set(reads), new Set([selectedHash, neighborHash]));
+      assert.equal(c.serialize(), before);
+      assert.equal(c.revision(), revision);
+      assert.equal(c.state().undo, undo);
+    } finally {
+      c.dispose();
+    }
+  }
+});

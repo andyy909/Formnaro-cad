@@ -2,8 +2,8 @@ import { planCadAIScalarFeatureOperation } from './cad-ai-feature-plan.js';
 import { prepareFreeCADRerun } from './cad-freecad-rerun.js';
 import { buildCadDependencyGraph, cadDependencyAffected, cadDependencyNodeId } from './cad-dependency-graph.js';
 import { planCadAIFeatureDependencies } from './cad-ai-feature-dependencies.js';
-import { hasGeometryRefs, sameDeferredGeometry } from './cad-geometry-ref.js';
-import { cadProjectRevision } from './cad-project.js';
+import { hasGeometryRefs, isGeometryRef, sameDeferredGeometry } from './cad-geometry-ref.js';
+import { cadProjectRevision, createCadProject } from './cad-project.js';
 import { flags } from './organization.js';
 import { planCadProjectParameters } from './cad-project-parameters-data.js';
 import { planCadParameterPatterns } from './cad-linked-pattern-update-data.js';
@@ -332,6 +332,33 @@ export function fnpackRequestRoots(project, request, { getDisplayIds = () => nul
     return [];
   return explicit ? [] : all();
 }
+async function connectorNeighborMeshes(project, ids, resolveProject, signal) {
+  if (!Array.isArray(ids) || ids.length !== 2 || ids[0] === ids[1]) return null;
+  const selected = new Set(ids);
+  const candidates = project.nodes.filter(
+    (node) => node.kind === 'mesh' && node.meshRole !== 'hole' && !selected.has(node.id) && isGeometryRef(node.mesh),
+  );
+  if (!candidates.length) return null;
+
+  // Connector interference checks include hidden material neighbors. Read their
+  // current mesh only. Their retained sources are irrelevant to this check.
+  const neighborProject = createCadProject({
+    nodes: candidates.map(({ id, name, transform, mesh }) => ({ id, name, kind: 'mesh', transform, mesh })),
+  });
+  const hydrated = await resolveProject(neighborProject, null, { signal });
+  return {
+    prepared: new Map(hydrated.nodes.map(({ id, mesh }) => [id, mesh])),
+    original: new Map(candidates.map(({ id, mesh }) => [id, mesh])),
+  };
+}
+
+function replaceRootMeshes(project, meshes) {
+  return {
+    ...project,
+    nodes: project.nodes.map((node) => (meshes.has(node.id) ? { ...node, mesh: meshes.get(node.id) } : node)),
+  };
+}
+
 export function withFnpackGeometry(worker, { resolveProject, getProject, getDisplayIds } = {}) {
   return {
     ...worker,
@@ -351,16 +378,23 @@ export function withFnpackGeometry(worker, { resolveProject, getProject, getDisp
               { signal: options.signal },
             )
           : undefined;
+      const neighborMeshes =
+          request.job === 'edit' && request.operation?.type === 'mesh-connectors'
+            ? await connectorNeighborMeshes(project, request.operation.ids, resolveProject, options.signal)
+            : null,
+        workerProject = neighborMeshes ? replaceRootMeshes(project, neighborMeshes.prepared) : project;
       const prepared = {
         ...request,
-        ...(request.project ? { project } : {}),
+        ...(request.project ? { project: workerProject } : {}),
         ...(baseline ? { baseline } : {}),
         ...(request.node && hasGeometryRefs(request.node)
           ? { node: project.nodes.find((n) => n.id === request.node.id) }
           : {}),
       };
-      const revision = cadProjectRevision(baseline ?? project),
+      const revision = cadProjectRevision(baseline ?? workerProject),
         result = await worker.run(prepared, { ...options, revision });
+      if (neighborMeshes)
+        return { ...result, project: replaceRootMeshes(result.project, neighborMeshes.original) };
       if (
         request.job === 'query' &&
         options.revision !== undefined &&

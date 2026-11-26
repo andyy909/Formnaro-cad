@@ -119,10 +119,20 @@ export function closeProfileGap(sketch,elements,activeLoop){
 }
 
 export function appendProfileLoop(sketch,entities,role='hole'){
- const next=structuredClone(sketch);if(role==='outer'){const prior=next.loops.find(l=>l.role==='outer'),remove=new Set(prior?.elements??[]);next.elements=next.elements.filter(e=>!remove.has(e.id));next.loops=next.loops.filter(l=>l.role!=='outer');}next.elements.push(...entities);next.loops.push({id:profileId('loop'),role,elements:entities.map(e=>e.id)});return next;
+ const next=structuredClone(sketch);
+ if(role==='outer'){
+  const prior=next.loops.find(l=>l.role==='outer'),remove=new Set(prior?.elements??[]);
+  if(next.constraints?.some(constraint=>constraint.refs.some(ref=>remove.has(ref.element))))
+   fail('Vor dem Ersetzen der Außenkontur ihre Skizzenbedingungen entfernen.');
+  next.elements=next.elements.filter(e=>!remove.has(e.id));
+  next.loops=next.loops.filter(l=>l.role!=='outer');
+ }
+ next.elements.push(...entities);
+ next.loops.push({id:profileId('loop'),role,elements:entities.map(e=>e.id)});
+ return next;
 }
 export function profileLines(points,{construction=false}={}){return points.map((start,i)=>({id:profileId('line'),type:'line',start:[...start],end:[...points[(i+1)%points.length]],construction}));}
-export function profileFromLegacy(sketch){const next={version:2,kind:'profile',variables:structuredClone(sketch.variables),dimensions:{height:sketch.dimensions.height},elements:[],loops:[]};let entities;if(sketch.kind==='circle')entities=[{id:profileId('circle'),type:'circle',center:['0','0'],diameter:sketch.dimensions.diameter,construction:false}];else if(sketch.kind==='rectangle'){const w=sketch.dimensions.width,d=sketch.dimensions.depth;entities=profileLines([[`-(${w})/2`,`-(${d})/2`],[`(${w})/2`,`-(${d})/2`],[`(${w})/2`,`(${d})/2`],[`-(${w})/2`,`(${d})/2`]]);}else entities=profileLines(sketch.points);return appendProfileLoop(next,entities,'outer');}
+export function profileFromLegacy(sketch,resolved){const next={version:2,kind:'profile',variables:structuredClone(sketch.variables),dimensions:{height:sketch.dimensions.height},elements:[],loops:[]};let entities;if(sketch.kind==='circle')entities=[{id:profileId('circle'),type:'circle',center:['0','0'],diameter:sketch.dimensions.diameter,construction:false}];else if(sketch.kind==='rectangle'){const w=sketch.dimensions.width,d=sketch.dimensions.depth;entities=profileLines([[`-(${w})/2`,`-(${d})/2`],[`(${w})/2`,`-(${d})/2`],[`(${w})/2`,`(${d})/2`],[`-(${w})/2`,`(${d})/2`]]);}else entities=profileLines(sketch.points);return appendProfileLoop(next,entities,'outer');}
 export function profilePrimitive(type,start,end,{radius=2,construction=false}={}){
  if(!['line','arc','circle','rectangle','roundrect','slot'].includes(type))fail('Unbekannte Zeichenform.');
  const min=[0,1].map(k=>Math.min(start[k],end[k])),max=[0,1].map(k=>Math.max(start[k],end[k])),w=max[0]-min[0],h=max[1]-min[1],base={construction};

@@ -14,6 +14,8 @@ export function createWorkspaceIO({
   assemblyDisplay,
   packFiles,
   readyForFile,
+  onProjectSaved,
+  refreshTablet,
   confirmProjectChange,
   cacheWelcomePackageThumbnail,
   download,
@@ -86,8 +88,9 @@ export function createWorkspaceIO({
     automation = false,
     expectedRevision,
     filename: requestedFilename,
+    allowPartPreview = false,
   } = {}) {
-    readyForFile();
+    readyForFile({allowPartPreview});
     const release = automation
       ? controller.holdRevision(expectedRevision, { message: 'Projekt wird gespeichert.' })
       : () => {};
@@ -141,8 +144,12 @@ export function createWorkspaceIO({
         runtime.recoveredProject = false;
         runtime.savedWorkspaceSignature = signature;
         runtime.cleanWorkspaceSignature = signature;
+        const prior = runtime.activeProjectFile?.id;
         runtime.activeProjectFile = result.file ? { ...result.file, projectVersion: storedVersion } : null;
-        toast(result.warning ?? 'Projekt gespeichert.');
+        let warning = result.warning;
+        try { onProjectSaved?.(prior, runtime.activeProjectFile?.id); }
+        catch (error) { warning = 'Projekt gespeichert. Tablet-Notizen konnten nicht mitkopiert werden. ' + error.message; }
+        toast(warning ?? 'Projekt gespeichert.');
         if (pack && result.file) cacheWelcomePackageThumbnail(result.file);
       }
       updateState();
@@ -231,6 +238,7 @@ export function createWorkspaceIO({
     } finally {
       runtime.assemblyOpening = false;
     }
+    refreshTablet?.();
     runtime.assemblyScope = controller.projectScope();
     runtime.assemblyKnownIds = new Set(project().nodes.map((n) => n.id));
     runtime.nextImportIndex = 0;
@@ -259,8 +267,8 @@ export function createWorkspaceIO({
   }
 
   async function openProject(id) {
-    readyForFile();
-    if (!(await confirmProjectChange())) return;
+    readyForFile({allowPartPreview:true});
+    if (!(await confirmProjectChange({allowPartPreview:true}))) return;
 
     if (!window.offlinecadDesktop?.openProject) {
       $('modal').close();

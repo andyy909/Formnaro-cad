@@ -3,7 +3,7 @@ import { attachCadDriveUI } from './cad-drive-ui.js';
 import { compileCadJointMotion, cadJointProblems, createCadJoints } from './cad-joints-data.js';
 import { multiplyCadMatrices } from './cad-affine.js';
 
-export function createCadJointsUI({ controller, view, getSelection, modal, prepare, openReferenceRebind }) {
+export function createCadJointsUI({ controller, view, getSelection, modal, prepare, toast, openReferenceRebind }) {
   const $ = (id) => document.getElementById(id);
   let state = null;
   function close({ restore = true } = {}) {

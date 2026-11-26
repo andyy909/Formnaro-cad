@@ -51,3 +51,26 @@ export function cadDrawingCurveBounds(c) {
   const points = ['minX', 'maxX', 'minY', 'maxY'].map((role) => cadDrawingCurvePoint(c, role));
   return { min: [points[0][0], points[2][1]], max: [points[1][0], points[3][1]] };
 }
+export function cadDrawingCenterlinePoints(curveA, curveB, options = {}) {
+  const centerA = cadDrawingCurvePoint(curveA, 'center'),
+    centerB = cadDrawingCurvePoint(curveB, 'center');
+  const dx = centerB[0] - centerA[0],
+    dy = centerB[1] - centerA[1],
+    distance = Math.hypot(dx, dy);
+  if (distance < 1e-10) throw Error('Mittellinie benötigt zwei unterschiedliche Mitten.');
+  const direction = [dx / distance, dy / distance];
+  const scale = Number(options.scale) || 1;
+  const startOverhang = Number.isFinite(options.extensionStart)
+    ? options.extensionStart
+    : Number.isFinite(options.overhangMm)
+      ? options.overhangMm
+      : 3;
+  const endOverhang = Number.isFinite(options.extensionEnd)
+    ? options.extensionEnd
+    : Number.isFinite(options.overhangMm)
+      ? options.overhangMm
+      : 3;
+  const p1 = [centerA[0] - direction[0] * (startOverhang / scale), centerA[1] - direction[1] * (startOverhang / scale)];
+  const p2 = [centerB[0] + direction[0] * (endOverhang / scale), centerB[1] + direction[1] * (endOverhang / scale)];
+  return { centerA, centerB, direction, distance, p1, p2, startOverhang, endOverhang };
+}

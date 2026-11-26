@@ -23,3 +23,33 @@ export function selectedConstraintRefs(handles, selected) {
     .flatMap((i) => (handles[i]?.references ?? []).map((r) => ({ element: r.id, point: r.field })))
     .filter((r, i, a) => a.findIndex((x) => x.element === r.element && x.point === r.point) === i);
 }
+
+
+const round = (element) => ['arc', 'circle'].includes(element?.type);
+const line = (element) => element?.type === 'line';
+
+export function quickConstraintRefs(type, elements, elementSelection, pointSelection) {
+  const byId = new Map(elements.map((element) => [element.id, element]));
+  const refs = elementSelection.map((element) => ({ element }));
+  if (refs.some(({ element }) => !byId.has(element))) return null;
+  const points = pointSelection.flatMap((group) => group);
+  const selectPoints = (count) => {
+    if (refs.length || pointSelection.length !== count || pointSelection.some((group) => group.length !== 1))
+      return null;
+    return points.every(({ element, point }) => point && Array.isArray(byId.get(element)?.[point])) &&
+      new Set(points.map(({ element, point }) => JSON.stringify([element, point]))).size === count
+      ? points
+      : null;
+  };
+  if (type === 'coincident') return selectPoints(2);
+  if (type === 'fixed') return pointSelection.length ? selectPoints(1) : refs.length === 1 ? refs : null;
+  if (pointSelection.length) return null;
+  const targets = refs.map(({ element }) => byId.get(element));
+  if (['horizontal', 'vertical'].includes(type)) return targets.length === 1 && targets.every(line) ? refs : null;
+  if (targets.length !== 2 || refs[0].element === refs[1].element) return null;
+  if (['parallel', 'perpendicular', 'equalLength'].includes(type)) return targets.every(line) ? refs : null;
+  if (['equalRadius', 'concentric'].includes(type)) return targets.every(round) ? refs : null;
+  if (type === 'tangent' && targets.every((element) => line(element) || round(element)) && targets.some(round))
+    return refs;
+  return null;
+}

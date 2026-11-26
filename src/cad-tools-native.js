@@ -15,7 +15,7 @@ import {
   multiplyCadMatrices,
   inverseCadMatrix,
 } from './cad-affine.js';
-import { cadBounds, cadRayHits, readCadBrep } from './cad-native-kernel.js';
+import { cadBounds, cadRayHits, readCadBrep, cadBoolean, cadVolume } from './cad-native-kernel.js';
 import { cadPlacementOnPlane } from './cad-face-placement.js';
 import { cadReferencePointsNative, resolveCadReferenceNative, cadReferenceFrame } from './cad-reference-points.js';
 import { cadPartitionDirection } from './cad-partition-data.js';
@@ -121,6 +121,57 @@ export function cadWorkplaneFromHit(hit, { transform = cadIdentity() } = {}) {
       },
     },
   };
+}
+
+/** Native cutting cylinder for one stage of a measured bore source (R04).
+ * The recipe is the ordinary analytical cylinder; the returned transform places
+ * it on the measured point/axis. Axial ends come from the measurement. For an
+ * opening whose ends are still open the caller must state the cutter span. */
+export function cadBoreCutter(source, { stage = null, lengthMM } = {}) {
+  if (!source || source.kind !== 'boreSource' || !Array.isArray(source.stages))
+    fail('BORE_SOURCE_INPUT', 'Gemessene Bohrquelle erforderlich.');
+  const chosen =
+    stage === null
+      ? source.stages.length === 1
+        ? source.stages[0]
+        : null
+      : source.stages.find((entry) => entry.index === stage);
+  if (!chosen) fail('BORE_SOURCE_STAGE', 'Bohrstufe fehlt oder ist nicht eindeutig.');
+  const axis = unit(source.axis, 'Bohrquellenachse');
+  let from, length;
+  if (chosen.from && chosen.to) {
+    from = vector(chosen.from, 'Stufenanfang');
+    length = Math.hypot(...vector(chosen.to, 'Stufenende').map((value, i) => value - from[i]));
+  } else {
+    if (!Number.isFinite(lengthMM) || lengthMM <= 0)
+      fail('BORE_SOURCE_LENGTH', 'Offene axiale Enden: Schnittlänge der Schneidquelle angeben.');
+    length = lengthMM;
+    from = vector(source.point, 'Bohrquellenpunkt').map((value, i) => value - axis[i] * length / 2);
+  }
+  if (!(length > 0.05)) fail('BORE_SOURCE_LENGTH', 'Schneidquelle benötigt eine positive Länge.');
+  const center = from.map((value, i) => value + axis[i] * length / 2),
+    orientation = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), new Vector3(...axis)),
+    transform = new Matrix4().compose(new Vector3(...center), orientation, new Vector3(1, 1, 1)).toArray();
+  return {
+    version: 1,
+    kind: 'cadBoreCutter',
+    hole: true,
+    sourceId: source.id,
+    stage: chosen.index,
+    name: `${source.name}: Stufe ${chosen.index}`,
+    diameterMM: chosen.diameterMM,
+    lengthMM: length,
+    from,
+    to: from.map((value, i) => value + axis[i] * length),
+    axis,
+    transform,
+    recipe: { type: 'cylinder', size: [chosen.diameterMM, chosen.diameterMM, length] },
+  };
+}
+/** One native cutting cylinder per measured stage. */
+export function cadBoreCutters(source, options = {}) {
+  if (!source?.stages?.length) fail('BORE_SOURCE_INPUT', 'Gemessene Bohrquelle mit Stufen erforderlich.');
+  return source.stages.map((entry) => cadBoreCutter(source, { ...options, stage: entry.index }));
 }
 
 /** Requires a real native CAD service and a confirmed transaction store.

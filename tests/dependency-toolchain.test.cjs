@@ -1,4 +1,4 @@
-// Run from the application root after npm ci.
+// Run from the application root, mini, or mini-cad after npm ci.
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs/promises');

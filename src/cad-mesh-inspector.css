@@ -10,6 +10,13 @@
 #cad-mesh-inspector .mesh-inspector-warning{color:#aa481b}
 #cad-mesh-inspector .edge-actions{position:sticky;bottom:-16px;background:#fff;padding:10px 0 2px}
 #cad-mesh-inspector .mesh-inspector-navigation{display:flex;gap:6px}
+#cad-mesh-inspector .mesh-inspector-groups-section{margin:10px 0;border-top:1px solid var(--line,#d9e2ea);padding-top:8px}
+#cad-mesh-inspector .mesh-inspector-groups-list{display:flex;flex-direction:column;gap:5px;margin:6px 0}
+#cad-mesh-inspector .mesh-inspector-group-btn{padding:5px 8px;border:1px solid var(--line,#d9e2ea);border-radius:4px;background:#f5f8fa;color:#223;cursor:pointer;text-align:left;font-size:11px}
+#cad-mesh-inspector .mesh-inspector-group-btn:hover{background:#e8f0f6}
+#cad-mesh-inspector .mesh-inspector-group-btn.active{border-color:#2195d1;background:#e1f0fa;font-weight:600}
 #cad-mesh-inspector [hidden]{display:none!important}
 [data-theme=dark] #cad-mesh-inspector .edge-actions{background:#212f3e}
 [data-theme=dark] #cad-mesh-inspector .mesh-inspector-warning{color:#ffba85}
+[data-theme=dark] #cad-mesh-inspector .mesh-inspector-group-btn{background:#2a3a4c;color:#eef;border-color:#3c5066}
+[data-theme=dark] #cad-mesh-inspector .mesh-inspector-group-btn.active{border-color:#5cb8ff;background:#1e354a}

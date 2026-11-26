@@ -139,9 +139,7 @@ export function mountCadPatternConsumerEditor({
         let existing;
         try {
           existing = cadSelectionContext(project, input.target);
-        } catch {
-          /* Show the lost-reference option when its previous target cannot be resolved. */
-        }
+        } catch {}
         select.add(
           new Option(
             existing

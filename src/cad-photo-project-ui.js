@@ -3,6 +3,8 @@ import { editPhotoReference } from './cad-photo-ui.js';
 import { loadPhotoImage } from './cad-photo-images.js';
 import { readCadAIImage } from './cad-ai-attachments.js';
 import { showPhotoMultiView } from './cad-photo-multiview-ui.js';
+import { createPhotoCutoutControl } from './cad-photo-cutout.js';
+import { showPhotoProfile } from './cad-photo-profile-ui.js';
 export async function showProjectPhotos(store, { onAttach } = {}) {
   const dialog = document.createElement('dialog');
   dialog.id = 'photo-project-dialog';
@@ -42,8 +44,11 @@ export async function showProjectPhotos(store, { onAttach } = {}) {
   close.textContent = 'Schließen';
   close.onclick = () => dialog.close();
   dialog.append(title, intro);
-  if (!store.practice) dialog.append(add, file);
-  else intro.textContent = 'Vermessene Fotos dieser Projektkopie für die technische Rekonstruktion verwenden.';
+  if (!store.practice) {
+    dialog.append(add, file);
+    const cutout = createPhotoCutoutControl('photo-project-cutout');
+    if (cutout) dialog.append(cutout);
+  } else intro.textContent = 'Vermessene Fotos dieser Projektkopie für die technische Rekonstruktion verwenden.';
   dialog.append(multi, list, status, close);
   let closed = false,
     blocked = false;
@@ -57,7 +62,7 @@ export async function showProjectPhotos(store, { onAttach } = {}) {
     if (blocked) return;
     busy(true);
     try {
-      await fn();
+      if ((await fn()) === false) return;
       if (!closed) {
         render();
         status.textContent = 'Projekt aktualisiert. Rückgängig stellt den vorherigen Stand wieder her.';
@@ -113,6 +118,14 @@ export async function showProjectPhotos(store, { onAttach } = {}) {
         item.reference.dimensions.length +
         ' Maße';
       row.append(img, text);
+      if (!store.practice && store.previewProfile && item.reference.outline.length) {
+        const profile = document.createElement('button');
+        profile.type = 'button';
+        profile.dataset.photoProfile = '';
+        profile.textContent = 'CAD-Körper aus Kontur';
+        profile.onclick = () => action(() => showPhotoProfile(store, item.reference, state.revision));
+        row.append(profile);
+      }
       for (const [label, fn] of store.practice
         ? []
         : [

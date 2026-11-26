@@ -47,6 +47,23 @@ def analysis(root, options, edits=None, commands=()):
                 bounds_mm=mesh.bounds.tolist(),unit_mm=options.unit,tolerance_mm=options.tolerance)
 
 
+def artifacts_for(root, report):
+    artifacts={}
+    for key,report_key in (('preview','preview'),('repaired_stl','repaired_mesh'),('repaired_3mf','repaired_3mf')):
+        if report.get(report_key):
+            file=Path(report[report_key]);artifacts[key]=dict(file=file.name,size=file.stat().st_size,sha256=hashlib.sha256(file.read_bytes()).hexdigest())
+    return artifacts
+
+
+def local_names(report):
+    for key in ('input','output','preview','report','repaired_mesh','repaired_stl','repaired_3mf'):
+        if report.get(key):report[key]=Path(report[key]).name
+    repair=report.get('repair')
+    if isinstance(repair,dict):
+        for key in ('repaired_mesh','repaired_3mf'):
+            if repair.get(key):repair[key]=Path(repair[key]).name
+
+
 def run(directory: str) -> int:
     root=Path(directory).resolve(strict=True);response=root/'response.json'
     try:
@@ -55,7 +72,7 @@ def run(directory: str) -> int:
         request=json.loads(request_path.read_text(encoding='utf-8'))
         if not isinstance(request,dict) or not {'version','options'}<=set(request) or set(request)-{'version','options','action','edits','commands'} or request['version']!=PROTOCOL:
             raise ValueError('Ungültiger Konverterauftrag.')
-        from stlstep.engine import Options,convert
+        from stlstep.engine import Options,convert,StepConversionError
         from stlstep import __version__
         values=request['options'];allowed={'unit','tolerance','mode','rounds','repair','fallback','samples','target_faces','region_edits'}
         if not isinstance(values,dict) or not set(values)<=allowed:raise ValueError('Unbekannte Konverteroption.')
@@ -70,23 +87,26 @@ def run(directory: str) -> int:
             payload=dict(ok=True,version=PROTOCOL,engine=__version__,analysis=analysis(root,settings,request.get('edits'),request.get('commands',[])))
         else:
             if request.get('commands') or request.get('edits') is not None:raise ValueError('Regionskorrekturen über die Konverteroptionen übergeben.')
-            report=convert(root/'input.stl',root/'result.step',settings,progress)
-            from stlstep.deviation import measure_deviation
-            import trimesh
-            preview=trimesh.load_mesh(report['preview'],process=False)
-            original=trimesh.load_mesh(root/'input.stl',process=False)
-            progress('Berechne Abweichungsansicht am tatsächlichen STEP-Ergebnis …')
-            measurements=measure_deviation(original,preview,settings.unit)
-            artifacts={}
-            for key,report_key in (('preview','preview'),('repaired_stl','repaired_mesh'),('repaired_3mf','repaired_3mf')):
-                if report.get(report_key):
-                    file=Path(report[report_key]);artifacts[key]=dict(file=file.name,size=file.stat().st_size,sha256=hashlib.sha256(file.read_bytes()).hexdigest())
-            for key in ('input','output','preview','report','repaired_mesh','repaired_stl','repaired_3mf'):
-                if report.get(key):report[key]=Path(report[key]).name
-            payload=dict(ok=True,version=PROTOCOL,engine=__version__,report=report,
-                         step_sha256=hashlib.sha256((root/'result.step').read_bytes()).hexdigest(),artifacts=artifacts,
-                         deviation=dict(face_indices=measurements.face_indices.tolist(),distances_mm=measurements.distances_mm.tolist(),
-                                        kind='unsigned_result_triangle_centres_to_original_surface',unit='mm'))
+            try:
+                report=convert(root/'input.stl',root/'result.step',settings,progress)
+            except StepConversionError as partial:
+                # The repair is confirmed but the STEP failed. Report the error
+                # while keeping the confirmed repair files for the user.
+                report=partial.report;artifacts=artifacts_for(root,report);local_names(report)
+                payload=dict(ok=False,version=PROTOCOL,engine=__version__,error=str(partial).replace(str(root),'')[:2000],
+                             report=report,artifacts=artifacts)
+            else:
+                from stlstep.deviation import measure_deviation
+                import trimesh
+                preview=trimesh.load_mesh(report['preview'],process=False)
+                original=trimesh.load_mesh(root/'input.stl',process=False)
+                progress('Berechne Abweichungsansicht am tatsächlichen STEP-Ergebnis …')
+                measurements=measure_deviation(original,preview,settings.unit)
+                artifacts=artifacts_for(root,report);local_names(report)
+                payload=dict(ok=True,version=PROTOCOL,engine=__version__,report=report,
+                             step_sha256=hashlib.sha256((root/'result.step').read_bytes()).hexdigest(),artifacts=artifacts,
+                             deviation=dict(face_indices=measurements.face_indices.tolist(),distances_mm=measurements.distances_mm.tolist(),
+                                            kind='unsigned_result_triangle_centres_to_original_surface',unit='mm'))
     except Exception as error:
         payload=dict(ok=False,version=PROTOCOL,error=str(error).replace(str(root),'')[:2000])
     temporary=response.with_suffix('.tmp')

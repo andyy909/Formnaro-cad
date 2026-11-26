@@ -6143,7 +6143,9 @@
                                           "front",
                                           "side",
                                           "top",
-                                          "section"
+                                          "section",
+                                          "detail",
+                                          "exploded"
                                         ]
                                       },
                                       "sourceIds": {
@@ -6165,6 +6167,44 @@
                                           "type": "number",
                                           "minimum": -1000000,
                                           "maximum": 1000000
+                                        }
+                                      },
+                                      "scale": {
+                                        "type": "number",
+                                        "minimum": 0.001,
+                                        "maximum": 1000,
+                                        "description": "Own paper scale of this view. Detail views require it; other views fall back to the sheet scale."
+                                      },
+                                      "cutout": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                          "sourceViewId",
+                                          "center",
+                                          "radius"
+                                        ],
+                                        "description": "Required for detail views and rejected on every other view kind.",
+                                        "properties": {
+                                          "sourceViewId": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          },
+                                          "center": {
+                                            "type": "array",
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "items": {
+                                              "type": "number",
+                                              "minimum": -1000000,
+                                              "maximum": 1000000
+                                            }
+                                          },
+                                          "radius": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 1000000
+                                          }
                                         }
                                       },
                                       "section": {
@@ -6189,9 +6229,63 @@
                                           }
                                         }
                                       },
+                                      "assemblyViewId": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 200,
+                                        "description": "Optional assembly view whose saved part selection this explosion shares."
+                                      },
+                                      "explosion": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                          "version",
+                                          "distance",
+                                          "parts"
+                                        ],
+                                        "description": "The saved workspace explosion restricted to this exploded view’s source IDs.",
+                                        "properties": {
+                                          "version": {
+                                            "const": 1
+                                          },
+                                          "distance": {
+                                            "type": "number",
+                                            "exclusiveMinimum": 0,
+                                            "maximum": 1000
+                                          },
+                                          "parts": {
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "maxItems": 128,
+                                            "items": {
+                                              "type": "object",
+                                              "additionalProperties": false,
+                                              "required": [
+                                                "id",
+                                                "direction"
+                                              ],
+                                              "properties": {
+                                                "id": {
+                                                  "type": "string",
+                                                  "minLength": 1,
+                                                  "maxLength": 200
+                                                },
+                                                "direction": {
+                                                  "type": "array",
+                                                  "minItems": 3,
+                                                  "maxItems": 3,
+                                                  "items": {
+                                                    "type": "number"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
                                       "projection": {
                                         "type": "object",
-                                        "description": "Read-only cached native projection. Omit on put: the confirmed cache of the same view kind is retained, and changed source/cut settings mark it stale until explicit update. Supplied caches must equal a previously confirmed native result."
+                                        "description": "Read-only cached native projection. Omit on put: the confirmed cache of the same view kind is retained, and changed source, cut or explosion settings mark it stale until explicit update. Supplied caches must equal a previously confirmed native result."
                                       }
                                     }
                                   }
@@ -6222,6 +6316,107 @@
                                           "text": {
                                             "type": "string",
                                             "maxLength": 1000
+                                          },
+                                          "position": {
+                                            "type": "array",
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "items": {
+                                              "type": "number",
+                                              "minimum": -1000000,
+                                              "maximum": 1000000
+                                            }
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                          "id",
+                                          "kind",
+                                          "viewId",
+                                          "curveId",
+                                          "instanceId",
+                                          "sourceReferences",
+                                          "position"
+                                        ],
+                                        "properties": {
+                                          "id": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          },
+                                          "kind": {
+                                            "const": "balloon"
+                                          },
+                                          "viewId": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          },
+                                          "curveId": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          },
+                                          "instanceId": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          },
+                                          "sourceReferences": {
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "maxItems": 8,
+                                            "items": {
+                                              "type": "object",
+                                              "additionalProperties": false,
+                                              "required": [
+                                                "source",
+                                                "role"
+                                              ],
+                                              "properties": {
+                                                "source": {
+                                                  "type": "object",
+                                                  "additionalProperties": false,
+                                                  "required": [
+                                                    "rootId",
+                                                    "path"
+                                                  ],
+                                                  "properties": {
+                                                    "rootId": {
+                                                      "type": "string",
+                                                      "minLength": 1,
+                                                      "maxLength": 200
+                                                    },
+                                                    "path": {
+                                                      "type": "array",
+                                                      "maxItems": 12,
+                                                      "items": {
+                                                        "type": "string",
+                                                        "minLength": 1,
+                                                        "maxLength": 200
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "role": {
+                                                  "type": "string",
+                                                  "minLength": 1,
+                                                  "maxLength": 300
+                                                },
+                                                "elementId": {
+                                                  "type": "string",
+                                                  "minLength": 1,
+                                                  "maxLength": 100
+                                                },
+                                                "geometrySignature": {
+                                                  "type": "string",
+                                                  "pattern": "^[a-f0-9]{64}$"
+                                                }
+                                              }
+                                            }
                                           },
                                           "position": {
                                             "type": "array",
@@ -6566,6 +6761,10 @@
                                       }
                                     ]
                                   }
+                                },
+                                "partsList": {
+                                  "type": "object",
+                                  "description": "Saved drawing parts list. Retain it when editing a sheet with item balloons."
                                 }
                               }
                             }

@@ -112,6 +112,10 @@ if(process.env.FORMNARO_RELEASE_PROGRAM_ASSISTANT==='1'){
  const dir=proof+'/packaged-program-assistant';fs.mkdirSync(dir,{recursive:true});const report=dir+'/result.json';await execute('packaged-program-assistant',runtime+'/Formnaro.exe',['--verify-ai-result-checks='+report],stage,{FORMNARO_VERIFY_PROGRAM_ASSISTANT_ONLY:'1'});const r=JSON.parse(fs.readFileSync(report));assert(r.ok&&r.isolatedProfile&&r.appVersion===version&&!r.errors.length&&!r.external.length);results.push({mode:'packaged',flag:'program-assistant',checks:r.checks.length,report,sha256:hash(report),exeSha256:r.exeSha256,asarSha256:r.asarSha256});
 }
 if(process.env.FORMNARO_RELEASE_PHOTO==='1'){
+ const modeDir=proof+'/packaged-photo-mode';fs.mkdirSync(modeDir,{recursive:true});const modeReport=modeDir+'/result.json';
+ await execute('packaged-photo-mode',runtime+'/Formnaro.exe',['--verify-photo-mode='+modeReport],stage);
+ const mode=JSON.parse(fs.readFileSync(modeReport));assert(mode.ok&&mode.isolatedProfile&&mode.appVersion===version&&mode.checks.length>0);
+ results.push({mode:'packaged',flag:'photo-mode',checks:mode.checks.length,report:modeReport,sha256:hash(modeReport),exeSha256:mode.exeSha256,asarSha256:mode.asarSha256});
  const dir=proof+'/packaged-photo';fs.mkdirSync(dir,{recursive:true});const report=dir+'/result.json';await execute('packaged-photo',runtime+'/Formnaro.exe',['--verify-ai-result-checks='+report],stage,{FORMNARO_VERIFY_PHOTO_ONLY:'1'});const r=JSON.parse(fs.readFileSync(report));assert(r.ok&&r.isolatedProfile&&r.appVersion===version&&!r.errors.length&&!r.external.length);results.push({mode:'packaged',flag:'photo',checks:r.checks.length,report,sha256:hash(report),exeSha256:r.exeSha256,asarSha256:r.asarSha256});
 }
 if(process.env.FORMNARO_RELEASE_PERSPECTIVE==='1'){

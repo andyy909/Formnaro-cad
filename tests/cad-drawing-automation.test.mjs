@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Worker} from 'node:worker_threads';
 import {createCadController} from '../src/cad-controller.js';
+import {parseCadProject,serializeCadProject} from '../src/cad-project.js';
 import {createCadAutomationAccess} from '../src/cad-automation-access.js';
 import {createCadDrawingSheet,cadDrawingProblems,cadDrawingSourceSignatures} from '../src/cad-drawing-data.js';
 import {previewCadDrawingCommands,exportCadDrawing,validateCadDrawingCommands,CAD_DRAWING_COMMAND_SCHEMAS,cadDrawingPreviewSummary} from '../src/cad-drawing-automation.js';
@@ -31,6 +32,62 @@ test('local drawing preview/update/apply creates one Undo and preserves all orig
   const after=cad.serialize();cad.undo();assert.equal(cad.serialize(),before);cad.redo();assert.equal(cad.serialize(),after);
   const svg=await access.export({format:'drawing-svg',sheetId:'sheet'}),dxf=await access.export({format:'drawing-dxf',sheetId:'sheet'}),pdf=await access.export({format:'drawing-pdf',sheetId:'sheet'});assert.equal(svg.mimeType,'image/svg+xml');assert.match(Buffer.from(svg.dataBase64,'base64').toString(),/width="297mm" height="210mm"/);assert.match(Buffer.from(dxf.dataBase64,'base64').toString(),/AC1015/);assert.equal(pdf.mimeType,'application/pdf');assert.match(Buffer.from(pdf.dataBase64,'base64').toString(),/^%PDF-/);assert.equal(cad.serialize(),after);
  }finally{cad.dispose();}
+});
+
+test('B07-02 saves, exports, and refreshes a separate exploded view using the worker and ordinary drawing commands', async () => {
+  const { cad, access, posts } = await fixture();
+  try {
+    await cad.execute({ kind: 'create', recipe: { type: 'box', size: [10, 10, 10] }, options: { id: 'other' } });
+    await cad.execute({ kind: 'batch', commands: [{ op: 'transform', target: 'other', translate: [45, 0, 0] }] });
+    const ids = ['body', 'other'],
+      sheet = createCadDrawingSheet({ id: 'assembly-sheet', sourceIds: ids }),
+      explosion = { version: 1, distance: 25, parts: [{ id: 'other', direction: [1, 0, 0] }] };
+    sheet.views = [
+      { id: 'assembly-view', kind: 'top', sourceIds: ids, position: [60, 90] },
+      { id: 'exploded-view', kind: 'exploded', sourceIds: ids, position: [175, 90], explosion, assemblyViewId: 'assembly-view' },
+    ];
+    const nodes = cad.snapshot().nodes,
+      before = cad.serialize(),
+      depth = cad.state().undo;
+    posts.length = 0;
+    const preview = await access.preview({ revision: cad.revision(), commands: [put(sheet), update(sheet.id)] });
+    assert.equal(cad.serialize(), before);
+    assert.equal(posts.filter((post) => post.request?.query?.kind === 'drawingProjection').length, 2);
+    await access.apply(preview);
+    const result = parseCadProject(cad.serialize());
+    assert.equal(result.version, 40);
+    assert.throws(() => parseCadProject({ ...result, version: 39 }), /Projektformat 40/);
+    assert.deepEqual(result.nodes, nodes);
+    assert.equal(cad.state().undo, depth + 1);
+    assert.equal(serializeCadProject(result), cad.serialize());
+    const savedSheet = result.drawings.sheets[0], [assembly, exploded] = savedSheet.views;
+    assert.deepEqual(exploded.sourceIds, assembly.sourceIds);
+    assert.deepEqual(exploded.projection.sourceSignatures, assembly.projection.sourceSignatures);
+    assert.deepEqual(exploded.projection.explosion, explosion);
+    assert.deepEqual(cadDrawingProblems(savedSheet, { sourceSignatures: cadDrawingSourceSignatures(result) }), []);
+    for (const [format, name] of [['drawing-svg', 'Explosionsansicht'], ['drawing-dxf', 'Explosionsansicht']]) {
+      const output = await access.export({ format, sheetId: sheet.id });
+      assert.ok(Buffer.from(output.dataBase64, 'base64').toString().includes(name));
+    }
+    const changed = structuredClone(savedSheet);
+    changed.views[1].explosion.distance = 30;
+    const edit = await access.preview({ revision: cad.revision(), commands: [put(changed)] });
+    await access.apply(edit);
+    await assert.rejects(access.export({ format: 'drawing-svg', sheetId: sheet.id }), (error) =>
+      error.problems?.some((problem) => problem.viewId === exploded.id && problem.code === 'STALE_VIEW'));
+    const refreshed = await access.preview({ revision: cad.revision(), commands: [update(sheet.id)] });
+    await access.apply(refreshed);
+    assert.equal(cad.snapshot().drawings.sheets[0].views[1].projection.explosion.distance, 30);
+    assert.equal(exploded.assemblyViewId, assembly.id);
+    const retargeted = structuredClone(cad.snapshot().drawings.sheets[0]);
+    retargeted.views[0].sourceIds = ['body'];
+    await access.apply(await access.preview({ revision: cad.revision(), commands: [put(retargeted), update(sheet.id)] }));
+    await assert.rejects(access.export({ format: 'drawing-svg', sheetId: sheet.id }), (error) =>
+      error.problems?.some((problem) => problem.viewId === exploded.id && problem.code === 'STALE_SOURCE'));
+    assert.deepEqual(cad.snapshot().nodes, nodes);
+  } finally {
+    cad.dispose();
+  }
 });
 
 test('drawing preview summary exposes measured values and explicitly bounds curve and text payloads',async()=>{

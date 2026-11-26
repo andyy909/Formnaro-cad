@@ -15,7 +15,9 @@ export function cadNativeMemory(oc) {
   function sample(phase, details = {}) {
     const reserved = oc?.wasmMemory?.buffer?.byteLength ?? 0;
     peakReserved = Math.max(peakReserved, reserved);
-    const js = globalThis.performance?.memory?.usedJSHeapSize ?? globalThis.process?.memoryUsage?.().heapUsed ?? null;
+    const js =
+      globalThis.performance?.memory?.usedJSHeapSize ??
+      (typeof process !== 'undefined' && process.memoryUsage ? process.memoryUsage().heapUsed : null);
     const value = {
       phase,
       timeMs: globalThis.performance?.now?.() ?? Date.now(),
@@ -53,7 +55,8 @@ export function cadNativeMemory(oc) {
       peakReservedBytes: Math.max(peakReserved, oc?.wasmMemory?.buffer?.byteLength ?? 0),
       nativeOccupiedBytes: null,
       jsHeapBytes:
-        globalThis.performance?.memory?.usedJSHeapSize ?? globalThis.process?.memoryUsage?.().heapUsed ?? null,
+        globalThis.performance?.memory?.usedJSHeapSize ??
+        (typeof process !== 'undefined' && process.memoryUsage ? process.memoryUsage().heapUsed : null),
       trackedHandles: live,
       peakTrackedHandles: peakHandles,
       trackedHandleCoverage: 'screw construction and boolean temporaries; not all OCCT allocations',

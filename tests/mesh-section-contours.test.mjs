@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import Module from 'manifold-3d';
 import {Matrix4,Vector3} from 'three';
-import {meshSectionContours} from '../src/mesh-section-contours.js';
+import {meshSectionContours, planePointToWorld, worldPointToPlane} from '../src/mesh-section-contours.js';
 import {resolveCadSketch} from '../src/cad-sketch.js';
 import {profileElementSamples} from '../src/sketch-profile.js';
 import {pageAIAnalysisResult} from '../src/cad-ai-analysis.js';
@@ -40,6 +40,27 @@ test('Rounded noncircular profiles retain native arcs and independently sampled 
  const r=meshSectionContours(n,{normal:[0,0,1],planePoint:[0,0,4],includePoints:true}),resolved=resolveCadSketch(r.sketch),original=r.loops[0].points,curves=resolved.elements.map(e=>profileElementSamples(e,4096));assert.ok(resolved.elements.filter(e=>e.type==='arc').length>=4);assert.ok(resolved.elements.length<16);
  const edges=p=>p.map((a,i)=>[a,p[(i+1)%p.length]]),distance=(p,list)=>Math.min(...list.map(([a,b])=>{const dx=b[0]-a[0],dy=b[1]-a[1],d=dx*dx+dy*dy,t=d?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/d)):0;return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy);})),sourceEdges=edges(original),curveEdges=curves.flatMap(p=>p.slice(1).map((b,i)=>[p[i],b]));
  let maximum=0;for(const curve of curves)for(const p of curve)maximum=Math.max(maximum,distance(p,sourceEdges));for(const p of original)maximum=Math.max(maximum,distance(p,curveEdges));assert.ok(maximum<=r.loops[0].fitErrorBound+2e-5,`${maximum} > ${r.loops[0].fitErrorBound}`);
+});
+
+test('A densely tessellated corner is not flattened by the section simplifier',()=>{
+  // Synthetic prism with a filleted 90° corner. The arc is sampled finely
+  // enough that every point lies within the local section tolerance, but the
+  // corner is a real 58 mm² feature. Removing all arc points at once replaces
+  // it with the chord between the two adjacent sharp vertices.
+  const radius=14.25,arcPoints=1500,polygon=[[radius,0],[radius,-50],[100,-50],[100,100],[-50,100],[-50,radius]];
+  for(let i=0;i<arcPoints;i++){const a=Math.PI+(i/arcPoints)*(Math.PI/2);polygon.push([radius+radius*Math.cos(a),radius+radius*Math.sin(a)]);}
+  const area=polygon.reduce((s,a,i)=>{const b=polygon[(i+1)%polygon.length];return s+a[0]*b[1]-a[1]*b[0];},0)/2;
+  const n=lidHousing(kernel),count=polygon.length,verts=[],triangles=[];
+  for(const [x,y] of polygon)verts.push(x,y,0);
+  for(const [x,y] of polygon)verts.push(x,y,20);
+  for(let i=1;i<count-1;i++)triangles.push(0,i+1,i);
+  for(let i=1;i<count-1;i++)triangles.push(count,count+i,count+i+1);
+  for(let i=0;i<count;i++){const j=(i+1)%count;triangles.push(i,j,count+j,i,count+j,count+i);}
+  n.mesh={verts,triangles};
+  const r=meshSectionContours(n,{normal:[0,0,1],planePoint:[0,0,10],includePoints:true}),loop=r.outerProfile;
+  assert.equal(r.complete,true);
+  assert.ok(loop.pointCount>100,`nur ${loop.pointCount} Punkte übrig`);
+  assert.ok(Math.abs(loop.area-area)<.01,`Flächenfehler ${loop.area-area} mm²`);
 });
 
 test('Measurement mode keeps independent round sections when the outer outline is open',()=>{
@@ -89,4 +110,99 @@ test('Measurement mode fits many holes without transferring polylines or repeati
   } finally {
     for(const shape of ids.reverse()) shape.delete();
   }
+});
+
+test('R01: Gerichteter Schnitt durch gedrehte/geneigte Kontur mit äußerer Schleife, Innenkreis und exakter 2D<->3D-Rückabbildung', () => {
+  const node = lidHousing(kernel);
+  // Rotations- und Translationsmatrix
+  const rot = new Matrix4().makeRotationAxis(new Vector3(1, 1, 0).normalize(), Math.PI / 4);
+  rot.setPosition(25, -15, 30);
+  node.transform = rot.toArray();
+
+  // Schnitt senkrecht zur transformierten Z-Achse des Bauteils
+  const normal = new Vector3(0, 0, 1).applyAxisAngle(new Vector3(1, 1, 0).normalize(), Math.PI / 4).toArray();
+  const planePoint = new Vector3(0, 0, 10).applyMatrix4(rot).toArray();
+
+  const res = meshSectionContours(node, {
+    normal,
+    planePoint,
+    includePoints: true,
+  });
+
+  assert.equal(res.complete, true);
+  assert.equal(res.status, 'complete');
+  assert.equal(res.closed, true);
+  assert.ok(res.outerProfile, 'Äußere Schleife (outerProfile) vorhanden');
+  assert.equal(res.outerProfile.role, 'outer');
+  assert.ok(res.outerLoops.length >= 1, 'Mindestens eine äußere Schleife');
+  assert.ok(res.innerLoops.length >= 1, 'Innenkreise / Bohrungen vorhanden');
+  assert.ok(res.innerCircles.length >= 1, 'Fitted circles als Bohrungen erkannt');
+
+  // Prüfe Koordinatenrahmen und 2D <-> 3D Welt-Rückabbildung
+  assert.ok(Array.isArray(res.frame) && res.frame.length === 16);
+  assert.ok(Array.isArray(res.origin) && res.origin.length === 3);
+  assert.ok(Array.isArray(res.uAxis) && res.uAxis.length === 3);
+  assert.ok(Array.isArray(res.vAxis) && res.vAxis.length === 3);
+
+  // Jeder 2D-Punkt der äußeren Schleife wird exakt auf die Schnittebene im 3D-Raum abgebildet
+  for (const pt2d of res.outerProfile.points) {
+    const pt3d = planePointToWorld(pt2d, res);
+    // Abstand zur Schnittebene: dot(pt3d - origin, normal) muss ~0 sein
+    const distToPlane = Math.abs(
+      (pt3d[0] - res.origin[0]) * normal[0] +
+      (pt3d[1] - res.origin[1]) * normal[1] +
+      (pt3d[2] - res.origin[2]) * normal[2]
+    );
+    assert.ok(distToPlane < 1e-6, `Punkt ${pt3d} liegt nicht exakt auf Schnittebene: ${distToPlane}`);
+
+    // Umkehrabbildung 3D -> 2D
+    const backTo2d = worldPointToPlane(pt3d, res);
+    assert.ok(Math.hypot(backTo2d[0] - pt2d[0], backTo2d[1] - pt2d[1]) < 1e-6, 'Exakte 2D-Rückabbildung');
+  }
+
+  // Für jeden Innenkreis muss der 3D-Mittelpunkt ebenfalls exakt auf der Ebene liegen
+  for (const circle of res.innerCircles) {
+    assert.ok(Number.isFinite(circle.diameter) && circle.diameter > 0);
+    const distToPlane = Math.abs(
+      (circle.center[0] - res.origin[0]) * normal[0] +
+      (circle.center[1] - res.origin[1]) * normal[1] +
+      (circle.center[2] - res.origin[2]) * normal[2]
+    );
+    assert.ok(distToPlane < 1e-6, 'Kreismittelpunkt liegt auf Schnittebene');
+  }
+});
+
+test('R01-03: Unterbrochene/offene Außenkontur wird bei allowIncomplete als unvollständig markiert, während gültige Innenkreise erhalten bleiben', () => {
+  const node = lidHousing(kernel);
+  const { verts, triangles } = node.mesh;
+  const height = 10;
+  // Entferne gezielt ein Dreieck an der Außenwand, sodass die Außenkontur unterbrochen wird
+  const face = Array.from({ length: triangles.length / 3 }, (_, i) => i * 3).find((i) => {
+    const vertices = triangles.slice(i, i + 3);
+    const z = vertices.map((index) => verts[index * 3 + 2]);
+    return vertices.every((index) => verts[index * 3] === 0) && Math.min(...z) < height && Math.max(...z) > height;
+  });
+  assert.ok(Number.isInteger(face));
+  triangles.splice(face, 3);
+
+  const request = { normal: [0, 0, 1], planePoint: [0, 0, height] };
+
+  // Ohne allowIncomplete: strikter Wurf von MESH_LID_SECTION (Rückwärtskompatibilität)
+  assert.throws(() => meshSectionContours(node, request), { code: 'MESH_LID_SECTION' });
+
+  // Mit allowIncomplete: true -> kein Fehler, sondern Kennzeichnung als incomplete und Erhalt der Innenkreise
+  const res = meshSectionContours(node, { ...request, allowIncomplete: true, includePoints: true });
+  assert.equal(res.complete, false, 'Schnitt ist nicht vollständig');
+  assert.equal(res.status, 'incomplete', 'Status explizit incomplete');
+  assert.equal(res.closed, false, 'Außenkontur nicht geschlossen');
+  assert.equal(res.rejectedComponents, 1, 'Genau 1 fehlerhafte/offene Komponente abgewiesen');
+  assert.ok(res.openProfile, 'Offenes Außenprofil ist ausgewiesen');
+  assert.equal(res.openProfile.status, 'incomplete');
+  assert.equal(res.openProfile.closed, false);
+  assert.equal(res.outerProfile, null, 'Kein geschlossenes Außenprofil');
+
+  // Innenkreise aus demselben Schnitt bleiben messbar und verfügbar
+  assert.ok(res.innerCircles.length >= 2, 'Die zwei Bohrungen bleiben als gültige Innenkreise erhalten');
+  assert.ok(res.innerCircles.every((c) => Math.abs(c.diameter - 3.5) < 0.02), 'Bohrungsdurchmesser korrekt gemessen');
+  assert.ok(res.innerCircles.every((c) => Math.abs(c.center[2] - height) < 0.01), 'Bohrungsmittelpunkte in Z korrekt');
 });

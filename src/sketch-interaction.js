@@ -6,19 +6,34 @@ export const literalCoordinate = (value) =>
 export function createSketchHistory(initial, { limit = 100 } = {}) {
   let values = [structuredClone(initial)],
     at = 0;
+  let lastGroup;
   return {
-    record(value) {
-      if (JSON.stringify(value) === JSON.stringify(values[at])) return;
+    record(value, group) {
+      const serialized = JSON.stringify(value);
+      if (serialized === JSON.stringify(values[at])) return;
+      if (group && group === lastGroup && at > 0) {
+        if (serialized === JSON.stringify(values[at - 1])) {
+          values.pop();
+          at--;
+          lastGroup = undefined;
+        } else {
+          values[at] = structuredClone(value);
+        }
+        return;
+      }
       values = values.slice(0, at + 1);
       values.push(structuredClone(value));
       if (values.length > limit) values.shift();
       at = values.length - 1;
+      lastGroup = group;
     },
     undo() {
+      lastGroup = undefined;
       if (at > 0) at--;
       return structuredClone(values[at]);
     },
     redo() {
+      lastGroup = undefined;
       if (at < values.length - 1) at++;
       return structuredClone(values[at]);
     },
@@ -63,6 +78,23 @@ export function moveSketchPoints(sketch, indices, delta) {
     out.points[i] = out.points[i].map((v, k) => String(Number((Number(v) + delta[k]).toPrecision(14))));
   return out;
 }
+export function sketchViewport(box, width, height) {
+  if (!(width > 0 && height > 0)) return box;
+  const [x, y, w, h] = box;
+  const aspect = width / height;
+  const nextWidth = Math.max(w, h * aspect);
+  const nextHeight = Math.max(h, w / aspect);
+  return [x - (nextWidth - w) / 2, y - (nextHeight - h) / 2, nextWidth, nextHeight];
+}
+
+export function sketchVisibleGridStep(span, spacing) {
+  const fallback = 10 ** Math.floor(Math.log10(span / 10));
+  if (!(spacing > 0 && Number.isFinite(spacing))) return fallback;
+  const multiplier = Math.ceil(span / spacing / 80);
+  const step = spacing * Math.max(1, multiplier);
+  return Number.isFinite(step) ? step : fallback;
+}
+
 export function createSketchCamera() {
   let box = null;
   return {

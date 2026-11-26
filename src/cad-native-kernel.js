@@ -404,9 +404,7 @@ export function cadFuseMany(oc, shapes, { balanced = false } = {}) {
     // the established left-to-right calculation available after a failure.
     try {
       return combine(0, shapes.length).shape;
-    } catch {
-      /* Retry with the established left-to-right union below. */
-    }
+    } catch {}
   }
   try {
     result = readCadBrep(oc, writeCadBrep(oc, shapes[0]));

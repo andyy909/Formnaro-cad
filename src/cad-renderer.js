@@ -63,6 +63,9 @@ export function createCadRenderer({
   onGesture,
   onSnapGesture,
   onResize,
+  onPlanePick,
+  onMeasurePick,
+  onMagnetPick,
   onError = () => {},
   getPreferences = () => ({ handleSize: 14, gridVisible: true, zoomSpeed: 1 }),
   onDimensions = () => {},
@@ -83,7 +86,8 @@ export function createCadRenderer({
     selection = [],
     gesture = null,
     interaction = null,
-    interactionAllowsCanvasListeners = false;
+    interactionAllowsCanvasListeners = false,
+    ghost = null;
   camera.position.set(245, -310, 265);
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, stencil: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -157,7 +161,7 @@ export function createCadRenderer({
   scene.add(meshSelectionMarks, meshProtectionMarks);
   let meshSelectionBinding = null,
     meshSelectionSource = null;
-  function setMeshSelection(binding) {
+  function setMeshSelection(binding, sourceNode) {
     const node = binding ? getProject().nodes.find((n) => n.id === binding.objectId) : null,
       old = meshSelectionBinding;
     if (
@@ -179,7 +183,7 @@ export function createCadRenderer({
       refreshVisibility();
       return;
     }
-    const next = createMeshSelectionOverlay(binding, node);
+    const next = createMeshSelectionOverlay(binding, sourceNode ?? node);
     clear(meshSelectionMarks);
     meshSelectionBinding = binding ? structuredClone(binding) : null;
     meshSelectionSource = node?.mesh ?? null;
@@ -760,8 +764,16 @@ export function createCadRenderer({
   scalePreviewStatus.hidden = true;
   scalePreviewStatus.setAttribute('role', 'status');
   viewport.append(scalePreviewStatus);
-  let cornerPreview = null,
+  let cornerDimensions = null,
+    cornerClick = null,
+    cornerPreview = null,
     pendingScale = null;
+  function setCornerDimensions(data) {
+    cornerDimensions = data;
+    if (data) scaleDimensions.update({ bounds: data.item.localBounds, worldMatrix: data.item.worldMatrix, sizes: data.sizes, controls: data.controls });
+    else scaleDimensions.hide();
+    invalidate('corner-dimensions');
+  }
   function scalePreviewVisible(visible, ready = false) {
     scalePreviewStatus.hidden = !visible;
     if (visible) {
@@ -784,7 +796,8 @@ export function createCadRenderer({
     const parent = multiplyCadMatrices(data.item.worldMatrix, inverseCadMatrix(data.item.transform));
     const next = multiplyCadMatrices(parent, resized.transform),
       delta = matrix(multiplyCadMatrices(next, inverseCadMatrix(data.item.worldMatrix)));
-    if (showDimensions) scaleDimensions.update({ bounds: data.item.localBounds, worldMatrix: next, sizes });
+    if (showDimensions)
+      scaleDimensions.update({ bounds: data.item.localBounds, worldMatrix: next, sizes, controls: data === cornerPreview ? cornerDimensions?.controls : undefined });
     for (const [mesh, original] of data.matrices) {
       mesh.matrix.copy(delta).multiply(original);
       mesh.matrixWorldNeedsUpdate = true;
@@ -801,7 +814,7 @@ export function createCadRenderer({
       mesh.matrixWorldNeedsUpdate = true;
     }
     cornerPreview = null;
-    scaleDimensions.hide();
+    setCornerDimensions(cornerDimensions);
     scalePreviewVisible(false);
     setSelection(getSelection(), getScene());
     invalidate('scale-preview-clear');
@@ -1193,6 +1206,11 @@ export function createCadRenderer({
     cast(event);
     return cadVisibleRayHit(raycaster, sources.children, [...bodies.children, ...assemblyBoxes.proxies]);
   }
+  function freeCornerSpace(event) {
+    if (visualHit(event)) return false;
+    const visible = [...preview.children, ...handles.children].filter((object) => object.visible);
+    return raycaster.intersectObjects(visible, false).length === 0;
+  }
   function visualTargets(event) {
     cast(event);
     return cadVisibleRayTargets(raycaster, sources.children, [...bodies.children, ...assemblyBoxes.proxies]);
@@ -1287,6 +1305,12 @@ export function createCadRenderer({
     'pointerdown',
     (event) => {
       if (event.button !== 0 || gizmo.dragging) return;
+      if (cornerDimensions) {
+        cornerClick = freeCornerSpace(event) ? { x: event.clientX, y: event.clientY, id: event.pointerId, session: cornerDimensions } : null;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
       if (pendingCommit || !canEdit()) {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -1499,6 +1523,14 @@ export function createCadRenderer({
     }
   });
   renderer.domElement.addEventListener('pointerup', (event) => {
+    if (cornerClick?.id === event.pointerId && event.button === 0) {
+      const click = cornerClick;
+      cornerClick = null;
+      if (cornerDimensions === click.session && Math.hypot(event.clientX - click.x, event.clientY - click.y) < 4 && freeCornerSpace(event)) {
+        if (!scaleDimensions.commit() && !cornerDimensions.controls.isApplying()) cornerDimensions.controls.cancel();
+      }
+      return;
+    }
     if (interactionDrag) {
       const completed = interactionDrag;
       interactionDrag = null;
@@ -1543,6 +1575,7 @@ export function createCadRenderer({
     updateMarquee(start, event);
   });
   function cancel() {
+    cornerClick = null;
     clearCornerPreview();
     if (pendingScale) {
       if (pendingScale.revision === getScene()?.revision)
@@ -1589,6 +1622,7 @@ export function createCadRenderer({
     return active;
   }
   renderer.domElement.addEventListener('pointercancel', () => {
+    cornerDimensions?.controls.cancel();
     cancel();
     document.getElementById('selection-marquee')?.style.setProperty('display', 'none');
   });
@@ -1726,7 +1760,50 @@ export function createCadRenderer({
     }
   }
   const cameraStep = createCadCameraStep({ getCamera: () => camera, orbit });
+  const tabletSpotlight = new THREE.Group();
+  tabletSpotlight.name = 'Tablet companion spotlight';
+  scene.add(tabletSpotlight);
+  let tabletSpotlightTimer;
+  function clearTabletSpotlight() {
+    clearTimeout(tabletSpotlightTimer);
+    clear(tabletSpotlight);
+    invalidate('tablet-spotlight');
+  }
+  function showTabletSpotlight(rootId, bounds, current) {
+    clearTabletSpotlight();
+    const box = new THREE.Box3(new THREE.Vector3(...bounds.min), new THREE.Vector3(...bounds.max));
+    box.expandByScalar(Math.max(0.15, box.getSize(new THREE.Vector3()).length() * 0.025));
+    const marker = new THREE.Box3Helper(box, 0x30d9ef);
+    marker.userData = { rootId, current };
+    marker.material.depthTest = false;
+    marker.material.depthWrite = false;
+    marker.renderOrder = 45;
+    tabletSpotlight.add(marker);
+    tabletSpotlightTimer = setTimeout(clearTabletSpotlight, 1400);
+    invalidate('tablet-spotlight');
+  }
+  async function captureTabletView() {
+    const source = renderer.domElement;
+    if (!source.width || !source.height || !host.clientWidth || !host.clientHeight)
+      throw Error('Die Modellansicht am PC ist gerade nicht sichtbar.');
+    const buffer = document.createElement('canvas');
+    const scale = Math.min(1, 1024 / Math.max(source.width, source.height));
+    buffer.width = Math.max(1, Math.round(source.width * scale));
+    buffer.height = Math.max(1, Math.round(source.height * scale));
+    await scheduler.paint();
+    buffer.getContext('2d').drawImage(source, 0, 0, buffer.width, buffer.height);
+    const image = buffer.toDataURL('image/jpeg', 0.82);
+    if (!image.startsWith('data:image/jpeg;base64,') || image.length > 270000)
+      throw Error('Die Modellansicht ist für den Skizzenblock zu groß.');
+    return { image, width: buffer.width, height: buffer.height, view: viewState() };
+  }
   function draw() {
+    const marker = tabletSpotlight.children[0];
+    if (marker) {
+      const { rootId, current } = marker.userData;
+      marker.visible =
+        current() && allows(rootId) && bodies.children.some((body) => body.visible && body.userData.rootId === rootId);
+    }
     const scale = cornerPreview ?? (handleDrag?.moved && !handleDrag.lift ? handleDrag : pendingScale);
     if (scale && (scale !== pendingScale || scale.revision === getScene()?.revision))
       drawCornerPreview(scale, { showDimensions: scale !== pendingScale });
@@ -1770,6 +1847,7 @@ export function createCadRenderer({
         meshSelectionMarks,
         meshProtectionMarks,
         meshInspectionMarks,
+        tabletSpotlight,
         rotationHandles.group,
         gizmo.getHelper(),
       ],
@@ -1903,6 +1981,7 @@ export function createCadRenderer({
       invalidate('view');
     },
     isScalePending: () => !!(pendingScale || (handleDrag?.moved && !handleDrag.lift)),
+    setCornerDimensions,
     previewCornerSize,
     clearCornerPreview,
     markCornerPreviewReady: () => {
@@ -1937,6 +2016,8 @@ export function createCadRenderer({
     },
     allows,
     sectionPreview,
+    showTabletSpotlight,
+    captureTabletView,
     setThickness,
     clearThickness,
     setMode: (value) => {
@@ -2127,6 +2208,7 @@ export function createCadRenderer({
       bed,
       edges,
       measurements,
+      motionMarks,
       section,
       preview,
       sources,
@@ -2140,6 +2222,7 @@ export function createCadRenderer({
       stagedBytes: stagedDisplay?.nextBytes ?? 0,
     }),
     dispose: () => {
+      clearTabletSpotlight();
       explosionView.clear();
       assemblyBoxes.clear();
       jointView.clear();

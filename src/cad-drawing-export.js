@@ -1,8 +1,14 @@
 import {
   validateCadDrawingSheet,
   cadDrawingPaperSize,
+  cadDrawingPaperPoint,
   cadDrawingProblems,
   cadDrawingDimension,
+  cadDrawingBalloon,
+  cadDrawingViewScale,
+  cadDrawingPartsListSize,
+  CAD_DRAWING_PARTS_LIST_COLUMNS,
+  CAD_DRAWING_PARTS_LIST_STYLE,
 } from './cad-drawing-data.js';
 
 const TAU = Math.PI * 2,
@@ -19,7 +25,51 @@ const at = (c, t) =>
     : c.center.map((v, k) => v + c.radius * (k ? Math.sin(t) : Math.cos(t)));
 const pathPoint = (p) => p.map(num).join(' ');
 const paperPoint = (view, scale, p) => [view.position[0] + p[0] * scale, view.position[1] - p[1] * scale];
+const scaleLabel = (n) => (n >= 1 ? String(n) + ':1' : '1:' + String(Number((1 / n).toPrecision(8))));
 const drawingOrder = (curves) => [...curves].sort((a, b) => Number(b.hidden) - Number(a.hidden));
+const partsListCell = (row, key) => {
+  const value = row[key];
+  return value === null || value === undefined ? '' : String(value);
+};
+function partsListSvg(list, interactive) {
+  const [width, height] = cadDrawingPartsListSize(list),
+    [left, bottom] = list.position,
+    top = bottom - height,
+    titleBottom = top + CAD_DRAWING_PARTS_LIST_STYLE.titleHeight,
+    headerBottom = titleBottom + CAD_DRAWING_PARTS_LIST_STYLE.headerHeight,
+    stroke = [`M${num(left)} ${num(top)} H${num(left + width)} V${num(bottom)} H${num(left)} Z`],
+    text = [];
+  stroke.push(`M${num(left)} ${num(titleBottom)} H${num(left + width)}`);
+  stroke.push(`M${num(left)} ${num(headerBottom)} H${num(left + width)}`);
+  let cursor = left;
+  for (const column of CAD_DRAWING_PARTS_LIST_COLUMNS.slice(0, -1)) {
+    cursor += column.width;
+    stroke.push(`M${num(cursor)} ${num(titleBottom)} V${num(bottom)}`);
+  }
+  for (let index = 1; index < list.rows.length; index++)
+    stroke.push(
+      `M${num(left)} ${num(headerBottom + index * CAD_DRAWING_PARTS_LIST_STYLE.rowHeight)} H${num(left + width)}`,
+    );
+  text.push(
+    `<text x="${num(left + width / 2)}" y="${num(top + 4.8)}" text-anchor="middle" font-size="3.1" font-weight="bold">${esc(list.title)}</text>`,
+  );
+  const cells = (row, baseline, header = false) => {
+    let x = left;
+    for (const column of CAD_DRAWING_PARTS_LIST_COLUMNS) {
+      const anchor = column.align === 'middle' ? 'middle' : 'start',
+        cellX = column.align === 'middle' ? x + column.width / 2 : x + 1.2,
+        value = row ? partsListCell(row, column.key) : column.label;
+      text.push(
+        `<text x="${num(cellX)}" y="${num(baseline)}" text-anchor="${anchor}" font-size="${header ? 2.6 : 2.5}"${header ? ' font-weight="bold"' : ''}>${esc(value)}</text>`,
+      );
+      x += column.width;
+    }
+  };
+  cells(null, titleBottom + 4.2, true);
+  for (const [index, row] of list.rows.entries())
+    cells(row, headerBottom + (index + 0.7) * CAD_DRAWING_PARTS_LIST_STYLE.rowHeight);
+  return `<g${interactive ? ` data-drawing-parts-list="${esc(list.id)}"` : ''} fill="none" stroke="#222" stroke-width="0.25"><path d="${stroke.join(' ')}"/></g><g fill="#111" font-family="Arial, sans-serif">${text.join('')}</g>`;
+}
 
 function ready(value, options) {
   const sheet = validateCadDrawingSheet(value),
@@ -107,11 +157,25 @@ function curveSvg(c, tolerance) {
   return `<path d="${d}"/>`;
 }
 
-export function cadDrawingAnnotationGeometry(sheet, a) {
+export function cadDrawingAnnotationGeometry(sheet, a, options) {
   if (a.kind === 'label') return { text: a.text, position: a.position, lines: [], arcs: [] };
+  if (a.kind === 'balloon') {
+    const { row, target } = cadDrawingBalloon(sheet, a, options),
+      text = String(row.position),
+      radius = Math.max(3.2, text.length + 1),
+      delta = target.map((coordinate, axis) => coordinate - a.position[axis]),
+      length = Math.hypot(...delta),
+      lines = [];
+    if (length > radius) {
+      const rim = a.position.map((coordinate, axis) => coordinate + (delta[axis] * radius) / length);
+      lines.push([target, rim]);
+    }
+    return { text, position: a.position, lines, arcs: [], radius };
+  }
   const result = cadDrawingDimension(sheet, a),
     { view, curves } = result,
-    p = (p) => paperPoint(view, sheet.scale, p),
+    viewScale = cadDrawingViewScale(view, sheet),
+    p = (p) => paperPoint(view, viewScale, p),
     lines = [],
     arcs = [];
   if (a.kind === 'distance') {
@@ -156,6 +220,45 @@ export function cadDrawingAnnotationGeometry(sheet, a) {
         [cp, [cp[0] + r * Math.cos(start + span), cp[1] + r * Math.sin(start + span)]],
       );
     } else lines.push([p(c.a), a.position], [p(d.a), a.position]);
+  } else if (a.kind === 'centermark') {
+    const c = curves[0],
+      center = p(c.center),
+      overshoot = 2,
+      r = c.radius * viewScale + overshoot;
+    lines.push(
+      [[center[0] - r, center[1]], [center[0] + r, center[1]]],
+      [[center[0], center[1] - r], [center[0], center[1] + r]],
+    );
+    return { text: '', position: center, lines, arcs: [] };
+  } else if (a.kind === 'centerline') {
+    const [c1, c2] = curves,
+      center1 = p(c1.center),
+      center2 = p(c2.center),
+      dx = center2[0] - center1[0],
+      dy = center2[1] - center1[1],
+      distance = Math.hypot(dx, dy);
+    if (distance < 1e-10) fail('Mittellinie benötigt zwei unterschiedliche Mitten.');
+    const dir = [dx / distance, dy / distance];
+    const overhangStart = Number.isFinite(a.extensionStart)
+      ? a.extensionStart
+      : Number.isFinite(a.overhangMm)
+        ? a.overhangMm
+        : 3;
+    const overhangEnd = Number.isFinite(a.extensionEnd)
+      ? a.extensionEnd
+      : Number.isFinite(a.overhangMm)
+        ? a.overhangMm
+        : 3;
+    const start = [center1[0] - dir[0] * overhangStart, center1[1] - dir[1] * overhangStart];
+    const end = [center2[0] + dir[0] * overhangEnd, center2[1] + dir[1] * overhangEnd];
+    lines.push([start, end]);
+    return {
+      text: '',
+      position: [(center1[0] + center2[0]) / 2, (center1[1] + center2[1]) / 2],
+      lines,
+      arcs: [],
+      dash: '8 2 2 2',
+    };
   } else {
     const c = curves[0],
       center = p(c.center),
@@ -172,7 +275,7 @@ export function cadDrawingAnnotationGeometry(sheet, a) {
         unit = [Math.cos(endpoint), -Math.sin(endpoint)];
       }
     }
-    const r = c.radius * sheet.scale,
+    const r = c.radius * viewScale,
       edge = center.map((x, k) => x + r * unit[k]);
     if (a.kind === 'diameter') lines.push([center.map((x, k) => x - r * unit[k]), edge]);
     else lines.push([center, edge]);
@@ -206,30 +309,59 @@ export function cadDrawingSvg(value, options = {}) {
         );
       continue;
     }
-    const curves = drawingOrder(view.projection.curves)
-      .map((c) => {
-        const geometry = curveSvg(c, view.projection.tolerance);
-        return `<g${attrs('curve', c.id)}${c.hidden ? ' stroke-dasharray="' + num(1 / sheet.scale) + ' ' + num(1 / sheet.scale) + '"' : ''}>${interactive ? `<g stroke="transparent" stroke-width="${num(3 / sheet.scale)}" pointer-events="stroke">${geometry}</g><g pointer-events="none">${geometry}</g>` : geometry}</g>`;
-      })
-      .join('');
+    const viewScale = cadDrawingViewScale(view, sheet),
+      curves = drawingOrder(view.projection.curves)
+        .map((c) => {
+          const geometry = curveSvg(c, view.projection.tolerance);
+          return `<g${attrs('curve', c.id)}${c.hidden ? ' stroke-dasharray="' + num(1 / viewScale) + ' ' + num(1 / viewScale) + '"' : ''}>${interactive ? `<g stroke="transparent" stroke-width="${num(3 / viewScale)}" pointer-events="stroke">${geometry}</g><g pointer-events="none">${geometry}</g>` : geometry}</g>`;
+        })
+        .join('');
     content.push(
-      `<g${attrs('view', view.id)} transform="translate(${view.position.map(num).join(' ')}) scale(${num(sheet.scale)} ${num(-sheet.scale)})" fill="none" stroke="#111" stroke-width="${num(0.25 / sheet.scale)}" stroke-linecap="round" stroke-linejoin="round">${curves}</g>`,
+      `<g${attrs('view', view.id)} transform="translate(${view.position.map(num).join(' ')}) scale(${num(viewScale)} ${num(-viewScale)})" fill="none" stroke="#111" stroke-width="${num(0.25 / viewScale)}" stroke-linecap="round" stroke-linejoin="round">${curves}</g>`,
     );
+    if (view.kind === 'detail') {
+      const radius = view.cutout.radius * viewScale,
+        letter = String.fromCharCode(
+          65 + Math.max(0, sheet.views.filter((candidate) => candidate.kind === 'detail').indexOf(view)),
+        );
+      content.push(
+        `<g${attrs('detail', view.id)}><circle cx="${num(view.position[0])}" cy="${num(view.position[1])}" r="${num(radius)}" fill="none" stroke="#666" stroke-width="0.25" stroke-dasharray="2 1"/><text x="${num(view.position[0] - radius)}" y="${num(view.position[1] - radius - 2)}" font-family="Arial, sans-serif" font-size="3.5" fill="#111" stroke="white" stroke-width="0.8" paint-order="stroke">${esc('Detail ' + letter + ' · ' + scaleLabel(viewScale))}</text></g>`,
+      );
+    } else if (view.kind === 'exploded') {
+      const bounds = view.projection.bounds,
+        [x, y] = cadDrawingPaperPoint(view, viewScale, [bounds.min[0], bounds.max[1]]);
+      content.push(
+        `<text x="${num(x)}" y="${num(y - 2)}" pointer-events="none" font-family="Arial, sans-serif" font-size="3.5" fill="#111">${esc(options.explodedViewLabel ?? 'Explosionsansicht')}</text>`,
+      );
+    }
   }
   for (const a of sheet.annotations) {
     let g;
     try {
-      g = cadDrawingAnnotationGeometry(sheet, a);
+      g = cadDrawingAnnotationGeometry(sheet, a, options);
     } catch (error) {
       if (!options.allowStale) throw error;
-      g = { text: 'Bezug verloren', position: a.position, lines: [], arcs: [] };
+      g = a.kind === 'balloon'
+        ? { text: '?', position: a.position, lines: [], arcs: [], radius: 3.2, lost: true }
+        : { text: 'Bezug verloren', position: a.position, lines: [], arcs: [] };
     }
     const lines = g.lines.map(([p, q]) => `<path d="M${pathPoint(p)} L${pathPoint(q)}"/>`).join(''),
-      arcs = g.arcs.map((c) => curveSvg({ kind: 'arc', ...c }, 0.01)).join('');
+      arcs = g.arcs.map((c) => curveSvg({ kind: 'arc', ...c }, 0.01)).join(''),
+      strokeDash = g.dash ? ` stroke-dasharray="${g.dash}"` : '';
+    if (a.kind === 'balloon') {
+      const [x, y] = g.position.map(num),
+        color = g.lost ? '#a12222' : '#222',
+        title = g.lost ? `<title>${esc(options.lostBalloonLabel ?? 'Positionsballon: Bezug verloren')}</title>` : '';
+      content.push(
+        `<g${attrs('annotation', a.id)}>${title}<g fill="none" stroke="${color}" stroke-width="0.25">${lines}<circle cx="${x}" cy="${y}" r="${num(g.radius)}" fill="white"/></g><text x="${x}" y="${num(g.position[1] + 1.15)}" fill="${color}" text-anchor="middle" font-family="Arial, sans-serif" font-size="3.5">${esc(g.text)}</text></g>`,
+      );
+      continue;
+    }
     content.push(
-      `<g${attrs('annotation', a.id)}><g fill="none" stroke="#333" stroke-width="0.18">${lines}${arcs}</g><text x="${num(g.position[0])}" y="${num(g.position[1] - 0.7)}" text-anchor="middle" fill="#111" stroke="white" stroke-width="0.8" paint-order="stroke" font-family="Arial, sans-serif" font-size="3.5">${esc(g.text)}</text></g>`,
+      `<g${attrs('annotation', a.id)}><g fill="none" stroke="#333" stroke-width="0.18"${strokeDash}>${lines}${arcs}</g>${g.text ? `<text x="${num(g.position[0])}" y="${num(g.position[1] - 0.7)}" text-anchor="middle" fill="#111" stroke="white" stroke-width="0.8" paint-order="stroke" font-family="Arial, sans-serif" font-size="3.5">${esc(g.text)}</text>` : ''}</g>`,
     );
   }
+  if (sheet.partsList) content.push(partsListSvg(sheet.partsList, interactive));
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}mm" height="${height}mm" viewBox="0 0 ${width} ${height}" data-formnaro-drawing="1" role="img" aria-label="${esc(sheet.name)}">${content.join('')}</svg>`;
 }
 
@@ -309,7 +441,7 @@ export function cadDrawingDxf(value, options = {}) {
     100,
     'AcDbSymbolTable',
     70,
-    2,
+    3,
     0,
     'LTYPE',
     5,
@@ -359,6 +491,42 @@ export function cadDrawingDxf(value, options = {}) {
     74,
     0,
     0,
+    'LTYPE',
+    5,
+    (handle++).toString(16),
+    100,
+    'AcDbSymbolTableRecord',
+    100,
+    'AcDbLinetypeTableRecord',
+    2,
+    'CENTER',
+    70,
+    0,
+    3,
+    'Center line',
+    72,
+    65,
+    73,
+    4,
+    40,
+    16,
+    49,
+    10,
+    74,
+    0,
+    49,
+    -2,
+    74,
+    0,
+    49,
+    2,
+    74,
+    0,
+    49,
+    -2,
+    74,
+    0,
+    0,
     'ENDTAB',
   );
   put(0, 'TABLE', 2, 'LAYER', 5, (handle++).toString(16), 330, 0, 100, 'AcDbSymbolTable', 70, layers.length);
@@ -382,20 +550,27 @@ export function cadDrawingDxf(value, options = {}) {
       'CONTINUOUS',
     );
   put(0, 'ENDTAB', 0, 'ENDSEC', 0, 'SECTION', 2, 'BLOCKS', 0, 'ENDSEC', 0, 'SECTION', 2, 'ENTITIES');
-  const entity = (kind, layer, subclass, hidden = false) => {
+  const entity = (kind, layer, subclass, linetype = false) => {
     put(0, kind, 5, (handle++).toString(16), 100, 'AcDbEntity', 8, layer);
-    if (hidden) put(6, 'HIDDEN');
+    if (linetype === true) put(6, 'HIDDEN');
+    else if (linetype) put(6, linetype);
     put(100, subclass);
   };
-  const line = (a, b, layer, hidden = false) => {
-    entity('LINE', layer, 'AcDbLine', hidden);
+  const line = (a, b, layer, linetype = false) => {
+    entity('LINE', layer, 'AcDbLine', linetype);
     point(10, a);
     point(11, b);
   };
-  const label = (text, p, layer = 'ANNOTATIONS', height = 2.5) => {
+  const label = (text, p, layer = 'ANNOTATIONS', height = 2.5, centered = false) => {
     entity('TEXT', layer, 'AcDbText');
     point(10, p);
-    put(40, height, 1, dxfText(text), 50, 0, 100, 'AcDbText');
+    put(40, height, 1, dxfText(text), 50, 0);
+    if (centered) {
+      put(72, 1);
+      point(11, p);
+    }
+    put(100, 'AcDbText');
+    if (centered) put(73, 2);
   };
   function writeCurve(c, offset, layer) {
     const p = (v) => v.map((x, k) => x + offset[k]);
@@ -469,26 +644,41 @@ export function cadDrawingDxf(value, options = {}) {
       offset = [cursor - bounds.min[0], -bounds.min[1]],
       width = bounds.max[0] - bounds.min[0],
       height = bounds.max[1] - bounds.min[1],
+      viewScale = cadDrawingViewScale(view, sheet),
       layer = 'VIEW_' + (index + 1);
     for (const c of drawingOrder(view.projection.curves)) writeCurve(c, offset, layer);
     label(
-      { front: 'Vorderansicht', side: 'Seitenansicht', top: 'Draufsicht', section: 'Schnitt' }[view.kind],
+      view.kind === 'detail'
+        ? 'Detail ' +
+            String.fromCharCode(
+              65 + Math.max(0, sheet.views.filter((candidate) => candidate.kind === 'detail').indexOf(view)),
+            ) +
+            ' ' +
+            scaleLabel(viewScale)
+        : {
+            front: 'Vorderansicht',
+            side: 'Seitenansicht',
+            top: 'Draufsicht',
+            section: 'Schnitt',
+            exploded: 'Explosionsansicht',
+          }[view.kind],
       [cursor, height + 8],
       layer,
     );
     for (const a of sheet.annotations.filter((a) => a.kind !== 'label' && a.viewId === view.id)) {
-      const g = cadDrawingAnnotationGeometry(sheet, a),
+      const g = cadDrawingAnnotationGeometry(sheet, a, options),
         toModel = (p) => [
-          (p[0] - view.position[0]) / sheet.scale + offset[0],
-          -(p[1] - view.position[1]) / sheet.scale + offset[1],
+          (p[0] - view.position[0]) / viewScale + offset[0],
+          -(p[1] - view.position[1]) / viewScale + offset[1],
         ];
-      for (const [p, q] of g.lines) line(toModel(p), toModel(q), 'ANNOTATIONS');
+      const linetype = a.kind === 'centerline' ? 'CENTER' : false;
+      for (const [p, q] of g.lines) line(toModel(p), toModel(q), 'ANNOTATIONS', linetype);
       for (const arc of g.arcs)
         writeCurve(
           {
             kind: 'arc',
             center: toModel(arc.center),
-            radius: arc.radius / sheet.scale,
+            radius: arc.radius / viewScale,
             startAngle: -arc.startAngle,
             endAngle: -arc.endAngle,
             clockwise: !arc.clockwise,
@@ -496,9 +686,53 @@ export function cadDrawingDxf(value, options = {}) {
           [0, 0],
           'ANNOTATIONS',
         );
-      label(g.text, toModel(g.position));
+      if (a.kind === 'balloon') {
+        writeCurve({ kind: 'circle', center: toModel(g.position), radius: g.radius / viewScale }, [0, 0], 'ANNOTATIONS');
+        label(g.text, toModel(g.position), 'ANNOTATIONS', 3.5 / viewScale, true);
+      } else if (g.text) label(g.text, toModel(g.position));
     }
     cursor += width + 20;
+  }
+  if (sheet.partsList) {
+    const list = sheet.partsList,
+      [width, height] = cadDrawingPartsListSize(list),
+      [left, bottom] = list.position,
+      top = bottom - height,
+      titleBottom = top + CAD_DRAWING_PARTS_LIST_STYLE.titleHeight,
+      headerBottom = titleBottom + CAD_DRAWING_PARTS_LIST_STYLE.headerHeight,
+      paper = ([x, y]) => [x, -y],
+      paperLine = (a, b) => line(paper(a), paper(b), 'ANNOTATIONS'),
+      cells = (row, baseline) => {
+        let x = left;
+        for (const column of CAD_DRAWING_PARTS_LIST_COLUMNS) {
+          const value = row ? partsListCell(row, column.key) : column.label,
+            cellX =
+              column.align === 'middle'
+                ? x + column.width / 2 - value.length * 0.6
+                : x + 1.2;
+          label(value, paper([cellX, baseline]), 'ANNOTATIONS', row ? 2.5 : 2.6);
+          x += column.width;
+        }
+      };
+    paperLine([left, top], [left + width, top]);
+    paperLine([left + width, top], [left + width, bottom]);
+    paperLine([left + width, bottom], [left, bottom]);
+    paperLine([left, bottom], [left, top]);
+    paperLine([left, titleBottom], [left + width, titleBottom]);
+    paperLine([left, headerBottom], [left + width, headerBottom]);
+    let cursor = left;
+    for (const column of CAD_DRAWING_PARTS_LIST_COLUMNS.slice(0, -1)) {
+      cursor += column.width;
+      paperLine([cursor, titleBottom], [cursor, bottom]);
+    }
+    for (let index = 1; index < list.rows.length; index++) {
+      const y = headerBottom + index * CAD_DRAWING_PARTS_LIST_STYLE.rowHeight;
+      paperLine([left, y], [left + width, y]);
+    }
+    label(list.title, paper([left + width / 2 - list.title.length * 0.8, top + 4.8]), 'ANNOTATIONS', 3);
+    cells(null, titleBottom + 4.2);
+    for (const [index, row] of list.rows.entries())
+      cells(row, headerBottom + (index + 0.7) * CAD_DRAWING_PARTS_LIST_STYLE.rowHeight);
   }
   let labelY = -15;
   for (const a of sheet.annotations.filter((a) => a.kind === 'label')) {

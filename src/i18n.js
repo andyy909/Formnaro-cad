@@ -867,6 +867,35 @@ Wanddickenkarte|Wall thickness map
 Ansicht & Prüfen|View & Inspect
 Ansichten|Views
 Schnittansicht|Section view
+Bauteildefinition|Component definition
+Länge (lokale Z-Achse, mm)|Length (local Z axis, mm)
+Gemeinsame Länge ändern …|Change shared length …
+Verwendung lösen …|Detach placement …
+Teilenummer der gelösten Verwendung (optional)|Detached placement part number (optional)
+Bauteildefinition wird geprüft …|Checking component definition …
+Bauteildefinition übernommen.|Component definition applied.
+Vorschau bereit. Alle verknüpften Platzierungen behalten ihre Einbaulage.|Preview ready. Every linked placement keeps its installed position.
+Vorschau bereit. Die gewählte Platzierung erhält eine eigene Definition.|Preview ready. The selected placement receives its own definition.
+Eine vollständige Bauteilplatzierung wählen.|Select a complete component placement.
+Das gewählte Teil hat keine gemeinsame Bauteildefinition.|The selected part has no shared component definition.
+Eine Platzierung der Definition ist unterdrückt.|A placement of this definition is suppressed.
+Eine Platzierung der Definition ist ausgeblendet.|A placement of this definition is hidden.
+Gemeinsame Länge ist nur für einfache native Zylinder und Rohre verfügbar.|Shared length is available for simple native cylinders and tubes.
+Die Platzierungen haben unterschiedliche Nennlängen.|The placements use different nominal lengths.
+Länge zwischen 0,01 und 10 000 mm eingeben.|Enter a length between 0.01 and 10,000 mm.
+Eine andere Länge eingeben.|Enter a different length.
+Positionsballon|Item balloon
+Positionsballon · Bauteilkante anklicken|Item balloon · click a part edge
+Eine Kante des Bauteils anklicken. Die Nummer kommt aus der Stückliste auf dem Blatt.|Click a part edge. The number comes from the parts list on the sheet.
+Positionsballon: Bezug verloren|Item balloon: reference lost
+Zeichnung: Positionsballon: Bezug verloren. Platzierung, Ansicht und Stückliste prüfen oder den Ballon entfernen.|Drawing: Item balloon reference lost. Check the placement, view and parts list, or remove the balloon.
+Zeichnung: Zuerst eine Stückliste auf das Blatt setzen.|Drawing: Add a parts list to the sheet first.
+Zeichnung: Eine projizierte Kante mit eindeutigem Platzierungsbezug wählen.|Drawing: Choose a projected edge with an unambiguous placement reference.
+Explosionsansicht|Exploded view
+Für eine Explosionsansicht zuerst eine Montageansicht wählen.|Choose an assembly view first to add an exploded view.
+Zeichnung: Eine gespeicherte Explosionsdarstellung mit Abstand wird benötigt.|Drawing: A saved exploded arrangement with a positive distance is required.
+Zeichnung: Für die gewählten Quellen sind keine Explosionsrichtungen gespeichert.|Drawing: The selected sources have no saved explosion directions.
+Explosionsdarstellung geändert. Blatt aktualisieren.|The exploded arrangement changed. Update the sheet.
 Modell prüfen|Inspect model
 Vorlagen|Templates
 ☆ Favoriten|☆ Favorites
@@ -1170,6 +1199,7 @@ export function translateText(text, language) {
       [/^Linealursprung ([UVNXYZ])$/, (_, v) => 'Ruler origin ' + v],
       [/^(Breite|Tiefe|Höhe) direkt am Modell$/, (_, v) => EN[v] + ' on model'],
       [/^(Größe|Position|Drehung) ([XYZ])$/, (_, v, a) => EN[v] + ' ' + a],
+      [/^(.* · )(\d+) Platzierung(?:en)?$/, (_, prefix, count) => prefix + count + (count === '1' ? ' placement' : ' placements')],
       [/^(.*) hinzufügen$/, (_, v) => 'Add ' + translateText(v, language)],
       [
         /^(Körper|Loch) in der Modellhistorie bearbeiten$/,

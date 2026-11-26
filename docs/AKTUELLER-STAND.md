@@ -1,7 +1,13 @@
 # Öffentliche Windows-Ausgaben / Public Windows releases
 
-- [Formnaro 0.144.0-r1](#formnaro-01440-r1) – reguläre Ausgabe / stable release
+- [Formnaro 0.150.0-r2](#formnaro-01500-r2) – reguläre Ausgabe / stable release
 - [Windows Nightly 0.148.0-r5](#windows-nightly-01480-r5) – Vorabversion / pre-release
+
+## Formnaro 0.150.0-r2
+
+Direkte Skizzenmaße, Detail- und Baugruppenansichten in Zeichnungen sowie CAD-Profile aus bestätigten Fotokonturen. / Direct sketch dimensions, drawing detail and assembly views, and CAD profiles from confirmed photo contours.
+
+[GitHub Release](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.150.0-r2) · [Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip) · [SHA-256](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/SHA256SUMS.txt) · [Application sources / Programmquellen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-Quellcode-v0.150.0-r2.zip)
 
 ## Formnaro 0.144.0-r1
 

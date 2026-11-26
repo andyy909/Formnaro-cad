@@ -37,20 +37,21 @@ export function installSketchToolsUI({ s, controller, properties, fields, change
       fields();
       changed();
       if (s.sketch.version >= 3) void s.solveConstraints();
+      return true;
     } catch (error) {
       message(error.message, true);
+      return false;
     }
   }
+  const editLine = (operation) => apply(() => trimExtendSketch(s.sketch, operation));
   for (const mode of ['trim', 'extend'])
     $('sketch-' + mode).onclick = () =>
-      apply(() =>
-        trimExtendSketch(s.sketch, {
-          id: getId(),
-          cutterId: $('sketch-edit-cutter').value,
-          mode,
-          end: $('sketch-edit-end').value,
-        }),
-      );
+      editLine({
+        id: getId(),
+        cutterId: $('sketch-edit-cutter').value,
+        mode,
+        end: $('sketch-edit-end').value,
+      });
   $('sketch-mirror').onclick = () => {
     const loopId = $('sketch-edit-loop').value || null;
     apply(() => {
@@ -126,9 +127,7 @@ export function installSketchToolsUI({ s, controller, properties, fields, change
         row.append(span, input, button);
         direct.append(row);
       }
-    } catch {
-      /* The sketch editor remains available when direct dimension fields cannot be derived. */
-    }
+    } catch {}
   }
   function refresh() {
     const active = [2, 3, 4].includes(s.sketch.version);
@@ -153,5 +152,5 @@ export function installSketchToolsUI({ s, controller, properties, fields, change
     $('sketch-copy-label').hidden = !s.target;
     dimensions();
   }
-  return { refresh, dimensions, asCopy: () => $('sketch-as-copy').checked };
+  return { refresh, dimensions, editLine, asCopy: () => $('sketch-as-copy').checked };
 }

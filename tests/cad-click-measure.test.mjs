@@ -18,9 +18,51 @@ test('Mirrored rotated cylinder measures world millimetres and nonuniform scalin
   const affine=structuredClone(project);affine.nodes[0].transform=new Matrix4().makeScale(2,1,1).toArray();const h=m.pick({project:affine,ids:['c'],ray:ray([50,0,0],[-1,0,0])});assert.notEqual(h.surface.kind,'cylinder');
  }finally{service.dispose();}
 });
+test('Native oriented faces distinguish a 10 mm bore from the cylindrical outside',async()=>{
+ const service=createCadService({oc});
+ try{
+  const tube=service.nativeNode({type:'tube',size:[20,20,6],params:{wall:5}},{id:'tube'});
+  const project=await service.rebuild(createCadProject({nodes:[tube]}));
+  const measure=createCadClickMeasureNative({oc,service});
+  const pick=(origin,direction)=>measure.pick({project,ids:[tube.id],ray:ray(origin,direction)});
+  const bore=pick([0,0,0],[0,1,0]);
+  assert.equal(bore.surface.inner,true);
+  near(bore.surface.diameter,10);
+  const outside=pick([0,50,0],[0,-1,0]);
+  assert.equal(outside.surface.inner,false);
+  near(outside.surface.diameter,20);
+  const top=pick([0,7,50],[0,0,-1]),bottom=pick([0,7,-50],[0,0,1]);
+  assert.equal(top.surface.kind,'plane');
+  near(measure.distance({project,from:top,to:bottom}).distance,6);
+  near(measure.distance({project,from:top,to:outside}).distance,0);
+ }finally{service.dispose();}
+});
 test('Two clicked trimmed faces measure their shortest distance, including faces within one body',async()=>{
  const service=createCadService({oc});try{const n=service.nativeNode({type:'box',size:[20,30,40]},{id:'box'}),project=await service.rebuild(createCadProject({nodes:[n]})),m=createCadClickMeasureNative({oc,service}),from=m.pick({project,ids:['box'],ray:ray([-50,2,3],[1,0,0])}),to=m.pick({project,ids:['box'],ray:ray([50,2,3],[-1,0,0])}),r=m.distance({project,from,to});near(r.distance,20);near(Math.hypot(...r.to.map((v,k)=>v-r.from[k])),20);near(m.distance({project,from,to:from}).distance,0);
   assert.throws(()=>m.distance({project,from:{objectId:'box',faceIndex:999},to}),/fehlt/);assert.throws(()=>m.pick({project,ids:['box','box'],ray:ray([50,0,0],[-1,0,0])}),/Ungültige/);
+ }finally{service.dispose();}
+});
+test('Wall sampling accepts an uninterrupted normal path and keeps air gaps as distances',async()=>{
+ const service=createCadService({oc});
+ try{
+  const plate=service.nativeNode({type:'box',size:[20,20,6]},{id:'plate'});
+  const tube=service.nativeNode({type:'tube',size:[20,20,6],params:{wall:5}},
+    {id:'tube',transform:new Matrix4().makeTranslation(40,0,0).toArray()});
+  const block=service.nativeNode({type:'box',size:[20,20,6]},
+    {id:'block',transform:new Matrix4().makeTranslation(0,0,12).toArray()});
+  const project=await service.rebuild(createCadProject({nodes:[plate,tube,block]}));
+  const measure=createCadClickMeasureNative({oc,service});
+  const pick=(id,origin,direction)=>measure.pick({project,ids:[id],ray:ray(origin,direction)});
+  const distance=(from,to)=>measure.distance({project,from,to,wallEntry:{point:from.point,normal:from.normal}});
+  const top=pick('plate',[0,1,8],[0,0,-1]),bottom=pick('plate',[0,1,-8],[0,0,1]);
+  near(distance(top,bottom).thickness.value,6);
+  const air=distance(top,pick('block',[0,1,6],[0,0,1]));
+  near(air.distance,6);
+  assert.equal(air.thickness,null);
+  const inner=pick('tube',[40,0,0],[0,1,0]),outer=pick('tube',[40,20,0],[0,-1,0]);
+  near(distance(inner,outer).thickness.value,5);
+  const cap=pick('tube',[40,7,8],[0,0,-1]);
+  assert.equal(distance(inner,cap).thickness,null);
  }finally{service.dispose();}
 });
 test('Nearest CAD surface wins and ambiguous edge hits fail clearly',async()=>{

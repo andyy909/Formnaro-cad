@@ -3387,3 +3387,6 @@ https://github.com/pyodide/pyodide/tree/314.0.7
 Offline scientific Python libraries: NumPy, SciPy, Shapely/GEOS, Trimesh, Matplotlib, SymPy, NetworkX and dependencies. Exact versions, pinned distribution SHA256 and complete bundled notices: licenses/analysis-python/README.txt and python-runtime/packages/manifest.json. Runtime package installation and host access are not exposed to AI scripts.
 
 Sicherheitsaktualisierung 0.103.1: Die lokale Analyse verwendet Pillow 13.0.0 und setuptools 84.2.1. Vollständige aktualisierte Lizenztexte einschließlich LibWebP 1.6.0, LibTIFF 4.7.2 sowie Emscripten-Ports (FreeType, libjpeg, libpng, zlib) unter licenses/analysis-python/security-pillow-13/. Der separate native Konverter enthält aktuelle Paketmetadaten und Lizenztexte unter resources/converter/Lizenzen. Buildrezepte und Quell-SHAs: python-runtime/security-pillow/.
+qrcode-generator 2.0.4: local QR invitation encoding in the PC companion.
+Copyright (c) 2009 Kazuhiko Arase. MIT. License notice in the distributed package.
+https://github.com/kazuhikoarase/qrcode-generator

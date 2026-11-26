@@ -14,7 +14,7 @@ function temporary(t){
 }
 test('Portable package contains every pinned renderer source needed by all frozen benchmark suites',t=>{
  const source=fileURLToPath(new URL('../',import.meta.url)),stage=temporary(t),copied=copyBenchmarkSources(source,stage);
- assert.deepEqual(copied.sort(),['cad-agent-ui-policy','cad-ai-analysis','cad-ai-result-checks','cad-bore-check-native','cad-drill-stock-native','cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref','cad-practice-controls','cad-practice-model-ui','cad-service'].map(n=>'src/'+n+'.js').sort());
+ assert.deepEqual(copied.sort(),['cad-agent-ui-policy','cad-ai-analysis','cad-ai-result-checks','cad-bore-check-native','cad-drill-stock-native','cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref','cad-part-properties','cad-practice-controls','cad-practice-model-ui','cad-service','mesh-appearance'].map(n=>'src/'+n+'.js').sort());
  for(const suite of ['benchmark-core-v1.json','benchmark-advanced-v2.json','benchmark-guided-v1.json'])for(const entry of JSON.parse(fs.readFileSync(path.join(source,'ai',suite))).dependencies.filter(e=>e.path.startsWith('src/'))){
   const bytes=fs.readFileSync(path.join(stage,entry.path));assert.deepEqual(bytes,fs.readFileSync(path.join(source,entry.path)));assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.sha256);
  }

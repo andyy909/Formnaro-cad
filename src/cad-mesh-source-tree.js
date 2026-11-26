@@ -103,9 +103,9 @@ export function meshSourceTree(root, { geometry = true } = {}) {
   return items;
 }
 
-export function meshSourceAtPath(root, path) {
+export function meshSourceAtPath(root, path, options) {
   if (!Array.isArray(path)) throw Error('Ungültiger Netzquellenpfad.');
-  const entry = meshSourceTree(root).find((item) => item.key === JSON.stringify(path));
+  const entry = meshSourceTree(root, options).find((item) => item.key === JSON.stringify(path));
   if (!entry) throw Error('Gespeicherte Netzquelle ist nicht mehr vorhanden.');
   return entry;
 }

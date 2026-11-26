@@ -434,6 +434,51 @@ def _seam_edge(points,surface,other_surface,first,last):
     return edge
 
 
+def _graph_wall_edge(points, surface, graph, plane, first, last, numeric, tolerance):
+    """Edge between a freeform height graph and a wall plane through its frame.
+
+    The graph surface is parametrised linearly in its frame plane, so a wall
+    whose normal lies in that plane cuts the surface along a straight parameter
+    line. That line is the exact pcurve; the 3D curve follows from the surface
+    itself. Approximating the pcurve afterwards from a numerically intersected
+    3D curve left residuals above the 1e-7 mm edge tolerance that survive no
+    STEP round trip. Returns None when the wall does not qualify.
+    """
+    import cadquery as cq
+    from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeEdge
+    from OCP.BRepLib import BRepLib
+    from OCP.BRep import BRep_Tool
+    from OCP.Geom2d import Geom2d_Line
+    from OCP.gp import gp_Pnt2d, gp_Dir2d
+    if abs(float(np.dot(plane['normal'], graph['normal']))) > 1e-6:
+        return None
+    origin = np.asarray(graph['origin']); bounds = np.asarray(graph['xy_bounds'])
+    span = bounds[1]-bounds[0]
+    def parameters(point):
+        local = np.asarray(point)-origin
+        return (np.array([local@np.asarray(graph['basis_x']), local@np.asarray(graph['basis_y'])])-bounds[0])/span
+    uv = np.array([parameters(p) for p in points])
+    uv[0] = parameters(first.toTuple()); uv[-1] = parameters(last.toTuple())
+    direction = uv[-1]-uv[0]; length = float(np.linalg.norm(direction))
+    if length < 1e-9:
+        return None
+    direction /= length
+    offset = uv-uv[0]
+    if np.max(np.abs(offset[:,0]*direction[1]-offset[:,1]*direction[0])*np.min(span)) > numeric*4:
+        return None
+    line = Geom2d_Line(gp_Pnt2d(*map(float,uv[0])), gp_Dir2d(*map(float,direction)))
+    maker = BRepBuilderAPI_MakeEdge(line, surface, first.wrapped, last.wrapped, 0., length)
+    if not maker.IsDone() or not BRepLib.BuildCurve3d_s(maker.Edge(), 1e-9):
+        return None
+    edge = cq.Edge(maker.Edge())
+    curve = BRep_Tool.Curve_s(edge.wrapped, 0., 0.)
+    midpoints = (np.asarray(points)[:-1]+np.asarray(points)[1:])/2
+    _, errors = _projection(curve, midpoints)
+    if np.max(errors) > tolerance*.45 or abs(float(surface_distance(plane, np.array([curve.Value(t).Coord() for t in np.linspace(curve.FirstParameter(), curve.LastParameter(), 9)])).max())) > numeric*16:
+        return None
+    return edge
+
+
 def _intersection_edge(mesh, chain, models, surfaces, vertices, numeric, tolerance):
     import cadquery as cq
     from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeEdge
@@ -455,6 +500,11 @@ def _intersection_edge(mesh, chain, models, surfaces, vertices, numeric, toleran
                 return cq.Edge(maker.Edge())
     if _same_primitive(models[a],models[b],numeric):
         return _seam_edge(points,surfaces[a],surfaces[b],first,last)
+    for graph_owner,plane_owner in ((a,b),(b,a)):
+        if models[graph_owner]['type']=='GRAPH' and models[plane_owner]['type']=='PLANE':
+            wall = _graph_wall_edge(points,surfaces[graph_owner],models[graph_owner],models[plane_owner],first,last,numeric,tolerance)
+            if wall is not None:
+                return wall
     choices = []
     for owner in (a,b):
         if models[owner]['type']!='REVOLUTION':continue
@@ -533,6 +583,36 @@ def _loops(mesh, indices):
         loops.append(nodes)
     return loops
 
+
+def _pcurve_deviation(shape, samples=129):
+    """Largest distance between each edge's 3D curve and its pcurve on a face.
+
+    ShapeFix_Edge.FixAddPCurve approximates pcurves on freeform surfaces and
+    leaves the edge tolerance untouched. isValid() accepts such residuals, but
+    OpenCASCADE's extended check and boolean follow-up operations reject them as
+    BOPAlgo_InvalidCurveOnSurface. A raised tolerance would not survive the STEP
+    round trip (the STEP uncertainty is 1e-7 mm), so the deviation must be
+    removed by construction or refused. Read-only measurement.
+    """
+    from OCP.BRep import BRep_Tool
+    from OCP.BRepAdaptor import BRepAdaptor_Curve, BRepAdaptor_Curve2d, BRepAdaptor_Surface
+    ts = np.linspace(0.0, 1.0, samples)
+    worst = dict(excess_mm=-1.0, deviation_mm=0.0, tolerance_mm=0.0, face_type=None)
+    for face in shape.Faces():
+        surface = BRepAdaptor_Surface(face.wrapped)
+        for edge in face.Edges():
+            curve3d = BRepAdaptor_Curve(edge.wrapped)
+            curve2d = BRepAdaptor_Curve2d(edge.wrapped, face.wrapped)
+            first = max(curve3d.FirstParameter(), curve2d.FirstParameter())
+            last = min(curve3d.LastParameter(), curve2d.LastParameter())
+            deviation = 0.0
+            for t in first + (last-first)*ts:
+                uv = curve2d.Value(float(t))
+                deviation = max(deviation, curve3d.Value(float(t)).Distance(surface.Value(uv.X(), uv.Y())))
+            tolerance = BRep_Tool.Tolerance_s(edge.wrapped)
+            if deviation-tolerance > worst['excess_mm']:
+                worst = dict(excess_mm=deviation-tolerance, deviation_mm=deviation, tolerance_mm=tolerance, face_type=face.geomType())
+    return worst
 
 def _fix_freeform_trims(shape, numeric):
     """Harmonize native trim curves without sewing or changing topology.
@@ -680,6 +760,7 @@ def advanced_region_shape(mesh, tolerance, progress=None, analysis=None, *, canc
         if face.geomType()=='PLANE':
             for edge in face.Edges():BRepLib.BuildPCurveForEdgeOnPlane_s(edge.wrapped,face.wrapped)
     BRepLib.SameParameter_s(shape.wrapped,1e-7,True)
+    pcurve = _pcurve_deviation(shape)
     max_tol=max(BRep_Tool.Tolerance_s(e.wrapped) for e in shape.Edges())
     if max_tol>numeric*16:raise ValueError(f'Analytische Randtoleranz zu groß: {max_tol:g}')
     trim_repair = None

@@ -18,7 +18,7 @@ function fixture(t,outcome,{performance,clock}={}){
   if(outcome==='forced')hostSetTimeout(()=>child.emit('exit',null,'SIGTERM'),1);
  };
  return {...openDiagnosticFixture(t,{
-  spawn:()=>child,executable:'test.exe',directory:'isolated',performance,clock,normal:12,grace:40,forced:8
+  spawn:()=>child,executable:'test.exe',performance,clock,normal:12,grace:40,forced:8
  }),child};
 }
 test('normal OS exit is observed and never forced',async t=>{const f=fixture(t,'normal'),r=await f.control.close();assert.equal(r.code,0);assert.equal(r.signal,null);assert.equal(f.child.killed,false);assert(f.delays.includes(30000));});

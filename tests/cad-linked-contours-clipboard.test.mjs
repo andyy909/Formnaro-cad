@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {captureCadLinkedClipboard,insertCadLinkedClipboard} from '../src/cad-linked-contours-clipboard.js';
 import {stampCadContourLink,cadContourLinkProblems} from '../src/cad-linked-contours-data.js';
-import {createCadProjectParameters,stampCadProjectParameters} from '../src/cad-project-parameters-data.js';
+import {cadProjectParameterProblems,createCadProjectParameters,stampCadProjectParameters} from '../src/cad-project-parameters-data.js';
 
 const identity=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],address=(rootId,path=[])=>({rootId,path}),profile=()=>({elements:[{id:'rim',type:'circle',center:[0,0],diameter:20}],loops:[{id:'outer',role:'outer',elements:['rim']}]}),body=id=>({id,kind:'cad',source:'native',solid:true,layerId:'default',folderId:null,recipe:{type:'cylinder',size:[20,20,10]},brep:{data:'unchanged cylinder'},transform:identity(),stats:{bounds:{min:[-10,-10,0],max:[10,10,10]}}});
 function fixture(nested=false){const source=body('source'),target={...body('target'),recipe:{type:'sketch',size:[20,20,2],sketch:{version:2,kind:'profile',variables:[{name:'height',value:'2'}],dimensions:{height:'height'},...profile()}}};target.transform[14]=10;const group={...body('group'),source:'group',operation:'union',children:[source,target],transform:[-1.2,0,0,0,.3,1.1,0,0,.2,.1,1.4,0,50,-10,5,1]};delete group.recipe;const project={version:14,nodes:nested?[group]:[source,target],layers:[{id:'default',hidden:false,locked:false}],folders:[],activeLayerId:'default',activeFolderId:null},link={id:'link',source:address(nested?'group':'source',nested?['source']:[]),target:address(nested?'group':'target',nested?['target']:[]),selector:{kind:'native-role',role:'cylinder.cap.max'}};project.contourLinks={version:1,links:[stampCadContourLink(project,link,{profile:profile(),faceFrame:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,10,1],elementMap:[{id:'rim',sourceKey:'cylinder.edge.cap.max'}]})]};return project;}
@@ -26,4 +26,47 @@ test('cross-project target-only paste captures upstream geometry and fresh globa
 test('ancestor plus descendant selection is normalized once and plain geometry keeps its old metadata shape',()=>{
  const original=fixture(true),captured=captureCadLinkedClipboard(original,[address('group',['target']),address('group')],{scope:'one'});assert.deepEqual(captured.targets,[address('group')]);const draft=structuredClone(original);insertCadLinkedClipboard(draft,captured,{scope:'one'});assert.equal(draft.nodes.length,2);assert.equal(draft.contourLinks.links.length,2);assert.deepEqual(cadContourLinkProblems(draft),[]);
  const plain={...original,nodes:[body('plain')]};delete plain.contourLinks;const clipboard=captureCadLinkedClipboard(plain,[address('plain')],{scope:'one'}),host={...plain,nodes:[]};insertCadLinkedClipboard(host,clipboard,{scope:'different'});assert.equal(host.nodes.length,1);assert.equal(host.contourLinks,undefined);assert.equal(host.projectParameters,undefined);
+});
+
+test('cross-project paste confirms matching incoming bindings while a prior host binding is stale',()=>{
+ const original=fixture();
+ original.nodes[0].locked=true;
+ const parameters=id=>({...createCadProjectParameters(),parameters:[{id:'width',name:'width',value:20}],
+  bindings:[{id:'binding',parameterId:'width',target:address(id),field:'size.0'}]});
+ original.projectParameters=stampCadProjectParameters(original,parameters('source'));
+ const draft={...original,nodes:[body('host')]};
+ delete draft.contourLinks;
+ draft.projectParameters=stampCadProjectParameters(draft,parameters('host'));
+ draft.nodes[0].transform[0]=1.1;
+ const prior=cadProjectParameterProblems(draft);
+ assert.deepEqual(prior.map(problem=>problem.bindingId),['binding']);
+ const copied=captureCadLinkedClipboard(original,[address('target')]);
+ const insertion=insertCadLinkedClipboard(draft,copied,{scope:'host',offset:[0,0,0]});
+ assert.equal(insertion.parameterNames.get('width'),'width_2');
+ assert.deepEqual(cadProjectParameterProblems(draft),prior);
+ const sourceId=draft.contourLinks.links[0].source.rootId;
+ assert.equal(draft.nodes.find(node=>node.id===sourceId).locked,true);
+ assert.ok(draft.projectParameters.applied.inputs.some(input=>
+  input.bindingId===draft.projectParameters.bindings.find(binding=>binding.target.rootId===sourceId).id));
+});
+
+test('cross-project paste keeps confirmed unrelated FreeCAD inputs',()=>{
+ const original=fixture(),host=body('freecad-host');
+ host.source='step';
+ host.metadata={freecadSource:{script:{version:1,code:'result = None',parameters:{width:30}}}};
+ const addressHost=address(host.id);
+ const draft={...original,nodes:[host]};
+ delete draft.contourLinks;
+ draft.projectParameters=stampCadProjectParameters(draft,{...createCadProjectParameters(),version:2,
+  parameters:[{id:'width',name:'width',value:30}],
+  bindings:[{id:'binding',parameterId:'width',target:addressHost,field:'freecad.parameters.width'}],
+  freecad:[{target:addressHost,inputs:[]}]},{freecadTargets:[addressHost]});
+ const proof=draft.projectParameters.applied.inputs[0];
+ original.projectParameters=stampCadProjectParameters(original,{...createCadProjectParameters(),
+  parameters:[{id:'width',name:'width',value:20}],
+  bindings:[{id:'binding',parameterId:'width',target:address('source'),field:'size.0'}]});
+ const insertion=insertCadLinkedClipboard(draft,captureCadLinkedClipboard(original,[address('target')]),{scope:'host',offset:[0,0,0]});
+ assert.equal(insertion.parameterNames.get('width'),'width_2');
+ assert.deepEqual(draft.projectParameters.applied.inputs[0],proof);
+ assert.deepEqual(cadProjectParameterProblems(draft),[]);
 });

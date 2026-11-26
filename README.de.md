@@ -16,14 +16,14 @@ Formnaro ist portabel unter Windows x64. Die Modellierung funktioniert offline.
 
 | Version | Inhalt | Download |
 | --- | --- | --- |
-| **0.144.0-r1** · reguläre Ausgabe | Entwicklungschecks und Nachweise im KI-Labor | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-v0.144.0-r1-Windows-x64.zip)** · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.144.0-r1) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/SHA256SUMS.txt) |
+| **0.150.0-r2** · reguläre Ausgabe | Direkte Skizzenmaße, Detail- und Baugruppenansichten in Zeichnungen und Foto-Konturen für CAD-Profile | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip)** · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.150.0-r2) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/SHA256SUMS.txt) |
 | **0.148.0-r5** · Windows Nightly | Tablet-Kopplung, direkter Teiletransfer mit Android-Pilot 35 r32 und Korrektur der Orca-3MF-Naht | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip)** · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.148.0-r5) · [SHA-256-Prüfsummen](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/SHA256SUMS.txt) |
 
 ### Quellarchive
 
 | Version | Formnaro | FreeCAD | CAD-Kern |
 | --- | --- | --- | --- |
-| **0.144.0-r1** | [Formnaro](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-Quellcode-v0.144.0-r1.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD-Kern](https://github.com/andyy909/Formnaro-cad/releases/download/v0.144.0-r1/Formnaro-CAD-Quellen.zip) |
+| **0.150.0-r2** | [Formnaro](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-Quellcode-v0.150.0-r2.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD-Kern](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-CAD-Quellen.zip) |
 | **0.148.0-r5** | [Formnaro](https://github.com/andyy909/Formnaro-cad/archive/refs/tags/v0.148.0-r5.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD-Kern](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-CAD-Quellen.zip) |
 
 Formnaro startet mit leerer Arbeitsfläche. Die Startseite zeigt drei mitgelieferte Beispiele, bis zu drei zuletzt verwendete Projekte und bei vorhandener Autosicherung eine eigene Wiederherstellungsschaltfläche. [Windows-Ausgaben und Abnahme](docs/AKTUELLER-STAND.md)

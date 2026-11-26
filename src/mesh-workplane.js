@@ -217,7 +217,7 @@ export function synchronizeMeshWorkplane(project, baseline) {
       project.workplane,
       project.nodes.find((n) => n.id === reference.objectId),
     );
-  } catch {
+  } catch (error) {
     detached = true;
     let previous = project.workplane;
     if (

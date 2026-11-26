@@ -17,7 +17,7 @@ import { eraseFillSelectedMesh, validateMeshEraseFillOptions, MESH_ERASE_FILL_LI
 import { sculptMesh, validateMeshSculptOptions } from './mesh-sculpt.js';
 import { smoothSelectedMesh, validateMeshSmoothOptions, MESH_SMOOTH_LIMIT } from './mesh-smooth.js';
 import { reduceCurvedMesh } from './mesh-curved-reduce.js';
-import { reduceLargeMesh, largeMeshCatalog } from './mesh-large-reduce.js';
+import { reduceLargeMesh, largeMeshCatalog, validateLargeMeshReduceOptions } from './mesh-large-reduce.js';
 import { reducePlanarMesh, validateMeshReduceOptions } from './mesh-reduce.js';
 import { remeshPlanarMesh, validateMeshRemeshOptions } from './mesh-remesh.js';
 import {
@@ -31,6 +31,7 @@ import { fillPlanarHole, holeFillCatalog } from './mesh-hole-fill.js';
 import { keepMeshAppearance } from './mesh-appearance.js';
 import { repairSimpleTopology, simpleRepairCatalog } from './mesh-simple-repair.js';
 import { buildMeshSelectionTopology, meshSelectionGeometryDigest, queryMeshSelection } from './mesh-selection-data.js';
+import { OUTER_SKIN_BUDGET_MM, OUTER_SKIN_METHOD, evaluateOuterSkin } from './mesh-outer-skin.js';
 import { meshProtectionRegions } from './mesh-protection.js';
 import { inspectMeshTopology } from './mesh-inspector.js';
 import * as THREE from 'three';
@@ -68,6 +69,74 @@ import { meshWorkplaneGeometryDigest, resolveMeshWorkplane, synchronizeMeshWorkp
 import { CAD_QUALITY_DEFAULTS } from './cad-quality.js';
 import { defaultLayout } from './layout-preferences.js';
 import { validateCadWorkspace } from './cad-workspace.js';
+
+/** One 24k-point outer-skin admission run for a local repair. The exact
+ * thresholds and the reference method stay in mesh-outer-skin.js. */
+export const LOCAL_REPAIR_OUTER_SKIN = Object.freeze({
+  samples: Object.freeze([24000]),
+  budgetMm: OUTER_SKIN_BUDGET_MM,
+});
+
+const outerSkinPoint = (points, choose) =>
+  (points ?? []).reduce((best, entry) => (!best || choose(entry) > choose(best) ? entry : best), null);
+
+/**
+ * Runs the released outer-skin comparison (original ↔ candidate) and blocks a
+ * candidate above the fixed 0.15 mm budget. Returns the full evidence for the
+ * preview report; the values are not persisted (see Q02-P return).
+ */
+export function admitLocalRepairOuterSkin(
+  original,
+  candidate,
+  { samples = LOCAL_REPAIR_OUTER_SKIN.samples, budget = LOCAL_REPAIR_OUTER_SKIN.budgetMm } = {},
+) {
+  const started = performance.now();
+  const skin = evaluateOuterSkin({ original, candidate, samples: [...samples], budget });
+  const durationMs = Math.round(performance.now() - started);
+  const run = skin.runs[0];
+  const decided = skin.decidedBy === 'raw' ? run.raw : run.skin;
+  const location = outerSkinPoint(decided.worstPoints, (entry) => entry.sampledMm)?.point ?? null;
+  const report = {
+    method: OUTER_SKIN_METHOD,
+    budgetMm: budget,
+    samples: [...samples],
+    seed: skin.seed,
+    decidedBy: skin.decidedBy,
+    passed: skin.passed,
+    durationMs,
+    skin: {
+      originalToCandidateMm: run.skin.maximum,
+      candidateToOriginalMm: run.skin.reverse,
+      maximumMm: run.skin.worst,
+      meanMm: run.skin.mean,
+      skippedInsideMaterial: run.skin.skippedInsideMaterial,
+    },
+    raw: {
+      originalToCandidateMm: run.raw.maximum,
+      candidateToOriginalMm: run.raw.reverse,
+      maximumMm: run.raw.worst,
+      meanMm: run.raw.mean,
+    },
+    excludedFaces: skin.report.excludedFaces,
+    excludedAreaMm2: skin.report.excludedArea,
+    excludedBounds: skin.report.excludedBounds,
+    originalDigest: meshSelectionGeometryDigest(original),
+    resultDigest: meshSelectionGeometryDigest(candidate),
+    worstLocation: location,
+    probe: { samplePointsPerDirection: run.samples, seed: skin.seed, exactWorstChecked: run.skin.exactWorstChecked },
+  };
+  if (!skin.passed) {
+    const place = location ? ` bei (${location.map((v) => v.toFixed(3)).join('; ')}) mm` : '';
+    const amount = decided.worst.toLocaleString('de-DE', { maximumFractionDigits: 4 });
+    throw Object.assign(
+      Error(
+        `Außenhautprüfung nicht bestanden: ${amount} mm${place} überschreiten das Budget von ${budget.toLocaleString('de-DE')} mm. Die Übernahme bleibt blockiert.`,
+      ),
+      { code: 'MESH_OUTER_SKIN_BUDGET', report },
+    );
+  }
+  return report;
+}
 
 export function createMeshEngineAdapter({ kernel } = {}) {
   if (!kernel?.Manifold) throw TypeError('Netz-Rechenkern fehlt.');
@@ -409,6 +478,31 @@ export function createMeshEngineAdapter({ kernel } = {}) {
       scaled?.delete();
     }
   }
+  function assertGroupRetessellation(original, candidate) {
+    const before = original.boundingBox(),
+      after = candidate.boundingBox(),
+      distanceTolerance = Math.max(1e-9, original.tolerance()),
+      volumeTolerance = Math.max(1e-9, original.volume() * 1e-6);
+    let added, removed;
+    try {
+      added = candidate.subtract(original);
+      removed = original.subtract(candidate);
+      if (
+        ['min', 'max'].some((key) =>
+          before[key].some((coordinate, axis) => Math.abs(coordinate - after[key][axis]) > distanceTolerance),
+        ) ||
+        [added, removed].some((difference) => {
+          const volume = difference.volume();
+          return difference.status() !== 'NoError' || !Number.isFinite(volume) || Math.abs(volume) > volumeTolerance;
+        })
+      )
+        throw Error('Die Netzbereinigung würde die erzeugte Gruppengeometrie verändern.');
+    } finally {
+      added?.delete();
+      removed?.delete();
+    }
+  }
+
   function commonFromLegacy(legacy, template, transform = matrixArray(legacy)) {
     const m = localManifold(legacy);
     try {
@@ -428,17 +522,32 @@ export function createMeshEngineAdapter({ kernel } = {}) {
             smallTriangleLimit: 0,
             removeComponents: [],
           });
-        if (meshTopologyClass(fixed.mesh).type !== 'closedMesh')
+        let candidate = fixed.mesh;
+        const retessellate = meshTopologyClass(candidate).type !== 'closedMesh' && legacy.type === 'group';
+        if (retessellate) {
+          // A normalized group can retain coplanar zero-area facets that
+          // deletion alone would turn into a seam. Use the kernel's existing
+          // tolerance to retriangulate and verify the resulting material.
+          const simplified = m.simplify();
+          try {
+            candidate = meshData(positive(simplified));
+          } finally {
+            simplified.delete();
+          }
+        }
+        if (meshTopologyClass(candidate).type !== 'closedMesh')
           throw Error('Die erzeugte Netzform konnte nicht als geschlossener Körper geprüft werden.');
-        const checked = fromMesh(fixed.mesh);
+        const checked = fromMesh(candidate);
+
         try {
           positive(checked);
+          if (retessellate) assertGroupRetessellation(m, checked);
           if (Math.abs(checked.volume() - m.volume()) > Math.max(1e-9, Math.abs(m.volume()) * 1e-6))
             throw Error('Die Netzbereinigung würde das erzeugte Volumen verändern.');
         } finally {
           checked.delete();
         }
-        mesh = fixed.mesh;
+        mesh = candidate;
       }
       return {
         ...structuredClone(template),
@@ -492,13 +601,19 @@ export function createMeshEngineAdapter({ kernel } = {}) {
   }
   function simpleRepair(source, options) {
     const topology = buildMeshSelectionTopology(source.mesh),
-      fixed = repairSimpleTopology(topology, options),
+      fixed = repairSimpleTopology(topology, options, { buildTopology: buildMeshSelectionTopology }),
       counts = (t) =>
         Object.fromEntries(
           Object.entries(inspectMeshTopology(t, { smallTriangleLimit: options.smallTriangleLimit }).categories).map(
             ([k, c]) => [k, c.count],
           ),
         );
+    // A confirmed local seam repair has to prove the released outer skin before
+    // any preview is offered. Without a seam repair the previous path is kept.
+    const outerSkin =
+      (options.repairPlanarSeam || options.repairPlanarSeams) && fixed.report.repairedPlanarSeams
+        ? admitLocalRepairOuterSkin(source.mesh, fixed.mesh)
+        : null;
     const node = {
       id: source.id,
       name: source.name,
@@ -517,6 +632,7 @@ export function createMeshEngineAdapter({ kernel } = {}) {
         before: counts(topology),
         after: counts(buildMeshSelectionTopology(fixed.mesh)),
         solidProven: false,
+        outerSkin,
       },
     };
   }

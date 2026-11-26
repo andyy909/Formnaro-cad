@@ -21,6 +21,12 @@ export function createRecoveryActions({
     recoveryFailure = null;
   let closeRecoveryPending = false,
     recoveryTimer;
+  // An untouched startup window must never replace an older recovery file.
+  // Once this session has written recovery data itself, the file belongs to
+  // this session and an Undo back to the startup state must be persisted too.
+  let sessionWroteRecovery = false;
+  const protectsStartupRecovery = () =>
+    !sessionWroteRecovery && controller.revision() === runtime.startupEmptyRevision;
 
   function recoveryData(state = workspace()) {
     return recovery.packageMode() ? { ...project(), workspace: state } : serializeWorkspace(state);
@@ -55,6 +61,7 @@ export function createRecoveryActions({
     updateSaveState(identity.workspaceKey);
     try {
       const saved = await submitRecovery(state, confirmedOnly);
+      if (saved) sessionWroteRecovery = true;
       if (saved && !confirmedOnly && controller.projectScope() === ticket.scope) recoveryWritten = ticket;
       if (!saved && recovery.blocked()) throw Error('Autosicherung ist gesperrt. Projekt bitte manuell speichern.');
       return saved;
@@ -79,7 +86,7 @@ export function createRecoveryActions({
         !runtime.autosave ||
         runtime.startupRecoveryFailed ||
         recovery.blocked() ||
-        controller.revision() === runtime.startupEmptyRevision
+        protectsStartupRecovery()
       )
         return;
       const { key } = identity;
@@ -100,7 +107,7 @@ export function createRecoveryActions({
   }
 
   async function flushOnClose() {
-    if (!window.__cadReady || !runtime.autosave || controller.revision() === runtime.startupEmptyRevision) return true;
+    if (!window.__cadReady || !runtime.autosave || protectsStartupRecovery()) return true;
     if (runtime.startupRecoveryFailed || recovery.blocked()) {
       if ([runtime.cleanRevision, runtime.savedRevision].includes(controller.revision())) return true;
       toast('Die bisherige Autosicherung bleibt erhalten. Projekt bitte vor dem Schließen manuell speichern.');
@@ -139,7 +146,7 @@ export function createRecoveryActions({
   function saveOnUnload() {
     if (
       window.__cadReady &&
-      controller.revision() !== runtime.startupEmptyRevision &&
+      !protectsStartupRecovery() &&
       runtime.autosave &&
       !runtime.startupRecoveryFailed &&
       !window.offlinecadDesktop?.changeRecoveryData

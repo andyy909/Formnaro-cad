@@ -3,7 +3,8 @@ import {resolveSketch} from '../src/mesh-engine/mesh-sketch.js';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {resolveSketchProfile,profilePrimitive,appendProfileLoop} from '../src/sketch-profile.js';
 import {sketchExpression} from '../src/sketch-expression.js';
-import {dimensionSketchElement,sketchElementDimensions,editSketchCoordinate,mirrorSketch,trimExtendSketch,installOffsetContour} from '../src/sketch-tools.js';
+import {dimensionSketchElement,sketchElementDimensions,editSketchCoordinate,mirrorSketch,trimExtendSketch,installOffsetContour,pickSketchEditElement} from '../src/sketch-tools.js';
+import {upgradeSketchConstraints} from '../src/sketch-constraints-data.js';
 import {offsetSketchContour} from '../src/sketch-offset-native.js';
 import load from '../cad-kernel-build/runtime/formnaro_cad.js';
 const resolve=s=>resolveSketchProfile(s,sketchExpression),geom=s=>resolveSketchProfile(s,sketchExpression,{geometryOnly:true}),near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} vs ${b}`);
@@ -13,6 +14,29 @@ test('Length and angle anchor start, propagate shared ends and retain variable f
 test('Coordinate editing retains symbolic shared endpoints, circle radius anchors center',()=>{let s=plate(),id=s.elements[0].id;s=editSketchCoordinate(s,id,'end',0,'long+5');near(geom(s).elements[1].start[0],65);s=appendProfileLoop(s,[{id:'circle',type:'circle',center:[20,20],diameter:4}]);s=dimensionSketchElement(s,'circle','radius','3');near(resolve(s).area,2500-9*Math.PI);assert.deepEqual(s.elements.at(-1).center,[20,20]);});
 test('Mirror creates independent editable IDs and reflects arcs without moving original',()=>{let s=plate();s=appendProfileLoop(s,profilePrimitive('slot',[10,15],[28,21]));const old=structuredClone(s),loop=s.loops.at(-1),mirrored=mirrorSketch(s,{loopId:loop.id,axis:'y',offset:30});assert.deepEqual(s,old);assert.equal(mirrored.loops.length,3);near(resolve(mirrored).area,2400-2*(12*6+9*Math.PI));assert.equal(new Set(mirrored.elements.map(e=>e.id)).size,mirrored.elements.length);});
 test('Trim and extend lines/circles/arcs use real intersections; open results cannot extrude',()=>{let s=plate();s.elements.push({id:'cutter',type:'line',start:[20,-10],end:[20,50],construction:true});const id=s.elements[0].id,trim=trimExtendSketch(s,{id,cutterId:'cutter'});near(geom(trim).elements[0].end[0],20);assert.throws(()=>resolve(trim),/offen/);const extend=trimExtendSketch(trim,{id,cutterId:s.elements[1].id,mode:'extend'});near(geom(extend).elements[0].end[0],60);near(resolve(extend).area,2400);s=appendProfileLoop(s,[{id:'hole',type:'circle',center:[20,20],diameter:10}]);const cut=trimExtendSketch(s,{id:'hole',cutterId:'cutter'});assert.equal(cut.elements.find(e=>e.id==='hole').type,'arc');near(geom(cut).elements.find(e=>e.id==='hole').radius,5);});
+test('Drawing picks the clicked line end and only a visible, finite cutter', () => {
+  const sketch = plate();
+  sketch.elements.push({id:'cutter',type:'circle',center:[20,20],diameter:10,construction:true});
+  const elements = geom(sketch).elements;
+  const target = elements[0];
+  assert.deepEqual(pickSketchEditElement(elements,[4,0.1],0.2,{lineOnly:true}),{id:target.id,end:'start'});
+  assert.deepEqual(pickSketchEditElement(elements,[56,0.1],0.2,{lineOnly:true}),{id:target.id,end:'end'});
+  assert.deepEqual(pickSketchEditElement(elements,[25,20],0.2,{exclude:target.id}),{id:'cutter',end:'end'});
+  assert.equal(pickSketchEditElement(elements,[70,0],0.2,{lineOnly:true}),null);
+  assert.equal(pickSketchEditElement(elements,[25,20],0.2,{lineOnly:true}),null);
+});
+test('Contour replacement and trim preserve existing constraints and coordinate formulas', () => {
+  const sketch = upgradeSketchConstraints(plate());
+  sketch.elements.push({id:'cut',type:'line',start:[20,-10],end:[20,10],construction:true});
+  const baseline = structuredClone(sketch);
+  assert.throws(() => appendProfileLoop(sketch,profilePrimitive('rectangle',[0,0],[45,30]),'outer'),/Skizzenbedingungen/);
+  assert.throws(() => trimExtendSketch(sketch,{id:sketch.elements[0].id,cutterId:'cut'}),/Skizzenbedingungen/);
+  assert.deepEqual(sketch,baseline);
+  const formula = plate();
+  formula.elements[0].end[0] = 'long';
+  formula.elements.push({id:'cut',type:'line',start:[20,-10],end:[20,10],construction:true});
+  assert.throws(() => trimExtendSketch(formula,{id:formula.elements[0].id,cutterId:'cut'}),/Formeln/);
+});
 test('Native 2mm offset stays analytic and refuses split or vanished outputs',async()=>{const oc=await load({print:()=>{},printErr:()=>{}});let s=plate();const offset=offsetSketchContour(oc,{sketch:s,loopId:s.loops[0].id,distance:-2}),ring=installOffsetContour(s,offset.segments,{sourceLoopId:s.loops[0].id});near(resolve(ring).area,2400-56*36);s=appendProfileLoop(s,[{id:'circle',type:'circle',center:[20,20],diameter:10}]);const circle=offsetSketchContour(oc,{sketch:s,loopId:s.loops[1].id,distance:2});near(circle.segments[0].rx,7);assert.equal(circle.segments[0].kind,'ellipse');assert.throws(()=>offsetSketchContour(oc,{sketch:s,loopId:s.loops[0].id,distance:-100}),/zerfällt|berechnet/);});
 
 test('Arc radius anchors the center and moves shared endpoints on adjacent edges',()=>{let s=plate();const a=[{id:'bottom',type:'line',start:[-20,-10],end:[20,-10]},{id:'arc',type:'arc',start:[20,-10],through:[30,0],end:[20,10]},{id:'top',type:'line',start:[20,10],end:[-20,10]},{id:'left',type:'line',start:[-20,10],end:[-20,-10]}];s=appendProfileLoop(s,a,'outer');s=dimensionSketchElement(s,'arc','radius','12');const e=geom(s).elements.find(e=>e.id==='arc');near(e.center[0],20);near(e.center[1],0);near(e.radius,12);assert.deepEqual(s.elements.find(e=>e.id==='bottom').end,s.elements.find(e=>e.id==='arc').start);near(resolve(s).area,880+72*Math.PI);});

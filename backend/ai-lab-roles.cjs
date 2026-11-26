@@ -30,7 +30,7 @@ function applyEffort(config,selection,detail){
 function publicConnection(c,effort,selection){return {providerId:c.providerId,model:c.config.model,authMode:c.config.authMode,protocol:c.config.protocol,requestedEffort:selection,effectiveEffort:effort??'auto'};}
 function createLabRoles({directory,credentials,provider,connections,onChange=()=>{}}){
  const file=path.join(directory,'Labor-Agenten.json');let selections=validateRoles({});const secrets=new Set();
- try{selections=validateRoles(JSON.parse(fs.readFileSync(file,'utf8')));}catch{ /* Keep the validated defaults if saved roles cannot be loaded. */ }
+ try{selections=validateRoles(JSON.parse(fs.readFileSync(file,'utf8')));}catch{}
  const redact=value=>{const text=JSON.stringify(value);if(text===undefined)return null;let safe=connections?.redact?connections.redact(text):text;for(const key of secrets)if(key)safe=safe.split(key).join('[entfernt]');return JSON.parse(safe);};
  const getConnection=id=>id==='current'?credentials():connections?.connection?connections.connection(id):(()=>{const c=credentials();if(new URL(c.config.baseUrl).origin!==id)throw Error('Dieses Zugangsprofil ist hier nicht verfügbar.');return c;})();
  const publicProviders=()=>connections?.providers?connections.providers():[{id:new URL(credentials().config.baseUrl).origin,label:new URL(credentials().config.baseUrl).host,model:credentials().config.model,hasKey:!!credentials().key,authMode:credentials().config.authMode??'api-key'}];

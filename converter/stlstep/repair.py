@@ -213,12 +213,46 @@ def _closed(topology):
 
 
 def _zero_deviation():
-    stats = {"max_mm": 0.0, "p95_mm": 0.0, "mean_mm": 0.0, "points": 0}
+    stats = {"reference": "reference_mesh_surface", "max_mm": 0.0, "max_point_mm": None,
+             "p95_mm": 0.0, "mean_mm": 0.0, "points": 0, "unit": "mm"}
     return {
         "stl_to_cad": dict(stats), "cad_to_stl": dict(stats),
         "sampled_max_mm": 0.0,
+        "samples_per_direction": 0,
         "kind": "unchanged_vertex_and_face_arrays",
     }
+
+
+def _format_point(point):
+    if not point:
+        return "unbekannt"
+    return "[" + ", ".join(f"{value:.6g}" for value in point) + "]"
+
+
+def _deviation_message(deviation, budget_mm):
+    first, second = deviation["stl_to_cad"], deviation["cad_to_stl"]
+    direction = "Original→Reparatur" if first["max_mm"] >= second["max_mm"] else "Reparatur→Original"
+    worst = first if first["max_mm"] >= second["max_mm"] else second
+    return (
+        f"Formabweichung {worst['max_mm']:.6g} mm in Richtung {direction} "
+        f"(Schwelle {budget_mm:.6g} mm, Stichprobe {first['points']} Punkte je Richtung, "
+        f"größter Punkt {_format_point(worst.get('max_point_mm'))}); andere Richtung "
+        f"{(second if worst is first else first)['max_mm']:.6g} mm")
+
+
+def _admit(reference, candidate, budget_mm, samples, *, adds_new_surface, deviation=None,
+           changed=True, outer_skin_result=None):
+    """Apply topology, opening and outside-region rules to a repaired candidate."""
+    from .repair_budget import assess_repair_candidate, admission_message
+    admission = assess_repair_candidate(reference, candidate, budget_mm=budget_mm,
+                                        samples=samples, adds_new_surface=adds_new_surface,
+                                        deviation=deviation, changed=changed,
+                                        outer_skin_result=outer_skin_result)
+    if not admission["accepted"]:
+        raise RepairError(
+            "Netzreparatur abgelehnt: " + admission_message(admission)
+            + " Gründe: " + ", ".join(admission["reasons"]) + ".")
+    return admission
 
 
 def _validate_result(reference, candidate, budget_mm, samples):
@@ -241,11 +275,42 @@ def _validate_result(reference, candidate, budget_mm, samples):
     except Exception as exc:
         raise RepairError(f"Die Formabweichung der Netzreparatur konnte nicht geprüft werden: {exc}") from exc
     measured = deviation["sampled_max_mm"]
+    outer_skin_result = None
     if not math.isfinite(measured) or measured > budget_mm + 1e-9:
-        raise RepairError(
-            f"Netzreparatur abgelehnt: Die gemessene Formabweichung beträgt {measured:.6g} mm "
-            f"(Reparaturbudget {budget_mm:.6g} mm). Große Löcher werden nicht ungeprüft geschlossen.")
-    return topology, deviation, bounds_change
+        outer_skin_result = _measure_outer_skin(reference, candidate, budget_mm, samples)
+        if not _outer_skin_decides(outer_skin_result):
+            raise RepairError(
+                "Netzreparatur abgelehnt: " + _deviation_message(deviation, budget_mm)
+                + ". Große Löcher werden nicht ungeprüft geschlossen.")
+    return topology, deviation, bounds_change, outer_skin_result
+
+
+def _measure_outer_skin(reference, candidate, budget_mm, samples):
+    """Run the admitted outer-skin rule for a candidate over the raw budget.
+
+    The gate deliberately falls back to the unchanged raw rejection when the
+    method cannot be evaluated: an error must never widen the admission.
+    """
+    try:
+        from .outer_skin import evaluate_outer_skin
+        return evaluate_outer_skin(original=reference, candidate=candidate,
+                                   samples=(int(samples),), budget=budget_mm)
+    except Exception:
+        return None
+
+
+def _outer_skin_decides(result):
+    """True only for a proven outer-skin exclusion measured within budget."""
+    if not isinstance(result, dict):
+        return False
+    from .outer_skin import OUTER_SKIN_METHOD
+
+    return bool(
+        result.get("proven")
+        and result.get("decided_by") == "outer-skin"
+        and result.get("passed")
+        and (result.get("report") or {}).get("method") == OUTER_SKIN_METHOD
+    )
 
 
 def validate_repair_candidate(reference, candidate, *, budget_mm, samples=6000):
@@ -265,11 +330,12 @@ def validate_repair_candidate(reference, candidate, *, budget_mm, samples=6000):
             or not isinstance(candidate, trimesh.Trimesh)):
         raise RepairError("Für die Reparaturprüfung sind zwei verwendbare Dreiecksnetze erforderlich.")
     before = _topology(reference)
-    after, deviation, bounds_change = _validate_result(reference, candidate, budget_mm, samples)
+    after, deviation, bounds_change, outer_skin_result = _validate_result(
+        reference, candidate, budget_mm, samples)
     if after["components"] < before["components"]:
         raise RepairError("Die Netzreparatur würde getrennte Hüllen verlieren; Ergebnis verworfen.")
     return {"before": before, "after": after, "deviation": deviation,
-            "bounds_change_max_mm": bounds_change}
+            "bounds_change_max_mm": bounds_change, "outer_skin": outer_skin_result}
 
 
 def _meshfix_candidate(part, pymeshfix, method):
@@ -329,10 +395,14 @@ def repair_mesh(mesh, *, budget_mm, samples=6000):
         "geometry_changed": False,
         "deviation": _zero_deviation(),
         "bounds_change_max_mm": 0.0,
+        "admission": None,
+        "repair_fassung": None,
         "notes": ["Die unveränderte Eingabe bleibt die geometrische Referenz. "
                   "Beidseitige Oberflächenstichproben sind keine mathematische Fehlergarantie."],
     }
     if _closed(before):
+        from .repair_budget import unchanged_admission
+        report["admission"] = unchanged_admission(original, budget_mm=budget_mm, samples=samples)
         return original, report
 
     # Formnaro's exact neighbor subdivision also works after degenerate STL
@@ -356,12 +426,16 @@ def repair_mesh(mesh, *, budget_mm, samples=6000):
                            "coordinates_moved": False, "new_surface_added": False}]
             if seam_fans["added_vertices"]:
                 operations.append(_fan_summary(seam_fans))
+            admission = _admit(original, seamed, budget_mm, samples,
+                               adds_new_surface=False, deviation=checked["deviation"],
+                               outer_skin_result=checked["outer_skin"])
             report.update({
                 "applied": True, "backend": "local.split_collinear_seams",
                 "backend_version": "2", "after": checked["after"],
                 "deviation": checked["deviation"],
                 "bounds_change_max_mm": checked["bounds_change_max_mm"],
                 "component_operations": operations,
+                "admission": admission, "repair_fassung": admission["fassung"],
             })
             report["notes"].append("Exakt kollineare T-Verbindungen wurden durch Teilung "
                                    "vorhandener Dreiecke geschlossen; keine Punkte verschoben "
@@ -372,13 +446,18 @@ def repair_mesh(mesh, *, budget_mm, samples=6000):
     # This stage changes topology with exactly zero triangle displacement.
     split_mesh, split_report = split_vertex_fans(original)
     if split_report["added_vertices"] and _closed(_topology(split_mesh)):
-        topology, deviation, bounds_change = _validate_result(original, split_mesh, budget_mm, samples)
+        topology, deviation, bounds_change, outer_skin_result = _validate_result(
+            original, split_mesh, budget_mm, samples)
+        admission = _admit(original, split_mesh, budget_mm, samples,
+                           adds_new_surface=False, deviation=deviation,
+                           outer_skin_result=outer_skin_result)
         report.update({
             "applied": True, "backend": "local.split_vertex_fans", "backend_version": "1",
             "after": topology, "deviation": deviation,
             "bounds_change_max_mm": bounds_change,
             "preserved_closed_components": len(_components(original)),
             "component_operations": [_fan_summary(split_report)],
+            "admission": admission, "repair_fassung": admission["fassung"],
         })
         return split_mesh, report
 
@@ -400,12 +479,16 @@ def repair_mesh(mesh, *, budget_mm, samples=6000):
         oriented = part.copy()
         oriented.fix_normals(multibody=True)
         if _closed(_topology(oriented)):
-            topology, deviation, _ = _validate_result(part, oriented, budget_mm, samples)
+            topology, deviation, _, outer_skin_result = _validate_result(
+                part, oriented, budget_mm, samples)
+            admission = _admit(part, oriented, budget_mm, samples,
+                               adds_new_surface=False, deviation=deviation,
+                               outer_skin_result=outer_skin_result)
             repaired_parts.append(oriented)
             backend_methods.add("trimesh.fix_normals")
             report["component_operations"].append({"component": number, "method": "trimesh.fix_normals",
                                                    "before": part_before, "after": topology,
-                                                   "deviation": deviation})
+                                                   "deviation": deviation, "admission": admission})
             continue
 
         attempts = []
@@ -414,6 +497,9 @@ def repair_mesh(mesh, *, budget_mm, samples=6000):
                 raw, provider = _windows_candidate(part)
                 candidate, fan_report = split_vertex_fans(raw)
                 checked = validate_repair_candidate(part, candidate, budget_mm=budget_mm, samples=samples)
+                admission = _admit(part, candidate, budget_mm, samples,
+                                   adds_new_surface=True, deviation=checked["deviation"],
+                                   outer_skin_result=checked["outer_skin"])
                 # Windows's explicit indices can represent coincident geometric
                 # contacts. Preserve them through indexed CAD construction.
                 has_coincident_ids = len(np.unique(candidate.vertices, axis=0)) < len(candidate.vertices)
@@ -428,6 +514,7 @@ def repair_mesh(mesh, *, budget_mm, samples=6000):
                     "deviation": checked["deviation"], "provider": provider,
                     "vertex_fan_split": _fan_summary(fan_report),
                     "preserve_vertex_identity": bool(candidate.metadata.get("preserve_vertex_identity")),
+                    "admission": admission,
                 })
                 continue
             except Exception as exc:
@@ -445,7 +532,11 @@ def repair_mesh(mesh, *, budget_mm, samples=6000):
         for method in ("fill", "connectivity_and_fill", "repair"):
             try:
                 candidate = _meshfix_candidate(part, pymeshfix, method)
-                topology, deviation, _ = _validate_result(part, candidate, budget_mm, samples)
+                topology, deviation, _, outer_skin_result = _validate_result(
+                    part, candidate, budget_mm, samples)
+                admission = _admit(part, candidate, budget_mm, samples,
+                                   adds_new_surface=True, deviation=deviation,
+                                   outer_skin_result=outer_skin_result)
             except Exception as exc:
                 # Native process failures are handled by the caller's worker.
                 attempts.append({"method": method, "rejection": str(exc)})
@@ -454,7 +545,8 @@ def repair_mesh(mesh, *, budget_mm, samples=6000):
             backend_methods.add(f"pymeshfix.{method}")
             report["component_operations"].append({"component": number, "method": f"pymeshfix.{method}",
                                                    "before": part_before, "after": topology,
-                                                   "deviation": deviation, "rejected_attempts": attempts})
+                                                   "deviation": deviation, "admission": admission,
+                                                   "rejected_attempts": attempts})
             break
         else:
             reasons = " ".join(f"{attempt['method']}: {attempt['rejection']}" for attempt in attempts)
@@ -465,9 +557,15 @@ def repair_mesh(mesh, *, budget_mm, samples=6000):
     repaired = trimesh.util.concatenate(repaired_parts)
     if any(part.metadata.get("preserve_vertex_identity") for part in repaired_parts):
         repaired.metadata["preserve_vertex_identity"] = True
-    after, deviation, bounds_change = _validate_result(original, repaired, budget_mm, samples)
+    after, deviation, bounds_change, outer_skin_result = _validate_result(
+        original, repaired, budget_mm, samples)
     if after["components"] < before["components"]:
         raise RepairError("Die Netzreparatur würde getrennte Hüllen verlieren; Ergebnis verworfen.")
+    adds_surface = any(method.startswith("pymeshfix") or method == "Windows.Printing3D.RepairAsync"
+                       for method in backend_methods)
+    admission = _admit(original, repaired, budget_mm, samples,
+                       adds_new_surface=adds_surface, deviation=deviation,
+                       outer_skin_result=outer_skin_result)
     report.update({
         "applied": True,
         "backend": ", ".join(sorted(backend_methods)),
@@ -477,6 +575,8 @@ def repair_mesh(mesh, *, budget_mm, samples=6000):
         "deviation": deviation,
         "geometry_changed": bool(deviation["sampled_max_mm"] > 1e-9),
         "bounds_change_max_mm": bounds_change,
+        "admission": admission,
+        "repair_fassung": admission["fassung"],
     })
     if any(method.startswith("pymeshfix") for method in backend_methods):
         report["notes"].append("PyMeshFix kann Dreiecke entfernen, Löcher füllen und die Form verändern. "

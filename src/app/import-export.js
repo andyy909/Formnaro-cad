@@ -18,6 +18,7 @@ import {
   createLocalStlConversion,
 } from '../cad-stl-converter.js';
 import { cadIdentity } from '../cad-affine.js';
+import { repairFassungFromReport } from '../mesh-repair-fassung.js';
 import { originalCadSubpath } from '../cad-original-contours.js';
 import { easyImportPolicy } from '../cad-easy-domain.js';
 import { cadDrawingSvg, cadDrawingDxf } from '../cad-drawing-export.js';
@@ -214,6 +215,8 @@ export function createImportExport({
 
           check();
           options.metadata.notes = conversionSummary(converted.report).slice(0, 4000);
+          const repair = repairFassungFromReport(converted.report);
+          if (repair) options.metadata.meshRepair = repair;
 
           proposal = await controller.preview(
             {

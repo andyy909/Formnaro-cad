@@ -9,8 +9,19 @@ import {
   cadDrawingPaperSize,
   cadDrawingProblems,
   cadDrawingDimension,
+  cadDrawingBalloon,
+  createCadDrawingBalloon,
+  cadDrawingDefaultDetailCutout,
+  cadDrawingDetailProjection,
+  cadDrawingViewScale,
+  updateCadDrawingDetailViews,
   updateCadDrawingProjection,
+  createCadDrawingPartsList,
+  cadDrawingPartsListDefaultPosition,
+  cadDrawingExplosion,
+  cadDrawingProjectionOptions,
 } from './cad-drawing-data.js';
+import { createPartPropertiesService } from './cad-part-properties-service.js';
 import { cadDrawingSvg } from './cad-drawing-export.js';
 import {
   cadDrawingUpdatedPosition,
@@ -21,7 +32,14 @@ import { autoDimensionCadDrawing } from './cad-drawing-auto-dimensions.js';
 import { CAD_DRAWING_POINT_ROLES, cadDrawingCurvePoint } from './cad-drawing-measure.js';
 import './cad-drawing.css';
 
-const labels = { front: 'Vorderansicht', side: 'Seitenansicht', top: 'Draufsicht', section: 'Schnittansicht' };
+const labels = {
+  front: 'Vorderansicht',
+  side: 'Seitenansicht',
+  top: 'Draufsicht',
+  section: 'Schnittansicht',
+  detail: 'Detailansicht',
+  exploded: 'Explosionsansicht',
+};
 const makeId = () => globalThis.crypto.randomUUID();
 const copy = (value) => structuredClone(value);
 
@@ -31,6 +49,7 @@ export function createCadDrawingUI({
   controller,
   view,
   getSelection,
+  getExplosion = () => controller.readSnapshot().workspace?.explosion,
   prepare = () => {},
   refresh = async () => {},
   toast = () => {},
@@ -44,16 +63,17 @@ export function createCadDrawingUI({
   panel.setAttribute('aria-label', t('Technische Zeichnungsblätter'));
   view.canvas.parentElement.append(panel);
   const q = (selector) => panel.querySelector(selector),
-    signatureCache = new WeakMap();
+    signatureCache = new WeakMap(),
+    partService = createPartPropertiesService(controller);
   let active = null;
   function draftProject() {
     return active?.combined && active.proposal ? active.proposal.project : controller.readSnapshot();
   }
   function sourceSignatures(sheet, project = draftProject()) {
-    const signatures = {};
+    const signatures = Object.create(null);
     for (const id of new Set(sheet.views.flatMap((v) => v.sourceIds))) {
       const node = project.nodes.find((n) => n.id === id);
-      if (node) {
+      if (node?.kind === 'cad') {
         let digest = signatureCache.get(node);
         if (!digest) {
           digest = cadSourceGeometryDigest(node);
@@ -233,10 +253,13 @@ export function createCadDrawingUI({
     const canvas = q('[data-drawing-paper]');
     if (!canvas) return;
     resizePaper();
+    const signatures = sourceSignatures(value);
     canvas.innerHTML = cadDrawingSvg(value, {
       allowStale: true,
-      sourceSignatures: sourceSignatures(value),
+      sourceSignatures: signatures,
       interactive: true,
+      explodedViewLabel: t(labels.exploded),
+      lostBalloonLabel: t('Positionsballon: Bezug verloren'),
     });
     const svg = canvas.querySelector('svg');
     if (svg) {
@@ -253,8 +276,9 @@ export function createCadDrawingUI({
       pendingCommit = pendingSourceCommit(value);
     const state = q('[data-drawing-freshness]');
     if (state) {
+      const issue = stale.find((problem) => problem.code === 'LOST_BALLOON_REFERENCE') ?? stale[0];
       state.textContent = stale.length
-        ? t('Aktualisierung nötig') + ' · ' + stale[0].message
+        ? t('Aktualisierung nötig') + ' · ' + t(issue.message)
         : pendingCommit
           ? t('Berechnete Quellen mit „Blatt übernehmen“ bestätigen.')
           : t('Blatt aktuell');
@@ -275,9 +299,18 @@ export function createCadDrawingUI({
         const option = document.createElement('option');
         option.value = a.id;
         try {
-          option.textContent = a.kind === 'label' ? a.text : cadDrawingDimension(value, a).text;
+          option.textContent =
+            a.kind === 'label'
+              ? a.text
+              : a.kind === 'balloon'
+                ? t('Positionsballon') + ' ' + cadDrawingBalloon(value, a, { sourceSignatures: signatures }).row.position
+                : a.kind === 'centermark'
+                  ? t('Mittelpunktmarke') + ' (' + a.curveIds[0] + ')'
+                  : a.kind === 'centerline'
+                    ? t('Mittellinie') + ' (' + a.curveIds.join(' · ') + ')'
+                    : cadDrawingDimension(value, a).text;
         } catch {
-          option.textContent = t('Bezug verloren') + ' · ' + a.kind;
+          option.textContent = a.kind === 'balloon' ? t('Positionsballon: Bezug verloren') : t('Bezug verloren') + ' · ' + a.kind;
         }
         annotationList.append(option);
       }
@@ -285,6 +318,7 @@ export function createCadDrawingUI({
       annotationList.onchange = () => {
         s.annotationId = annotationList.value || null;
         q('[data-drawing-remove-annotation]').disabled = !s.annotationId;
+        toolHint();
       };
     }
     const remove = q('[data-drawing-remove-annotation]');
@@ -298,6 +332,11 @@ export function createCadDrawingUI({
       autoReport.hidden = !s.autoReport;
       autoReport.textContent = s.autoReport ? autoMessage(s.autoReport) : '';
     }
+    const partsReport = q('[data-drawing-parts-report]');
+    if (partsReport)
+      partsReport.textContent = value.partsList
+        ? `${t('Stückliste auf dem Blatt')}: ${value.partsList.rows.length} ${t('Positionen')} · ${value.partsList.title}`
+        : '';
   }
   function render() {
     const s = active,
@@ -309,11 +348,17 @@ export function createCadDrawingUI({
       .map(([kind, label]) => `<option value="${kind}">${t(label)}</option>`)
       .join(
         '',
-      )}</select><button data-drawing-add-view data-drawing-edit>${t('Hinzufügen')}</button></div><div class="drawing-row"><button data-drawing-sources data-drawing-edit>${t('Auswahl verwenden')}</button><button data-drawing-remove-view data-drawing-edit>${t('Ansicht löschen')}</button></div><p data-drawing-source-list class="small-note"></p><div data-drawing-section-controls><div class="drawing-row"><label>${t('Schnittachse')}<select data-drawing-section-axis data-drawing-edit><option value="0">X</option><option value="1">Y</option><option value="2">Z</option></select></label><label>${t('Schnittlage (mm)')}<input data-drawing-section-offset data-drawing-edit inputmode="decimal"></label></div></div><hr><label>${t('Blattwerkzeug')}<select data-drawing-tool><option value="move">${t('Ansichten und Maßtexte verschieben')}</option><option value="length">${t('Längenmaß · Linie anklicken')}</option><option value="angle">${t('Winkelmaß · zwei Linien anklicken')}</option><option value="radius">${t('Radiusmaß · Kreis oder Bogen anklicken')}</option><option value="diameter">${t('Durchmesser · Kreis oder Bogen anklicken')}</option><option value="label">${t('Beschriftung · Blatt anklicken')}</option></select></label><label data-drawing-label-control hidden>${t('Beschriftung')}<input data-drawing-label maxlength="500"></label><button data-drawing-remove-annotation data-drawing-edit disabled>${t('Gewählte Beschriftung löschen')}</button><p class="small-note" data-drawing-tool-hint></p></aside><main class="drawing-workspace"><div class="drawing-toolbar"><button data-drawing-zoom-out aria-label="${t('Verkleinern')}">−</button><span data-drawing-zoom-value></span><button data-drawing-zoom-in aria-label="${t('Vergrößern')}">+</button><button data-drawing-fit>${t('Blatt einpassen')}</button><span data-drawing-freshness role="status"></span></div><div class="drawing-viewport" data-drawing-viewport tabindex="0" aria-label="${t('Zeichnungsblatt')} "><div class="drawing-paper" data-drawing-paper></div></div></main></div><footer class="drawing-footer"><p data-drawing-status role="status" aria-live="polite"></p><div class="drawing-actions"><button data-drawing-update>${t('Blatt aktualisieren')}</button><button data-drawing-stop hidden>${t('Berechnung abbrechen')}</button><button data-drawing-export="pdf">PDF</button><button data-drawing-export="svg">SVG</button><button data-drawing-export="dxf">DXF 1:1</button><button data-drawing-apply class="primary">${t('Blatt übernehmen')}</button><button data-drawing-cancel>${t('Abbrechen')}</button></div></footer>`;
+      )}</select><button data-drawing-add-view data-drawing-edit>${t('Hinzufügen')}</button></div><div class="drawing-row"><button data-drawing-sources data-drawing-edit>${t('Auswahl verwenden')}</button><button data-drawing-remove-view data-drawing-edit>${t('Ansicht löschen')}</button></div><p data-drawing-source-list class="small-note"></p><div data-drawing-section-controls><div class="drawing-row"><label>${t('Schnittachse')}<select data-drawing-section-axis data-drawing-edit><option value="0">X</option><option value="1">Y</option><option value="2">Z</option></select></label><label>${t('Schnittlage (mm)')}<input data-drawing-section-offset data-drawing-edit inputmode="decimal"></label></div></div><div data-drawing-detail-controls hidden><p class="small-note">${t('Detailansicht: Ausschnitt in Modellkoordinaten der Quellansicht. Der Detailmaßstab gilt nur für dieses Detail; die Modellmaße und die DXF-Ausgabe bleiben 1:1.')}</p><div class="drawing-row"><label>${t('Ausschnitt X (mm)')}<input data-drawing-detail-x data-drawing-edit inputmode="decimal"></label><label>${t('Ausschnitt Y (mm)')}<input data-drawing-detail-y data-drawing-edit inputmode="decimal"></label></div><div class="drawing-row"><label>${t('Ausschnittradius (mm)')}<input data-drawing-detail-radius data-drawing-edit inputmode="decimal"></label><label>${t('Detailmaßstab')}<select data-drawing-detail-scale data-drawing-edit></select></label></div></div><hr><label>${t('Blattwerkzeug')}<select data-drawing-tool><option value="move">${t('Ansichten und Maßtexte verschieben')}</option><option value="length">${t('Längenmaß · Linie anklicken')}</option><option value="angle">${t('Winkelmaß · zwei Linien anklicken')}</option><option value="radius">${t('Radiusmaß · Kreis oder Bogen anklicken')}</option><option value="diameter">${t('Durchmesser · Kreis oder Bogen anklicken')}</option><option value="centermark">${t('Mittelpunktmarke · Kreis oder Bogen anklicken')}</option><option value="centerline">${t('Mittellinie · zwei Kreise oder Bögen anklicken')}</option><option value="balloon">${t('Positionsballon · Bauteilkante anklicken')}</option><option value="label">${t('Beschriftung · Blatt anklicken')}</option></select></label><label data-drawing-label-control hidden>${t('Beschriftung')}<input data-drawing-label maxlength="500"></label><label data-drawing-centerline-control hidden>${t('Überstand (mm)')}<input data-drawing-overhang type="number" min="0" max="100" step="1" inputmode="decimal"></label><div data-drawing-tolerance-control hidden><label>${t('Toleranzanzeige')}<select data-drawing-tolerance-mode data-drawing-edit><option value="none">${t('Keine Toleranz')}</option><option value="deviation">${t('Abweichung (+/−)')}</option><option value="limits">${t('Grenzmaße')}</option></select></label><div data-drawing-tolerance-inputs class="drawing-row" hidden><label>${t('Obere Abweichung (mm)')}<input data-drawing-tolerance-upper type="number" step="0.01" inputmode="decimal"></label><label>${t('Untere Abweichung (mm)')}<input data-drawing-tolerance-lower type="number" step="0.01" inputmode="decimal"></label></div></div><button data-drawing-remove-annotation data-drawing-edit disabled>${t('Gewählte Beschriftung löschen')}</button><p class="small-note" data-drawing-tool-hint></p></aside><main class="drawing-workspace"><div class="drawing-toolbar"><button data-drawing-zoom-out aria-label="${t('Verkleinern')}">−</button><span data-drawing-zoom-value></span><button data-drawing-zoom-in aria-label="${t('Vergrößern')}">+</button><button data-drawing-fit>${t('Blatt einpassen')}</button><span data-drawing-freshness role="status"></span></div><div class="drawing-viewport" data-drawing-viewport tabindex="0" aria-label="${t('Zeichnungsblatt')} "><div class="drawing-paper" data-drawing-paper></div></div></main></div><footer class="drawing-footer"><p data-drawing-status role="status" aria-live="polite"></p><div class="drawing-actions"><button data-drawing-update>${t('Blatt aktualisieren')}</button><button data-drawing-stop hidden>${t('Berechnung abbrechen')}</button><button data-drawing-export="pdf">PDF</button><button data-drawing-export="svg">SVG</button><button data-drawing-export="dxf">DXF 1:1</button><button data-drawing-apply class="primary">${t('Blatt übernehmen')}</button><button data-drawing-cancel>${t('Abbrechen')}</button></div></footer>`;
     const autoControls = document.createElement('div');
     autoControls.className = 'drawing-auto-controls';
     autoControls.innerHTML = `<label>${t('Automatische Bemaßung')}<select data-drawing-auto-mode data-drawing-edit><option value="basic">${t('Grundbemaßung')}</option><option value="detailed">${t('Detaillierte Bemaßung')}</option></select></label><button data-drawing-auto>${t('Automatisch bemaßen')}</button><p class="small-note">${t('Ergänzt Maße auf dem ganzen Blatt. Vorhandene Maße bleiben erhalten. Vorschläge lassen sich verschieben, löschen und ergänzen.')}</p><p class="small-note" data-drawing-auto-report role="status" hidden></p>`;
     q('[data-drawing-tool]').parentElement.before(autoControls);
+    const partsControls = document.createElement('div');
+    partsControls.className = 'drawing-parts-controls';
+    partsControls.innerHTML = `<label>${t('Stückliste')}<button data-drawing-parts data-drawing-edit type="button">${t('Gruppierte Stückliste setzen / aktualisieren')}</button></label><p class="small-note" data-drawing-parts-report role="status"></p><p class="small-note">${t('Gruppiert nach Bauteildefinition. Bestehende Positionsnummern bleiben beim Umsortieren, Aus-/Einblenden und Wiederöffnen erhalten.')}</p>`;
+    autoControls.after(partsControls);
+    q('[data-drawing-parts]').id = 'drawing-parts';
+    q('[data-drawing-parts]').onclick = () => run(updatePartsList);
     q('[data-drawing-auto-mode]').value = s.autoMode ?? 'basic';
     q('[data-drawing-auto-mode]').onchange = () => {
       s.autoMode = q('[data-drawing-auto-mode]').value;
@@ -431,7 +476,8 @@ export function createCadDrawingUI({
     scale.onchange = () => {
       const next = Number(scale.value);
       for (const item of value.views)
-        item.position = cadDrawingRescaledPosition(item.position, item.projection, value.scale, next);
+        if (item.scale === undefined)
+          item.position = cadDrawingRescaledPosition(item.position, item.projection, value.scale, next);
       value.scale = next;
       edited('Papiermaßstab geändert. Die Modellmaße und die DXF-Ausgabe bleiben 1:1.');
     };
@@ -448,7 +494,40 @@ export function createCadDrawingUI({
         if (value.views.length >= CAD_DRAWING_LIMITS.views)
           throw Error('Höchstens ' + CAD_DRAWING_LIMITS.views + ' Ansichten pro Blatt.');
         const kind = q('[data-drawing-add-kind]').value,
-          sourceIds = value.views.find((v) => v.id === s.viewId)?.sourceIds ?? selectedIds(),
+          parent = value.views.find((v) => v.id === s.viewId);
+        let entry;
+        if (kind === 'detail') {
+          if (!parent) throw Error('Für ein Detail zuerst eine Quellansicht wählen.');
+          if (parent.kind === 'detail') throw Error('Ein Detail einer Detailansicht wird nicht unterstützt.');
+          if (!parent.projection)
+            throw Error('Für ein Detail zuerst die Quellansicht mit „Blatt aktualisieren“ berechnen.');
+          const cutout = cadDrawingDefaultDetailCutout(parent.projection, parent.id);
+          entry = {
+            id: makeId(),
+            kind,
+            sourceIds: [...parent.sourceIds],
+            position: cadDrawingNewViewPosition(value.views.length, cadDrawingPaperSize(value)),
+            scale: 2,
+            cutout,
+            projection: cadDrawingDetailProjection(parent.projection, cutout),
+          };
+        } else if (kind === 'exploded') {
+          if (!parent || !['front', 'side', 'top'].includes(parent.kind))
+            throw Error('Für eine Explosionsansicht zuerst eine Montageansicht wählen.');
+          const paper = cadDrawingPaperSize(value);
+          const position = value.views.some((item) => item.kind === 'exploded')
+            ? cadDrawingNewViewPosition(value.views.length, paper)
+            : [paper[0] * 0.65, paper[1] * 0.25];
+          entry = {
+            id: makeId(),
+            kind,
+            sourceIds: [...parent.sourceIds],
+            position,
+            assemblyViewId: parent.id,
+            explosion: cadDrawingExplosion(getExplosion(), parent.sourceIds, { capture: true }),
+          };
+        } else {
+          const sourceIds = parent?.sourceIds ?? selectedIds();
           entry = {
             id: makeId(),
             kind,
@@ -456,11 +535,16 @@ export function createCadDrawingUI({
             position: cadDrawingNewViewPosition(value.views.length, cadDrawingPaperSize(value)),
             ...(kind === 'section' ? { section: { axis: 2, offset: 0 } } : {}),
           };
+        }
         value.views.push(entry);
         s.viewId = entry.id;
         s.changed = true;
         render();
-        status('Neue Ansicht angelegt. „Blatt aktualisieren“ berechnet die Konturen.');
+        status(
+          kind === 'detail'
+            ? 'Detailansicht mit eigenem Maßstab angelegt. Ausschnitt und Maßstab links einstellen.'
+            : 'Neue Ansicht angelegt. „Blatt aktualisieren“ berechnet die Konturen.',
+        );
       });
     q('[data-drawing-remove-view]').onclick = () =>
       run(() => {
@@ -474,6 +558,7 @@ export function createCadDrawingUI({
     q('[data-drawing-sources]').onclick = () =>
       run(() => {
         const item = value.views.find((v) => v.id === s.viewId);
+        if (item.kind === 'exploded') return;
         item.sourceIds = selectedIds();
         s.changed = true;
         render();
@@ -490,6 +575,67 @@ export function createCadDrawingUI({
     q('[data-drawing-label]').oninput = () => {
       s.label = q('[data-drawing-label]').value;
     };
+    const overhangInput = q('[data-drawing-overhang]');
+    if (overhangInput) {
+      overhangInput.value = s.overhangMm ?? 3;
+      overhangInput.oninput = overhangInput.onchange = () => {
+        const num = Number(overhangInput.value);
+        if (Number.isFinite(num) && num >= 0 && num <= 100) {
+          s.overhangMm = num;
+          const target = value.annotations.find((a) => a.id === s.annotationId);
+          if (target && target.kind === 'centerline') {
+            target.overhangMm = num;
+            edited();
+          }
+        }
+      };
+    }
+    const toleranceModeSelect = q('[data-drawing-tolerance-mode]');
+    if (toleranceModeSelect) {
+      toleranceModeSelect.onchange = () => {
+        const target = value.annotations.find((a) => a.id === s.annotationId);
+        if (!target || !['length', 'diameter', 'radius', 'distance'].includes(target.kind)) return;
+        const mode = toleranceModeSelect.value;
+        if (mode === 'none') {
+          delete target.tolerance;
+        } else {
+          if (!target.tolerance) {
+            target.tolerance = { upper: 0.1, lower: -0.05, mode };
+          } else {
+            target.tolerance.mode = mode;
+          }
+        }
+        toolHint();
+        edited();
+      };
+    }
+    const toleranceUpper = q('[data-drawing-tolerance-upper]');
+    const toleranceLower = q('[data-drawing-tolerance-lower]');
+    const onToleranceChange = () => {
+      const target = value.annotations.find((a) => a.id === s.annotationId);
+      if (!target || !target.tolerance) return;
+      const up = Number(toleranceUpper?.value);
+      const low = Number(toleranceLower?.value);
+      if (Number.isFinite(up) && Number.isFinite(low)) {
+        if (low > up) {
+          status(t('Untere Toleranzgrenze darf nicht größer als die obere sein.'));
+          return;
+        }
+        try {
+          const testAnnotation = structuredClone(target);
+          testAnnotation.tolerance.upper = up;
+          testAnnotation.tolerance.lower = low;
+          cadDrawingDimension(value, testAnnotation);
+          target.tolerance.upper = up;
+          target.tolerance.lower = low;
+          edited();
+        } catch (err) {
+          status(err.message);
+        }
+      }
+    };
+    if (toleranceUpper) toleranceUpper.oninput = toleranceUpper.onchange = onToleranceChange;
+    if (toleranceLower) toleranceLower.oninput = toleranceLower.onchange = onToleranceChange;
     q('[data-drawing-remove-annotation]').onclick = () => {
       if (!s.annotationId) return;
       value.annotations = value.annotations.filter((a) => a.id !== s.annotationId);
@@ -545,12 +691,13 @@ export function createCadDrawingUI({
   function renderViewControls() {
     const s = active,
       value = sheet(),
-      list = q('[data-drawing-view-list]');
+      list = q('[data-drawing-view-list]'),
+      scaleText = (n) => (n >= 1 ? String(n) + ':1' : '1:' + String(Number((1 / n).toPrecision(8))));
     list.replaceChildren();
     for (const item of value.views) {
       const option = document.createElement('option');
       option.value = item.id;
-      option.textContent = labels[item.kind] + ' ' + (value.views.indexOf(item) + 1);
+      option.textContent = t(labels[item.kind]) + ' ' + (value.views.indexOf(item) + 1);
       list.append(option);
     }
     if (!value.views.some((v) => v.id === s.viewId)) s.viewId = value.views[0]?.id;
@@ -560,6 +707,7 @@ export function createCadDrawingUI({
       renderViewControls();
     };
     const item = value.views.find((v) => v.id === s.viewId);
+    q('[data-drawing-sources]').hidden = item?.kind === 'exploded';
     q('[data-drawing-section-controls]').hidden = item?.kind !== 'section';
     const nodes = controller.readSnapshot().nodes;
     q('[data-drawing-source-list]').textContent = item
@@ -580,11 +728,91 @@ export function createCadDrawingUI({
           edited('Schnittlage geändert. „Blatt aktualisieren“ berechnet die neue Schnittkontur.');
         });
     }
+    const detailControls = q('[data-drawing-detail-controls]');
+    if (detailControls) detailControls.hidden = item?.kind !== 'detail';
+    if (item?.kind === 'detail') {
+      const x = q('[data-drawing-detail-x]'),
+        y = q('[data-drawing-detail-y]'),
+        radius = q('[data-drawing-detail-radius]'),
+        scale = q('[data-drawing-detail-scale]');
+      x.value = String(item.cutout.center[0]);
+      y.value = String(item.cutout.center[1]);
+      radius.value = String(item.cutout.radius);
+      scale.replaceChildren();
+      for (const n of [0.1, 0.2, 0.5, 1, 2, 5, 10]) {
+        const option = document.createElement('option');
+        option.value = String(n);
+        option.textContent = n >= 1 ? String(n) + ':1' : '1:' + String(Number((1 / n).toPrecision(8)));
+        scale.append(option);
+      }
+      if (![...scale.options].some((option) => Number(option.value) === item.scale)) {
+        const option = document.createElement('option');
+        option.value = String(item.scale);
+        option.textContent = scaleText(item.scale);
+        scale.append(option);
+      }
+      scale.value = String(item.scale);
+      const apply = () =>
+        run(() => {
+          const parent = value.views.find((view) => view.id === item.cutout.sourceViewId);
+          if (!parent?.projection)
+            throw Error('Die Detailquelle hat keine berechnete Projektion. Zuerst „Blatt aktualisieren“ ausführen.');
+          const cutout = {
+            sourceViewId: item.cutout.sourceViewId,
+            center: [numeric(x, -1e6, 1e6), numeric(y, -1e6, 1e6)],
+            radius: numeric(radius, 0, 1e6),
+          };
+          if (!(cutout.radius > 1e-9)) throw Error('Der Ausschnittradius muss größer als 0 sein.');
+          const projection = cadDrawingDetailProjection(parent.projection, cutout),
+            nextScale = Number(scale.value);
+          if (!Number.isFinite(nextScale) || nextScale <= 0) throw Error('Ungültiger Detailmaßstab.');
+          const previousScale = cadDrawingViewScale(item, value);
+          if (nextScale !== previousScale)
+            for (const annotation of value.annotations.filter((a) => a.viewId === item.id))
+              annotation.position = [
+                item.position[0] + (annotation.position[0] - item.position[0]) * (nextScale / previousScale),
+                item.position[1] + (annotation.position[1] - item.position[1]) * (nextScale / previousScale),
+              ];
+          item.cutout = cutout;
+          item.scale = nextScale;
+          item.projection = projection;
+          const updated = updateCadDrawingDetailViews(value);
+          if (updated.changed) Object.assign(value, updated.sheet);
+          edited('Detailausschnitt geändert. Die Modellmaße und die DXF-Ausgabe bleiben 1:1.');
+        });
+      x.onchange = y.onchange = radius.onchange = scale.onchange = apply;
+    }
   }
   function toolHint() {
     const s = active;
     if (!s) return;
     q('[data-drawing-label-control]').hidden = s.tool !== 'label';
+    const target = s.annotationId ? sheet().annotations.find((a) => a.id === s.annotationId) : null;
+    const isCenterline = s.tool === 'centerline' || target?.kind === 'centerline';
+    const overhangControl = q('[data-drawing-centerline-control]');
+    if (overhangControl) {
+      overhangControl.hidden = !isCenterline;
+      if (isCenterline && target?.kind === 'centerline') {
+        const input = q('[data-drawing-overhang]');
+        if (input && Number.isFinite(target.overhangMm)) input.value = target.overhangMm;
+      }
+    }
+    const toleranceControl = q('[data-drawing-tolerance-control]');
+    const toleranceInputs = q('[data-drawing-tolerance-inputs]');
+    const toleranceModeSelect = q('[data-drawing-tolerance-mode]');
+    const toleranceUpper = q('[data-drawing-tolerance-upper]');
+    const toleranceLower = q('[data-drawing-tolerance-lower]');
+    const canHaveTolerance = target && ['length', 'diameter', 'radius', 'distance'].includes(target.kind);
+    if (toleranceControl) {
+      toleranceControl.hidden = !canHaveTolerance;
+      if (canHaveTolerance) {
+        const mode = target.tolerance ? (target.tolerance.mode ?? 'deviation') : 'none';
+        if (toleranceModeSelect) toleranceModeSelect.value = mode;
+        if (toleranceInputs) toleranceInputs.hidden = mode === 'none';
+        if (toleranceUpper && target.tolerance) toleranceUpper.value = target.tolerance.upper;
+        if (toleranceLower && target.tolerance) toleranceLower.value = target.tolerance.lower;
+      }
+    }
     q('[data-drawing-tool-hint]').textContent = t(
       s.tool.startsWith('distance-')
         ? 'Zwei Maßpunkte derselben Ansicht anklicken. Bei Geraden wird der nächste Endpunkt, bei Kreisen die Mitte verwendet.'
@@ -592,11 +820,17 @@ export function createCadDrawingUI({
           ? 'Eine Ansicht oder einen Maßtext ziehen. Maßtexte anklicken und anschließend löschen.'
           : s.tool === 'angle'
             ? 'Zwei gerade Kanten derselben Ansicht nacheinander anklicken.'
-            : s.tool === 'label'
-              ? 'Text eingeben und die gewünschte Position auf dem Blatt anklicken.'
-              : s.tool === 'length'
-                ? 'Eine gerade Kante anklicken. Gemessen wird ihre projizierte Länge in Millimetern.'
-                : 'Einen unverzerrten Kreis oder Kreisbogen anklicken.',
+            : s.tool === 'centerline'
+              ? 'Zwei Kreise oder Kreisbögen derselben Ansicht nacheinander anklicken.'
+              : s.tool === 'balloon'
+                ? 'Eine Kante des Bauteils anklicken. Die Nummer kommt aus der Stückliste auf dem Blatt.'
+                : s.tool === 'label'
+                ? 'Text eingeben und die gewünschte Position auf dem Blatt anklicken.'
+                : s.tool === 'length'
+                  ? 'Eine gerade Kante anklicken. Gemessen wird ihre projizierte Länge in Millimetern.'
+                  : s.tool === 'centermark'
+                    ? 'Einen Kreis oder Kreisbogen anklicken, um eine Mittelpunktmarke zu setzen.'
+                    : 'Einen unverzerrten Kreis oder Kreisbogen anklicken.',
     );
   }
   function autoMessage(report) {
@@ -618,6 +852,48 @@ export function createCadDrawingUI({
     toolHint();
     edited(autoMessage(result.report));
     return copy(result.report);
+  }
+  async function updatePartsList() {
+    const s = active;
+    if (!s || s.running) return;
+    ensureBase(s);
+    const value = sheet(),
+      ticket = ++s.ticket,
+      revision = s.revision;
+    s.running = true;
+    s.abort = new AbortController();
+    busyControls();
+    status('Stückliste wird aus den sichtbaren Teilen ermittelt …');
+    try {
+      const summary = await partService.measure({ mode: 'grouped' });
+      if (active !== s || ticket !== s.ticket || s.revision !== revision || controller.revision() !== revision) return;
+      if (!summary.rows.length && !value.partsList)
+        throw Error('Keine sichtbaren fertigen Teile für die Stückliste. Zuerst Teile einblenden und erneut prüfen.');
+      const previous = value.partsList ?? null,
+        table = createCadDrawingPartsList(summary.rows, {
+          id: previous?.id,
+          title: previous?.title ?? 'Stückliste',
+          position: cadDrawingPartsListDefaultPosition(value, summary.rows.length),
+          previous,
+        });
+      value.partsList = table;
+      s.changed = true;
+      edited(
+        previous
+          ? summary.rows.length
+            ? `Stückliste aktualisiert: ${table.rows.length} Positionen. Vorhandene Positionsnummern bleiben erhalten.`
+            : 'Stückliste aktualisiert: keine sichtbaren Teile. Entfernte Positionsnummern bleiben für ein späteres Einblenden reserviert.'
+          : `Stückliste mit ${table.rows.length} Positionen auf das Blatt gesetzt.`,
+      );
+      return copy(table);
+    } finally {
+      if (active === s && ticket === s.ticket) {
+        s.running = false;
+        s.abort = null;
+        busyControls();
+        renderSheet();
+      }
+    }
   }
   function paperPoint(event) {
     const canvas = q('[data-drawing-paper]'),
@@ -666,7 +942,8 @@ export function createCadDrawingUI({
           curve = item.projection?.curves.find((c) => c.id === curveId);
         let role = 'center';
         if (curve?.kind === 'line') {
-          const toPaper = (p) => [item.position[0] + p[0] * value.scale, item.position[1] - p[1] * value.scale],
+          const itemScale = cadDrawingViewScale(item, value),
+            toPaper = (p) => [item.position[0] + p[0] * itemScale, item.position[1] - p[1] * itemScale],
             distance = (p) => Math.hypot(p[0] - point[0], p[1] - point[1]);
           role = distance(toPaper(curve.a)) <= distance(toPaper(curve.b)) ? 'a' : 'b';
         }
@@ -702,28 +979,82 @@ export function createCadDrawingUI({
         if (!item || !curveElement) throw Error('Eine geeignete Konturkante der Ansicht anklicken.');
         const curveId = curveElement.dataset.drawingCurve,
           curve = item.projection?.curves.find((c) => c.id === curveId);
+        if (s.tool === 'balloon') {
+          if (value.annotations.length >= CAD_DRAWING_LIMITS.annotations) throw Error('Die Maßgrenze wurde erreicht.');
+          const issue = problems(value).find((problem) => problem.viewId === item.id && !problem.annotationId);
+          if (issue) throw Error(issue.message);
+          const size = cadDrawingPaperSize(value),
+            position = measurePosition(value, point).map((coordinate, axis) =>
+              Math.max(15, Math.min(size[axis] - 15, coordinate)),
+            );
+          const balloon = createCadDrawingBalloon(value, { id: makeId(), viewId: item.id, curveId, position }, {
+            sourceSignatures: sourceSignatures(value),
+          });
+          value.annotations.push(balloon);
+          edited();
+          return;
+        }
         if (s.tool === 'length' || s.tool === 'angle') {
           if (curve?.kind !== 'line') throw Error('Für dieses Maß gerade Konturkanten wählen.');
         } else if (!['circle', 'arc'].includes(curve?.kind))
-          throw Error('Für Radius und Durchmesser einen unverzerrten Kreis oder Kreisbogen wählen.');
-        if (s.tool === 'angle') {
+          throw Error(
+            s.tool === 'centermark'
+              ? 'Für eine Mittelpunktmarke einen Kreis oder Kreisbogen wählen.'
+              : s.tool === 'centerline'
+                ? 'Für eine Mittellinie Kreise oder Kreisbögen wählen.'
+                : 'Für Radius und Durchmesser einen unverzerrten Kreis oder Kreisbogen wählen.',
+          );
+        if (s.tool === 'angle' || s.tool === 'centerline') {
           if (!s.picks.length) {
             s.picks = [{ viewId: item.id, curveId }];
             renderSheet();
-            status('Zweite gerade Kante derselben Ansicht anklicken.');
+            status(
+              s.tool === 'centerline'
+                ? 'Zweiten Kreis oder Kreisbogen derselben Ansicht anklicken.'
+                : 'Zweite gerade Kante derselben Ansicht anklicken.',
+            );
             return;
           }
-          if (s.picks[0].viewId !== item.id) throw Error('Beide Kanten in derselben Ansicht auswählen.');
-          if (s.picks[0].curveId === curveId) throw Error('Eine andere gerade Kante wählen.');
+          if (s.picks[0].viewId !== item.id)
+            throw Error(
+              s.tool === 'centerline'
+                ? 'Beide Bohrungen in derselben Ansicht auswählen.'
+                : 'Beide Kanten in derselben Ansicht auswählen.',
+            );
+          if (s.picks[0].curveId === curveId)
+            throw Error(
+              s.tool === 'centerline'
+                ? 'Einen anderen Kreis oder Kreisbogen wählen.'
+                : 'Eine andere gerade Kante wählen.',
+            );
+        }
+        const curveIds = ['angle', 'centerline'].includes(s.tool) ? [s.picks[0].curveId, curveId] : [curveId];
+        const selectedCurves = curveIds.map((id) => item.projection?.curves.find((c) => c.id === id));
+        let pos;
+        const itemScale = cadDrawingViewScale(item, value);
+        if (s.tool === 'centermark' && curve?.center) {
+          pos = [item.position[0] + curve.center[0] * itemScale, item.position[1] - curve.center[1] * itemScale];
+        } else if (s.tool === 'centerline' && selectedCurves[0]?.center && selectedCurves[1]?.center) {
+          const p1 = [item.position[0] + selectedCurves[0].center[0] * itemScale, item.position[1] - selectedCurves[0].center[1] * itemScale];
+          const p2 = [item.position[0] + selectedCurves[1].center[0] * itemScale, item.position[1] - selectedCurves[1].center[1] * itemScale];
+          pos = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+        } else {
+          pos = measurePosition(value, point);
         }
         const annotation = {
           id: makeId(),
           kind: s.tool,
           viewId: item.id,
           sourceSignatures: copy(item.projection.sourceSignatures),
-          curveIds: s.tool === 'angle' ? [s.picks[0].curveId, curveId] : [curveId],
-          position: measurePosition(value, point),
+          curveIds,
+          position: pos,
+          ...(s.tool === 'centerline' ? { overhangMm: Number.isFinite(s.overhangMm) ? s.overhangMm : 3 } : {}),
         };
+        if (selectedCurves.every((c) => c?.sourceReferences)) {
+          annotation.curveReferences = selectedCurves.map((c) => ({
+            sourceReferences: copy(c.sourceReferences),
+          }));
+        }
         value.annotations.push(annotation);
         const issues = problems(value).filter((p) => p.annotationId === annotation.id);
         if (issues.length) {
@@ -736,6 +1067,7 @@ export function createCadDrawingUI({
       const targetAnnotation = value.annotations.find((a) => a.id === annotation?.dataset.drawingAnnotation);
       s.annotationId = targetAnnotation?.id ?? null;
       q('[data-drawing-remove-annotation]').disabled = !targetAnnotation;
+      toolHint();
       if (targetAnnotation || item) {
         s.drag = {
           pointerId: event.pointerId,
@@ -773,7 +1105,13 @@ export function createCadDrawingUI({
       else
         element.setAttribute(
           'transform',
-          'translate(' + target.position.join(' ') + ') scale(' + value.scale + ' ' + -value.scale + ')',
+          'translate(' +
+            target.position.join(' ') +
+            ') scale(' +
+            cadDrawingViewScale(target, value) +
+            ' ' +
+            -cadDrawingViewScale(target, value) +
+            ')',
         );
     }
   }
@@ -783,9 +1121,7 @@ export function createCadDrawingUI({
     s.drag = null;
     try {
       q('[data-drawing-paper]').releasePointerCapture(event.pointerId);
-    } catch {
-      /* Pointer capture may already have been released when the drag ends. */
-    }
+    } catch {}
     renderSheet();
     status('Position geändert. Mit „Blatt übernehmen“ speichern.');
   }
@@ -846,19 +1182,24 @@ export function createCadDrawingUI({
         return proposal;
       }
       for (let i = 0; i < draft.views.length; i++) {
-        const item = draft.views[i],
-          previous = item.projection;
+        const item = draft.views[i];
+        if (item.kind === 'detail') continue;
+        const previous = item.projection;
         status('Native Ansicht ' + (i + 1) + ' / ' + draft.views.length + ' wird berechnet …');
-        const projection = await controller.query(
-          'drawingProjection',
-          { ids: item.sourceIds, view: item.kind, ...(item.kind === 'section' ? { section: item.section } : {}) },
-          { signal: s.abort.signal },
-        );
+        const projection = await controller.query('drawingProjection', cadDrawingProjectionOptions(item), {
+          signal: s.abort.signal,
+        });
         if (active !== s || ticket !== s.ticket || controller.revision() !== revision) return;
-        const position = cadDrawingUpdatedPosition(item.position, previous, projection, draft.scale);
+        const position = cadDrawingUpdatedPosition(
+          item.position,
+          previous,
+          projection,
+          cadDrawingViewScale(item, draft),
+        );
         draft = updateCadDrawingProjection(draft, item.id, projection);
         draft.views[i].position = position;
       }
+      if (draft.views.some((view) => view.kind === 'detail')) draft = updateCadDrawingDetailViews(draft).sheet;
       // Native curve IDs encode their geometry. Preserve measures verbatim: changed
       // or missing curves stay visibly unresolved until explicitly picked/deleted.
       const drawings = copy(s.drawings),

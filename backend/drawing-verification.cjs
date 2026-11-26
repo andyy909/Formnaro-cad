@@ -15,9 +15,94 @@ exports.verifyDrawings=async(win,{directory,files}={})=>{
    const group=[...document.querySelectorAll('[data-drawing-view]')].find(e=>e.dataset.drawingView===view.id),curve=[...group.querySelectorAll('[data-drawing-curve]')].find(e=>e.dataset.drawingCurve===chosen.id),shape=curve.querySelector('path,circle,ellipse,polyline');check(shape,'curve SVG missing');shape.scrollIntoView({block:'center',inline:'center'});const matrix=shape.getScreenCTM(),diagnostics=[];for(const ratio of [.33,.66,.15,.85]){const local=shape.getPointAtLength(shape.getTotalLength()*ratio),v=new DOMPoint(local.x,local.y).matrixTransform(matrix),element=document.elementFromPoint(v.x,v.y),hit=element?.closest('[data-drawing-curve]');if(hit?.dataset.drawingCurve===chosen.id)return {x:Math.round(v.x),y:Math.round(v.y)};diagnostics.push({x:v.x,y:v.y,tag:element?.tagName,html:element?.outerHTML.slice(0,300)});}throw Error('curve covered '+JSON.stringify({chosen,diagnostics}));`);
   await mouse(point);return point;
  }
+
+ async function verifyBalloons() {
+  await proof('B06 native STEP fixture has two simplified screws and a same-named variant', `
+   await a.resetProject();
+   a.workbenchUI.setMode('normal');
+   const specifications = [
+     { length: 18, head: 12, x: -30, definitionId: 'base-screw' },
+     { length: 18, head: 12, x: 0, definitionId: 'base-screw' },
+     { length: 22, head: 14, x: 30, definitionId: 'variant-screw' },
+   ];
+   const commands = specifications.flatMap(({ length, head, x }, index) => [
+     { op: 'create', type: 'cylinder', size: [8, 8, length], pos: [x, 0, length / 2], as: 'shaft' + index },
+     { op: 'create', type: 'hexagon', size: [head, head, 4], pos: [x, 0, length + 1], as: 'head' + index },
+     { op: 'group', targets: ['$shaft' + index, '$head' + index], as: 'screw' + index, name: 'Screw ' + index },
+   ]);
+   await a.controller.execute({ kind: 'batch', commands });
+   await a.settled();
+   const stepFiles = [];
+   for (const node of a.getModel().nodes)
+     stepFiles.push((await a.controller.exportModel({ format: 'step', ids: [node.id] })).data);
+   await a.resetProject();
+   for (const [index, bytes] of stepFiles.entries())
+     await a.controller.execute({ kind: 'importStep', bytes, options: { name: 'B06 screw ' + index + '.step' } });
+   await a.settled();
+   const xCenter = (node) => node.transform[12] + (node.stats.bounds.min[0] + node.stats.bounds.max[0]) / 2;
+   const ids = [...a.getModel().nodes].sort((left, right) => xCenter(left) - xCenter(right)).map(node => node.id);
+   check(ids.length === 3, 'missing native fixture');
+   await a.mutate(model => {
+     model.componentDefinitions = { version: 1, definitions: [
+       { id: 'base-screw', name: 'Test screw', partNumber: 'M8-L18' },
+       { id: 'variant-screw', name: 'Test screw', partNumber: 'M8-L22' },
+     ] };
+     for (const node of model.nodes) {
+       node.name = 'Test screw';
+       node.definitionId = specifications[ids.indexOf(node.id)].definitionId;
+     }
+   });
+   await a.settled();
+   a.select(ids.map(rootId => ({ rootId, path: [] })));
+   window.__drawingProof = { ids, source: canonical(a.getModel().nodes) };
+  `);
+  await click('[data-action=drawing]');
+  const unwantedViews=await run("return a.drawingUI.state().drawings.sheets[0].views.filter(view=>view.kind!=='top').map(view=>view.id);");
+  for(const id of unwantedViews){
+   await field('[data-drawing-view-list]',id);
+   await click('[data-drawing-remove-view]');
+  }
+  await click('[data-drawing-update]');
+  await until('!a.drawingUI.state().running&&a.drawingUI.state().drawings.sheets[0].views.every(v=>v.projection)');
+  await click('[data-drawing-parts]');
+  await until('!a.drawingUI.state().running&&a.drawingUI.state().drawings.sheets[0].partsList?.rows.length===2');
+  await field('[data-drawing-tool]','balloon');
+  for (const index of [0,1,2]) {
+   const point=await run('const id=p.ids['+index+`],sheet=a.drawingUI.state().drawings.sheets[0],view=sheet.views.find(v=>v.kind==='top'),curves=view.projection.curves.filter(curve=>!curve.hidden&&curve.sourceReferences?.length&&curve.sourceReferences.every(({source})=>source.rootId===id&&!source.path.length));const group=[...document.querySelectorAll('[data-drawing-view]')].find(e=>e.dataset.drawingView===view.id);for(const curve of curves){const element=[...group.querySelectorAll('[data-drawing-curve]')].find(e=>e.dataset.drawingCurve===curve.id),shape=element?.querySelector('path,circle,ellipse,polyline');if(!shape)continue;for(const ratio of [.35,.65,.5]){const local=shape.getPointAtLength(shape.getTotalLength()*ratio),v=new DOMPoint(local.x,local.y).matrixTransform(shape.getScreenCTM()),x=Math.round(v.x),y=Math.round(v.y);if(document.elementFromPoint(x,y)?.closest('[data-drawing-curve]')===element)return {x,y};}}throw Error('Cannot pick visible native placement '+id);`);
+   await mouse(point);
+  }
+  await proof('B06-01/02 real projected-edge clicks resolve two equal numbers and one distinct variant', `const sheet=a.drawingUI.state().drawings.sheets[0],top=sheet.views.find(v=>v.kind==='top');check(sheet.annotations.length===3,'three balloons expected: '+document.querySelector('[data-drawing-status]').textContent);p.positions=sheet.annotations.map((balloon,index)=>{check(balloon.kind==='balloon'&&balloon.instanceId===p.ids[index]&&balloon.viewId===top.id,'wrong placement ID');const expected=sheet.partsList.rows.find(row=>row.instanceIds.includes(balloon.instanceId)).position,group=[...document.querySelectorAll('[data-drawing-annotation]')].find(el=>el.dataset.drawingAnnotation===balloon.id);check(group.querySelector('text').textContent===String(expected)&&group.querySelector('circle')&&group.querySelector('path'),'visible number, circle or leader wrong');return expected;});check(p.positions[0]===p.positions[1]&&p.positions[0]!==p.positions[2],'part grouping lost');p.pinned=Object.fromEntries(sheet.annotations.map(b=>[b.instanceId,b.curveId]));`);
+  await shot('B06-Montageblatt');
+  await proof('B06 format 41 commit, physical reopen and exact Undo/Redo preserve native model', async()=>{
+   await click('[data-drawing-apply]');
+   await until('!a.drawingUI.state()');
+   const saved=await run(`await a.settled();check(a.getModel().version===41&&canonical(a.getModel().nodes)===p.source,'format or original geometry changed');p.saved=a.serialize();await a.actions.undo();await a.settled();check(!a.getModel().drawings,'balloon Undo failed');await a.actions.redo();await a.settled();check(a.serialize()===p.saved,'balloon Redo failed');return p.saved;`);
+   const file=path.join(directory,'B06-Montageblatt.ocad');
+   fs.writeFileSync(file,saved);
+   await run('await a.controller.open(JSON.parse('+JSON.stringify(fs.readFileSync(file,'utf8'))+'));await a.settled();a.drawingUI.open();check(!a.drawingUI.state().problems.length,"reopened balloon stale");');
+  });
+  for (const format of ['svg','dxf','pdf']) await proof('B06-04 actual '+format.toUpperCase()+' export retains table and balloons', async()=>{
+   files.save=path.join(directory,'B06-Montageblatt.'+format);
+   await click('[data-drawing-export='+format+']');
+   await until('!a.drawingUI.state().running');
+   const bytes=fs.readFileSync(files.save);
+   if(format==='pdf') assert.equal(bytes.subarray(0,5).toString(),'%PDF-');
+   else if(format==='svg') assert.equal((bytes.toString().match(/<circle [^>]+fill="white"/g)??[]).length,3);
+   else assert.equal((bytes.toString().match(/AcDbEntity\r\n8\r\nANNOTATIONS\r\n100\r\nAcDbCircle\r\n/g)??[]).length,3);
+  });
+  await proof('B06-03 changed placement refollows native projection and retains its position number',`a.drawingUI.close();await a.mutate(model=>{model.nodes.find(n=>n.id===p.ids[0]).transform[12]-=12;});await a.settled();a.drawingUI.open();check(a.drawingUI.state().problems.some(problem=>problem.code==='STALE_SOURCE'),'changed placement did not mark stale');await a.drawingUI.update();const draft=a.drawingUI.state().drawings.sheets[0],balloon=draft.annotations[0],top=draft.views.find(view=>view.id===balloon.viewId),curve=top.projection.curves.find(c=>c.id===balloon.curveId);check(!a.drawingUI.state().problems.length&&balloon.instanceId===p.ids[0]&&balloon.curveId!==p.pinned[balloon.instanceId]&&curve.sourceReferences.every(r=>r.source.rootId===balloon.instanceId),'balloon failed exact native update');check(draft.partsList.rows.find(row=>row.instanceIds.includes(balloon.instanceId)).position===p.positions[0],'position number changed on move');await a.drawingUI.apply();await a.settled();`);
+  await proof('B06-03 removal visibly loses only the exact ID and blocks export',`await a.mutate(model=>{model.nodes=model.nodes.filter(n=>n.id!==p.ids[0]);});await a.settled();a.select([]);a.drawingUI.open();const state=a.drawingUI.state(),sheet=state.drawings.sheets[0],lost=state.problems.filter(problem=>problem.code==='LOST_BALLOON_REFERENCE');check(lost.length===1&&lost[0].annotationId===sheet.annotations[0].id&&sheet.annotations[0].instanceId===p.ids[0],'lost balloon was rebound or unrelated balloons broke');const lostGroup=[...document.querySelectorAll('[data-drawing-annotation]')].find(el=>el.dataset.drawingAnnotation===lost[0].annotationId);check(lostGroup.querySelector('text').textContent==='?'&&document.querySelector('[data-drawing-export=svg]').disabled,'lost reference visible or export gate missing');`);
+  await shot('B06-Bezug-verloren');
+  await run('a.drawingUI.close();await a.controller.open(JSON.parse(p.saved));await a.settled();');
+ }
  const watchdog=setInterval(()=>{run('return {ready:window.__cadReady,stage:window.__drawingStage,controller:a?.controller?.state(),state:a?.drawingUI?.state(),status:document.querySelector("[data-drawing-status]")?.textContent};').then(value=>fs.writeFileSync(path.join(directory,'drawing-health.json'),JSON.stringify(value))).catch(()=>{});},5000);
  try{
   win.setSize(1500,1000);
+  if (process.env.FORMNARO_VERIFY_B03_ONLY === '1') {
+   await require('./b03-ui-verification.cjs').verifyB03({ directory, proof, run, click, field, until, shot });
+   return { ok: true, checks };
+  }
+  if(process.env.FORMNARO_VERIFY_DRAWING_BALLOONS_ONLY==='1'){await verifyBalloons();return {ok:true,checks};}
   await proof('drawing entry in Normal and Easy CAD and native bored fixture',`window.__drawingStage='reset';await a.resetProject();window.__drawingStage='menus';a.workbenchUI.setMode('normal');check(typeof a.actions.drawing==='function','drawing action missing');check(document.querySelector('[data-action=drawing]'),'Normal drawing entry missing');a.workbenchUI.setMode('easy');a.workbenchUI.setDomain('cad');check(document.querySelector('[data-action=drawing]')&&!document.querySelector('[data-action=drawing]').closest('[hidden]'),'Easy drawing entry missing');a.workbenchUI.setMode('normal');window.__drawingStage='loadDemo';await a.loadDemo();window.__drawingStage='settled';await a.settled();window.__drawingStage='fixture ready';const node=a.getModel().nodes[0];a.select([{rootId:node.id,path:[]}]);window.__drawingProof={id:node.id,before:a.serialize(),source:JSON.stringify(a.getModel().nodes),depth:a.undoDepth(),queries:0,query:a.controller.query};a.controller.query=async(...args)=>{window.__drawingProof.queries++;return window.__drawingProof.query(...args)};`);
   await click('[data-action=drawing]');
   await proof('opening creates only a local three-view draft without native work or history',`const s=a.drawingUI.state(),d=s.drawings.sheets[0];check(d.paper==='A4'&&d.orientation==='landscape'&&d.views.length===3,'initial views');check(d.views.every(v=>!v.projection),'eager projection');let rejected=false;try{await a.drawingUI.export('svg');}catch{rejected=true;}check(rejected&&a.drawingUI.state().problems.some(x=>x.code==='UPDATE_REQUIRED'),'uncomputed view exported');check(p.queries===0&&a.serialize()===p.before&&a.undoDepth()===p.depth,'open changed model/history');`);
@@ -79,6 +164,7 @@ exports.verifyDrawings=async(win,{directory,files}={})=>{
   await proof('source movement and resize preserve manual paper layout without extra native jobs',`const s=a.drawingUI.state(),d=s.drawings.sheets.find(v=>v.id===s.sheetId);for(const v of d.views){const b=v.projection.bounds,c=b.min.map((n,k)=>(n+b.max[k])/2),paper=[v.position[0]+c[0]*d.scale,v.position[1]-c[1]*d.scale];check(paper.every((n,k)=>Math.abs(n-p.manualFarCentres[v.id][k])<1e-7),'updated far source moved paper layout '+v.kind);}const top=d.views.find(v=>v.kind==='top');check(Math.abs((top.projection.bounds.max[0]-top.projection.bounds.min[0])*d.scale-45)<1e-6,'far resize changed scale/dimensions');check(p.queries-p.farQueries===3,'far changed-source update count');check(a.serialize()===p.farModel,'far drawing update changed source');a.drawingUI.close();await a.controller.open(JSON.parse(p.originalBeforeFar));await a.settled();check(a.serialize()===p.originalBeforeFar,'far test restore changed original');a.controller.query=p.query;`);
   fs.writeFileSync(path.join(directory,'drawing-final.ocad'),await run('return a.serialize();'));
   fs.writeFileSync(path.join(directory,'drawing-expected.json'),JSON.stringify({paperA4:[297,210],paperA3:[297,420],bores:4,boreRadius:2.5,plate:[60,40,6],dxfUnits:'mm',dxfScale:1,sourcePreserved:true},null,2));
+  await verifyBalloons();
   return {ok:true,checks};
- }catch(error){try{fs.writeFileSync(path.join(directory,'drawing-failure.png'),(await win.webContents.capturePage()).toPNG());fs.writeFileSync(path.join(directory,'drawing-failure-state.json'),JSON.stringify(await run('return {drawing:a.drawingUI.state(),controller:a.controller.state(),stage:window.__drawingStage};'),null,2));}catch{ /* Failure evidence is optional. Preserve the original verification error. */ }throw error;}finally{clearInterval(watchdog);}
+ }catch(error){try{fs.writeFileSync(path.join(directory,'drawing-failure.png'),(await win.webContents.capturePage()).toPNG());fs.writeFileSync(path.join(directory,'drawing-failure-state.json'),JSON.stringify(await run('return {drawing:a.drawingUI.state(),controller:a.controller.state(),stage:window.__drawingStage};'),null,2));}catch{}throw error;}finally{clearInterval(watchdog);}
 };

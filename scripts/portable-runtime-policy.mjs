@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
+import {execFileSync} from 'node:child_process';
 const profile=JSON.parse(fs.readFileSync(new URL('./portable-freecad-profile.json',import.meta.url),'utf8'));
 const nativeExclusions=new Map(profile.nativeExclusions.map(row=>[row.file.toLowerCase(),row]));
 for(const name of ['bin/freecad.exe','bin/freecadcmd.exe','bin/python.exe','bin/freecad.pyd','bin/python3.dll','bin/python311.dll','bin/opengl32sw.dll','lib/part.pyd','lib/sketcher.pyd','lib/mesh.pyd','lib/meshpart.pyd','lib/import.pyd','lib/surface.pyd','formnaro-container.exe'])if(nativeExclusions.has(name))throw Error('Core runtime cannot be excluded: '+name);
@@ -51,6 +52,10 @@ export function copyPortableCAD(from,to){
  fs.writeFileSync(path.join(to,'manifest.json'),JSON.stringify(manifest,null,2));
  return {files:files.length,removedFiles:removed.length,savedBytes:removed.reduce((a,r)=>a+r.size,0),removed};
 }
+// The Advanced Lab drawing oracle imports plain modules in Electron's main process.
+// This runtime closure follows the transitive imports of cad-drawing-data
+// (cad-part-properties -> mesh-appearance) and stays separate from the frozen pins.
+export const benchmarkDrawingRuntimeSources=['cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref','cad-part-properties','mesh-appearance'];
 export function copyBenchmarkSources(source,stage){
  const required=new Map();
  for(const suite of ['benchmark-core-v1.json','benchmark-advanced-v2.json','benchmark-guided-v1.json']){
@@ -66,9 +71,7 @@ export function copyBenchmarkSources(source,stage){
   if(createHash('sha256').update(bytes).digest('hex')!==sha256)throw Error('Benchmark source changed: '+file);
   return {file,bytes};
  });
- // The Advanced Lab drawing oracle imports plain modules in Electron's main process.
- // Keep this runtime closure separate from the frozen benchmark source pins.
- if(fs.existsSync(path.join(source,'backend','ai-benchmark-advanced-evaluate.cjs'))) for(const name of ['cad-drawing-data','cad-drawing-measure','cad-geometry-digest','cad-geometry-ref']){
+ if(fs.existsSync(path.join(source,'backend','ai-benchmark-advanced-evaluate.cjs'))) for(const name of benchmarkDrawingRuntimeSources){
   const file='src/'+name+'.js';
   if(!required.has(file))checked.push({file,bytes:fs.readFileSync(path.join(source,file))});
  }
@@ -93,6 +96,17 @@ export function copyPortableApp(source,stage){
   const target=path.join(packaged,file);
   fs.mkdirSync(path.dirname(target),{recursive:true});
   fs.copyFileSync(path.join(fflate,file),target);
+ }
+ // Pairing generates its QR code in the Electron main process.
+ if(fs.existsSync(path.join(stage,'backend','tablet-transfer.cjs'))){
+  const entry=require.resolve('qrcode-generator');
+  const moduleRoot=path.dirname(path.dirname(entry));
+  const target=path.join(stage,'node_modules','qrcode-generator');
+  fs.mkdirSync(path.join(target,'dist'),{recursive:true});
+  fs.copyFileSync(path.join(moduleRoot,'package.json'),path.join(target,'package.json'));
+  fs.copyFileSync(entry,path.join(target,'dist','qrcode.js'));
+  execFileSync(process.execPath,[path.join(source,'scripts','build-tablet-runtime.mjs'),stage],
+   {stdio:'inherit',windowsHide:true});
  }
  // The public bridge client and acceptance/build scripts stay in the source repository.
 }

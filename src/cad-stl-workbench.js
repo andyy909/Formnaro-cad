@@ -89,6 +89,7 @@ export function openStlWorkbench(
   const dialog = $('modal'),
     status = $('converter-status');
   const defaults = workflowSettings?.get(),
+    localRepair = boundSource?.source?.localRepair ?? null,
     settings = {
       unit: defaults?.import.unit ?? 1,
       tolerance: defaults?.conversion.tolerance ?? 0.15,
@@ -97,6 +98,9 @@ export function openStlWorkbench(
       repair: boundSource ? (defaults?.conversion.meshRepair ?? false) : (defaults?.conversion.repair ?? true),
       ...initialOptions,
     };
+  // A locally repaired mesh keeps its confirmed result: the converter must not
+  // repair it a second time. Without that confirmation nothing changes.
+  if (localRepair) settings.repair = false;
   for (const [key, id] of [
     ['unit', 'converter-unit'],
     ['tolerance', 'converter-tolerance'],
@@ -104,6 +108,15 @@ export function openStlWorkbench(
   ])
     $(id).value = String(settings[key]);
   $('converter-repair').checked = settings.repair;
+  if (localRepair) {
+    $('converter-repair').disabled = true;
+    const lockNote = document.createElement('p');
+    lockNote.className = 'small-note';
+    lockNote.id = 'converter-repair-lock';
+    lockNote.textContent =
+      'Dieses Netz ist bereits lokal repariert (überlappende ebene Naht, Außenhaut geprüft). Es wird nicht erneut repariert; die Option bleibt gesperrt.';
+    $('converter-repair').closest('label').after(lockNote);
+  }
   $('converter-fallback').checked = settings.fallback;
   const assistanceLabel = document.createElement('label');
   assistanceLabel.className = 'dialog-label';
@@ -172,7 +185,7 @@ export function openStlWorkbench(
   const options = () => ({
     ...readConversionControls('converter'),
     unit: boundSource ? 1 : Number($('converter-unit').value),
-    repair: $('converter-repair').checked,
+    repair: localRepair ? false : $('converter-repair').checked,
   });
   const filtered = () => {
     const query = $('stl-filter').value.trim().toLowerCase();
@@ -261,6 +274,7 @@ export function openStlWorkbench(
       '.stl-settings input,.stl-settings select,.stl-edit-actions input,.stl-edit-actions button,.stl-edit-actions select',
     ))
       if (!node.closest('#converter-ai')) node.disabled = locked || !!projectPreview || sourceApplied;
+    if (localRepair) $('converter-repair').disabled = true;
     const analysisButton = $('converter-auto-analyse');
     if (analysisButton) {
       analysisButton.hidden = assistance !== 'with';
@@ -279,7 +293,7 @@ export function openStlWorkbench(
     if (projectOnly) $('converter-save-step').disabled = locked || !result;
     $('converter-cancel').disabled = !locked || applying;
     $('converter-import').disabled =
-      locked || sourceApplied || !!projectPreview || !result || (!converterImport && !importConverted);
+      locked || sourceApplied || !!projectPreview || !result?.bytes || (!converterImport && !importConverted);
     $('converter-mesh-help').hidden =
       !meshHelpAvailable || !!result || !showMeshHelp || (!boundSource && !importMeshForHelp);
     $('converter-mesh-help').disabled = locked || !!projectPreview || sourceApplied;
@@ -292,7 +306,7 @@ export function openStlWorkbench(
       const requiresResult = ['Ergebnis', 'Überlagerung', 'Abweichung'].includes(option.value);
       option.disabled =
         (requiresSource && !preview.hasOriginal()) ||
-        (requiresResult && !result) ||
+        (requiresResult && !result?.artifacts?.preview) ||
         (option.value === 'Abweichung' && !result?.deviation);
     }
     $('converter-report').disabled = locked || !result;
@@ -531,6 +545,17 @@ export function openStlWorkbench(
   function showResult(value, settings) {
     result = value;
     meshHelpAvailable = false;
+    if (value.repairOnly) {
+      $('converter-result').textContent =
+        'Reparatur bestätigt, STEP-Aufbau fehlgeschlagen: ' +
+        (value.error || value.report?.step?.message || 'ohne Meldung') +
+        '. Die bestätigte Reparatur steht als 3MF und STL bereit; es gibt kein STEP-Ergebnis.' +
+        scaleNote(value.report, settings);
+      $('stl-view').value = 'Original';
+      preview.setMode('Original');
+      controls();
+      return;
+    }
     $('converter-result').textContent = conversionSummary(value.report) + scaleNote(value.report, settings);
     if (value.report.symmetry)
       $('converter-result').textContent +=
@@ -548,6 +573,7 @@ export function openStlWorkbench(
     controls();
   }
   const save = async () => {
+    if (!result?.bytes) throw Error('Kein STEP-Ergebnis vorhanden. Bitte die Reparatur speichern oder erneut konvertieren.');
     const saved = await downloadOne(result.bytes, filename('.step'), 'model/step');
     if (!alive()) return;
     status.textContent = saved?.saved
@@ -563,7 +589,8 @@ export function openStlWorkbench(
       await stopping;
       if (requested !== sequence || !alive() || sourceStale) return;
       ready();
-      if (result) return save();
+      if (result?.bytes) return save();
+      result = null;
       const settings = options();
       if (analysis?.modified) {
         if (settings.mode !== 'auto') throw Error('Regionskorrekturen benötigen Automatisch erkennen.');
@@ -580,6 +607,13 @@ export function openStlWorkbench(
         const value = await nativeTask.run(selected, settings);
         if (ticket !== sequence || !alive()) return;
         showResult(value, settings);
+        if (value.repairOnly) {
+          status.textContent =
+            'Reparatur bestätigt, STEP-Aufbau fehlgeschlagen: ' +
+            (value.error || value.report?.step?.message || 'ohne Meldung') +
+            '. Reparierte 3MF/STL speichern oder erneut konvertieren.';
+          return;
+        }
         if (projectOnly)
           status.textContent = 'CAD-Ergebnis bereit. Original und Ergebnis vergleichen, dann CAD-Übernahme prüfen.';
         else await save();

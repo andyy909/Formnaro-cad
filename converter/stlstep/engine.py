@@ -34,6 +34,18 @@ class ConversionError(ValueError):
     """A user-readable conversion failure."""
 
 
+class StepConversionError(ConversionError):
+    """The STEP step failed after an accepted repair.
+
+    The confirmed repair files and their report were written; ``report`` keeps
+    the original, the repair state and the STEP outcome apart.
+    """
+
+    def __init__(self, message, report):
+        super().__init__(message)
+        self.report = report
+
+
 MIN_SMOOTH_TESSELLATION_MM = 0.0005
 
 
@@ -159,41 +171,25 @@ def load_mesh(path: str | Path, options: Options, progress=None):
 
 def surface_points(mesh: trimesh.Trimesh, count: int, seed: int):
     """Include vertices, triangle centres, edge midpoints and area samples."""
-    rng = np.random.default_rng(seed)
-    def subset(values, budget):
-        if len(values) <= budget:
-            return values
-        return values[rng.choice(len(values), budget, replace=False)]
-    vertices = subset(mesh.vertices, count)
-    centres = subset(mesh.triangles_center, count)
-    edges = mesh.edges_unique
-    edge_points = subset(mesh.vertices[edges].mean(axis=1), count)
-    random_points, _ = trimesh.sample.sample_surface(mesh, count=count, seed=seed)
-    return np.vstack((vertices, centres, edge_points, random_points))
+    from .surface_check import sample_points
+    return sample_points(mesh, count, seed)
 
 
 def _distances(mesh, points):
-    # Chunked queries avoid the large point x candidate-triangle allocations
-    # produced by Trimesh's vectorised nearest-surface implementation.
-    result = []
-    for start in range(0, len(points), 512):
-        _, distance, _ = trimesh.proximity.closest_point(mesh, points[start:start + 512])
-        result.append(distance)
-    values = np.concatenate(result)
-    if not np.isfinite(values).all():
-        raise ConversionError("Die Abweichungsprüfung ergab ungültige Werte.")
-    return values
+    from .surface_check import distances
+    try:
+        return distances(mesh, points)
+    except ValueError as exc:
+        raise ConversionError(str(exc)) from exc
 
 
 def compare_meshes(reference, candidate, samples):
-    a = _distances(candidate, surface_points(reference, samples, 481))
-    b = _distances(reference, surface_points(candidate, samples, 947))
-    def stats(values):
-        return {"max_mm": float(values.max()), "p95_mm": float(np.percentile(values, 95)),
-                "mean_mm": float(values.mean()), "points": len(values)}
-    return {"stl_to_cad": stats(a), "cad_to_stl": stats(b),
-            "sampled_max_mm": float(max(a.max(), b.max())),
-            "kind": "deterministic_surface_samples_not_a_mathematical_bound"}
+    """Both sampled directions with reference label, maximum and its location."""
+    from .surface_check import compare_surfaces
+    try:
+        return compare_surfaces(reference, candidate, samples)
+    except ValueError as exc:
+        raise ConversionError(str(exc)) from exc
 
 
 def shape_mesh(shape: cq.Shape, tolerance: float):
@@ -881,6 +877,76 @@ def _roundtrip_candidates(candidates, reference, options, step_file, progress):
     return imported, reimport_mesh, volume_error, error, margin
 
 
+def _publish_repair_only(*, source, destination, report_path, repaired_path, repaired_3mf,
+                         options, reference, repaired, repairs, status, message, started,
+                         overwrite):
+    """Keep a confirmed repair when the STEP step fails.
+
+    Files are written to a staged directory first and only then moved with
+    ``os.replace`` so an interrupted write never leaves a half-written 3MF, STL
+    or report. ``None`` means the overwrite guard refused the export.
+    """
+    from . import __version__
+
+    guarded = (destination, report_path, repaired_path, repaired_3mf)
+    if not overwrite and any(p.exists() for p in guarded):
+        return None
+    unit = "mm"
+    report = {
+        "version": __version__, "input": str(source), "output": None,
+        "status": "repair_only", "valid": False, "repair_valid": True,
+        "options": asdict(options),
+        "input_triangles": repairs["original_triangles"],
+        "input_bounds_mm": reference.bounds.tolist(),
+        "original": {
+            "triangles": repairs["original_triangles"],
+            "bounds_mm": reference.bounds.tolist(),
+            "volume_mm3": float(reference.volume) if repairs["original_volume_valid"] else None,
+            "unit": unit,
+        },
+        "repair": {
+            "accepted": True,
+            "changed": bool(repairs.get("changed")),
+            "backend": repairs.get("backend"),
+            "fassung": repairs.get("repair_fassung"),
+            "triangles": int(len(repaired.faces)),
+            "bounds_mm": repaired.bounds.tolist(),
+            "volume_mm3": float(repaired.volume),
+            "unit": unit,
+            "deviation": repairs.get("deviation"),
+            "admission": repairs.get("admission"),
+            "repaired_mesh": str(repaired_path),
+            "repaired_3mf": str(repaired_3mf),
+        },
+        "step": {"status": status, "message": message},
+        "repairs": repairs,
+        "notes": [
+            "Die Reparatur wurde vor dem STEP-Aufbau bestätigt; der STEP-Aufbau ist fehlgeschlagen.",
+            "Die reparierte 3MF und STL entsprechen dem bestätigten Reparaturstand und sind keine STEP-Ergebnisse.",
+            "STL enthält keine Einheit; die Begleitdateien und Maße sind in Millimetern.",
+        ],
+        "elapsed_seconds": round(time.monotonic() - started, 2),
+        "preview": None, "report": str(report_path),
+        "repaired_mesh": str(repaired_path), "repaired_3mf": str(repaired_3mf),
+    }
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".stl-step-repair-", dir=destination.parent) as temporary:
+        staged = Path(temporary)
+        if repaired_path:
+            repaired.export(staged / "repaired.stl", file_type="stl")
+            from .windows_repair import _write_input_package
+            _write_input_package(repaired, staged / "repaired.3mf")
+        (staged / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False),
+                                            encoding="utf-8")
+        if not overwrite and any(p.exists() for p in (destination, report_path)):
+            return None
+        os.replace(staged / "report.json", report_path)
+        if repaired_path:
+            os.replace(staged / "repaired.stl", repaired_path)
+            os.replace(staged / "repaired.3mf", repaired_3mf)
+    return report
+
+
 def convert(input_path: str | Path, output_path: str | Path, options: Options | None = None,
             progress: Callable[[str], None] | None = None, *, overwrite=False):
     """Write validated STEP and JSON report; existing results require overwrite."""
@@ -928,15 +994,34 @@ def convert(input_path: str | Path, output_path: str | Path, options: Options | 
         except RegionEditError as exc:
             raise ConversionError(str(exc)) from exc
     reconstructed_reference = trimesh.util.concatenate(components)
+    repair_accepted = bool(options.repair and isinstance(repairs.get("admission"), dict)
+                           and repairs["admission"].get("accepted") is True)
+
+    def keep_repair(exc, status):
+        """Turn a STEP-side failure into a repair-only result when admitted."""
+        if not repair_accepted:
+            return exc
+        report = _publish_repair_only(
+            source=source, destination=destination, report_path=report_path,
+            repaired_path=repaired_path, repaired_3mf=repaired_3mf, options=options,
+            reference=reference, repaired=reconstructed_reference, repairs=repairs,
+            status=status, message=str(exc), started=started, overwrite=overwrite)
+        return StepConversionError(str(exc), report) if report is not None else exc
+
     candidates, attempts = [], []
     repair_error = float(repairs.get("deviation", {}).get("sampled_max_mm", 0.0))
     remaining_budget = options.tolerance - repair_error
     if remaining_budget < 0.0001:
-        raise ConversionError("Die Netzreparatur verbraucht bereits das Abweichungsbudget. Bitte eine etwas größere Toleranz wählen.")
+        raise keep_repair(ConversionError(
+            "Die Netzreparatur verbraucht bereits das Abweichungsbudget. "
+            "Bitte eine etwas größere Toleranz wählen."), "not_attempted")
     cad_options = replace(options, tolerance=remaining_budget)
-    for i, component in enumerate(components):
-        _notify(progress, f"Körper {i + 1} von {len(components)} …")
-        candidates.append(convert_part(component, cad_options, progress, attempts))
+    try:
+        for i, component in enumerate(components):
+            _notify(progress, f"Körper {i + 1} von {len(components)} …")
+            candidates.append(convert_part(component, cad_options, progress, attempts))
+    except ConversionError as exc:
+        raise keep_repair(exc, "not_attempted") from exc
     # Stage all files in the destination directory; a failed conversion never
     # replaces an existing output. The STEP is committed last as success marker.
     with tempfile.TemporaryDirectory(prefix=".stl-step-", dir=destination.parent) as temporary:
@@ -944,56 +1029,62 @@ def convert(input_path: str | Path, output_path: str | Path, options: Options | 
         step_file = staged / "result.step"
         stages = ("manual", "regions", "features", "profiles", "layers", "patches", "advanced", "local", "smooth", "planar", "exact")
         disabled = [set() for _ in components]
-        while True:
-            try:
-                imported, reimport_mesh, roundtrip_volume_error, roundtrip_error, margin = _roundtrip_candidates(
-                    candidates, reference, options, step_file, progress)
-                break
-            except OSError:
-                raise  # Another geometry strategy cannot fix a filesystem error.
-            except Exception as exc:
-                attempts.append({"method": "STEP-Rundlauf", "accepted": False,
-                                 "stages": [c.stage for c in candidates], "reason": str(exc)[:500]})
-                if all(c.stage == "exact" for c in candidates):
-                    raise ConversionError(str(exc)) from exc
-                _notify(progress, "STEP-Prüfung fehlgeschlagen; versuche das nächste Rekonstruktionsverfahren …")
-                # Identify the failed body before changing successful profiles.
-                # These diagnostic checks use repaired components; the combined
-                # result is still gated against the original on the next loop.
-                failed = []
-                if len(candidates) > 1:
-                    for i, (component, candidate) in enumerate(zip(components, candidates)):
+        def _attempt_step():
+            while True:
+                try:
+                    result = _roundtrip_candidates(
+                        candidates, reference, options, step_file, progress)
+                    break
+                except OSError:
+                    raise  # Another geometry strategy cannot fix a filesystem error.
+                except Exception as exc:
+                    attempts.append({"method": "STEP-Rundlauf", "accepted": False,
+                                     "stages": [c.stage for c in candidates], "reason": str(exc)[:500]})
+                    if all(c.stage == "exact" for c in candidates):
+                        raise ConversionError(str(exc)) from exc
+                    _notify(progress, "STEP-Prüfung fehlgeschlagen; versuche das nächste Rekonstruktionsverfahren …")
+                    # Identify the failed body before changing successful profiles.
+                    # These diagnostic checks use repaired components; the combined
+                    # result is still gated against the original on the next loop.
+                    failed = []
+                    if len(candidates) > 1:
+                        for i, (component, candidate) in enumerate(zip(components, candidates)):
+                            try:
+                                _roundtrip_candidates([candidate], component, cad_options,
+                                                      staged / f"probe-{i}.step", progress)
+                            except OSError:
+                                raise
+                            except Exception:
+                                failed.append(i)
+                    else:
+                        failed = [0]
+                    retry_indices = failed or list(range(len(candidates)))
+                    advanced = False
+                    for i in retry_indices:
+                        candidate = candidates[i]
+                        if candidate.stage == "exact":
+                            if failed:
+                                raise ConversionError(str(exc)) from exc
+                            continue
+                        next_disabled = disabled[i] | set(stages[:stages.index(candidate.stage) + 1])
                         try:
-                            _roundtrip_candidates([candidate], component, cad_options,
-                                                  staged / f"probe-{i}.step", progress)
-                        except OSError:
-                            raise
-                        except Exception:
-                            failed.append(i)
-                else:
-                    failed = [0]
-                retry_indices = failed or list(range(len(candidates)))
-                advanced = False
-                for i in retry_indices:
-                    candidate = candidates[i]
-                    if candidate.stage == "exact":
-                        if failed:
-                            raise ConversionError(str(exc)) from exc
-                        continue
-                    next_disabled = disabled[i] | set(stages[:stages.index(candidate.stage) + 1])
-                    try:
-                        replacement = convert_part(components[i], cad_options, progress, attempts, next_disabled)
-                    except ConversionError:
-                        if failed:
-                            raise
-                        continue
-                    disabled[i] = next_disabled
-                    candidates[i] = replacement
-                    advanced = True
-                    if not failed:
-                        break  # Global-only failure: change just one body first.
-                if not advanced:
-                    raise ConversionError(str(exc)) from exc
+                            replacement = convert_part(components[i], cad_options, progress, attempts, next_disabled)
+                        except ConversionError:
+                            if failed:
+                                raise
+                            continue
+                        disabled[i] = next_disabled
+                        candidates[i] = replacement
+                        advanced = True
+                        if not failed:
+                            break  # Global-only failure: change just one body first.
+                    if not advanced:
+                        raise ConversionError(str(exc)) from exc
+            return result
+        try:
+            imported, reimport_mesh, roundtrip_volume_error, roundtrip_error, margin = _attempt_step()
+        except ConversionError as exc:
+            raise keep_repair(exc, "failed") from exc
         # Use the final STEP's tessellation for the saved preview as well.
         combined_mesh = reimport_mesh
         types = dict(Counter(f.geomType() for f in imported.Faces()))
@@ -1035,6 +1126,7 @@ def convert(input_path: str | Path, output_path: str | Path, options: Options | 
                   "options": asdict(options), "input_triangles": repairs["original_triangles"],
                   "output_faces": len(imported.Faces()), "solids": len(imported.Solids()),
                   "surface_types": types, "valid": True, "repairs": repairs,
+                  "step": {"status": "succeeded", "message": None},
                   "remaining_cad_budget_mm": remaining_budget,
                   "input_bounds_mm": reference.bounds.tolist(),
                   "output_bounds_mm": reimport_mesh.bounds.tolist(),

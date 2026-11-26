@@ -1,7 +1,7 @@
 {
   "name": "formnaro",
   "productName": "Formnaro",
-  "version": "0.148.0",
+  "version": "0.150.0",
   "private": true,
   "author": "Andreas Klisch",
   "license": "MIT",
@@ -22,10 +22,11 @@
     "package:advanced-modeling": "node scripts/package-advanced-modeling.mjs",
     "test:advanced-modeling": "node --test --test-concurrency=1 tests/cad-curves.test.mjs tests/cad-composite-path.test.mjs tests/cad-advanced-profiles.test.mjs tests/cad-freecad-advanced.test.mjs tests/freecad-advanced.test.cjs tests/advanced-modeling-release-config.test.mjs",
     "test:feature-references": "node --test --test-concurrency=1 tests/cad-ai-feature-references.test.mjs tests/cad-ai-feature-dependencies.test.mjs tests/cad-ai-feature-structure.test.mjs tests/feature-release-config.test.mjs",
-    "test:photo": "node --test --test-concurrency=1 tests/cad-photo.test.mjs tests/cad-photo-perspective.test.mjs tests/cad-photo-project.test.mjs",
+    "test:photo": "node --test --test-concurrency=1 tests/cad-photo.test.mjs tests/cad-photo-perspective.test.mjs tests/cad-photo-project.test.mjs tests/cad-photo-alpha.test.mjs tests/cad-photo-profile.test.mjs tests/photo-cutout.test.cjs",
+    "test:photo-ui": "npm run build && node scripts/test-photo-mode.mjs",
     "test:expansion": "node scripts/expansion-baseline.mjs",
     "test:linked-contours": "node --test --test-concurrency=1 tests/cad-drawing-references.test.mjs tests/cad-dependency-graph.test.mjs tests/cad-linked-contours-data.test.mjs tests/cad-linked-contours-native.test.mjs tests/cad-linked-contours-controller.test.mjs tests/cad-linked-contours-automation.test.mjs tests/cad-linked-contours-persistence.test.mjs tests/cad-linked-contours-clipboard.test.mjs",
-    "test:drawings": "node --test --test-concurrency=1 tests/cad-drawing-layout.test.mjs tests/cad-drawing-data.test.mjs tests/cad-drawing-export.test.mjs tests/cad-drawing-controller.test.mjs tests/cad-drawing-native.test.mjs tests/cad-drawing-automation.test.mjs tests/drawing-pdf.test.cjs tests/drawing-file-cancel.test.cjs",
+    "test:drawings": "node --test --test-concurrency=1 tests/cad-drawing-layout.test.mjs tests/cad-drawing-data.test.mjs tests/cad-drawing-detail-view.test.mjs tests/cad-drawing-export.test.mjs tests/cad-drawing-controller.test.mjs tests/cad-drawing-native.test.mjs tests/cad-drawing-automation.test.mjs tests/drawing-pdf.test.cjs tests/drawing-file-cancel.test.cjs",
     "test:cad-modeling": "node --test --test-concurrency=1 tests/cad-modeling-native.test.mjs tests/cad-face-sketch-native.test.mjs tests/cad-modeling-integration.test.mjs tests/cad-modeling-ai.test.mjs",
     "test:move-dimensions": "node --test tests/cad-move-dimensions.test.mjs",
     "test:move-dimensions-ui": "electron . --verify-move-dimensions=work/move-dimensions/manual/result.json",
@@ -103,6 +104,7 @@
     "test:exchange-ui": "electron tests/exchange-desktop.cjs",
     "test:unification": "node --test tests/project-objects.test.mjs tests/mixed-project.test.mjs tests/cad-project.test.mjs tests/cad-transactions.test.mjs tests/cad-persistence.test.mjs tests/cad-workspace-serialization.test.mjs tests/projects.test.cjs",
     "test:unification-ui": "electron tests/mixed-project-desktop.cjs",
+    "test:fnpack-mesh-grouping-ui": "electron tests/mixed-project-desktop.cjs --fnpack-mesh-grouping",
     "test:mesh-integration": "node --test tests/mesh-integration.test.mjs tests/mesh-controller-integration.test.mjs",
     "test:mesh-integration-ui": "electron tests/mesh-integration-desktop.cjs",
     "test:shared-workspace": "node --test tests/mesh-workplane.test.mjs tests/shared-workspace-controller.test.mjs tests/cad-mesh-source-tree.test.mjs",
@@ -159,6 +161,8 @@
   "dependencies": {
     "fflate": "0.8.3",
     "opentype.js": "2.0.0",
+    "qrcode-generator": "2.0.4",
+    "selfsigned": "5.5.0",
     "three": "0.186.1"
   },
   "devDependencies": {

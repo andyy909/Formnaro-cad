@@ -4,7 +4,7 @@
 import { cadIdentity, cadPoint, inverseCadMatrix, multiplyCadMatrices } from './cad-affine.js';
 import { findAssociativeDrillBox } from './cad-associative-drill.js';
 import { remapCadBoxFaceAnchor } from './cad-box-face-anchor.js';
-import { cadBounds, readCadBrep, transformCad } from './cad-native-kernel.js';
+import { cadBounds, readCadBrep, transformCad, writeCadBrep } from './cad-native-kernel.js';
 import { cadGeometryDigest, cadSourceGeometryDigest } from './cad-geometry-digest.js';
 import {
   uniqueCadEdgesNative,
@@ -14,6 +14,9 @@ import {
 } from './cad-edge-display-native.js';
 import { createCadPrecisionNative } from './cad-precision-native.js';
 import { cadContourEdgeSourceKey } from './cad-linked-contours-native.js';
+import { cadDrawingExplosion, cadDrawingViewFrame as drawingFrame } from './cad-drawing-data.js';
+import { assemblyDisplayMatrix } from './cad-part-display-placement.js';
+import { explosionOffsets } from './cad-part-properties.js';
 
 const TAU = 2 * Math.PI;
 export const CAD_DRAWING_BORE_ROLE = 'drill.bore.entry';
@@ -24,8 +27,8 @@ const fail = (message) => {
 };
 const xy = (p) => p.slice(0, 2).map((v) => (v === 0 ? 0 : v));
 
-export function cadDrawingViewFrame(view, section) {
-  if (!['front', 'side', 'top', 'section'].includes(view)) fail('Unbekannte technische Zeichnungsansicht.');
+export function cadDrawingViewFrame(view, section, explosion) {
+  if (!['front', 'side', 'top', 'section', 'exploded'].includes(view)) fail('Unbekannte technische Zeichnungsansicht.');
   if (
     view === 'section' &&
     (!section ||
@@ -36,15 +39,7 @@ export function cadDrawingViewFrame(view, section) {
   )
     fail('Schnittansicht benötigt Achse und gültige Lage in Millimetern.');
   if (view !== 'section' && section !== undefined) fail('Nur eine Schnittansicht besitzt eine Schnittlage.');
-  const axis = view === 'section' ? section.axis : view === 'top' ? 2 : view === 'front' ? 1 : 0;
-  const frame =
-    axis === 2
-      ? cadIdentity()
-      : axis === 1
-        ? [1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1]
-        : [0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1];
-  if (view === 'section') frame[12 + axis] = section.offset;
-  return frame;
+  return drawingFrame(view, section, explosion);
 }
 
 // Convert a native B-spline to its original rational Bézier spans. This is an
@@ -244,12 +239,13 @@ function drawingSourceReferences(oc, nodes, inverse) {
     if (node.kind !== 'cad' || node.suppressed) return;
     const world = multiplyCadMatrices(parent, node.transform),
       bore = throughBoreEntry(node),
-      originalSource =
-        node.source === 'step' ||
+      screwSource = node.source === 'native' && ['thread', 'nut'].includes(node.recipe?.type),
+      exactGeometry = node.source === 'step' || screwSource,
+      originalSource = exactGeometry ||
         (node.source === 'native' && ['box', 'cylinder', 'sketch'].includes(node.recipe?.type));
     if (originalSource || bore) {
       const shape = readCadBrep(oc, node.brep.data),
-        brepSignature = node.source === 'step' ? cadGeometryDigest(node.brep.data) : null;
+        brepSignature = exactGeometry ? cadGeometryDigest(node.brep.data) : null;
       let edges = [];
       try {
         edges = uniqueCadEdgesNative(oc, shape);
@@ -279,7 +275,9 @@ function drawingSourceReferences(oc, nodes, inverse) {
             if (!bucket) continue;
             let role;
             try {
-              role = bore ? CAD_DRAWING_BORE_ROLE : cadContourEdgeSourceKey(oc, node, edge);
+              if (bore) role = CAD_DRAWING_BORE_ROLE;
+              else if (screwSource) role = 'screw.edge.exact.' + cadGeometryDigest(writeCadBrep(oc, edge));
+              else role = cadContourEdgeSourceKey(oc, node, edge);
             } catch (error) {
               if (error.code === 'CONTOUR_REBIND_REQUIRED') continue;
               throw error;
@@ -303,7 +301,7 @@ function drawingSourceReferences(oc, nodes, inverse) {
                 source: structuredClone(target),
                 role,
                 ...(elementId ? { elementId } : {}),
-                ...(node.source === 'step' ? { geometrySignature: brepSignature } : {}),
+                ...(exactGeometry ? { geometrySignature: brepSignature } : {}),
               },
               list = buckets.get(bucket) ?? [];
             if (list.length < 100) list.push({ curve, ref });
@@ -338,7 +336,7 @@ export function createCadDrawingNative({ oc, service } = {}) {
       typeof options !== 'object' ||
       Array.isArray(options) ||
       Object.keys(options).some(
-        (k) => !['ids', 'view', 'section', 'includeHidden', 'tolerance', 'maxPoints'].includes(k),
+        (k) => !['ids', 'view', 'section', 'explosion', 'includeHidden', 'tolerance', 'maxPoints'].includes(k),
       )
     )
       fail('Unbekannte Zeichnungsoption.');
@@ -358,11 +356,31 @@ export function createCadDrawingNative({ oc, service } = {}) {
       maxPoints > 200000
     )
       fail('Ungültiger Umfang oder Genauigkeit der technischen Zeichnung.');
-    const frame = cadDrawingViewFrame(view, section),
-      inverse = inverseCadMatrix(frame),
-      nodes = service.productionNodes(project, { ids });
+    const nodes = service.productionNodes(project, { ids });
     if (nodes.length !== ids.length || nodes.some((n) => n.suppressed))
       fail('Zeichnungsansichten benötigen sichtbare aktive native CAD-Materialteile.');
+    let explosion;
+    if (view === 'exploded') {
+      try {
+        explosion =
+          options.explosion === undefined
+            ? cadDrawingExplosion(project.workspace?.explosion, ids, { capture: true })
+            : cadDrawingExplosion(options.explosion, ids);
+      } catch (error) {
+        fail(error.message);
+      }
+    } else if (options.explosion !== undefined) fail('Explosionsdaten nur für Explosionsansichten.');
+    // The production nodes remain the original geometry/provenance inputs.
+    // HLR and edge matching share the same ephemeral display placements.
+    const frame = cadDrawingViewFrame(view, section, explosion),
+      inverse = inverseCadMatrix(frame),
+      offsets = new Map(explosionOffsets(explosion ?? null, { nodes }).map(({ id, offset }) => [id, offset])),
+      displayNodes = offsets.size
+        ? nodes.map((node) => {
+            const offset = offsets.get(node.id);
+            return offset ? { ...node, transform: assemblyDisplayMatrix(node.transform, offset) } : node;
+          })
+        : nodes;
     const shapes = [],
       contours = [],
       extractions = [],
@@ -411,7 +429,7 @@ export function createCadDrawingNative({ oc, service } = {}) {
     }
     try {
       const precision = view === 'section' ? createCadPrecisionNative({ oc, service }) : null;
-      for (const node of nodes) {
+      for (const node of displayNodes) {
         if (view === 'section') {
           const result = precision.section({ node, frame, side: 'negative', maxPoints });
           // The cap boundary is an internally generated wire, not a material
@@ -459,7 +477,7 @@ export function createCadDrawingNative({ oc, service } = {}) {
       for (const shape of contours) consume(shape, false);
       if (!curves.length) fail('Die Zeichnungsansicht ist leer. Schnittlage und Teile prüfen.');
       if (view !== 'section') {
-        const sourceReferences = drawingSourceReferences(oc, nodes, inverse);
+        const sourceReferences = drawingSourceReferences(oc, displayNodes, inverse);
         for (const curve of curves) {
           const references = sourceReferences(curve);
           if (references) curve.sourceReferences = references;
@@ -472,6 +490,7 @@ export function createCadDrawingNative({ oc, service } = {}) {
         curves,
         bounds: { min, max },
         sourceSignatures: nodes.map((node) => ({ id: node.id, signature: cadSourceGeometryDigest(node) })),
+        ...(explosion ? { explosion } : {}),
         tolerance,
         approximation: 'exact-native-curves',
       };
