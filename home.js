@@ -15,12 +15,25 @@
   const src = i => base + 'atlas-5-frames/' + String(i).padStart(3, '0') + '.webp?v=3';
   const cache = [];
   const load = seg => { const [s, n] = segs[seg]; for (let i = s; i < s + n; i++) if (!cache[i]) { cache[i] = new Image(); cache[i].src = src(i); } };
+  // Das letzte X-Bild wiederholt die Grundstellung.
+  const xSteps = segs[0][1] - 1;
+  const xPositions = Array.from({ length: xSteps }, (_, i) => Math.sin(2 * Math.PI * i / xSteps));
+  const nearestXFrame = v => xPositions.reduce((best, position, i) =>
+    Math.abs(position - v) < Math.abs(xPositions[best] - v) ? i : best, 0);
+
   // Bildposition (gebrochen) innerhalb eines Abschnitts für einen Reglerwert v in [-1, 1].
   const framePos = (seg, v) => {
+    if (seg === 0) return nearestXFrame(v);
     const n = segs[seg][1], q = Math.asin(Math.max(-1, Math.min(1, Math.abs(v)))) / (2 * Math.PI) * (n - 1);
     return v >= 0 ? q : (n - 1) / 2 + q;
   };
   const showPos = (seg, p) => {
+    if (seg === 0) {
+      // Bei Querfahrt würde eine Überblendung den Fräskopf doppelt zeigen.
+      imgB.style.opacity = '0';
+      img.src = src(p);
+      return;
+    }
     const s = segs[seg][0], a = Math.floor(p), t = p - a;
     img.src = src(s + a);
     imgB.src = src(s + Math.min(a + 1, segs[seg][1] - 1));
