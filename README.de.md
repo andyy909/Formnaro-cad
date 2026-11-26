@@ -1,41 +1,17 @@
-<p align="center">
-  <a href="https://formnaro.de/">
-    <img src="docs/bilder/readme/banner-de-dark.svg" alt="Formnaro – 3D-CAD für deine Werkstatt. Bauteile konstruieren, Netze reparieren, Baugruppen bewegen." width="100%">
-  </a>
-</p>
+# Formnaro
 
-<p align="center">
-  <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip"><img src="https://img.shields.io/badge/F%C3%BCr_Windows_laden-0.150.0--r2-C8892B?style=for-the-badge&logo=windows&logoColor=white&labelColor=1D2329" alt="Formnaro 0.150.0-r2 für Windows laden"></a>
-  <a href="https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk"><img src="https://img.shields.io/badge/Android--Tablet-0.4.0-2F5D8C?style=for-the-badge&logo=android&logoColor=white&labelColor=1D2329" alt="Formnaro CAD 0.4.0 für Android laden"></a>
-</p>
+**3D-CAD für deine Werkstatt.** Konstruiere Bauteile, repariere Netze und setze Baugruppen in Bewegung.
 
-<p align="center">
-  <a href="LICENSE.txt"><img src="https://img.shields.io/badge/Lizenz-MIT-56616C?style=flat-square" alt="MIT-Lizenz"></a>
-  <img src="https://img.shields.io/badge/Konto-nicht_n%C3%B6tig-56616C?style=flat-square" alt="Kein Konto nötig">
-  <img src="https://img.shields.io/badge/Modellieren-offline-56616C?style=flat-square" alt="Modellieren offline">
-  <img src="https://img.shields.io/badge/FreeCAD--Kern-enthalten-56616C?style=flat-square" alt="FreeCAD-Kern enthalten">
-  <a href="https://github.com/andyy909/Formnaro-cad/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/andyy909/Formnaro-cad/build.yml?branch=main&style=flat-square&label=build" alt="Build-Status"></a>
-</p>
-
-<p align="center">
-  <a href="https://formnaro.de/"><b>Webseite</b></a> ·
-  <a href="#welcher-modus-passt-zu-dir">Modi</a> ·
-  <a href="https://formnaro.de/ki/">KI-Anbindung</a> ·
-  <a href="https://formnaro.de/ki-labor/">KI-Labor</a> ·
-  <a href="#anleitungen">Anleitungen</a> ·
-  <a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Über PayPal unterstützen</a> ·
-  <a href="README.md">English</a>
-</p>
-
-<p align="center">
-  <a href="https://formnaro.de/"><img src="https://formnaro.de/cad-hero-lagerbaugruppe.webp" alt="Explosionsansicht einer Lagerbaugruppe in Formnaro" width="720"></a>
-</p>
-
----
+[Webseite](https://formnaro.de/) · [English](README.md)
 
 ## Download
 
-Formnaro ist ein **portables Programm für Windows x64**. Keine Installation, kein Konto – FreeCAD und Python sind enthalten, und zum Modellieren brauchst du kein Internet.
+**[Für Windows herunterladen (ZIP)](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip)** · **[Für Android herunterladen (APK)](https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk)**
+
+Die Windows-Version ist portabel und enthält FreeCAD und Python. Zum Modellieren brauchst du weder ein Konto noch Internet.
+
+<details>
+<summary>Versionen, Prüfsummen und Quellarchive</summary>
 
 | Version | Inhalt | Download |
 | --- | --- | --- |
@@ -43,10 +19,9 @@ Formnaro ist ein **portables Programm für Windows x64**. Keine Installation, ke
 | **0.148.0-r5** · Nightly | Tablet-Kopplung, direkter Teiletransfer mit Android-Pilot 35 r32 und Korrektur der Orca-3MF-Naht | [Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.148.0-r5) · [SHA-256](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/SHA256SUMS.txt) |
 | **Android 0.4.0** · Tablet | Am Tablet zeichnen, am PC weiterbauen – Android 10 oder neuer | [APK](https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk) (ca. 19 MB) · [Versionshinweise](https://github.com/andyy909/Formnaro-Android/releases/tag/v0.4.0) |
 
-Das ZIP vollständig in einen beschreibbaren Ordner entpacken und **Formnaro starten** öffnen. [Alle Ausgaben](https://github.com/andyy909/Formnaro-cad/releases) · [Ausgaben und Abnahme](docs/AKTUELLER-STAND.md) · [Paketregel](docs/PORTABLE-PAKETE.md)
+[Alle Ausgaben](https://github.com/andyy909/Formnaro-cad/releases) · [Ausgaben und Abnahme](docs/AKTUELLER-STAND.md) · [Paketregel](docs/PORTABLE-PAKETE.md)
 
-<details>
-<summary><b>Quellarchive</b></summary>
+**Quellarchive**
 
 | Version | Formnaro | FreeCAD | CAD-Kern |
 | --- | --- | --- | --- |
@@ -54,6 +29,16 @@ Das ZIP vollständig in einen beschreibbaren Ordner entpacken und **Formnaro sta
 | **0.148.0-r5** | [Formnaro](https://github.com/andyy909/Formnaro-cad/archive/refs/tags/v0.148.0-r5.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD-Kern](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-CAD-Quellen.zip) |
 
 </details>
+
+## Schnell starten
+
+1. Windows-ZIP herunterladen und vollständig in einen eigenen, beschreibbaren Ordner entpacken.
+2. Alle Unterordner zusammenlassen und **Formnaro starten** öffnen.
+3. Auf der Startseite ein Beispiel auswählen oder mit **Öffnen** ein Projekt laden. Eine vorhandene Autosicherung lässt sich dort wiederherstellen.
+
+<p align="center">
+  <a href="https://formnaro.de/"><img src="https://formnaro.de/cad-hero-lagerbaugruppe.webp" alt="Explosionsansicht einer Lagerbaugruppe in Formnaro" width="720"></a>
+</p>
 
 ## ATLAS-5 in Bewegung
 
@@ -150,14 +135,6 @@ Ein offenes Getriebekonzept etwa für einen langsamen Drehteller. Nur die Antrie
 | **Kosten** | Kostenlos und quelloffen (MIT), kein Konto |
 | **Beispiele** | Drei mitgelieferte Beispiele auf der Startseite · [weitere Beispielmodelle](beispiele/README.md) |
 
-## Schnell starten
-
-1. Windows-ZIP herunterladen und vollständig in einen eigenen Ordner entpacken.
-2. Alle Unterordner zusammenlassen und **Formnaro starten** öffnen.
-3. Auf der Startseite ein Beispiel auswählen oder mit **Öffnen** ein Projekt laden. Eine vorhandene Autosicherung lässt sich dort wiederherstellen.
-
-Die [Spracheingabe im KI-Chat](docs/SPRACHEINGABE.md) nutzt Windows-Diktat oder optional Deepgram.
-
 ## Anleitungen
 
 | Thema | Weiterlesen |
@@ -165,8 +142,8 @@ Die [Spracheingabe im KI-Chat](docs/SPRACHEINGABE.md) nutzt Windows-Diktat oder 
 | Bedienung | [Kurzstart](LIES-MICH.txt) · [Handbuch (EN)](docs/USER-GUIDE.md) · [Beispiele](beispiele/README.md) · [Solid](docs/SOLID-MODUS.md) · [Fusion](docs/FUSION-MODUS.md) |
 | Konstruktion | [Parameter und Varianten](docs/PROJEKTPARAMETER.md) · [Kurven, Loft und Sweep](docs/CAD-KURVEN.md) · [STL zu CAD](docs/GEMEINSAMER-KONVERTER.md) |
 | Zeichnungen und Baugruppen | [Technische Zeichnungen](docs/TECHNISCHE-ZEICHNUNGEN.md) · [Teile, Material und Stücklisten](docs/TEILE-MATERIAL-BAUGRUPPEN.md) |
-| KI-Unterstützung | [KI-Aufträge](docs/KI-AUFTRAEGE.md) · [Foto-Assistent](docs/FOTO-ASSISTENT.md) · [Programm-Assistent](docs/PROGRAMM-ASSISTENT.md) · [AI guide (EN)](docs/AI-GUIDE.md) |
-| Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/ARCHITECTURE.md) · [Mitwirken](CONTRIBUTING.md) |
+| KI-Unterstützung | [KI-Aufträge](docs/KI-AUFTRAEGE.md) · [Foto-Assistent](docs/FOTO-ASSISTENT.md) · [Programm-Assistent](docs/PROGRAMM-ASSISTENT.md) · [Spracheingabe im KI-Chat](docs/SPRACHEINGABE.md) · [AI guide (EN)](docs/AI-GUIDE.md) |
+| Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/ARCHITECTURE.md) · [Mitwirken](CONTRIBUTING.md) · [Build-Status](https://github.com/andyy909/Formnaro-cad/actions/workflows/build.yml) |
 
 <!-- formnaro-development-status:start -->
 ## Neu in 0.150.0-r2

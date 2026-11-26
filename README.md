@@ -1,41 +1,17 @@
-<p align="center">
-  <a href="https://formnaro.de/en/">
-    <img src="docs/bilder/readme/banner-en-dark.svg" alt="Formnaro – 3D CAD for your workshop. Design parts, repair meshes and build assemblies that actually move." width="100%">
-  </a>
-</p>
+# Formnaro
 
-<p align="center">
-  <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip"><img src="https://img.shields.io/badge/Download_for_Windows-0.150.0--r2-C8892B?style=for-the-badge&logo=windows&logoColor=white&labelColor=1D2329" alt="Download Formnaro 0.150.0-r2 for Windows"></a>
-  <a href="https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk"><img src="https://img.shields.io/badge/Android_tablet-0.4.0-2F5D8C?style=for-the-badge&logo=android&logoColor=white&labelColor=1D2329" alt="Download Formnaro CAD 0.4.0 for Android"></a>
-</p>
+**3D CAD for your workshop.** Design parts, repair meshes and build assemblies that move.
 
-<p align="center">
-  <a href="LICENSE.txt"><img src="https://img.shields.io/badge/licence-MIT-56616C?style=flat-square" alt="MIT licence"></a>
-  <img src="https://img.shields.io/badge/account-not_needed-56616C?style=flat-square" alt="No account needed">
-  <img src="https://img.shields.io/badge/modelling-offline-56616C?style=flat-square" alt="Offline modelling">
-  <img src="https://img.shields.io/badge/FreeCAD_kernel-included-56616C?style=flat-square" alt="FreeCAD kernel included">
-  <a href="https://github.com/andyy909/Formnaro-cad/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/andyy909/Formnaro-cad/build.yml?branch=main&style=flat-square&label=build" alt="Build status"></a>
-</p>
-
-<p align="center">
-  <a href="https://formnaro.de/en/"><b>Website</b></a> ·
-  <a href="#which-mode-suits-you">Modes</a> ·
-  <a href="https://formnaro.de/en/ai/">AI connection</a> ·
-  <a href="https://formnaro.de/en/ai-lab/">AI lab</a> ·
-  <a href="docs/USER-GUIDE.md">User guide</a> ·
-  <a href="https://www.paypal.com/donate/?hosted_button_id=TPZ9RQ242TJES">Support via PayPal</a> ·
-  <a href="README.de.md">Deutsch</a>
-</p>
-
-<p align="center">
-  <a href="https://formnaro.de/en/"><img src="https://formnaro.de/cad-hero-lagerbaugruppe.webp" alt="Exploded bearing assembly rendered in Formnaro" width="720"></a>
-</p>
-
----
+[Website](https://formnaro.de/en/) · [Deutsch](README.de.md)
 
 ## Download
 
-Formnaro is a **portable app for Windows x64**. No installer, no account — FreeCAD and Python are bundled, and you don't need an internet connection to model.
+**[Download for Windows (ZIP)](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip)** · **[Download for Android (APK)](https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk)**
+
+The Windows app is portable and includes FreeCAD and Python. Modelling requires no account or internet connection.
+
+<details>
+<summary>Versions, checksums and source archives</summary>
 
 | Build | Highlights | Download |
 | --- | --- | --- |
@@ -43,10 +19,9 @@ Formnaro is a **portable app for Windows x64**. No installer, no account — Fre
 | **0.148.0-r5** · nightly | Tablet pairing, direct part transfer with Android Pilot 35 r32, and the Orca 3MF seam fix | [Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip) · [Release notes](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.148.0-r5) · [SHA-256](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/SHA256SUMS.txt) |
 | **Android 0.4.0** · tablet | Sketch on the tablet, continue on the PC — Android 10 or later | [APK](https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk) (≈ 19 MB) · [Release notes](https://github.com/andyy909/Formnaro-Android/releases/tag/v0.4.0) |
 
-Extract the whole ZIP into a writable folder and open **Formnaro starten**. [All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Releases and verification](docs/AKTUELLER-STAND.md) · [Packaging policy](docs/PORTABLE-PAKETE.md)
+[All releases](https://github.com/andyy909/Formnaro-cad/releases) · [Releases and verification](docs/AKTUELLER-STAND.md) · [Packaging policy](docs/PORTABLE-PAKETE.md)
 
-<details>
-<summary><b>Source archives</b></summary>
+**Source archives**
 
 | Version | Formnaro | FreeCAD | CAD kernel |
 | --- | --- | --- | --- |
@@ -54,6 +29,16 @@ Extract the whole ZIP into a writable folder and open **Formnaro starten**. [All
 | **0.148.0-r5** | [Formnaro](https://github.com/andyy909/Formnaro-cad/archive/refs/tags/v0.148.0-r5.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD kernel](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-CAD-Quellen.zip) |
 
 </details>
+
+## Quick start
+
+1. Download the Windows ZIP and extract it completely into a writable folder of its own.
+2. Keep all subfolders together and open **Formnaro starten**.
+3. Pick an example on the welcome screen, or use **Open** to load a project. An autosave can be restored from the welcome screen.
+
+<p align="center">
+  <a href="https://formnaro.de/en/"><img src="https://formnaro.de/cad-hero-lagerbaugruppe.webp" alt="Exploded bearing assembly rendered in Formnaro" width="720"></a>
+</p>
 
 ## ATLAS-5 in motion
 
@@ -150,14 +135,6 @@ An open gearbox concept, for example for a slow rotary table. Only the input sha
 | **Price** | Free and open source (MIT), no account |
 | **Examples** | Three bundled examples on the welcome screen · [more example models](beispiele/README.md) |
 
-## Quick start
-
-1. Download the Windows ZIP and extract it completely into its own folder.
-2. Keep all subfolders together and open **Formnaro starten**.
-3. Pick an example on the welcome screen, or use **Open** to load a project. An autosave can be restored from the welcome screen.
-
-The [user guide](docs/USER-GUIDE.md) covers project files, workspace modes and portable updates. Voice input options are described in the [speech guide](docs/SPRACHEINGABE.md).
-
 ## Documentation
 
 Some detailed reference material is available in German.
@@ -167,8 +144,8 @@ Some detailed reference material is available in German.
 | Getting around | [User guide](docs/USER-GUIDE.md) · [Examples](beispiele/README.md) · [Solid](docs/SOLID-MODUS.md) · [Fusion](docs/FUSION-MODUS.md) |
 | Modelling | [Parameters and variants](docs/PROJEKTPARAMETER.md) · [Curves, lofts and sweeps](docs/CAD-KURVEN.md) · [STL to CAD](docs/STL-TO-CAD.md) |
 | Drawings and assemblies | [Technical drawings](docs/TECHNISCHE-ZEICHNUNGEN.md) · [Parts, materials and bills of materials](docs/TEILE-MATERIAL-BAUGRUPPEN.md) |
-| AI assistance | [AI guide](docs/AI-GUIDE.md) · [AI tasks](docs/KI-AUFTRAEGE.md) · [Photo assistant](docs/FOTO-ASSISTENT.md) · [Application assistant](docs/PROGRAMM-ASSISTENT.md) |
-| Development | [Build instructions](docs/BUILD.md) · [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md) |
+| AI assistance | [AI guide](docs/AI-GUIDE.md) · [AI tasks](docs/KI-AUFTRAEGE.md) · [Photo assistant](docs/FOTO-ASSISTENT.md) · [Application assistant](docs/PROGRAMM-ASSISTENT.md) · [Voice input](docs/SPRACHEINGABE.md) |
+| Development | [Build instructions](docs/BUILD.md) · [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md) · [Build status](https://github.com/andyy909/Formnaro-cad/actions/workflows/build.yml) |
 
 <!-- formnaro-development-status:start -->
 ## What's new in 0.150.0-r2
