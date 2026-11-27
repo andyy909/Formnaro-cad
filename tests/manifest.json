@@ -21,6 +21,7 @@
   {"file":"tests/ai-exchange.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.332},
   {"file":"tests/ai-integration-improvements.test.mjs","referencedBy":["scripts/legacy/package-ai-inspection.mjs","scripts/legacy/package-ai-measurement-fix.mjs","scripts/legacy/package-ai-workspace.mjs","scripts/legacy/package-chatgpt.mjs","scripts/legacy/package-freecad.mjs","scripts/legacy/package-fusion.mjs","scripts/legacy/package-provider-context.mjs","scripts/legacy/package-security.mjs","scripts/legacy/package-speech.mjs","scripts/package-freecad-python.mjs"],"kind":"node","status":"pass","seconds":3.854},
   {"file":"tests/ai-lab-benchmark.test.cjs","referencedBy":["ci"],"kind":"node","status":"pass","seconds":16.177},
+  {"file":"tests/ai-lab-benchmark-overview.test.mjs","referencedBy":[],"kind":"node","status":"pass","seconds":1.4},
   {"file":"tests/ai-lab-campaign-effort-regression.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":2.2},
   {"file":"tests/ai-lab-cause-fixes.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.205},
   {"file":"tests/ai-lab-completion-fixes.test.cjs","referencedBy":[],"kind":"node","status":"pass","seconds":0.445},
