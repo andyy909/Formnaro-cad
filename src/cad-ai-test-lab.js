@@ -1,5 +1,6 @@
 import {mountBenchmark} from './cad-ai-lab-benchmark.js';
 import {mountFrontierCharts} from './cad-ai-lab-frontier-charts.js';
+import {mountBenchmarkOverview} from './cad-ai-lab-benchmark-overview.js';
 import {mountSimpleBenchmark} from './cad-ai-lab-simple-benchmark.js';
 import './cad-ai-test-lab.css';
 import {mountLabRolePicker} from './cad-ai-lab-roles.js';
@@ -52,6 +53,8 @@ export function mountAITestLab({host,desktop}){
   host:root.querySelector('[data-pane=benchmark]'),desktop,start:selection=>supplemental.startSimple(selection),
  });
  const frontierCharts=mountFrontierCharts({host:root.querySelector('[data-pane=benchmark]'),desktop});
+ const benchmarkPane=root.querySelector('[data-pane=benchmark]');
+ const benchmarkOverview=mountBenchmarkOverview({host:benchmarkPane,desktop,before:benchmarkPane.children[1]??null});
  el('supplemental-plan').hidden=!desktop.developmentEvidence;
  function chooseView(view){
   planPane.dataset.labView=view;
@@ -78,7 +81,7 @@ export function mountAITestLab({host,desktop}){
   el('status').textContent=(planOpen&&planError)||actionStatus;
  }
  function status(text){actionStatus=text;updateStatus();}
- function tab(name){if(name==='benchmark'){void simpleBenchmark?.load({refresh:true});void frontierCharts.refresh();}el('run').hidden=name==='benchmark';el('campaign').hidden=name==='benchmark'||planPane.dataset.labView==='simple';for(const b of root.querySelectorAll('[data-tab]'))b.setAttribute('aria-selected',String(b.dataset.tab===name));for(const p of root.querySelectorAll('[data-pane]'))p.hidden=p.dataset.pane!==name;updateStatus();}
+ function tab(name){if(name==='benchmark'){void simpleBenchmark?.load({refresh:true});void frontierCharts.refresh();void benchmarkOverview.refresh();}el('run').hidden=name==='benchmark';el('campaign').hidden=name==='benchmark'||planPane.dataset.labView==='simple';for(const b of root.querySelectorAll('[data-tab]'))b.setAttribute('aria-selected',String(b.dataset.tab===name));for(const p of root.querySelectorAll('[data-pane]'))p.hidden=p.dataset.pane!==name;updateStatus();}
  root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
  function checks(key,items,chosen){el(key).replaceChildren(...items.map(([value,label])=>{const l=node('label'),i=node('input');i.type='checkbox';i.value=value;i.checked=chosen.includes(value);l.append(i,node('span',label));return l;}));}
  const picked=key=>[...el(key).querySelectorAll('input:checked')].map(i=>i.value);

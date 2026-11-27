@@ -2,6 +2,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const {writeLabFile}=require('./ai-lab-storage.cjs');
 const {frontierChartRow}=require('../ai/lab-frontier-chart-data.mjs');
+const {benchmarkRunsFromReports}=require('../ai/lab-benchmark-overview.mjs');
 const cases=new Set(require('../ai/lab-supplemental-cases.json').map(test=>test.id));
 const receipt=/^Zusatzpruefung-[a-f0-9-]{36}\.json$/;
 const maxReportBytes=1572864;
@@ -97,6 +98,7 @@ function createSupplementalEvidence(directory, { provenance } = {}){
     }
    });
   },
+  benchmarkRuns(){return benchmarkRunsFromReports(records());},
   clear(){for(const file of paths())fs.rmSync(file,{force:true});},
  };
 }
