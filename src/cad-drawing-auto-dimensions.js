@@ -203,11 +203,12 @@ export function autoDimensionCadDrawing(
   obstacles.push({ min: [width - 10 - Math.min(180, width - 20), height - 40], max: [width - 10, height - 10] });
   const occupied = sheet.annotations.map((a) => {
       try {
-        const text = a.kind === 'label'
-          ? a.text
-          : a.kind === 'balloon'
-            ? String(cadDrawingBalloon(sheet, a).row.position)
-            : cadDrawingDimension(sheet, a).text;
+        const text =
+          a.kind === 'label'
+            ? a.text
+            : a.kind === 'balloon'
+              ? String(cadDrawingBalloon(sheet, a).row.position)
+              : cadDrawingDimension(sheet, a).text;
         return textBox(text, a.position);
       } catch {
         return textBox('Bezug verloren', a.position);

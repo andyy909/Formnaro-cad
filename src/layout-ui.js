@@ -151,15 +151,15 @@ export function createLayoutUI({
     properties: [propertySection, 'Form bearbeiten'],
     workspace: [workspaceSection, 'Arbeitsfläche'],
   };
-  const gridViewport = () => ({usableWidth: innerWidth, usableHeight: innerHeight});
-  const gridNode = key => items.get(key) || blocks[key]?.[0];
-  const blockKind = key =>
+  const gridViewport = () => ({ usableWidth: innerWidth, usableHeight: innerHeight });
+  const gridNode = (key) => items.get(key) || blocks[key]?.[0];
+  const blockKind = (key) =>
     key === 'library' || key === 'inspector' ? 'panel' : key === 'view' || key === 'mode' ? 'group' : 'section';
   function floatingSize(key) {
     const node = gridNode(key);
     if (items.has(key)) {
-      const {width, height} = rect(node);
-      return {width: Math.max(36, width), height: Math.max(36, height)};
+      const { width, height } = rect(node);
+      return { width: Math.max(36, width), height: Math.max(36, height) };
     }
     if (node.dataset.layoutFloating) return rect(node);
     node.dataset.layoutFloating = blockKind(key);
@@ -321,7 +321,7 @@ export function createLayoutUI({
       for (const key of keys) {
         if (!items.has(key)) continue;
         const clip = draft.grid[key]
-          ? {left: 0, top: 0, right: innerWidth, bottom: innerHeight}
+          ? { left: 0, top: 0, right: innerWidth, bottom: innerHeight }
           : rect(zone === 'toolbar' ? document.querySelector('.toolbar') : zones[zone]);
         const r = rect(items.get(key)),
           left = Math.max(r.left, clip.left),
@@ -427,7 +427,9 @@ export function createLayoutUI({
   }
   function targetAt(x, y) {
     if (!gesture || x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return null;
-    const grid = () => ({grid: snapLayoutGrid(x - gesture.offsetX, y - gesture.offsetY, gesture.size, gridViewport())});
+    const grid = () => ({
+      grid: snapLayoutGrid(x - gesture.offsetX, y - gesture.offsetY, gesture.size, gridViewport()),
+    });
     if (gesture.block) {
       const b = [...overlay.querySelectorAll('.layout-dock-target')].find((b) => contains(rect(b), x, y));
       return b ? { block: gesture.block, value: b.dataset.dockValue } : grid();
@@ -466,7 +468,7 @@ export function createLayoutUI({
     }
     if (!target?.zone) return;
     const keys = draft.zones[target.zone],
-      anchor = items.get(keys[target.index] || keys.findLast(key => items.has(key) && !draft.grid[key])),
+      anchor = items.get(keys[target.index] || keys.findLast((key) => items.has(key) && !draft.grid[key])),
       r = anchor ? rect(anchor) : rect(zones[target.zone]),
       end = target.index === keys.length;
     place(

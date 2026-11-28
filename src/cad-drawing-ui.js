@@ -303,14 +303,17 @@ export function createCadDrawingUI({
             a.kind === 'label'
               ? a.text
               : a.kind === 'balloon'
-                ? t('Positionsballon') + ' ' + cadDrawingBalloon(value, a, { sourceSignatures: signatures }).row.position
+                ? t('Positionsballon') +
+                  ' ' +
+                  cadDrawingBalloon(value, a, { sourceSignatures: signatures }).row.position
                 : a.kind === 'centermark'
                   ? t('Mittelpunktmarke') + ' (' + a.curveIds[0] + ')'
                   : a.kind === 'centerline'
                     ? t('Mittellinie') + ' (' + a.curveIds.join(' · ') + ')'
                     : cadDrawingDimension(value, a).text;
         } catch {
-          option.textContent = a.kind === 'balloon' ? t('Positionsballon: Bezug verloren') : t('Bezug verloren') + ' · ' + a.kind;
+          option.textContent =
+            a.kind === 'balloon' ? t('Positionsballon: Bezug verloren') : t('Bezug verloren') + ' · ' + a.kind;
         }
         annotationList.append(option);
       }
@@ -825,12 +828,12 @@ export function createCadDrawingUI({
               : s.tool === 'balloon'
                 ? 'Eine Kante des Bauteils anklicken. Die Nummer kommt aus der Stückliste auf dem Blatt.'
                 : s.tool === 'label'
-                ? 'Text eingeben und die gewünschte Position auf dem Blatt anklicken.'
-                : s.tool === 'length'
-                  ? 'Eine gerade Kante anklicken. Gemessen wird ihre projizierte Länge in Millimetern.'
-                  : s.tool === 'centermark'
-                    ? 'Einen Kreis oder Kreisbogen anklicken, um eine Mittelpunktmarke zu setzen.'
-                    : 'Einen unverzerrten Kreis oder Kreisbogen anklicken.',
+                  ? 'Text eingeben und die gewünschte Position auf dem Blatt anklicken.'
+                  : s.tool === 'length'
+                    ? 'Eine gerade Kante anklicken. Gemessen wird ihre projizierte Länge in Millimetern.'
+                    : s.tool === 'centermark'
+                      ? 'Einen Kreis oder Kreisbogen anklicken, um eine Mittelpunktmarke zu setzen.'
+                      : 'Einen unverzerrten Kreis oder Kreisbogen anklicken.',
     );
   }
   function autoMessage(report) {
@@ -987,9 +990,13 @@ export function createCadDrawingUI({
             position = measurePosition(value, point).map((coordinate, axis) =>
               Math.max(15, Math.min(size[axis] - 15, coordinate)),
             );
-          const balloon = createCadDrawingBalloon(value, { id: makeId(), viewId: item.id, curveId, position }, {
-            sourceSignatures: sourceSignatures(value),
-          });
+          const balloon = createCadDrawingBalloon(
+            value,
+            { id: makeId(), viewId: item.id, curveId, position },
+            {
+              sourceSignatures: sourceSignatures(value),
+            },
+          );
           value.annotations.push(balloon);
           edited();
           return;
@@ -1035,8 +1042,14 @@ export function createCadDrawingUI({
         if (s.tool === 'centermark' && curve?.center) {
           pos = [item.position[0] + curve.center[0] * itemScale, item.position[1] - curve.center[1] * itemScale];
         } else if (s.tool === 'centerline' && selectedCurves[0]?.center && selectedCurves[1]?.center) {
-          const p1 = [item.position[0] + selectedCurves[0].center[0] * itemScale, item.position[1] - selectedCurves[0].center[1] * itemScale];
-          const p2 = [item.position[0] + selectedCurves[1].center[0] * itemScale, item.position[1] - selectedCurves[1].center[1] * itemScale];
+          const p1 = [
+            item.position[0] + selectedCurves[0].center[0] * itemScale,
+            item.position[1] - selectedCurves[0].center[1] * itemScale,
+          ];
+          const p2 = [
+            item.position[0] + selectedCurves[1].center[0] * itemScale,
+            item.position[1] - selectedCurves[1].center[1] * itemScale,
+          ];
           pos = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
         } else {
           pos = measurePosition(value, point);
@@ -1271,7 +1284,7 @@ export function createCadDrawingUI({
       issues = problems(value);
     if (pendingSourceCommit(value)) throw Error('Berechnete Quellen zunächst mit „Blatt übernehmen“ bestätigen.');
     if (issues.length) throw Error(issues[0].message + ' „Blatt aktualisieren“ ausführen.');
-    if (format === 'svg-view' && !value.views.find(view => view.id === s.viewId)?.projection)
+    if (format === 'svg-view' && !value.views.find((view) => view.id === s.viewId)?.projection)
       throw Error('Eine berechnete Zeichnungsansicht auswählen.');
     if (typeof exportDrawing !== 'function') throw Error('Die lokale Zeichnungsausgabe ist nicht verfügbar.');
     s.running = true;

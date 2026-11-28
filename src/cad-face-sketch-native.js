@@ -69,7 +69,7 @@ function screenUpInPlane(viewAxes, normal) {
   const fitted = upInPlane.map((v, k) => v + fromRight[k]);
   const direction = Math.hypot(...fitted) > TOLERANCE ? fitted : upInPlane;
   const length = Math.hypot(...direction);
-  return length > TOLERANCE ? direction.map(v => v / length) : null;
+  return length > TOLERANCE ? direction.map((v) => v / length) : null;
 }
 
 function faceFrame(oc, face, viewAxes) {
@@ -205,7 +205,10 @@ export function faceSketchNative(oc, worldShape, faceIndex, { height = 3, maxEle
   if (edgeKey !== undefined && typeof edgeKey !== 'function')
     fail('FACE_SKETCH_INVALID_OPTIONS', 'Interne Kantenherkunft benötigt eine native Prüffunktion.');
   if (viewAxes !== undefined) {
-    const unitAxis = axis => Array.isArray(axis) && axis.length === 3 && axis.every(Number.isFinite) &&
+    const unitAxis = (axis) =>
+      Array.isArray(axis) &&
+      axis.length === 3 &&
+      axis.every(Number.isFinite) &&
       Math.abs(Math.hypot(...axis) - 1) < TOLERANCE;
     if (!unitAxis(viewAxes?.right) || !unitAxis(viewAxes?.up) || Math.abs(dot(viewAxes.right, viewAxes.up)) > TOLERANCE)
       fail('FACE_SKETCH_INVALID_OPTIONS', 'Die Modellansicht hat keine gültigen Bildschirmachsen.');

@@ -773,7 +773,13 @@ export function createCadRenderer({
     pendingScale = null;
   function setCornerDimensions(data) {
     cornerDimensions = data;
-    if (data) scaleDimensions.update({ bounds: data.item.localBounds, worldMatrix: data.item.worldMatrix, sizes: data.sizes, controls: data.controls });
+    if (data)
+      scaleDimensions.update({
+        bounds: data.item.localBounds,
+        worldMatrix: data.item.worldMatrix,
+        sizes: data.sizes,
+        controls: data.controls,
+      });
     else scaleDimensions.hide();
     invalidate('corner-dimensions');
   }
@@ -800,7 +806,12 @@ export function createCadRenderer({
     const next = multiplyCadMatrices(parent, resized.transform),
       delta = matrix(multiplyCadMatrices(next, inverseCadMatrix(data.item.worldMatrix)));
     if (showDimensions)
-      scaleDimensions.update({ bounds: data.item.localBounds, worldMatrix: next, sizes, controls: data === cornerPreview ? cornerDimensions?.controls : undefined });
+      scaleDimensions.update({
+        bounds: data.item.localBounds,
+        worldMatrix: next,
+        sizes,
+        controls: data === cornerPreview ? cornerDimensions?.controls : undefined,
+      });
     for (const [mesh, original] of data.matrices) {
       mesh.matrix.copy(delta).multiply(original);
       mesh.matrixWorldNeedsUpdate = true;
@@ -909,8 +920,8 @@ export function createCadRenderer({
   function scaleHandle(handle, preferences, rect) {
     const corner = handle.userData.kind === 'corner';
     const pixels = corner
-      ? preferences.cornerHandleSize ?? DEFAULTS.cornerHandleSize
-      : preferences.handleSize ?? DEFAULTS.handleSize;
+      ? (preferences.cornerHandleSize ?? DEFAULTS.cornerHandleSize)
+      : (preferences.handleSize ?? DEFAULTS.handleSize);
     handle.scale.setScalar(pixelRadius(handle.position, pixels, rect) / (corner ? SCALE_HANDLE_WIDTH : 2));
   }
   function updateBed(project) {
@@ -1218,14 +1229,19 @@ export function createCadRenderer({
   }
   function hitHandle(event) {
     const hits = new Set(raycaster.intersectObjects(handles.children, false).map(({ object }) => object));
-    let nearest, distance = Infinity;
+    let nearest,
+      distance = Infinity;
     for (const handle of handles.children) {
       if (!handle.visible || (!hits.has(handle) && handle.userData.kind !== 'corner')) continue;
       const position = projected(handle.position.toArray());
-      const dx = position.x - event.clientX, dy = position.y - event.clientY;
+      const dx = position.x - event.clientX,
+        dy = position.y - event.clientY;
       // Keep small visible corner grips easy to target in screen pixels.
-      const inCornerHitArea = position.z >= -1 && position.z <= 1 &&
-        Math.abs(dx) <= CORNER_HIT_HALF_WIDTH && Math.abs(dy) <= CORNER_HIT_HALF_WIDTH;
+      const inCornerHitArea =
+        position.z >= -1 &&
+        position.z <= 1 &&
+        Math.abs(dx) <= CORNER_HIT_HALF_WIDTH &&
+        Math.abs(dy) <= CORNER_HIT_HALF_WIDTH;
       if (!hits.has(handle) && !inCornerHitArea) continue;
       const next = Math.hypot(dx, dy);
       if (next < distance) {
@@ -1335,7 +1351,9 @@ export function createCadRenderer({
     (event) => {
       if (event.button !== 0 || gizmo.dragging) return;
       if (cornerDimensions) {
-        cornerClick = freeCornerSpace(event) ? { x: event.clientX, y: event.clientY, id: event.pointerId, session: cornerDimensions } : null;
+        cornerClick = freeCornerSpace(event)
+          ? { x: event.clientX, y: event.clientY, id: event.pointerId, session: cornerDimensions }
+          : null;
         event.preventDefault();
         event.stopImmediatePropagation();
         return;
@@ -1548,7 +1566,11 @@ export function createCadRenderer({
     if (cornerClick?.id === event.pointerId && event.button === 0) {
       const click = cornerClick;
       cornerClick = null;
-      if (cornerDimensions === click.session && Math.hypot(event.clientX - click.x, event.clientY - click.y) < 4 && freeCornerSpace(event)) {
+      if (
+        cornerDimensions === click.session &&
+        Math.hypot(event.clientX - click.x, event.clientY - click.y) < 4 &&
+        freeCornerSpace(event)
+      ) {
         if (!scaleDimensions.commit() && !cornerDimensions.controls.isApplying()) cornerDimensions.controls.cancel();
       }
       return;

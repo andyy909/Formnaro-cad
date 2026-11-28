@@ -158,9 +158,12 @@ function normalizeStepNames(bytes) {
     for (let i = 0; i < joined.length; i += digits) {
       const unit = joined.slice(i, i + digits);
       const point = Number.parseInt(unit, 16);
-      name += point >= 32 && point <= 126 && point !== 92
-        ? (point === 39 ? "''" : String.fromCodePoint(point))
-        : `\\X${width}\\${unit}\\X0\\`;
+      name +=
+        point >= 32 && point <= 126 && point !== 92
+          ? point === 39
+            ? "''"
+            : String.fromCodePoint(point)
+          : `\\X${width}\\${unit}\\X0\\`;
     }
     return name;
   });

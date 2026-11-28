@@ -24,7 +24,11 @@ function buildLocalTopology(mesh) {
   const edges = new Map();
   for (let face = 0; face < faceCount; face++) {
     const base = face * 3;
-    const vs = [representatives[triangles[base]], representatives[triangles[base + 1]], representatives[triangles[base + 2]]];
+    const vs = [
+      representatives[triangles[base]],
+      representatives[triangles[base + 1]],
+      representatives[triangles[base + 2]],
+    ];
     for (let k = 0; k < 3; k++) {
       const a = vs[k],
         b = vs[(k + 1) % 3];
@@ -203,9 +207,8 @@ export const RESIDUAL_PLANAR_FILL = Object.freeze({
  */
 function coplanarDefectBounds(mesh, topology, plane, seedFaces, margin) {
   const onPlane = (p) =>
-    Math.abs(
-      plane.normal[0] * p[0] + plane.normal[1] * p[1] + plane.normal[2] * p[2] - plane.distance,
-    ) <= RESIDUAL_PLANAR_FILL.planeToleranceMm;
+    Math.abs(plane.normal[0] * p[0] + plane.normal[1] * p[1] + plane.normal[2] * p[2] - plane.distance) <=
+    RESIDUAL_PLANAR_FILL.planeToleranceMm;
   const faceOnPlane = (face) =>
     [0, 1, 2].every((k) => {
       const id = mesh.triangles[face * 3 + k];
@@ -259,9 +262,8 @@ function closeResidualPlanarOpenings(mesh, plane, bounds, { signal, buildTopolog
   const filled = [],
     welds = [];
   const onPlane = (p) =>
-    Math.abs(
-      plane.normal[0] * p[0] + plane.normal[1] * p[1] + plane.normal[2] * p[2] - plane.distance,
-    ) <= RESIDUAL_PLANAR_FILL.planeToleranceMm;
+    Math.abs(plane.normal[0] * p[0] + plane.normal[1] * p[1] + plane.normal[2] * p[2] - plane.distance) <=
+    RESIDUAL_PLANAR_FILL.planeToleranceMm;
   const inBounds = (p) => [0, 1, 2].every((k) => p[k] >= bounds.min[k] && p[k] <= bounds.max[k]);
   const worldPoints = (ring) => ring.vertices.map((v) => current.verts.slice(v * 3, v * 3 + 3));
   const eligible = (ring) => {
@@ -293,11 +295,7 @@ function closeResidualPlanarOpenings(mesh, plane, bounds, { signal, buildTopolog
         distance = 0;
       for (let i = 0; i < ring.vertices.length; i++) {
         const j = (i + 1) % ring.vertices.length,
-          length = Math.hypot(
-            points[i][0] - points[j][0],
-            points[i][1] - points[j][1],
-            points[i][2] - points[j][2],
-          );
+          length = Math.hypot(points[i][0] - points[j][0], points[i][1] - points[j][1], points[i][2] - points[j][2]);
         if (length > 0 && length < RESIDUAL_PLANAR_FILL.weldToleranceMm) {
           pair = [ring.vertices[i], ring.vertices[j]];
           distance = length;
@@ -428,9 +426,10 @@ export function repairSimpleTopology(topology, options, { signal, buildTopology 
           RESIDUAL_PLANAR_FILL.boundsMarginMm,
         )
       : null;
-  const residualFill = residualBounds && typeof buildTopology === 'function'
-    ? closeResidualPlanarOpenings(baseMesh, planarSeamReport.plane, residualBounds, { signal, buildTopology })
-    : null;
+  const residualFill =
+    residualBounds && typeof buildTopology === 'function'
+      ? closeResidualPlanarOpenings(baseMesh, planarSeamReport.plane, residualBounds, { signal, buildTopology })
+      : null;
   if (residualFill && (residualFill.filled.length || residualFill.welds.length)) {
     baseMesh = residualFill.mesh;
     baseTopology = buildLocalTopology(baseMesh);
@@ -603,9 +602,7 @@ export function repairSimpleTopology(topology, options, { signal, buildTopology 
       holesFilled: residualFill?.filled.length ?? 0,
       residualOpeningsClosed: residualFill?.filled ?? [],
       residualWelds: residualFill?.welds ?? [],
-      planarResidualScope: planarSeamReport
-        ? 'only the detected defect plane and its local bounds'
-        : 'none',
+      planarResidualScope: planarSeamReport ? 'only the detected defect plane and its local bounds' : 'none',
       scope: 'existing-faces-only',
     },
   };

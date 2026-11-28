@@ -56,6 +56,7 @@ export function cadDisplayPreset(value, mode) {
 }
 
 export function isSimplifiedCadDisplay(quality) {
-  return quality.deflection === SIMPLIFIED_DISPLAY.deflection &&
-    quality.angleDegrees === SIMPLIFIED_DISPLAY.angleDegrees;
+  return (
+    quality.deflection === SIMPLIFIED_DISPLAY.deflection && quality.angleDegrees === SIMPLIFIED_DISPLAY.angleDegrees
+  );
 }

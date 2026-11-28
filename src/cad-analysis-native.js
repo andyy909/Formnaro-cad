@@ -73,8 +73,7 @@ export function cadUniformSourceStyle(node) {
   // A plain union takes all of its material from the direct solid sources.
   // Cutting tools remove material. There is no region for the root fallback
   // unless a later operation adds material or a nested group splits colors.
-  const plainUnion =
-    node.source === 'group' && node.operation === 'union' && !node.finish && !node.drill;
+  const plainUnion = node.source === 'group' && node.operation === 'union' && !node.finish && !node.drill;
   const nestedColors = node.children.some(
     (source) => source.solid && !source.suppressed && source.multicolor && source.children,
   );

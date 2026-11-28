@@ -40,7 +40,8 @@ export function createScaleDimensions({ viewport, projectPoint, getPreferences }
   }
   function commit() {
     if (!editor || !state?.controls) return false;
-    const { axis, input } = editor, value = readValue(input);
+    const { axis, input } = editor,
+      value = readValue(input);
     if (value === null) {
       input.setAttribute('aria-invalid', 'true');
       input.focus();
@@ -59,7 +60,8 @@ export function createScaleDimensions({ viewport, projectPoint, getPreferences }
       closeEditor();
       state.controls.preview(axis, null);
     }
-    const { label } = rows[axis], input = document.createElement('input');
+    const { label } = rows[axis],
+      input = document.createElement('input');
     input.type = 'text';
     input.inputMode = 'decimal';
     input.className = 'cad-scale-dimension cad-scale-input';

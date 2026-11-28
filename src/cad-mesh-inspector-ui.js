@@ -81,8 +81,12 @@ export function createCadMeshInspectorUI({
     const isGroup = $('focus-kind').value === 'defectGroup';
     const c = isGroup ? null : r?.categories[$('focus-kind').value];
     $('finding').textContent = isGroup
-      ? (r?.defectGroups?.length ? `Fehlerstelle ${number((s.activeGroupIndex ?? 0) + 1)} von ${number(r.defectGroups.length)}` : '')
-      : (c ? `Fundstelle ${number((s.focusIndex ?? 0) + 1)} von ${number(c.count)}` : '');
+      ? r?.defectGroups?.length
+        ? `Fehlerstelle ${number((s.activeGroupIndex ?? 0) + 1)} von ${number(r.defectGroups.length)}`
+        : ''
+      : c
+        ? `Fundstelle ${number((s.focusIndex ?? 0) + 1)} von ${number(c.count)}`
+        : '';
     const groupsList = $('groups-list');
     if (groupsList) {
       if (r?.defectGroups?.length) {
@@ -107,7 +111,11 @@ export function createCadMeshInspectorUI({
       return;
     }
     try {
-      view.setMeshInspection?.(r, { enabled: [...s.enabled], through: s.through, activeGroupIndex: s.activeGroupIndex });
+      view.setMeshInspection?.(r, {
+        enabled: [...s.enabled],
+        through: s.through,
+        activeGroupIndex: s.activeGroupIndex,
+      });
     } catch (error) {
       clear();
       message(error.message, true);

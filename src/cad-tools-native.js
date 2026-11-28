@@ -146,10 +146,10 @@ export function cadBoreCutter(source, { stage = null, lengthMM } = {}) {
     if (!Number.isFinite(lengthMM) || lengthMM <= 0)
       fail('BORE_SOURCE_LENGTH', 'Offene axiale Enden: Schnittlänge der Schneidquelle angeben.');
     length = lengthMM;
-    from = vector(source.point, 'Bohrquellenpunkt').map((value, i) => value - axis[i] * length / 2);
+    from = vector(source.point, 'Bohrquellenpunkt').map((value, i) => value - (axis[i] * length) / 2);
   }
   if (!(length > 0.05)) fail('BORE_SOURCE_LENGTH', 'Schneidquelle benötigt eine positive Länge.');
-  const center = from.map((value, i) => value + axis[i] * length / 2),
+  const center = from.map((value, i) => value + (axis[i] * length) / 2),
     orientation = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), new Vector3(...axis)),
     transform = new Matrix4().compose(new Vector3(...center), orientation, new Vector3(1, 1, 1)).toArray();
   return {
@@ -1415,9 +1415,7 @@ export function createCadToolsNative({ oc, service, transactions } = {}) {
       positive = nodes.filter((node) => !node.suppressed && (holeGroup || node.solid));
     if (!positive.length || (operation === 'intersection' && positive.length < 2))
       fail('INVALID_CAD_GROUP', 'Die CAD-Gruppe braucht aktive Körperquellen oder mindestens zwei Lochformen.');
-    const jointEndpoints = new Set(
-      (p.joints?.joints ?? []).flatMap((joint) => [joint.parentId, joint.childId]),
-    );
+    const jointEndpoints = new Set((p.joints?.joints ?? []).flatMap((joint) => [joint.parentId, joint.childId]));
     const affectedEndpoint = nodes.find((node) => jointEndpoints.has(node.id));
     if (affectedEndpoint)
       fail(

@@ -2008,45 +2008,70 @@ export function createCadCommandRouter({
       }
       case 'tabletFaceCut': {
         fields(operation, ['kind', 'binding', 'originalSketch', 'frame', 'sketch', 'cut']);
-        const {binding, cut} = operation;
+        const { binding, cut } = operation;
         fields(binding, ['targetId', 'point', 'normal', 'geometryDigest']);
-        const target = project.nodes.find(node => node.id === binding.targetId);
-        if (!target || target.kind !== 'cad' || !target.solid || target.suppressed ||
-          flags(target, project).hidden || flags(target, project).locked ||
-          projectObjectGeometryDigest(target) !== binding.geometryDigest) {
+        const target = project.nodes.find((node) => node.id === binding.targetId);
+        if (
+          !target ||
+          target.kind !== 'cad' ||
+          !target.solid ||
+          target.suppressed ||
+          flags(target, project).hidden ||
+          flags(target, project).locked ||
+          projectObjectGeometryDigest(target) !== binding.geometryDigest
+        ) {
           throw Error('Das gewählte Teil wurde geändert oder ist gesperrt. Sende seine Fläche erneut ans Tablet.');
         }
         const face = cadSketchFaceHit(oc, service, target, binding.point, binding.normal);
         const frame = validateAffineMatrix(operation.frame);
-        const [x, y, z] = [0, 4, 8].map(index => new Vector3(...frame.slice(index, index + 3)));
+        const [x, y, z] = [0, 4, 8].map((index) => new Vector3(...frame.slice(index, index + 3)));
         const normal = new Vector3(...face.normal);
         const offset = normal.dot(new Vector3(...frame.slice(12, 15)).sub(new Vector3(...face.point)));
-        if ([x, y, z].some(axis => Math.abs(axis.lengthSq() - 1) > 1e-7) ||
-          x.clone().cross(y).dot(z) < 1 - 1e-7 || z.dot(normal) < 1 - 1e-7 || Math.abs(offset) > 1e-5) {
+        if (
+          [x, y, z].some((axis) => Math.abs(axis.lengthSq() - 1) > 1e-7) ||
+          x.clone().cross(y).dot(z) < 1 - 1e-7 ||
+          z.dot(normal) < 1 - 1e-7 ||
+          Math.abs(offset) > 1e-5
+        ) {
           throw Error('Die ursprüngliche Flächenebene passt nicht mehr zum Teil.');
         }
-        const minimumZ = cut.mode === 'through'
-          ? service.inspect(target, new Matrix4().fromArray(frame).invert()
-              .multiply(new Matrix4().fromArray(target.transform)).toArray()).worldBounds.min[2]
-          : null;
-        const prepared = prepareTabletFaceCut({...operation, frame}, minimumZ);
+        const minimumZ =
+          cut.mode === 'through'
+            ? service.inspect(
+                target,
+                new Matrix4().fromArray(frame).invert().multiply(new Matrix4().fromArray(target.transform)).toArray(),
+              ).worldBounds.min[2]
+            : null;
+        const prepared = prepareTabletFaceCut({ ...operation, frame }, minimumZ);
         const label = cut.mode === 'through' ? 'Tablet-Durchbruch' : 'Tablet-Ausschnitt';
         const commands = prepared.cutters.map((sketch, index) => ({
-          op: 'sketch', as: 'tabletCut' + index, sketch,
-          frame: prepared.frame, solid: false, name: label,
+          op: 'sketch',
+          as: 'tabletCut' + index,
+          sketch,
+          frame: prepared.frame,
+          solid: false,
+          name: label,
         }));
         commands.push({
-          op: 'group', as: 'tabletResult', operation: 'union', name: target.name,
-          targets: [target.id, ...commands.map(command => '$' + command.as)],
+          op: 'group',
+          as: 'tabletResult',
+          operation: 'union',
+          name: target.name,
+          targets: [target.id, ...commands.map((command) => '$' + command.as)],
         });
-        const result = await batch(project, {kind:'batch',commands}, baseline, progress);
-        const alias = result.aliases.tabletResult, id = typeof alias === 'string' ? alias : alias.rootId;
-        const after = service.inspect(result.project.nodes.find(node => node.id === id));
+        const result = await batch(project, { kind: 'batch', commands }, baseline, progress);
+        const alias = result.aliases.tabletResult,
+          id = typeof alias === 'string' ? alias : alias.rootId;
+        const after = service.inspect(result.project.nodes.find((node) => node.id === id));
         const report = checkSketchAttachment(service.inspect(target), after, {
-          mode:'cut', sourceId:target.id, engine:'cad', requestedDepth:prepared.requestedDepth,
-          overlap:prepared.overlap, sketch:prepared.cutters[0],
+          mode: 'cut',
+          sourceId: target.id,
+          engine: 'cad',
+          requestedDepth: prepared.requestedDepth,
+          overlap: prepared.overlap,
+          sketch: prepared.cutters[0],
         });
-        return {...result, selectedIds:[id], report};
+        return { ...result, selectedIds: [id], report };
       }
       case 'template':
         fields(operation, ['kind', 'controls', 'bindings', 'values']);

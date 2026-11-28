@@ -76,7 +76,7 @@ export function createCadProjectsUI({
         remembered.hidden = !info.available;
         if (!lastKnown) {
           $('remember').checked = info.enabled;
-          if (Array.from(address.options).some(option => option.value === info.host)) address.value = info.host;
+          if (Array.from(address.options).some((option) => option.value === info.host)) address.value = info.host;
         }
         const snapshot = JSON.stringify(info);
         if (snapshot === lastKnown) return;
@@ -114,7 +114,7 @@ export function createCadProjectsUI({
     async function loadAddresses() {
       const addresses = await desktop.tabletAddresses();
       if (!active()) return;
-      address.replaceChildren(...addresses.map(ip => new Option(ip, ip)));
+      address.replaceChildren(...addresses.map((ip) => new Option(ip, ip)));
       begin.disabled = !address.options.length;
       if (begin.disabled) status.textContent = 'PC mit einem lokalen WLAN oder Netzwerkkabel verbinden.';
       await refreshKnown();
@@ -148,8 +148,13 @@ export function createCadProjectsUI({
           );
         }
         status.textContent = quick
-          ? (result.qr ? 'QR-Code gilt zwei Minuten.' : 'Kopplungscode kopieren und am Tablet eingeben.')
-          : 'Ziel „' + result.target.name + '“. ' + (result.qr ? 'QR scannen oder ' : '') +
+          ? result.qr
+            ? 'QR-Code gilt zwei Minuten.'
+            : 'Kopplungscode kopieren und am Tablet eingeben.'
+          : 'Ziel „' +
+            result.target.name +
+            '“. ' +
+            (result.qr ? 'QR scannen oder ' : '') +
             'Code kopieren und in Formano Mini einfügen. Zwei Minuten zum Koppeln.';
         copy.disabled = false;
       } catch (error) {
@@ -190,7 +195,10 @@ export function createCadProjectsUI({
   function openTabletPairing() {
     ++generation;
     release();
-    modal('Tablet koppeln', '<div id="tablet-pairing-code"><p>Am Tablet „CAD-Projekt → Mit PC verbinden → QR scannen“ öffnen.</p></div>');
+    modal(
+      'Tablet koppeln',
+      '<div id="tablet-pairing-code"><p>Am Tablet „CAD-Projekt → Mit PC verbinden → QR scannen“ öffnen.</p></div>',
+    );
     const code = document.getElementById('tablet-pairing-code');
     attachTabletTransfer(code.closest('dialog'), code, { quick: true });
   }

@@ -274,7 +274,9 @@ export function installSketchConstraintsUI({
         c.type === type &&
         (type !== 'tangent' || c.mode !== 'internal') &&
         c.refs.length === refs.length &&
-        refs.every((ref) => c.refs.some((candidate) => candidate.element === ref.element && candidate.point === ref.point)),
+        refs.every((ref) =>
+          c.refs.some((candidate) => candidate.element === ref.element && candidate.point === ref.point),
+        ),
     );
   }
   function refreshQuickActions() {
@@ -440,7 +442,9 @@ export function installSketchConstraintsUI({
     refreshQuickActions();
     if (s.linked || s.sketch.version < 3 || !geometry) return;
     const selectedRefs = selectedConstraintRefs(handles, selected),
-      ids = [...new Set([...selectedRefs.map((r) => r.element), ...elementSelection, ...highlighted, ...conflictElements])],
+      ids = [
+        ...new Set([...selectedRefs.map((r) => r.element), ...elementSelection, ...highlighted, ...conflictElements]),
+      ],
       related = new Set(constraintsForElements(s.sketch.constraints, ids));
     for (const li of root.querySelectorAll('[data-constraint-id]'))
       li.classList.toggle('selected', related.has(li.dataset.constraintId));

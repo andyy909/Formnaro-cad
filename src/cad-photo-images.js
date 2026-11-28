@@ -40,7 +40,9 @@ export function suggestPhotoAlphaContour(image) {
     ? {
         kind: 'alpha',
         points: originalPoints(silhouette.outline),
-        warnings: ['Außenkontur aus Transparenz vorgeschlagen. Punkte prüfen, bestätigen oder verwerfen. Öffnungen separat markieren.'],
+        warnings: [
+          'Außenkontur aus Transparenz vorgeschlagen. Punkte prüfen, bestätigen oder verwerfen. Öffnungen separat markieren.',
+        ],
       }
     : null;
 }

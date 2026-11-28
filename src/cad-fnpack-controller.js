@@ -398,8 +398,7 @@ export function withFnpackGeometry(worker, { resolveProject, getProject, getDisp
       };
       const revision = cadProjectRevision(baseline ?? workerProject),
         result = await worker.run(prepared, { ...options, revision });
-      if (neighborMeshes)
-        return { ...result, project: replaceRootMeshes(result.project, neighborMeshes.original) };
+      if (neighborMeshes) return { ...result, project: replaceRootMeshes(result.project, neighborMeshes.original) };
       if (
         request.job === 'query' &&
         options.revision !== undefined &&

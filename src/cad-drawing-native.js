@@ -241,8 +241,8 @@ function drawingSourceReferences(oc, nodes, inverse) {
       bore = throughBoreEntry(node),
       screwSource = node.source === 'native' && ['thread', 'nut'].includes(node.recipe?.type),
       exactGeometry = node.source === 'step' || screwSource,
-      originalSource = exactGeometry ||
-        (node.source === 'native' && ['box', 'cylinder', 'sketch'].includes(node.recipe?.type));
+      originalSource =
+        exactGeometry || (node.source === 'native' && ['box', 'cylinder', 'sketch'].includes(node.recipe?.type));
     if (originalSource || bore) {
       const shape = readCadBrep(oc, node.brep.data),
         brepSignature = exactGeometry ? cadGeometryDigest(node.brep.data) : null;

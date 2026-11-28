@@ -260,8 +260,12 @@ export function groupPartRows(rows) {
     if (group.every((r) => Array.isArray(r.centerMm) && r.centerMm.every(Number.isFinite))) {
       const weightSum = group.reduce((sum, r) => sum + ((Number.isFinite(r.massG) ? r.massG : r.volumeMm3) ?? 0), 0);
       if (weightSum > 0) {
-        centerMm = [0, 1, 2].map((k) =>
-          group.reduce((sum, r) => sum + r.centerMm[k] * ((Number.isFinite(r.massG) ? r.massG : r.volumeMm3) ?? 0), 0) / weightSum
+        centerMm = [0, 1, 2].map(
+          (k) =>
+            group.reduce(
+              (sum, r) => sum + r.centerMm[k] * ((Number.isFinite(r.massG) ? r.massG : r.volumeMm3) ?? 0),
+              0,
+            ) / weightSum,
         );
       } else {
         centerMm = [0, 1, 2].map((k) => group.reduce((sum, r) => sum + r.centerMm[k], 0) / group.length);
@@ -313,8 +317,7 @@ export function summarizeParts(inputRows, { grouped = false, mode = grouped ? 'g
   const rows = isGrouped ? groupPartRows(normalizedRows) : normalizedRows;
 
   const complete =
-    rows.length > 0 &&
-    rows.every((r) => Number.isFinite(r.massG) && r.massG > 0 && r.centerMm?.every(Number.isFinite));
+    rows.length > 0 && rows.every((r) => Number.isFinite(r.massG) && r.massG > 0 && r.centerMm?.every(Number.isFinite));
 
   const knownMassG = rows.reduce((s, r) => s + (Number.isFinite(r.massG) ? r.massG : 0), 0);
   const totalCount = rows.reduce((s, r) => s + (r.count ?? 1), 0);

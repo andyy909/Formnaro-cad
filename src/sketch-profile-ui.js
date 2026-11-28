@@ -15,7 +15,16 @@ import {
   profileId,
 } from './sketch-profile.js';
 export function installSketchProfileUI({
-  s, board, svg, fields, changed, message, controller, isCurrent, desktop = true, prepareLineEdit,
+  s,
+  board,
+  svg,
+  fields,
+  changed,
+  message,
+  controller,
+  isCurrent,
+  desktop = true,
+  prepareLineEdit,
 }) {
   const $ = (id) => document.getElementById(id),
     root = document.createElement('section');
@@ -43,7 +52,10 @@ export function installSketchProfileUI({
   commandBar.insertBefore(finish, $('sketch-profile-close'));
   const lineEditButtons = new Map();
   if (desktop) {
-    for (const [mode, label] of [['trim', 'Linie trimmen'], ['extend', 'Linie verlängern']]) {
+    for (const [mode, label] of [
+      ['trim', 'Linie trimmen'],
+      ['extend', 'Linie verlängern'],
+    ]) {
       const button = document.createElement('button');
       button.type = 'button';
       button.id = 'sketch-profile-canvas-' + mode;
@@ -211,13 +223,26 @@ export function installSketchProfileUI({
   function drawPreview(end, _extent, origin) {
     clearPreview();
     const mode = $('sketch-profile-shape').value;
-    const start = mode === 'line' ? pending[0] ?? origin : origin;
-    if (lineEdit || !['line', 'construction'].includes(mode) || !start || !end ||
-        Math.hypot(end[0] - start[0], end[1] - start[1]) < 1e-7) return;
+    const start = mode === 'line' ? (pending[0] ?? origin) : origin;
+    if (
+      lineEdit ||
+      !['line', 'construction'].includes(mode) ||
+      !start ||
+      !end ||
+      Math.hypot(end[0] - start[0], end[1] - start[1]) < 1e-7
+    )
+      return;
     svg('line', {
-      x1: start[0], y1: -start[1], x2: end[0], y2: -end[1],
-      class: 'sketch-line-preview', stroke: '#79e0e7', 'stroke-width': 1.5,
-      'stroke-dasharray': '6 4', 'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none',
+      x1: start[0],
+      y1: -start[1],
+      x2: end[0],
+      y2: -end[1],
+      class: 'sketch-line-preview',
+      stroke: '#79e0e7',
+      'stroke-width': 1.5,
+      'stroke-dasharray': '6 4',
+      'vector-effect': 'non-scaling-stroke',
+      'pointer-events': 'none',
     });
   }
   function drawLineEditTarget(elements) {
@@ -225,9 +250,15 @@ export function installSketchProfileUI({
     const target = elements.find((element) => element.id === lineEdit?.target?.id);
     if (!target) return;
     svg('line', {
-      x1: target.start[0], y1: -target.start[1], x2: target.end[0], y2: -target.end[1],
-      class: 'sketch-line-edit-target', stroke: '#ffc853', 'stroke-width': 2,
-      'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none',
+      x1: target.start[0],
+      y1: -target.start[1],
+      x2: target.end[0],
+      y2: -target.end[1],
+      class: 'sketch-line-edit-target',
+      stroke: '#ffc853',
+      'stroke-width': 2,
+      'vector-effect': 'non-scaling-stroke',
+      'pointer-events': 'none',
     });
   }
   function startLineEdit(mode) {
@@ -249,7 +280,10 @@ export function installSketchProfileUI({
       const { target, mode } = lineEdit;
       const pick = pickSketchEditElement(elements, point, tolerance, { lineOnly: !target, exclude: target?.id });
       if (!pick) {
-        message(target ? 'Eine andere Linie, einen Kreis oder Kreisbogen als Grenze anklicken.' : 'Eine Linie anklicken.', true);
+        message(
+          target ? 'Eine andere Linie, einen Kreis oder Kreisbogen als Grenze anklicken.' : 'Eine Linie anklicken.',
+          true,
+        );
       } else if (!target) {
         lineEdit.target = pick;
         activeId = pick.id;
@@ -373,8 +407,7 @@ export function installSketchProfileUI({
             throw error;
           }
           return true;
-        }
-        else
+        } else
           message(
             shape === 'bezier'
               ? 'Bézier: ' + (4 - pending.length) + ' weitere Punkte anklicken.'
@@ -634,7 +667,13 @@ export function installSketchProfileUI({
     isCurrent,
   });
   return {
-    refresh, pointerUp, render, enable, reset, removeLast, drawPreview,
+    refresh,
+    pointerUp,
+    render,
+    enable,
+    reset,
+    removeLast,
+    drawPreview,
     circlePlacement(cursor) {
       if ($('sketch-profile-shape').value !== 'circle3') return null;
       let preview;
@@ -652,6 +691,10 @@ export function installSketchProfileUI({
     updateLineEnd(id, point) {
       if (activeId === id && activeLoop && pending.length === 1) pending = [[...point]];
     },
-    finishOpen, cancelDrawing, startLineEdit, handleLineEdit, asCopy: () => toolsUI.asCopy(),
+    finishOpen,
+    cancelDrawing,
+    startLineEdit,
+    handleLineEdit,
+    asCopy: () => toolsUI.asCopy(),
   };
 }

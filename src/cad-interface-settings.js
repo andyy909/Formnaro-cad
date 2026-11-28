@@ -229,12 +229,11 @@ export function createCadInterfaceSettings({
     const values = quality();
     const detail = byId('settings-display-detail');
     if (detail) {
-      detail.value =
-        isSimplifiedCadDisplay(values.display)
-          ? 'simplified'
-          : values.display.deflection === 0.02 && values.display.angleDegrees === 8
-            ? 'full'
-            : 'custom';
+      detail.value = isSimplifiedCadDisplay(values.display)
+        ? 'simplified'
+        : values.display.deflection === 0.02 && values.display.angleDegrees === 8
+          ? 'full'
+          : 'custom';
       detail.onchange = run(async () => {
         if (detail.value !== 'custom') await setQuality(cadDisplayPreset(quality(), detail.value));
         fillQuality();

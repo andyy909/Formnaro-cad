@@ -1,6 +1,12 @@
 import { photoPlane, projectPhotoPoint } from './cad-photo-perspective.js';
 import { validatePhotoReference, measurePhoto, photoPolygon } from './cad-photo-data.js';
-import { loadPhotoImage, photoGrid, rectifiedPhotoImage, suggestPhotoAlphaContour, suggestPhotoImageContour } from './cad-photo-images.js';
+import {
+  loadPhotoImage,
+  photoGrid,
+  rectifiedPhotoImage,
+  suggestPhotoAlphaContour,
+  suggestPhotoImageContour,
+} from './cad-photo-images.js';
 import './cad-photo.css';
 import { registerPhotoDetail, renderPhotoDetail } from './cad-photo-detail.js';
 import { createPhotoCutoutControl } from './cad-photo-cutout.js';
@@ -406,9 +412,9 @@ export async function editPhotoReference(attachment, { explicitScale = false } =
     mode = 'edit';
     update();
     el('photo-edit-group').value = 'suggestion';
-    dialog.querySelectorAll('[data-mode]').forEach((button) =>
-      button.setAttribute('aria-pressed', String(button.dataset.mode === mode)),
-    );
+    dialog
+      .querySelectorAll('[data-mode]')
+      .forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.mode === mode)));
     status(suggestion.warnings.join(' '));
   }
   el('photo-suggest').onclick = () => {
@@ -427,7 +433,8 @@ export async function editPhotoReference(attachment, { explicitScale = false } =
     try {
       sync();
       if (suggestion.kind === 'alpha') {
-        if (ref.outline.length) throw Error('Die Außenkontur ist bereits bestätigt. Den Transparenzvorschlag verwerfen.');
+        if (ref.outline.length)
+          throw Error('Die Außenkontur ist bereits bestätigt. Den Transparenzvorschlag verwerfen.');
         ref.outline = photoPolygon(suggestion.points, ref.width, ref.height);
       } else {
         ref.outline = validatePhotoReference({ ...ref, outline: suggestion.points }).outline;

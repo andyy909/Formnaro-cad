@@ -65,9 +65,7 @@ function library(value) {
     !Array.isArray(value.items) ||
     value.items.length > 500
   )
-    throw Error(
-      'Nur Teilebibliotheken Version 5, 7 bis 16, 18 bis 32 und 35 bis 42 sind kompatibel.',
-    );
+    throw Error('Nur Teilebibliotheken Version 5, 7 bis 16, 18 bis 32 und 35 bis 42 sind kompatibel.');
   const ids = new Set();
   return {
     format: LIBRARY_FORMAT,
@@ -97,7 +95,10 @@ function library(value) {
         throw Error('Projekte mit Format 38 benötigen Bibliotheksversion 38.');
       if (project.version >= DRAWING_CENTERMARK_PROJECT_VERSION && value.version < DRAWING_CENTERMARK_PROJECT_VERSION)
         throw Error('Mittelpunktmarken in Zeichnungen benötigen Bibliotheksversion 37.');
-      if (project.version >= COMPONENT_DEFINITION_PROJECT_VERSION && value.version < COMPONENT_DEFINITION_PROJECT_VERSION)
+      if (
+        project.version >= COMPONENT_DEFINITION_PROJECT_VERSION &&
+        value.version < COMPONENT_DEFINITION_PROJECT_VERSION
+      )
         throw Error('Bauteildefinitionen benötigen Bibliotheksversion 36.');
       if (project.version >= PART_NUMBER_PROJECT_VERSION && value.version < PART_NUMBER_PROJECT_VERSION)
         throw Error('Teilenummern benötigen Bibliotheksversion 35.');

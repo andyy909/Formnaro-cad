@@ -36,10 +36,9 @@ import { CAD_LINKED_PATTERN_COMMAND_SCHEMAS } from './cad-linked-pattern-automat
 import { PROGRAM_ASSISTANT_CONTRACT } from './cad-program-help.js';
 import { CAD_AI_FEATURE_COMMAND_SCHEMA } from './cad-ai-feature-automation.js';
 
-const supportedProjectVersions = Array.from(
-  { length: MOTION_CLIP_PROJECT_VERSION },
-  (_, index) => index + 1,
-).filter(isSupportedCadProjectVersion);
+const supportedProjectVersions = Array.from({ length: MOTION_CLIP_PROJECT_VERSION }, (_, index) => index + 1).filter(
+  isSupportedCadProjectVersion,
+);
 
 export function cadAIContext(fonts = CAD_FONTS) {
   const commandSchema = structuredClone(COMMAND_SCHEMA);

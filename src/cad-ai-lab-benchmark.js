@@ -70,7 +70,9 @@ export function mountBenchmark({ host, api, status, refresh, getModeler, selectS
     el('converter').disabled = busy;
     el('start').disabled = busy || selected?.available !== true;
     availability.hidden = selected?.available !== false;
-    availability.textContent = availability.hidden ? '' : selected.reason || 'Diese Aufgabenserie benötigt eine Prüferkalibrierung.';
+    availability.textContent = availability.hidden
+      ? ''
+      : selected.reason || 'Diese Aufgabenserie benötigt eine Prüferkalibrierung.';
     el('tasks').replaceChildren(
       ...(selected?.cases ?? []).map((c) => {
         const li = document.createElement('li');

@@ -141,9 +141,7 @@ export function createCadMeshSelectionUI({
           session?.objectId === node.id && model.state() ? model.state().protections : meshProtectionRegions(node),
         digest = protectionDigests.get(node.mesh);
       const ids = [
-        ...new Set(
-          regions.filter((r) => matchesRegion(r, digest, node)).flatMap((r) => r.triangleIds),
-        ),
+        ...new Set(regions.filter((r) => matchesRegion(r, digest, node)).flatMap((r) => r.triangleIds)),
       ].sort((a, b) => a - b);
       if (ids.length)
         values.push({

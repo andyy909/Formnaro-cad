@@ -142,16 +142,15 @@ function simplify(p, eps) {
   // Re-evaluate after every removal. Filtering all points against the old
   // neighbours removes whole runs of locally flat points at a corner, which
   // can erase a real bend while each individual point is still within eps.
-  for (let changed = true; changed && out.length > 3; ) {
+  for (let changed = true; changed && out.length > 3;) {
     changed = false;
-    for (let i = 0; i < out.length && out.length > 3; ) {
+    for (let i = 0; i < out.length && out.length > 3;) {
       const a = out[(i + out.length - 1) % out.length],
         b = out[i],
         c = out[(i + 1) % out.length],
         ab = sub(b, a),
         ac = sub(c, a),
-        keep =
-          Math.abs(ab[0] * ac[1] - ab[1] * ac[0]) > eps * Math.hypot(...ac) || dot(ab, sub(b, c)) > 0;
+        keep = Math.abs(ab[0] * ac[1] - ab[1] * ac[0]) > eps * Math.hypot(...ac) || dot(ab, sub(b, c)) > 0;
       if (keep) {
         i++;
         continue;
