@@ -16,3 +16,16 @@ test('Folder lists copied files, deleted recents are disabled, export files are 
  const handlers={},win={webContents:{}};installProjects(win,{directory:f.directory,ipcMain:{handle:(n,h)=>handlers[n]=h},dialog:f.dialog,shell:f.shell});assert.equal((await handlers['cad-project:list']({sender:{}})).ok,false);assert.equal((await handlers['cad-project:list']({sender:win.webContents})).ok,true);
  assert.equal(projectDirectory({isPackaged:true,getPath:()=>path.join(f.root,'App/Formnaro.exe')}),path.join(f.root,'App/Projekte'));await fs.rm(f.root,{recursive:true,force:true});
 });
+test('Native project dialog titles use the requested language and fall back to German', async t => {
+ const f = await fixture();
+ t.after(() => fs.rm(f.root, { recursive: true, force: true }));
+ const titles = [];
+ const cancel = async (_win, { title }) => { titles.push(title); return { canceled: true }; };
+ f.dialog.showOpenDialog = cancel;
+ f.dialog.showSaveDialog = cancel;
+ await f.store.open({ language: 'en' });
+ await f.store.save({ ...args('model'), language: 'en' });
+ await f.store.save({ filename: 'model.fnpack', project: {}, blocks: [], language: 'en' });
+ await f.store.open({ language: 'unknown' });
+ assert.deepEqual(titles, ['Open project', 'Save project', 'Save geometry package', 'Projekt öffnen']);
+});

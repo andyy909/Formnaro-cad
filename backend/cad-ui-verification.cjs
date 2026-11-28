@@ -1,4 +1,3 @@
-/* global window, document, requestAnimationFrame -- Serialized verification callbacks run in Electron's renderer. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 
 // Runs only inside the explicitly isolated --verify-local application. The
@@ -33,6 +32,6 @@ async function verifyCadUi(win,app,outputPath){
     await new Promise(r=>setTimeout(r,50));for(const file of files)assert.ok(fs.statSync(file).size>0,'Native file chooser/IPC did not write '+path.basename(file));assert.equal(new Set(files.map(f=>path.extname(f))).size,8,'Project plus seven export formats missing');
     const projectFile=files.find(file=>path.extname(file)==='.ocad'),project=JSON.parse(fs.readFileSync(projectFile,'utf8'));assert.equal(project.version,5);assert.ok(project.nodes.some(n=>n.kind==='referenceMesh'));for(const node of project.nodes.filter(n=>n.kind==='cad'))assert.equal(node.brep.triangulation,false);
     return {checks,files:files.map(file=>({name:path.basename(file),bytes:fs.statSync(file).size})),...summary,controlledChooser:true,trustedNativeMouse:true};
-  }catch(error){try{fs.writeFileSync(path.join(directory,'native-ui-failed.png'),(await win.webContents.capturePage()).toPNG());}catch{ /* Failure evidence is optional. Preserve the original verification error. */ }throw error;}finally{dialog.showSaveDialog=originalChooser;if(!attached&&win.webContents.debugger.isAttached())win.webContents.debugger.detach();await run('window.__packedCadUi?.stop()').catch(()=>{});}
+  }catch(error){try{fs.writeFileSync(path.join(directory,'native-ui-failed.png'),(await win.webContents.capturePage()).toPNG());}catch{}throw error;}finally{dialog.showSaveDialog=originalChooser;if(!attached&&win.webContents.debugger.isAttached())win.webContents.debugger.detach();await run('window.__packedCadUi?.stop()').catch(()=>{});}
 }
 module.exports={verifyCadUi};

@@ -7,6 +7,7 @@ import {createCadToolsNative} from '../src/cad-tools-native.js';
 import {createCadProject,parseCadProject,serializeCadProject} from '../src/cad-project.js';
 import {cadIdentity} from '../src/cad-affine.js';
 import {cadFuseMany,cadBoolean,cadVolume,validateCadSolid,writeCadBrep} from '../src/cad-native-kernel.js';
+import {createCadJoint} from '../src/cad-joints-data.js';
 const oc=await loadCadKernel({print:()=>{},printErr:()=>{}}),near=(a,b)=>assert.ok(Math.abs(a-b)<1e-5,`${a} != ${b}`);
 // OCCT marks a TShape non-free when it becomes a compound child. This
 // ownership flag is not geometry; all other bytes must remain unchanged.
@@ -37,6 +38,27 @@ test('Group preview, source editing, suppression, dissolve, reload and Undo pres
   store.apply(await tools.previewEditSource({groupId:'g',path:['p0'],patch:{recipe:{type:'box',size:[6,4,4]}},revision:store.revision()}));assert.ok(store.snapshot().nodes[0].stats.volume>352);store.undo();assert.equal(store.serialize(),grouped);
   store.apply(await tools.previewDissolve({id:'g',revision:store.revision()}));assert.equal(store.serialize(),before);
  }}finally{service.dispose();}
+});
+test('Group and dissolve guard only removed joint root endpoints and keep confirmed project unchanged on rejection',async()=>{
+ const service=createCadService({oc});try{
+  const p=await service.rebuild(fixture(service));
+  p.joints=createCadJoint(p,{id:'ab',kind:'fixed',parentId:'p0',childId:'p1',origin:[1.5,0,0]});
+  const jointProject=await service.rebuild(p),store=createCadTransactions({initial:jointProject,build:p=>service.rebuild(p)}),tools=createCadToolsNative({oc,service,transactions:store});
+  const initial=store.serialize(),depth=store.state().undo;
+  assert.throws(()=>tools.previewGroup({ids:['p0','p1'],id:'bad-group',revision:store.revision()}),{code:'JOINT_GROUP_ENDPOINT'});
+  assert.equal(store.serialize(),initial);assert.equal(store.state().undo,depth);assert.equal(store.state().busy,false);
+  const allowed=await tools.previewGroup({ids:['p2','p3'],id:'unrelated-group',revision:store.revision()});store.apply(allowed);
+  const grouped=store.snapshot(),group=grouped.nodes.find(n=>n.id==='unrelated-group');
+  const blocked=structuredClone(grouped);blocked.joints=createCadJoint(blocked,{id:'group-joint',kind:'fixed',parentId:group.id,childId:'p4',origin:[10.5,0,0]});
+  const blockedStore=createCadTransactions({initial:blocked,build:p=>service.rebuild(p)}),blockedTools=createCadToolsNative({oc,service,transactions:blockedStore});
+  const beforeBlocked=blockedStore.serialize(),blockedDepth=blockedStore.state().undo;
+  assert.throws(()=>blockedTools.previewDissolve({id:group.id,revision:blockedStore.revision()}),{code:'JOINT_DISSOLVE_ENDPOINT'});
+  assert.equal(blockedStore.serialize(),beforeBlocked);assert.equal(blockedStore.state().undo,blockedDepth);assert.equal(blockedStore.state().busy,false);
+  const dissolveStore=createCadTransactions({initial:grouped,build:p=>service.rebuild(p)}),dissolveTools=createCadToolsNative({oc,service,transactions:dissolveStore});
+  const beforeDissolve=dissolveStore.serialize(),beforeDepth=dissolveStore.state().undo;
+  const unrelatedDissolve=await dissolveTools.previewDissolve({id:group.id,revision:dissolveStore.revision()});dissolveStore.apply(unrelatedDissolve);
+  assert.equal(dissolveStore.snapshot().nodes.some(n=>n.id===group.id),false);assert.equal(dissolveStore.snapshot().joints.joints[0].id,'ab');
+ }finally{service.dispose();}
 });
 test('Failed balanced calculation falls back; persistent failures leave the confirmed transaction unchanged',async()=>{
  const service=createCadService({oc});try{

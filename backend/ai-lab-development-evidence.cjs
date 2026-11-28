@@ -127,6 +127,7 @@ function installDevelopmentEvidence(win,directory,ipcMain=require('electron').ip
    }
    if(value?.action==='supplement-save')return {ok:true,value:supplemental.save(value.report)};
    if(value?.action==='supplement-chart-data')return {ok:true,value:supplemental.chartRows()};
+   if(value?.action==='supplement-benchmark-runs')return {ok:true,value:supplemental.benchmarkRuns()};
    if(value?.action==='supplement-read')return {ok:true,value:supplemental.read(value.id)};
    if(value?.action==='supplement-recent')return {ok:true,value:supplemental.recent()};
    if(value?.action==='supplement-completed')return {ok:true,value:supplemental.completed()};

@@ -41,6 +41,35 @@ test('A full circular cap remains one analytic circle',()=>{
  try{const hit=pick(shape,[0,0,40]),copy=faceSketchNative(oc,shape,hit.faceIndex);assert.equal(copy.elementCount,1);assert.equal(copy.sketch.elements[0].type,'circle');near(Number(copy.sketch.elements[0].diameter),16);near(copy.area,Math.PI*64);}finally{shape.delete();}
 });
 
+test('Tablet contours follow a tilted camera and retain their exact location on the CAD face', () => {
+  const {native, height} = plate();
+  const shape = buildCadContours(oc, {contours: [native], height});
+  try {
+    const {faceIndex} = pick(shape, [0, 12, 50]);
+    const original = faceSketchNative(oc, shape, faceIndex);
+    const angle = Math.PI / 5;
+    const rotated = faceSketchNative(oc, shape, faceIndex, {
+      viewAxes: {right: [0, 1, 0], up: [-Math.cos(angle), 0, Math.sin(angle)]},
+    });
+    [0, 1, 0, 0, -1, 0, 0, 0].forEach((expected, index) => near(rotated.frame[index], expected));
+    near(new Matrix4().fromArray(rotated.frame).determinant(), 1);
+    near(rotated.area, original.area);
+    assert.deepEqual(rotated.sketch.loops, original.sketch.loops);
+    for (const [index, element] of original.sketch.elements.entries()) {
+      const copy = rotated.sketch.elements[index];
+      for (const field of ['start', 'through', 'end', 'center']) {
+        if (!Array.isArray(element[field])) continue;
+        const previousWorld = cadPoint(original.frame, [...element[field].map(Number), 0]);
+        const currentWorld = cadPoint(rotated.frame, [...copy[field].map(Number), 0]);
+        currentWorld.forEach((value, axis) => near(value, previousWorld[axis]));
+      }
+      if (element.type === 'circle') near(Number(copy.diameter), Number(element.diameter));
+    }
+  } finally {
+    shape.delete();
+  }
+});
+
 test('STEP boundaries survive mirrored rotated placement and uniform scaling in world millimetres',async()=>{
  const service=createCadService({oc});try{
   const profile=plate(),node=service.nativeNode(cadSketchRecipe(profile.sketch),{id:'original'}),project=await service.rebuild(createCadProject({nodes:[node]})),imported=service.stepNode(service.exportStep(project),{id:'step'}),matrix=new Matrix4().makeTranslation(70,-40,20).multiply(new Matrix4().makeRotationX(.7)).multiply(new Matrix4().makeScale(-1.5,1.5,1.5)).toArray();imported.transform=matrix;

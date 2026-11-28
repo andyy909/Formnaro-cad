@@ -29,9 +29,7 @@ function openProgramStorage(legacy, desktop, cadOnly, asynchronous) {
     try {
       const value = legacy.getItem(key);
       if (value !== null) old[key] = value;
-    } catch {
-      /* An unavailable legacy entry must not prevent reading the remaining keys. */
-    }
+    } catch {}
   }
   const request = cadOnly
     ? { format: 'FormnaroProgramDataInitialization', version: 1, cadOnly: true, values: old }

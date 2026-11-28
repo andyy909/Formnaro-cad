@@ -120,7 +120,7 @@ export function createCadAIChat({
   const pickFeature = document.createElement('button');
   pickFeature.id = 'ai-chat-pick-feature';
   pickFeature.type = 'button';
-  pickFeature.textContent = language() === 'en' ? 'Attach model feature' : 'Stelle anhängen';
+  pickFeature.textContent = 'Stelle anhängen';
   pickFeature.hidden = !featureStore?.pickForChat;
   el('ai-chat-send').before(pickFeature);
   const layout = createCadAIChatLayout(root, { language });

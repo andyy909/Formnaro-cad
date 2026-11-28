@@ -1082,9 +1082,9 @@
     ]
   },
   "application": "Formnaro",
-  "version": "0.147.1",
+  "version": "0.157.0",
   "apiVersion": 1,
-  "projectVersion": 32,
+  "projectVersion": 42,
   "supportedProjectVersions": [
     5,
     7,
@@ -1112,7 +1112,16 @@
     29,
     30,
     31,
-    32
+    32,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42
   ],
   "units": "mm",
   "programTools": {
@@ -1540,7 +1549,7 @@
   "projectParametersContract": "Project/library13 retains projectParameters:{version:1,parameters:[{id,name,value:number|expression}],bindings:[{id,parameterId,target:{rootId,path},field}],variants:[{id,name,values:[{parameterId,value}],states:[{target,hidden?,suppressed?}]}],activeVariantId:null|id}. Format23 additionally supports projectParameters version2 with explicit freecad:[{target,inputs:[{name,target,unresolved?}]}]. Bind existing numeric script/plan fields freecad.parameters.KEY only from the actual catalog; no code editing. Configure every automatic run explicitly, including an empty inputs list for inputless programs. Input changes invalidate native receipts; libraries keep missing external inputs unresolved. The desktop coordinates actual FreeCAD jobs in the same dependency pass, one run per affected source, with native STEP checks and one Undo. Native post-edits may be reset by a parameter rerun and require explicit warning acceptance. Limits100parameters/500bindings/32variants. Stable parameter IDs survive naming changes; expressions reference unique variable names with arithmetic + - * /, parentheses and sind/cosd in degrees. Cycles, unknown names and invalid inactive variant expressions reject. Read actual binding field addresses from scene.projectParameterCatalog or app/projectParameterCatalog; never invent fields/source paths. Fields size.0-2 are explicit affine whole-object dimensions and preserve all sketch formulas; pos.0-2 are the source center in its parent frame (world for roots). params.Name edits existing numeric native form controls. sketch.variables.Name, sketch.dimensions.width/depth/diameter/height and stable sketch.elements.ID numeric coordinate/diameter fields bind only literal/free values; derived formulas stay strings and require binding an upstream free variable. modeling.offset/thickness/path.length/radius/angle edit the saved native operation, retaining original sources. Put and selectVariant stage a homogeneous parameter-only batch; a final explicit update is required for any bound geometry change. One controller preview computes the final active definition once, then Apply makes one Undo. Metadata-only unused values/renames/inactive variants or root visibility/suppression need no construction. Every affected native target and necessary ancestor is constructed at most once per Update, with exact verified finished-BRep cache reuse after shape eviction; unrelated native geometry remains unchanged. Active-variant suppressed targets still retain matching completed geometry; inactive variants are not precomputed. Source changes can leave stored bindings stale; every export of affected results, including drawing exports, requires successful update. Remove clears the table and bindings, keeps completed bodies, and restores captured variant baseline flags; nested suppression restoration can require final update. applied/baseStates are read-only internal stamps/baselines; omit them on put or pass the unchanged confirmed values. Preview replies expose bounded response.parameters and actual parameterReport {affectedIds,stateChangedIds,rebuiltIds,constructedIds,counts,metadataOnly}; this is inspectable data, not an automatically opened visual parameter editor. Existing API/MCP endpoint names and key-free local connection remain unchanged.",
   "linkedPatternContract": "Read scene.linkedPatterns for up to 50 current linked body pattern definitions, stable instance identities and problems; total/truncated indicate additional patterns. A linkedPattern command must be the only command in a preview. Use action put with a complete version 1 pattern definition and existing sourceId to create or update; preserve the sourceId and omit internal instances and snapshot. Kinds are line, grid, circle and mirror; positions are zero-based and position 0 is the source. excluded lists omitted positions, bindings refer to project parameter IDs. action detachInstance takes id and index and preserves the detached part as independent geometry. action detach requires explicit confirm:true and preserves all geometry. Preview, check and apply against the current revision; existing locks, external references, conflicts and stale states use the same validation as the UI. Affected technical drawing views on retained pattern copies update natively after the copies, including parameter/variant and coordinated drill updates, in the same preview and Undo. Referenced copies cannot be removed or excluded until their drawing source is explicitly changed. Other shared view inputs must be current. Native dimension correspondence is retained only when unambiguous; unresolved dimensions remain stored and block drawing export. Direct linkedPattern put in the pattern editor also updates current contour chains on retained whole-body copies, including native sketch targets nested inside ordinary CSG groups, then their drawings. Contour targets may retain project bindings to existing literal free sketch variables, literal extrusion-height fields, literal sketch.elements.ID circle diameter or start/through/end/center coordinates, size.0/1/2 or pos.0/1/2 controls; copied target controls are applied after all copies, in contour order. Size controls use the source axes and fixed corner while preserving the full affine map; position controls use the existing bounds-centre coordinates. The next contour reads the fully resized and positioned preceding source. Explicit profile-element bindings overlay the freshly read native source profile by exact element identity; original snapshot.profile remains the native source and removing a binding restores that source field. Collect connected endpoint bindings together; missing elements or invalid/open profiles reject the whole preview. Profile-only changes also validate unchanged source copies and update affected contour chains and drawings. Program/joint/KI/other pattern consumers and face annotations/colors remain blocked. Nested source addresses inside regenerated pattern copies still require explicit reassignment because copied child identities are not retained; missing or stale contour references require explicit repair first. Project parameter/variant updates also carry these current contour chains after all copies and before affected drawings in the same preview and Undo. Project parameter/variant updates may add or change bindings to those supported target controls. Coordinated drill rebind preserves the existing binding layout and may change values of existing supported target bindings. Pre-existing independently pending target bindings must first be explicitly updated. Target visibility and suppression states from saved project variants are supported on these contour chains, including explicitly addressed nested sketch targets. A shared CSG ancestor is rebuilt after its affected contour children in one topological pass. Changed nested suppression joins that final pass instead of rebuilding ancestors against provisional old copied contours. Protected source ancestors, hidden containers, lost addresses and additional metadata consumers remain blocked. Current variant-inactive targets still rebuild after copy changes. Views naming variant-hidden or suppressed sources retain their previous projection with an explicit warning and are not reported as updated; reactivation refreshes affected views even when only states change, without reconstructing unchanged geometry. Other missing or unsupported shared drawing inputs still reject the preview. Hidden containers and independently stale target values or references remain blocked. Coordinated drill face rebind also carries these supported copied contour chains after all copies and before affected drawings. Original-source contours explicitly owned by that coordinated plan are checked in the earlier native phase, including explicit repicking when required; lost or independently stale copied-contour references still require separate repair. FreeCAD, joint, KI and other downstream consumers on changed copies remain unsupported. The older pattern command continues to create independent copies.",
   "contourLinkContract": "Project/library14 additionally retains contourLinks version1 and stable drawing curve/measure source roles. Read scene.contourLinks or app/contourLinks {offset,limit} for bounded current/stale/blocked references. Query cad/linkedFaceCandidate {source:{rootId,path},ray:{origin,direction}} (or transient faceIndex) to obtain an exact supported native-role or step-exact selector; never save face numbers or guess the nearest surface. Send one homogeneous contour command per preview: {op:\"contour\",action:\"create\",source,selector,height?,name?,targetSketch?}, update with optional ids/edits, rebind with id/source/selector/edits, or unlink with ids. update.ids collects necessary upstream and downstream dependencies; every affected geometry node is constructed at most once, unrelated geometry is reused. Source fields remain preserved; direct linked target profile edits remain read-only. Explicit project parameter bindings may replace existing literal profile-element coordinates or circle diameter after fresh native extraction, preserving exact element identity and the original snapshot.profile. Removing a binding restores its source field on Update. Collect connected endpoint controls together; invalid/open or missing-element profiles reject atomically. Free target variables and extrusion height remain editable. Geometry exchange or ambiguous STEP reference requires explicit rebind; identical original STEP geometry follows placement changes only on Update. Snapshot geometry, frames and element correspondence are internal read-only proof. Unlink preserves the last geometry without constructing. Source changes remain saveable but stale downstream exports are blocked; unrelated selected exports remain possible. Drawing update joins required source parameters/contours and semantic measured roles in one Preview/Apply/Undo. Native geometry/HLR runs only on explicit update; paper edits and zoom reuse cached curves. No cloud key or external provider is required.",
-  "drawingContract": "Project/library12 can retain technical sheets under drawings:{version:1,sheets:[...]}. Read current project to obtain sheet/view/curve IDs. Send homogeneous drawing-only preview batches: {op:\"drawing\",action:\"put\",sheet:{id,name,paper:\"A4\"|\"A3\",orientation:\"portrait\"|\"landscape\",scale,titleBlock:{title,number,revision,author,date},views:[{id,kind:\"front\"|\"side\"|\"top\"|\"section\",sourceIds:[nativeRootId],position:[paperX,paperY],section?:{axis:0|1|2,offset}}],annotations:[{id,kind:\"label\",text,position}|{id,kind:\"length\"|\"angle\"|\"radius\"|\"diameter\",viewId,curveIds,position}]}}, {op:\"drawing\",action:\"update\",sheetId}, {op:\"drawing\",action:\"remove\",sheetId}. put retains unchanged confirmed projection caches when omitted, never accepts fabricated curves. Only explicit update computes native HLR/cuts in the existing cancellable CAD worker, then one revision-bound Preview/Apply/Undo covers the entire batch. Front=X/Z, side=Y/Z, top=X/Y; curve coordinates are model mm with Y up, paper placement/text positions are paper mm Y down. Length/radius/diameter refer one measured curve, angle two measured lines. Lost curve refs require explicit reassignment or annotation removal; there is no nearest-curve matching. Native source edits leave cached drawings stale and saveable; export blocks until successful update. Export {format:\"drawing-svg\"|\"drawing-dxf\"|\"drawing-pdf\",sheetId} uses current cached curves only. SVG/PDF preserve A4/A3 paper size/scale; local Electron PDF needs no external service. ASCII AC1015 DXF model geometry is 1:1 millimetres regardless of paper scale. Arbitrary imported curves retain exact native conics/rational Bézier data; bounded SVG representation discloses its curve error. Automatic dimension suggestions: {op:\"drawing\",action:\"dimension\",sheetId,mode:\"basic\"|\"detailed\"} uses fresh cached curves only, preserves authored dimensions and returns an ordinary revision-bound preview. Basic adds overall dimensions and circle diameters; detailed adds circle centre positions from minima, arc radii, edge lengths and non-right corner angles. New distance annotations require project/library18, with kind:\"distance\", axis:\"x\"|\"y\", curveIds:[oneOrTwoUniqueIds], anchors:[{curveIndex:0|1,point:\"a\"|\"b\"|\"center\"|\"minX\"|\"maxX\"|\"minY\"|\"maxY\"},secondAnchor]. Coordinates always derive from native curves, never user-supplied measurement values. Text placement is bounded by free paper space. Unsupported spline views skip overall/position suggestions explicitly. No inferred tolerances, GD&T or guarantee of complete manufacturing dimensioning.",
+  "drawingContract": "Project/library12 can retain technical sheets under drawings:{version:1,sheets:[...]}. Read current project to obtain sheet/view/curve IDs. Send homogeneous drawing-only preview batches: {op:\"drawing\",action:\"put\",sheet:{id,name,paper:\"A4\"|\"A3\",orientation:\"portrait\"|\"landscape\",scale,titleBlock:{title,number,revision,author,date},views:[{id,kind:\"front\"|\"side\"|\"top\"|\"section\"|\"detail\"|\"exploded\",sourceIds:[nativeRootId],position:[paperX,paperY],scale?:number,section?:{axis:0|1|2,offset},cutout?:{sourceViewId,center:[modelX,modelY],radius},explosion?:{version:1,distance,parts:[{id,direction:[x,y,z]}]}}],annotations:[{id,kind:\"label\",text,position}|{id,kind:\"length\"|\"angle\"|\"radius\"|\"diameter\",viewId,curveIds,position}]}}, {op:\"drawing\",action:\"update\",sheetId}, {op:\"drawing\",action:\"remove\",sheetId}. put retains unchanged confirmed projection caches when omitted, never accepts fabricated curves. Only explicit update computes native HLR/cuts in the existing cancellable CAD worker, then one revision-bound Preview/Apply/Undo covers the entire batch. Front=X/Z, side=Y/Z, top=X/Y; curve coordinates are model mm with Y up, paper placement/text positions are paper mm Y down. Length/radius/diameter refer one measured curve, angle two measured lines. Lost curve refs require explicit reassignment or annotation removal; there is no nearest-curve matching. Native source edits leave cached drawings stale and saveable; export blocks until successful update. Export {format:\"drawing-svg\"|\"drawing-dxf\"|\"drawing-pdf\",sheetId} uses current cached curves only. SVG/PDF preserve A4/A3 paper size/scale; local Electron PDF needs no external service. Project/library38 additionally stores detail views with cutout:{sourceViewId,center:[modelX,modelY],radius} and an own view scale. A detail derives its clipped analytic curves from the parent projection; supported curve kinds are line, circle, arc, polyline and fully interior ellipse/Bézier spans. Paper SVG/PDF print the detail at its own scale while DXF keeps model geometry 1:1. Moving the parent view or changing the sheet scale never stacks a second detail scale. A missing parent or invalid cutout is reported and blocks export. Project/library40 adds native isometric exploded views. When putting an exploded view, use the saved workspace explosion with a positive distance, keep only direction entries for the view sourceIds, and include at least one such entry. Each direction is a unit vector. The stored snapshot controls later refreshes independently of workspace display settings. The native projection applies those offsets for drawing geometry while retaining the original assembly placement and source identities. Project/library41 stores item balloons with their native projection edge and exact placement ID. Each displayed number is read from the active parts-list row containing that placement. Keep the partsList and native sourceReferences when putting a sheet that already has balloons. A lost or ambiguous balloon reference is reported and blocks export. ASCII AC1015 DXF model geometry is 1:1 millimetres regardless of paper scale. Arbitrary imported curves retain exact native conics/rational Bézier data; bounded SVG representation discloses its curve error. Automatic dimension suggestions: {op:\"drawing\",action:\"dimension\",sheetId,mode:\"basic\"|\"detailed\"} uses fresh cached curves only, preserves authored dimensions and returns an ordinary revision-bound preview. Basic adds overall dimensions and circle diameters; detailed adds circle centre positions from minima, arc radii, edge lengths and non-right corner angles. New distance annotations require project/library18, with kind:\"distance\", axis:\"x\"|\"y\", curveIds:[oneOrTwoUniqueIds], anchors:[{curveIndex:0|1,point:\"a\"|\"b\"|\"center\"|\"minX\"|\"maxX\"|\"minY\"|\"maxY\"},secondAnchor]. Coordinates always derive from native curves, never user-supplied measurement values. Text placement is bounded by free paper space. Unsupported spline views skip overall/position suggestions explicitly. No inferred tolerances, GD&T or guarantee of complete manufacturing dimensioning.",
   "nativeModelingContract": {
     "commands": "Native batch commands: {op:\"modeling\",target,operation:{kind:\"face-offset\",faceIndex,offset}|{kind:\"shell\",faceIndices:[...],thickness},as?}; {op:\"profileModeling\",targets:[...],kind:\"loft\"|\"sweep\",path?,as?}. Scripts can pass these directly to api.run, or use {op:\"tool\",engine:\"cad\",operation:{kind:\"batch\",commands:[...]}}. These are batch commands, not standalone operation.kind names.",
     "faceSelection": "Use cad/rayPick on the visible completed material root and read the measured one-based faceIndex. Indices are transient within the current geometry and revision; never invent them or reuse them after changing geometry or pose. Commands require unlocked visible native CAD roots, not meshes or nested sources. New face-offset/shell construction uses the input root world geometry and millimetres at creation.",
@@ -9698,7 +9707,9 @@
                               "front",
                               "side",
                               "top",
-                              "section"
+                              "section",
+                              "detail",
+                              "exploded"
                             ]
                           },
                           "sourceIds": {
@@ -9720,6 +9731,44 @@
                               "type": "number",
                               "minimum": -1000000,
                               "maximum": 1000000
+                            }
+                          },
+                          "scale": {
+                            "type": "number",
+                            "minimum": 0.001,
+                            "maximum": 1000,
+                            "description": "Own paper scale of this view. Detail views require it; other views fall back to the sheet scale."
+                          },
+                          "cutout": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "sourceViewId",
+                              "center",
+                              "radius"
+                            ],
+                            "description": "Required for detail views and rejected on every other view kind.",
+                            "properties": {
+                              "sourceViewId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "center": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": {
+                                  "type": "number",
+                                  "minimum": -1000000,
+                                  "maximum": 1000000
+                                }
+                              },
+                              "radius": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1000000
+                              }
                             }
                           },
                           "section": {
@@ -9744,9 +9793,63 @@
                               }
                             }
                           },
+                          "assemblyViewId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "description": "Optional assembly view whose saved part selection this explosion shares."
+                          },
+                          "explosion": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "version",
+                              "distance",
+                              "parts"
+                            ],
+                            "description": "The saved workspace explosion restricted to this exploded view’s source IDs.",
+                            "properties": {
+                              "version": {
+                                "const": 1
+                              },
+                              "distance": {
+                                "type": "number",
+                                "exclusiveMinimum": 0,
+                                "maximum": 1000
+                              },
+                              "parts": {
+                                "type": "array",
+                                "minItems": 1,
+                                "maxItems": 128,
+                                "items": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "id",
+                                    "direction"
+                                  ],
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "direction": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
                           "projection": {
                             "type": "object",
-                            "description": "Read-only cached native projection. Omit on put: the confirmed cache of the same view kind is retained, and changed source/cut settings mark it stale until explicit update. Supplied caches must equal a previously confirmed native result."
+                            "description": "Read-only cached native projection. Omit on put: the confirmed cache of the same view kind is retained, and changed source, cut or explosion settings mark it stale until explicit update. Supplied caches must equal a previously confirmed native result."
                           }
                         }
                       }
@@ -9777,6 +9880,107 @@
                               "text": {
                                 "type": "string",
                                 "maxLength": 1000
+                              },
+                              "position": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": {
+                                  "type": "number",
+                                  "minimum": -1000000,
+                                  "maximum": 1000000
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "id",
+                              "kind",
+                              "viewId",
+                              "curveId",
+                              "instanceId",
+                              "sourceReferences",
+                              "position"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "kind": {
+                                "const": "balloon"
+                              },
+                              "viewId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "curveId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "instanceId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "sourceReferences": {
+                                "type": "array",
+                                "minItems": 1,
+                                "maxItems": 8,
+                                "items": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "source",
+                                    "role"
+                                  ],
+                                  "properties": {
+                                    "source": {
+                                      "type": "object",
+                                      "additionalProperties": false,
+                                      "required": [
+                                        "rootId",
+                                        "path"
+                                      ],
+                                      "properties": {
+                                        "rootId": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 200
+                                        },
+                                        "path": {
+                                          "type": "array",
+                                          "maxItems": 12,
+                                          "items": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "role": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 300
+                                    },
+                                    "elementId": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 100
+                                    },
+                                    "geometrySignature": {
+                                      "type": "string",
+                                      "pattern": "^[a-f0-9]{64}$"
+                                    }
+                                  }
+                                }
                               },
                               "position": {
                                 "type": "array",
@@ -10121,6 +10325,10 @@
                           }
                         ]
                       }
+                    },
+                    "partsList": {
+                      "type": "object",
+                      "description": "Saved drawing parts list. Retain it when editing a sheet with item balloons."
                     }
                   }
                 }
@@ -44609,7 +44817,9 @@
                               "front",
                               "side",
                               "top",
-                              "section"
+                              "section",
+                              "detail",
+                              "exploded"
                             ]
                           },
                           "sourceIds": {
@@ -44631,6 +44841,44 @@
                               "type": "number",
                               "minimum": -1000000,
                               "maximum": 1000000
+                            }
+                          },
+                          "scale": {
+                            "type": "number",
+                            "minimum": 0.001,
+                            "maximum": 1000,
+                            "description": "Own paper scale of this view. Detail views require it; other views fall back to the sheet scale."
+                          },
+                          "cutout": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "sourceViewId",
+                              "center",
+                              "radius"
+                            ],
+                            "description": "Required for detail views and rejected on every other view kind.",
+                            "properties": {
+                              "sourceViewId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "center": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": {
+                                  "type": "number",
+                                  "minimum": -1000000,
+                                  "maximum": 1000000
+                                }
+                              },
+                              "radius": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1000000
+                              }
                             }
                           },
                           "section": {
@@ -44655,9 +44903,63 @@
                               }
                             }
                           },
+                          "assemblyViewId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "description": "Optional assembly view whose saved part selection this explosion shares."
+                          },
+                          "explosion": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "version",
+                              "distance",
+                              "parts"
+                            ],
+                            "description": "The saved workspace explosion restricted to this exploded view’s source IDs.",
+                            "properties": {
+                              "version": {
+                                "const": 1
+                              },
+                              "distance": {
+                                "type": "number",
+                                "exclusiveMinimum": 0,
+                                "maximum": 1000
+                              },
+                              "parts": {
+                                "type": "array",
+                                "minItems": 1,
+                                "maxItems": 128,
+                                "items": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "id",
+                                    "direction"
+                                  ],
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 200
+                                    },
+                                    "direction": {
+                                      "type": "array",
+                                      "minItems": 3,
+                                      "maxItems": 3,
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
                           "projection": {
                             "type": "object",
-                            "description": "Read-only cached native projection. Omit on put: the confirmed cache of the same view kind is retained, and changed source/cut settings mark it stale until explicit update. Supplied caches must equal a previously confirmed native result."
+                            "description": "Read-only cached native projection. Omit on put: the confirmed cache of the same view kind is retained, and changed source, cut or explosion settings mark it stale until explicit update. Supplied caches must equal a previously confirmed native result."
                           }
                         }
                       }
@@ -44688,6 +44990,107 @@
                               "text": {
                                 "type": "string",
                                 "maxLength": 1000
+                              },
+                              "position": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": {
+                                  "type": "number",
+                                  "minimum": -1000000,
+                                  "maximum": 1000000
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "id",
+                              "kind",
+                              "viewId",
+                              "curveId",
+                              "instanceId",
+                              "sourceReferences",
+                              "position"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "kind": {
+                                "const": "balloon"
+                              },
+                              "viewId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "curveId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "instanceId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "sourceReferences": {
+                                "type": "array",
+                                "minItems": 1,
+                                "maxItems": 8,
+                                "items": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "source",
+                                    "role"
+                                  ],
+                                  "properties": {
+                                    "source": {
+                                      "type": "object",
+                                      "additionalProperties": false,
+                                      "required": [
+                                        "rootId",
+                                        "path"
+                                      ],
+                                      "properties": {
+                                        "rootId": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 200
+                                        },
+                                        "path": {
+                                          "type": "array",
+                                          "maxItems": 12,
+                                          "items": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 200
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "role": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 300
+                                    },
+                                    "elementId": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 100
+                                    },
+                                    "geometrySignature": {
+                                      "type": "string",
+                                      "pattern": "^[a-f0-9]{64}$"
+                                    }
+                                  }
+                                }
                               },
                               "position": {
                                 "type": "array",
@@ -45032,6 +45435,10 @@
                           }
                         ]
                       }
+                    },
+                    "partsList": {
+                      "type": "object",
+                      "description": "Saved drawing parts list. Retain it when editing a sheet with item balloons."
                     }
                   }
                 }

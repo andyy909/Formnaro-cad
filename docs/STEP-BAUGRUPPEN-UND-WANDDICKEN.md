@@ -1,4 +1,4 @@
-# STEP-Baugruppen und Wanddickenkarte · Formnaro 0.61.0
+# STEP-Baugruppen und Wanddickenkarte
 
 Beide Funktionen laufen vollständig lokal. Es gibt keinen zusätzlichen Dienst,
 keinen Upload und keine neue Laufzeitabhängigkeit.
@@ -7,20 +7,25 @@ keinen Upload und keine neue Laufzeitabhängigkeit.
 
 STEP/STP wie gewohnt importieren. Der native XCAF-Leser erhält ursprüngliche
 Baugruppen als verschachtelte Ordner und Komponenten als einzeln auswählbare
-CAD-Teile. Mehrfach verwendete Komponenten bleiben getrennte Instanzen mit
-ihren ursprünglichen Platzierungen, Namen und Farben. Die ganze importierte
-Baugruppe wird gemeinsam zur Arbeitsmitte gestellt; ihre Teile werden dabei
-nicht neu angeordnet oder miteinander verschmolzen.
+CAD-Teile. Mehrfach verwendete Komponenten erhalten einzelne Projektkennungen
+und dieselbe Bauteildefinition, wenn die STEP-Referenzen diese gemeinsame
+Definition belegen. Lage, Name und Farbe gehören zum jeweiligen Einbau.
+Formnaro verwendet für jeden Dateiimport eine eigene Zuordnung der Definitionen
+und platziert die gesamte Baugruppe gemeinsam auf der Arbeitsfläche.
 
 Der Teilebaum bietet die vorhandenen Schalter für Ausblenden und Sperren.
 Zum separaten Export ein Teil auswählen und unter **Export → Umfang →
 Ausgewählte Teile** exportieren. STEP bleibt analytische CAD-Geometrie.
-Der STEP-Export schreibt ausgewählte Teile mit Namen, Teil- und Flächenfarben;
-die Baugruppenordner werden beim Export nicht als STEP-Hierarchie geschrieben.
+Unter **STEP · Baugruppenbaum** schreibt Formnaro die sichtbaren oder
+ausgewählten Teile mit ihren Projektordnern aus. Importierte gemeinsame
+Definitionen werden mit einzelnen starren Einbaulagen und Einbaufarben
+geschrieben. Für Teile mit Skalierung, Scherung oder Spiegelung steht
+**STEP · CAD-Körper** zur Ausgabe der platzierten Geometrie zur Verfügung.
 OBJ/MTL, 3MF und GLB/glTF übernehmen auch importierte Flächenfarben. STL besitzt
-keine Farbdaten. Projektdateien erhalten den Ordnerbaum und die Farbzuordnungen.
+keine Farbdaten. OCAD und FNPACK erhalten Ordner, Definitionen, Farben und
+Platzierungen. Gemeinsame Bauteildefinitionen benötigen Projektformat 36.
 
-Grenzen: eigenständige Text-STEP-Datei bis 30 MB, maximal 500 Teile,
+Eine eigenständige Text-STEP-Datei darf bis zu 30 MB umfassen. Es gelten maximal 500 Teile,
 500 Projektordner und 12 Ordnerebenen einschließlich vorhandener Ordner.
 BRep maximal 12 MB je Teil, beim Import insgesamt 40 MB; Projektdatei maximal
 50 MB. Originalnamen bis 200 Zeichen. Übergrenzen, offene CAD-Flächen und

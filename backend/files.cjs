@@ -44,10 +44,10 @@ function installFiles(win,{ipcMain,dialog,sequenceFile}=require('electron')){
     try{
       if(!args||typeof args.filename!=='string'||args.filename.length>220||/[<>:"/\\|?*\x00-\x1f]/.test(args.filename)||args.numbered!==undefined&&typeof args.numbered!=='boolean'||args.operationId!==undefined&&(typeof args.operationId!=='string'||!/^[a-zA-Z0-9-]{1,100}$/.test(args.operationId))||!(args.bytes instanceof Uint8Array)||args.bytes.length>400*1024*1024)throw Error('Ungültige Dateidaten.');
       saving=true;activeSave={id:args.operationId,canceled:false};if(args.numbered)await loadSeries();const suggestion=args.numbered?await suggestedName(args.filename):{filename:args.filename};
-      const result=await dialog.showSaveDialog(win,{title:'Datei speichern',defaultPath:suggestion.filename,filters:[{name:'Formnaro-Datei',extensions:[args.filename.split('.').at(-1)]}]});
+      const result=await dialog.showSaveDialog(win,{title:args.language==='en'?'Save file':'Datei speichern',defaultPath:suggestion.filename,filters:[{name:args.language==='en'?'Formnaro file':'Formnaro-Datei',extensions:[args.filename.split('.').at(-1)]}]});
       if(result.canceled||!result.filePath||activeSave.canceled||win.isDestroyed?.())return {ok:true,value:{saved:false,...(args.operationId?{canceled:true}:{})}};
       await writeAtomic(result.filePath,args.bytes,{shouldCommit:()=>!activeSave.canceled&&!win.isDestroyed?.()});if(args.numbered)await remember(args.filename,path.resolve(result.filePath),suggestion);return {ok:true,value:{saved:true}};
-    }catch(e){return e.code==='ABORTED'?{ok:true,value:{saved:false,canceled:true}}:{ok:false,error:'Datei nicht gespeichert: '+e.message};}finally{saving=false;activeSave=null;}
+    }catch(e){return e.code==='ABORTED'?{ok:true,value:{saved:false,canceled:true}}:{ok:false,error:(args?.language==='en'?'File not saved: ':'Datei nicht gespeichert: ')+e.message};}finally{saving=false;activeSave=null;}
   });
 }
 module.exports={installFiles,writeAtomic};

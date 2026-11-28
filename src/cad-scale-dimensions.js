@@ -1,4 +1,5 @@
 import { cadPoint } from './cad-affine.js';
+import { formatUiNumber } from './ui-numbers.js';
 
 // Screen-space annotations of the same local CAD bounds used by corner resize.
 // No geometry queries or model mutations are needed during a pointer move.
@@ -11,18 +12,83 @@ export function createScaleDimensions({ viewport, projectPoint, getPreferences }
   overlay.append(svg);
   const rows = [0, 1, 2].map((axis) => {
     const path = document.createElementNS(ns, 'path'),
-      label = document.createElement('div');
+      label = document.createElement('button');
+    label.type = 'button';
     label.className = 'cad-scale-dimension';
     label.dataset.axis = String(axis);
     svg.append(path);
     overlay.append(label);
+    label.onclick = () => edit(axis);
     return { path, label };
   });
   viewport.append(overlay);
   let state = null,
-    lastDraw = null;
-  function update({ bounds, worldMatrix, sizes }) {
-    state = { bounds, worldMatrix, sizes };
+    lastDraw = null,
+    editor = null;
+  function closeEditor() {
+    if (!editor) return;
+    const { axis, input } = editor;
+    editor = null;
+    input.remove();
+    const { label } = rows[axis];
+    label.style.visibility = '';
+  }
+  function readValue(input) {
+    const text = input.value.trim().replace(',', '.');
+    const value = Number(text);
+    return /^(?:\d+(?:\.\d*)?|\.\d+)$/.test(text) && value >= 0.01 && value <= 10000 ? value : null;
+  }
+  function commit() {
+    if (!editor || !state?.controls) return false;
+    const { axis, input } = editor, value = readValue(input);
+    if (value === null) {
+      input.setAttribute('aria-invalid', 'true');
+      input.focus();
+      input.select();
+      return true;
+    }
+    const { apply } = state.controls;
+    closeEditor();
+    apply(axis, value);
+    return true;
+  }
+  function edit(axis) {
+    if (!state?.controls || state.controls.isApplying()) return;
+    if (editor?.axis === axis) return editor.input.focus();
+    if (editor) {
+      closeEditor();
+      state.controls.preview(axis, null);
+    }
+    const { label } = rows[axis], input = document.createElement('input');
+    input.type = 'text';
+    input.inputMode = 'decimal';
+    input.className = 'cad-scale-dimension cad-scale-input';
+    input.dataset.axis = String(axis);
+    input.setAttribute('aria-label', label.textContent);
+    input.value = formatUiNumber(state.sizes[axis], getPreferences().language);
+    input.style.left = label.style.left;
+    input.style.top = label.style.top;
+    label.style.visibility = 'hidden';
+    overlay.append(input);
+    editor = { axis, input };
+    input.addEventListener('input', () => {
+      input.removeAttribute('aria-invalid');
+      state?.controls?.preview(axis, readValue(input));
+    });
+    input.addEventListener('keydown', (event) => {
+      if (event.isComposing || (event.key !== 'Enter' && event.key !== 'Escape')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.key === 'Escape') state?.controls?.cancel();
+      else commit();
+    });
+    input.focus();
+    input.select();
+  }
+  function update({ bounds, worldMatrix, sizes, controls }) {
+    if (!controls) closeEditor();
+    state = { bounds, worldMatrix, sizes, controls };
+    overlay.toggleAttribute('data-editable', !!controls);
     draw();
   }
   function draw() {
@@ -44,12 +110,14 @@ export function createScaleDimensions({ viewport, projectPoint, getPreferences }
       rect.width,
       rect.height,
       sizes,
+      !!state.controls,
       getPreferences().language,
     ]);
     if (signature === lastDraw) return;
     lastDraw = signature;
     if (corners.some((p) => !Number.isFinite(p.x) || !Number.isFinite(p.y) || p.z < -1 || p.z > 1)) {
       overlay.hidden = true;
+      closeEditor();
       return;
     }
     overlay.hidden = false;
@@ -100,6 +168,7 @@ export function createScaleDimensions({ viewport, projectPoint, getPreferences }
         x = Math.max(...corners.map((p) => p.x)) - rect.left + 76;
         y = center.y - rect.top + axis * 44;
       }
+      label.disabled = !state.controls;
       label.dataset.value = String(sizes[axis]);
       label.textContent = `${'XYZ'[axis]} · ${names[axis]} ${sizes[axis].toLocaleString(english ? 'en-US' : 'de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} mm`;
       const halfWidth = label.offsetWidth / 2,
@@ -130,12 +199,18 @@ export function createScaleDimensions({ viewport, projectPoint, getPreferences }
       occupied.push({ x, y, halfWidth, halfHeight });
       label.style.left = x + 'px';
       label.style.top = y + 'px';
+      if (editor?.axis === axis) {
+        editor.input.style.left = label.style.left;
+        editor.input.style.top = label.style.top;
+      }
     });
   }
   return {
     update,
     draw,
+    commit,
     hide() {
+      closeEditor();
       state = null;
       lastDraw = null;
       overlay.hidden = true;

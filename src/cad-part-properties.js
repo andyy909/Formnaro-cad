@@ -17,10 +17,18 @@ const text = (v) => {
     throw Error('Material-/Gruppenname mit 1–120 Zeichen erforderlich.');
   return v.trim();
 };
+export const PART_NUMBER_MAX_LENGTH = 120;
+
 export function validatePartProperties(value) {
-  object(value, ['version', 'material', 'surfaces']);
+  object(value, ['version', 'material', 'surfaces', 'partNumber']);
   if (value.version !== 1) throw Error('Unbekannte Teileigenschaftsversion.');
   const out = { version: 1 };
+  if (value.partNumber !== undefined) {
+    const number = value.partNumber;
+    if (typeof number !== 'string' || !number.trim() || number.length > PART_NUMBER_MAX_LENGTH || /[\r\n]/.test(number))
+      throw Error('Teilenummer mit 1–120 Zeichen in einer Zeile eingeben oder offen lassen.');
+    out.partNumber = number.trim();
+  }
   if (value.material !== undefined) {
     object(value.material, ['name', 'densityGcm3']);
     const d = value.material.densityGcm3;
@@ -201,16 +209,124 @@ export function explosionOffsets(explosion, project) {
       .map((p) => ({ id: p.id, offset: p.direction.map((v) => v * state.distance) })) ?? []
   );
 }
-export function summarizeParts(rows) {
+/** Stable row identity shared by the B04 grouping and B05 drawing parts list.
+ * A defined component groups by definition plus execution; a standalone part
+ * remains one unique instance row. */
+export function partRowIdentity(row) {
+  if (row?.definitionId) {
+    // Defined component: group by definitionId + execution (partNumber, variant, material, density, recipe size)
+    return JSON.stringify([
+      'def',
+      row.definitionId,
+      row.partNumber ?? '',
+      row.variant ?? '',
+      row.material ?? '',
+      row.densityGcm3 ?? null,
+      row.recipe?.size ?? null,
+    ]);
+  }
+  // Standalone parts without definitionId are never merged: unique per instance
+  return JSON.stringify(['standalone', row?.id]);
+}
+
+export function groupPartRows(rows) {
+  if (!Array.isArray(rows)) return [];
+  const groups = new Map();
+
+  for (const row of rows) {
+    const key = partRowIdentity(row);
+
+    let group = groups.get(key);
+    if (!group) {
+      group = [];
+      groups.set(key, group);
+    }
+    group.push(row);
+  }
+
+  const groupedRows = [];
+  for (const [identityKey, group] of groups) {
+    const first = group[0];
+    const count = group.reduce((sum, r) => sum + (r.count ?? 1), 0);
+    const instanceIds = group.flatMap((r) => (r.instanceIds ? r.instanceIds : [r.id]));
+
+    const allHaveVolume = group.every((r) => Number.isFinite(r.volumeMm3));
+    const volumeMm3 = allHaveVolume ? group.reduce((sum, r) => sum + r.volumeMm3, 0) : null;
+
+    const allHaveMass = group.every((r) => Number.isFinite(r.massG));
+    const massG = allHaveMass ? group.reduce((sum, r) => sum + r.massG, 0) : null;
+
+    let centerMm = null;
+    if (group.every((r) => Array.isArray(r.centerMm) && r.centerMm.every(Number.isFinite))) {
+      const weightSum = group.reduce((sum, r) => sum + ((Number.isFinite(r.massG) ? r.massG : r.volumeMm3) ?? 0), 0);
+      if (weightSum > 0) {
+        centerMm = [0, 1, 2].map((k) =>
+          group.reduce((sum, r) => sum + r.centerMm[k] * ((Number.isFinite(r.massG) ? r.massG : r.volumeMm3) ?? 0), 0) / weightSum
+        );
+      } else {
+        centerMm = [0, 1, 2].map((k) => group.reduce((sum, r) => sum + r.centerMm[k], 0) / group.length);
+      }
+    }
+
+    let status = 'Geprüft';
+    const failed = group.find(
+      (r) => r.status && !['Geprüft', 'Volumen/Schwerpunkt geprüft; Dichte fehlt', 'Nicht geprüft'].includes(r.status),
+    );
+    if (failed) {
+      status = failed.status;
+    } else if (!allHaveMass) {
+      status = allHaveVolume ? 'Volumen/Schwerpunkt geprüft; Dichte fehlt' : 'Nicht geprüft';
+    }
+
+    groupedRows.push({
+      id: first.definitionId ?? first.id,
+      identityKey,
+      definitionId: first.definitionId ?? null,
+      instanceIds,
+      count,
+      name: first.name,
+      kind: first.kind,
+      partNumber: first.partNumber ?? null,
+      material: first.material ?? null,
+      densityGcm3: first.densityGcm3 ?? null,
+      volumeMm3,
+      massG,
+      centerMm,
+      status,
+      surfaceGroups: first.surfaceGroups,
+    });
+  }
+
+  return groupedRows;
+}
+
+export function summarizeParts(inputRows, { grouped = false, mode = grouped ? 'grouped' : 'single' } = {}) {
+  const isGrouped = Boolean(grouped || mode === 'grouped');
+  const normalizedRows = (inputRows ?? []).map((r) => ({
+    ...r,
+    count: r.count ?? 1,
+    partNumber: r.partNumber ?? null,
+    definitionId: r.definitionId ?? null,
+    instanceIds: r.instanceIds ?? [r.id],
+  }));
+
+  const rows = isGrouped ? groupPartRows(normalizedRows) : normalizedRows;
+
   const complete =
-      rows.length > 0 &&
-      rows.every((r) => Number.isFinite(r.massG) && r.massG > 0 && r.centerMm?.every(Number.isFinite)),
-    knownMassG = rows.reduce((s, r) => s + (Number.isFinite(r.massG) ? r.massG : 0), 0);
+    rows.length > 0 &&
+    rows.every((r) => Number.isFinite(r.massG) && r.massG > 0 && r.centerMm?.every(Number.isFinite));
+
+  const knownMassG = rows.reduce((s, r) => s + (Number.isFinite(r.massG) ? r.massG : 0), 0);
+  const totalCount = rows.reduce((s, r) => s + (r.count ?? 1), 0);
+
   return {
     rows,
+    rawRows: normalizedRows,
     complete,
     knownMassG,
     totalMassG: complete ? knownMassG : null,
+    totalCount,
+    mode: isGrouped ? 'grouped' : 'single',
     centerMm: complete
       ? [0, 1, 2].map((k) => rows.reduce((s, r) => s + r.centerMm[k] * r.massG, 0) / knownMassG)
       : null,
@@ -218,18 +334,34 @@ export function summarizeParts(rows) {
       'Summe der aufgeführten fertigen Teile; Überlappungen werden nicht vereinigt. Homogene Dichte je Teil, keine aus Farbe geschätzten Werkstoffe.',
   };
 }
-export function partsCsv(summary) {
+
+export function groupPartSummary(summary) {
+  if (!summary || !Array.isArray(summary.rows)) return summary;
+  const sourceRows = summary.rawRows ?? summary.rows;
+  return summarizeParts(sourceRows, { grouped: true });
+}
+
+export function partsCsv(summary, { grouped } = {}) {
   const cell = (v) => {
     let s = v === null || v === undefined ? '' : String(v);
     if (typeof v === 'string' && /^\s*[=+\-@]/.test(s)) s = "'" + s;
     return '"' + s.replaceAll('"', '""') + '"';
   };
+  const isGrouped = grouped !== undefined ? Boolean(grouped) : summary?.mode === 'grouped';
+  let activeSummary = summary;
+  if (isGrouped && summary?.mode !== 'grouped') {
+    activeSummary = groupPartSummary(summary);
+  } else if (!isGrouped && summary?.mode === 'grouped' && summary?.rawRows) {
+    activeSummary = summarizeParts(summary.rawRows, { mode: 'single' });
+  }
+
   const rows = [
     [
       'Teil-ID',
+      'Teilenummer',
       'Name',
       'Materialgruppe',
-      'Anzahl',
+      'Menge',
       'Dichte g/cm³',
       'Volumen mm³',
       'Masse g',
@@ -238,11 +370,12 @@ export function partsCsv(summary) {
       'Schwerpunkt Z mm',
       'Status',
     ],
-    ...summary.rows.map((r) => [
+    ...activeSummary.rows.map((r) => [
       r.id,
+      r.partNumber ?? '',
       r.name,
       r.material ?? '',
-      1,
+      r.count ?? 1,
       r.densityGcm3,
       r.volumeMm3,
       r.massG,

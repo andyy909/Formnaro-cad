@@ -53,18 +53,14 @@ export function createAssistantRecording({ capture, language = () => 'de' } = {}
     viewer.hidden = false;
     try {
       viewer.showPopover?.();
-    } catch {
-      /* The visible replay pane still works if opening its popover fails. */
-    }
+    } catch {}
     show(0);
   };
   el('assistant-replay-close').onclick = () => {
     stopPlayback();
     try {
       viewer.hidePopover?.();
-    } catch {
-      /* Hiding the pane below also closes the replay when popover support is unavailable. */
-    }
+    } catch {}
     viewer.hidden = true;
   };
   slider.oninput = () => {
@@ -114,9 +110,7 @@ export function createAssistantRecording({ capture, language = () => 'de' } = {}
       stopPlayback();
       try {
         viewer.hidePopover?.();
-      } catch {
-        /* Continue resetting the replay when the popover is already closed. */
-      }
+      } catch {}
       viewer.hidden = true;
       open.hidden = true;
       frames = [];

@@ -12,9 +12,11 @@ const API_PROVIDERS=[
  {id:'https://api.z.ai',label:'GLM · Z.ai',baseUrl:'https://api.z.ai/api/paas/v4',protocol:'chat',docs:'https://docs.z.ai/api-reference/llm/chat-completion'},
  {id:'https://api.minimax.io',label:'MiniMax',baseUrl:'https://api.minimax.io/v1',protocol:'chat',jsonMode:false,docs:'https://platform.minimax.io/docs/api-reference/text-openai-api'}
 ].map(p=>({model:'',authMode:'api-key',...p}));
+const {LOCAL_PROVIDER}=require('./portable-ai.cjs');
 const BUILTIN_PROVIDERS=[
  {id:'chatgpt',label:'ChatGPT-Abo',authMode:'chatgpt',baseUrl:'https://api.openai.com/v1',protocol:'responses',model:''},
  {id:'mistral-vibe',label:'Mistral Vibe · Anmeldung',authMode:'mistral-vibe',baseUrl:'https://api.mistral.ai/v1',protocol:'chat',model:'vibe-default'},
+ LOCAL_PROVIDER,
  ...API_PROVIDERS
 ];
 function preset(config){const url=new URL(config.baseUrl);return API_PROVIDERS.find(p=>p.id===url.origin)||(/^[a-z0-9-]+\.[a-z0-9-]+\.maas\.aliyuncs\.com$/i.test(url.hostname)?API_PROVIDERS.find(p=>p.id==='https://dashscope-intl.aliyuncs.com'):undefined);}

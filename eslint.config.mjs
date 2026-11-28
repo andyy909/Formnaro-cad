@@ -29,7 +29,7 @@ export default [
     linterOptions: { reportUnusedDisableDirectives: 'off' },
     rules: {
       'no-undef': 'warn',
-      'no-unused-vars': ['warn', { ignoreRestSiblings: true }],
+      'no-unused-vars': 'warn',
       'no-empty': 'warn',
       'no-dupe-keys': 'warn',
     },
@@ -50,9 +50,5 @@ export default [
   {
     files: ['backend/**/*.{js,mjs}', 'vite.config.js'],
     languageOptions: { globals: globals.nodeBuiltin },
-  },
-  {
-    files: ['ai/*.mjs'],
-    languageOptions: { globals: { structuredClone: 'readonly' } },
   },
 ];

@@ -1,0 +1,38 @@
+.sketch-move-readout-host { position: relative; }
+
+.sketch-move-readout {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: 10px;
+  padding: 4px 9px;
+  border: 1px solid #476875;
+  border-radius: 7px;
+  background: #172c37f5;
+  color: #edf5f9;
+  box-shadow: 0 2px 8px #08141f60;
+  transform: translate(-50%, -100%);
+  box-sizing: border-box;
+  pointer-events: none;
+  user-select: none;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.45;
+}
+.sketch-move-readout[hidden] { display: none; }
+.sketch-move-readout.is-moving { border-color: #65bccd; }
+.sketch-move-readout > span { white-space: nowrap; }
+.sketch-move-readout b { color: #9fe1e8; }
+.sketch-move-announcement {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+@media (pointer: coarse) {
+  .sketch-move-readout { font-size: 14px; }
+}

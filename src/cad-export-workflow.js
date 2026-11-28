@@ -15,12 +15,16 @@ export function createCadExportWorkflow({
   getModalSequence,
   safe,
   selected,
+  profileExport,
+  getSelection,
   exportSvg = exportCadProjectSvg,
 }) {
   async function exportModel(
     format,
     { ids, quality: exportQuality = quality.get().export, current = () => true } = {},
   ) {
+    const stepAssembly = format === 'step-assembly';
+    if (stepAssembly) format = 'step';
     ids = easyExportIds(project(), activeEasyKind(), ids, format);
     const domainRevision = getEasyDomainRevision(),
       originalCurrent = current;
@@ -31,7 +35,12 @@ export function createCadExportWorkflow({
       await download(result.svg, project().name + '.svg', 'image/svg+xml', { numbered: true });
       return result;
     }
-    const result = await controller.exportModel({ format, ids, quality: exportQuality });
+    const result = await controller.exportModel({
+      format,
+      ids,
+      quality: exportQuality,
+      ...(stepAssembly ? { stepAssembly } : {}),
+    });
     if (!current()) return { canceled: true };
     await download(result.data, project().name + '.' + result.extension, result.mime, { numbered: true });
     return result;
@@ -41,7 +50,7 @@ export function createCadExportWorkflow({
     prepareDialog();
     modal(
       'Modell exportieren',
-      '<p>Exportiert werden dauerhaft sichtbare Teile. STL und OBJ enthalten CAD-Körper und Netzteile. 3MF, GLB und glTF enthalten zusätzlich Ansichtsvorlagen. STEP enthält native CAD-Körper. Lose Lochteile werden ausgelassen. Die Auswahlisolation begrenzt nur die Ansicht.</p><label class="dialog-label">Format<select id="export-format"><option value="stl">STL · 3D-Druck</option><option value="step">STEP · CAD-Körper</option><option value="obj">OBJ + MTL</option><option value="3mf">3MF · Farben</option><option value="glb">GLB · Darstellung in einer Datei</option><option value="gltf">glTF · Darstellung</option><option value="svg">SVG · CAD- und Netzprojektion</option></select></label><label class="dialog-label">Umfang<select id="export-scope"><option value="all">Sichtbare Teile</option><option value="selection">Ausgewählte Teile</option></select></label><label class="dialog-label">Export-Abweichung (mm)<input id="export-deflection" type="number" min="0.0000001" step="0.001"></label><label class="dialog-label">Export-Winkel (Grad)<input id="export-angle" type="number" min="0.01" max="90"></label><p id="export-status" role="status"></p><div class="modal-actions"><button id="export-confirm" class="primary">Exportieren</button></div>',
+      '<p>Exportiert werden dauerhaft sichtbare Teile. STL und OBJ enthalten CAD-Körper und Netzteile. 3MF, GLB und glTF enthalten zusätzlich Ansichtsvorlagen. STEP enthält native CAD-Körper. Lose Lochteile werden ausgelassen. Die Auswahlisolation begrenzt nur die Ansicht.</p><label class="dialog-label">Format<select id="export-format"><option value="stl">STL · 3D-Druck</option><option value="step">STEP · CAD-Körper</option><option value="step-assembly">STEP · Baugruppenbaum</option><option value="obj">OBJ + MTL</option><option value="3mf">3MF · Farben</option><option value="glb">GLB · Darstellung in einer Datei</option><option value="gltf">glTF · Darstellung</option><option value="svg">SVG · CAD- und Netzprojektion</option><option value="profile-svg">SVG · Schnittkontur 1:1</option><option value="profile-dxf">DXF · Schnittkontur 1:1</option><option value="profile-dxf-polylines">DXF · Geschlossene Polylinien 1:1</option></select></label><label class="dialog-label" id="export-profile-source-label" hidden>Konturquelle<select id="export-profile-source"><option value="face">Ebene CAD-Fläche anklicken</option><option value="sketch">Ausgewählte Skizze</option></select></label><label class="dialog-label">Umfang<select id="export-scope"><option value="all">Sichtbare Teile</option><option value="selection">Ausgewählte Teile</option></select></label><label class="dialog-label">Export-Abweichung (mm)<input id="export-deflection" type="number" min="0.0000001" step="0.001"></label><label class="dialog-label">Export-Winkel (Grad)<input id="export-angle" type="number" min="0.01" max="90"></label><p id="export-status" role="status"></p><div class="modal-actions"><button id="export-confirm" class="primary">Exportieren</button></div>',
     );
     $('export-format').value = workflowSettings.get().export.format;
     $('export-scope').value = workflowSettings.get().export.scope;
@@ -49,7 +58,8 @@ export function createCadExportWorkflow({
     $('export-angle').value = quality.get().export.angleDegrees;
     if (activeEasyKind()) {
       const mesh = activeEasyKind() === 'mesh';
-      if (mesh) $('export-format').querySelector('[value=step]')?.remove();
+      if (mesh)
+        for (const option of $('export-format').querySelectorAll('[value^=step], [value^="profile-"]')) option.remove();
       if (!$('export-format').value) $('export-format').value = 'stl';
       $('export-scope').querySelector('[value=all]').textContent = mesh ? 'Sichtbare Netzteile' : 'Sichtbare CAD-Teile';
       $('modal-body').querySelector('p').textContent = mesh
@@ -60,13 +70,42 @@ export function createCadExportWorkflow({
       dialog = $('modal'),
       status = $('export-status');
     const current = () => session === getModalSequence() && status.isConnected && dialog.open;
-    $('export-confirm').onclick = () =>
+    const format = $('export-format'),
+      profileMode = () => format.value.startsWith('profile-'),
+      button = $('export-confirm');
+    const syncFormat = () => {
+      const profile = profileMode();
+      const source = $('export-profile-source-label');
+      if (!source) return;
+      source.hidden = !profile;
+      for (const id of ['export-scope', 'export-deflection', 'export-angle']) $(id).closest('label').hidden = profile;
+      button.textContent = profile && $('export-profile-source').value === 'face' ? 'Fläche wählen' : 'Exportieren';
+      status.textContent = '';
+    };
+    format.onchange = syncFormat;
+    const source = $('export-profile-source');
+    if (source) source.onchange = syncFormat;
+    syncFormat();
+    button.onclick = () =>
       safe(async () => {
         if (!current()) return;
         status.textContent = '';
-        const ids =
-          $('export-scope').value === 'selection' ? selected({ roots: true }).map((value) => value.node.id) : undefined;
         try {
+          if (profileMode()) {
+            const extension = format.value.slice('profile-'.length);
+            if ($('export-profile-source').value === 'face') {
+              profileExport.pickFace(extension);
+              dialog.close();
+            } else {
+              const result = await profileExport.saveSelection(getSelection(), extension);
+              if (current() && !result?.canceled) dialog.close();
+            }
+            return;
+          }
+          const ids =
+            $('export-scope').value === 'selection'
+              ? selected({ roots: true }).map((value) => value.node.id)
+              : undefined;
           await exportModel($('export-format').value, {
             ids,
             quality: {
@@ -78,7 +117,7 @@ export function createCadExportWorkflow({
           if (current()) dialog.close();
         } catch (error) {
           if (!current()) return;
-          if (['SVG_OPEN_MESH', 'SVG_INVALID_MESH'].includes(error.code)) {
+          if (profileMode() || ['SVG_OPEN_MESH', 'SVG_INVALID_MESH'].includes(error.code)) {
             status.textContent = error.message;
             return;
           }

@@ -1,4 +1,5 @@
 export const CAD_QUALITY_KEY = 'offlinecad-cad-quality-v1';
+const SIMPLIFIED_DISPLAY = Object.freeze({ deflection: 0.25, angleDegrees: 20 });
 export const CAD_QUALITY_DEFAULTS = Object.freeze({
   format: 'FormnaroCADQuality',
   version: 1,
@@ -50,6 +51,11 @@ export function createCadQualitySettings(storage) {
 export function cadDisplayPreset(value, mode) {
   if (!['full', 'simplified'].includes(mode)) throw Error('Unbekannte Anzeigedetailstufe.');
   const checked = validateCadQuality(value);
-  checked.display = mode === 'full' ? { ...CAD_QUALITY_DEFAULTS.display } : { deflection: 0.25, angleDegrees: 20 };
+  checked.display = { ...(mode === 'full' ? CAD_QUALITY_DEFAULTS.display : SIMPLIFIED_DISPLAY) };
   return checked;
+}
+
+export function isSimplifiedCadDisplay(quality) {
+  return quality.deflection === SIMPLIFIED_DISPLAY.deflection &&
+    quality.angleDegrees === SIMPLIFIED_DISPLAY.angleDegrees;
 }

@@ -172,9 +172,7 @@ export function createCadWorkerClient({
         if (typeof data.stack === 'string') error.stack = data.stack;
         try {
           onError(error, { ...job.diagnostics, phase: data.phase });
-        } catch {
-          /* Reject the failed worker job even if its diagnostics callback throws. */
-        }
+        } catch {}
         job.reject(error);
         if (error.code === 'CAD_KERNEL_FATAL') stop(error);
       } else {
@@ -197,9 +195,7 @@ export function createCadWorkerClient({
         const error = new Error(event.message || 'CAD-Worker abgestürzt.');
         try {
           onError(error, { source: 'cad-worker-crash' });
-        } catch {
-          /* Continue worker recovery if the crash callback throws. */
-        }
+        } catch {}
         stop(error);
       }
     };

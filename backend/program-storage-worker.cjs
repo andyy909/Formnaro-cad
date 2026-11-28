@@ -54,7 +54,7 @@ if(parentPort){
   if(data.cancel){controller.abort();return;}
   if(started)return;
   started=true;
-  void run(data.job,controller.signal,port).finally(()=>process.exit(0));
+  void run(data.job,controller.signal,port);
  });
  port.postMessage({ready:true});
 }

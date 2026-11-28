@@ -12,7 +12,7 @@ export function practiceScrewEvidence(drives,values,selected){
  });
 }
 
-export function createPracticeModelUI({controller,input,waitFor,checkpoint,settled,document,aliases=new Map(),frameConstruction}){
+export function createPracticeModelUI({controller,access,input,waitFor,checkpoint,settled,document,aliases=new Map(),frameConstruction}){
  const joints=new Map(),gears=new Map(),project=()=>controller.readSnapshot(),q=id=>document.getElementById(id);
  const ui=async(action,target,value,text)=>{await checkpoint();await input({target:'ui:id:'+target,action,...(value===undefined?{}:{value:String(value)})},text);await settled();};
  const click=(id,text)=>ui('click',id,undefined,text),choose=(id,value,text)=>ui('choose',id,value,text);

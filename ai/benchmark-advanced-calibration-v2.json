@@ -2,17 +2,17 @@
   "format": "FormnaroLocalNativeCalibration",
   "version": 1,
   "suiteId": "formnaro-practice-advanced",
-  "suiteVersion": "2.0.8",
-  "program": "0.139.1-r1",
+  "suiteVersion": "2.0.26",
+  "program": "0.157.0-r1",
   "providerRequests": 0,
   "positiveNative": 8,
   "noopRejected": 8,
   "nearMissRejected": 8,
   "missingReplayRejected": 8,
   "regularChildExit": true,
-  "driverSHA256": "f7dedd7181e5ce6bc90a40f3f611389235cc912c7c53d091e2233b7ca6592b3b",
+  "driverSHA256": "7fd79551dc8d3ce9eadb8bf21c76b8a859810cdc09697d2ffeb45719f2f36e9b",
   "referenceConstructionSHA256": "042aea175c8457f202e203bdb561b8b7980e496a58e6429ee4ce54a550c14509",
-  "scope": "Fresh package native calibration. Eight positive references and 24 negative checks; all real child and host processes exited normally. This is not an AI benchmark. Native task geometry and numeric predicates unchanged.",
+  "scope": "Lokale Referenzmodelle und unabhängige native Prüfer. Acht Sollmodelle, acht unveränderte Ausgangsmodelle, acht nahe Fehlmodelle und acht Prüfungen mit fehlendem Ablaufbeleg. Provideranfragen: 0.",
   "cases": [
     {
       "caseId": "advanced-01",
@@ -80,13 +80,7 @@
       ],
       "noopRejected": true,
       "nearMissRejected": true,
-      "missingReplayRejected": true,
-      "nearMissFailedChecks": [
-        {
-          "name": "Alle drei asymmetrischen Bohrungen nativ bestätigt",
-          "passed": false
-        }
-      ]
+      "missingReplayRejected": true
     },
     {
       "caseId": "advanced-02",
@@ -154,13 +148,7 @@
       ],
       "noopRejected": true,
       "nearMissRejected": true,
-      "missingReplayRejected": true,
-      "nearMissFailedChecks": [
-        {
-          "name": "Zwei getrennte rechteckige Durchbrüche und Materialstege",
-          "passed": false
-        }
-      ]
+      "missingReplayRejected": true
     },
     {
       "caseId": "advanced-03",
@@ -188,13 +176,7 @@
       ],
       "noopRejected": true,
       "nearMissRejected": true,
-      "missingReplayRejected": true,
-      "nearMissFailedChecks": [
-        {
-          "name": "Acht Hülsen an genau den acht versetzten Winkelpositionen",
-          "passed": false
-        }
-      ]
+      "missingReplayRejected": true
     },
     {
       "caseId": "advanced-04",
@@ -266,25 +248,7 @@
       ],
       "noopRejected": true,
       "nearMissRejected": true,
-      "missingReplayRejected": true,
-      "nearMissFailedChecks": [
-        {
-          "name": "Unabhängig berechnetes Materialvolumen",
-          "passed": false,
-          "actual": {
-            "actual": 31660.707993412307,
-            "expected": 31321.415986824606
-          }
-        },
-        {
-          "name": "Stufe links Z24, Grundplatte rechts Z8, Loch offen",
-          "passed": false
-        },
-        {
-          "name": "Ø6 durch die gesamte Stufenhöhe",
-          "passed": false
-        }
-      ]
+      "missingReplayRejected": true
     },
     {
       "caseId": "advanced-05",
@@ -356,21 +320,7 @@
       ],
       "noopRejected": true,
       "nearMissRejected": true,
-      "missingReplayRejected": true,
-      "nearMissFailedChecks": [
-        {
-          "name": "Unabhängig berechnetes Materialvolumen",
-          "passed": false,
-          "actual": {
-            "actual": 21707.99999999998,
-            "expected": 22068
-          }
-        },
-        {
-          "name": "Vordere Öffnung 10×12, seitliches Material und Rückwand erhalten",
-          "passed": false
-        }
-      ]
+      "missingReplayRejected": true
     },
     {
       "caseId": "advanced-06",
@@ -427,7 +377,7 @@
           "name": "Unabhängig berechnetes Materialvolumen",
           "passed": true,
           "actual": {
-            "actual": 66836.81421051074,
+            "actual": 66836.81421051075,
             "expected": 66836.81421051075
           }
         },
@@ -438,21 +388,7 @@
       ],
       "noopRejected": true,
       "nearMissRejected": true,
-      "missingReplayRejected": true,
-      "nearMissFailedChecks": [
-        {
-          "name": "Unabhängig berechnetes Materialvolumen",
-          "passed": false,
-          "actual": {
-            "actual": 66196.81421051074,
-            "expected": 66836.81421051075
-          }
-        },
-        {
-          "name": "Taschenboden Z12, Bohrungsboden Z8 und übrige Oberseite Z20",
-          "passed": false
-        }
-      ]
+      "missingReplayRejected": true
     },
     {
       "caseId": "advanced-07",
@@ -528,25 +464,7 @@
       ],
       "noopRejected": true,
       "nearMissRejected": true,
-      "missingReplayRejected": true,
-      "nearMissFailedChecks": [
-        {
-          "name": "Unabhängig berechnetes Materialvolumen",
-          "passed": false,
-          "actual": {
-            "actual": 12298.407105255379,
-            "expected": 12128.76110196153
-          }
-        },
-        {
-          "name": "Beide Skizzenlöcher mit richtigen Durchmessern und Weltlagen",
-          "passed": false
-        },
-        {
-          "name": "Bearbeitbare Skizzenquelle mit Außenkontur und zwei Innenkonturen",
-          "passed": false
-        }
-      ]
+      "missingReplayRejected": true
     },
     {
       "caseId": "advanced-08",
@@ -586,13 +504,7 @@
       ],
       "noopRejected": true,
       "nearMissRejected": true,
-      "missingReplayRejected": true,
-      "nearMissFailedChecks": [
-        {
-          "name": "A3 quer, Maßstab1:2, Nummer AB-08, Revision B",
-          "passed": false
-        }
-      ]
+      "missingReplayRejected": true
     }
   ]
 }

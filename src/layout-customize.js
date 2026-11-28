@@ -34,7 +34,9 @@ export function mountLayoutCustomize(root, { items, getDraft, change, t = (v) =>
       );
       zone.append(option);
     }
-    zone.value = current;
+    if (draft.grid[key]) zone.add(new Option(t('Auf dem Raster'), 'grid'));
+    zone.value = draft.grid[key] ? 'grid' : current;
+    $('layout-tool-back').disabled = $('layout-tool-forward').disabled = Boolean(draft.grid[key]);
     visible.checked = !draft.hiddenTools.includes(key);
     visible.disabled = key === 'settings';
     $('layout-library-order').value = String(draft.objectsFirst);
@@ -42,6 +44,7 @@ export function mountLayoutCustomize(root, { items, getDraft, change, t = (v) =>
   }
   picker.onchange = refresh;
   zone.onchange = () => {
+    if (zone.value === 'grid') return;
     const next = structuredClone(getDraft()),
       key = picker.value;
     for (const keys of Object.values(next.zones)) {
@@ -49,6 +52,7 @@ export function mountLayoutCustomize(root, { items, getDraft, change, t = (v) =>
       if (index >= 0) keys.splice(index, 1);
     }
     next.zones[zone.value].push(key);
+    delete next.grid[key];
     change(next);
     refresh();
   };

@@ -1,6 +1,6 @@
 {
   "id": "formnaro-practice-core",
-  "version": "1.0.27",
+  "version": "1.0.30",
   "knownDevelopmentTasks": true,
   "limits": {
     "seconds": 360,
@@ -62,7 +62,7 @@
   "dependencies": [
     {
       "path": "backend/ai-practice-function-evaluate.cjs",
-      "sha256": "90452716fc547e8c60146c71bd81b92d2073b04f4b5b4ef9b109d62f7d68be75"
+      "sha256": "a0da5955d43f03bfb87aaae7de1631b1380c336c206cfe7fd644144b6555e039"
     },
     {
       "path": "backend/ai-diagnostic-evaluate.cjs",
@@ -78,7 +78,7 @@
     },
     {
       "path": "backend/ai-practice-prompt.cjs",
-      "sha256": "f3666eef4124da4e429b08a2dab51ce14de1f31eb1f44f8c8063f766411f7c43"
+      "sha256": "cf43fc3d425eec432d0bdb02907db42b0744c81d2e2f314b4705a88d8d1caf7f"
     },
     {
       "path": "backend/practice-result-checks.cjs",
@@ -86,7 +86,7 @@
     },
     {
       "path": "ai/formnaro-tool-reference.mjs",
-      "sha256": "38de0ee9a1b1a43045e39345dd37440f2e3e4a5fb069a9b63485b0f01fa7cff7"
+      "sha256": "c7eb4fd70ecc05e01ddb59f546a3c21336a17f1c2e3b730685332130df5340b1"
     },
     {
       "path": "ai/formnaro-solid-labels.mjs",
@@ -98,7 +98,7 @@
     },
     {
       "path": "src/cad-service.js",
-      "sha256": "3949ce0a6eaa8aa9fff8cebbd2b883bc91eb0b0ee48a59d4ba1b0a86f54afd48"
+      "sha256": "5cff15520406bcf54def53318d7f5b63798d9252dc54e86e44558c1d54abb53d"
     },
     {
       "path": "src/cad-drill-stock-native.js",
@@ -110,15 +110,19 @@
     },
     {
       "path": "src/cad-practice-model-ui.js",
-      "sha256": "4477f9799f5bcf005e1881ce83d2fac7d76ff35d0302bea055c6c0f60f0793f2"
+      "sha256": "55d30ce556637d5e0726e99e925db25e5f0ae78ede320fd873fd61faf3df2f53"
     },
     {
       "path": "backend/ai-lab-review-data.cjs",
-      "sha256": "3f904f71cbcca685ddc5cdfe226ac9cee29b7bc80b5221675ec1d30ed35858b6"
+      "sha256": "3a358282058513f87f33a2c4474508445fce10c8d0c346e0675d5e37608cc301"
     },
     {
       "path": "backend/ai-diagnostics.cjs",
-      "sha256": "fc0584e797e65f98383b30bd45db4984a680e06e003a9b73256c033c43c64650"
+      "sha256": "9fc35469743ce27d9ba7ca5403e635215ca68650c2964d0b5397a19254c4fea4"
+    },
+    {
+      "path": "backend/ai-practice-focus-guard.cjs",
+      "sha256": "b22b47a9436d31a1d4c7137bbfe7e1e1ad08de76e744348f0115127f828c129c"
     },
     {
       "path": "src/cad-practice-controls.js",
@@ -126,11 +130,11 @@
     },
     {
       "path": "backend/practice-child.cjs",
-      "sha256": "ad5b0ff4dcdee629b69305b737dd268f612ce964ed261120d5f2d303892122bb"
+      "sha256": "d878eaa3a8b9ff392408ba667115dfe5d1308ae13d085a625720dbc3ca545bfa"
     },
     {
       "path": "backend/practice-runner.cjs",
-      "sha256": "3ebdaec1f9a12d3f8d1f4faa75d2cd1de21ecb6abcaca056db2aa01df5800131"
+      "sha256": "80f5d56fe7f36f2622f07c2911aa3ef559c1eb9c3cf9de30bdc722d1287599b7"
     },
     {
       "path": "src/cad-agent-ui-policy.js",
@@ -138,11 +142,11 @@
     },
     {
       "path": "backend/desktop-ai.cjs",
-      "sha256": "52f01d74434deee87d6575d2c0b8a3eb40505b244ef0bc7a98046aa9fdf152d4"
+      "sha256": "4461381d819830de1fdcb483f608af6704a362dd033c29be497f04a1506e2ccd"
     },
     {
       "path": "backend/ai-lab-storage.cjs",
-      "sha256": "d55c2482acc689953c6fd94407f6fd2a0edd1b6f1f0dc18342990391456d1ee6"
+      "sha256": "d7e11156b7d4f02ef83141e7d493d9c4f8c23a832e3610d1ca6c435cbe78e54d"
     },
     {
       "path": "backend/ai-task-atomic.cjs",
@@ -154,7 +158,7 @@
     },
     {
       "path": "backend/ai-lab-reviewer.cjs",
-      "sha256": "169c5f328adeb81e993fc3755c85abdaa5cf1f873a6993656aae0e75f8c4be83"
+      "sha256": "e8f0db854572518bcbd96a661d86e8a80e10067ff7c516b976ca5e6913ee38aa"
     },
     {
       "path": "backend/ai-diagnostic-child.cjs",
@@ -173,5 +177,5 @@
       "sha256": "6f5021d8c0879156ca11022879c222248496a0b681322b8fb86199563833f038"
     }
   ],
-  "revisionReason": "Lint cleanup preserves benchmark tasks, limits and native grading."
+  "revisionReason": "Lokale Prüfung auf Formnaro 0.157.0-r1: acht unveränderte Ausgangsmodelle abgewiesen, fünf positive Referenzen erneut geprüft und drei frühere positive Belege für unveränderte Aufgaben und Prüfer übernommen. Werkzeugauskunft und Rendererquellen neu gebunden."
 }

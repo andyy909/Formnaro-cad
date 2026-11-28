@@ -4,6 +4,18 @@ import { createMeshSelectionService } from './mesh-selection-data.js';
 import { MESH_INSPECTION_CATEGORIES } from './mesh-inspector.js';
 import './cad-mesh-repair.css';
 const number = (n) => Number(n).toLocaleString('de-DE');
+const millimetres = (n) => Number(n).toLocaleString('de-DE', { maximumFractionDigits: 4 });
+const hash = (value) => (typeof value === 'string' && value.length >= 12 ? `${value.slice(0, 12)}…` : '—');
+function outerSkinSummary(skin) {
+  if (!skin) return '';
+  return (
+    `\nAußenhaut (${skin.method}, Budget ${millimetres(skin.budgetMm)} mm, ${number(skin.probe?.samplePointsPerDirection ?? skin.samples?.[0] ?? 0)} Punkte je Richtung): ` +
+    `${skin.passed ? 'bestanden' : 'nicht bestanden'} · Außenhaut ${millimetres(skin.skin.originalToCandidateMm)} / ${millimetres(skin.skin.candidateToOriginalMm)} mm · ` +
+    `Roh ${millimetres(skin.raw.originalToCandidateMm)} / ${millimetres(skin.raw.candidateToOriginalMm)} mm · ` +
+    `Ausschluss ${number(skin.excludedFaces)} Dreiecke / ${millimetres(skin.excludedAreaMm2)} mm² · ` +
+    `Original ${hash(skin.originalDigest)} → Ergebnis ${hash(skin.resultDigest)} · ${number(skin.durationMs)} ms.\n`
+  );
+}
 export function createCadMeshRepairUI({
   controller,
   view,
@@ -171,6 +183,7 @@ export function createCadMeshRepairUI({
         removeDegenerate: $('degenerate').checked,
         removeDuplicates: $('duplicates').checked,
         orient: $('orient').checked,
+        repairPlanarSeam: $('planar-seam')?.checked ?? false,
         smallTriangleLimit: s.catalog.smallTriangleLimit,
         removeComponents: [...s.parts],
       };
@@ -191,8 +204,22 @@ export function createCadMeshRepairUI({
       }
       const r = proposal.report;
       $('compare').value = 'repaired';
+      const planarNote = r.repairedPlanarSeams
+        ? `${number(r.repairedPlanarSeams)} überlappende ebene Naht lokal repariert (${number(r.planarSeamChanges ?? 0)} geänderte Flächen).\n`
+        : '';
+      const openingNote = r.holesFilled
+        ? `${number(r.holesFilled)} Restöffnung(en) auf der erkannten Nahtebene innerhalb der lokalen Defektbegrenzung geschlossen; andere Öffnungen bleiben offen.\n`
+        : '';
+      const weldNote = r.residualWelds?.length
+        ? `${number(r.residualWelds.length)} Randstelle(n) mit doppelten Koordinaten auf der Nahtebene zusammengeführt; andere Öffnungen bleiben offen.\n`
+        : '';
       $('result').textContent =
-        `${number(r.removedDegenerate)} entartete und ${number(r.removedDuplicates)} zusätzliche doppelte Flächen entfernt. ${number(r.flippedFaces)} Flächen ausgerichtet.\n${number(r.removedComponents)} ausgewählte Nebenbestandteile (${number(r.removedComponentFaces)} Flächen) entfernt. ${number(r.removedUnusedVertices)} unbenutzte Punkte entfallen.\n${number(r.beforeTriangles)} → ${number(r.afterTriangles)} Dreiecke. ${number(r.skippedOrientationComponents)} ungeeignete Orientierungsbereiche unverändert.\n\nVerbleibende Diagnose (vorher → nachher):\n` +
+        planarNote +
+        openingNote +
+        weldNote +
+        `${number(r.removedDegenerate)} entartete und ${number(r.removedDuplicates)} zusätzliche doppelte Flächen entfernt. ${number(r.flippedFaces)} Flächen ausgerichtet.\n${number(r.removedComponents)} ausgewählte Nebenbestandteile (${number(r.removedComponentFaces)} Flächen) entfernt. ${number(r.removedUnusedVertices)} unbenutzte Punkte entfallen.\n${number(r.beforeTriangles)} → ${number(r.afterTriangles)} Dreiecke. ${number(r.skippedOrientationComponents)} ungeeignete Orientierungsbereiche unverändert.\n` +
+        outerSkinSummary(r.outerSkin) +
+        `\nVerbleibende Diagnose (vorher → nachher):\n` +
         Object.entries(MESH_INSPECTION_CATEGORIES)
           .map(([k, c]) => `${c.label}: ${number(r.before[k])} → ${number(r.after[k])}`)
           .join('\n');
@@ -266,13 +293,13 @@ export function createCadMeshRepairUI({
       abort: null,
     };
     panel.innerHTML =
-      '<div class="mesh-repair-heading"><strong>Netz gezielt reparieren</strong><button id="mesh-repair-x" aria-label="Reparatur abbrechen">×</button></div><p id="mesh-repair-name"></p><label><input id="mesh-repair-degenerate" type="checkbox">Sicher entartete Dreiecke entfernen</label><label><input id="mesh-repair-duplicates" type="checkbox">Zusätzliche doppelte Flächen entfernen</label><p class="small-note">Bei exakt gleichen Dreiecken bleibt die erste Originalfläche erhalten, auch bei Gegenrichtung. Entartete Flächen werden nur bei bestätigtem Flächeninhalt null entfernt.</p><label><input id="mesh-repair-orient" type="checkbox">Geeignete Flächenbereiche einheitlich ausrichten</label><p class="small-note">Weniger Flächen werden umgedreht; bei Gleichstand bleibt die erste Fläche richtungsgebend. Keine automatische Innen-/Außenbestimmung. Mehrdeutige oder weiter beschädigte Bereiche bleiben erhalten.</p><details><summary>Kleine Nebenbestandteile gezielt entfernen</summary><label>Höchstens Dreiecke je Nebenbestandteil<input id="mesh-repair-limit" type="number" min="0" max="500000" step="1" value="20"></label><p class="small-note">Größter Bestandteil bleibt erhalten. Kantenverbundene Bestandteile mit Punktkontakt werden nicht entfernt. Erst „Ansehen“, dann gewünschte Teile ankreuzen. 0 schaltet diese Liste aus.</p><div id="mesh-repair-parts"></div><div class="mesh-repair-page"><button id="mesh-repair-page-before">Zurück</button><span id="mesh-repair-page"></span><button id="mesh-repair-page-after">Weiter</button></div><p id="mesh-repair-chosen"></p></details><p class="small-note">Verwendete Koordinaten bleiben exakt; unbenutzte Punkte entfallen. Öffnungen bleiben offen. Original und bisherige Quellen werden gespeichert. Flächenmarkierungen nach einer Reparatur neu wählen.</p><label>Vergleich<select id="mesh-repair-compare" disabled><option value="repaired">Reparierte Vorschau</option><option value="original">Original</option></select></label><p id="mesh-repair-result"></p><p id="mesh-repair-status" role="status"></p><div class="edge-actions"><button id="mesh-repair-preview">Vorschau</button><button id="mesh-repair-apply" class="primary" disabled>Übernehmen</button><button id="mesh-repair-cancel">Abbrechen</button></div>';
+      '<div class="mesh-repair-heading"><strong>Netz gezielt reparieren</strong><button id="mesh-repair-x" aria-label="Reparatur abbrechen">×</button></div><p id="mesh-repair-name"></p><label><input id="mesh-repair-planar-seam" type="checkbox">Überlappende ebene Nähte lokal reparieren</label><p class="small-note">Erkennt planare Nahtstellen geometrisch und entfernt überlappende Schichten lokal am gemessenen Defektort; unbeteiligte Flächen bleiben unberührt.</p><label><input id="mesh-repair-degenerate" type="checkbox">Sicher entartete Dreiecke entfernen</label><label><input id="mesh-repair-duplicates" type="checkbox">Zusätzliche doppelte Flächen entfernen</label><p class="small-note">Bei exakt gleichen Dreiecken bleibt die erste Originalfläche erhalten, auch bei Gegenrichtung. Entartete Flächen werden nur bei bestätigtem Flächeninhalt null entfernt.</p><label><input id="mesh-repair-orient" type="checkbox">Geeignete Flächenbereiche einheitlich ausrichten</label><p class="small-note">Weniger Flächen werden umgedreht; bei Gleichstand bleibt die erste Fläche richtungsgebend. Keine automatische Innen-/Außenbestimmung. Mehrdeutige oder weiter beschädigte Bereiche bleiben erhalten.</p><details><summary>Kleine Nebenbestandteile gezielt entfernen</summary><label>Höchstens Dreiecke je Nebenbestandteil<input id="mesh-repair-limit" type="number" min="0" max="500000" step="1" value="20"></label><p class="small-note">Größter Bestandteil bleibt erhalten. Kantenverbundene Bestandteile mit Punktkontakt werden nicht entfernt. Erst „Ansehen“, dann gewünschte Teile ankreuzen. 0 schaltet diese Liste aus.</p><div id="mesh-repair-parts"></div><div class="mesh-repair-page"><button id="mesh-repair-page-before">Zurück</button><span id="mesh-repair-page"></span><button id="mesh-repair-page-after">Weiter</button></div><p id="mesh-repair-chosen"></p></details><p class="small-note">Verwendete Koordinaten bleiben exakt; unbenutzte Punkte entfallen. Nur Restöffnungen auf der erkannten Nahtebene innerhalb der lokalen Defektbegrenzung werden geschlossen; alle anderen Öffnungen bleiben offen. Original und bisherige Quellen werden gespeichert. Flächenmarkierungen nach einer Reparatur neu wählen.</p><label>Vergleich<select id="mesh-repair-compare" disabled><option value="repaired">Reparierte Vorschau</option><option value="original">Original</option></select></label><p id="mesh-repair-result"></p><p id="mesh-repair-status" role="status"></p><div class="edge-actions"><button id="mesh-repair-preview">Vorschau</button><button id="mesh-repair-apply" class="primary" disabled>Übernehmen</button><button id="mesh-repair-cancel">Abbrechen</button></div>';
     $('name').textContent = n.name;
     panel.hidden = false;
     $('preview').onclick = () => void preview();
     $('apply').onclick = () => void apply();
     $('cancel').onclick = $('x').onclick = close;
-    for (const id of ['degenerate', 'duplicates', 'orient']) $(id).onchange = changed;
+    for (const id of ['degenerate', 'duplicates', 'orient', 'planar-seam']) $(id).onchange = changed;
     $('limit').onchange = () => {
       if (active) {
         active.parts.clear();

@@ -10,6 +10,64 @@ function harness(t,completeModel,onEvent=()=>{},closeResult={code:0,signal:null}
 const spec={mode:'single',caseId:'drill',variant:'A',effort:'low',stage:'start'};
 const reply=tool=>({data:{model:'deepseek-flash',usage:{input_tokens:100,output_tokens:20,input_tokens_details:{cached_tokens:70}}},text:JSON.stringify(tool)});
 
+test('Only a shared runtime configuration error stops the series; an oversized task does not', async t => {
+ const {preset}=require('../backend/ai-test-lab-plan.cjs');
+ const p=preset();
+ const plan={...p,caseIds:['drill'],variants:['A','D'],efforts:['low'],monitor:{...p.monitor,mode:'off'}};
+ let calls=0;
+ const h=harness(t,async(c,k,e)=>{
+  if(++calls===1){
+   e.onDiagnostic({type:'context-budget',contextTokens:8192,inputTokens:8300,outputTokens:0});
+   throw Object.assign(Error('Kontextlimit'),{code:'AI_PROVIDER_CONTEXT_LIMIT'});
+  }
+  return reply({status:'completed',message:'done'});
+ });
+ await h.runner.start({mode:'lab',plan});
+ const [run]=h.runner.state().records;
+ assert.equal(h.runner.state().records.length,2);
+ assert.equal(run.status,'failed');
+ const raw=h.runner.read(run.id);
+ assert.equal(raw.error.code,'AI_PROVIDER_CONTEXT_LIMIT');
+ assert.equal(require('../backend/ai-lab-storage.cjs').failureClass(raw),'provider-context-limit');
+ assert.equal(raw.toolCalls,0);
+ assert.equal(raw.cleanExit,true);
+ assert.equal(require('../backend/ai-lab-benchmark.cjs').classifyBenchmarkTrial(raw),'infrastructure');
+
+ const misconfigured=harness(t,async()=>{throw Object.assign(Error('Konfiguration'),{code:'AI_PROVIDER_CONTEXT_CONFIG'});});
+ await assert.rejects(misconfigured.runner.start({mode:'lab',plan}),{code:'AI_PROVIDER_CONTEXT_CONFIG'});
+ assert.equal(misconfigured.runner.state().records.length,1);
+});
+
+test('Paired shadow triggers see the same model trace at different events and never act on stop', async t => {
+ const p=require('../backend/ai-test-lab-plan.cjs').preset();
+ const proposal={tool:'offlinecad_preview',arguments:{revision,commands:[{op:'create',type:'box',size:[1,2,3]}]}};
+ const h=harness(t,async(c,k,e)=>{
+  e.onDiagnostic({type:'request',body:{model:c.model}});
+  if(e.system.includes('independent Formnaro experiment supervisor')){
+   return reply({verdict:'stop',reasonCode:'wrong_target',confidence:0.99,explanation:'Wrong target in test trace',evidence:'Controlled target reference'});
+  }
+  e.onDiagnostic({type:'reasoning',text:'controlled trace '.repeat(80)});
+  return reply(proposal);
+ });
+ for(const trigger of ['reasoning','proposal']){
+  await h.runner.start({mode:'lab',plan:{...p,caseIds:['drill'],variants:['A'],efforts:['low'],
+   monitor:{...p.monitor,mode:'shadow',trigger}}});
+ }
+ const runs=h.runner.state().records.map(r=>h.runner.read(r.id));
+ for(const [run,trigger] of runs.map(r=>[r,r.spec.monitor.trigger])){
+  assert.equal(run.status,'proposal');
+  assert.equal(run.monitorRequests,1);
+  const judgment=run.events.find(e=>e.type==='monitor-judgment');
+  assert.equal(judgment.kind,trigger==='reasoning'?'reasoning-prefix':'first-proposal');
+  assert.equal(judgment.verdict,'stop');
+  assert.equal(judgment.acted,false);
+  assert.equal(run.finalReview.assessment,'unverified');
+  assert.equal(run.cleanExit,true);
+ }
+ assert.deepEqual(runs[0].proposal,runs[1].proposal);
+ assert.ok(!h.calls.some(c=>c.method==='rpc'&&['preview','apply'].includes(c.args.method)));
+});
+
 test('Lab supervisor has independent input, role billing and a frozen series manifest',async t=>{
  const {preset}=require('../backend/ai-test-lab-plan.cjs');let inputs=[];
  const h=harness(t,async(c,k,e)=>{inputs.push(e);e.onDiagnostic({type:'request',body:{model:c.model}});return e.system.includes('independent Formnaro experiment supervisor')?reply({verdict:'continue',reasonCode:'none',confidence:.8,explanation:'No proven violation',evidence:'Valid proposal'}):reply({tool:'offlinecad_preview',arguments:{revision,commands:[{op:'create',type:'box',size:[1,2,3]}]}});});
@@ -68,9 +126,20 @@ test('Total report preserves known cache subtotals and unknown-price flags acros
  const r=h.runner.read(h.runner.state().records[0].id);r.events.push({type:'usage',round:1,ms:1,usage:{input_tokens:100,output_tokens:10}},{type:'usage',round:2,ms:2,usage:{input_tokens:100}});
  const report=JSON.parse(fs.readFileSync((await h.runner.exportAll('json')).path,'utf8'));assert.equal(report.total.cached,70);assert.equal(report.total.cacheUnknown,true);assert.equal(report.total.priceUnknown,true);assert.ok(report.total.min<report.total.max);
 });
+test('Run totals use normalized usage and still count legacy raw provider fields',async t=>{
+ const h=harness(t,async(c,k,e)=>{
+  e.onDiagnostic({type:'usage',usage:{input_tokens:100,output_tokens:20,input_tokens_details:{cached_tokens:70}}});
+  e.onDiagnostic({type:'usage',usage:{prompt_tokens:15,completion_tokens:5,prompt_cache_hit_tokens:6}});
+  return {data:{model:c.model,usage:{prompt_tokens:30,completion_tokens:10,prompt_tokens_details:{cached_tokens:45}}},text:JSON.stringify({status:'completed',message:'done'})};
+ });
+ await h.runner.start(spec);
+ const record=h.runner.read(h.runner.state().records[0].id);
+ const persisted=JSON.parse(fs.readFileSync(path.join(h.directory,'run-'+record.id+'.json'),'utf8'));
+ assert.deepEqual(persisted.usage,{input:145,output:35,cached:106});
+});
 test('A response without usage stays unsettled and exports unknown cost without crashing',async t=>{
  const h=harness(t,async(c,k,e)=>{e.onDiagnostic({type:'request',body:{model:c.model}});return {data:{model:c.model},text:JSON.stringify({status:'completed',message:'done'})};});await h.runner.start(spec);
- assert.equal(h.runner.state().records[0].unsettledRequests,1);const report=JSON.parse(fs.readFileSync((await h.runner.exportAll('json')).path,'utf8'));assert.equal(report.total.priceUnknown,true);assert.equal(report.unsettledRequests,1);assert.match(fs.readFileSync((await h.runner.exportAll('md')).path,'utf8'),/Weitere Kosten unbekannt/);
+ assert.equal(h.runner.state().records[0].unsettledRequests,1);assert.deepEqual(h.runner.state().records[0].usage,{input:0,output:0,cached:0});const report=JSON.parse(fs.readFileSync((await h.runner.exportAll('json')).path,'utf8'));assert.equal(report.total.priceUnknown,true);assert.equal(report.unsettledRequests,1);assert.match(fs.readFileSync((await h.runner.exportAll('md')).path,'utf8'),/Weitere Kosten unbekannt/);
 });
 test('Provider reconciliation exposes only validated totals and is removed with local records',async t=>{
  const h=harness(t,async()=>reply({status:'completed',message:'done'}));fs.writeFileSync(path.join(h.directory,'Anbieterabgleich.json'),JSON.stringify({checkedAt:'2026-11-05T20:00:00Z',providerCostUSD:'1.12',costDifferenceUSD:'.01',localRequestsStarted:3,requestCountMatchesIncludingUnsettled:true,providerCostsMatchTokenRows:true,apiKey:'private-test-secret'}));
@@ -123,3 +192,14 @@ test('Actual failed tool results reach the supervisor immediately and final chec
  const final=inputs.find(i=>i.observation.kind==='final-result');assert.ok(final);assert.equal(final.observation.result.cleanExit,true);assert.equal(final.observation.result.verification.passed,false);assert.equal(final.observation.result.verificationError,null);assert.equal(h.runner.state().records[0].finalReview.assessment,'native-failed');assert.equal(h.closed,1);
 });
 test('Malformed optional practice checks receive correction before the first actual playback',async t=>{let turns=0;const h=harness(t,async()=>reply({revision,assistant:{kind:'practice',plan:{version:1,title:'Check-format transport control',actions:[{kind:'model',commands:[{op:'create',type:'box',as:'body'}],...(++turns===1?{checks:['body remains unchanged']}:{})}]}}}));await h.runner.start({...spec,stage:'full',workflow:'practice'});assert.equal(turns,2);const calls=h.calls.filter(c=>c.method==='practice');assert.equal(calls.length,1);assert.equal(calls[0].args.plan.actions[0].checks,undefined);const r=h.runner.read(h.runner.state().records[0].id);assert.ok(r.events.some(e=>e.type==='format-feedback'&&/Prüf|checks/.test(e.error)));});
+test('Unattended practice ends as interrupted after focus loss instead of waiting for the trial budget',async t=>{
+ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-diagnostic-test-'));t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));
+ let activity=null,cancelled=0;const nodes=[{id:'protected',name:'Unbeteiligtes Teil'}];
+ const runner=createDiagnostics({app:{},directory,reviewerEnabled:false,practiceFocusGraceMs:50,credentials:()=>({key:'private-test-secret',config:{baseUrl:'https://api.deepseek.com',model:'deepseek-flash'}}),provider:{testConnection:async()=>({models:['deepseek-flash']}),completeModel:async()=>reply({revision,assistant:{kind:'practice',plan:{version:1,title:'View only',actions:[{kind:'ui',action:'click',target:'view:fit'}]}}})},
+  openChild:()=>({onPracticeActivity:cb=>{activity=cb;return ()=>{activity=null;};},call:async(method)=>{if(method==='setup')return {scene:{revision,objects:[],selectionTargets:[]},context:{},validationContext:(await import('../src/cad-ai-context.js')).cadAIContext(),project:{nodes}};if(method==='practice'){activity?.({phase:'spawned',elapsedMs:0});activity?.({phase:'paused',reason:'focus-lost',elapsedMs:10});return new Promise(()=>{});}if(method==='snapshot')return {scene:{revision,objects:[],selectionTargets:[]},project:{nodes}};if(method==='providerScene')return {revision,objects:[],selectionTargets:[]};if(method==='capture')return 'data:image/png;base64,AAAA';return {};},cancel(){cancelled++;},async close(){return {code:0,signal:null};}})});
+ const started=Date.now();await runner.start({...spec,stage:'full',workflow:'practice'});
+ const r=runner.read(runner.state().records[0].id);
+ assert.equal(r.status,'interrupted');assert.equal(r.error.code,'PRACTICE_FOCUS_LOST');assert.ok(cancelled>=1,'practice playback is cancelled');
+ assert.ok(r.events.some(e=>e.type==='notice'&&/Fokus/.test(e.text)));assert.ok(Date.now()-started<20000,'does not wait for the trial budget');
+ // failureClass needs a modeler request event, which only the real provider layer emits; covered in ai-lab-completion-fixes.
+});

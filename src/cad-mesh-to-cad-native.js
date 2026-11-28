@@ -1,13 +1,19 @@
-import { meshCadSource, meshCadFrame } from './cad-mesh-to-cad-data.js';
+import { meshCadSource, meshCadFrame, confirmedLocalRepair } from './cad-mesh-to-cad-data.js';
 import { projectObjectGeometryDigest } from './project-objects.js';
+import { validateMeshRepairFassung } from './mesh-repair-fassung.js';
 
-export function meshToCadNative(service, project, { target, sourceDigest, bytes, id, notes }) {
+export function meshToCadNative(service, project, { target, sourceDigest, bytes, id, notes, repair }) {
   const source = meshCadSource(project, target);
   if (sourceDigest !== projectObjectGeometryDigest(source))
     throw Error('Das Quellnetz wurde geändert. Neu an den Konverter übergeben.');
   if (typeof id !== 'string' || !id.trim() || id.length > 200 || project.nodes.some((n) => n.id === id))
     throw Error('Die CAD-Kopie benötigt eine neue eindeutige Kennung.');
   if (typeof notes !== 'string' || notes.length > 4000) throw Error('Ungültiger Konverterbericht.');
+  const fassung = repair === undefined || repair === null ? null : validateMeshRepairFassung(repair, 'repair');
+  if (fassung && confirmedLocalRepair(source))
+    throw Error(
+      'Dieses Netz ist bereits lokal repariert (ebene Naht). Der Konverter darf es nicht erneut reparieren; ohne Reparatur konvertieren.',
+    );
   return service.stepNode(bytes, {
     id,
     name: source.name.slice(0, 186) + ' · CAD-Kopie',
@@ -21,6 +27,7 @@ export function meshToCadNative(service, project, { target, sourceDigest, bytes,
     metadata: {
       sourceReference: { objectId: source.id, geometryDigest: sourceDigest, operation: 'mesh-to-cad' },
       notes,
+      ...(fassung ? { meshRepair: fassung } : {}),
     },
   });
 }

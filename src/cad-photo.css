@@ -33,6 +33,10 @@
 #photo-assistant button:disabled{opacity:.5;cursor:default}
 #photo-project-dialog{width:min(820px,94vw);max-height:90vh;overflow:auto;border:1px solid #7890a5;border-radius:10px;padding:18px;background:var(--panel,#fff);color:var(--text,#172435)}
 #photo-project-dialog::backdrop{background:#10182799}
+#photo-profile-dialog{width:min(560px,94vw);max-height:90vh;overflow:auto;padding:18px;border:1px solid #7890a5;border-radius:10px;background:var(--panel,#fff);color:var(--text,#172435)}
+#photo-profile-dialog::backdrop{background:#10182799}
+#photo-profile-image{display:block;width:100%;max-height:42vh;object-fit:contain;margin:12px 0}
+#photo-profile-image[hidden]{display:none}
 .photo-project-row{display:flex;gap:12px;padding:12px 0;border-top:1px solid #7890a5;flex-wrap:wrap;align-items:center}
 .photo-project-row img{width:100px;height:76px;object-fit:contain;background:#d7dee7}
 .photo-project-row p{flex:1;min-width:150px;overflow-wrap:anywhere}

@@ -10,8 +10,12 @@ import {
 } from './cad-linked-contours-data.js';
 import { captureCadProjectParameterClipboard } from './cad-project-parameters-clipboard.js';
 import { copyCadProjectParameterReferences } from './cad-project-parameters-references.js';
-import { mergeCadProjectParameters, stampCadProjectParameters } from './cad-project-parameters-data.js';
-import { remapCadJoints, mergeCadJoints } from './cad-joints-data.js';
+import {
+  mergeCadProjectParameters,
+  refreshCadProjectParameterCorrespondence,
+  stampCadProjectParameters,
+} from './cad-project-parameters-data.js';
+import { remapCadJoints, validateCadJoints, mergeCadJoints } from './cad-joints-data.js';
 
 const within = (target, family) =>
   target.rootId === family.rootId &&
@@ -80,6 +84,7 @@ export function insertCadLinkedClipboard(draft, clipboard, { scope, offset = [10
   }
   const routes = source.targets.map((from, index) => ({ from, to: { rootId: copies[index].id, path: [] } }));
   let importParameters = !sameProject;
+  let parameterNames;
   if (sameProject && clipboard.sourceParameters) {
     const prior = draft.projectParameters;
     try {
@@ -97,7 +102,11 @@ export function insertCadLinkedClipboard(draft, clipboard, { scope, offset = [10
   }
   if (importParameters && source.parameterData) {
     const prior = draft.projectParameters,
-      merged = mergeCadProjectParameters(prior, source.parameterData, { nodeIds: mapping }).data;
+      { data: merged, mapping: parameterMapping } = mergeCadProjectParameters(prior, source.parameterData, {
+        nodeIds: mapping,
+      });
+    parameterNames = parameterMapping.names;
+    if (prior?.applied) merged.applied = structuredClone(prior.applied);
     draft.projectParameters = merged;
     try {
       draft.projectParameters = stampCadProjectParameters(draft, merged);
@@ -111,7 +120,9 @@ export function insertCadLinkedClipboard(draft, clipboard, { scope, offset = [10
         ].includes(error.code)
       )
         throw error;
-      if (prior?.applied) draft.projectParameters.applied = structuredClone(prior.applied);
+      draft.projectParameters = refreshCadProjectParameterCorrespondence(draft, merged, {
+        bindingIds: [...parameterMapping.bindingIds.values()],
+      });
     }
   }
   if (sameProject && clipboard.project.contourLinks) {
@@ -136,5 +147,5 @@ export function insertCadLinkedClipboard(draft, clipboard, { scope, offset = [10
     if (copied.joints.length) draft.joints = mergeCadJoints(draft.joints, copied);
   }
   const targets = clipboard.nodes.map((node) => ({ rootId: mapping.get(node.id), path: [] }));
-  return { targets, mapping, sameProject, addedSources: sameProject ? 0 : source.addedTargets.length };
+  return { targets, mapping, parameterNames, sameProject, addedSources: sameProject ? 0 : source.addedTargets.length };
 }

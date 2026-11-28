@@ -18,3 +18,17 @@ test('cancellation during a replacement wait prevents a later commit and removes
  await assert.rejects(writeAtomic(file,Buffer.from('never'),{platform:'win32',shouldCommit:()=>!canceled,rename:async()=>{attempts++;throw Object.assign(Error('busy'),{code:'EBUSY'});},wait:async()=>{canceled=true;}}),{code:'ABORTED'});assert.equal(attempts,1);assert.equal(await fs.readFile(file,'utf8'),'old');assert.deepEqual(await fs.readdir(dir),['old.ocad']);
 });
 test('Cancelled native dialog reports no save; IPC validates data and failed writes',async()=>{let handler;const win={webContents:{}},ipcMain={handle:(_n,h)=>handler=h},dialog={showSaveDialog:async()=>({canceled:true})};installFiles(win,{ipcMain,dialog});assert.deepEqual(await handler({sender:win.webContents},{filename:'ä.ocad',bytes:new Uint8Array([1])}),{ok:true,value:{saved:false}});assert.equal((await handler({sender:win.webContents},{filename:'../bad',bytes:new Uint8Array([1])})).ok,false);dialog.showSaveDialog=async()=>({filePath:path.join(os.tmpdir(),'formnaro-nonexistent-'+Date.now(),'a.ocad')});assert.equal((await handler({sender:win.webContents},{filename:'a.ocad',bytes:new Uint8Array([1])})).ok,false);});
+
+test('Native file save supplies English dialog text and error prefix when requested', async () => {
+ const handlers = {}, win = { webContents: {} };
+ const dialog = { showSaveDialog: async (_window, options) => {
+   assert.equal(options.title, 'Save file');
+   assert.equal(options.filters[0].name, 'Formnaro file');
+   throw Error('test failure');
+ } };
+ installFiles(win, { ipcMain: { handle: (name, handler) => { handlers[name] = handler; } }, dialog });
+ const save = handlers['cad-file:save'];
+ assert.deepEqual(await save({ sender: win.webContents }, {
+   filename: 'part.stl', bytes: new Uint8Array([1]), language: 'en',
+ }), { ok: false, error: 'File not saved: test failure' });
+});

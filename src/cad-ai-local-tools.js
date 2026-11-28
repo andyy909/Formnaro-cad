@@ -4,6 +4,7 @@ import { SKETCH_TEMPLATES, createSketchTemplate } from './sketch-templates.js';
 import { queryTechnicalMesh } from './mesh-technical-service.js';
 import { meshCadInput } from './cad-mesh-to-cad-data.js';
 import { createLocalStlAnalysis, createLocalStlConversion, conversionSummary } from './cad-stl-converter.js';
+import { repairFassungFromReport } from './mesh-repair-fassung.js';
 import { meshTextPaths, meshSvgPaths } from './mesh-contours.js';
 import { cadProjectRevision } from './cad-project.js';
 import {
@@ -52,6 +53,7 @@ export async function runModelConversion({
     if (action === 'analyze') return result;
     if (!(result?.bytes instanceof Uint8Array) || !result.report?.valid)
       throw Error('Der Konverter hat keinen geprüften CAD-Körper geliefert.');
+    const repair = repairFassungFromReport(result.report);
     return {
       operation: {
         kind: 'meshToCad',
@@ -60,6 +62,7 @@ export async function runModelConversion({
         id: crypto.randomUUID(),
         bytes: result.bytes,
         notes: conversionSummary(result.report).slice(0, 4000),
+        ...(repair ? { repair } : {}),
       },
       report: result.report,
     };

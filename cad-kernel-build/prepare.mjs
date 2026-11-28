@@ -24,9 +24,12 @@ for(const source of lock.sources){
   const bytes=fs.readFileSync(archive);if(createHash('sha256').update(bytes).digest('hex')!==source.sha256)throw Error(`Source archive checksum failed: ${source.name}`);
   const destination=path.join(build,'sources',source.directory);
   if(!fs.existsSync(destination)){
-    const listing=spawnSync('tar',['-tf',archive],{encoding:'utf8'});if(listing.status!==0)throw Error(listing.stderr);
+    // The pinned OCCT archive has a listing larger than spawnSync's default 1 MiB.
+    const listing=spawnSync('tar',['-tf',archive],{encoding:'utf8',maxBuffer:32*1024*1024});
+    if(listing.status!==0)throw Error(`Cannot list ${source.name} archive: ${listing.error?.message||listing.stderr||listing.status}`);
     if(listing.stdout.split(/\r?\n/).filter(Boolean).some(entry=>!entry.startsWith(source.directory+'/')||entry.split('/').includes('..')||entry.includes('\\')))throw Error('Unsafe archive paths.');
-    const extraction=spawnSync('tar',['-xf',archive,'-C',path.join(build,'sources')],{encoding:'utf8'});if(extraction.status!==0)throw Error(extraction.stderr);
+    const extraction=spawnSync('tar',['-xf',archive,'-C',path.join(build,'sources')],{encoding:'utf8'});
+    if(extraction.status!==0)throw Error(`Cannot unpack ${source.name} archive: ${extraction.error?.message||extraction.stderr||extraction.status}`);
   }
 }
 const replicad=path.join(build,'sources',lock.sources.find(source=>source.name==='replicad').directory,'packages','replicad-opencascadejs','build-config'),destination=path.join(build,'config');

@@ -5,6 +5,7 @@ import {meshTextPaths,meshSvgPaths} from './mesh-contours.js';
 import * as THREE from 'three';
 import {flags} from './organization.js';
 import {meshSourceTree,meshSourceAtPath} from './cad-mesh-source-tree.js';
+import {hasGeometryRefs} from './cad-geometry-ref.js';
 import {defaults,SCHEMAS} from './mesh-engine/parameters.js';
 import './cad-mesh-tools.css';
 import './cad-tools.css';
@@ -17,10 +18,10 @@ const names=Object.fromEntries(modes);
 
 /** Existing mesh engine tools use the same project transaction as CAD tools.
  * Display labels never serve as solid proof; each session queries the worker. */
-export function createCadMeshTools({controller,view,getSelection,select=()=>{},safe,toast=()=>{},prepare=()=>{},showPreview,clearPreview=()=>view.clearPreview(),applyProposal,onMore,onSketchSource,getFonts=()=>[],project=()=>controller.readSnapshot()}={}){
+export function createCadMeshTools({controller,view,getSelection,getScene=()=>null,select=()=>{},safe,toast=()=>{},prepare=()=>{},showPreview,clearPreview=()=>view.clearPreview(),applyProposal,onMore,onSketchSource,getFonts=()=>[],project=()=>controller.readSnapshot()}={}){
   if(!controller||!view||typeof getSelection!=='function')throw Error('Netz-Werkzeuge benötigen Projekt, Auswahl und gemeinsame Arbeitsfläche.');
   const panel=document.createElement('section');panel.id='cad-mesh-tools';panel.className='edge-tool-panel';panel.hidden=true;panel.setAttribute('aria-label','Netz-Werkzeuge');view.canvas.parentElement.append(panel);
-  let active=null,generation=0;
+  let active=null,opening=null,generation=0;
   const $=id=>panel.querySelector('#'+id),run=fn=>safe?safe(fn):Promise.resolve().then(fn).catch(error=>toast(error.message));
   const selectionKey=()=>JSON.stringify(getSelection());
   const partitionUI=createMeshPartitionUI({panel,controller,view,getSession:()=>active,getProject:project,onChanged:changed,onAvailability:availability,message});
@@ -28,7 +29,7 @@ export function createCadMeshTools({controller,view,getSelection,select=()=>{},s
   function valid(){const s=active;if(!s||s.revision!==controller.revision()||s.selection!==selectionKey())throw Error('Projekt oder Auswahl geändert. Netz-Werkzeug erneut öffnen.');return s;}
   function message(text,error=false){if(!$('mesh-message'))return;$('mesh-message').textContent=text;$('mesh-message').classList.toggle('mesh-warning',error);}
   function discard(){const s=active;if(!s)return;if(s.busy){controller.cancel();s.busy=false;}s.request++;if(s.preview)controller.discard(s.preview.previewId);s.preview=null;partitionUI.reset();connectorUI.reset();clearPreview();availability();}
-  function close(){const had=!!active;generation++;discard();partitionUI.close();connectorUI.close();active=null;panel.hidden=true;view.setInteraction(null);view.setEdges([]);return had;}
+  function close(){const had=!!active;generation++;opening?.cancellation.abort();opening=null;discard();partitionUI.close();connectorUI.close();active=null;panel.hidden=true;view.setInteraction(null);view.setEdges([]);return had;}
   function bounds(node){const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity],p=new THREE.Vector3(),matrix=new THREE.Matrix4().fromArray(node.transform);for(let i=0;i<node.mesh.verts.length;i+=3){p.fromArray(node.mesh.verts,i).applyMatrix4(matrix);for(let k=0;k<3;k++){min[k]=Math.min(min[k],p.getComponent(k));max[k]=Math.max(max[k],p.getComponent(k));}}return {min,max,center:min.map((v,k)=>(v+max[k])/2)};}
   function roots(){const p=project(),targets=getSelection(),nodes=targets.map(target=>target.path.length?null:p.nodes.find(n=>n.id===target.rootId));if(!targets.length)return {nodes:[],reason:'Ein Netzteil in der Arbeitsfläche auswählen.'};if(nodes.some(n=>!n||n.kind!=='mesh'))return {nodes:[],reason:'Für Netz-Werkzeuge fertige Netzteile auswählen. CAD-Körper und Ansichtsvorlagen verwenden ihre eigenen Werkzeuge.'};return {nodes};}
   function locked(node){return flags(node,project()).locked;}
@@ -38,6 +39,7 @@ export function createCadMeshTools({controller,view,getSelection,select=()=>{},s
   const vector=(prefix,label,values)=>`<div class="small-note">${label}</div><div class="mesh-vector">${['x','y','z'].map((axis,k)=>input(prefix+'-'+axis,axis.toUpperCase(),String(values[k]))).join('')}</div>`;
   function sourceItems(){return meshSourceTree(active.nodes[0]);}
   function sourceEntry(path){const item=sourceItems().find(value=>JSON.stringify(value.path)===JSON.stringify(path));if(!item)throw Error('Gespeicherte Netzquelle ist nicht mehr vorhanden.');return item;}
+  function sourceAt(path){return sourceEntry(path).node;}
   function parameterFields(node,attribute){const schema=SCHEMAS[node.type]??[],values={...defaults(node.type),...node.params};return schema.map(field=>`<label>${esc(field.label)}${field.unit?' ('+esc(field.unit)+')':''}${field.options?`<select ${attribute}="${esc(field.key)}">${field.options.map(([value,label])=>`<option value="${esc(value)}" ${values[field.key]===value?'selected':''}>${esc(label)}</option>`).join('')}</select>`:`<input ${attribute}="${esc(field.key)}" inputmode="decimal" value="${esc(String(values[field.key]))}">`}</label>`).join('');}
   function sourceControls(){const s=active,path=JSON.parse($('mesh-source-path').value),entry=sourceEntry(path),node=entry.node;s.sourcePath=path;s.sourceNode=node;s.sourceLocked=entry.locked;$('mesh-source-fields').innerHTML=`<label>Name<input id="mesh-source-name" maxlength="200" value="${esc(node.name)}"></label><label>Rolle<select id="mesh-source-solid"><option value="true">Körper</option><option value="false">Lochform</option></select></label><label class="mesh-check" ${entry.suppressible?'':'hidden'}><input id="mesh-source-suppressed" type="checkbox" ${entry.suppressed?'checked':''}>Quelle unterdrücken</label><div id="mesh-source-pose" ${entry.poseEditable?'':'hidden'}>${vector('mesh-source-pos','Position in der gespeicherten Quellgruppe (mm)',node.pos)}${vector('mesh-source-rot','Drehung der Quelle (°)',node.rot)}${vector('mesh-source-size','Lokale Maße der Quelle (mm)',node.size)}</div>${entry.poseEditable?'':'<p class="small-note">Diese Quelle ist eine erhaltene Netzgruppe. Maße und Lage des ganzen Teils über die gemeinsamen Eigenschaften ändern; einzelne Quellen hier im Baum auswählen.</p>'}<div id="mesh-source-params">${parameterFields(node,'data-mesh-param')}</div>`;const extras=document.createElement('div');extras.innerHTML=`<label>Farbe<input id="mesh-source-color" type="color" value="${esc(node.color??'#77a8b5')}"></label><label>Deckkraft (%)<input id="mesh-source-opacity" value="${esc((node.opacity??1)*100)}" inputmode="decimal"></label><label>Notiz<input id="mesh-source-notes" maxlength="4000" value="${esc(node.notes??'')}"></label>`;
     if(node.type==='text'){const fonts=getFonts(),choices=fonts.some(f=>f.id===node.font)?fonts:[...fonts,{id:node.font??'regular',name:'Gespeicherte Schrift'}];extras.innerHTML+=`<label>Text<input id="mesh-source-text" maxlength="200" value="${esc(node.text??'TEXT')}"></label><label>Schrift<select id="mesh-source-font">${choices.map(f=>`<option value="${esc(f.id)}" ${(node.font??'regular')===f.id?'selected':''}>${esc(f.name)}</option>`).join('')}</select></label>`;}
@@ -67,7 +69,52 @@ export function createCadMeshTools({controller,view,getSelection,select=()=>{},s
   function drawEdges(){const s=active;if(!s||s.kind!=='finish')return;view.setEdges(s.edges.map(edge=>({...edge,edgeToken:edge.id,points:edge.points?[...edge.points,...(edge.closed?[edge.points[0]]:[])]:[edge.start,edge.end],selected:s.selectedEdges.has(edge.id)})));$('mesh-edge-list').replaceChildren();s.edges.forEach((edge,index)=>{const label=document.createElement('label');label.className='mesh-check';const box=document.createElement('input');box.type='checkbox';box.dataset.meshEdge=edge.id;box.checked=s.selectedEdges.has(edge.id);box.onchange=()=>run(()=>toggleEdge(edge.id));label.append(box,document.createTextNode((edge.kind==='rim'?'Randkontur ':'Kante ')+(index+1)+' · '+fmt(edge.length)+' mm'));$('mesh-edge-list').append(label);});if(!s.edges.length)$('mesh-edge-list').textContent='Keine unterstützte Kante gefunden.';availability();}
   function toggleEdge(id){const s=valid();if(s.kind!=='finish'||!s.edges.some(edge=>edge.id===id))throw Error('Kantenwahl ist nicht mehr gültig.');if(s.selectedEdges.has(id))s.selectedEdges.delete(id);else{if(s.selectedEdges.size>=16){message('Höchstens 16 Kanten je Bearbeitung wählen.',true);drawEdges();return false;}s.selectedEdges.add(id);}discard();drawEdges();message(s.selectedEdges.size+' Kanten gewählt. Vorschau berechnen.');}
   async function check(s,token){if(s.problem)return;if(s.kind==='create'){s.ready=true;availability();message('Grundform einstellen und Vorschau berechnen.');return;}const request=s.request;s.checking=true;s.busy=true;availability();try{const proofs=[];for(const node of s.nodes){const proof=controller.meshQuery?await controller.meshQuery('inspectSolid',{id:node.id}):await controller.inspectMeshSolid(node);if(active!==s||token!==generation||request!==s.request)return;proofs.push(proof);}s.proofs=proofs;s.ready=proofs.every(proof=>proof.ok);if(s.kind==='finish'&&s.ready){const analysis=await controller.meshQuery('analyzeEdges',{id:s.nodes[0].id});if(active!==s||token!==generation||request!==s.request)return;s.edges=analysis.edges??[];drawEdges();}if(s.kind==='inspect'){$('mesh-inspection').replaceChildren();proofs.forEach((proof,k)=>{const p=document.createElement('p');p.textContent=s.nodes[k].name+': '+(proof.ok?'gültiger Materialkörper · '+fmt(proof.volume)+' mm³ · '+(proof.triangles??s.nodes[k].mesh.triangles.length/3)+' Dreiecke':proof.reason??proof.error??'kein gültiger geschlossener Materialkörper');$('mesh-inspection').append(p);});}s.checking=false;message(reason()||(s.kind==='inspect'?'Prüfung abgeschlossen. Das Projekt wurde nicht verändert.':'Körperprüfung erfolgreich. Werkzeug einstellen und Vorschau berechnen.'),!!reason());}catch(error){if(active===s&&token===generation&&request===s.request){s.ready=false;message(error.message,true);}}finally{if(active===s&&token===generation&&request===s.request){s.checking=false;s.busy=false;availability();}}}
-  async function open(kind='inspect'){kind=({group:'union',intersect:'intersection',ungroup:'dissolve',extract:'bodies',round:'finish',chamfer:'finish'})[kind]??kind;if(!names[kind])throw Error('Unbekanntes Netz-Werkzeug.');prepare();close();const choice=kind==='create'?{nodes:[]}:roots(),s=active={kind,nodes:choice.nodes,problem:choice.reason,selection:selectionKey(),revision:controller.revision(),checking:false,busy:false,ready:false,request:0,preview:null,edges:[],selectedEdges:new Set(),sourcePath:[]};panel.innerHTML='<div class="mesh-heading"><strong>Netz-Werkzeuge</strong><button id="mesh-close" aria-label="Netz-Werkzeuge schließen">×</button></div><label>Werkzeug<select id="mesh-tool-kind">'+modes.map(([value,label])=>`<option value="${value}">${label}</option>`).join('')+'</select></label><div id="mesh-fields"></div><p id="mesh-message" role="status"></p><p id="mesh-report" class="small-note"></p><div class="edge-actions"><button id="mesh-preview">Vorschau berechnen</button><button id="mesh-apply" class="primary" disabled>Übernehmen</button><button id="mesh-cancel">Abbrechen</button></div>';panel.hidden=false;$('mesh-tool-kind').value=kind;$('mesh-tool-kind').onchange=()=>run(()=>open($('mesh-tool-kind').value));$('mesh-close').onclick=$('mesh-cancel').onclick=close;if(onMore){const more=document.createElement('button');more.id='mesh-more-tools';more.textContent='Weitere Netz-Werkzeuge …';more.onclick=()=>run(onMore);$('mesh-fields').before(more);}$('mesh-preview').onclick=()=>run(preview);$('mesh-apply').onclick=()=>run(apply);fields();message(choice.reason??'Netzkörper werden geprüft …',!!choice.reason);await check(s,++generation);return state();}
+  async function open(kind='inspect',initialize) {
+    kind=({group:'union',intersect:'intersection',ungroup:'dissolve',extract:'bodies',round:'finish',chamfer:'finish'})[kind]??kind;
+    if(!names[kind])throw Error('Unbekanntes Netz-Werkzeug.');
+    prepare();
+    close();
+    const token=++generation, selection=selectionKey(), revision=controller.revision();
+    const choice=kind==='create'?{nodes:[]}:roots();
+    let nodes=choice.nodes;
+    if(nodes.some(node=>hasGeometryRefs(node))){
+      const isCurrent=()=>token===generation&&selection===selectionKey()&&revision===controller.revision();
+      const cancellation=new AbortController();
+      opening={selection,revision,cancellation};
+      let materialized;
+      try{
+        materialized=await controller.materialize(nodes.map(node=>node.id),{signal:cancellation.signal});
+      }catch(error){
+        if(!isCurrent())return;
+        throw error;
+      }finally{
+        if(opening?.cancellation===cancellation)opening=null;
+      }
+      if(!isCurrent())return;
+      const byId=new Map(materialized.nodes.map(node=>[node.id,node]));
+      nodes=nodes.map(node=>byId.get(node.id));
+    }
+    const s=active={kind,nodes,problem:choice.reason,selection,revision,checking:false,busy:false,ready:false,request:0,preview:null,edges:[],selectedEdges:new Set(),sourcePath:[]};
+    panel.innerHTML='<div class="mesh-heading"><strong>Netz-Werkzeuge</strong><button id="mesh-close" aria-label="Netz-Werkzeuge schließen">×</button></div><label>Werkzeug<select id="mesh-tool-kind">'+modes.map(([value,label])=>`<option value="${value}">${label}</option>`).join('')+'</select></label><div id="mesh-fields"></div><p id="mesh-message" role="status"></p><p id="mesh-report" class="small-note"></p><div class="edge-actions"><button id="mesh-preview">Vorschau berechnen</button><button id="mesh-apply" class="primary" disabled>Übernehmen</button><button id="mesh-cancel">Abbrechen</button></div>';
+    panel.hidden=false;
+    $('mesh-tool-kind').value=kind;
+    $('mesh-tool-kind').onchange=()=>run(()=>open($('mesh-tool-kind').value));
+    $('mesh-close').onclick=$('mesh-cancel').onclick=close;
+    if(onMore){
+      const more=document.createElement('button');
+      more.id='mesh-more-tools';
+      more.textContent='Weitere Netz-Werkzeuge …';
+      more.onclick=()=>run(onMore);
+      $('mesh-fields').before(more);
+    }
+    $('mesh-preview').onclick=()=>run(preview);
+    $('mesh-apply').onclick=()=>run(apply);
+    fields();
+    message(choice.reason??'Netzkörper werden geprüft …',!!choice.reason);
+    await check(s,token);
+    if(active!==s)return;
+    return initialize?initialize(s):state();
+  }
   const numeric=id=>{const text=$(id)?.value?.trim()??'',value=text?Number(text.replace(',','.')):NaN;if(!Number.isFinite(value))throw Error('Bitte gültige endliche Zahlen eingeben.');return value;};
   const readVector=prefix=>['x','y','z'].map(axis=>numeric(prefix+'-'+axis));
   function readParameters(attribute,node){const params={...defaults(node.type),...node.params};for(const control of panel.querySelectorAll('['+attribute+']')){const key=control.getAttribute(attribute),text=control.value.trim(),value=control.tagName==='SELECT'?text:text?Number(text.replace(',','.')):NaN;if(typeof value==='number'&&!Number.isFinite(value))throw Error('Quellparameter müssen endliche Zahlen sein.');params[key]=value;}return params;}
@@ -101,7 +148,19 @@ export function createCadMeshTools({controller,view,getSelection,select=()=>{},s
   async function apply(){const s=valid();if(!s.preview||s.busy)throw Error('Zuerst eine gültige Netzvorschau berechnen.');const proposal=s.preview,before=new Set(project().nodes.map(n=>n.id)),ids=proposal.selectedIds??proposal.meshSelectedIds??proposal.project.nodes.filter(n=>!before.has(n.id)).map(n=>n.id);if(applyProposal)await applyProposal(proposal);else controller.apply({previewId:proposal.previewId,revision:s.revision});if(active===s)close();if(ids.length)select(ids.map(rootId=>({rootId,path:[]})));toast('Netzbearbeitung übernommen. Rückgängig stellt den vorherigen Projektstand wieder her.'+(proposal.warnings?.length?' '+proposal.warnings.join(' '):''));return proposal;}
   function setOptions(values){for(const [key,value]of Object.entries(values)){const id=({mode:'finish-mode',diameter:'diameter',depth:'depth',style:'drill-style',termination:'drill-termination',sourcePath:'source-path',role:'role'})[key]??key,el=$('mesh-'+id);if(!el)throw Error('Unbekanntes Netzwerkzeug-Feld: '+key);if(el.type==='checkbox')el.checked=!!value;else el.value=typeof value==='object'?JSON.stringify(value):String(value);el.dispatchEvent(new Event(el.tagName==='SELECT'?'change':'input',{bubbles:true}));}availability();}
   function state(){const s=active;return s?{kind:s.kind,revision:s.revision,ids:s.nodes.map(n=>n.id),checking:s.checking,ready:s.ready,busy:s.busy,problem:reason(),hasPreview:!!s.preview,previewId:s.preview?.previewId,edges:structuredClone(s.edges),selectedEdges:[...s.selectedEdges],sourcePath:[...s.sourcePath]}:null;}
-  async function openSource(rootId,path){const node=project().nodes.find(n=>n.id===rootId);meshSourceAtPath(node,path);await open('sources');const s=active;if(!s||s.kind!=='sources'||s.nodes.length!==1||s.nodes[0].id!==rootId||s.revision!==controller.revision())return false;const value=JSON.stringify(path);if(![...$('mesh-source-path').options].some(option=>option.value===value)){message('Die gespeicherte Netzquelle wurde inzwischen verändert.',true);return false;}$('mesh-source-path').value=value;sourceControls();message(reason()||'Gespeicherte Netzquelle ausgewählt. Änderungen als gemeinsame Vorschau prüfen.',!!reason());return state();}
-  const actions={'mesh-tools':()=>open(),'mesh-create':()=>open('create'),'mesh-group':()=>open('union'),'mesh-intersect':()=>open('intersection'),'mesh-ungroup':()=>open('dissolve'),'mesh-round':async()=>{await open('finish');setOptions({mode:'fillet'});},'mesh-chamfer':async()=>{await open('finish');setOptions({mode:'chamfer'});}, 'mesh-union':()=>open('union'),'mesh-subtract':()=>open('difference'),'mesh-intersection':()=>open('intersection'),'mesh-role':()=>open('role'),'mesh-drill':()=>open('drill'),'mesh-split':()=>open('split'),'mesh-extract':()=>open('bodies'),'mesh-connectors':()=>open('connectors'),'mesh-finish':()=>open('finish'),'mesh-sources':()=>open('sources'),'mesh-dissolve':()=>open('dissolve')};
-  return {open,openSource,actions,state,preview,apply,close,escape:close,setOptions,toggleEdge,revisionChanged:()=>{if(active&&active.revision!==controller.revision())close();},selectionChanged:()=>{if(active&&active.selection!==selectionKey())close();},refresh:availability};
+  async function openSource(rootId,path){
+    const node=project().nodes.find(n=>n.id===rootId);
+    meshSourceAtPath(node,path,{geometry:false});
+    return (await open('sources',s=>{
+      if(s.nodes.length!==1||s.nodes[0].id!==rootId)return false;
+      const value=JSON.stringify(path), field=$('mesh-source-path');
+      if(![...field.options].some(option=>option.value===value)){message('Die gespeicherte Netzquelle wurde inzwischen verändert.',true);return false;}
+      field.value=value;
+      sourceControls();
+      message(reason()||'Gespeicherte Netzquelle ausgewählt. Änderungen als gemeinsame Vorschau prüfen.',!!reason());
+      return state();
+    }))??false;
+  }
+  const actions={'mesh-tools':()=>open(),'mesh-create':()=>open('create'),'mesh-group':()=>open('union'),'mesh-intersect':()=>open('intersection'),'mesh-ungroup':()=>open('dissolve'),'mesh-round':()=>open('finish',()=>setOptions({mode:'fillet'})),'mesh-chamfer':()=>open('finish',()=>setOptions({mode:'chamfer'})), 'mesh-union':()=>open('union'),'mesh-subtract':()=>open('difference'),'mesh-intersection':()=>open('intersection'),'mesh-role':()=>open('role'),'mesh-drill':()=>open('drill'),'mesh-split':()=>open('split'),'mesh-extract':()=>open('bodies'),'mesh-connectors':()=>open('connectors'),'mesh-finish':()=>open('finish'),'mesh-sources':()=>open('sources'),'mesh-dissolve':()=>open('dissolve')};
+  return {open,openSource,actions,state,preview,apply,close,escape:close,setOptions,toggleEdge,revisionChanged:()=>{const s=active??opening;if(s&&s.revision!==controller.revision())close();},selectionChanged:()=>{const s=active??opening;if(s&&s.selection!==selectionKey())close();},refresh:availability};
 }

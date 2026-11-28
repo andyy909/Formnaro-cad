@@ -62,3 +62,172 @@ test('close retries a changed revision and saves confirmed OCAD data while the c
     ['{"revision":2}', 17],
   ]);
 });
+
+test('blocked package autosave closes only after current model and workspace were saved to the active file', async () => {
+  let revision = 4,
+    workspace = { tree: [] },
+    blocked = false;
+  const savedWorkspace = JSON.stringify(workspace);
+  const toasts = [];
+  const recovery = createRecoveryActions({
+    window: { __cadReady: true },
+    controller: {
+      projectScope: () => 'package',
+      revision: () => revision,
+      state: () => ({ busy: false }),
+      serialize: () => 'current model',
+    },
+    project: () => ({ version: 17 }),
+    workspace: () => workspace,
+    workspaceSignature: (state = workspace) => JSON.stringify(state),
+    serializeWorkspace: (state) => JSON.stringify(state),
+    recovery: {
+      packageMode: () => true,
+      blocked: () => blocked,
+      write: async () => {
+        blocked = true;
+        throw Error('Paket-Autosicherung wurde inzwischen geändert.');
+      },
+    },
+    updateSaveState: () => {},
+    toast: (message) => toasts.push(message),
+    errorReporter: { report: (error) => assert.fail(error.message) },
+    runtime: {
+      autosave: true,
+      startupEmptyRevision: 0,
+      activeProjectFile: { id: 'active-package', projectVersion: 17 },
+      savedRevision: 4,
+      cleanRevision: 4,
+      savedWorkspaceSignature: savedWorkspace,
+      cleanWorkspaceSignature: savedWorkspace,
+    },
+  });
+
+  assert.equal(await recovery.flushOnClose(), true);
+  revision = 5;
+  assert.equal(await recovery.flushOnClose(), false);
+  assert.match(toasts.at(-1), /vor dem Schließen manuell speichern/);
+  revision = 4;
+  workspace = { tree: ['expanded'] };
+  assert.equal(await recovery.flushOnClose(), false);
+  assert.match(toasts.at(-1), /vor dem Schließen manuell speichern/);
+});
+
+function harness({ startRevision, initialRevision, protectedFile }) {
+  let revision = initialRevision;
+  const writes = [];
+  let intervalFn;
+  const realSetInterval = globalThis.setInterval;
+  const actions = {
+    window: { __cadReady: true },
+    controller: {
+      projectScope: () => 'project',
+      revision: () => revision,
+      state: () => ({ busy: false }),
+      serialize: () => 'confirmed model',
+    },
+    project: () => ({ version: 17 }),
+    workspace: () => ({ revision }),
+    workspaceSignature: (state = { revision }) => JSON.stringify(state),
+    serializeWorkspace: (state) => JSON.stringify(state),
+    recovery: {
+      packageMode: () => false,
+      blocked: () => false,
+      async write(data) {
+        writes.push(JSON.parse(data).revision);
+        return true;
+      },
+    },
+    updateSaveState: () => {},
+    isBusy: () => false,
+    hasActiveTool: () => false,
+    isMeshSelectionChecking: () => false,
+    toast: (message) => assert.fail(message),
+    safe: (fn) => fn(),
+    errorReporter: { report: (error) => assert.fail(error.message) },
+    runtime: { autosave: true, startupEmptyRevision: startRevision },
+  };
+  return {
+    writes,
+    setRevision: (value) => (revision = value),
+    create() {
+      const recovery = createRecoveryActions(actions);
+      return {
+        ...recovery,
+        startAutosave() {
+          globalThis.setInterval = (fn) => ((intervalFn = fn), 0);
+          try {
+            recovery.startAutosave();
+          } finally {
+            globalThis.setInterval = realSetInterval;
+          }
+        },
+      };
+    },
+    tick: async () => {
+      intervalFn();
+      await new Promise((resolve) => setImmediate(resolve));
+    },
+  };
+}
+
+test('AS-3 A: an untouched empty startup window never overwrites an older recovery file', async () => {
+  const h = harness({ startRevision: 'empty', initialRevision: 'empty' });
+  const recovery = h.create();
+  recovery.startAutosave();
+  const realNow = Date.now;
+  let now = 1_000_000;
+  Date.now = () => now;
+  try {
+    for (let i = 0; i < 5; i++) {
+      await h.tick();
+      now += 1500;
+    }
+  } finally {
+    Date.now = realNow;
+  }
+  assert.equal(await recovery.flushOnClose(), true);
+  recovery.saveOnUnload();
+  assert.deepEqual(h.writes, []);
+});
+
+test('AS-3 B: undo back to the startup revision after a written autosave is persisted on close', async () => {
+  const h = harness({ startRevision: 'empty', initialRevision: 'empty' });
+  const recovery = h.create();
+  h.setRevision('one body');
+  await recovery.writeConfirmedRecovery({ revision: 'one body' });
+  h.setRevision('empty');
+  assert.equal(await recovery.flushOnClose(), true);
+  assert.deepEqual(h.writes, ['one body', 'empty']);
+});
+
+test('AS-3 B2: the autosave timer also persists the undone startup state', async () => {
+  const h = harness({ startRevision: 'empty', initialRevision: 'empty' });
+  const recovery = h.create();
+  recovery.startAutosave();
+  h.setRevision('one body');
+  await recovery.writeConfirmedRecovery({ revision: 'one body' });
+  h.setRevision('empty');
+  const realNow = Date.now;
+  let now = 2_000_000;
+  Date.now = () => now;
+  try {
+    for (let i = 0; i < 4; i++) {
+      await h.tick();
+      now += 1500;
+    }
+  } finally {
+    Date.now = realNow;
+  }
+  assert.deepEqual(h.writes, ['one body', 'empty']);
+});
+
+test('AS-3 C: undo to the opened project state after a written autosave is persisted on close', async () => {
+  const h = harness({ startRevision: 'empty', initialRevision: 'opened' });
+  const recovery = h.create();
+  h.setRevision('two bodies');
+  await recovery.writeConfirmedRecovery({ revision: 'two bodies' });
+  h.setRevision('opened');
+  assert.equal(await recovery.flushOnClose(), true);
+  assert.deepEqual(h.writes, ['two bodies', 'opened']);
+});

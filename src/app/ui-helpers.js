@@ -80,6 +80,7 @@ export function createUiHelpers({
       try {
         return await window.offlinecadDesktop.saveFile({
           filename: safeName,
+          language: document.documentElement?.lang,
           ...(numbered ? { numbered: true } : {}),
           ...(operationId ? { operationId } : {}),
           bytes,

@@ -42,29 +42,108 @@ app.whenReady().then(async()=>{
    if(cancel==='escape')await win.webContents.debugger.sendCommand('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});else await run(`window.__cadTest.view.canvas.dispatchEvent(new PointerEvent('pointercancel',{pointerId:1}))`);
    await mouse('mouseReleased',p);await run(`(async()=>{const a=window.__cadTest,b=window.scaleBefore;await a.settled();if(a.serialize()!==b.model||a.undoDepth()!==b.undo||document.querySelector('.cad-scale-dimensions').checkVisibility())throw Error('Cancel changed original or kept overlay');})()`);
   }
-  const {p,sizes}=await setup('box');
-  const open=async()=>{await mouse('mouseMoved',p);await mouse('mousePressed',p);await mouse('mouseReleased',p);};
-  await open();
+  const selectAxis = '.cad-scale-dimensions input[data-axis="0"]';
+  async function click(p) {
+   await mouse('mouseMoved',p);
+   await mouse('mousePressed',p);
+   await mouse('mouseReleased',p);
+  }
+  async function key(key,code,windowsVirtualKeyCode) {
+   for(const type of ['keyDown','keyUp'])
+    await win.webContents.debugger.sendCommand('Input.dispatchKeyEvent',{type,key,code,windowsVirtualKeyCode});
+  }
+  async function startInline({p}) {
+   await click(p);
+   const label=await run(`(()=>{
+    const overlay=document.querySelector('.cad-scale-dimensions'),modal=document.getElementById('modal');
+    const labels=[...overlay.querySelectorAll('button.cad-scale-dimension[data-axis]')];
+    if(modal.open||document.getElementById('corner-size-0'))throw Error('A grip click opened the old dimension dialog');
+    if(!overlay.checkVisibility()||labels.length!==3||labels.some(item=>item.disabled||!item.checkVisibility()))
+     throw Error('A grip click did not leave three clickable model dimensions');
+    const label=labels.find(item=>item.dataset.axis==='0');
+    const rect=label.getBoundingClientRect();
+    const point={x:Math.round(rect.x+rect.width/2),y:Math.round(rect.y+rect.height/2)};
+    if(!label.contains(document.elementFromPoint(point.x,point.y)))throw Error('Model dimension is covered');
+    return point;
+   })()`);
+   await click(label);
+   if(!await run(`document.activeElement.matches(${JSON.stringify(selectAxis)})`))
+    throw Error('The clicked model dimension did not focus its own inline input');
+  }
+  async function typeInline(value) {
+   await run(`(()=>{
+    const input=document.querySelector(${JSON.stringify(selectAxis)});
+    if(input!==document.activeElement)throw Error('Inline input lost focus before typing');
+    input.select();
+   })()`);
+   await win.webContents.debugger.sendCommand('Input.insertText',{text:String(value)});
+  }
+  async function freeCanvasPoint() {
+   return run(`(()=>{
+    const view=window.__cadTest.view,canvas=view.canvas,r=canvas.getBoundingClientRect();
+    for(const y of [.22,.38,.64,.79])for(const x of [.12,.24,.71,.86]){
+     const point={x:Math.round(r.left+r.width*x),y:Math.round(r.top+r.height*y)};
+     if(document.elementFromPoint(point.x,point.y)===canvas&&!view.visualHit({clientX:point.x,clientY:point.y}))
+      return point;
+    }
+    throw Error('No blank model viewport point outside the input and the body');
+   })()`);
+  }
+  async function unchanged() {
+   return run(`(()=>{
+    const a=window.__cadTest,b=window.scaleBefore;
+    return a.serialize()===b.model&&a.undoDepth()===b.undo;
+   })()`);
+  }
+  async function waitForCommit(sizes,expected,expectedPreviews=null) {
+   return run(`(async()=>{
+    const a=window.__cadTest,b=window.scaleBefore,start=performance.now();
+    while(a.controller.revision()===b.revision){
+     if(performance.now()-start>15000)throw Error('Inline dimension did not commit');
+     await new Promise(resolve=>setTimeout(resolve,10));
+    }
+    await a.settled();
+    const item=a.getScene().objects.find(o=>o.id===b.target.rootId);
+    const dimensions=item.localBounds.size.map((v,k)=>v*Math.hypot(...item.transform.slice(k*4,k*4+3)));
+    if(dimensions.some((v,k)=>Math.abs(v-${JSON.stringify([expected,...sizes.slice(1)])}[k])>1e-7)
+       ||a.undoDepth()!==b.undo+1)throw Error('Inline dimension changed the wrong axis or Undo depth');
+    if(document.querySelector('.cad-scale-dimensions').checkVisibility()
+       ||!document.querySelector('.cad-scale-preview-status').hidden)throw Error('Inline editor or preview remained after applying');
+    if(${expectedPreviews}!==null&&window.scalePreviewProbe.calls.length!==${expectedPreviews})
+     throw Error('Apply rebuilt the already prepared native preview');
+    await a.actions.undo();
+    if(a.serialize()!==b.model||a.undoDepth()!==b.undo)throw Error('Inline dimension Undo differs');
+   })()`);
+  }
+  const direct=await setup('box',0,1);
+  await startInline(direct);
+  await typeInline('-1');
+  await key('Enter','Enter',13);
+  if(!await run(`document.querySelector(${JSON.stringify(selectAxis)})?.matches('[aria-invalid="true"]')`)||!await unchanged())
+   throw Error('Enter accepted an invalid inline dimension');
+  await click(await freeCanvasPoint());
+  if(!await run(`document.querySelector(${JSON.stringify(selectAxis)})?.checkVisibility()`)||!await unchanged())
+   throw Error('A blank canvas click accepted an invalid value or closed its input');
+  await key('Escape','Escape',27);
+  if(await run("document.querySelector('.cad-scale-dimensions').checkVisibility()")||!await unchanged())
+   throw Error('Escape did not close the inline session without committing');
+  await startInline(direct);
+  const enterValue=direct.sizes[0]+7.25;
+  await typeInline(String(enterValue).replace('.',','));
+  await key('Enter','Enter',13);
+  await waitForCommit(direct.sizes,enterValue);
+
+  const editable=await setup('box');
+  await startInline(editable);
   await run(`(async()=>{
-   const a=window.__cadTest,b=window.scaleBefore,dialog=document.getElementById('modal'),input=document.getElementById('corner-size-0'),notice=document.querySelector('.cad-scale-preview-status');
-   if(!dialog.open||!input)throw Error('Corner click no longer opens dimension input');
-   const matrix=()=>JSON.stringify(a.view.groups.bodies.children.map(mesh=>mesh.matrix.toArray())),before=matrix();
-   input.value=String(${sizes[0]+7});input.dispatchEvent(new Event('input',{bubbles:true}));
-   await a.view.renderReady();
-   if(notice.hidden||matrix()===before||a.serialize()!==b.model||a.undoDepth()!==b.undo)throw Error('Numeric preview did not stay visual and provisional');
-   const closed=new Promise(resolve=>dialog.addEventListener('close',resolve,{once:true}));
-   dialog.close();
-   await Promise.race([closed,new Promise((_resolve,reject)=>setTimeout(()=>reject(Error('Numeric dialog did not dispatch close')),2000))]);
-   await a.view.renderReady();
-   if(!notice.hidden||matrix()!==before||a.serialize()!==b.model||a.undoDepth()!==b.undo)throw Error('Closing numeric preview did not restore its original display '+JSON.stringify({hidden:notice.hidden,viewRestored:matrix()===before,modelRestored:a.serialize()===b.model,undo:a.undoDepth()}));
-  })()`);
-  await open();
-  await run(`(async()=>{
-   const a=window.__cadTest,b=window.scaleBefore,input=document.getElementById('corner-size-0'),notice=document.querySelector('.cad-scale-preview-status');
-   const original=a.controller.preview,calls=[];
+   const a=window.__cadTest,b=window.scaleBefore,input=document.querySelector(${JSON.stringify(selectAxis)}),
+      notice=document.querySelector('.cad-scale-preview-status'),original=a.controller.preview;
+   const calls=[],matrix=()=>JSON.stringify(a.view.groups.bodies.children.map(mesh=>mesh.matrix.toArray())),before=matrix();
    let release;
+   const restore=()=>{release?.();a.controller.preview=original;delete window.scalePreviewProbe;};
+   window.scalePreviewProbe={calls,restore};
    a.controller.preview=async(...args)=>{
-    calls.push(args[1].project.nodes[0].transform[0]);
+    calls.push(args);
     const result=await original(...args);
     if(calls.length===1)await new Promise(resolve=>release=resolve);
     return result;
@@ -72,56 +151,74 @@ app.whenReady().then(async()=>{
    const set=value=>{input.value=String(value);input.dispatchEvent(new Event('input',{bubbles:true}));};
    const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
    try{
-    for(let i=1;i<=5;i++)set(${sizes[0]}+i);
+    for(let i=1;i<=5;i++)set(${editable.sizes[0]}+i);
+    if(calls.length)throw Error('Typing started native preview before debounce');
     await a.view.renderReady();
-    if(calls.length||notice.hidden||a.serialize()!==b.model)throw Error('Early preview mutated model or started native work before debounce');
+    if(notice.hidden||matrix()===before||a.serialize()!==b.model||a.undoDepth()!==b.undo)
+     throw Error('Typing did not produce a visual and provisional scale preview');
     for(let i=0;i<150&&!release;i++)await wait(20);
-    if(calls.length!==1||!release)throw Error('Settled input did not start one native preview');
+    if(calls.length!==1||!release)throw Error('Settled inline input did not start one native preview');
     const camera=a.view.viewState().position;
     document.querySelector('[data-view="front"]').click();
-    if(a.view.viewState().position.every((value,k)=>value===camera[k]))throw Error('Camera action was blocked by numeric preview');
+    if(a.view.viewState().position.every((value,k)=>value===camera[k]))throw Error('Camera action was blocked by inline preview');
     document.querySelector('[data-action="sketch-on-part"]').click();
     if(a.sketchUI.state())throw Error('Surface action used the provisional display');
-    for(let i=6;i<=9;i++)set(${sizes[0]}+i);
+    for(let i=6;i<=9;i++)set(${editable.sizes[0]}+i);
     await wait(220);
     if(calls.length!==1)throw Error('Queued inputs started parallel native previews');
     release();
     for(let i=0;i<150&&(calls.length<2||notice.textContent!=='Vorschau bereit');i++)await wait(20);
-    if(calls.length!==2||notice.textContent!=='Vorschau bereit'||a.serialize()!==b.model||a.undoDepth()!==b.undo)throw Error('Latest native preview was not ready without commit');
-    document.getElementById('corner-apply').click();
-    for(let i=0;i<150&&a.controller.revision()===b.revision;i++)await wait(20);
-    await a.settled();await wait(80);
-    const actual=a.getScene().objects.find(item=>item.id===b.target.rootId),width=actual.localBounds.size[0]*Math.hypot(...actual.transform.slice(0,3));
-    if(!notice.hidden||a.undoDepth()!==b.undo+1||Math.abs(width-(${sizes[0]}+9))>1e-7||calls.length!==2)throw Error('Numeric Apply did not reuse the latest prepared candidate');
-    await a.actions.undo();
-    if(a.serialize()!==b.model)throw Error('Numeric Apply Undo changed the original');
-   }finally{release?.();a.controller.preview=original;}
+    if(calls.length!==2||notice.textContent!=='Vorschau bereit'||a.serialize()!==b.model||a.undoDepth()!==b.undo)
+     throw Error('Latest native preview was not ready without committing');
+   }catch(error){restore();throw error;}
   })()`);
-  for(const interrupt of ['undo','project','close']){
-   const {p,sizes}=await setup('box');
-   await mouse('mouseMoved',p);await mouse('mousePressed',p);await mouse('mouseReleased',p);
-   await run(`(async()=>{
-    const a=window.__cadTest,original=a.controller.preview,paint=a.view.setPreview;
-    let release,published=0;
-    a.controller.preview=async(...args)=>{const proposal=await original(...args);await new Promise(resolve=>release=resolve);return proposal;};
-    a.view.setPreview=(...args)=>{published++;return paint(...args);};
-    const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-    try{
-     const input=document.getElementById('corner-size-0');
-     input.value=String(${sizes[0]+5});input.dispatchEvent(new Event('input',{bubbles:true}));
-     for(let i=0;i<150&&!release;i++)await wait(20);
-     if(!release)throw Error('No delayed candidate');
-     const action=${JSON.stringify(interrupt)};
-     if(action==='undo')await a.actions.undo();
-     else if(action==='project')await a.resetProject();
-     else document.getElementById('modal-close').click();
-     for(let i=0;i<100&&document.querySelector('.cad-corner-dialog[open]');i++)await wait(20);
-     const revision=a.controller.revision(),model=a.serialize(),depth=a.undoDepth();
-     release();await wait(180);await a.settled();await a.view.renderReady();
-     if(published||!document.querySelector('.cad-scale-preview-status').hidden||a.controller.revision()!==revision||a.serialize()!==model||a.undoDepth()!==depth)throw Error('Stale scale result after '+action+' '+JSON.stringify({published,hidden:document.querySelector('.cad-scale-preview-status').hidden,revision:a.controller.revision(),expected:revision,modelMatches:a.serialize()===model,depth:a.undoDepth(),expectedDepth:depth}));
-    }finally{release?.();a.controller.preview=original;a.view.setPreview=paint;}
-   })()`);
+  try {
+   await click(await freeCanvasPoint());
+   await waitForCommit(editable.sizes,editable.sizes[0]+9,2);
+  } finally {
+   await run('window.scalePreviewProbe?.restore()');
   }
-  if(errors.length||external.length)throw Error(JSON.stringify({errors,external}));const result={ok:true,cases,escape:true,pointercancel:true,clickDimensions:true,errors,external};fs.writeFileSync(path.join(output,'result.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));app.exit(0);
+  for(const interrupt of ['undo','project','escape']){
+   const next=await setup('box');
+   await startInline(next);
+   try {
+    await run(`(async()=>{
+     const a=window.__cadTest,original=a.controller.preview,paint=a.view.setPreview;
+     const state={published:0,restore(){state.release?.();a.controller.preview=original;a.view.setPreview=paint;delete window.inlineStaleProbe;}};
+     window.inlineStaleProbe=state;
+     a.controller.preview=async(...args)=>{
+      const proposal=await original(...args);
+      await new Promise(resolve=>state.release=resolve);
+      return proposal;
+     };
+     a.view.setPreview=(...args)=>{state.published++;return paint(...args);};
+     const input=document.querySelector(${JSON.stringify(selectAxis)});
+     input.value=String(${next.sizes[0]+5});
+     input.dispatchEvent(new Event('input',{bubbles:true}));
+     for(let i=0;i<150&&!state.release;i++)await new Promise(resolve=>setTimeout(resolve,20));
+     if(!state.release)throw Error('No delayed native inline preview');
+    })()`);
+    if(interrupt==='escape')await key('Escape','Escape',27);
+    else if(interrupt==='undo')await run('window.__cadTest.actions.undo()');
+    else await run('window.__cadTest.resetProject()');
+    await run(`(async()=>{
+     const a=window.__cadTest,state=window.inlineStaleProbe;
+     const visible=()=>document.querySelector('.cad-scale-dimensions').checkVisibility();
+     for(let i=0;i<100&&visible();i++)await new Promise(resolve=>setTimeout(resolve,20));
+     if(visible())throw Error('Inline controls survived '+${JSON.stringify(interrupt)});
+     const revision=a.controller.revision(),model=a.serialize(),depth=a.undoDepth();
+     state.release();
+     await new Promise(resolve=>setTimeout(resolve,180));
+     await a.settled();
+     await a.view.renderReady();
+     if(state.published||!document.querySelector('.cad-scale-preview-status').hidden
+        ||a.controller.revision()!==revision||a.serialize()!==model||a.undoDepth()!==depth)
+      throw Error('Stale inline preview survived '+${JSON.stringify(interrupt)});
+    })()`);
+   } finally {
+    await run('window.inlineStaleProbe?.restore()');
+   }
+  }
+  if(errors.length||external.length)throw Error(JSON.stringify({errors,external}));const result={ok:true,cases,escape:true,pointercancel:true,clickDimensions:true,directModelDimension:true,inlineCanvasApply:true,inlineEnterApply:true,inlineInvalidRetained:true,inlineEscape:true,inlineStale:true,errors,external};fs.writeFileSync(path.join(output,'result.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));app.exit(0);
  }catch(error){fs.writeFileSync(path.join(output,'result.json'),JSON.stringify({ok:false,error:error.message,errors,external},null,2));console.error(error.stack);app.exit(1);}
 });

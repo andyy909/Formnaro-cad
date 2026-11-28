@@ -15,7 +15,7 @@ function createOnlineSpeech({directory,safeStorage,fetcher=(...args)=>globalThis
   let key;try{key=safeStorage.decryptString(Buffer.from(encrypted,'base64'));}catch{throw Error('Der gespeicherte Deepgram-Schlüssel kann nicht entschlüsselt werden.');}
   if(!key)throw Error('Der gespeicherte Deepgram-Schlüssel ist leer.');
   const params=new URLSearchParams({model:'nova-3',smart_format:'true',...(language==='auto'?{detect_language:'true'}:{language})});
-  let response;try{response=await fetcher('https://api.deepgram.com/v1/listen?'+params,{method:'POST',headers:{Authorization:'Token '+key,'Content-Type':'audio/wav'},body:bytes,signal,redirect:'error'});}catch{if(signal?.aborted)throw Error('Spracherkennung abgebrochen.');throw Error('Deepgram ist nicht erreichbar. Internetverbindung prüfen.');}finally{key='';}
+  let response;try{response=await fetcher('https://api.deepgram.com/v1/listen?'+params,{method:'POST',headers:{Authorization:'Token '+key,'Content-Type':'audio/wav'},body:bytes,signal,redirect:'error'});}catch(e){if(signal?.aborted)throw Error('Spracherkennung abgebrochen.');throw Error('Deepgram ist nicht erreichbar. Internetverbindung prüfen.');}finally{key='';}
   if(!response.ok)throw Error('Deepgram-Spracherkennung fehlgeschlagen (HTTP '+response.status+'). Schlüssel und Guthaben prüfen.');
   if(Number(response.headers.get('content-length'))>1000000)throw Error('Deepgram-Antwort ist zu groß.');
   let data;try{const raw=await response.text();if(raw.length>1000000)throw Error();data=JSON.parse(raw);}catch{throw Error('Deepgram lieferte keine lesbare Sprachantwort.');}

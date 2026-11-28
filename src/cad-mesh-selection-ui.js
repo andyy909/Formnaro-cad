@@ -1,4 +1,5 @@
 import { meshProtectionRegions, validateMeshProtection } from './mesh-protection.js';
+import { isGeometryRef } from './cad-geometry-ref.js';
 import { flags } from './organization.js';
 import {
   createMeshSelectionService,
@@ -24,6 +25,7 @@ const clone = (value) => (value == null ? null : structuredClone(value));
  * changed protection metadata is committed as one confirmed model operation. */
 export function createCadMeshSelectionUI({
   getProject,
+  materialize,
   getSelection,
   view,
   prepare = () => {},
@@ -52,9 +54,30 @@ export function createCadMeshSelectionUI({
     stroke = null,
     strokeOverlay = null;
   const protectionDigests = new WeakMap();
+  const loadedMeshes = new Map();
   const $ = (id) => panel.querySelector('#mesh-selection-' + id);
   const selectionKey = () => JSON.stringify(getSelection());
-  const nodeFor = (id) => getProject().nodes.find((node) => node.id === id);
+  const withLoadedMesh = (node) => {
+    const mesh = isGeometryRef(node?.mesh) && loadedMeshes.get(node.mesh);
+    return mesh ? { ...node, mesh } : node;
+  };
+  const nodeFor = (id) => withLoadedMesh(getProject().nodes.find((node) => node.id === id));
+  async function loadNode(node, signal) {
+    if (!isGeometryRef(node?.mesh)) return node;
+    if (!materialize) throw Error('Netzgeometrie konnte nicht aus dem Projektpaket geladen werden.');
+    const project = await materialize([node.id], { signal: signal?.signal });
+    signal?.signal.throwIfAborted();
+    const loaded = project.nodes.find((candidate) => candidate.id === node.id);
+    if (!loaded?.mesh || isGeometryRef(loaded.mesh))
+      throw Error('Netzgeometrie konnte nicht aus dem Projektpaket geladen werden.');
+    const mesh = loadedMeshes.get(node.mesh) ?? loaded.mesh;
+    loadedMeshes.set(node.mesh, mesh);
+    return { ...node, mesh };
+  }
+  const matchesRegion = (region, digest, node) => {
+    const count = isGeometryRef(node?.mesh) ? node.mesh.triangles : (node?.mesh?.triangles?.length ?? 0) / 3;
+    return region.geometryDigest === digest && region.triangleIds.every((id) => id < count);
+  };
   const message = (text, warning = false) => {
     if ($('message')) {
       $('message').textContent = text;
@@ -89,9 +112,11 @@ export function createCadMeshSelectionUI({
     if (pending === signal) pending = null;
   }
   const geometryDigest = (node, signal) =>
-    service.geometryDigest
-      ? service.geometryDigest(node, { signal: signal?.signal })
-      : meshSelectionGeometryDigest(node, { signal: signal?.signal });
+    isGeometryRef(node.mesh)
+      ? node.mesh.sha256
+      : service.geometryDigest
+        ? service.geometryDigest(node, { signal: signal?.signal })
+        : meshSelectionGeometryDigest(node, { signal: signal?.signal });
   function abort() {
     endStroke();
     for (const signal of tasks) signal.abort();
@@ -105,20 +130,19 @@ export function createCadMeshSelectionUI({
   function protectionDraft() {
     return session && model.state() ? model.state().protections : meshProtectionRegions(nodeFor(session?.objectId));
   }
+  const hasVisibleGeometry = (id) => view.meshInspectionAvailable?.(id);
   function drawProtections() {
     const values = [];
-    for (const node of getProject().nodes) {
-      if (node.kind !== 'mesh' || eligibility(node)) continue;
+    for (const source of getProject().nodes) {
+      const node = withLoadedMesh(source);
+      if (node.kind !== 'mesh' || isGeometryRef(node.mesh) || eligibility(node)) continue;
+      if (isGeometryRef(source.mesh) && hasVisibleGeometry(node.id) === false) continue;
       const regions =
           session?.objectId === node.id && model.state() ? model.state().protections : meshProtectionRegions(node),
         digest = protectionDigests.get(node.mesh);
       const ids = [
         ...new Set(
-          regions
-            .filter(
-              (r) => r.geometryDigest === digest && r.triangleIds.every((id) => id < node.mesh.triangles.length / 3),
-            )
-            .flatMap((r) => r.triangleIds),
+          regions.filter((r) => matchesRegion(r, digest, node)).flatMap((r) => r.triangleIds),
         ),
       ].sort((a, b) => a - b);
       if (ids.length)
@@ -146,7 +170,8 @@ export function createCadMeshSelectionUI({
     const s = model.state(),
       value = session ? s?.draft : model.snapshot(),
       node = value ? nodeFor(value.objectId) : null;
-    view.setMeshSelection?.(value && !eligibility(node) ? value : null);
+    const displaySelection = value && !eligibility(node) && !isGeometryRef(node.mesh);
+    view.setMeshSelection?.(displaySelection ? value : null, displaySelection ? node : undefined);
     if (!session) return;
     const triangles = s?.draft?.triangleIds.length ?? 0,
       edges = s?.draft?.boundaryEdges.length ?? 0;
@@ -160,21 +185,18 @@ export function createCadMeshSelectionUI({
     $('radius-field').hidden = session.mode !== 'brush';
     const regions = s?.protections ?? [],
       selected = $('regions').value,
-      digest = model.state()?.geometryDigest;
+      digest = s?.geometryDigest,
+      sourceNode = nodeFor(session.objectId);
     $('regions').innerHTML = regions
       .map(
         (r) =>
-          `<option value="${escaped(r.id)}">${escaped(r.name)} · ${number(r.triangleIds.length)} Dreiecke${r.geometryDigest !== digest || r.triangleIds.some((id) => id >= nodeFor(session.objectId).mesh.triangles.length / 3) ? ' · UNGÜLTIG – neu auswählen' : ''}</option>`,
+          `<option value="${escaped(r.id)}">${escaped(r.name)} · ${number(r.triangleIds.length)} Dreiecke${!matchesRegion(r, digest, sourceNode) ? ' · UNGÜLTIG – neu auswählen' : ''}</option>`,
       )
       .join('');
     if (regions.some((r) => r.id === selected)) $('regions').value = selected;
     $('protect').disabled = session.busy || !s?.draft?.triangleIds.length || regions.length >= 32;
     $('unprotect').disabled = $('unprotect-all').disabled = $('recall').disabled = session.busy || !regions.length;
-    $('protection-status').textContent = regions.some(
-      (r) =>
-        r.geometryDigest !== digest ||
-        r.triangleIds.some((id) => id >= nodeFor(session.objectId).mesh.triangles.length / 3),
-    )
+    $('protection-status').textContent = regions.some((r) => !matchesRegion(r, digest, sourceNode))
       ? 'Ungültige Schutzbereiche: Netzgeometrie geändert. Sie werden nicht als geschützte Flächen angezeigt. Entfernen und neu auswählen.'
       : regions.length
         ? 'Türkis: Schutzvorschau. Übernehmen speichert Schutzbereiche mit Modell-Rückgängig.'
@@ -211,19 +233,17 @@ export function createCadMeshSelectionUI({
     if (disposed) return false;
     const ticket = ++checkTicket,
       active = session;
-    const committed = model.snapshot(),
-      draft = model.state(),
-      ids = [
-        ...new Set(
-          [
-            committed?.objectId,
-            draft?.objectId,
-            ...getProject()
-              .nodes.filter((n) => meshProtectionRegions(n).length)
-              .map((n) => n.id),
-          ].filter(Boolean),
-        ),
-      ];
+    const projectNodes = getProject().nodes;
+    const bindings = new Set([model.snapshot()?.objectId, active?.objectId].filter(Boolean));
+    const protectedNodes = projectNodes.filter((node) => meshProtectionRegions(node).length);
+    const visibleProtected = new Set(
+      protectedNodes.filter((node) => hasVisibleGeometry(node.id) && !eligibility(node)).map((node) => node.id),
+    );
+    const retained = new Set(
+      projectNodes.filter((node) => bindings.has(node.id) || visibleProtected.has(node.id)).map((node) => node.mesh),
+    );
+    for (const mesh of loadedMeshes.keys()) if (!retained.has(mesh)) loadedMeshes.delete(mesh);
+    const ids = [...new Set([...bindings, ...protectedNodes.map((node) => node.id)])];
     if (!ids.length) {
       draw();
       return true;
@@ -232,10 +252,12 @@ export function createCadMeshSelectionUI({
     const signal = task();
     try {
       for (const id of ids) {
-        const node = nodeFor(id);
+        let node = nodeFor(id);
         let digest = null;
         try {
           if (node?.kind === 'mesh' && node.mesh) {
+            if (isGeometryRef(node.mesh) && (bindings.has(id) || visibleProtected.has(id)))
+              node = await loadNode(node, signal);
             digest = await geometryDigest(node, signal);
             protectionDigests.set(node.mesh, digest);
           }
@@ -287,7 +309,8 @@ export function createCadMeshSelectionUI({
     }
     const signal = (pending = task());
     try {
-      const node = nodeFor(clean.objectId);
+      const sourceNode = nodeFor(clean.objectId);
+      const node = isGeometryRef(sourceNode?.mesh) ? await loadNode(sourceNode, signal) : sourceNode;
       if (!node || node.kind !== 'mesh') throw Error('Die gespeicherte Netzquelle ist nicht mehr vorhanden.');
       const checked = service.validate
         ? await service.validate(clean, node, { signal: signal.signal })
@@ -647,10 +670,7 @@ export function createCadMeshSelectionUI({
     if (!session || session.busy) return;
     const region = protectionDraft().find((r) => r.id === $('regions').value);
     if (!region) return;
-    if (
-      region.geometryDigest !== model.state().geometryDigest ||
-      region.triangleIds.some((id) => id >= nodeFor(session.objectId).mesh.triangles.length / 3)
-    )
+    if (!matchesRegion(region, model.state().geometryDigest, nodeFor(session.objectId)))
       throw Error('Dieser Schutzbereich ist ungültig. Flächen neu auswählen.');
     model.update({
       format: 'FormnaroMeshSelection',
@@ -773,10 +793,12 @@ export function createCadMeshSelectionUI({
     message('Netzquelle wird geprüft …');
     const signal = task();
     try {
-      const digest = await geometryDigest(node, signal);
-      protectionDigests.set(node.mesh, digest);
+      const loaded = isGeometryRef(node.mesh) ? await loadNode(node, signal) : node;
+      const digest = await geometryDigest(loaded, signal);
+      protectionDigests.set(loaded.mesh, digest);
       if (disposed || !session || owner !== generation) return false;
-      const latest = source();
+      let latest = source();
+      if (latest.id === node.id && isGeometryRef(latest.mesh)) latest = await loadNode(latest, signal);
       if (latest.id !== node.id || (await geometryDigest(latest, signal)) !== digest) {
         cancel();
         return false;
@@ -791,7 +813,6 @@ export function createCadMeshSelectionUI({
         changed();
         toast('Vorherige Flächenauswahl verworfen: Die Netzgeometrie wurde geändert.');
       }
-      protectionDigests.set(node.mesh, digest);
       model.begin({ objectId: node.id, geometryDigest: digest, protections: meshProtectionRegions(node) });
       session.busy = false;
       draw();
@@ -855,6 +876,7 @@ export function createCadMeshSelectionUI({
       disposed = true;
       checkTicket++;
       service.dispose?.();
+      loadedMeshes.clear();
       strokeOverlay?.remove();
       panel.remove();
     },

@@ -1,4 +1,4 @@
-const fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),{spawn}=require('node:child_process');
+const fs=require('node:fs/promises'),sync=require('node:fs'),path=require('node:path'),os=require('node:os'),{spawn}=require('node:child_process');
 const {validatePlan}=require('./freecad-plan.cjs');
 const {validateScript,runPythonJob}=require('./freecad-python.cjs');
 const LIMIT=32*1024*1024;

@@ -1,5 +1,7 @@
 // Shared by the renderer and the native file bridge. Contains only UI data.
-export const LAYOUT_DEFAULTS={version:1,librarySide:'left',viewSide:'left',modePosition:'top',libraryCollapsed:false,inspectorCollapsed:false,libraryWidth:null,inspectorWidth:null,shapeLibraryHeight:null,chatHeight:null,hiddenTools:[],objectsFirst:false,workspaceFirst:false,zones:{
+export const LAYOUT_GRID_BLOCKS=['library','inspector','view','mode','shapes','objects','properties','workspace'];
+export const LAYOUT_GRID_LAST_CELL=255;
+export const LAYOUT_DEFAULTS={version:1,librarySide:'left',viewSide:'left',modePosition:'top',libraryCollapsed:false,inspectorCollapsed:false,libraryWidth:null,inspectorWidth:null,shapeLibraryHeight:null,chatHeight:null,hiddenTools:[],objectsFirst:false,workspaceFirst:false,grid:{},zones:{
   header:['new','open','save','projects','import','stl-to-step','export','ai','settings'],
   toolbar:['undo','redo','duplicate','copy','paste','delete','bundle','group','ungroup','align','mirror','edges','general-fit','center','drop','lay-on-face','reference-place','sketch','split','extract','drill','mesh-tools','mesh-select','mesh-inspector','mesh-repair','mesh-close-hole','mesh-connectors','mesh-reduce','mesh-remesh','mesh-smooth','mesh-sculpt','mesh-erase-fill','mesh-make-solid','mesh-hollow','mesh-more','cad-to-mesh','mesh-to-cad','marks','functions','help'],
   view:['view-iso','view-top','view-front','view-right','coordinates','measure','section','thickness','inspect','ruler','fit','projection','workplane-set','workplane-top','reset-plane'],
@@ -30,10 +32,17 @@ export function validateLayout(value){
   for(const key of ['objectsFirst','workspaceFirst']){if(value[key]!==undefined&&typeof value[key]!=='boolean')throw Error('Ungültige Bereichsreihenfolge.');value[key]??=false;}
   const all=Object.values(LAYOUT_DEFAULTS.zones).flat();value.hiddenTools??=[];
   if(!Array.isArray(value.hiddenTools)||new Set(value.hiddenTools).size!==value.hiddenTools.length||value.hiddenTools.some(key=>!all.includes(key)||key==='settings'))throw Error('Ungültige Werkzeugauswahl.');
+  const grid=value.grid??{};
+  const validGridNames=new Set([...all,...LAYOUT_GRID_BLOCKS]);
+  if(typeof grid!=='object'||Array.isArray(grid)||Object.entries(grid).some(([name,cell])=>!validGridNames.has(name)
+      ||!Array.isArray(cell)||cell.length!==2||cell.some(index=>!Number.isInteger(index)||index<0||index>LAYOUT_GRID_LAST_CELL)))
+    throw Error('Ungültige Rasterposition im Layout.');
+  // Canonical order keeps named layouts comparable even after re-saving.
+  value.grid=Object.fromEntries(Object.entries(grid).sort(([a],[b])=>a.localeCompare(b)));
   for(const [key,min,max]of [['libraryWidth',180,640],['inspectorWidth',240,640],['shapeLibraryHeight',100,1600],['chatHeight',240,1200]]){
     const size=value[key]??null;if(size!==null&&(!Number.isInteger(size)||size<min||size>max))throw Error('Ungültige Bereichsgröße.');value[key]=size;
   }
-  return {...structuredClone(value),libraryCollapsed:value.libraryCollapsed??false,inspectorCollapsed:value.inspectorCollapsed??false};
+  return {...LAYOUT_DEFAULTS,...value,libraryCollapsed:value.libraryCollapsed??false,inspectorCollapsed:value.inspectorCollapsed??false};
 }
 export function layoutName(value){
   if(typeof value!=='string')throw Error('Bitte einen Namen für das Layout eingeben.');

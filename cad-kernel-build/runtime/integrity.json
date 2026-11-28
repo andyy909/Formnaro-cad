@@ -17,24 +17,24 @@
       "sha256": "79431b159386e28ee8d3946d2f8a6f749740c8ae9fc2764acd9bab8c7f4f54f1"
     },
     "formnaro_cad.wasm": {
-      "bytes": 23393741,
-      "sha256": "9b9ae11e91f7c6ad7f3b124aa5b4e19a3e8b6631193ff431ba7c79bb98048537"
+      "bytes": 23396732,
+      "sha256": "105395ab74112ac18d4b8a7046de5f0205f3aedce7eb26ab8041a41e807bfd71"
     },
     "formnaro_cad.d.ts": {
       "bytes": 1628417,
       "sha256": "c9a46d2b2e6289a8cd8d5fa922961bc180e2e1977a45131b01bf02dbbb4fc896"
     },
     "formnaro_cad.provenance.json": {
-      "bytes": 7611,
-      "sha256": "57589ce4de18b6b10baa11b9666cdb7d5eb2bed4cf419cb7d3f4965d2cd26bec"
+      "bytes": 7612,
+      "sha256": "75d21e37f3c8d4fd6a39d59d13941d8ff059309b728f501d694a93375f975c7a"
     },
     "formnaro_cad.build-manifest.json": {
       "bytes": 483836,
-      "sha256": "caef31827b70060412315320bfb827ae7900de6473998115a0948d4b2ef656eb"
+      "sha256": "69a6218fd9c3e9d2d7daa04fc2f731fcfdfe3781d332fbe19e06e3811abada9c"
     },
     "build-inputs.json": {
       "bytes": 3575,
-      "sha256": "6a56268071a467d395839fe0f777e4e1cfbaac5e77ae641f25aabd8321e659d7"
+      "sha256": "b3e71434e009e35fd2e4b060354b692cb2ad8214e1ce152172cc49d85c392927"
     },
     "licenses/compiler-rt.txt": {
       "bytes": 16708,
@@ -93,16 +93,16 @@
       "sha256": "7a3c098c1cf5d8de05efa0b930e7c8398c221da2a59032b617057fb7f122cf70"
     },
     "upstream-lock.json": {
-      "bytes": 3379,
-      "sha256": "0087bde93eee91f93187fae285ee98099ba104529bbd9fa4c198d6b32cc8b4f4"
+      "bytes": 3306,
+      "sha256": "a1906d8aca9dae53b8c6397714341cad082ccb547643f23e5ab15d17b228c956"
     },
     "system-license-lock.json": {
       "bytes": 2482,
       "sha256": "f661b3054058bde03fb68b8521712cb804f09a409eb45f16579747e06b56699b"
     },
     "README.md": {
-      "bytes": 3437,
-      "sha256": "2eff31769a3d6afb7adad8da97bf590d610a06420e715bcbad97be4d5fc5354f"
+      "bytes": 3384,
+      "sha256": "2b72c36626f88f623cceafddd8e6109a8c343688d40186f9552973465b6125ca"
     },
     "package.json": {
       "bytes": 567,

@@ -4,12 +4,18 @@ import { benchmarkRunEntries, renderBenchmarkChart } from './cad-ai-model-benchm
 export function mountBenchmark({ host, api, status, refresh, getModeler, selectSupplemental }) {
   host.innerHTML = `<div class="lab-card"><h3>KI-Benchmark · feste Aufgaben</h3><p>Vormachen führt acht Stufen im Übungsfenster aus, je zweimal mit frischem Projekt. Die Stufen reichen vom Verschieben bis zur technischen Zeichnung mit Schnitt und Bezugsmaßen.</p><label class="lab-field">Aufgabenserie<select data-benchmark-suite><option value="formnaro-practice-advanced">Aufbau · schwierige Aufgaben · 2.0.0</option><option value="formnaro-practice-core">Grundlagen · bisherige Aufgaben · 1.0.4</option><option value="formnaro-practice-guided">Vormachen · steigende Anforderungen · 1.0.0</option></select></label><details><summary>Die acht Aufgaben dieser Serie</summary><ul data-benchmark-tasks></ul></details><p data-benchmark-model></p><div class="lab-controls"><label class="lab-field">Eine feste Denkstufe<select data-benchmark-effort><option value="high">high</option></select></label><label class="lab-field">Schrittüberwachung<select data-benchmark-monitor><option value="off">Aus · Vergleichslauf</option><option value="shadow">Beobachtend · separate Diagnose</option></select></label></div><p data-benchmark-conditions class="lab-subtle">Maximal 360 s je Versuch · 16.384 Ausgabetokens je Antwort · 20 Runden · höchstens zwei Formatkorrekturen.</p><button data-benchmark-start class="lab-primary">KI-Benchmark starten</button><p data-benchmark-status role="status">Bereit. Start erfolgt ausschließlich über den Knopf.</p></div><div class="lab-card" data-benchmark-supplemental><h3>Weitere Arbeitsweisen</h3><button type="button" data-benchmark-guidedladder>Leistungsgrenze · Vorführen</button> <button type="button" data-benchmark-photoladder>Leistungsgrenze · Fotos</button> <button type="button" data-benchmark-stlladder>Leistungsgrenze · STL zu CAD</button> <button type="button" data-benchmark-frontier>Leistungsgrenze · Platte ändern</button> <button type="button" data-benchmark-merge>Modellbau · Teilezahl steigern</button> <button type="button" data-benchmark-converter>STL-Konverter · Flächenkorrektur</button></div><div class="lab-card"><h3>Ein Benchmark-Lauf · 16 feste Versuche</h3><label class="lab-field">Einzelner Benchmark-Lauf<select data-benchmark-series><option value="">Noch kein Benchmark</option></select></label><p data-benchmark-score></p><div data-benchmark-chart class="lab-benchmark-chart"></div><div data-benchmark-results class="lab-table-wrap"></div><p data-benchmark-notes class="lab-subtle"></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button data-benchmark-resume>Nur ausstehende Versuche fortsetzen</button><button data-benchmark-json>Bericht JSON</button><button data-benchmark-md>Bericht Markdown</button><button data-benchmark-export>Datenpaket für externen Agenten</button></div></div>`;
   const el = (k) => host.querySelector('[data-benchmark-' + k + ']');
+  const availability = document.createElement('p');
+  availability.dataset.benchmarkAvailability = '';
+  availability.setAttribute('role', 'status');
+  availability.hidden = true;
+  el('start').before(availability);
   let state = null,
     busy = false,
     pending = false;
   function results() {
     const r = state?.lab?.benchmarks?.runs?.find((r) => r.id === el('series').value);
-    el('resume').disabled = busy || !r?.pending;
+    const currentSuite = state?.lab?.benchmarks?.suites?.find((s) => s.suiteId === r?.suite.suiteId);
+    el('resume').disabled = busy || !r?.pending || currentSuite?.available === false;
     for (const k of ['json', 'md', 'export']) el(k).disabled = busy || !r || !r.rawAttempts;
     el('score').textContent = r
       ? `${r.passed} / ${r.planned} vollständig bestätigt · ${r.finished} / ${r.planned} beendet · ${r.pending} ausstehend · Abschlussauswerter: ${r.reviewStatus}`
@@ -62,7 +68,9 @@ export function mountBenchmark({ host, api, status, refresh, getModeler, selectS
     for (const key of ['frontier', 'guidedladder', 'photoladder', 'stlladder']) el(key).disabled = busy;
     el('merge').disabled = busy;
     el('converter').disabled = busy;
-    el('start').disabled = busy || selected?.available === false;
+    el('start').disabled = busy || selected?.available !== true;
+    availability.hidden = selected?.available !== false;
+    availability.textContent = availability.hidden ? '' : selected.reason || 'Diese Aufgabenserie benötigt eine Prüferkalibrierung.';
     el('tasks').replaceChildren(
       ...(selected?.cases ?? []).map((c) => {
         const li = document.createElement('li');

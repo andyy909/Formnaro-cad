@@ -1,8 +1,9 @@
 import { photoPlane, projectPhotoPoint } from './cad-photo-perspective.js';
-import { validatePhotoReference, measurePhoto } from './cad-photo-data.js';
-import { loadPhotoImage, photoGrid, rectifiedPhotoImage, suggestPhotoImageContour } from './cad-photo-images.js';
+import { validatePhotoReference, measurePhoto, photoPolygon } from './cad-photo-data.js';
+import { loadPhotoImage, photoGrid, rectifiedPhotoImage, suggestPhotoAlphaContour, suggestPhotoImageContour } from './cad-photo-images.js';
 import './cad-photo.css';
 import { registerPhotoDetail, renderPhotoDetail } from './cad-photo-detail.js';
+import { createPhotoCutoutControl } from './cad-photo-cutout.js';
 export async function editPhotoReference(attachment, { explicitScale = false } = {}) {
   const image = await loadPhotoImage(attachment.dataUrl),
     gridImage = await loadPhotoImage(photoGrid(image).image.dataUrl),
@@ -44,6 +45,10 @@ export async function editPhotoReference(attachment, { explicitScale = false } =
     (attachment.photo.width !== image.naturalWidth || attachment.photo.height !== image.naturalHeight)
   )
     throw Error('Originalbild und gespeicherte Bildgröße widersprechen sich.');
+  if (!explicitScale) {
+    const cutout = createPhotoCutoutControl('photo-cutout');
+    if (cutout) dialog.querySelector('#photo-cancel').before(cutout);
+  }
   document.body.append(dialog);
   dialog.showModal();
   const el = (id) => dialog.querySelector('#' + id),
@@ -396,13 +401,19 @@ export async function editPhotoReference(attachment, { explicitScale = false } =
       ' mm → Originalpixel ' +
       p.map((n) => n.toFixed(1)).join(', ');
   };
+  function offerSuggestion(value) {
+    suggestion = value;
+    mode = 'edit';
+    update();
+    el('photo-edit-group').value = 'suggestion';
+    dialog.querySelectorAll('[data-mode]').forEach((button) =>
+      button.setAttribute('aria-pressed', String(button.dataset.mode === mode)),
+    );
+    status(suggestion.warnings.join(' '));
+  }
   el('photo-suggest').onclick = () => {
     try {
-      suggestion = suggestPhotoImageContour(image);
-      update();
-      el('photo-edit-group').value = 'suggestion';
-      mode = 'edit';
-      status(suggestion.warnings.join(' '));
+      offerSuggestion(suggestPhotoImageContour(image));
     } catch (e) {
       error(e);
     }
@@ -415,8 +426,12 @@ export async function editPhotoReference(attachment, { explicitScale = false } =
   el('photo-accept-suggestion').onclick = () => {
     try {
       sync();
-      const next = validatePhotoReference({ ...ref, outline: suggestion.points });
-      ref.outline = next.outline;
+      if (suggestion.kind === 'alpha') {
+        if (ref.outline.length) throw Error('Die Außenkontur ist bereits bestätigt. Den Transparenzvorschlag verwerfen.');
+        ref.outline = photoPolygon(suggestion.points, ref.width, ref.height);
+      } else {
+        ref.outline = validatePhotoReference({ ...ref, outline: suggestion.points }).outline;
+      }
       suggestion = null;
       update();
       status('Außenkontur ausdrücklich bestätigt; Öffnungen separat markieren.');
@@ -514,6 +529,14 @@ export async function editPhotoReference(attachment, { explicitScale = false } =
       ? 'Vier Rechteckecken und beide bekannten Maße prüfen.'
       : 'Zuerst zwei Referenzpunkte anklicken und die bekannte Länge angeben.',
   );
+  if (!explicitScale && !ref.outline.length && attachment.dataUrl.startsWith('data:image/png;base64,')) {
+    try {
+      const proposal = suggestPhotoAlphaContour(image);
+      if (proposal) offerSuggestion(proposal);
+    } catch {
+      // Leave manual measurement available if the image cannot be analysed.
+    }
+  }
   return new Promise((resolve) => {
     let result = null;
     el('photo-save').onclick = () => {

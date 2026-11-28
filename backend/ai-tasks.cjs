@@ -90,9 +90,9 @@ function createAITaskStore({directory,write=writeTaskAtomicSync,maxTasks=40,maxB
   request(args,provider){
    const connection=database();let started=false;
    try{connection.exec('BEGIN IMMEDIATE');started=true;const result=request(args,provider);connection.exec('COMMIT');return result;}
-   catch(e){if(started){try{connection.exec('ROLLBACK');}catch{ /* Report the transaction error even if rollback also fails. */ }}if(e.errcode===5||/database is locked/i.test(e.message))throw error('Ein anderer Prozess aktualisiert gerade die KI-Aufträge. Erneut versuchen.','BUSY');throw e;}
+   catch(e){if(started){try{connection.exec('ROLLBACK');}catch{}}if(e.errcode===5||/database is locked/i.test(e.message))throw error('Ein anderer Prozess aktualisiert gerade die KI-Aufträge. Erneut versuchen.','BUSY');throw e;}
   },
-  releaseOwned(){if(!db||!owned.size)return 0;let count=0;db.exec('BEGIN IMMEDIATE');try{for(const [id,token]of owned)count+=db.prepare('DELETE FROM leases WHERE id=? AND pid=? AND token=?').run(id,process.pid,token).changes;db.exec('COMMIT');owned.clear();return count;}catch(error){try{db.exec('ROLLBACK');}catch{ /* Report the lease release error even if rollback also fails. */ }throw error;}},
+  releaseOwned(){if(!db||!owned.size)return 0;let count=0;db.exec('BEGIN IMMEDIATE');try{for(const [id,token]of owned)count+=db.prepare('DELETE FROM leases WHERE id=? AND pid=? AND token=?').run(id,process.pid,token).changes;db.exec('COMMIT');owned.clear();return count;}catch(error){try{db.exec('ROLLBACK');}catch{}throw error;}},
   close(){if(db){need(owned.size===0,'Laufende Aufträge vor dem Schließen abschließen.','BUSY');db.close();db=null;}}
  };
 }

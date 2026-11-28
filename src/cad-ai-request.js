@@ -754,9 +754,7 @@ export async function runCadAIRequest({
                     },
                   );
                   imageStatus = 'attached';
-                } catch {
-                  /* Keep the image unavailable for the text fallback or the photo review check below. */
-                }
+                } catch {}
               }
               if (photoReview && (imageStatus !== 'attached' || !report.report.photoDetail))
                 throw Object.assign(

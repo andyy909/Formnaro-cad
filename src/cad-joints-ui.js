@@ -2,8 +2,9 @@ import './cad-joints.css';
 import { attachCadDriveUI } from './cad-drive-ui.js';
 import { compileCadJointMotion, cadJointProblems, createCadJoints } from './cad-joints-data.js';
 import { multiplyCadMatrices } from './cad-affine.js';
+import { cadMotionClipsPanel } from './cad-motion-clips-ui.js';
 
-export function createCadJointsUI({ controller, view, getSelection, modal, prepare, openReferenceRebind }) {
+export function createCadJointsUI({ controller, view, getSelection, modal, prepare, toast, openReferenceRebind }) {
   const $ = (id) => document.getElementById(id);
   let state = null;
   function close({ restore = true } = {}) {
@@ -12,6 +13,7 @@ export function createCadJointsUI({ controller, view, getSelection, modal, prepa
     state = null;
     s.disposed = true;
     s.inspectionMarks?.dispose();
+    s.importedMotion?.dispose();
     s.ticket++;
     s.playAbort?.abort();
     s.abort?.abort();
@@ -82,6 +84,16 @@ export function createCadJointsUI({ controller, view, getSelection, modal, prepa
     collisionGroup.before(collisionDetails);
     collisionDetails.append(collisionSummary, collisionGroup);
     if (project.joints?.joints.length) createDetails.before($('joint-motion').closest('fieldset'));
+    s.importedMotion = cadMotionClipsPanel({
+      project,
+      view,
+      beforePreview() {
+        if (s.moved || s.playing || s.applying || s.proposal)
+          throw Error('Die laufende Gelenkvorschau zuerst zurücksetzen oder übernehmen.');
+        cancelQuery();
+      },
+    });
+    if (s.importedMotion) $('joint-panel').firstElementChild.after(s.importedMotion.panel);
 
     s.closed = () => {
       if (state === s && !$('modal').open) close();
@@ -143,6 +155,7 @@ export function createCadJointsUI({ controller, view, getSelection, modal, prepa
     }
     function ready() {
       if (s.playing) throw Error('Wiedergabe zuerst stoppen.');
+      s.importedMotion?.reset();
       if (state !== s || controller.revision() !== s.revision) throw Error('Modell geändert. Gelenke erneut öffnen.');
       if (controller.state().busy) throw Error('Eine Modellbearbeitung läuft bereits.');
     }
@@ -394,6 +407,7 @@ export function createCadJointsUI({ controller, view, getSelection, modal, prepa
     });
     $('joint-reset').onclick = () => {
       cancelQuery();
+      s.importedMotion?.reset();
       s.motion?.reset();
       view.clearJointPreview();
       s.values = [];

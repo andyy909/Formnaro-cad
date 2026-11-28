@@ -2,6 +2,7 @@ import { Matrix4 } from 'three';
 import { cadPoint, inverseCadMatrix, multiplyCadMatrices } from './cad-affine.js';
 import { cadGeometryDigest } from './cad-geometry-digest.js';
 import {
+  cadBounds,
   cadBoolean,
   cadVolume,
   cadRayHits,

@@ -228,7 +228,7 @@ export function createAIAgentChat({
     return true;
   }
 
-  async function submit(prompt, id, clearInput) {
+  async function submit(prompt, id, clearInput, ensureTarget) {
     busy = true;
     onBusy(true);
     controls();
@@ -241,6 +241,7 @@ export function createAIAgentChat({
     try {
       settings = await desktop.getAISettings();
       if (disposed) return;
+      ensureTarget?.();
       switchHistory(settings.providerId);
       append('user', prompt);
       if (clearInput) el('ai-agent-prompt').value = '';
@@ -301,11 +302,15 @@ export function createAIAgentChat({
     };
   }
 
-  async function externalRequest(args) {
+  async function externalRequest(args, ensureTarget) {
     const invalid = () => agentError('AGENT_REQUEST_INVALID', 'Ungültiger lokaler Chat-Auftrag.');
     if (!args || typeof args !== 'object' || Array.isArray(args)) throw invalid();
     const keys = Object.keys(args);
-    if (args.action === 'state' && keys.length === 1) return snapshot();
+    if (args.action === 'state' && keys.length === 1) {
+      const state = await snapshot();
+      ensureTarget?.();
+      return state;
+    }
     const id = args.requestId;
     if (typeof id !== 'string' || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(id)) throw invalid();
     if (args.action === 'cancel' && keys.length === 2) {
@@ -327,7 +332,7 @@ export function createAIAgentChat({
     ensureIdle();
     accepted.set(id, prompt);
     if (accepted.size > 100) accepted.delete(accepted.keys().next().value);
-    void submit(prompt, id, false);
+    void submit(prompt, id, false, ensureTarget);
     return { accepted: true, requestId: id };
   }
 

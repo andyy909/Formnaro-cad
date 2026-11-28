@@ -22,7 +22,7 @@ Regler und Zahlenfelder bewegen ausschließlich die Anzeigematrizen der betroffe
 
 Der aufklappbare Bereich bietet Grenzen, „Bezug erneuern“ und „Verbindung lösen“. Jede ausdrücklich übernommene Definitionsänderung ist ein eigener Undo-Schritt. Neue Grenzen müssen den bestätigten Wert einschließen. Eine noch unbestätigte Bewegung zuerst übernehmen oder zurücksetzen.
 
-Freies Verschieben, Geometrieänderungen oder Gruppieren außerhalb des Gelenkbereichs können gespeicherte Bezüge veralten lassen. Fehlende Teile bleiben als beschädigte Bezüge gespeichert. Die Bewegung ist dann gesperrt, bis die betroffenen Bezüge ausdrücklich erneuert oder gelöst wurden. „Bezug erneuern“ verwendet den oben angegebenen Weltpunkt und die Achse und erhält den gesamten aktuellen Körper sowie den bestätigten Bewegungswert. Es erfolgt keine automatische Suche nach ähnlichen Flächen. Diese erste Stufe verlangt gültige Bezüge für den gesamten gespeicherten Gelenkbaum.
+Freies Verschieben und Geometrieänderungen können gespeicherte Bezüge veralten lassen. Beim Gruppieren oder Auflösen muss jedes vorhandene Gelenkende als Wurzelteil erhalten bleiben. Fehlende Teile bleiben als beschädigte Bezüge gespeichert. Die Bewegung ist dann gesperrt, bis die betroffenen Bezüge ausdrücklich erneuert oder gelöst wurden. „Bezug erneuern“ verwendet den oben angegebenen Weltpunkt und die Achse und erhält den gesamten aktuellen Körper sowie den bestätigten Bewegungswert. Es erfolgt keine automatische Suche nach ähnlichen Flächen. Diese erste Stufe verlangt gültige Bezüge für den gesamten gespeicherten Gelenkbaum.
 
 ## Kollision ausdrücklich prüfen
 

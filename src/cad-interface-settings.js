@@ -1,7 +1,7 @@
 import { MESH_DISPLAY_STYLES } from './mesh-display-style.js';
-import { DEFAULTS, validatePreferences } from './preferences.js';
+import { CORNER_HANDLE_SIZE_RANGE, DEFAULTS, validatePreferences } from './preferences.js';
 import { CAD_PLUGIN, parsePlugin, label } from './cad-plugin-manifest.js';
-import { CAD_QUALITY_DEFAULTS, validateCadQuality, cadDisplayPreset } from './cad-quality.js';
+import { CAD_QUALITY_DEFAULTS, validateCadQuality, cadDisplayPreset, isSimplifiedCadDisplay } from './cad-quality.js';
 import { FORMNARO_VERSION } from './version.js';
 import { parseFunctionPlugin } from './cad-function-plugins.js';
 import { createCadLegalUI } from './cad-legal-ui.js';
@@ -222,13 +222,15 @@ export function createCadInterfaceSettings({
     }
     const output = byId('settings-handle-output');
     if (output) output.value = values.handleSize + ' px';
+    const cornerOutput = byId('settings-corner-handle-output');
+    if (cornerOutput) cornerOutput.value = values.cornerHandleSize + ' px';
   }
   function fillQuality() {
     const values = quality();
     const detail = byId('settings-display-detail');
     if (detail) {
       detail.value =
-        values.display.deflection === 0.25 && values.display.angleDegrees === 20
+        isSimplifiedCadDisplay(values.display)
           ? 'simplified'
           : values.display.deflection === 0.02 && values.display.angleDegrees === 8
             ? 'full'
@@ -338,8 +340,8 @@ export function createCadInterfaceSettings({
         .join(
           '',
         )}</select></label><p class="small-note">Nur die Ansicht ändert sich. Gespeicherte Modellfarben und Export bleiben erhalten.</p><label class="check-line"><input id="settings-autosave" type="checkbox"> Automatisch lokal sichern</label><label class="dialog-label">Zoom-Geschwindigkeit<input id="settings-zoomSpeed" type="range" min="0.3" max="3" step="0.1"></label><p class="small-note" id="settings-storage-note">Einstellungen gelten für dieses Programm und bleiben nach einem Neustart erhalten.</p></section>
-      <section data-settings-page="modeling" hidden><label class="dialog-label">Rasterfang<select id="settings-snap"><option value="0">Aus</option><option value="0.1">0,1 mm</option><option value="0.25">0,25 mm</option><option value="0.5">0,5 mm</option><option value="1">1 mm</option><option value="2">2 mm</option><option value="5">5 mm</option></select></label><p class="small-note" id="settings-rotation-ring">Drehkreis: im Kreis 15°, außerhalb 1°. Umschalttaste: immer 15°.</p><label class="dialog-label">Griffgröße<input id="settings-handleSize" type="range" min="10" max="24" step="1"><output id="settings-handle-output"></output></label><label class="check-line"><input id="settings-gridVisible" type="checkbox"> Raster und Arbeitsebene anzeigen</label>
-      <h3>Anzeigequalität</h3><label class="dialog-label">Detaildarstellung<select id="settings-display-detail"><option value="custom">Eigene Anzeigequalität</option><option value="full">Vollständige Anzeige (Standard)</option><option value="simplified">Vereinfachte Anzeige</option></select></label><p class="small-note">Nur die Anzeige wird gröber. Gewindequellen und vollständige CAD-Exportgeometrie bleiben erhalten.</p><label class="dialog-label">Flächenabweichung (mm)<input id="settings-display-deflection" type="number" min="0.0000001" max="10" step="any"></label><label class="dialog-label">Winkel (Grad)<input id="settings-display-angleDegrees" type="number" min="0.000001" max="90" step="any"></label>
+      <section data-settings-page="modeling" hidden><label class="dialog-label">Rasterfang<select id="settings-snap"><option value="0">Aus</option><option value="0.1">0,1 mm</option><option value="0.25">0,25 mm</option><option value="0.5">0,5 mm</option><option value="1">1 mm</option><option value="2">2 mm</option><option value="5">5 mm</option></select></label><p class="small-note" id="settings-rotation-ring">Drehkreis: im Kreis 15°, außerhalb 1°. Umschalttaste: immer 15°.</p><label class="dialog-label">Seiten- und Höhengriffe<input id="settings-handleSize" type="range" min="10" max="24" step="1"><output id="settings-handle-output"></output></label><label class="check-line"><input id="settings-gridVisible" type="checkbox"> Raster und Arbeitsebene anzeigen</label>
+      <h3>Anzeigequalität</h3><label class="dialog-label">Detaildarstellung<select id="settings-display-detail"><option value="custom">Eigene Anzeigequalität</option><option value="full">Vollständige Anzeige (Standard)</option><option value="simplified">Vereinfachte Anzeige</option></select></label><p class="small-note">Die vereinfachte Vorschau zeigt jeden CAD-Körper in seiner Teilefarbe. Teilnamen, Gewinde und exakte CAD-Exportgeometrie bleiben erhalten.</p><label class="dialog-label">Flächenabweichung (mm)<input id="settings-display-deflection" type="number" min="0.0000001" max="10" step="any"></label><label class="dialog-label">Winkel (Grad)<input id="settings-display-angleDegrees" type="number" min="0.000001" max="90" step="any"></label>
       <h3>Exportqualität</h3><label class="dialog-label">Flächenabweichung (mm)<input id="settings-export-deflection" type="number" min="0.0000001" max="10" step="any"></label><label class="dialog-label">Winkel (Grad)<input id="settings-export-angleDegrees" type="number" min="0.000001" max="90" step="any"></label><p class="small-note">Kleinere Werte erzeugen feinere Netze. Anzeige und Export haben getrennte Einstellungen. Maße und CAD-Geometrie bleiben bei einer Qualitätsänderung erhalten.</p></section>
       ${
         workflowSettings
@@ -351,7 +353,10 @@ export function createCadInterfaceSettings({
           : ''
       }
       <section data-settings-page="plugins" hidden><p>Lokale Formen- und Vorlagenpakete hinzufügen. Geladene Formen erscheinen in der Bibliothek; ihre gespeicherten Modelle behalten die CAD-Geometrie.</p><div id="settings-plugins"></div><div class="two-buttons"><button id="plugin-load">Formenpaket laden …</button><button id="plugin-example">Beispielpaket speichern</button></div><p class="small-note">OfflineCAD-Plugin, Format 1 · JSON/.ocplugin · bis zu 20 Pakete. Alle Vorlagen werden vor dem Laden als CAD-Körper geprüft.</p></section>
-      <section data-settings-page="layout" hidden id="layout-settings-page"></section><section data-settings-page="ai" hidden id="ai-settings-page"></section><div class="modal-actions"><button id="settings-reset">Standardwerte</button><button id="settings-done" class="primary">Fertig</button></div>`,
+      <section data-settings-page="layout" hidden>
+        <label class="dialog-label">Eckgriffgröße<input id="settings-cornerHandleSize" type="range" min="${CORNER_HANDLE_SIZE_RANGE.min}" max="${CORNER_HANDLE_SIZE_RANGE.max}" step="1"><output id="settings-corner-handle-output" for="settings-cornerHandleSize"></output></label>
+        <div id="layout-settings-page"></div>
+      </section><section data-settings-page="ai" hidden id="ai-settings-page"></section><div class="modal-actions"><button id="settings-reset">Standardwerte</button><button id="settings-done" class="primary">Fertig</button></div>`,
     );
     refresh();
     if (storage?.info) {
@@ -420,7 +425,7 @@ export function createCadInterfaceSettings({
       const tab = document.createElement('button');
       tab.id = 'settings-tab-context';
       tab.dataset.settingsTab = 'context';
-      tab.textContent = language() === 'en' ? 'Right click' : 'Rechtsklick';
+      tab.textContent = 'Rechtsklick';
       document.querySelector('.settings-tabs').append(tab);
       const page = document.createElement('section');
       page.dataset.settingsPage = 'context';

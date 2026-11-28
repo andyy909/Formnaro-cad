@@ -12,6 +12,7 @@ export function mountDiagnosticUsage({ host, desktop, rates = null }) {
     roles = new Map(),
     liveRoles = new Map();
   let currentId = null,
+    live = null,
     lastUpdate = 0,
     reconciliation = null,
     requestCount = 0;

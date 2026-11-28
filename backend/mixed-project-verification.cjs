@@ -8,6 +8,9 @@ async function verifyMixedProject(win,{directory,files}={}){
  await proof('mixed-real-ui-imports-open-and-closed-triangles',`
   await a.resetProject();await a.addShape('box');await a.settled();
   const p=window.__mixed={native:a.getModel().nodes[0],checks:[]};
+  check(await a.requestRecovery(),'native recovery fixture was not written');
+  p.nativeRecovery=a.storage.getItem('offlinecad-autosave-v7');
+  check(p.nativeRecovery&&JSON.parse(p.nativeRecovery).version!==8,'native recovery fixture is missing');
   const closed={v:[[0,0,0],[20,0,0],[0,20,0],[0,0,20]],t:[[0,2,1],[0,1,3],[1,2,3],[2,0,3]]},open={v:[[0,0,0],[20,0,0],[0,20,0]],t:[[0,1,2]]};
   p.wait=async fn=>{const start=Date.now();while(!fn()){if(Date.now()-start>20000)throw Error('UI timeout: '+document.getElementById('import-status')?.textContent);await new Promise(r=>setTimeout(r,25));}};
   p.import=async(data,name,cancel=false)=>{const rows=['solid test'];for(const t of data.t){rows.push('facet normal 0 0 1','outer loop',...t.map(i=>'vertex '+data.v[i].join(' ')),'endloop','endfacet');}rows.push('endsolid test');const file=new File([rows.join('\\n')],name,{type:'model/stl'}),transfer=new DataTransfer();transfer.items.add(file);const input=document.getElementById('import-file');input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));await p.wait(()=>document.getElementById('modal').open&&!!document.getElementById('import-kind'));check(document.getElementById('import-kind').querySelector('option[value="mesh"]'),'mesh choice missing');document.getElementById('import-kind').value='mesh';document.getElementById('import-kind').dispatchEvent(new Event('change',{bubbles:true}));if(cancel){document.getElementById('import-cancel').click();return;}const count=a.getModel().nodes.length;document.getElementById('import-confirm').click();await p.wait(()=>a.getModel().nodes.length===count+1&&!document.getElementById('modal').open);await a.settled();};
@@ -44,7 +47,7 @@ async function verifyMixedProject(win,{directory,files}={}){
   const result=await js(`window.__cadTest.exportModel(${JSON.stringify(format)})`);const file=path.join(directory,'exports','Gemeinsames Prüfprojekt.'+result.extension);assert.ok(fs.statSync(file).size>30,format+' physical file');checks.push('mixed-normal-export-ipc-'+format);
  }
  await proof('mixed-autosave-keeps-prior-cad-namespace',`
-  const p=window.__mixed,old=a.storage.getItem('offlinecad-autosave-v7');await p.wait(()=>!!a.storage.getItem('offlinecad-autosave-v8'));const saved=JSON.parse(a.storage.getItem('offlinecad-autosave-v8'));check(saved.version===8&&JSON.stringify(saved.nodes)===JSON.stringify(JSON.parse(a.serialize()).nodes),'mixed autosave geometry missing');check(old&&a.storage.getItem('offlinecad-autosave-v7')===old&&JSON.parse(old).version!==8,'old CAD autosave overwritten');
+  const p=window.__mixed;await p.wait(()=>!!a.storage.getItem('offlinecad-autosave-v8'));const saved=JSON.parse(a.storage.getItem('offlinecad-autosave-v8'));check(saved.version===8&&JSON.stringify(saved.nodes)===JSON.stringify(JSON.parse(a.serialize()).nodes),'mixed autosave geometry missing');check(a.storage.getItem('offlinecad-autosave-v7')===p.nativeRecovery,'old CAD autosave overwritten');
   p.final=a.serialize();
  `);
  const image=path.join(directory,'mixed-scene.png');await js('window.__cadTest.view.fit();window.__cadTest.view.invalidate();');await new Promise(r=>setTimeout(r,100));fs.writeFileSync(image,(await win.webContents.capturePage()).toPNG());
@@ -62,10 +65,47 @@ async function verifyMixedProject(win,{directory,files}={}){
  assert.deepEqual(fs.readFileSync(oldCadFile),cadBefore);checks.push('mixed-original-cad5-file-byte-identical-after-upgrade');
  return {ok:true,checks,projectFile:files.save,screenshot:image};
 }
+async function verifyFnpackMeshGrouping(win,{directory,files}){
+ const projectFile=files.save=path.join(directory,'Mesh-Grouping.fnpack');
+ await win.webContents.executeJavaScript(`(async()=>{
+  const a=window.__cadTest;
+  const check=(ok,message)=>{if(!ok)throw Error(message);};
+  await a.resetProject();
+  for(const [i,x] of [0,5].entries())
+   await a.execute({type:'mesh-create',id:'mesh-'+i,shape:'box',position:[x,0,5],size:[10,10,10]});
+  await a.settled();
+  check((await a.save({saveAs:true,format:'fnpack'})).saved,'FNPACK save');
+  await a.resetProject();check(await a.openProject(),'FNPACK open');await a.settled();
+  const nodes=a.getModel().nodes;
+  check(nodes.length===2&&nodes.every(n=>n.mesh?.format==='Formnaro-GeometryRef'),'deferred STL fixture');
+  const before=a.serialize(),depth=a.undoDepth();
+  a.select([{rootId:nodes[0].id,path:[]}]);
+  check(await a.meshReduceUI.open('large-v1'),'large mesh reduction did not open');
+  check(document.getElementById('mesh-reduce-target').value==='4','large mesh reduction target differs');
+  a.meshReduceUI.close();
+  check((await a.meshSelectionUI.open())?.objectId===nodes[0].id,'mesh face selection did not open');
+  a.meshSelectionUI.cancel();
+  check(a.serialize()===before&&a.undoDepth()===depth,'opening mesh tools changed the project');
+  a.select(nodes.map(n=>({rootId:n.id,path:[]})));
+  await a.group();
+  check(document.getElementById('mesh-preview')?.disabled===false,'Group dialog not ready');
+  await a.meshTools.preview();
+  check(a.meshTools.state()?.hasPreview&&a.serialize()===before&&a.undoDepth()===depth,'preview changed project');
+  await a.meshTools.apply();await a.settled();
+  const result=a.getModel().nodes;
+  check(result.length===1&&result[0].meshSource?.sources?.length===2&&a.undoDepth()===depth+1,'group sources or Undo missing');
+  const solid=await a.controller.meshQuery('inspectSolid',{id:result[0].id});
+  check(solid.ok&&Math.abs(solid.volume-1500)<0.01,'group volume differs');
+  const after=a.serialize();
+  await a.actions.undo();await a.settled();check(a.serialize()===before,'FNPACK group Undo differs');
+  await a.actions.redo();await a.settled();check(a.serialize()===after,'FNPACK group Redo differs');
+ })()`);
+ return {ok:true,checks:['fnpack-reopened-mesh-grouping-preserves-preview-and-history'],projectFile};
+}
 function verificationDialogs(directory){
  const files={save:path.join(directory,'Gemischt.ocad')};
  const projectDialog={showSaveDialog:async()=>({filePath:files.save}),showOpenDialog:async()=>({filePaths:[files.save]})};
  const exportDialog={showSaveDialog:async(_win,options)=>{const dir=path.join(directory,'exports');fs.mkdirSync(dir,{recursive:true});return {filePath:path.join(dir,path.basename(options.defaultPath))};}};
  return {files,projectDialog,exportDialog};
 }
-module.exports={verifyMixedProject,verificationDialogs};
+module.exports={verifyMixedProject,verifyFnpackMeshGrouping,verificationDialogs};

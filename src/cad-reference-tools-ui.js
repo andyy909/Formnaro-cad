@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { mountCadDrillConversionEditor } from './cad-drill-conversion-ui.js';
+import { multiplyCadMatrices } from './cad-affine.js';
 import { cadProjectParameterProblems } from './cad-project-parameters-data.js';
 import { cadSelectionContext } from './cad-interface-state.js';
 import { cadDrillEditStart, cadDrillSourceProblems } from './cad-drill-source-data.js';
@@ -116,7 +117,7 @@ export function createCadReferenceToolsUI({
   function revisionChanged() {
     if (active && active.revision !== controller.revision()) close();
   }
-  function canPick(point) {
+  function canPick(point, event) {
     const projected = view.projectPoint(point),
       at = { clientX: projected.x, clientY: projected.y },
       hit = view.visualHit(at);
@@ -456,9 +457,7 @@ export function createCadReferenceToolsUI({
                 v.gap <= 5,
             )
           : [];
-      } catch {
-        /* Keep the empty preset list when legacy storage cannot be read. */
-      }
+      } catch {}
       for (const preset of presets) q('[data-drill-preset]').append(new Option(preset.name, preset.id));
       q('[data-drill-preset]').onchange = () => {
         const selected = presets.find((v) => v.id === q('[data-drill-preset]').value);

@@ -26,6 +26,21 @@ def roof_mesh(kind='sinusoidal',segments=16):
     return mesh
 
 
+def curve_on_surface_faults(shape):
+    """Extended OpenCASCADE check for edge/pcurve/surface consistency.
+
+    ``isValid`` alone accepts pcurves that stray from their edge tolerance;
+    boolean follow-up operations reject them as BOPAlgo_InvalidCurveOnSurface.
+    Returns a list of fault names (empty when the shape passes).
+    """
+    from OCP.BOPAlgo import BOPAlgo_ArgumentAnalyzer
+    analyzer=BOPAlgo_ArgumentAnalyzer()
+    analyzer.SetShape1(shape.wrapped if hasattr(shape,'wrapped') else shape)
+    analyzer.CurveOnSurfaceMode=True
+    analyzer.Perform()
+    return [str(r.GetCheckStatus()).rsplit('.',1)[-1] for r in analyzer.GetCheckResult()] if analyzer.HasFaulty() else []
+
+
 def run(directory):
     import tkinter as tk
     import cadquery as cq
@@ -91,6 +106,7 @@ def run(directory):
         shape=cq.importers.importStep(str(output/'roof.step')).val()
         checks['every_native_edge_has_two_neighbours']=all(
             sum(any(e.isSame(other) for other in f.Edges()) for f in shape.Faces())==2 for e in shape.Edges())
+        checks['actual_step_curve_on_surface_clean']=not curve_on_surface_faults(shape)
         checks['actual_step_global_gate']=check_candidate(shape,app.region_mesh,Options(tolerance=.2,samples=500),
                                                           'freeform',stage='patches') is not None
         results['automatic']=dict(faces=report['output_faces'],types=report['surface_types'],deviation=report['deviation'])

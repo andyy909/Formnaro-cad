@@ -28,7 +28,19 @@ die Projektregeln und den direkten Modellierauftrag.
 - `cad-kernel-build/runtime/` enthält den versionierten CAD-WASM-Kern.
   `python-runtime/` enthält die Web-Python-Laufzeit und Pakete. Die integrierte
   FreeCAD-Laufzeit und der native STL-Konverter werden separat vorbereitet.
-  `mini/` enthält den Web-Build und die Gradle-App für Formnaro Mini auf Android.
+  `mini/` und `mini-cad/` sind eigenständige Teilprojekte.
+
+Der Tablet-Transfer liefert PC-Flächenskizzen über die gekoppelte
+Live-Verbindung. Der Schalter im 3D-Feld erzeugt direkt einen QR-Code
+mit Live-Freigabe und startet bei einem empfangsbereiten Tablet die
+Flächenauswahl. Windows verwendet den nativen CAD-Flächentreffer und die
+exakte planare Konturübernahme, ausgerichtet an der Ansicht beim Klick.
+Android bestätigt den Empfang nach lokalem Speichern und öffnet den
+bearbeitbaren Entwurf. Der Rückweg bindet den Schnitt an den ursprünglichen
+Körper und seine CAD-Fläche. Neue geschlossene Innenkonturen werden in
+einem Rückgängig-Schritt durchschnitten oder bis zur angegebenen Tiefe
+ausgeschnitten. Die Vorschau und Prüfung laufen intern vor der Übernahme.
+Vorhandene Außenränder und Öffnungen begrenzen den Schnittbereich.
 
 ## Kompatibilität und lokale Daten
 
@@ -46,6 +58,23 @@ bei Prüfungen schützen.
 Die lokale KI-Schnittstelle verwendet die in Formnaro angezeigte
 `ai-bridge.json`. Die Verbindung und der Python-Fallback stehen in
 [AGENTS.md](../AGENTS.md). Verbindungsdatei und Token bleiben vertraulich.
+
+Beim ersten Start des portablen Windows-Pakets speichert Formnaro die Entscheidung
+zur KI-Einrichtung im lokalen PC-Profil. Das vorhandene Einstellungsfenster
+„KI / API“ kann die Einrichtung erneut öffnen. Die ChatGPT-Auswahl nutzt die
+bestehende Browseranmeldung.
+
+Die lokale Text-KI lädt Modell und CPU-Laufzeit erst auf Anforderung nach
+`Daten/KI-Modelle`. Der Electron-Hauptprozess prüft beide Downloads und startet
+`llama-server` mit einem Sitzungsschlüssel auf der Loopback-Adresse. Der
+Dateidialog kann zusätzlich einzelne GGUF-Textmodelle importieren. Formnaro
+kopiert sie unter `Daten/KI-Modelle/Eigene Modelle` und aktiviert sie nach einem
+erfolgreichen Start. Die Modellliste des lokalen Anbieters zeigt die vorhandenen
+Modelle. Die Kataloglinks öffnen Hugging Face und ModelScope im Standardbrowser.
+Der vorhandene Chat-Anbieterpfad verwendet den Prozess bis zum Programmende.
+Für das kleine Modell enthält die Anfrage einen kurzen Projektzustand mit
+Auswahl und Grundkörperbefehlen. Änderungsvorschläge nutzen dieselbe native
+Vorschau und Maßprüfung wie die anderen Chat-Zugänge.
 
 ## Private Laborupdates auf Windows
 
@@ -69,11 +98,6 @@ Aus dem sauberen Kandidatenstand: `node scripts/build-lab-test-patch.mjs <Progra
   die vorhandenen Laufzeiten anhand von [BUILD.md](BUILD.md) prüfen.
 
 ## Entwicklung und Prüfungen
-
-Bei Desktop-Prüfmodulen deklarieren die betroffenen Dateien die Browser-Globals
-der Rückrufe, die Electron im Renderer ausführt. Objekt-Destrukturierung darf
-Felder bewusst aus der Restkopie ausschließen. Optionale Fehlerpfade
-dokumentieren im jeweiligen `catch`-Block, welche Rückfallebene übernimmt.
 
 Die Node-Version steht in `.node-version`. Nach `npm ci` baut
 `npm run build` die Oberfläche. `npm test` führt die Standardauswahl aus

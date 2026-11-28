@@ -2,6 +2,7 @@
 // Shared byte-for-byte with Formnaro Netz; no CAD or Manifold dependency.
 import { unzipSync, strFromU8 } from 'fflate';
 import { Matrix4, Vector3, Quaternion, Color } from 'three';
+import { bindGltfPartToNode, gltfAnimationClips, gltfNodeRecord } from './gltf-animation-import.js';
 
 export const EXCHANGE_LIMITS = Object.freeze({
   fileBytes: 50 * 1024 * 1024,
@@ -306,7 +307,10 @@ function glbDocument(bytes) {
   if (!json) fail('GLB-JSON fehlt.');
   return { json, bin };
 }
-export async function parseGltf(input, { binary = false, files = [] } = {}) {
+export async function parseGltf(
+  input,
+  { binary = false, files = [], animations = false, describeAnimations = false, documentPath = '' } = {},
+) {
   const bytes = typeof input === 'string' ? new TextEncoder().encode(input) : new Uint8Array(input);
   if (bytes.length > EXCHANGE_LIMITS.fileBytes) fail('glTF-Datei ist größer als 50 MB.');
   const { json: g, bin } = binary ? glbDocument(bytes) : { json: JSON.parse(strFromU8(bytes)) },
@@ -316,7 +320,8 @@ export async function parseGltf(input, { binary = false, files = [] } = {}) {
   for (const ext of g.extensionsRequired ?? [])
     if (!['KHR_mesh_quantization', 'KHR_materials_unlit'].includes(ext))
       fail('Nicht unterstützte erforderliche glTF-Erweiterung: ' + ext);
-  if (g.animations?.length) c.warnings.add('Animationen werden als statische Ausgangsstellung importiert.');
+  if (g.animations?.length && !animations && !describeAnimations)
+    c.warnings.add('Animationen werden als statische Ausgangsstellung importiert.');
   if (g.textures?.length) c.warnings.add('Texturen werden nicht übernommen; Objektfarben bleiben erhalten.');
   let total = bytes.length;
   const buffers = [];
@@ -333,11 +338,12 @@ export async function parseGltf(input, { binary = false, files = [] } = {}) {
       if (encoded.length > (EXCHANGE_LIMITS.expandedBytes * 4) / 3 + 4) fail('glTF-Datenpuffer ist zu groß.');
       data = Uint8Array.from(atob(encoded), (ch) => ch.charCodeAt(0));
     } else {
-      const name = pathName(buffer.uri),
-        matches = files.filter((f) => {
-          const path = f.webkitRelativePath || f.name;
-          return path === name || path.endsWith('/' + name) || f.name === name.split('/').at(-1);
-        });
+      const name = pathName(buffer.uri, dir(documentPath));
+      let matches = files.filter((f) => (f.webkitRelativePath || f.name) === name);
+      if (!matches.length && !documentPath.includes('/')) {
+        matches = files.filter((f) => f.webkitRelativePath?.endsWith('/' + name));
+        if (!matches.length) matches = files.filter((f) => !f.webkitRelativePath && f.name === name.split('/').at(-1));
+      }
       if (matches.length !== 1)
         fail('glTF-Begleitdatei fehlt oder ist mehrdeutig: ' + name + '. Bitte zusammen mit der glTF-Datei auswählen.');
       if (matches[0].size > EXCHANGE_LIMITS.expandedBytes) fail('glTF-Begleitdatei ist zu groß.');
@@ -368,13 +374,14 @@ export async function parseGltf(input, { binary = false, files = [] } = {}) {
     return { v, buffer, offset };
   }
   let readValues = 0;
-  function accessor(index, size, { indices = false } = {}) {
+  function accessor(index, size, { indices = false, animation = false } = {}) {
     const a = g.accessors?.[index],
-      type = size === 3 ? 'VEC3' : 'SCALAR';
+      type = size === 4 ? 'VEC4' : size === 3 ? 'VEC3' : 'SCALAR';
     if (
       !a ||
       a.type !== type ||
       !component[a.componentType] ||
+      (animation && (a.componentType !== 5126 || a.normalized)) ||
       (indices && (![5121, 5123, 5125].includes(a.componentType) || a.normalized))
     )
       fail('Nicht unterstützter glTF-Accessor.');
@@ -433,8 +440,9 @@ export async function parseGltf(input, { binary = false, files = [] } = {}) {
   const roots = g.scenes?.[g.scene ?? 0]?.nodes;
   if (!Array.isArray(roots)) fail('glTF-Szene fehlt.');
   const basis = new Matrix4().set(1000, 0, 0, 0, 0, 0, -1000, 0, 0, 1000, 0, 0, 0, 0, 0, 1);
+  const hierarchy = animations ? { nodes: [], byIndex: new Map() } : null;
   let visits = 0;
-  function visit(index, parent, stack = []) {
+  function visit(index, parent, stack = [], parentIndex = null) {
     integer(index, 0, (g.nodes?.length ?? 0) - 1, 'glTF-Knoten');
     if (stack.includes(index) || stack.length >= EXCHANGE_LIMITS.depth || ++visits > 10000)
       fail('Zyklische oder zu große glTF-Hierarchie.');
@@ -457,6 +465,15 @@ export async function parseGltf(input, { binary = false, files = [] } = {}) {
       );
     }
     const world = parent.clone().multiply(local);
+    let record;
+    if (hierarchy) {
+      // The original glTF node is kept for later hierarchy work. Geometry
+      // below still becomes world-space millimetre parts for the CAD renderer.
+      if (hierarchy.byIndex.has(index)) fail('Doppelter glTF-Knoten in der Szenenhierarchie.');
+      record = gltfNodeRecord(n, index, parentIndex);
+      hierarchy.byIndex.set(index, record);
+      hierarchy.nodes.push(record);
+    }
     if (n.mesh !== undefined) {
       const mesh = g.meshes?.[n.mesh];
       if (!mesh || mesh.weights?.some((v) => v !== 0)) fail('glTF-Netz fehlt oder ist verformt.');
@@ -498,26 +515,41 @@ export async function parseGltf(input, { binary = false, files = [] } = {}) {
           },
           world,
         );
+        if (record) bindGltfPartToNode(c.parts[c.parts.length - 1], record);
       }
     }
-    for (const next of n.children ?? []) visit(next, world, [...stack, index]);
+    for (const next of n.children ?? []) visit(next, world, [...stack, index], index);
   }
   for (const root of roots) visit(root, basis);
-  return c.result();
+  const result = c.result();
+  if (describeAnimations) result.hasAnimations = Array.isArray(g.animations) && g.animations.length > 0;
+  if (hierarchy) {
+    result.clips = gltfAnimationClips(g, accessor, hierarchy);
+    result.nodes = hierarchy.nodes.sort((a, b) => a.index - b.index);
+    result.roots = [...roots];
+  }
+  return result;
 }
 
-export async function readExchangeFile(file, { files = [] } = {}) {
+export async function readExchangeFile(file, { files = [], animations = false, describeAnimations = false } = {}) {
   if (file.size > EXCHANGE_LIMITS.fileBytes) fail('Importdatei ist größer als 50 MB.');
   const ext = file.name.split('.').at(-1).toLowerCase(),
     bytes = await file.arrayBuffer();
   if (ext === '3mf') return parseThreeMF(bytes);
-  if (ext === 'glb' || ext === 'gltf') return parseGltf(bytes, { binary: ext === 'glb', files });
+  if (ext === 'glb' || ext === 'gltf')
+    return parseGltf(bytes, {
+      binary: ext === 'glb',
+      files,
+      animations,
+      describeAnimations,
+      documentPath: file.webkitRelativePath || file.name,
+    });
   fail('Nicht unterstütztes Austauschformat.');
 }
 
 export function exchangeMainFile(files, { freecad = false } = {}) {
   const models = Array.from(files).filter(
-    (f) => /\.(3mf|glb|gltf|stl|obj|svg|step|stp)$/i.test(f.name) || (freecad && /\.fcstd$/i.test(f.name)),
+    (f) => /\.(3mf|glb|gltf|stl|obj|svg|dxf|step|stp)$/i.test(f.name) || (freecad && /\.fcstd$/i.test(f.name)),
   );
   if (models.length !== 1)
     fail('Bitte genau eine Modelldatei auswählen; glTF-Begleitdateien dürfen zusätzlich ausgewählt werden.');

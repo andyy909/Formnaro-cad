@@ -2,13 +2,16 @@ import {
   cadDrawingDimension,
   cadDrawingProblems,
   cadDrawingSourceSignatures,
+  cadDrawingViewScale,
+  cadDrawingProjectionOptions,
+  updateCadDrawingDetailViews,
   updateCadDrawingProjection,
 } from './cad-drawing-data.js';
 import { cadDrawingUpdatedPosition } from './cad-drawing-layout.js';
 import { CAD_DRAWING_BORE_ROLE, createCadDrawingNative } from './cad-drawing-native.js';
 
 function projectView(project, view, drawingProjection) {
-  return drawingProjection(project, { ids: view.sourceIds, view: view.kind });
+  return drawingProjection(project, cadDrawingProjectionOptions(view));
 }
 
 function boreReference(curve, rootId, path) {
@@ -33,14 +36,14 @@ export function prepareCadDrillDrawingRefresh(project, rootId, path, { oc, servi
   const plan = [];
   let dimensionCount = 0;
   for (const sheet of project.drawings?.sheets ?? []) {
-    const views = sheet.views.filter(view => view.sourceIds.includes(rootId));
+    const views = sheet.views.filter(view => view.kind !== 'detail' && view.sourceIds.includes(rootId));
     if (!views.length) continue;
     const problems = cadDrawingProblems(sheet, { sourceSignatures });
     for (const view of views) {
       signal?.throwIfAborted();
       if (view.kind === 'section' || view.sourceIds.length !== 1 || problems.some(problem => problem.viewId === view.id))
         return null;
-      const annotations = sheet.annotations.filter(annotation => annotation.viewId === view.id && annotation.kind !== 'label');
+      const annotations = sheet.annotations.filter(annotation => annotation.viewId === view.id && !['label', 'balloon'].includes(annotation.kind));
       const measures = [];
       if (annotations.length) {
         const native = projectView(project, view, drawingProjection);
@@ -73,7 +76,12 @@ export function refreshCadDrillDrawings(project, { rootId, drawingProjection, pl
     const sheet = drawings.sheets[sheetIndex];
     const view = sheet.views.find(view => view.id === target.viewId);
     const projection = projectView(project, view, drawingProjection),
-      position = cadDrawingUpdatedPosition(view.position, view.projection, projection, sheet.scale);
+      position = cadDrawingUpdatedPosition(
+        view.position,
+        view.projection,
+        projection,
+        cadDrawingViewScale(view, sheet),
+      );
     for (const measure of target.measures) {
       const annotation = sheet.annotations.find(annotation => annotation.id === measure.id);
       annotation.curveReferences = [{ sourceReferences: [{ source: { rootId, path: [...path] }, role: CAD_DRAWING_BORE_ROLE }] }];
@@ -91,5 +99,8 @@ export function refreshCadDrillDrawings(project, { rootId, drawingProjection, pl
       });
     drawings.sheets[sheetIndex] = next;
   }
+  for (let index = 0; index < drawings.sheets.length; index++)
+    if (drawings.sheets[index].views?.some(view => view.kind === 'detail'))
+      drawings.sheets[index] = updateCadDrawingDetailViews(drawings.sheets[index]).sheet;
   return drawings;
 }

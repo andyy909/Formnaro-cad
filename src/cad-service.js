@@ -6,17 +6,22 @@ import {cadStepMeshParts} from './cad-step-appearance.js';
 import {meshColorsEnabled} from './mesh-appearance.js';
 import {createCadDisplayEncoder} from './cad-display-cache.js';
 import {cadDisplayStretch,cadDisplayIsometry,cadDisplayDeflectionLevels} from './cad-display-scale.js';
+import {isSimplifiedCadDisplay} from './cad-quality.js';
 import {cadConstructionStretch} from './cad-construction-scale.js';
 import {createCadAnnotationValidator} from './cad-annotations-native.js';
 import {buildCadRecipe,constructionTolerance,cadRecipeMinimumFeature,CAD_CONSTRUCTION_TOLERANCE} from './cad-recipes.js';
-import {cadAffineVolume,cadBoolean,cadCutMany,cadFuseMany,cadBounds,validateCadSolid,writeCadBrep,readCadBrep,transformCad,cadDisplayMesh,cadExportMesh} from './cad-native-kernel.js';
+import {cadAffineVolume,cadBoolean,cadCutMany,cadFuseMany,cadBounds,validateCadSolid,writeCadBrep,readCadBrep,readValidatedCadBrep,transformCad,cadDisplayMesh,cadExportMesh} from './cad-native-kernel.js';
 import {cadProjectSnapshot,validateAffineMatrix} from './cad-project.js';
 import {cadIdentity,multiplyCadMatrices,inverseCadMatrix,cadPoint} from './cad-affine.js';
 import {createCadCache} from './cad-worker-client.js';
 import {importCadStep,importCadStepAssembly,exportCadStep} from './cad-step-io.js';
-import {cadColorPartsNative} from './cad-analysis-native.js';
+import {importStepProject} from './cad-step-project-import.js';
+import {exportCadStepProjectAssembly} from './cad-step-assembly-parts.js';
+import {cadColorPartsNative,cadUniformSourceStyle} from './cad-analysis-native.js';
 import {encodeCadMeshes} from './cad-mesh-formats.js';
-import {rebindCadWorkplaneNative} from './cad-topology-native.js';
+import {compactCadMesh} from './cad-mesh-copy-data.js';
+import {cadSketchRecipe} from './cad-sketch.js';
+import {projectCadPlanarFaceNative,rebindCadWorkplaneNative} from './cad-topology-native.js';
 import {analyzeStlHousing,buildStlHousingCad} from './cad-stl-housing.js';
 import {repairStlMesh} from './cad-stl-repair.js';
 import {partitionCadNative} from './cad-partition-native.js';
@@ -137,16 +142,10 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     return {id,kind:'cad',name,solid,source:'step',transform:[...transform],...metadata,...importCadStep(oc,bytes)};
   }
   function stepAssembly(project,bytes,options={}){
-    alive();const tree=importCadStepAssembly(oc,bytes),layerId=options.layerId??project.activeLayerId;
-    const folder=(name,parentId)=>{const id=globalThis.crypto.randomUUID();project.folders.push({id,name,hidden:false,locked:false,layerId,parentId});return id;};
-    const parent=folder(options.name??'STEP',options.folderId??project.activeFolderId),ids=[];
-    function visit(item,parentId){
-      if(item.children){const id=folder(item.name,parentId);item.children.forEach(child=>visit(child,id));return;}
-      const id=ids.length?globalThis.crypto.randomUUID():(options.id??globalThis.crypto.randomUUID()),metadata={...options.metadata};
-      if(item.faceColors?.length)metadata.stepFaceColors=item.faceColors.map(f=>({faceIndex:f.faceIndex,color:f.appearance.color,opacity:Math.max(.05,f.appearance.opacity??1)}));
-      project.nodes.push({id,kind:'cad',name:item.name,source:'step',solid:true,transform:options.transform??cadIdentity(),layerId,folderId:parentId,metadata,...item.appearance,...(item.appearance.opacity!==undefined?{opacity:Math.max(.05,item.appearance.opacity)}:{}),brep:item.brep,stats:item.stats});ids.push(id);
-    }
-    tree.forEach(item=>visit(item,parent));cadProjectSnapshot(project);return ids;
+    // C1-C5: the reader owns native validation and returns either world-baked
+    // bodies (old runtime) or a definition-aware occurrence tree (new runtime).
+    // The project mapping lives in its own module and accepts both contracts.
+    alive();return importStepProject(project,importCadStepAssembly(oc,bytes),options);
   }
   function stlHousingNode(mesh,{id=globalThis.crypto.randomUUID(),name='STL-Gehäuse',transform=cadIdentity(),solid=true,...metadata}={},repair={}){
     alive();validateAffineMatrix(transform);
@@ -164,8 +163,8 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     const entry=cache.get(sourceKey(node,nodeTolerance(node,world)));
     if(entry?.brep===node.brep.data)return entry;
   }
-  function inspectThreadPlacement(node,world,linear){
-    if(node.source!=='native'||node.recipe?.type!=='thread'||!cadDisplayIsometry(linear))return;
+  function inspectRigidPlacement(node,world,linear){
+    if(!cadDisplayIsometry(linear))return;
     const determinant=linear[0]*(linear[5]*linear[10]-linear[9]*linear[6])
       -linear[4]*(linear[1]*linear[10]-linear[9]*linear[2])
       +linear[8]*(linear[1]*linear[6]-linear[5]*linear[2]);
@@ -174,10 +173,10 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     // proved by this worker for the same BRep. A saved or supplied BRep still
     // goes through the native reader and solid validation on a cold cache.
     const cached=cachedThread(node,world);
-    const local=cached?.shape??readCadBrep(oc,node.brep.data);
+    const {shape:local, stats}=cached??readValidatedCadBrep(oc,node.brep.data);
     let transform,builder,placed;
     try{
-      const {bounds,volume,solids}=cached?.stats??validateCadSolid(oc,local);
+      const {bounds,volume,solids}=stats;
       const {min,max}=bounds;
       const localBounds={min,max,size:min.map((v,i)=>max[i]-v),center:min.map((v,i)=>(max[i]+v)/2)};
       if(linear.every((value,index)=>value===(index%5===0?1:0)))return {localBounds,worldBounds:{...localBounds},volume,solids};
@@ -197,7 +196,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     const linear=[...world];linear[12]=linear[13]=linear[14]=0;
     const key=JSON.stringify([node.brep.data,linear]);let record=inspectionCache.get(key);
     if(!record){
-      record=inspectThreadPlacement(node,world,linear);
+      record=inspectRigidPlacement(node,world,linear);
       if(!record){const local=readCadBrep(oc,node.brep.data);let placed;
         try{const localBounds=cadBounds(oc,local);placed=transformCad(oc,local,linear);const checked=validateCadSolid(oc,placed);record={localBounds,worldBounds:checked.bounds,volume:checked.volume,solids:checked.solids};}
         finally{placed?.delete();local.delete();}
@@ -208,11 +207,44 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     bounds.min=bounds.min.map((v,k)=>v+world[12+k]);bounds.max=bounds.max.map((v,k)=>v+world[12+k]);bounds.center=bounds.center.map((v,k)=>v+world[12+k]);
     return result;
   }
-  async function rebuild(project,{signal,progress,baseline,catalogOnly=false,restoreUnresolvedSources=false}={}){
+  function checkAttachedSketchFace(project, baseline) {
+    const attachment=project.attachedSketch;
+    if(!attachment)return project;
+    if(JSON.stringify(attachment.sketch)!==JSON.stringify(baseline?.attachedSketch?.sketch)){
+      const profile=buildCadRecipe(oc,cadSketchRecipe(attachment.sketch));
+      profile.delete();
+    }
+    const reference=attachment.workplane.reference;
+    if(!reference)return project;
+    const support=project.nodes.find(node=>node.id===reference.objectId);
+    if(isGeometryRef(support.brep))return project;
+    const previous=baseline?.nodes.find(node=>node.id===support.id);
+    if(previous?.brep.data===support.brep.data &&
+        JSON.stringify(baseline.attachedSketch?.workplane.reference)===JSON.stringify(reference))return project;
+    const {point,normal}=reference.topology.anchor, shape=readCadBrep(oc,support.brep.data);
+    try {
+      if(projectCadPlanarFaceNative(oc,shape,point,{normal,tolerance:1e-6}).length!==1)
+        throw Object.assign(Error('Die Bezugsfläche der gebundenen Skizze wurde geändert. Wähle die Fläche erneut.'),{code:'CAD_SKETCH_FACE_LOST'});
+    } finally {shape.delete();}
+    return project;
+  }
+  async function rebuild(project,{signal,progress,baseline,promotedThreads,catalogOnly=false,restoreUnresolvedSources=false}={}){
     alive(signal);const draft=cadProjectSnapshot(project),total=draft.nodes.length;let completed=0;
     function visit(node,parent){
       alive(signal);if(node.kind!=='cad'){referenceBounds(node);return node;}
       const world=multiplyCadMatrices(parent,node.transform);
+      // Promoting an already inspected thread is a change of parent only.
+      // Match the complete source of the confirmed group, including its exact
+      // placed BRep and recipe. Never seed the recipe-construction proof cache.
+      const promoted = promotedThreads?.get(node.id);
+      if (promoted && JSON.stringify(promoted) === JSON.stringify(node)) {
+        const linear = [...world];
+        linear[12] = linear[13] = linear[14] = 0;
+        if (inspectionCache.get(JSON.stringify([node.brep.data, linear]))) {
+          const {localBounds, volume, solids} = inspect(node, cadIdentity());
+          return {...node, stats: {bounds: {min: localBounds.min, max: localBounds.max}, volume, solids}};
+        }
+      }
       if(node.extraction&&cadSourceGeometryDigest(node.children[0])!==node.extraction.sourceSignature){const error=Error('Die Originalgeometrie wurde geändert. Körper erneut herauslösen.');error.code='CAD_REEXTRACT_REQUIRED';throw error;}
       if(node.children)node.children=node.children.map(child=>visit(child,node.extraction?.constructionFrame??world));
       if(restoreUnresolvedSources&&cadDrillSourceProblems({nodes:[node]},{includeHidden:true}).length){
@@ -222,7 +254,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
       try{return snapshotNode(node,entry);}finally{release();}
     }
     const nodes=[];for(const node of draft.nodes){if(hasGeometryRefs(node)){if(!catalogOnly&&!sameDeferredGeometry(baseline?.nodes.find(n=>n.id===node.id),node))throw Object.assign(Error('Geänderte Geometrie vor dem Aufbau laden.'),{code:'GEOMETRY_NOT_LOADED'});nodes.push(node);progress?.(++completed/Math.max(1,total));continue;}const built=visit(node,cadIdentity());if(built.kind==='cad'){const checked=inspect(built);if([...checked.worldBounds.min,...checked.worldBounds.max].some(v=>Math.abs(v)>100000)||checked.worldBounds.size.some(v=>v<.01||v>10000))throw Error('CAD-Körper überschreitet den zulässigen Arbeitsbereich.');}nodes.push(annotationValidator.rebindRoot(built));progress?.(++completed/Math.max(1,total));await Promise.resolve();}
-    return rebindCadWorkplaneNative(oc,{...draft,nodes},{baseline});
+    return checkAttachedSketchFace(rebindCadWorkplaneNative(oc,{...draft,nodes},{baseline}),baseline);
   }
   /** Explicit parameter updates visit only selected source branches. Every
    * geometry edit is already collected before this single bottom-up traversal.
@@ -268,7 +300,7 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     let completed=0;for(let i=0;i<draft.nodes.length;i++)if(roots.has(draft.nodes[i].id)){if(nodeOrder===undefined)draft.nodes[i]=await visit(draft.nodes[i],cadIdentity(),{rootId:draft.nodes[i].id,path:[]});const checked=inspect(draft.nodes[i]);if([...checked.worldBounds.min,...checked.worldBounds.max].some(v=>Math.abs(v)>100000)||checked.worldBounds.size.some(v=>v<.01||v>10000))throw Error('CAD-Körper überschreitet den zulässigen Arbeitsbereich.');draft.nodes[i]=annotationValidator.rebindRoot(draft.nodes[i]);progress?.(++completed/Math.max(1,roots.size));await Promise.resolve();}
     function precision(node,parent){if(node.kind!=='cad')return;const world=multiplyCadMatrices(parent,node.transform),used=budgets.get(node.id),required=nodeTolerance(node,world);if(used!==undefined&&used>required*(1+1e-12))throw Error('Das fertige CAD-Maß benötigt eine feinere Konstruktion als das einmalig gebaute Ergebnis.');for(const child of node.children??[])precision(child,node.extraction?.constructionFrame??world);}
     for(const root of draft.nodes)if(roots.has(root.id))precision(root,cadIdentity());
-    return rebindCadWorkplaneNative(oc,draft,{baseline:before});
+    return checkAttachedSketchFace(rebindCadWorkplaneNative(oc,draft,{baseline:before}),before);
   }
   function display(project,quality={deflection:.02,angleDegrees:8},{colored=false,knownMeshes,ids,timings}={}){
     alive();cadNativeMemory(oc).check('display');const draft=cadProjectSnapshot(project),result=[];
@@ -277,10 +309,15 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     const mark=()=>timings?performance.now():0;
     const record=(name,start)=>{if(timings)timings[name]=(timings[name]??0)+performance.now()-start;};
     const known=knownMeshes===undefined?null:new Set(knownMeshes),included=ids===undefined?null:new Set(ids);
+    // The simplified preset meshes the finished body directly. This keeps
+    // native face indices and avoids reconstructing boolean source regions.
+    const simplified=colored&&isSimplifiedCadDisplay(quality);
     for(const node of draft.nodes){
       if(included&&!included.has(node.id))continue;
       if(node.kind!=='cad'){referenceBounds(node);result.push({id:node.id,kind:node.kind,transform:node.transform,mesh:structuredClone(node.mesh),...(partFaceColors(node).length?{faceColors:partFaceColors(node)}:{})});continue;}
-      if(colored&&node.solid&&node.multicolor&&node.children&&!hasCurrentPartSurfaceGroups(node)){
+      const sourceColors=colored&&!simplified&&node.solid&&node.multicolor&&node.children&&!hasCurrentPartSurfaceGroups(node);
+      const uniformStyle=sourceColors?cadUniformSourceStyle(node):null;
+      if(sourceColors&&!uniformStyle){
         const linear=[...node.transform];linear[12]=linear[13]=linear[14]=0;
         const colorSource=value=>[value.brep.data,value.transform,value.name,value.color,value.opacity,value.solid,!!value.suppressed,!!value.multicolor,value.children?.map(colorSource)];
         const placementStart=mark();
@@ -323,7 +360,8 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
           displayCache.set(key,mesh,Math.max(1,bytes));
         }finally{if(!thread)shape.delete();}
       }
-      result.push({id:node.id,kind:'cad',transform:node.transform,...(partFaceColors(node).length?{faceColors:partFaceColors(node)}:{}),...displayEnvelope(mesh,known)});
+      const faceColors=simplified||uniformStyle?[]:partFaceColors(node);
+      result.push({id:node.id,kind:'cad',transform:node.transform,...(uniformStyle?{rootId:node.id,...uniformStyle}:{}),...(faceColors.length?{faceColors}:{}),...displayEnvelope(mesh,known)});
     }
     return result;
   }
@@ -348,8 +386,16 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     for(const node of productionNodes(project,{ids})){const parts=cadColorPartsNative(oc,node,{regionCache:colorRegionCache});try{for(const part of parts)for(const output of cadStepMeshParts(part,exportMesh(part.shape,quality)))outputs.push({id:node.id,...output});}finally{parts.forEach(part=>part.shape.delete());}}
     return outputs;
   }
-  function exportStep(project,{ids}={}){
-    const parts=[];try{for(const node of productionNodes(project,{ids}))parts.push(...cadColorPartsNative(oc,node,{regionCache:colorRegionCache}));return exportCadStep(oc,parts);}finally{parts.forEach(part=>part.shape.delete());}
+  function exportStep(project,{ids,stepAssembly=false}={}){
+    const nodes=productionNodes(project,{ids});
+    if(stepAssembly)return exportCadStepProjectAssembly(oc,project,nodes);
+    const parts=[];
+    try{
+      for(const node of nodes)parts.push(...cadColorPartsNative(oc,node,{regionCache:colorRegionCache}));
+      return exportCadStep(oc,parts);
+    }finally{
+      parts.forEach(part=>part.shape.delete());
+    }
   }
   function meshExportParts(project,{ids,includeReferences=false,meshColorParts}={}){
     const draft=cadProjectSnapshot(project),layers=new Map(draft.layers.map(v=>[v.id,v])),folders=new Map(draft.folders.map(v=>[v.id,v])),parts=[];
@@ -364,8 +410,8 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
     }
     return parts;
   }
-  function exportModel(project,{format,quality={deflection:.01,angleDegrees:5},ids,meshColorParts}={}){
-    if(format==='step')return {data:exportStep(project,{ids}),extension:'step',mime:'application/step'};
+  function exportModel(project,{format,quality={deflection:.01,angleDegrees:5},ids,meshColorParts,stepAssembly=false}={}){
+    if(format==='step')return {data:exportStep(project,{ids,stepAssembly}),extension:'step',mime:'application/step'};
     if(!['stl','obj','3mf','gltf','glb'].includes(format))throw Error('Unbekanntes CAD-Exportformat.');
     if(!Number.isFinite(quality.deflection)||quality.deflection<=0||!Number.isFinite(quality.angleDegrees)||quality.angleDegrees<=0||quality.angleDegrees>180)throw Error('Ungültige CAD-Exportqualität.');
     let parts;
@@ -377,6 +423,14 @@ export function createCadService({oc,maxEntries=128,maxBytes=64*1024*1024,finish
       // glTF position attributes are float32. Reserve half of the requested
       // world tolerance for centered-buffer quantization and verify it below.
       const meshQuality=['gltf','glb'].includes(format)?{...quality,deflection:quality.deflection/2}:quality;parts=exportMeshes(project,meshQuality,{ids});
+      // Native tessellation indexes vertices per BRep face. 3MF needs shared
+      // indices at coincident face seams within each exported CAD part.
+      if (format === '3mf') {
+        for (const part of parts) {
+          const { verts, triangles } = compactCadMesh(part.mesh);
+          part.mesh = { vertices: verts, triangles };
+        }
+      }
       parts.push(...meshExportParts(project,{ids,includeReferences:['3mf','gltf','glb'].includes(format),meshColorParts}));
     }
     return {data:encodeCadMeshes(parts,format,{roundingBudget:quality.deflection/2}),extension:format==='obj'?'zip':format,mime:{stl:'model/stl',obj:'application/zip','3mf':'model/3mf',gltf:'model/gltf+json',glb:'model/gltf-binary'}[format]};

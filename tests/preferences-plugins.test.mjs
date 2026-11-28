@@ -6,4 +6,18 @@ test('Local plugins validate templates, duplicate IDs and bounded geometry field
 test('Plugin persistence skips corrupt packs and duplicate installations',()=>{const good={manifest:EXAMPLE_PLUGIN,enabled:true};const loaded=loadPlugins({getItem:()=>JSON.stringify([{},good,good])});assert.equal(loaded.length,1);assert.equal(loaded[0].enabled,true);assert.deepEqual(loadPlugins({getItem:()=>'{bad'}),[]);});
 test('English localization covers native parameters, dynamic measurements and roundtrips',()=>{assert.equal(translateText('  Einstellungen ','en'),'  Settings ');assert.equal(translateText('Radius / Fasenmaß (mm)','en'),'Radius / chamfer size (mm)');assert.equal(translateText('Gruppe aus 8 Formen','en'),'Group of 8 shapes');assert.equal(translateText('N: Mitte ausrichten','en'),'N: align centre');assert.equal(translateText('Loch in der Modellhistorie bearbeiten','en'),'Edit hole in model history');assert.equal(translateText('Einstellungen','de'),'Einstellungen');});
 
+test('Corner grip sizes restore independently from existing side and height grip settings',()=>{
+ const restore=value=>loadPreferences({getItem:()=>JSON.stringify(value)});
+ assert.equal(restore({handleSize:20}).cornerHandleSize,9);
+ assert.equal(restore({handleSize:20}).handleSize,20);
+ for(const cornerHandleSize of [7,9,20]){
+  const prefs=restore({handleSize:20,cornerHandleSize});
+  assert.equal(prefs.cornerHandleSize,cornerHandleSize);
+  assert.equal(prefs.handleSize,20);
+ }
+ for(const cornerHandleSize of [6,21,8.5,'9'])assert.throws(()=>validatePreferences({cornerHandleSize}));
+ assert.equal(translateText('Eckgriffgröße','de'),'Eckgriffgröße');
+ assert.equal(translateText('Eckgriffgröße','en'),'Corner handle size');
+});
+
 test('STL style defaults migrate and six persisted styles validate',()=>{assert.equal(validatePreferences({}).meshDisplayStyle,'blue');for(const meshDisplayStyle of ['blue','white','sand','graphite','fusion','solidworks'])assert.equal(loadPreferences({getItem:()=>JSON.stringify({meshDisplayStyle})}).meshDisplayStyle,meshDisplayStyle);assert.throws(()=>validatePreferences({meshDisplayStyle:'unknown'}));});

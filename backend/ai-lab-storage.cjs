@@ -6,7 +6,8 @@ function writeLabFile(file,value,options){
 function failureClass(record){
  const code=record.error?.code;
  if(record.cleanExit===false||record.close&&(record.close.forced||record.close.code!==0||record.close.signal))return 'infrastructure';
- if(record.failureClass==='infrastructure'||['LAB_STORAGE_FAILED','EPERM','EACCES','EBUSY','ENOSPC','EIO','EROFS','HOST_EXIT','AI_PROVIDER_QUOTA','CHATGPT_REQUEST_FAILED','CHATGPT_AUTH_REQUIRED'].includes(code)||record.failurePhase==='preparation'||record.verificationFailure==='checker-error')return 'infrastructure';
+ if(record.failureClass==='infrastructure'||['LAB_STORAGE_FAILED','EPERM','EACCES','EBUSY','ENOSPC','EIO','EROFS','HOST_EXIT','AI_PROVIDER_QUOTA','AI_PROVIDER_CONTEXT_CONFIG','CHATGPT_REQUEST_FAILED','CHATGPT_AUTH_REQUIRED'].includes(code)||record.failurePhase==='preparation'||record.verificationFailure==='checker-error')return 'infrastructure';
+ if(code==='AI_PROVIDER_CONTEXT_LIMIT')return 'provider-context-limit';
  if(['cancelled','interrupted'].includes(record.status))return 'interrupted';
  if(record.error)return 'execution';
  if(record.verification?.passed===false)return 'native-mismatch';

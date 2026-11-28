@@ -10,6 +10,7 @@ import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
 import { CAD_PROJECT_LIMITS } from '../cad-project.js';
 import { readExchangeFile, exchangeImportSummary } from '../exchange-formats.js';
+import { cadMotionScene } from '../cad-motion-clips.js';
 import {
   hasLocalStlConverter,
   conversionControls,
@@ -18,9 +19,13 @@ import {
   createLocalStlConversion,
 } from '../cad-stl-converter.js';
 import { cadIdentity } from '../cad-affine.js';
+import { cadSketchFromExchange } from '../cad-profile-import.js';
+import { cadSvgEntities } from '../cad-profile-svg-import.js';
+import { readCadProfileDxf, cadDxfEntities } from '../cad-profile-dxf-import.js';
+import { repairFassungFromReport } from '../mesh-repair-fassung.js';
 import { originalCadSubpath } from '../cad-original-contours.js';
 import { easyImportPolicy } from '../cad-easy-domain.js';
-import { cadDrawingSvg, cadDrawingDxf } from '../cad-drawing-export.js';
+import { cadDrawingSvg, cadDrawingDxf, cadDrawingViewSvg } from '../cad-drawing-export.js';
 import { cadDrawingPaperSize, cadDrawingSourceSignatures } from '../cad-drawing-data.js';
 
 export function createImportExport({
@@ -48,6 +53,9 @@ export function createImportExport({
   download,
   selected,
   prepareExportDialog,
+  profileExport,
+  openSketchImport,
+  getSelection,
   state,
 }) {
   async function importFile(
@@ -65,7 +73,11 @@ export function createImportExport({
       current = () => true,
       files = [],
       exchange,
+      animations = false,
       asMesh = false,
+      asSketch = false,
+      dxfDocument,
+      dxfUnit,
       preparedMesh,
       importSignal,
       forMeshHelp = false,
@@ -104,13 +116,32 @@ export function createImportExport({
         folderId: p.activeFolderId,
         metadata: { importedFile: { name: file.name, type: ext } },
       };
+    if (ext === 'dxf' || (ext === 'svg' && asSketch)) {
+      if (file.size > 4 * 1024 * 1024) throw Error('Skizzenimport: maximal 4 MiB.');
+      if (importDomain === 'mesh') throw Error('Skizzendateien im CAD-Bereich importieren.');
+      const text = dxfDocument ? null : await file.text();
+      checkImport();
+      const dxf = ext === 'dxf' ? cadDxfEntities(dxfDocument ?? readCadProfileDxf(text), dxfUnit) : null;
+      const sketch = cadSketchFromExchange(dxf?.entities ?? cadSvgEntities(text));
+      const notes = dxf
+        ? [
+            'DXF-Layer: ' + dxf.layers.join(', '),
+            ...(dxf.skipped.length ? ['Ausgelassene Zeichnungselemente: ' + dxf.skipped.join(', ')] : []),
+          ].join(' · ')
+        : '';
+      return openSketchImport({
+        sketch,
+        name: file.name.replace(/\.(svg|dxf)$/i, '').slice(0, 160),
+        frame: workFrame(p),
+        notes,
+      });
+    }
     let proposal;
 
     if (['3mf', 'glb', 'gltf'].includes(ext)) {
-      const revision = controller.revision(),
-        result = exchange ?? (await readExchangeFile(file, { files }));
-
-      if (!current() || controller.revision() !== revision) throw Error('Import abgebrochen oder Projekt geändert.');
+      const result =
+        (animations && !exchange?.clips ? null : exchange) ?? (await readExchangeFile(file, { files, animations }));
+      checkImport();
 
       const draft = controller.snapshot(),
         ids = [];
@@ -131,11 +162,13 @@ export function createImportExport({
           mesh: part.mesh,
         });
       }
+      const motion = result.clips?.length ? cadMotionScene(result, ids, file.name) : null;
+      if (motion) draft.motionClips = { version: 1, scenes: [...(draft.motionClips?.scenes ?? []), motion] };
 
       proposal = await controller.preview(undefined, {
         project: draft,
-        revision,
-        label: 'Austauschdatei als Netzreferenzen importieren',
+        revision: importRevision,
+        label: motion ? 'Teile und Bewegungsclips importieren' : 'Austauschdatei als Netzreferenzen importieren',
       });
 
       if (!current()) {
@@ -214,6 +247,8 @@ export function createImportExport({
 
           check();
           options.metadata.notes = conversionSummary(converted.report).slice(0, 4000);
+          const repairRecord = repairFassungFromReport(converted.report);
+          if (repairRecord) options.metadata.meshRepair = repairRecord;
 
           proposal = await controller.preview(
             {
@@ -336,6 +371,42 @@ export function createImportExport({
     const importDomain = activeEasyKind(),
       domainRevision = state.easyDomainRevision;
     easyImportPolicy(file.name.split('.').at(-1), importDomain);
+    if (/\.dxf$/i.test(file.name)) {
+      readyForFile();
+      if (file.size > 4 * 1024 * 1024) throw Error('DXF-Skizzenimport: maximal 4 MiB.');
+      const revision = controller.revision(),
+        scope = controller.projectScope();
+      const unchanged = () =>
+        revision === controller.revision() &&
+        scope === controller.projectScope() &&
+        domainRevision === state.easyDomainRevision;
+      const dxf = readCadProfileDxf(await file.text());
+      if (!unchanged()) throw Error('Projekt inzwischen verändert. Import erneut starten.');
+      modal(
+        'DXF als Skizze importieren',
+        (dxf.unit
+          ? '<p>Einheit aus der Datei übernommen.</p>'
+          : '<label class="dialog-label">Einheit<select id="dxf-import-unit"><option value="">Einheit wählen</option><option value="1">Millimeter</option><option value="10">Zentimeter</option><option value="1000">Meter</option><option value="25.4">Zoll</option><option value="304.8">Fuß</option></select></label>') +
+          '<p id="dxf-import-status" role="status"></p><div class="modal-actions"><button id="dxf-import-confirm" class="primary">Skizze öffnen</button></div>',
+      );
+      const session = state.modalSequence;
+      const current = () => $('modal').open && state.modalSequence === session && unchanged();
+      $('dxf-import-confirm').onclick = () =>
+        safe(async () => {
+          if (!current()) return;
+          const status = $('dxf-import-status');
+          try {
+            await importFile(file, {
+              dxfDocument: dxf,
+              dxfUnit: dxf.unit ?? Number($('dxf-import-unit').value),
+              current,
+            });
+          } catch (error) {
+            if (current()) status.textContent = error.message;
+          }
+        });
+      return;
+    }
     if (/\.fcstd$/i.test(file.name)) {
       readyForFile();
       if (aiUI.isBusy()) throw Error('Laufenden Auftrag zuerst abschließen.');
@@ -374,7 +445,7 @@ export function createImportExport({
 
     if (/\.(3mf|glb|gltf)$/i.test(file.name)) {
       const revision = controller.revision(),
-        exchange = await readExchangeFile(file, { files });
+        exchange = await readExchangeFile(file, { files, describeAnimations: true });
       if (domainRevision !== state.easyDomainRevision)
         throw new DOMException('Arbeitsbereich während des Imports geändert.', 'AbortError');
       if (controller.revision() !== revision) throw Error('Projekt inzwischen verändert. Import erneut starten.');
@@ -382,7 +453,11 @@ export function createImportExport({
       modal(
         'Teile importieren',
         exchangeImportSummary(exchange, { cad: true }) +
-          '<label class="dialog-label">Verwendung<select id="exchange-kind"><option value="reference">Ansichtsvorlagen</option><option value="mesh">Bearbeitbare Netzteile</option></select></label><p>Auch offene Netze lassen sich als Netzteile anzeigen und speichern. Körperwerkzeuge benötigen eine zusätzliche Prüfung.</p><p id="exchange-status" role="status"></p><div class="modal-actions"><button id="exchange-cancel">Abbrechen</button><button id="exchange-import" class="primary">Importieren</button></div>',
+          '<label class="dialog-label">Verwendung<select id="exchange-kind"><option value="reference">Ansichtsvorlagen</option><option value="mesh">Bearbeitbare Netzteile</option></select></label>' +
+          (exchange.hasAnimations
+            ? '<label class="dialog-label"><input id="exchange-animations" type="checkbox" checked> Bewegungsclips übernehmen</label><p>Öffne die Clips in „Normal“ unter „CAD-Werkzeuge“ und „Gelenke“.</p>'
+            : '') +
+          '<p>Auch offene Netze lassen sich als Netzteile anzeigen und speichern. Körperwerkzeuge benötigen eine zusätzliche Prüfung.</p><p id="exchange-status" role="status"></p><div class="modal-actions"><button id="exchange-cancel">Abbrechen</button><button id="exchange-import" class="primary">Importieren</button></div>',
       );
 
       $('exchange-kind').value =
@@ -417,7 +492,13 @@ export function createImportExport({
         importing = true;
         try {
           if (controller.revision() !== revision) throw Error('Projekt inzwischen verändert. Import erneut starten.');
-          await importFile(file, { files, exchange, asMesh: $('exchange-kind').value === 'mesh', current });
+          await importFile(file, {
+            files,
+            exchange,
+            animations: !!$('exchange-animations')?.checked,
+            asMesh: $('exchange-kind').value === 'mesh',
+            current,
+          });
           importing = false;
           active = false;
           detach();
@@ -453,7 +534,7 @@ export function createImportExport({
       svg ? 'SVG extrudieren' : stl ? 'STL importieren' : 'Netzreferenz importieren',
 
       (svg
-        ? '<label class="dialog-label">Verwendung<select id="import-kind"><option value="cad">CAD-Körper</option><option value="mesh">Bearbeitbares Netzteil</option></select></label><label class="dialog-label">Extrusionshöhe (mm)<input id="import-height" type="number" min="0.01" max="10000" value="3"></label>'
+        ? '<label class="dialog-label">Verwendung<select id="import-kind"><option value="cad">CAD-Körper</option><option value="mesh">Bearbeitbares Netzteil</option><option value="sketch">Bearbeitbare Skizze (1:1)</option></select></label><label class="dialog-label">Extrusionshöhe (mm)<input id="import-height" type="number" min="0.01" max="10000" value="3"></label>'
         : (stl
             ? '<label class="dialog-label">Verwendung<select id="import-kind"><option value="reference">Ansichtsvorlage</option><option value="mesh">Bearbeitbares Netzteil</option><option value="cad">STL als CAD-Körper rekonstruieren</option></select></label><p>CAD-Körper lassen sich mit den CAD-Werkzeugen bearbeiten. Netzreferenzen lassen sich positionieren.</p>' +
               repairControls
@@ -468,7 +549,14 @@ export function createImportExport({
     if (!svg) {
       $('import-kind').value = !stl && defaults.import.meshUse === 'cad' ? 'reference' : defaults.import.meshUse;
       $('import-unit').value = String(defaults.import.unit);
-    } else $('import-height').value = defaults.import.svgHeight;
+    } else {
+      $('import-height').value = defaults.import.svgHeight;
+      const kind = $('import-kind');
+      if (importDomain === 'mesh') kind.querySelector('[value=sketch]')?.remove();
+      kind.onchange = () => {
+        $('import-height').closest('label').hidden = kind.value === 'sketch';
+      };
+    }
 
     if (stl) {
       $('import-repair').checked = defaults.conversion.repair;
@@ -544,6 +632,7 @@ export function createImportExport({
             height: svg ? Number($('import-height').value) : 3,
             unit: reference ? Number($('import-unit').value) : 1,
             asMesh: !!$('import-kind') && $('import-kind').value === 'mesh',
+            asSketch: svg && $('import-kind').value === 'sketch',
             reconstruct: stl && $('import-kind').value === 'cad',
             repair: stl && $('import-kind').value === 'cad' && $('import-repair').checked,
             fillSmallHoles: !!$('import-fill-holes') && $('import-fill-holes').checked,
@@ -603,7 +692,7 @@ export function createImportExport({
       });
   }
 
-  async function saveDrawingExport({ format, sheet, signal }) {
+  async function saveDrawingExport({ format, sheet, viewId, signal }) {
     const revision = controller.revision(),
       release = controller.holdRevision(revision);
     try {
@@ -628,6 +717,10 @@ export function createImportExport({
         if (controller.revision() !== revision)
           throw Object.assign(Error('Modell während der PDF-Ausgabe geändert.'), { code: 'STALE_REVISION' });
         return await download(bytes, name + '.pdf', 'application/pdf', { numbered: true, signal });
+      }
+      if (format === 'svg-view') {
+        const svg = cadDrawingViewSvg(sheet, viewId, options);
+        return await download(svg, name + ' - Ansicht.svg', 'image/svg+xml', { numbered: true, signal });
       }
       const text =
         format === 'svg' ? cadDrawingSvg(sheet, options) : format === 'dxf' ? cadDrawingDxf(sheet, options) : null;
@@ -655,6 +748,8 @@ export function createImportExport({
     getModalSequence: () => state.modalSequence,
     safe,
     selected,
+    profileExport,
+    getSelection,
   });
 
   return { importFile, importDialog, exportModel, exportDialog, saveDrawingExport };

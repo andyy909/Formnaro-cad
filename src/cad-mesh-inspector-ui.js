@@ -69,19 +69,45 @@ export function createCadMeshInspectorUI({
     }
     const kinds = r ? Object.keys(MESH_INSPECTION_CATEGORIES).filter((k) => r.categories[k].count) : [],
       old = $('focus-kind').value;
+    if (r?.defectGroups?.length) kinds.push('defectGroup');
     $('focus-kind').innerHTML = kinds
-      .map((k) => `<option value="${k}">${MESH_INSPECTION_CATEGORIES[k].label}</option>`)
+      .map(
+        (k) =>
+          `<option value="${k}">${k === 'defectGroup' ? 'Lokale Fehlerstellen' : MESH_INSPECTION_CATEGORIES[k].label}</option>`,
+      )
       .join('');
     if (kinds.includes(old)) $('focus-kind').value = old;
     $('next').disabled = $('previous').disabled = $('focus-kind').disabled = s.busy || !kinds.length;
-    const c = r?.categories[$('focus-kind').value];
-    $('finding').textContent = c ? `Fundstelle ${number((s.focusIndex ?? 0) + 1)} von ${number(c.count)}` : '';
+    const isGroup = $('focus-kind').value === 'defectGroup';
+    const c = isGroup ? null : r?.categories[$('focus-kind').value];
+    $('finding').textContent = isGroup
+      ? (r?.defectGroups?.length ? `Fehlerstelle ${number((s.activeGroupIndex ?? 0) + 1)} von ${number(r.defectGroups.length)}` : '')
+      : (c ? `Fundstelle ${number((s.focusIndex ?? 0) + 1)} von ${number(c.count)}` : '');
+    const groupsList = $('groups-list');
+    if (groupsList) {
+      if (r?.defectGroups?.length) {
+        groupsList.innerHTML = r.defectGroups
+          .map(
+            (g, idx) =>
+              `<button type="button" class="mesh-inspector-group-btn${s.activeGroupIndex === idx ? ' active' : ''}" data-group-index="${idx}"><strong>${g.id}</strong>: ${number(g.edgeCount)} Kanten (Körper ${g.componentId + 1})</button>`,
+          )
+          .join('');
+        for (const btn of groupsList.querySelectorAll('.mesh-inspector-group-btn')) {
+          btn.onclick = () => {
+            const idx = Number(btn.dataset.groupIndex);
+            focusGroup(idx);
+          };
+        }
+      } else {
+        groupsList.innerHTML = r ? '<p class="small-note">Keine lokalen Fehlerstellen vorhanden.</p>' : '';
+      }
+    }
     if (!r || s.busy || !eligible(n)) {
       clear();
       return;
     }
     try {
-      view.setMeshInspection?.(r, { enabled: [...s.enabled], through: s.through });
+      view.setMeshInspection?.(r, { enabled: [...s.enabled], through: s.through, activeGroupIndex: s.activeGroupIndex });
     } catch (error) {
       clear();
       message(error.message, true);
@@ -142,11 +168,28 @@ export function createCadMeshInspectorUI({
       }
     }
   }
+  function focusGroup(index) {
+    if (!session?.result || session.busy) return false;
+    const groups = session.result.defectGroups;
+    if (!groups?.length || index < 0 || index >= groups.length) return false;
+    session.activeGroupIndex = index;
+    const points = meshInspectionFindingPoints(session.result, node(), 'defectGroup', index);
+    if (points.length) view.focusWorldPoints?.(points);
+    draw();
+    return points.length > 0;
+  }
   function focus(step = 0) {
     if (!session?.result || session.busy) return false;
-    const kind = $('focus-kind').value,
-      c = session.result.categories[kind];
+    const kind = $('focus-kind').value;
+    if (kind === 'defectGroup') {
+      const groups = session.result.defectGroups;
+      if (!groups?.length) return false;
+      const nextIdx = ((session.activeGroupIndex ?? -1) + step + groups.length) % groups.length;
+      return focusGroup(nextIdx);
+    }
+    const c = session.result.categories[kind];
     if (!c?.count) return false;
+    session.activeGroupIndex = null;
     session.focusIndex = ((session.focusIndex ?? 0) + step + c.count) % c.count;
     const points = meshInspectionFindingPoints(session.result, node(), kind, session.focusIndex);
     if (points.length) view.focusWorldPoints?.(points);
@@ -171,6 +214,7 @@ export function createCadMeshInspectorUI({
       enabled: new Set(Object.keys(MESH_INSPECTION_CATEGORIES)),
       through: false,
       focusIndex: 0,
+      activeGroupIndex: null,
     };
     panel.innerHTML =
       '<div class="mesh-inspector-heading"><strong>Netzinspektor</strong><button id="mesh-inspector-x" aria-label="Netzinspektor schließen">×</button></div><p id="mesh-inspector-name"></p><p class="small-note">Reine Diagnose. Das Netz wird weder repariert noch verändert. Auch gesperrte Netzteile können geprüft werden.</p><label>Kleine Nebenbestandteile: höchstens so viele Dreiecke<input id="mesh-inspector-threshold" type="number" min="0" max="500000" step="1" value="20"></label><p class="small-note">Der größte kantenverbundene Bestandteil bleibt Hauptbestandteil. Bei Gleichstand gilt der mit der ersten ursprünglichen Dreiecksnummer. 0 schaltet die Nebenbestandteil-Markierung aus.</p><p id="mesh-inspector-summary" role="status"></p><div class="mesh-inspector-categories">' +
@@ -180,7 +224,7 @@ export function createCadMeshInspectorUI({
             `<label><input id="mesh-inspector-show-${kind}" type="checkbox" checked><span class="mesh-inspector-swatch" style="background:${info.color}"></span><span>${info.label}</span><strong id="mesh-inspector-count-${kind}">—</strong></label>`,
         )
         .join('') +
-      '</div><label><input id="mesh-inspector-through" type="checkbox"> Markierungen durch das Bauteil zeigen</label><label>Fundstellen ansehen<select id="mesh-inspector-focus-kind"></select></label><div class="mesh-inspector-navigation"><button id="mesh-inspector-previous">Vorherige</button><button id="mesh-inspector-next">Nächste Fundstelle</button></div><p id="mesh-inspector-finding"></p><p id="mesh-inspector-status" role="status"></p><details><summary>Was wird geprüft?</summary><p>Exakt gleiche Koordinaten gelten für diese Topologieprüfung als derselbe Punkt. Gespeicherte Punkte und Dreiecksnummern bleiben erhalten. Doppelte Dreiecke: alle betroffenen Flächen, unabhängig von ihrer Richtung. Entartet: kein eindeutiger Flächeninhalt. Problematische Kanten: mehr als zwei angrenzende Dreiecke. Problematische Punkte: mehrere getrennte Flächenfächer. Bei bereits fehlerhaften Nachbarflächen werden zusätzliche Punktmeldungen unterdrückt.</p><p>Richtung: widersprüchliche Nachbarrichtung an gemeinsamen Kanten. Keine Prüfung auf Selbstüberschneidungen, konsistent nach innen gerichtete Hüllen, Wandstärken oder Druckbarkeit. Kein Körpernachweis; absichtliche Öffnungen und getrennte Teile bleiben erhalten.</p><p>Bis 500.000 Dreiecke und 1.000.000 gespeicherte Punkte je Netz. Ergebnisse und Markierungen sind vorübergehend; nach Öffnen einer Datei erneut berechnen.</p></details><div class="edge-actions"><button id="mesh-inspector-calculate">Neu prüfen</button><button id="mesh-inspector-close" class="primary">Schließen</button></div>';
+      '</div><div class="mesh-inspector-groups-section"><strong>Lokale Fehlerstellen</strong><div id="mesh-inspector-groups-list" class="mesh-inspector-groups-list"></div></div><label><input id="mesh-inspector-through" type="checkbox"> Markierungen durch das Bauteil zeigen</label><label>Fundstellen ansehen<select id="mesh-inspector-focus-kind"></select></label><div class="mesh-inspector-navigation"><button id="mesh-inspector-previous">Vorherige</button><button id="mesh-inspector-next">Nächste Fundstelle</button></div><p id="mesh-inspector-finding"></p><p id="mesh-inspector-status" role="status"></p><details><summary>Was wird geprüft?</summary><p>Exakt gleiche Koordinaten gelten für diese Topologieprüfung als derselbe Punkt. Gespeicherte Punkte und Dreiecksnummern bleiben erhalten. Doppelte Dreiecke: alle betroffenen Flächen, unabhängig von ihrer Richtung. Entartet: kein eindeutiger Flächeninhalt. Problematische Kanten: mehr als zwei angrenzende Dreiecke. Problematische Punkte: mehrere getrennte Flächenfächer. Bei bereits fehlerhaften Nachbarflächen werden zusätzliche Punktmeldungen unterdrückt.</p><p>Richtung: widersprüchliche Nachbarrichtung an gemeinsamen Kanten. Keine Prüfung auf Selbstüberschneidungen, konsistent nach innen gerichtete Hüllen, Wandstärken oder Druckbarkeit. Kein Körpernachweis; absichtliche Öffnungen und getrennte Teile bleiben erhalten.</p><p>Bis 500.000 Dreiecke und 1.000.000 gespeicherte Punkte je Netz. Ergebnisse und Markierungen sind vorübergehend; nach Öffnen einer Datei erneut berechnen.</p></details><div class="edge-actions"><button id="mesh-inspector-calculate">Neu prüfen</button><button id="mesh-inspector-close" class="primary">Schließen</button></div>';
     $('name').textContent = n.name;
     panel.hidden = false;
     $('calculate').onclick = () => void calculate();

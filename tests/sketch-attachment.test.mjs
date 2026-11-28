@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
-import {Matrix4} from 'three';import load from '../cad-kernel-build/runtime/formnaro_cad.js';
+import {Matrix4,Vector3} from 'three';import load from '../cad-kernel-build/runtime/formnaro_cad.js';
 import {createCadProject,parseCadProject,serializeCadProject} from '../src/cad-project.js';
 import {createCadService} from '../src/cad-service.js';
 import {createCadCommandRouter} from '../src/cad-command-router.js';
@@ -7,6 +7,8 @@ import {createMeshEngineAdapter} from '../src/mesh-engine-adapter.js';import Mod
 import {defaultCadSketch} from '../src/cad-sketch.js';import {projectObjectGeometryDigest} from '../src/project-objects.js';
 import {createCadTransactions} from '../src/cad-transactions.js';
 import {prepareSketchAttachment,checkSketchAttachment,attachmentNativeCommands,attachmentMeshOperations} from '../src/sketch-attachment.js';
+import {faceSketchNative} from '../src/cad-face-sketch-native.js';
+import {cadRayHits} from '../src/cad-native-kernel.js';
 const oc=await load({print:()=>{},printErr:()=>{}}),near=(a,b,tol=1e-5)=>assert.ok(Math.abs(a-b)<tol,`${a} vs ${b}`);
 const circle=()=>{const s=defaultCadSketch('circle');s.dimensions.diameter='6';s.dimensions.height='5';return s;};
 const options=(p,mode='add',point=[0,0,1.5])=>({targetId:p.nodes[0].id,sketch:circle(),mode,reference:{point,normal:[0,0,1],geometryDigest:projectObjectGeometryDigest(p.nodes[0])}});
@@ -19,3 +21,51 @@ test('The actual native attachment operation is atomic and contributes exactly o
 test('The actual mesh attachment operation proves closure/components and rejects misses without committing',async()=>{const kernel=await Module({wasmBinary:fs.readFileSync(new URL('../node_modules/manifold-3d/manifold.wasm',import.meta.url))});kernel.setup();const engine=createMeshEngineAdapter({kernel}),p=(await engine.edit({project:createCadProject(),operation:{type:'mesh-create',id:'target',shape:'box',size:[60,40,3],position:[0,0,0]}})).project,operation={type:'mesh-sketch-attachment',...options(p)},before=JSON.stringify(p),result=await engine.edit({project:p,operation});assert.equal(JSON.stringify(p),before);assert.equal(result.report.engine,'mesh');assert.ok(result.project.nodes[0].meshSource.sources[1].name.includes('Anbau'));assert.equal(result.report.solidsBefore,1);assert.equal(result.report.solidsAfter,1);near(result.report.volumeAfter,7200+45*Math.PI,.25);await assert.rejects(()=>engine.edit({project:p,operation:{...operation,reference:{...operation.reference,point:[100,0,1.5]}}}),/berühren/);assert.equal(JSON.stringify(p),before);});
 
 test('World millimeters and every original affine entry survive mirrored, sheared targets in both engines',async()=>{const affine=new Matrix4().makeScale(-2,.5,1.5);affine.elements[4]=.2;const service=createCadService({oc}),router=createCadCommandRouter({oc,service});try{const p=await service.rebuild(createCadProject({nodes:[service.nativeNode({type:'box',size:[60,40,3]},{id:'target',transform:affine.toArray()})]})),op={kind:'sketchAttachment',...options(p,'add',[0,0,2.25])},r=await router.run(p,op);near(r.report.volumeBefore,10800);near(r.report.changedVolume,45*Math.PI);assert.deepEqual(r.project.nodes[0].children[0].transform,p.nodes[0].transform);}finally{service.dispose();}const kernel=await Module({wasmBinary:fs.readFileSync(new URL('../node_modules/manifold-3d/manifold.wasm',import.meta.url))});kernel.setup();const engine=createMeshEngineAdapter({kernel}),p=(await engine.edit({project:createCadProject(),operation:{type:'mesh-create',id:'target',shape:'box',size:[60,40,3],position:[0,0,0]}})).project;p.nodes[0].transform=affine.clone().multiply(new Matrix4().fromArray(p.nodes[0].transform)).toArray();const op={type:'mesh-sketch-attachment',...options(p,'add',[0,0,2.25])},r=await engine.edit({project:p,operation:op});near(r.report.volumeBefore,10800);near(r.report.changedVolume,45*Math.PI,.3);assert.deepEqual(r.project.nodes[0].meshSource.sources[0].transform,p.nodes[0].transform);});
+
+test('Tablet outlines cut through or to exact depth in one undoable CAD change', async () => {
+  const service = createCadService({oc});
+  try {
+    const router = createCadCommandRouter({oc, service});
+    const target = service.nativeNode({type:'box',size:[60,40,8]},{id:'target'});
+    const initial = await service.rebuild(createCadProject({nodes:[target]}));
+    const shape = service.worldShape(initial.nodes[0]);
+    let hit, draft;
+    try {
+      hit = cadRayHits(oc, shape, {origin:[0,0,20],direction:[0,0,-1],far:100})
+        .sort((a,b)=>a.t-b.t)[0];
+      draft = faceSketchNative(oc, shape, hit.faceIndex,{viewAxes:{right:[0,1,0],up:[-1,0,0]}});
+    } finally {
+      shape.delete();
+    }
+    const sketch = structuredClone(draft.sketch);
+    const local = new Matrix4().fromArray(draft.frame).invert();
+    const planePoint = (x,y) => new Vector3(x,y,4).applyMatrix4(local).toArray().slice(0,2);
+    sketch.elements.push(
+      {id:'tablet-first',type:'circle',center:planePoint(-9,2),diameter:6},
+      {id:'tablet-other',type:'circle',center:planePoint(7,-3),diameter:4},
+    );
+    sketch.loops.push(
+      {id:'tablet-loop-one',role:'hole',elements:['tablet-first']},
+      {id:'tablet-loop-two',role:'hole',elements:['tablet-other']},
+    );
+    const operation = {
+      kind:'tabletFaceCut',frame:draft.frame,originalSketch:draft.sketch,sketch,
+      binding:{targetId:'target',point:hit.point,normal:hit.normal,geometryDigest:projectObjectGeometryDigest(initial.nodes[0])},
+    };
+    const through = await router.run(initial,{...operation,cut:{mode:'through'}});
+    near(through.report.changedVolume,-104*Math.PI);
+    const store = createCadTransactions({initial,build:async (p,c)=>(await router.run(p,c.operation,{baseline:c.baseline})).project});
+    const before = store.serialize();
+    const proposal = await store.preview({revision:store.revision(),project:initial,operation:{...operation,cut:{mode:'depth',depth:2.5}}});
+    assert.equal(store.serialize(),before);
+    store.apply(proposal);
+    assert.equal(store.state().undo,1);
+    near(store.snapshot().nodes[0].stats.volume,19200-32.5*Math.PI);
+    store.undo();
+    assert.equal(store.serialize(),before);
+    await assert.rejects(router.run(initial,{...operation,sketch:draft.sketch,cut:{mode:'through'}}),/neue geschlossene Lochkontur/);
+    await assert.rejects(router.run(initial,{...operation,binding:{...operation.binding,geometryDigest:'0'.repeat(64)},cut:{mode:'through'}}),/erneut ans Tablet/);
+  } finally {
+    service.dispose();
+  }
+});

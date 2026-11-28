@@ -2,7 +2,13 @@ import { createCadController } from './cad-controller.js';
 import { label } from './cad-function-plugins.js';
 import './functions.css';
 import { openStlWorkbench } from './cad-stl-workbench.js';
-import { hasLocalStlConverter } from './cad-stl-converter.js';
+import {
+  hasLocalStlConverter,
+  conversionControls,
+  readConversionControls,
+  conversionSummary,
+  createLocalStlConversion,
+} from './cad-stl-converter.js';
 export function createCadFunctionsUI({
   plugins,
   modal,

@@ -1,5 +1,5 @@
 import { INSPECTION_COMMAND_SCHEMAS } from './cad-inspection-state.js';
-import { CAD_NATIVE_REFERENCE_SCHEMA } from './cad-precise-tools.js';
+import { CAD_NATIVE_RAY_SCHEMA, CAD_NATIVE_REFERENCE_SCHEMA } from './cad-precise-tools.js';
 import {
   CAD_COMMAND_INFO_SCHEMA,
   CAD_CONTEXT_PROFILE_SCHEMA,
@@ -24,6 +24,7 @@ import { SCHEMAS } from './parameters.js';
 import { COMMAND_SCHEMA, TARGET_SCHEMA, CAD_MODELING_COMMAND_SCHEMAS } from './command-schema.js';
 import { CAD_FONTS } from './cad-fonts.js';
 import { FORMNARO_VERSION } from './version.js';
+import { MOTION_CLIP_PROJECT_VERSION, isSupportedCadProjectVersion } from './cad-project.js';
 import { MESH_AI_COMMAND_SCHEMAS, MESH_AI_SHAPE_IDS } from './cad-mixed-ai.js';
 import { AI_RESULT_CHECKS_SCHEMA } from './cad-ai-result-checks.js';
 import { AI_PROGRAM_SCHEMAS, AI_PROGRAM_TOOLS } from './cad-ai-program.js';
@@ -34,6 +35,12 @@ import { CAD_CONTOUR_COMMAND_SCHEMAS } from './cad-linked-contours-automation.js
 import { CAD_LINKED_PATTERN_COMMAND_SCHEMAS } from './cad-linked-pattern-automation.js';
 import { PROGRAM_ASSISTANT_CONTRACT } from './cad-program-help.js';
 import { CAD_AI_FEATURE_COMMAND_SCHEMA } from './cad-ai-feature-automation.js';
+
+const supportedProjectVersions = Array.from(
+  { length: MOTION_CLIP_PROJECT_VERSION },
+  (_, index) => index + 1,
+).filter(isSupportedCadProjectVersion);
+
 export function cadAIContext(fonts = CAD_FONTS) {
   const commandSchema = structuredClone(COMMAND_SCHEMA);
   commandSchema.properties.commands.items.oneOf.push(...structuredClone(CAD_MODELING_COMMAND_SCHEMAS));
@@ -189,7 +196,8 @@ export function cadAIContext(fonts = CAD_FONTS) {
       },
     },
   });
-  const reference = structuredClone(CAD_NATIVE_REFERENCE_SCHEMA);
+  const ray = structuredClone(CAD_NATIVE_RAY_SCHEMA),
+    reference = structuredClone(CAD_NATIVE_REFERENCE_SCHEMA);
   commandSchema.properties.commands.items.oneOf.push({
     type: 'object',
     additionalProperties: false,
@@ -351,10 +359,8 @@ export function cadAIContext(fonts = CAD_FONTS) {
     application: 'Formnaro',
     version: FORMNARO_VERSION,
     apiVersion: 1,
-    projectVersion: 32,
-    supportedProjectVersions: [
-      5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
-    ],
+    projectVersion: MOTION_CLIP_PROJECT_VERSION,
+    supportedProjectVersions: [...supportedProjectVersions],
     units: 'mm',
     programTools: structuredClone(AI_PROGRAM_TOOLS),
     packageStorageContract:
@@ -370,7 +376,7 @@ export function cadAIContext(fonts = CAD_FONTS) {
     contourLinkContract:
       'Project/library14 additionally retains contourLinks version1 and stable drawing curve/measure source roles. Read scene.contourLinks or app/contourLinks {offset,limit} for bounded current/stale/blocked references. Query cad/linkedFaceCandidate {source:{rootId,path},ray:{origin,direction}} (or transient faceIndex) to obtain an exact supported native-role or step-exact selector; never save face numbers or guess the nearest surface. Send one homogeneous contour command per preview: {op:"contour",action:"create",source,selector,height?,name?,targetSketch?}, update with optional ids/edits, rebind with id/source/selector/edits, or unlink with ids. update.ids collects necessary upstream and downstream dependencies; every affected geometry node is constructed at most once, unrelated geometry is reused. Source fields remain preserved; direct linked target profile edits remain read-only. Explicit project parameter bindings may replace existing literal profile-element coordinates or circle diameter after fresh native extraction, preserving exact element identity and the original snapshot.profile. Removing a binding restores its source field on Update. Collect connected endpoint controls together; invalid/open or missing-element profiles reject atomically. Free target variables and extrusion height remain editable. Geometry exchange or ambiguous STEP reference requires explicit rebind; identical original STEP geometry follows placement changes only on Update. Snapshot geometry, frames and element correspondence are internal read-only proof. Unlink preserves the last geometry without constructing. Source changes remain saveable but stale downstream exports are blocked; unrelated selected exports remain possible. Drawing update joins required source parameters/contours and semantic measured roles in one Preview/Apply/Undo. Native geometry/HLR runs only on explicit update; paper edits and zoom reuse cached curves. No cloud key or external provider is required.',
     drawingContract:
-      'Project/library12 can retain technical sheets under drawings:{version:1,sheets:[...]}. Read current project to obtain sheet/view/curve IDs. Send homogeneous drawing-only preview batches: {op:"drawing",action:"put",sheet:{id,name,paper:"A4"|"A3",orientation:"portrait"|"landscape",scale,titleBlock:{title,number,revision,author,date},views:[{id,kind:"front"|"side"|"top"|"section",sourceIds:[nativeRootId],position:[paperX,paperY],section?:{axis:0|1|2,offset}}],annotations:[{id,kind:"label",text,position}|{id,kind:"length"|"angle"|"radius"|"diameter",viewId,curveIds,position}]}}, {op:"drawing",action:"update",sheetId}, {op:"drawing",action:"remove",sheetId}. put retains unchanged confirmed projection caches when omitted, never accepts fabricated curves. Only explicit update computes native HLR/cuts in the existing cancellable CAD worker, then one revision-bound Preview/Apply/Undo covers the entire batch. Front=X/Z, side=Y/Z, top=X/Y; curve coordinates are model mm with Y up, paper placement/text positions are paper mm Y down. Length/radius/diameter refer one measured curve, angle two measured lines. Lost curve refs require explicit reassignment or annotation removal; there is no nearest-curve matching. Native source edits leave cached drawings stale and saveable; export blocks until successful update. Export {format:"drawing-svg"|"drawing-dxf"|"drawing-pdf",sheetId} uses current cached curves only. SVG/PDF preserve A4/A3 paper size/scale; local Electron PDF needs no external service. ASCII AC1015 DXF model geometry is 1:1 millimetres regardless of paper scale. Arbitrary imported curves retain exact native conics/rational Bézier data; bounded SVG representation discloses its curve error. Automatic dimension suggestions: {op:"drawing",action:"dimension",sheetId,mode:"basic"|"detailed"} uses fresh cached curves only, preserves authored dimensions and returns an ordinary revision-bound preview. Basic adds overall dimensions and circle diameters; detailed adds circle centre positions from minima, arc radii, edge lengths and non-right corner angles. New distance annotations require project/library18, with kind:"distance", axis:"x"|"y", curveIds:[oneOrTwoUniqueIds], anchors:[{curveIndex:0|1,point:"a"|"b"|"center"|"minX"|"maxX"|"minY"|"maxY"},secondAnchor]. Coordinates always derive from native curves, never user-supplied measurement values. Text placement is bounded by free paper space. Unsupported spline views skip overall/position suggestions explicitly. No inferred tolerances, GD&T or guarantee of complete manufacturing dimensioning.',
+      'Project/library12 can retain technical sheets under drawings:{version:1,sheets:[...]}. Read current project to obtain sheet/view/curve IDs. Send homogeneous drawing-only preview batches: {op:"drawing",action:"put",sheet:{id,name,paper:"A4"|"A3",orientation:"portrait"|"landscape",scale,titleBlock:{title,number,revision,author,date},views:[{id,kind:"front"|"side"|"top"|"section"|"detail"|"exploded",sourceIds:[nativeRootId],position:[paperX,paperY],scale?:number,section?:{axis:0|1|2,offset},cutout?:{sourceViewId,center:[modelX,modelY],radius},explosion?:{version:1,distance,parts:[{id,direction:[x,y,z]}]}}],annotations:[{id,kind:"label",text,position}|{id,kind:"length"|"angle"|"radius"|"diameter",viewId,curveIds,position}]}}, {op:"drawing",action:"update",sheetId}, {op:"drawing",action:"remove",sheetId}. put retains unchanged confirmed projection caches when omitted, never accepts fabricated curves. Only explicit update computes native HLR/cuts in the existing cancellable CAD worker, then one revision-bound Preview/Apply/Undo covers the entire batch. Front=X/Z, side=Y/Z, top=X/Y; curve coordinates are model mm with Y up, paper placement/text positions are paper mm Y down. Length/radius/diameter refer one measured curve, angle two measured lines. Lost curve refs require explicit reassignment or annotation removal; there is no nearest-curve matching. Native source edits leave cached drawings stale and saveable; export blocks until successful update. Export {format:"drawing-svg"|"drawing-dxf"|"drawing-pdf",sheetId} uses current cached curves only. SVG/PDF preserve A4/A3 paper size/scale; local Electron PDF needs no external service. Project/library38 additionally stores detail views with cutout:{sourceViewId,center:[modelX,modelY],radius} and an own view scale. A detail derives its clipped analytic curves from the parent projection; supported curve kinds are line, circle, arc, polyline and fully interior ellipse/Bézier spans. Paper SVG/PDF print the detail at its own scale while DXF keeps model geometry 1:1. Moving the parent view or changing the sheet scale never stacks a second detail scale. A missing parent or invalid cutout is reported and blocks export. Project/library40 adds native isometric exploded views. When putting an exploded view, use the saved workspace explosion with a positive distance, keep only direction entries for the view sourceIds, and include at least one such entry. Each direction is a unit vector. The stored snapshot controls later refreshes independently of workspace display settings. The native projection applies those offsets for drawing geometry while retaining the original assembly placement and source identities. Project/library41 stores item balloons with their native projection edge and exact placement ID. Each displayed number is read from the active parts-list row containing that placement. Keep the partsList and native sourceReferences when putting a sheet that already has balloons. A lost or ambiguous balloon reference is reported and blocks export. ASCII AC1015 DXF model geometry is 1:1 millimetres regardless of paper scale. Arbitrary imported curves retain exact native conics/rational Bézier data; bounded SVG representation discloses its curve error. Automatic dimension suggestions: {op:"drawing",action:"dimension",sheetId,mode:"basic"|"detailed"} uses fresh cached curves only, preserves authored dimensions and returns an ordinary revision-bound preview. Basic adds overall dimensions and circle diameters; detailed adds circle centre positions from minima, arc radii, edge lengths and non-right corner angles. New distance annotations require project/library18, with kind:"distance", axis:"x"|"y", curveIds:[oneOrTwoUniqueIds], anchors:[{curveIndex:0|1,point:"a"|"b"|"center"|"minX"|"maxX"|"minY"|"maxY"},secondAnchor]. Coordinates always derive from native curves, never user-supplied measurement values. Text placement is bounded by free paper space. Unsupported spline views skip overall/position suggestions explicitly. No inferred tolerances, GD&T or guarantee of complete manufacturing dimensioning.',
     nativeModelingContract: structuredClone(AI_PROGRAM_TOOLS.nativeModeling),
     faceSketchContract: AI_PROGRAM_TOOLS.faceSketch,
     drawingPreviewContract:

@@ -137,3 +137,16 @@ test('one child retains the confirmed aliases across a correction and rejects fo
  assert.equal((await second).value.ok,true);
  child.emit('exit',0);
 });
+
+test('rejected shaft and drill plans identify the invalid step or field',()=>{
+ const edit=actions=>({version:1,title:'Sichtbare Übung',actions});
+ const set=(field,value)=>({kind:'set',field,value});
+ const checkbox={kind:'ui',action:'set',target:'ui:id:cad-drill-through',value:'true'};
+ const next=()=>validatePracticePlan(edit([set('size-1',14),set('size-0',0)]),1);
+ assert.doesNotThrow(()=>validatePracticePlan(edit([checkbox]),1));
+ assert.doesNotThrow(()=>validatePracticePlan(edit([{...checkbox,value:'false'}]),1));
+ assert.throws(()=>validatePracticePlan(edit([{...checkbox,action:'uncheck'}]),1),/Übungsschritt 1.*action.*uncheck.*set.*true.*false/);
+ assert.throws(()=>validatePracticePlan({...edit([set('size-0',14)]),practiceObjects:[]},1),/plan\.practiceObjects.*unbekannt/i);
+ assert.throws(next,/Übungsschritt 2.*size-0.*größer als 0/);
+ assert.throws(()=>validatePracticePlan(edit([set('size-0',14)])),/Übungsschritt 1.*size-0.*genau ein/);
+});

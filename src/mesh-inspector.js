@@ -115,6 +115,95 @@ export function inspectMeshTopology(topology, { objectId, smallTriangleLimit = 2
   categories.small.triangleIds.sort((a, b) => a - b);
   for (const c of Object.values(categories)) c.count = c.triangleIds.length + c.edges.length + c.vertexIds.length;
   abort(signal);
+  const faceComponent = new Int32Array(triangles);
+  for (let cIdx = 0; cIdx < components.length; cIdx++) {
+    const compFaces = components[cIdx];
+    for (let i = 0; i < compFaces.length; i++) faceComponent[compFaces[i]] = cIdx;
+  }
+  const defectItems = [];
+  const edgeKey = (a, b) => (a < b ? `${a},${b}` : `${b},${a}`);
+  for (let i = 0; i < categories.boundary.edges.length; i++) {
+    const e = categories.boundary.edges[i];
+    const topoEdge = edges.get(edgeKey(e.vertices[0], e.vertices[1]));
+    const comp = topoEdge?.incidents?.length ? faceComponent[topoEdge.incidents[0].face] : 0;
+    defectItems.push({ type: 'boundary', index: i, id: e.id, vertices: e.vertices, comp });
+  }
+  for (let i = 0; i < categories.nonmanifoldEdge.edges.length; i++) {
+    const e = categories.nonmanifoldEdge.edges[i];
+    const topoEdge = edges.get(edgeKey(e.vertices[0], e.vertices[1]));
+    const comp = topoEdge?.incidents?.length ? faceComponent[topoEdge.incidents[0].face] : 0;
+    defectItems.push({ type: 'nonmanifold', index: i, id: e.id, vertices: e.vertices, comp });
+  }
+  const itemsByComp = new Map();
+  for (let i = 0; i < defectItems.length; i++) {
+    const it = defectItems[i];
+    const list = itemsByComp.get(it.comp) ?? [];
+    list.push(it);
+    itemsByComp.set(it.comp, list);
+  }
+  const rawGroups = [];
+  for (const [comp, items] of itemsByComp.entries()) {
+    if (!items.length) continue;
+    const uf = unionFind(items.length);
+    const vertexMap = new Map();
+    for (let i = 0; i < items.length; i++) {
+      for (const v of items[i].vertices) {
+        const list = vertexMap.get(v) ?? [];
+        list.push(i);
+        vertexMap.set(v, list);
+      }
+    }
+    for (const list of vertexMap.values()) {
+      for (let i = 1; i < list.length; i++) uf.join(list[0], list[i]);
+    }
+    const byUf = new Map();
+    for (let i = 0; i < items.length; i++) {
+      const root = uf.find(i);
+      const list = byUf.get(root) ?? [];
+      list.push(items[i]);
+      byUf.set(root, list);
+    }
+    for (const groupItems of byUf.values()) rawGroups.push({ comp, items: groupItems });
+  }
+  rawGroups.sort((a, b) => {
+    if (a.comp !== b.comp) return a.comp - b.comp;
+    const minIdA = a.items.map((it) => it.id).sort()[0] ?? '';
+    const minIdB = b.items.map((it) => it.id).sort()[0] ?? '';
+    return minIdA.localeCompare(minIdB);
+  });
+  const defectGroups = rawGroups.map((rg, gIdx) => {
+    const boundaryIndices = rg.items
+      .filter((it) => it.type === 'boundary')
+      .map((it) => it.index)
+      .sort((a, b) => a - b);
+    const nonmanifoldEdgeIndices = rg.items
+      .filter((it) => it.type === 'nonmanifold')
+      .map((it) => it.index)
+      .sort((a, b) => a - b);
+    const edgeIds = rg.items.map((it) => it.id).sort();
+    const uniqueVertices = [...new Set(rg.items.flatMap((it) => it.vertices))].sort((a, b) => a - b);
+    const min = [Infinity, Infinity, Infinity];
+    const max = [-Infinity, -Infinity, -Infinity];
+    for (const v of uniqueVertices) {
+      for (let axis = 0; axis < 3; axis++) {
+        const coord = mesh.verts[v * 3 + axis];
+        if (coord < min[axis]) min[axis] = coord;
+        if (coord > max[axis]) max[axis] = coord;
+      }
+    }
+    const center = min.map((val, axis) => (val + max[axis]) / 2);
+    return {
+      id: `group-${gIdx + 1}`,
+      componentId: rg.comp,
+      edgeCount: rg.items.length,
+      boundaryIndices,
+      nonmanifoldEdgeIndices,
+      edgeIds,
+      vertices: uniqueVertices,
+      bounds: { min, max },
+      center,
+    };
+  });
   return {
     format: 'FormnaroMeshInspection',
     version: 1,
@@ -133,6 +222,7 @@ export function inspectMeshTopology(topology, { objectId, smallTriangleLimit = 2
     })),
     componentDetailsTruncated: components.length > 256,
     categories,
+    defectGroups,
     scope: 'exact-coordinate-topology',
     limitations: [
       'Keine Prüfung auf Selbstüberschneidungen, Wandstärken oder Druckbarkeit.',

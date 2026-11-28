@@ -124,6 +124,69 @@ export function projectCadFaceAnchorNative(oc, shape, anchor, { tolerance = 1e-6
   }
 }
 
+/** Resolve a display hit against the actual trimmed BRep plane, including in
+ * WASM builds that do not expose the native ray/normal adapter. */
+export function projectCadPlanarFaceNative(oc, shape, point, { normal: displayNormal, tolerance = 1e-4 } = {}) {
+  if (
+    !Array.isArray(point) ||
+    point.length !== 3 ||
+    !point.every(Number.isFinite) ||
+    !Number.isFinite(tolerance) ||
+    tolerance <= 0 ||
+    tolerance > 0.005
+  )
+    throw Error('Ungültiger Punkt für die CAD-Flächenwahl.');
+  const expected = displayNormal === undefined ? null : new Vector3(...unit(displayNormal));
+  const enumValue = (value) => value?.value ?? value;
+  const matches = [];
+  let nativePoint,
+    maker,
+    vertex,
+    list = [];
+  try {
+    nativePoint = new oc.gp_Pnt(...point);
+    maker = new oc.BRepBuilderAPI_MakeVertex(nativePoint);
+    vertex = maker.Vertex();
+    list = faces(oc, shape);
+    for (const face of list) {
+      const surface = new oc.BRepAdaptor_Surface(face, false);
+      let distance, plane, frame, xAxis, yAxis, projected;
+      try {
+        if (enumValue(surface.GetType()) !== enumValue(oc.GeomAbs_SurfaceType.GeomAbs_Plane)) continue;
+        distance = new oc.BRepExtrema_DistShapeShape(vertex, face);
+        if (!distance.IsDone() || !Number.isFinite(distance.Value()))
+          throw Error('Nativer CAD-Flächenprojektor fehlgeschlagen.');
+        if (distance.Value() > tolerance || distance.NbSolution() < 1) continue;
+        plane = surface.Plane();
+        frame = plane.Position();
+        xAxis = frame.XDirection();
+        yAxis = frame.YDirection();
+        const x = new Vector3(xAxis.X(), xAxis.Y(), xAxis.Z()),
+          y = new Vector3(yAxis.X(), yAxis.Y(), yAxis.Z());
+        const direction = new Vector3().crossVectors(x, y).normalize();
+        if (enumValue(face.Orientation()) === enumValue(oc.TopAbs_Orientation.TopAbs_REVERSED)) direction.negate();
+        if (expected && direction.dot(expected) < 0.999) continue;
+        projected = distance.PointOnShape2(1);
+        matches.push({ point: [projected.X(), projected.Y(), projected.Z()], normal: direction.toArray() });
+      } finally {
+        projected?.delete();
+        yAxis?.delete();
+        xAxis?.delete();
+        frame?.delete();
+        plane?.delete();
+        distance?.delete();
+        surface.delete();
+      }
+    }
+    return matches;
+  } finally {
+    list.forEach((face) => face.delete());
+    vertex?.delete();
+    maker?.delete();
+    nativePoint?.delete();
+  }
+}
+
 function sourceNode(root, path) {
   let node = root,
     matrix = cadIdentity();

@@ -17,6 +17,25 @@ export function meshCadFrame(node) {
   return transform;
 }
 
+/**
+ * A confirmed local repair is the retained `repair` operation whose options
+ * requested the planar seam repair (and, in this build, passed the outer-skin
+ * admission before it was offered). Such a mesh is not repaired a second time
+ * on its way to CAD; anything else keeps the previous behaviour.
+ */
+export function confirmedLocalRepair(node) {
+  const operation = node?.meshSource?.operation;
+  if (!operation || operation.type !== 'repair' || !operation.options) return null;
+  const options = operation.options;
+  if (options.method !== 'simple-v1') return null;
+  if (options.repairPlanarSeam !== true && options.repairPlanarSeams !== true) return null;
+  return {
+    method: options.method,
+    planarSeam: true,
+    note: 'Lokale ebene Naht am Original repariert; das Ergebnis wird nicht erneut repariert.',
+  };
+}
+
 // Bake only the affine linear part. Native conversion then measures real mm,
 // including nonuniform scaling and shear, without rounding a large translation.
 // ASCII numbers round-trip the original doubles; no float32 display/export mesh.
@@ -54,7 +73,12 @@ export function meshCadInput(project, target, revision) {
       .replace(/\.stl$/i, '') + '.stl';
   return {
     file: new File([bytes], name, { type: 'model/stl' }),
-    source: { target: structuredClone(target), digest: projectObjectGeometryDigest(node), revision },
+    source: {
+      target: structuredClone(target),
+      digest: projectObjectGeometryDigest(node),
+      revision,
+      localRepair: confirmedLocalRepair(node),
+    },
     triangles: mesh.triangles.length / 3,
   };
 }

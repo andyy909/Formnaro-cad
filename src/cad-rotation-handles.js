@@ -143,7 +143,8 @@ export function createCadRotationHandles({
     const left = Math.min(...corners.map((p) => p.x)),
       right = Math.max(...corners.map((p) => p.x)),
       top = Math.min(...corners.map((p) => p.y)),
-      bottom = Math.max(...corners.map((p) => p.y));
+      bottom = Math.max(...corners.map((p) => p.y)),
+      r = rect();
     const positions = [
       { x: left - 32, y: (top + bottom) / 2 },
       { x: right + 32, y: (top + bottom) / 2 },

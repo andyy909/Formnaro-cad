@@ -23,3 +23,11 @@ test('the fixed laboratory context supplies the drill commit controls before the
  const entry=await require('../backend/ai-test-lab-practice-context.cjs').practiceEntry({variant:'C',prompt:task.prompt,objects:[{alias:'existing-1',kind:'cad'}],toolIds:task.toolIds});
  assert(entry.text.includes('cad-ref-preview'));assert(entry.text.includes('cad-ref-apply'));assert(entry.text.includes('noch kein Material'));assert(entry.references.some(r=>r.toolReference.tool==='tool:drill'));
 });
+
+test('drill reference and practice prompt show the checkbox as a real UI set action',async()=>{
+ const tool=(await reference({tool:'tool:drill'},{practiceOnly:true})).tool;
+ const system=require('../backend/ai-practice-prompt.cjs').practiceSystem();
+ assert(tool.steps.some(s=>s.includes('"action":"set"')&&s.includes('"target":"ui:id:cad-drill-through"')&&s.includes('"value":"true"')&&s.includes('"false"')));
+ assert(system.includes('{"kind":"ui","action":"set","target":"ui:id:cad-drill-through","value":"true"}'));
+ assert.doesNotMatch(system,/uncheck ui:id:cad-drill-through/);
+});

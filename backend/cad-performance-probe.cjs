@@ -1,4 +1,3 @@
-/* global document, requestAnimationFrame, cancelAnimationFrame -- Serialized verification callbacks run in Electron's renderer. */
 // Serialized into the isolated benchmark renderer. No probe runs at startup.
 async function measureInteraction(app,action,hasFeedback,{workerTiming=true}={}){
  const view=app.view;

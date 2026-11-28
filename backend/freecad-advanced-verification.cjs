@@ -1,3 +1,4 @@
+const assert=require('node:assert/strict');
 exports.verifyAdvancedFreeCAD=async({win,js,click,set,until,point,shot,check,pause})=>{
  const near=(a,b,eps=1e-4)=>Math.abs(a-b)<eps;
  win.setSize(1440,1040);await js("document.documentElement.dataset.theme='light';window.__cadTest.workbenchUI.setMode('normal');void 0");

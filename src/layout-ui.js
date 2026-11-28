@@ -3,6 +3,7 @@ import { mountLayoutCustomize } from './layout-customize.js';
 import { LAYOUT_DEFAULTS, defaultLayout, loadLayout, validateLayout, moveLayoutItem } from './layout-preferences.js';
 import { createLayoutLibrary } from './layout-library.js';
 import { createSidebarSizing } from './sidebar-sizing.js';
+import { layoutGridStep, layoutGridPosition, snapLayoutGrid } from './layout-grid.js';
 
 // Move the existing controls so their handlers, enabled state and IDs survive.
 // The editor handles are separate buttons, including handles for disabled tools.
@@ -136,6 +137,68 @@ export function createLayoutUI({
         }
       }),
   });
+  const floatingTools = document.createElement('div');
+  floatingTools.className = 'layout-floating-tools';
+  document.body.append(floatingTools);
+  inertRoots.push(floatingTools);
+  const blocks = {
+    library: [sidePanels.library, 'Formen und Objekte'],
+    inspector: [sidePanels.inspector, 'Eigenschaften'],
+    view: [zones.view, 'Ansichtswerkzeuge'],
+    mode: [zones.mode, 'Bewegungswerkzeuge'],
+    shapes: [sideContents.library.querySelector('.shape-library-section'), 'Formen'],
+    objects: [sideContents.library.querySelector('.sidebar-object-section'), 'Objekte'],
+    properties: [propertySection, 'Form bearbeiten'],
+    workspace: [workspaceSection, 'Arbeitsfläche'],
+  };
+  const gridViewport = () => ({usableWidth: innerWidth, usableHeight: innerHeight});
+  const gridNode = key => items.get(key) || blocks[key]?.[0];
+  const blockKind = key =>
+    key === 'library' || key === 'inspector' ? 'panel' : key === 'view' || key === 'mode' ? 'group' : 'section';
+  function floatingSize(key) {
+    const node = gridNode(key);
+    if (items.has(key)) {
+      const {width, height} = rect(node);
+      return {width: Math.max(36, width), height: Math.max(36, height)};
+    }
+    if (node.dataset.layoutFloating) return rect(node);
+    node.dataset.layoutFloating = blockKind(key);
+    const size = rect(node);
+    delete node.dataset.layoutFloating;
+    return size;
+  }
+  function positionFloating(node, cell) {
+    if (!node || !cell) return;
+    const box = layoutGridPosition(cell, rect(node), gridViewport());
+    node.style.setProperty('--layout-grid-x', box.left + 'px');
+    node.style.setProperty('--layout-grid-y', box.top + 'px');
+  }
+  function setFloating(node, cell, kind) {
+    if (!node) return;
+    if (!cell) {
+      delete node.dataset.layoutFloating;
+      node.style.removeProperty('--layout-grid-x');
+      node.style.removeProperty('--layout-grid-y');
+      return;
+    }
+    node.dataset.layoutFloating = kind;
+    positionFloating(node, cell);
+  }
+  function syncFloatingTools(value = draft || saved) {
+    for (const [key, node] of items) {
+      const cell = value.grid[key];
+      if (cell && node.parentElement !== floatingTools) floatingTools.append(node);
+      setFloating(node, cell, 'tool');
+    }
+  }
+  function syncFloatingBlocks(value) {
+    const sidebarWidth = (key, fallback) => (value[key + 'Width'] ?? fallback) + 'px';
+    sidePanels.library.style.setProperty('--layout-panel-width', sidebarWidth('library', 230));
+    sidePanels.inspector.style.setProperty('--layout-panel-width', sidebarWidth('inspector', 340));
+    for (const [key, [node]] of Object.entries(blocks)) {
+      setFloating(node, value.grid[key], blockKind(key));
+    }
+  }
   async function run(fn) {
     if (busy) return false;
     busy = true;
@@ -198,6 +261,8 @@ export function createLayoutUI({
     // Regroup the restored controls before measuring: the temporary flat tool
     // row can otherwise shrink the available sidebar height during this call.
     window.dispatchEvent(new Event('formnaro-layout-change'));
+    syncFloatingTools(value);
+    syncFloatingBlocks(value);
     sizing.apply(value);
     customize?.refresh();
     window.dispatchEvent(new Event('resize'));
@@ -253,9 +318,11 @@ export function createLayoutUI({
       focused = focusKey || document.activeElement?.dataset.layoutItem || document.activeElement?.dataset.layoutBlock;
     handles.replaceChildren();
     for (const [zone, keys] of Object.entries(draft.zones)) {
-      const clip = rect(zone === 'toolbar' ? document.querySelector('.toolbar') : zones[zone]);
       for (const key of keys) {
         if (!items.has(key)) continue;
+        const clip = draft.grid[key]
+          ? {left: 0, top: 0, right: innerWidth, bottom: innerHeight}
+          : rect(zone === 'toolbar' ? document.querySelector('.toolbar') : zones[zone]);
         const r = rect(items.get(key)),
           left = Math.max(r.left, clip.left),
           right = Math.min(r.right, clip.right),
@@ -272,15 +339,13 @@ export function createLayoutUI({
     }
     const v = rect(viewport),
       m = rect(main);
-    for (const [key, name, r] of [
-      ['library', 'Formen und Objekte', rect(document.querySelector('.left-panel'))],
-      ['inspector', 'Eigenschaften', rect(document.querySelector('.right-panel'))],
-      ['view', 'Ansichtswerkzeuge', rect(zones.view)],
-      ['mode', 'Bewegungswerkzeuge', rect(zones.mode)],
-    ]) {
+    for (const [key, [node, name]] of Object.entries(blocks)) {
+      if (!node) continue;
+      const r = rect(node);
+      if (['shapes', 'objects', 'properties', 'workspace'].includes(key) && !r.width) continue;
       const b = button('⠿ ' + t(name), 'layout-block-handle');
       b.dataset.layoutBlock = key;
-      b.title = t('Bereich an einen markierten Platz ziehen');
+      b.title = t('Bereich an eine Rasterposition ziehen');
       // On narrow windows the panels are drawers; the two handles stay reachable.
       let left = r.width
         ? r.left + 8
@@ -300,8 +365,13 @@ export function createLayoutUI({
         left = draft.viewSide === 'left' ? v.right - 198 : v.left + 8;
         top = draft.modePosition === 'bottom' ? r.top - 34 : r.bottom + 7;
       }
-      b.style.left = Math.max(8, Math.min(innerWidth - 198, left)) + 'px';
-      b.style.top = Math.max(m.top + 8, Math.min(innerHeight - 38, top)) + 'px';
+      if (!['library', 'inspector', 'view', 'mode'].includes(key) || draft.grid[key]) {
+        left = r.left + 8;
+        top = r.top + (['library', 'inspector'].includes(key) ? 9 : 2);
+        if (key === 'shapes' && !draft.grid[key]) top += 47;
+      }
+      b.style.left = Math.max(6, Math.min(innerWidth - 198, left)) + 'px';
+      b.style.top = Math.max(6, Math.min(innerHeight - 38, top)) + 'px';
       handles.append(b);
     }
     if (focused) {
@@ -314,7 +384,7 @@ export function createLayoutUI({
   function showTargets(kind) {
     const root = overlay.querySelector('.layout-targets');
     root.replaceChildren();
-    if (kind === 'item') return;
+    if (!['library', 'inspector', 'view', 'mode'].includes(kind)) return;
     const v = rect(viewport),
       m = rect(main);
     for (const side of ['left', 'right']) {
@@ -356,21 +426,23 @@ export function createLayoutUI({
     }
   }
   function targetAt(x, y) {
-    if (!gesture) return null;
+    if (!gesture || x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return null;
+    const grid = () => ({grid: snapLayoutGrid(x - gesture.offsetX, y - gesture.offsetY, gesture.size, gridViewport())});
     if (gesture.block) {
       const b = [...overlay.querySelectorAll('.layout-dock-target')].find((b) => contains(rect(b), x, y));
-      return b ? { block: gesture.block, value: b.dataset.dockValue } : null;
+      return b ? { block: gesture.block, value: b.dataset.dockValue } : grid();
     }
     const source = Object.keys(draft.zones).find((z) => draft.zones[z].includes(gesture.key));
     const candidates = ['header', 'toolbar', 'view'].includes(source) ? ['header', 'toolbar', 'view'] : [source];
     for (const zone of candidates) {
+      if (draft.grid[zone]) continue;
       const clip = rect(zone === 'toolbar' ? document.querySelector('.toolbar') : zones[zone]);
       if (!contains(clip, x, y)) continue;
       const keys = draft.zones[zone],
         vertical = zone === 'view',
         coordinate = vertical ? y : x;
       let index = keys.findIndex((k) => {
-        if (!items.has(k)) return false;
+        if (!items.has(k) || draft.grid[k]) return false;
         const r = rect(items.get(k));
         return zone === 'mode'
           ? y <= r.bottom && (y < r.top || x < r.left + r.width / 2)
@@ -379,17 +451,22 @@ export function createLayoutUI({
       if (index < 0) index = keys.length;
       return { zone, index, vertical };
     }
-    return null;
+    return grid();
   }
   function markTarget(target) {
     overlay
       .querySelectorAll('.layout-dock-target')
       .forEach((b) => b.classList.toggle('active', !!target?.block && b.dataset.dockValue === target.value));
     const marker = overlay.querySelector('.layout-insert-marker');
-    marker.hidden = !target?.zone;
+    marker.classList.toggle('grid-target', !!target?.grid);
+    marker.hidden = !target?.zone && !target?.grid;
+    if (target?.grid) {
+      place(marker, target.grid.rect);
+      return;
+    }
     if (!target?.zone) return;
     const keys = draft.zones[target.zone],
-      anchor = items.get(keys[target.index] || keys.at(-1)),
+      anchor = items.get(keys[target.index] || keys.findLast(key => items.has(key) && !draft.grid[key])),
       r = anchor ? rect(anchor) : rect(zones[target.zone]),
       end = target.index === keys.length;
     place(
@@ -403,6 +480,7 @@ export function createLayoutUI({
     if (!gesture) return;
     const id = gesture.pointerId;
     gesture = null;
+    overlay.classList.remove('layout-grid-dragging');
     overlay.querySelector('.layout-drag-ghost').hidden = true;
     overlay.querySelector('.layout-insert-marker').hidden = true;
     overlay.querySelector('.layout-targets').replaceChildren();
@@ -414,12 +492,18 @@ export function createLayoutUI({
     const handle = e.target.closest('[data-layout-item],[data-layout-block]');
     if (!handle || e.button !== 0) return;
     e.preventDefault();
+    const name = handle.dataset.layoutItem || handle.dataset.layoutBlock;
+    const content = gridNode(name);
+    const r = rect(content);
     gesture = {
       key: handle.dataset.layoutItem,
       block: handle.dataset.layoutBlock,
       pointerId: e.pointerId,
       x: e.clientX,
       y: e.clientY,
+      offsetX: Math.min(24, Math.max(0, e.clientX - r.left)),
+      offsetY: Math.min(24, Math.max(0, e.clientY - r.top)),
+      size: floatingSize(name),
       moved: false,
       target: null,
     };
@@ -433,6 +517,7 @@ export function createLayoutUI({
     e.preventDefault();
     if (Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) > 4) gesture.moved = true;
     if (!gesture.moved) return;
+    overlay.classList.add('layout-grid-dragging');
     const ghost = overlay.querySelector('.layout-drag-ghost');
     ghost.hidden = false;
     ghost.style.left = Math.max(0, Math.min(innerWidth - 180, e.clientX + 12)) + 'px';
@@ -453,6 +538,7 @@ export function createLayoutUI({
     markTarget(gesture.target);
   }
   function dock(block, value) {
+    delete draft.grid[block];
     if (block === 'library') draft.librarySide = value;
     else if (block === 'inspector') draft.librarySide = value === 'left' ? 'right' : 'left';
     else if (block === 'view') draft.viewSide = value;
@@ -471,6 +557,11 @@ export function createLayoutUI({
     } else if (target?.block) {
       dock(target.block, target.value);
       renderHandles(target.block);
+    } else if (target?.grid) {
+      const key = g.key || g.block;
+      draft.grid[key] = target.grid.cell;
+      apply(draft);
+      renderHandles(key);
     }
   }
   function close() {
@@ -521,7 +612,8 @@ export function createLayoutUI({
     overlay.id = 'layout-editor';
     overlay.setAttribute('aria-label', t('Oberfläche anordnen'));
     overlay.innerHTML =
-      '<div class="layout-handles"></div><div class="layout-targets"></div><div class="layout-insert-marker" hidden></div><div class="layout-drag-ghost" hidden></div><section class="layout-editor-bar"><strong>Oberfläche anordnen</strong><p>Taster ziehen und an der Markierung loslassen. Bereiche am Griff in einen Andockplatz ziehen. Pfeiltasten verschieben den fokussierten Griff.</p><label class="layout-name-label">Als neues Layout (optional)<input id="layout-editor-name" maxlength="80" placeholder="Layoutname"></label><p class="layout-storage-error" role="alert" hidden></p><div><button id="layout-default">Standardanordnung</button><button id="layout-cancel">Abbrechen</button><button id="layout-done" class="primary">Anordnung speichern</button></div></section>';
+      '<div class="layout-handles"></div><div class="layout-targets"></div><div class="layout-insert-marker" hidden></div><div class="layout-drag-ghost" hidden></div><section class="layout-editor-bar"><strong>Oberfläche anordnen</strong><p>Werkzeuge und Bereiche im Raster platzieren. Alt + Pfeiltasten verschiebt um ein Feld. Pos1 dockt wieder an.</p><label class="layout-name-label">Als neues Layout (optional)<input id="layout-editor-name" maxlength="80" placeholder="Layoutname"></label><p class="layout-storage-error" role="alert" hidden></p><div><button id="layout-default">Standardanordnung</button><button id="layout-cancel">Abbrechen</button><button id="layout-done" class="primary">Anordnung speichern</button></div></section>';
+    overlay.style.setProperty('--layout-grid-step', layoutGridStep + 'px');
     document.body.append(overlay);
     overlay.querySelector('#layout-default').onclick = () => {
       abortGesture();
@@ -616,12 +708,30 @@ export function createLayoutUI({
         if (!['Tab', 'Enter', ' '].includes(e.key)) e.preventDefault();
         return;
       }
+      const name = key || block;
+      if (e.key === 'Home' && draft.grid[name]) {
+        e.preventDefault();
+        abortGesture();
+        delete draft.grid[name];
+        apply(draft);
+        renderHandles(name);
+        return;
+      }
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
         if (e.key !== 'Tab') e.preventDefault();
         return;
       }
       e.preventDefault();
       abortGesture();
+      if (e.altKey || draft.grid[name] || ['shapes', 'objects', 'properties', 'workspace'].includes(block)) {
+        const r = rect(gridNode(name));
+        const dx = e.key === 'ArrowLeft' ? -layoutGridStep : e.key === 'ArrowRight' ? layoutGridStep : 0;
+        const dy = e.key === 'ArrowUp' ? -layoutGridStep : e.key === 'ArrowDown' ? layoutGridStep : 0;
+        draft.grid[name] = snapLayoutGrid(r.left + dx, r.top + dy, floatingSize(name), gridViewport()).cell;
+        apply(draft);
+        renderHandles(name);
+        return;
+      }
       if (block) {
         dock(
           block,
@@ -689,6 +799,7 @@ export function createLayoutUI({
   for (const node of [...Object.values(zones), viewport, main]) observer.observe(node);
   window.addEventListener('resize', () => {
     if (gesture) abortGesture();
+    for (const [key, cell] of Object.entries((draft || saved).grid)) positionFloating(gridNode(key), cell);
     schedule();
   });
   for (const node of [document.querySelector('.toolbar'), ...Object.values(zones)])
@@ -833,6 +944,7 @@ export function createLayoutUI({
     togglePanel,
     openPanel: (key) => togglePanel(key, true),
     syncPanels: () => apply(draft || saved),
+    syncFloatingTools: () => syncFloatingTools(),
     ready: () => ready,
     isSaving: () => busy,
     isActive: () => !!draft,

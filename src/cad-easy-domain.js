@@ -27,7 +27,7 @@ export function easyImportPolicy(extension, kind) {
   const ext = extension.toLowerCase().replace(/^\./, '');
   if (kind === 'mesh' && ['stl', 'obj', 'svg', '3mf', 'glb', 'gltf'].includes(ext))
     return { asMesh: true, reconstruct: false };
-  if (kind === 'cad' && ['step', 'stp', 'fcstd', 'svg', 'stl'].includes(ext))
+  if (kind === 'cad' && ['step', 'stp', 'fcstd', 'svg', 'dxf', 'stl'].includes(ext))
     return { asMesh: false, reconstruct: ext === 'stl' };
   throw Error(kind === 'mesh' ? 'Diese Datei im CAD-Bereich importieren.' : 'Diese Datei im Netz-Bereich importieren.');
 }

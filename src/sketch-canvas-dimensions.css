@@ -1,0 +1,42 @@
+.sketch-canvas-dimensions {
+  color: #a2e3ee;
+  pointer-events: none;
+}
+
+.sketch-canvas-dimension-line,
+.sketch-canvas-dimension-guides {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sketch-canvas-dimension-line { stroke-width: 1.5; }
+.sketch-canvas-dimension-guides { opacity: .58; }
+
+.sketch-canvas-dimension-badge {
+  fill: #162d38;
+  stroke: #6c9faa;
+}
+
+.sketch-canvas-dimension-text {
+  fill: #ebfbff;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-anchor: middle;
+  dominant-baseline: central;
+  user-select: none;
+}
+
+.sketch-canvas-dimension-hit { fill: transparent; }
+.sketch-canvas-dimension-label[data-editable] .sketch-canvas-dimension-hit {
+  cursor: text;
+  pointer-events: all;
+}
+
+.sketch-canvas-dimension-label[data-editable]:is(:hover, :focus-visible) .sketch-canvas-dimension-badge {
+  fill: #234653;
+  stroke: #c7f9ff;
+  stroke-width: 2;
+}

@@ -11,7 +11,7 @@ export async function loadPhotoImage(dataUrl) {
     i.src = dataUrl;
   });
 }
-export function suggestPhotoImageContour(image, { includeSilhouette = false } = {}) {
+function samplePhotoContour(image) {
   const width = image.naturalWidth,
     height = image.naturalHeight,
     shrink = Math.min(1, 640 / Math.max(width, height));
@@ -22,12 +22,27 @@ export function suggestPhotoImageContour(image, { includeSilhouette = false } = 
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
   const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
   const originalPoints = (points) => points.map(([x, y]) => [(x * width) / canvas.width, (y * height) / canvas.height]);
+  return { pixels, originalPoints, shrink };
+}
+export function suggestPhotoImageContour(image, { includeSilhouette = false } = {}) {
+  const { pixels, originalPoints, shrink } = samplePhotoContour(image);
   if (includeSilhouette && shrink === 1) {
     const silhouette = suggestPhotoSilhouette(pixels);
     if (silhouette) return { silhouette };
   }
   const result = suggestPhotoContour(pixels);
   return { ...result, points: originalPoints(result.points) };
+}
+export function suggestPhotoAlphaContour(image) {
+  const { pixels, originalPoints } = samplePhotoContour(image);
+  const silhouette = suggestPhotoSilhouette(pixels, { alpha: true });
+  return silhouette
+    ? {
+        kind: 'alpha',
+        points: originalPoints(silhouette.outline),
+        warnings: ['Außenkontur aus Transparenz vorgeschlagen. Punkte prüfen, bestätigen oder verwerfen. Öffnungen separat markieren.'],
+      }
+    : null;
 }
 export function photoGrid(image, { crop = [0, 0, image.naturalWidth, image.naturalHeight], step } = {}) {
   const [x0, y0, x1, y1] = crop;

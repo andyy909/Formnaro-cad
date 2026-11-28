@@ -1,9 +1,12 @@
+export const CORNER_HANDLE_SIZE_RANGE = { min: 7, max: 20 };
+
 export const DEFAULTS = {
   language: 'de',
   theme: 'system',
   snap: 1,
   rotationSnap: 15,
   handleSize: 14,
+  cornerHandleSize: 9,
   segments: 64,
   gridVisible: true,
   autosave: true,
@@ -31,6 +34,9 @@ export function validatePreferences(value) {
     !Number.isInteger(s.handleSize) ||
     s.handleSize < 10 ||
     s.handleSize > 24 ||
+    !Number.isInteger(s.cornerHandleSize) ||
+    s.cornerHandleSize < CORNER_HANDLE_SIZE_RANGE.min ||
+    s.cornerHandleSize > CORNER_HANDLE_SIZE_RANGE.max ||
     typeof s.gridVisible !== 'boolean' ||
     typeof s.autosave !== 'boolean' ||
     typeof s.gearSnap !== 'boolean' ||

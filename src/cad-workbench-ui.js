@@ -482,11 +482,14 @@ export function createCadWorkbenchUI({
     for (const key of ['library', 'inspector'])
       document.getElementById('sidebar-' + key + '-content').inert = easy ? false : !!layout[key + 'Collapsed'];
     hint.textContent = easy
-      ? t('Ziehe eine Form von rechts auf die Arbeitsfläche oder klicke auf einen Grundkörper.')
+      ? 'Ziehe eine Form von rechts auf die Arbeitsfläche oder klicke auf einen Grundkörper.'
       : originalHint;
-    if (editing) return;
+    if (editing) {
+      layoutUI.syncFloatingTools();
+      return;
+    }
     if (['solid', 'fusion'].includes(mode)) {
-      for (const [, node] of controls) hidden.append(node);
+      for (const [key, node] of controls) hidden.append(node);
       for (const key of ['new', 'open', 'save', 'projects', 'import', 'export', 'settings']) {
         const node = controls.get(key);
         if (node) header.append(node);
@@ -502,7 +505,7 @@ export function createCadWorkbenchUI({
       (mode === 'solid' ? solid : fusion).mount();
       hint.textContent = t('Skizze oder extrudierten Aufsatz starten. Maße festlegen, Vorschau prüfen und übernehmen.');
     } else if (easy) {
-      for (const [, node] of controls) hidden.append(node);
+      for (const [key, node] of controls) hidden.append(node);
       const order = [...layout.zones.header, ...layout.zones.toolbar, ...layout.zones.view];
       for (const key of order.filter((key) => fileActions.includes(key))) {
         const node = controls.get(key);
@@ -597,6 +600,7 @@ export function createCadWorkbenchUI({
       const node = controls.get(key);
       if (node) header.append(node);
     }
+    layoutUI.syncFloatingTools();
     window.dispatchEvent(new Event('resize'));
   }
   function setMode(value) {

@@ -9,7 +9,7 @@ const path = require('path');
 const fs = require('node:fs');
 const {parseStartupOptions}=require('./backend/startup-options.cjs');
 const startupOptions=parseStartupOptions({app});
-const {diagnosticHost,diagnosticHome,diagnosticChild,practiceChild,practiceDirectory,maintenanceVerifyArg,speechVerifyArg,allFunctionsVerifyArg,allFunctionsPhase,aiResultChecksVerifyArg,easyCompleteVerifyArg,easyAutoRepairVerifyArg,easyDomainVerifyArg,rotationVerifyArg,moveDimensionsVerifyArg,k08VerifyArg,u05VerifyArg,drawingsVerifyArg,modelingContextVerifyArg,reconstructionVerifyArg,pythonVerifyArg,autoDimensionsVerifyArg,fnpackPhase,fnpackVerifyArg,assemblyVerifyArg,jointsVerifyArg,sketchConstraintsVerifyArg,linkedContoursVerifyArg,parametersVerifyArg,modelingVerifyArg,sketchUpgradeVerifyArg,numberDisplayVerifyArg,holeGroupsVerifyArg,meshImportVerifyArg,viewToolbarVerifyArg,contextMenuVerifyArg,fusionVerifyArg,solidVerifyArg,workbenchVerifyArg,meshHollowVerifyArg,meshMakeSolidVerifyArg,meshEraseFillVerifyArg,stepThicknessVerifyArg,placementVerifyArg,inspectionVerifyArg,meshSculptVerifyArg,meshSmoothVerifyArg,meshRemeshVerifyArg,meshReduceVerifyArg,meshConnectorsVerifyArg,meshPartitionVerifyArg,meshHoleVerifyArg,meshRepairVerifyArg,meshInspectorVerifyArg,meshSelectionVerifyArg,releaseWorkflowVerifyArg,releaseWorkflowReopenArg,unifiedWorkflowsVerifyArg,meshToCadVerifyArg,cadMeshCopyVerifyArg,sharedAIVerifyArg,stlVerifyArg,converterWorkspaceVerifyArg,toolParityVerifyArg,workspaceVerifyArg,meshVerifyArg,mixedVerifyArg,meshFeaturesVerifyArg,meshDisplayVerifyArg,cadMiniPerformanceVerifyArg,creationDomainVerifyArg,easyPerformanceVerifyArg,workingSpeedVerifyArg,verifyPath}=startupOptions;
+const {diagnosticHost,diagnosticHome,diagnosticChild,practiceChild,practiceDirectory,maintenanceVerifyArg,speechVerifyArg,allFunctionsVerifyArg,allFunctionsPhase,aiResultChecksVerifyArg,easyCompleteVerifyArg,easyAutoRepairVerifyArg,easyDomainVerifyArg,rotationVerifyArg,moveDimensionsVerifyArg,k08VerifyArg,u05VerifyArg,drawingsVerifyArg,modelingContextVerifyArg,reconstructionVerifyArg,pythonVerifyArg,autoDimensionsVerifyArg,fnpackPhase,fnpackVerifyArg,assemblyVerifyArg,jointsVerifyArg,sketchConstraintsVerifyArg,linkedContoursVerifyArg,parametersVerifyArg,modelingVerifyArg,sketchUpgradeVerifyArg,numberDisplayVerifyArg,holeGroupsVerifyArg,meshImportVerifyArg,viewToolbarVerifyArg,contextMenuVerifyArg,fusionVerifyArg,solidVerifyArg,workbenchVerifyArg,meshHollowVerifyArg,meshMakeSolidVerifyArg,meshEraseFillVerifyArg,stepThicknessVerifyArg,placementVerifyArg,inspectionVerifyArg,meshSculptVerifyArg,meshSmoothVerifyArg,meshRemeshVerifyArg,meshReduceVerifyArg,meshConnectorsVerifyArg,meshPartitionVerifyArg,meshHoleVerifyArg,meshRepairVerifyArg,meshInspectorVerifyArg,meshSelectionVerifyArg,releaseWorkflowVerifyArg,releaseWorkflowReopenArg,unifiedWorkflowsVerifyArg,meshToCadVerifyArg,cadMeshCopyVerifyArg,sharedAIVerifyArg,stlVerifyArg,converterWorkspaceVerifyArg,toolParityVerifyArg,workspaceVerifyArg,meshVerifyArg,mixedVerifyArg,photoModeVerifyArg,meshFeaturesVerifyArg,meshDisplayVerifyArg,cadMiniPerformanceVerifyArg,creationDomainVerifyArg,easyPerformanceVerifyArg,workingSpeedVerifyArg,verifyPath}=startupOptions;
 const labPracticeWindow=require('./backend/lab-practice-window.cjs');
 const backgroundPractice=practiceChild&&!diagnosticChild&&process.argv.includes('--formnaro-lab-background-practice');
 if(practiceChild)global.fetch=async()=>{throw Error('Netzwerkzugriff ist im Übungsfenster deaktiviert.');};
@@ -18,7 +18,10 @@ const toolVerificationErrors=[],toolVerificationExternal=[];
 app.setName('Formnaro');
 // Chromium cache and the transient local Codex connection keep the compatible PC profile.
 // Authored settings/library/autosave use the portable data store below.
-const profilePath=practiceChild?path.join(practiceDirectory,'profile'):verifyPath?path.join(path.dirname(verifyPath),'offlinecad-verification-profile'):diagnosticHost?path.join(diagnosticHome,'profile'):path.join(app.getPath('appData'),'offlinecad');
+const companion=process.argv.includes('--tablet-companion');
+const profilePath=practiceChild?path.join(practiceDirectory,'profile'):verifyPath?path.join(path.dirname(verifyPath),'offlinecad-verification-profile'):diagnosticHost?path.join(diagnosticHome,'profile'):path.join(app.getPath('appData'),companion?'formnaro-tablet-companion':'offlinecad');
+const portableAIEnabled=process.platform==='win32'&&!verifyPath&&!practiceChild&&!diagnosticHost&&!companion;
+const portableAIFirstLaunch=app.isPackaged&&!fs.existsSync(path.join(profilePath,'Preferences'));
 fs.mkdirSync(profilePath,{recursive:true});
 app.setPath('userData',profilePath);
 app.setPath('sessionData',profilePath);
@@ -33,7 +36,7 @@ app.whenReady().then(async () => {
     // Native/Python previews also run while an external assistant covers this
     // window. Throttling those renderers can turn a valid batch into a timeout.
     // The viewport already uses an idle render scheduler rather than a busy loop.
-    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, offscreen:!!verifyPath||backgroundPractice, preload:path.join(__dirname,'preload.cjs'), additionalArguments:['--formnaro-portable-data','--formnaro-stl-converter','--formnaro-error-log',...(practiceChild&&!diagnosticChild?['--formnaro-practice']:[])], backgroundThrottling:false } });
+    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, offscreen:!!verifyPath||backgroundPractice, preload:path.join(__dirname,'preload.cjs'), additionalArguments:['--formnaro-portable-data','--formnaro-stl-converter','--formnaro-error-log',...(portableAIEnabled?['--formnaro-portable-ai']:[]),...(practiceChild&&!diagnosticChild?['--formnaro-practice']:[])], backgroundThrottling:false } });
   const practiceAudit=practiceChild&&process.env.FORMNARO_PRACTICE_AUDIT==='1';
   const auditDirectory=verifyPath&&aiResultChecksVerifyArg&&process.env.FORMNARO_VERIFY_PRACTICE_ONLY==='1'&&
     process.env.FORMNARO_VERIFY_PRACTICE_EVIDENCE==='1'?path.join(path.dirname(verifyPath),'child-audit'):undefined;
@@ -45,7 +48,7 @@ app.whenReady().then(async () => {
   }else require('./backend/practice-runner.cjs').installPracticeRunner(win,{ipcMain:require('electron').ipcMain,app,auditDirectory,
     ...(diagnosticChild&&process.env.FORMNARO_LAB_HIDE_PRACTICE==='1'?{spawnChild:labPracticeWindow.spawnHiddenChild}:{}),
     windowTraceFile:auditDirectory?path.join(path.dirname(verifyPath),'practice-window-events.jsonl'):undefined});
-  const {dataDirectory,installProgramStorage,cadOnlyForVersion}=require('./backend/program-storage.cjs'),dataPath=practiceChild?path.join(practiceDirectory,'data'):diagnosticHost?path.join(diagnosticHome,'data'):dataDirectory(app,{verificationPath:verifyPath}),legacyAIFile=path.join(profilePath,'ai-settings.json');
+  const {dataDirectory,installProgramStorage,cadOnlyForVersion}=require('./backend/program-storage.cjs'),dataPath=practiceChild?path.join(practiceDirectory,'data'):diagnosticHost?path.join(diagnosticHome,'data'):dataDirectory(app,{verificationPath:verifyPath,root:companion?profilePath:undefined}),legacyAIFile=path.join(profilePath,'ai-settings.json');
   if(practiceChild&&!diagnosticChild)require('./backend/practice-tempo.cjs').installPracticeTempo(win,{
     directory:dataDirectory(app),ipcMain:require('electron').ipcMain,
   });
@@ -59,6 +62,7 @@ app.whenReady().then(async () => {
   if(maintenanceVerifyArg&&verifyPath){const change=programStore.changeRecovery;programStore.changeRecovery=args=>{if(!maintenanceWriteFailed&&args.key.startsWith('offlinecad-autosave-')){maintenanceWriteFailed=true;throw Error('Synthetic initial autosave disk failure');}return change(args);};}
   const toolLibrary=require('./backend/ai-tool-library.cjs').installToolLibrary(win,{directory:path.join(dataPath,'KI-Werkzeuge'),ipcMain:require('electron').ipcMain});
   if(!practiceChild)require('./backend/about-links.cjs').installAboutLinks(win,require('electron'));
+  if(!practiceChild)require('./backend/photo-cutout.cjs').installPhotoCutout(win,{...require('electron'),directory:dataPath});
   require('./backend/error-log.cjs').installErrorLog(win,{directory:path.join(dataPath,'Fehlerprotokolle'),version:app.getVersion()});
   if(!verifyPath&&!practiceChild)require('./backend/renderer-recovery.cjs').installRendererRecovery(win,{reload:win.reload.bind(win)});
   const flashProfile=verifyPath&&aiResultChecksVerifyArg&&process.env.FORMNARO_VERIFY_PRACTICE_ONLY==='1'&&process.env.FORMNARO_VERIFY_PRACTICE_FLASH_PROFILE;
@@ -68,10 +72,23 @@ app.whenReady().then(async () => {
     writeAtomic:require('./backend/program-storage.cjs').writeAtomicSync,
   });
   require('./backend/ai-rate-catalog.cjs').loadLocalRates(path.join(dataPath,'KI-Tarife.json'));
-  require('./backend/desktop-ai.cjs').installDesktopAI(win,{settingsFile:path.join(dataPath,'ai-settings.json'),toolLibraryStatus:()=>toolLibrary.status(),fallbackFile:fs.existsSync(path.join(dataPath,'profil.json'))?undefined:legacyAIFile,initialSettings});
+  // Model downloads use Windows networking in a session outside the offline renderer.
+  const downloadPortableAI=(url, options)=>session.fromPartition('portable-ai-download',{cache:false}).fetch(url,options);
+  const portableAI=require('./backend/portable-ai.cjs').createPortableAI({
+    directory:path.join(dataPath,'KI-Modelle'),profileDirectory:profilePath,enabled:portableAIEnabled,
+    firstLaunch:portableAIFirstLaunch,downloadFetch:downloadPortableAI,
+  });
+  const desktopAI=require('./backend/desktop-ai.cjs').installDesktopAI(win,{portableAI,settingsFile:path.join(dataPath,'ai-settings.json'),toolLibraryStatus:()=>toolLibrary.status(),fallbackFile:fs.existsSync(path.join(dataPath,'profil.json'))?undefined:legacyAIFile,initialSettings});
   if(!practiceChild) require('./backend/ai-lab-development-evidence.cjs').installDevelopmentEvidence(win,path.join(dataPath,'KI-Diagnose'));
   const speechService=require('./backend/speech.cjs').installSpeech(win,{settingsDirectory:dataPath});
-  let speechQuitting=false;app.on('before-quit',event=>{if(!speechService.hasActive())return;event.preventDefault();if(speechQuitting)return;speechQuitting=true;speechService.dispose().finally(()=>app.quit());});
+  let quittingForDownloads=false;
+  app.on('before-quit',event=>{
+    if(!speechService.hasActive()&&!portableAI.active())return;
+    event.preventDefault();
+    if(quittingForDownloads)return;
+    quittingForDownloads=true;
+    Promise.allSettled([speechService.dispose(),portableAI.dispose()]).finally(()=>app.quit());
+  });
   require('./backend/speech-permissions.cjs').installSpeechPermissions(win,{entry:path.join(__dirname,'dist','index.html')});
   require('./backend/windows-dictation.cjs').installWindowsDictation(win,{entry:path.join(__dirname,'dist','index.html')});
   require('./backend/edit-menu.cjs').installEditMenu(win,{getLanguage:()=>{try{return JSON.parse(programStore.read('offlinecad-settings-v1').value||'{}').language||'de';}catch{return 'de';}}});
@@ -80,12 +97,20 @@ app.whenReady().then(async () => {
   if(pythonVerifyArg||autoDimensionsVerifyArg||drawingsVerifyArg||linkedContoursVerifyArg)mixedDialogs.exportDialog.showSaveDialog=async()=>({filePath:mixedDialogs.files.save});
   require('./backend/drawing-pdf.cjs').installDrawingPdf(win);
   require('./backend/files.cjs').installFiles(win,{ipcMain:require('electron').ipcMain,dialog:require('electron').dialog,sequenceFile:path.join(dataPath,'export-series.json'),...(mixedDialogs?{ipcMain:require('electron').ipcMain,dialog:mixedDialogs.exportDialog}:stlVerifyArg?{ipcMain:require('electron').ipcMain,dialog:{showSaveDialog:async(_win,options)=>{if(globalThis.__cancelStlVerificationSave)return {canceled:true};const directory=path.join(path.dirname(verifyPath),'exports');fs.mkdirSync(directory,{recursive:true});return {filePath:path.join(directory,path.basename(options.defaultPath))};}}}:{} )});
-  const converterDirectory=app.isPackaged?path.join(process.resourcesPath,'converter'):path.join(__dirname,'converter/runtime-v010-security');
+  const converterDirectory=app.isPackaged?path.join(process.resourcesPath,'converter'):require('./backend/stl-converter.cjs').runtimeDirectory({root:__dirname});
   const stlConverter=require('./backend/stl-converter.cjs').installStlConverter(win,{directory:converterDirectory,...(practiceChild?{tempRoot:practiceDirectory,waitForClose:true}:{})});
   const {installProjects,projectDirectory}=require('./backend/projects.cjs');
   const performanceFixtures=cadMiniPerformanceVerifyArg&&process.env.FORMNARO_PERFORMANCE_FIXTURES;
   const performanceDialogs=performanceFixtures?require('./backend/mixed-project-verification.cjs').verificationDialogs(path.dirname(verifyPath)):null;
-  const projectStore=installProjects(win,{directory:projectDirectory(app,{verificationPath:verifyPath}),...(fnpackVerifyArg?{onPackRead:event=>packReads.push(event)}:{}),...((performanceDialogs??mixedDialogs)?{dialog:(performanceDialogs??mixedDialogs).projectDialog}:{})});
+  const projects=companion&&!verifyPath&&!diagnosticHost?path.join(profilePath,'Projekte'):projectDirectory(app,{verificationPath:verifyPath});
+  const projectStore=installProjects(win,{directory:projects,...(fnpackVerifyArg?{onPackRead:event=>packReads.push(event)}:{}),...((performanceDialogs??mixedDialogs)?{dialog:(performanceDialogs??mixedDialogs).projectDialog}:{})});
+  if(!practiceChild) {
+    const {ipcMain,dialog,shell,clipboard}=require('electron');
+    require('./backend/tablet-transfer.cjs').installTabletTransfer(win,{ipcMain,dialog,shell,clipboard,
+      directory:path.join(projects,'Tablet-Eingang'),getTarget:desktopAI.tabletTarget,
+      peerDirectory:dataPath,protection:require('electron').safeStorage,
+      provider:desktopAI.tabletProvider,live:desktopAI.tabletLive,agent:desktopAI.tabletAgent});
+  }
   let quittingSources=false,sourceCleanupDone=false;app.on('before-quit',event=>{if(!win.isDestroyed()||!projectStore.hasPackageSources()||sourceCleanupDone)return;event.preventDefault();if(quittingSources)return;quittingSources=true;projectStore.close().catch(error=>console.error('Private package source cleanup: '+error.message)).finally(()=>{sourceCleanupDone=true;app.quit();});});
   const {installLayouts,layoutDirectory}=require('./backend/layouts.cjs');
   const layoutRoot=practiceChild?practiceDirectory:diagnosticHost?diagnosticHome:undefined;
@@ -94,7 +119,7 @@ app.whenReady().then(async () => {
   if(verifyPath)win.webContents.on('console-message',e=>{if(e.level==='error'&&!/WebGL.*CONTEXT_LOST/.test(e.message))toolVerificationErrors.push(e.message);});
   // Only isolated acceptance instances enter this teardown. Stop both worker
   // families and the converter before destroying their hidden test window.
-  async function disposeVerification(){if(!verifyPath)return;try{await stlConverter.cancel();}catch{ /* Continue shutting down the window if the converter cannot be cancelled. */ }if(!win.isDestroyed()){try{await win.webContents.executeJavaScript('window.__cadTest?.modelingUI?.dispose();window.__cadTest?.sketchUI?.close();window.__cadTest?.projectParametersUI?.dispose();window.__cadTest?.drawingUI?.dispose();window.__cadTest?.easyRepair?.invalidate();window.__cadTest?.meshHoleFillUI?.dispose();window.__cadTest?.meshRepairUI?.dispose();window.__cadTest?.meshInspectorUI?.dispose();window.__cadTest?.meshSelectionUI?.dispose();window.__cadTest?.functionsUI?.dispose();window.__cadTest?.marksView?.dispose();window.__cadTest?.controller?.dispose();window.__cadTest?.view?.dispose();');}catch{ /* The renderer may already be gone during window shutdown. */ }win.destroy();}await projectStore.close();}
+  async function disposeVerification(){if(!verifyPath)return;try{await stlConverter.cancel();}catch{}if(!win.isDestroyed()){try{await win.webContents.executeJavaScript('window.__cadTest?.modelingUI?.dispose();window.__cadTest?.sketchUI?.close();window.__cadTest?.projectParametersUI?.dispose();window.__cadTest?.drawingUI?.dispose();window.__cadTest?.easyRepair?.invalidate();window.__cadTest?.meshHoleFillUI?.dispose();window.__cadTest?.meshRepairUI?.dispose();window.__cadTest?.meshInspectorUI?.dispose();window.__cadTest?.meshSelectionUI?.dispose();window.__cadTest?.functionsUI?.dispose();window.__cadTest?.marksView?.dispose();window.__cadTest?.controller?.dispose();window.__cadTest?.view?.dispose();');}catch{}win.destroy();}await projectStore.close();}
   const startupProfiler=cadMiniPerformanceVerifyArg&&process.env.FORMNARO_STARTUP_CPU==='1'?win.webContents.debugger:null;
   if(startupProfiler){
     await win.loadURL('about:blank');
@@ -179,6 +204,16 @@ app.whenReady().then(async () => {
           require('./backend/verification-report.cjs').writeVerificationReport(verifyPath,{...result,...packageIdentity(),appVersion:app.getVersion(),isolatedProfile:true,windowClosed:true,expected,errors,external:toolVerificationExternal});
           app.quit();return;
         }
+        if(drawingsVerifyArg&&process.env.FORMNARO_VERIFY_PROFILE_EXCHANGE==='1'){
+          const result=await require('./backend/profile-exchange-verification.cjs').verifyProfileExchange(win,{directory:path.dirname(verifyPath),files:mixedDialogs.files});
+          if(toolVerificationErrors.length||toolVerificationExternal.length)throw Error('Unexpected exchange errors or external requests: '+JSON.stringify(toolVerificationErrors));
+          win.once('closed',()=>{
+            require('./backend/verification-report.cjs').writeVerificationReport(verifyPath,{...result,normalClose:true,errors:toolVerificationErrors,external:toolVerificationExternal,...packageIdentity(),appVersion:app.getVersion(),isolatedProfile:true});
+            app.quit();
+          });
+          win.close();
+          return;
+        }
         if(drawingsVerifyArg){const result=await require('./backend/drawing-verification.cjs').verifyDrawings(win,{directory:path.dirname(verifyPath),files:mixedDialogs.files});if(toolVerificationErrors.length||toolVerificationExternal.length)throw Error('Unexpected drawing errors/network: '+JSON.stringify(toolVerificationErrors));require('./backend/verification-report.cjs').writeVerificationReport(verifyPath,{...result,errors:toolVerificationErrors,external:toolVerificationExternal,...packageIdentity(),appVersion:app.getVersion(),isolatedProfile:true});await disposeVerification();app.exit(0);return;}
         if(modelingVerifyArg){const result=await require('./backend/modeling-verification.cjs').verifyModeling(win,{directory:path.dirname(verifyPath),files:mixedDialogs.files});if(toolVerificationErrors.length||toolVerificationExternal.length)throw Error('Unexpected modeling errors/network: '+JSON.stringify(toolVerificationErrors));fs.writeFileSync(verifyPath,JSON.stringify({...result,errors:toolVerificationErrors,external:toolVerificationExternal,...packageIdentity(),appVersion:app.getVersion(),isolatedProfile:true},null,2));await disposeVerification();app.exit(0);return;}
         if(rotationVerifyArg){const result=await require('./backend/rotation-ring-verification.cjs').verifyRotationRing(win,{directory:path.dirname(verifyPath)});if(toolVerificationErrors.length||toolVerificationExternal.length)throw Error('Unexpected rotation errors/network: '+JSON.stringify(toolVerificationErrors));fs.writeFileSync(verifyPath,JSON.stringify({...result,errors:toolVerificationErrors,external:toolVerificationExternal,...packageIdentity(),appVersion:app.getVersion(),isolatedProfile:true},null,2));await disposeVerification();app.exit(0);return;}
@@ -253,6 +288,7 @@ app.whenReady().then(async () => {
         if(workspaceVerifyArg){const result=await require('./backend/shared-workspace-verification.cjs').verifySharedWorkspace(win,{directory:path.dirname(verifyPath),files:mixedDialogs.files});if(toolVerificationErrors.length||toolVerificationExternal.length)throw Error('Unexpected verification renderer errors or external requests: '+JSON.stringify(toolVerificationErrors));fs.writeFileSync(verifyPath,JSON.stringify({...result,...packageIdentity(),...(!app.isPackaged?{sourceManifest:(await import('./scripts/stl-integration-manifest.mjs')).integrationManifest(__dirname)}:{}),appVersion:app.getVersion(),isolatedProfile:true},null,2));await disposeVerification();app.exit(0);return;}
         if(meshVerifyArg){const result=await require('./backend/mesh-integration-verification.cjs').verifyMeshIntegration(win,{directory:path.dirname(verifyPath),files:mixedDialogs.files});if(toolVerificationErrors.length||toolVerificationExternal.length)throw Error('Unexpected verification renderer errors or external requests: '+JSON.stringify(toolVerificationErrors));fs.writeFileSync(verifyPath,JSON.stringify({...result,...packageIdentity(),...(!app.isPackaged?{sourceManifest:(await import('./scripts/stl-integration-manifest.mjs')).integrationManifest(__dirname)}:{}),appVersion:app.getVersion(),isolatedProfile:true},null,2));await disposeVerification();app.exit(0);return;}
         if(mixedVerifyArg){const result=await require('./backend/mixed-project-verification.cjs').verifyMixedProject(win,{directory:path.dirname(verifyPath),files:mixedDialogs.files});if(toolVerificationErrors.length||toolVerificationExternal.length)throw Error('Unexpected verification renderer errors or external requests: '+JSON.stringify(toolVerificationErrors));fs.writeFileSync(verifyPath,JSON.stringify({...result,...packageIdentity(),...(!app.isPackaged?{sourceManifest:(await import('./scripts/stl-integration-manifest.mjs')).integrationManifest(__dirname)}:{}),appVersion:app.getVersion(),isolatedProfile:true},null,2));await disposeVerification();app.exit(0);return;}
+        if(photoModeVerifyArg){const result=await require('./backend/photo-mode-verification.cjs').verifyPhotoMode(win,{directory:path.dirname(verifyPath)});if(toolVerificationErrors.length||toolVerificationExternal.length)throw Error('Unexpected verification renderer errors or external requests: '+JSON.stringify(toolVerificationErrors));fs.writeFileSync(verifyPath,JSON.stringify({...result,...packageIdentity(),...(!app.isPackaged?{sourceManifest:(await import('./scripts/stl-integration-manifest.mjs')).integrationManifest(__dirname)}:{}),appVersion:app.getVersion(),isolatedProfile:true},null,2));await disposeVerification();app.exit(0);return;}
         if(stlVerifyArg){const result=await require('./backend/stl-integration-verification.cjs').verify(win,app,{reportPath:verifyPath,converter:stlConverter});if(toolVerificationErrors.length||toolVerificationExternal.length)throw Error('Unexpected verification renderer errors or external requests: '+JSON.stringify(toolVerificationErrors));fs.writeFileSync(verifyPath,JSON.stringify({...result,...packageIdentity(),appVersion:app.getVersion(),isolatedProfile:true},null,2));await disposeVerification();app.exit(0);return;}
         if(await win.webContents.executeJavaScript('!!window.__cadTest?.controller')){
           const result=await require('./backend/verification-native-cad.cjs').verifyNativeCadSequence(win,app,{verifyPath,projectDirectory:projectStore.directory});

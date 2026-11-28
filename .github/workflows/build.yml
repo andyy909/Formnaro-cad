@@ -65,7 +65,7 @@ jobs:
         if: matrix.shard == 1
       - name: Verify laboratory storage, credentials and process shutdown
         if: matrix.shard == 1
-        run: node --test --test-concurrency=1 tests/ai-lab-integration-01390.test.cjs tests/ai-lab-ui-feedback.test.cjs tests/desktop-ai-lab-credentials.test.cjs tests/ai-diagnostic-close-grace.test.cjs tests/ai-diagnostic-os-exit.test.cjs tests/ai-lab-rejected-history.test.cjs
+        run: node --test --test-concurrency=1 tests/ai-lab-integration-01390.test.cjs tests/ai-lab-ui-feedback.test.cjs tests/desktop-ai-lab-credentials.test.cjs tests/ai-diagnostic-close-grace.test.cjs tests/ai-diagnostic-os-exit.test.cjs tests/ai-diagnostic-window-close-ipc.test.cjs tests/ai-lab-rejected-history.test.cjs
       - name: Verify archive and filesystem tooling
         if: matrix.shard == 1
         run: node --test tests/dependency-toolchain.test.cjs

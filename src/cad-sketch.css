@@ -1,4 +1,11 @@
 .sketch-modal{max-width:min(1050px,96vw)!important;width:1050px}.sketch-editor{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1fr);gap:20px}.sketch-editor fieldset{border:1px solid var(--border,#687984);border-radius:8px;margin-bottom:8px;padding:8px}.sketch-editor input{width:100%;min-width:0;padding:5px 6px;font-size:12px}.sketch-editor label{display:block;margin:6px 0;font-size:12px}.sketch-variable{display:grid;grid-template-columns:1fr 1.5fr 45px 26px;gap:4px;margin:4px 0;align-items:center}.sketch-variable output{font-size:12px;overflow-wrap:anywhere}.sketch-variable button{padding:4px}#sketch-board{width:100%;aspect-ratio:1;background:#1b2935;touch-action:none;border-radius:8px;cursor:crosshair}#sketch-board .grid{stroke:#405567;stroke-width:.12}#sketch-board .axis{stroke:#89a3b6;stroke-width:.25}#sketch-board .contour{fill:#66acb63b;stroke:#68d3dd;stroke-width:.5}#sketch-board .vertex{fill:#ffc358}#sketch-preview-3d{height:170px;background:#1c2a36;border-radius:8px;overflow:hidden}#sketch-preview-3d canvas{width:100%!important;height:170px!important}#sketch-points{max-height:200px;overflow:auto}#sketch-points label{display:grid;grid-template-columns:70px 1fr 1fr;gap:5px}#sketch-message{min-height:30px;font-size:11px;margin:8px 0}.sketch-editor .small-note{margin:5px 0;font-size:10px}.sketch-editor .modal-actions{position:sticky;bottom:0;background:inherit;padding:5px 0;margin-top:5px}#sketch-dimensions{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}.sketch-editor [hidden]{display:none!important}@media(max-width:700px){.sketch-editor{grid-template-columns:1fr}}
+.sketch-scale-handle {
+  fill: var(--accent, #2585a3);
+  stroke: #fff;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
 
 .sketch-editor input{height:28px;min-height:0;box-sizing:border-box}.sketch-editor label{margin:3px 0}.sketch-variable{margin:2px 0}.sketch-variable button,#sketch-variable-add{min-height:28px;padding:3px 6px}.sketch-editor .modal-actions{position:static}
 .sketch-canvas-toolbar{display:flex;align-items:end;gap:5px;flex-wrap:wrap;margin:5px 0}.sketch-canvas-toolbar label{flex:1;min-width:90px}.sketch-canvas-toolbar input,.sketch-canvas-toolbar select{width:100%;max-width:180px}.sketch-canvas-toolbar button{min-height:28px;padding:4px 7px;font-size:11px}#sketch-board .grid,#sketch-board .axis,#sketch-board .contour{vector-effect:non-scaling-stroke;stroke-width:1px}#sketch-board .vertex.selected{fill:#fff;stroke:#ffad22;stroke-width:2px;vector-effect:non-scaling-stroke}#sketch-board[data-tool=pan]{cursor:grab}#sketch-board[data-tool=select]{cursor:default}.sketch-expanded{max-width:96vw!important;width:1800px!important;max-height:94vh;overflow:auto}.sketch-expanded .sketch-editor{grid-template-columns:minmax(360px,2fr) minmax(280px,1fr)}.sketch-expanded #sketch-board{height:65vh;aspect-ratio:auto}@media(max-width:800px){.sketch-expanded .sketch-editor{grid-template-columns:1fr}.sketch-expanded #sketch-board{height:55vh}}
@@ -20,3 +27,127 @@
 #sketch-board .constraint-element-hit.selected{stroke:#ffc85399}#sketch-board .constraint-element-hit.conflict{stroke:#ff5c6199}
 
 #sketch-board .contour.contour-open{fill:none;}
+
+.sketch-workspace.sketch-modal {
+  width: min(1360px, 95vw);
+  max-width: 95vw !important;
+}
+.sketch-workspace .sketch-editor {
+  grid-template-columns: minmax(0, 1fr) minmax(286px, 360px);
+  gap: 18px;
+}
+.sketch-workspace[data-sketch-mode='simple']:not(.sketch-expanded) {
+  width: min(1050px, 95vw);
+}
+.sketch-workspace[data-sketch-mode='simple'] .sketch-quick-tools[data-profile='false'],
+.sketch-workspace[data-sketch-mode='simple'] [data-sketch-quick-tool='arc'],
+.sketch-workspace[data-sketch-mode='simple'] [data-sketch-quick-tool='construction'],
+.sketch-workspace[data-sketch-mode='simple'] [data-sketch-quick-tool='move'],
+.sketch-workspace[data-sketch-mode='simple'] [data-sketch-quick-tool='align'],
+.sketch-workspace[data-sketch-mode='simple'] [id^='sketch-profile-canvas-'],
+.sketch-workspace[data-sketch-mode='simple'] #sketch-open-relations,
+.sketch-workspace[data-sketch-mode='simple'] #sketch-constraints,
+.sketch-workspace[data-sketch-mode='simple'] #sketch-edit-tools {
+  display: none;
+}
+.sketch-workspace #sketch-board {
+  display: block;
+  height: clamp(280px, 54vh, 720px);
+  aspect-ratio: auto;
+}
+.sketch-workspace.sketch-expanded #sketch-board {
+  height: clamp(340px, 66vh, 880px);
+}
+.sketch-workspace .sketch-canvas-toolbar .sketch-toggle {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 4px;
+  min-width: auto;
+  padding-block: 4px;
+}
+.sketch-workspace .sketch-toggle input {
+  width: 1em;
+  height: 1em;
+  margin: 0;
+}
+.sketch-quick-tools,
+.sketch-workspace-mode,
+.sketch-constraint-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-block: 7px;
+}
+.sketch-quick-tools button,
+.sketch-workspace-mode button,
+.sketch-constraint-quick button {
+  padding: 4px 8px;
+  min-height: 30px;
+  font-size: 12px;
+}
+.sketch-quick-tools button[aria-pressed='true'],
+.sketch-workspace-mode button[aria-pressed='true'],
+.sketch-canvas-toolbar [id^='sketch-profile-canvas-'][aria-pressed='true'] {
+  border-color: var(--accent, #19788b);
+  box-shadow: inset 0 -2px var(--accent, #19788b);
+}
+#sketch-board[data-line-edit] {
+  cursor: crosshair;
+}
+#sketch-board .sketch-snap-guide {
+  fill: none;
+  stroke: #6ce5c7;
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+#sketch-board .sketch-snap-guide[data-kind='grid'] {
+  stroke: #a4b9d6;
+}
+#sketch-board .sketch-snap-guide[data-kind='midpoint'] {
+  stroke: #f2c45b;
+}
+#sketch-board[data-tool=move] { cursor: move; }
+#sketch-board .sketch-drawing-preview {
+  fill: #65c2d328;
+  stroke: #8de5ed;
+  stroke-width: 1.4px;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+#sketch-board .sketch-align-anchor {
+  fill: #f7c35144;
+  stroke: #f7c351;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.sketch-align-controls:not([hidden]) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 5px;
+  font-size: 13px;
+}
+.sketch-dimension-entry:popover-open {
+  display: flex;
+  position: fixed;
+  inset: auto;
+  align-items: center;
+  gap: 5px;
+  max-width: calc(100vw - 24px);
+  margin: 0;
+  padding: 5px;
+  color: var(--ink, #173342);
+  background: var(--panel, #fff);
+  border: 1px solid var(--border, #547685);
+  border-radius: 8px;
+}
+.sketch-dimension-entry input { width: 98px; }
+@media (max-width: 760px) {
+  .sketch-workspace .sketch-editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -57,7 +57,8 @@ import { runCadAIScript } from './cad-ai-sandbox.js';
 import { runModelConversion, queryProgramResources } from './cad-ai-local-tools.js';
 import { validateAIResultChecks, resolveAIResultTarget, aiCheckFailure } from './cad-ai-result-checks.js';
 import { projectObjectGeometryDigest } from './project-objects.js';
-import { prepareCadTranslationView } from './cad-translation-view.js';
+import { equalCadViewInput, prepareCadTranslationView } from './cad-translation-view.js';
+import { isSimplifiedCadDisplay } from './cad-quality.js';
 import { validateCadDrawings } from './cad-drawing-data.js';
 import {
   planCadProjectParameters,
@@ -167,7 +168,10 @@ export function createCadController({
   }
   function rememberQuery(project, part) {
     if (!reuseTranslations || project !== store.readSnapshot() || !project.nodes.every((n) => n.kind === 'cad')) return;
-    const record = { ...viewQueries.get(project), ...part };
+    // Refreshing tessellation at a different quality leaves the verified
+    // scene of this exact model intact. Pair it with the new display meshes.
+    const scene = confirmedView?.project === project ? confirmedView.view.scene : undefined;
+    const record = { scene, ...viewQueries.get(project), ...part };
     viewQueries.delete(project);
     viewQueries.set(project, record);
     while (viewQueries.size > 2) viewQueries.delete(viewQueries.keys().next().value);
@@ -184,6 +188,54 @@ export function createCadController({
       confirmedView = candidateViews.get(project);
       viewQueries.delete(project);
     }
+  }
+  // Grouping changes the displayed roots, but neighboring parts retain their
+  // exact scene and tessellation. Compare complete roots, including sources.
+  async function prepareGroupView(project, previous, quality, signal) {
+    const baseline = previous.project,
+      prior = previous.view;
+    if (
+      !project.nodes.every((node) => node.kind === 'cad') ||
+      !equalCadViewInput(baseline.layers, project.layers) ||
+      !equalCadViewInput(baseline.folders, project.folders)
+    )
+      return;
+    const oldRoots = new Map(baseline.nodes.map((node) => [node.id, node]));
+    const displayed = new Set(getDisplayIds(project) ?? project.nodes.map((node) => node.id));
+    const previousDisplay = new Set(prior.meshes.map((record) => record.rootId ?? record.id));
+    const changed = project.nodes
+      .filter(
+        (node) =>
+          displayed.has(node.id) !== previousDisplay.has(node.id) || !equalCadViewInput(oldRoots.get(node.id), node),
+      )
+      .map((node) => node.id);
+    if (changed.length === project.nodes.length) return;
+    const revision = cadProjectRevision(project);
+    const scene = await worker.run(
+      { job: 'query', project, query: { kind: 'scene' }, sceneRootIds: changed },
+      { revision, signal },
+    );
+    const displayIds = changed.filter((id) => displayed.has(id));
+    const meshes = displayIds.length
+      ? await worker.run({ job: 'display', project, quality, colored: true, ids: displayIds }, { revision, signal })
+      : [];
+    const updated = new Set(changed);
+    function merge(oldRecords, newRecords, rootId) {
+      const byRoot = new Map();
+      function add(record) {
+        const id = rootId(record);
+        if (!byRoot.has(id)) byRoot.set(id, []);
+        byRoot.get(id).push(record);
+      }
+      for (const record of oldRecords) if (!updated.has(rootId(record))) add(record);
+      for (const record of newRecords) add(record);
+      return project.nodes.flatMap((node) => byRoot.get(node.id) ?? []);
+    }
+    return {
+      revision,
+      scene: { ...scene, objects: merge(prior.scene.objects, scene.objects, (item) => item.target.rootId) },
+      meshes: merge(prior.meshes, meshes, (item) => item.rootId ?? item.id),
+    };
   }
   function parameterStateView(project, prior) {
     const revision = cadProjectRevision(project),
@@ -431,12 +483,15 @@ export function createCadController({
         nativeOperation = { kind: 'batch', commands: photoReconstruction.commands };
       }
       if (context.replaceProject && hasGeometryRefs(project)) {
-        const candidate = cadProjectReadView(project);
-        await prepareCommit(candidate, {
-          signal: context.signal,
-          revision: context.revision,
-          quality: { ...displayQuality },
-        });
+        const candidate = cadProjectReadView(project),
+          revision = cadProjectRevision(candidate),
+          view = await prepareCommit(candidate, {
+            signal: context.signal,
+            revision: context.revision,
+            quality: { ...displayQuality },
+          });
+        if (reuseTranslations && view?.revision === revision && view.scene?.revision === revision)
+          rememberView(candidate, view, qualityKey);
         metadata = { aliases: {}, changes: [], warnings: [] };
         return candidate;
       }
@@ -783,7 +838,10 @@ export function createCadController({
         confirmedView.quality === qualityKey
       ) {
         const candidate = cadProjectReadView(project),
-          view = prepareCadTranslationView(confirmed, candidate, confirmedView.view, null);
+          view = prepareCadTranslationView(confirmed, candidate, confirmedView.view, null, {
+            rootRoles: true,
+            simplified: isSimplifiedCadDisplay(displayQuality),
+          });
         if (view) {
           view.revision = view.scene.revision = cadProjectRevision(candidate);
           await prepareCommit(candidate, {
@@ -1024,7 +1082,17 @@ export function createCadController({
       const resultRevision = cadProjectRevision(result.project),
         preparedQuality = { ...displayQuality };
       progress({ phase: 'prepare-preview' });
+      const groupEdit =
+        context.operation?.kind === 'tool' && ['previewDissolve', 'previewGroup'].includes(context.operation.name);
+      const preparedView =
+        groupEdit &&
+        reuseTranslations &&
+        confirmedView?.project === confirmed &&
+        confirmedView.quality === JSON.stringify(preparedQuality)
+          ? await prepareGroupView(result.project, confirmedView, preparedQuality, context.signal)
+          : undefined;
       const view = await prepareCommit(result.project, {
+        preparedView,
         signal: context.signal,
         revision: context.revision,
         quality: preparedQuality,
@@ -1148,12 +1216,43 @@ export function createCadController({
     signal?.addEventListener('abort', abort, { once: true });
     return () => signal?.removeEventListener('abort', abort);
   }
-  function changed(result, before, { replacement = false } = {}) {
+  // Undo/Redo restores the frozen project itself. Ask after the UI has
+  // synchronized its load set, since newly restored roots can become visible.
+  function historyView() {
+    const project = store.readSnapshot(),
+      saved = confirmedView;
+    if (
+      saved?.project !== project ||
+      saved.quality !== JSON.stringify(displayQuality) ||
+      saved.view.revision !== store.revision() ||
+      !project.nodes.every((node) => node.kind === 'cad')
+    )
+      return null;
+    const wanted = getDisplayIds(project) ?? project.nodes.map((node) => node.id);
+    const drawn = new Set(saved.view.meshes.map((record) => record.rootId ?? record.id));
+    if (wanted.length !== drawn.size || !wanted.every((id) => drawn.has(id))) return null;
+    const meshes = saved.view.meshes.map(({ mesh, ...record }) => ({
+      ...structuredClone(record),
+      mesh: Object.isFrozen(mesh) ? mesh : structuredClone(mesh),
+    }));
+    return { meshes, revision: saved.view.revision, scene: structuredClone(saved.view.scene) };
+  }
+  function changed(result, before, { replacement = false, history = false } = {}) {
     if (result.changed || replacement) {
+      const oldScope = projectScope;
       projectScope = projectScopes.get(store.readSnapshot()) ?? projectScope;
       const drawingsOnly = !replacement && before && geometryOwner(before) === geometryOwner(store.readSnapshot());
-      confirmedView = candidateViews.get(store.readSnapshot()) ?? null;
-      onChange(store.snapshot(), store.state(), { drawingsOnly: !!drawingsOnly });
+      const current = store.readSnapshot();
+      confirmedView = candidateViews.get(current) ?? null;
+      if (confirmedView) {
+        // Keep the restored baseline beside the next preview in the two-entry cache.
+        candidateViews.delete(current);
+        candidateViews.set(current, confirmedView);
+      }
+      onChange(store.snapshot(), store.state(), {
+        drawingsOnly: !!drawingsOnly,
+        ...(history && oldScope === projectScope && confirmedView ? { historyView } : {}),
+      });
     }
     return result;
   }
@@ -1904,9 +2003,7 @@ export function createCadController({
               check.target,
               proposal.aliases ?? {},
             ).target;
-          } catch {
-            /* Keep the caller's target in the report when target resolution fails. */
-          }
+          } catch {}
           reports.push({
             ...structuredClone(check),
             target,
@@ -2044,7 +2141,8 @@ export function createCadController({
       revision = project === store.readSnapshot() ? store.revision() : cadProjectRevision(project);
     // A geometrically verified preview can be drawn without being committed.
     // The worker validates its own fixed input revision for this display job.
-    const included = validateCadLoadSet(Object.hasOwn(options, 'ids') ? options.ids : getDisplayIds(project)),
+    const canonicalDisplay = !Object.hasOwn(options, 'ids'),
+      included = validateCadLoadSet(canonicalDisplay ? getDisplayIds(project) : options.ids),
       idsSet = included === null ? null : new Set(included);
     async function build() {
       let meshes =
@@ -2093,7 +2191,7 @@ export function createCadController({
         }
       }
     } else meshes = await build();
-    if (included === null && scope === projectScope && sequence === displaySequence)
+    if (canonicalDisplay && scope === projectScope && sequence === displaySequence)
       rememberQuery(project, { meshes, quality: JSON.stringify(quality) });
     return { sequence, revision, current: sequence === displaySequence, meshes };
   }
@@ -2430,13 +2528,13 @@ export function createCadController({
       alive();
       assertWritable();
       const before = store.readSnapshot();
-      return changed(store.undo(), before);
+      return changed(store.undo(), before, { history: true });
     },
     redo: () => {
       alive();
       assertWritable();
       const before = store.readSnapshot();
-      return changed(store.redo(), before);
+      return changed(store.redo(), before, { history: true });
     },
     cancel,
     discard,

@@ -6,8 +6,30 @@ import {createCadProject} from '../src/cad-project.js';
 import {cadIdentity} from '../src/cad-affine.js';
 import {cadCollisionNative,cadColorRecordsNative} from '../src/cad-analysis-native.js';
 import {brepHasNoTriangulation} from '../src/cad-native-kernel.js';
+import {CAD_QUALITY_DEFAULTS,cadDisplayPreset} from '../src/cad-quality.js';
 const oc=await OCModule({print:()=>{},printErr:()=>{}}),close=(a,b,error=1e-6)=>assert.ok(Math.abs(a-b)<error,`${a} versus ${b}`);
 const moved=x=>{const m=cadIdentity();m[12]=x;return m;};
+
+test('Simplified preview meshes the finished body and full preview restores source colors', async()=>{
+  const service=createCadService({oc});
+  try{
+    const a=service.nativeNode({type:'box',size:[10,10,10]},{id:'a',color:'#ff0000'});
+    const b=service.nativeNode({type:'box',size:[10,10,10]},{id:'b',color:'#0000ff',transform:moved(5)});
+    const group={id:'group',kind:'cad',source:'group',name:'Spannbacke',color:'#225588',
+      solid:true,multicolor:true,transform:cadIdentity(),operation:'union',children:[a,b],brep:a.brep,stats:a.stats};
+    const project=await service.rebuild(createCadProject({nodes:[group]}));
+    const before=structuredClone(project);
+    const quality=cadDisplayPreset(CAD_QUALITY_DEFAULTS,'simplified');
+    const timings={};
+    const fast=service.display(project,quality.display,{colored:true,timings});
+    assert.deepEqual(fast.map(mesh=>mesh.id),['group']);
+    assert.equal(timings.colorPartitionMs,undefined);
+    assert.deepEqual(fast,service.display(project,quality.display));
+    const full=service.display(project,CAD_QUALITY_DEFAULTS.display,{colored:true});
+    assert.deepEqual(full.map(mesh=>mesh.color),['#ff0000','#0000ff']);
+    assert.deepEqual(project,before);
+  }finally{service.dispose();}
+});
 
 test('Collisions use exact CAD intersection volume and ignore display tessellation',()=>{
   const service=createCadService({oc});try{

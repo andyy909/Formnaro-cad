@@ -404,9 +404,7 @@ export function cadFuseMany(oc, shapes, { balanced = false } = {}) {
     // the established left-to-right calculation available after a failure.
     try {
       return combine(0, shapes.length).shape;
-    } catch {
-      /* Retry with the established left-to-right union below. */
-    }
+    } catch {}
   }
   try {
     result = readCadBrep(oc, writeCadBrep(oc, shapes[0]));
@@ -663,16 +661,19 @@ export function writeCadBrep(oc, shape) {
   return result;
 }
 
-export function readCadBrep(oc, data) {
+export function readValidatedCadBrep(oc, data) {
   if (!brepHasNoTriangulation(data)) throw Error('CAD-BRep muss triangulierungsfrei sein.');
   const shape = oc.BRepToolsWrapper.Read(data);
   try {
-    validateCadSolid(oc, shape);
-    return shape;
+    return { shape, stats: validateCadSolid(oc, shape) };
   } catch (error) {
     shape.delete();
     throw error;
   }
+}
+
+export function readCadBrep(oc, data) {
+  return readValidatedCadBrep(oc, data).shape;
 }
 
 function matrixInfo(matrix) {

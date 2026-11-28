@@ -6,7 +6,7 @@ const DEEPSEEK_MODELS=[
  {id:'deepseek-v4-flash',name:'V4 Flash · Alias → V4.1 Flash',vision:true},
  {id:'deepseek-v4-flash-vision-exp',name:'V4 Flash Vision Exp · Alias → V4.1 Flash',vision:true}
 ];
-function knownVision(config){return new URL(config.baseUrl).hostname==='api.deepseek.com'?DEEPSEEK_MODELS.find(m=>m.id===config.model)?.vision??null:null;}
+function knownVision(config){if(require('./portable-ai.cjs').isPortableModel(config))return false;return new URL(config.baseUrl).hostname==='api.deepseek.com'?DEEPSEEK_MODELS.find(m=>m.id===config.model)?.vision??null:null;}
 function modelCatalog(config,details=[]){
  const host=new URL(config.baseUrl).hostname,result=new Map();
  for(const model of host==='api.deepseek.com'?DEEPSEEK_MODELS:[])result.set(model.id,{...model});

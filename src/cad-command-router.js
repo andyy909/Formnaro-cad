@@ -4,17 +4,25 @@ import { rejectStaleCadReferences } from './cad-ai-reference-guard.js';
 import { rebindCadDrillsCoordinated } from './cad-drill-rebind-coordinated.js';
 import { updateCadLinkedPatternWithConsumers } from './cad-pattern-consumers-native.js';
 import { rebindCadReferencesNative } from './cad-reference-rebind-native.js';
+import { planCadPatternDrawings } from './cad-linked-pattern-drawing-data.js';
+import { updateCadPatternDrawings } from './cad-linked-pattern-drawings-native.js';
 import { prepareCadDrillDrawingRefresh, refreshCadDrillDrawings } from './cad-drawing-drill-native.js';
-import { hasGeometryRefs } from './cad-geometry-ref.js';
+import { planCadPatternContours } from './cad-linked-pattern-contour-data.js';
+import { updateCadPatternContours, mergeCadContourBuildReports } from './cad-linked-pattern-contours-native.js';
+import { hasGeometryRefs, isGeometryRef } from './cad-geometry-ref.js';
 import {
   validateCadLinkedPattern,
+  materializeCadLinkedPattern,
   stampCadLinkedPattern,
   cadLinkedPatternProblems,
   assertCadLinkedPatternCopyReady,
 } from './cad-linked-pattern-data.js';
-import { remapCadJoints, mergeCadJoints } from './cad-joints-data.js';
+import { remapCadJoints, validateCadJoints, mergeCadJoints } from './cad-joints-data.js';
 import { prepareConstrainedSketch } from './sketch-constraints-solver.js';
 import { prepareSketchAttachment, checkSketchAttachment, attachmentNativeCommands } from './sketch-attachment.js';
+import { cadSketchFaceHit } from './cad-sketch-attachment-native.js';
+import { prepareTabletFaceCut } from './cad-tablet-face-cut.js';
+import { flags } from './organization.js';
 import { meshToCadNative } from './cad-mesh-to-cad-native.js';
 import { parametricSceneMetadata } from './cad-parametric-data.js';
 import { cadMeshCopyNative } from './cad-mesh-copy-native.js';
@@ -25,7 +33,7 @@ import { aiFeedback } from './ai-feedback.js';
 import { cadSelectionContext, cadInterfaceLocalBounds, cadResizeForm } from './cad-interface-state.js';
 import { resolveCadAnnotationNative } from './cad-annotations-native.js';
 import { validateCadAnnotations, cadAnnotationWorld } from './cad-annotations-data.js';
-import { cadRayHits } from './cad-native-kernel.js';
+import { readCadBrep, cadRayHits } from './cad-native-kernel.js';
 import { cadPartitionWorldPlane } from './cad-partition-frame.js';
 import { cloneCadSources } from './cad-source-clone.js';
 import {
@@ -40,6 +48,7 @@ import {
   multiplyCadMatrices,
   inverseCadMatrix,
   cadFrameSources,
+  dissolveCadGroup,
   resizeCadAtCorner,
 } from './cad-affine.js';
 import { createCadTransactions } from './cad-transactions.js';
@@ -1563,7 +1572,7 @@ export function createCadCommandRouter({
         project.nodes.push(service.nativeNode(operation.recipe, operation.options));
         break;
       case 'meshToCad': {
-        fields(operation, ['kind', 'target', 'sourceDigest', 'bytes', 'id', 'notes']);
+        fields(operation, ['kind', 'target', 'sourceDigest', 'bytes', 'id', 'notes', 'repair']);
         if (cadProjectRevision(project) !== cadProjectRevision(baseline))
           fail('UNCONFIRMED_PROJECT', 'Die CAD-Kopie benötigt das bestätigte Quellnetz.');
         project.nodes.push(meshToCadNative(service, project, operation));
@@ -1869,7 +1878,23 @@ export function createCadCommandRouter({
         fields(operation, ['kind', 'name', 'options']);
         const store = createCadTransactions({
             initial: project,
-            build: (p, context) => service.rebuild(p, { baseline: context.baseline }),
+            build: (p, context) => {
+              let promotedThreads;
+              if (operation.name === 'previewDissolve') {
+                const group = project.nodes.find((node) => node.id === operation.options.id);
+                if (group.children.some((child) => child.recipe?.type === 'thread')) {
+                  const original = baseline.nodes.find((node) => node.id === group.id);
+                  if (JSON.stringify(original) === JSON.stringify(group)) {
+                    promotedThreads = new Map(
+                      dissolveCadGroup(group)
+                        .filter((child) => child.source === 'native' && child.recipe?.type === 'thread')
+                        .map((child) => [child.id, child]),
+                    );
+                  }
+                }
+              }
+              return service.rebuild(p, { baseline: context.baseline, promotedThreads });
+            },
           }),
           tools = createCadToolsNative({ oc, service, transactions: store });
         if (
@@ -1981,6 +2006,48 @@ export function createCadCommandRouter({
           report = checkSketchAttachment(before, after, prepared);
         return { ...result, selectedIds: [id], report };
       }
+      case 'tabletFaceCut': {
+        fields(operation, ['kind', 'binding', 'originalSketch', 'frame', 'sketch', 'cut']);
+        const {binding, cut} = operation;
+        fields(binding, ['targetId', 'point', 'normal', 'geometryDigest']);
+        const target = project.nodes.find(node => node.id === binding.targetId);
+        if (!target || target.kind !== 'cad' || !target.solid || target.suppressed ||
+          flags(target, project).hidden || flags(target, project).locked ||
+          projectObjectGeometryDigest(target) !== binding.geometryDigest) {
+          throw Error('Das gewählte Teil wurde geändert oder ist gesperrt. Sende seine Fläche erneut ans Tablet.');
+        }
+        const face = cadSketchFaceHit(oc, service, target, binding.point, binding.normal);
+        const frame = validateAffineMatrix(operation.frame);
+        const [x, y, z] = [0, 4, 8].map(index => new Vector3(...frame.slice(index, index + 3)));
+        const normal = new Vector3(...face.normal);
+        const offset = normal.dot(new Vector3(...frame.slice(12, 15)).sub(new Vector3(...face.point)));
+        if ([x, y, z].some(axis => Math.abs(axis.lengthSq() - 1) > 1e-7) ||
+          x.clone().cross(y).dot(z) < 1 - 1e-7 || z.dot(normal) < 1 - 1e-7 || Math.abs(offset) > 1e-5) {
+          throw Error('Die ursprüngliche Flächenebene passt nicht mehr zum Teil.');
+        }
+        const minimumZ = cut.mode === 'through'
+          ? service.inspect(target, new Matrix4().fromArray(frame).invert()
+              .multiply(new Matrix4().fromArray(target.transform)).toArray()).worldBounds.min[2]
+          : null;
+        const prepared = prepareTabletFaceCut({...operation, frame}, minimumZ);
+        const label = cut.mode === 'through' ? 'Tablet-Durchbruch' : 'Tablet-Ausschnitt';
+        const commands = prepared.cutters.map((sketch, index) => ({
+          op: 'sketch', as: 'tabletCut' + index, sketch,
+          frame: prepared.frame, solid: false, name: label,
+        }));
+        commands.push({
+          op: 'group', as: 'tabletResult', operation: 'union', name: target.name,
+          targets: [target.id, ...commands.map(command => '$' + command.as)],
+        });
+        const result = await batch(project, {kind:'batch',commands}, baseline, progress);
+        const alias = result.aliases.tabletResult, id = typeof alias === 'string' ? alias : alias.rootId;
+        const after = service.inspect(result.project.nodes.find(node => node.id === id));
+        const report = checkSketchAttachment(service.inspect(target), after, {
+          mode:'cut', sourceId:target.id, engine:'cad', requestedDepth:prepared.requestedDepth,
+          overlap:prepared.overlap, sketch:prepared.cutters[0],
+        });
+        return {...result, selectedIds:[id], report};
+      }
       case 'template':
         fields(operation, ['kind', 'controls', 'bindings', 'values']);
         return {
@@ -1998,7 +2065,7 @@ export function createCadCommandRouter({
       rebuilt.drawings = refreshCadDrillDrawings(rebuilt, drillDrawingRefresh, drillDrawingPath, signal);
     return { project: rebuilt };
   }
-  function scene(input, selection = []) {
+  function scene(input, selection = [], rootIds = null) {
     const project = cadProjectSnapshot(input),
       objects = [];
     function visit(node, parentWorld, rootId, path, inherited) {
@@ -2126,7 +2193,9 @@ export function createCadCommandRouter({
       objects.at(-1).metadata = parametricSceneMetadata(node.metadata);
       for (const child of node.children ?? []) visit(child, world, rootId, [...path, child.id], state);
     }
-    for (const node of project.nodes) visit(node, cadIdentity(), node.id, [], containerFlags(project, node));
+    const included = rootIds && new Set(rootIds);
+    for (const node of project.nodes)
+      if (!included || included.has(node.id)) visit(node, cadIdentity(), node.id, [], containerFlags(project, node));
     return {
       application: 'Formnaro',
       projectVersion: project.version,

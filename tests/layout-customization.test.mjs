@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {defaultLayout,validateLayout,validateLayouts,emptyLayouts,changeLayouts} from '../backend/layout-data.mjs';
 import {moveLayoutItem} from '../src/layout-preferences.js';
+import {layoutGridPosition, snapLayoutGrid} from '../src/layout-grid.js';
 
 test('old layouts and named profiles retain positions and gain all previously unmovable tools',()=>{
   const old=defaultLayout(),added=['stl-to-step','drill','mesh-tools','mesh-select','mesh-inspector','mesh-repair','mesh-close-hole','mesh-more','cad-to-mesh','mesh-to-cad','workplane-set','workplane-top','reset-plane'];
@@ -25,4 +26,22 @@ test('visibility and section order persist in a named profile with validation an
   assert.deepEqual(changeLayouts(saved,{action:'load',id},()=>id).current,layout);
   for(const hiddenTools of [['foreign'],['mesh-tools','mesh-tools'],['settings'],'mesh-tools'])assert.throws(()=>validateLayout({...layout,hiddenTools}));
   assert.throws(()=>validateLayout({...layout,objectsFirst:'yes'}));assert.throws(()=>validateLayout({...layout,workspaceFirst:1}));
+});
+
+test('button and panel grid positions survive named layouts and fit narrower displays', () => {
+  const layout = {...defaultLayout(), grid: {undo:[14,12], inspector:[0,6], workspace:[14,3]}};
+  const id = '11111111-1111-4111-8111-111111111111';
+  const saved = changeLayouts(emptyLayouts(), {action:'save', name:'Raster', layout}, () => id);
+  assert.deepEqual(changeLayouts(saved, {action:'load', id}, () => id).current.grid, layout.grid);
+  assert.equal(moveLayoutItem(layout, 'undo', 'toolbar', 1).grid.undo, undefined);
+  assert.deepEqual(validateLayout({...layout, grid:undefined}).grid, {});
+  for (const grid of [{foreign:[0,0]}, {undo:[-1,0]}, {undo:[7.5,0]}, {undo:[256,3]}, {undo:[7]}])
+    assert.throws(() => validateLayout({...layout, grid}), /Rasterposition/);
+  const size = {width:44, height:40}, viewport = {usableWidth:600, usableHeight:400};
+  const {cell, rect} = snapLayoutGrid(194, 207, size, viewport);
+  assert.deepEqual(cell, [4,5]);
+  assert.deepEqual(rect, {left:182, top:226, ...size});
+  const resized = layoutGridPosition(layout.grid.undo, size, viewport);
+  assert(resized.left + size.width <= viewport.usableWidth);
+  assert(resized.top + size.height <= viewport.usableHeight);
 });

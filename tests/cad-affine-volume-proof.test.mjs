@@ -25,3 +25,29 @@ test('A real native boolean cut of a sheared gear proves volume by intersection 
     const serialized=serializeCadProject(project);service.dispose();service=createCadService({oc});const rebuilt=await service.rebuild(parseCadProject(serialized));near(rebuilt.nodes[0].stats.volume,project.nodes[0].stats.volume);assert.deepEqual(rebuilt.nodes[0].children.map(node=>node.transform),project.nodes[0].children.map(node=>node.transform));assert.equal(rebuilt.nodes[0].children[1].solid,false);
   }finally{service.dispose();}
 });
+
+
+test('Cold rigid inspection measures imported BRep bytes and exact rotated bounds', () => {
+  const service = createCadService({ oc });
+  let local, placed;
+  try {
+    const source = service.nativeNode({ type: 'cylinder', size: [8, 8, 12] });
+    const node = { ...source, source: 'step', stats: { ...source.stats, volume: 1 } };
+    delete node.recipe;
+    const c = Math.cos(0.64), s = Math.sin(0.64);
+    const pose = [1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 3, -8, 7, 1];
+    const measured = service.inspect(node, pose);
+    local = readCadBrep(oc, node.brep.data);
+    placed = transformCad(oc, local, pose);
+    const bounds = cadBounds(oc, placed);
+    for (const key of ['min', 'max', 'size', 'center'])
+      bounds[key].forEach((value, i) => near(measured.worldBounds[key][i], value));
+    near(measured.volume, Math.PI * 16 * 12);
+    assert.equal(measured.solids, 1);
+    assert.throws(() => service.inspect({ ...node, brep: { ...node.brep, data: 'invalid' } }, pose));
+  } finally {
+    placed?.delete();
+    local?.delete();
+    service.dispose();
+  }
+});

@@ -19,5 +19,6 @@ export function moveLayoutItem(value, key, zone, index) {
   const oldIndex = next.zones[source].indexOf(key);
   next.zones[source].splice(oldIndex, 1);
   next.zones[zone].splice(index - (source === zone && index > oldIndex ? 1 : 0), 0, key);
+  delete next.grid[key];
   return validateLayout(next);
 }

@@ -44,7 +44,9 @@ exports.verifyMoveDimensions=async function(win,{directory}={}){
   `);}
  async function finish(p,name){await mouse('mouseReleased',p);await proof(name,`
    const b=window.moveBefore;for(let n=0;n<400&&a.controller.revision()===b.revision;n++)await new Promise(r=>setTimeout(r,10));await a.settled();
-   check(a.controller.revision()!==b.revision&&a.undoDepth()===b.undo+1,'move must commit exactly one Undo '+JSON.stringify({revision:a.controller.revision(),before:b.revision,undo:a.undoDepth(),depth:b.undo,delta:window.moveDelta,toast:document.getElementById('toast').textContent}));check(!document.querySelector('.cad-move-dimensions').checkVisibility(),'overlay remained after release');
+   check(a.controller.revision()!==b.revision&&a.undoDepth()===b.undo+1,'move must commit exactly one Undo '+JSON.stringify({revision:a.controller.revision(),before:b.revision,undo:a.undoDepth(),depth:b.undo,delta:window.moveDelta,toast:document.getElementById('toast').textContent}));const overlay=document.querySelector('.cad-move-dimensions'),retained=[...overlay.querySelectorAll('.cad-move-dimension')];
+   check(overlay.checkVisibility()&&overlay.hasAttribute('data-editable'),'released measurement is not editable');
+   check(retained.length===2&&retained.every((label,i)=>Math.abs(Number(label.dataset.value)-window.moveValues[i])<1e-7),'released distances differ from the drag preview');
    const find=(nodes,id)=>{for(const n of nodes){if(n.id===id)return n;const v=find(n.children||[],id);if(v)return v;}},current=a.getModel();
    for(const target of b.targets){const id=target.path.at(-1)||target.rootId,old=find(b.nodes,id),node=find(current.nodes,id);check(node,'target lost');
     if(!target.path.length)window.moveDelta.forEach((v,k)=>check(Math.abs(node.transform[12+k]-old.transform[12+k]-v)<1e-7,'commit differs from preview'));

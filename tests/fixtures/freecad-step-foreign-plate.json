@@ -1,0 +1,23 @@
+{
+  "generator": "FreeCAD",
+  "freeCadVersion": "1.1.4",
+  "occtVersion": "7.8.1",
+  "name": "Fremdplatte",
+  "bounds": {
+    "min": [
+      -20,
+      -15,
+      0
+    ],
+    "max": [
+      20,
+      15,
+      6
+    ]
+  },
+  "volume": 6898.40710525538,
+  "solidCount": 1,
+  "feature": "40x30x6 plate with one through hole d8 at (5,5)",
+  "stepFile": "freecad-step-foreign-plate.step",
+  "generatedBy": "scripts/step-freecad-foreign-sample.mjs --install-fixture"
+}

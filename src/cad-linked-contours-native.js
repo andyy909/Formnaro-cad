@@ -38,7 +38,13 @@ import {
 } from './cad-project-parameters-data.js';
 import { cadDependencyNodeId, cadDependencyAffected } from './cad-dependency-graph.js';
 import { buildCadBoundSubset } from './cad-project-parameters-native.js';
-import { validateCadDrawings, updateCadDrawingProjection } from './cad-drawing-data.js';
+import {
+  validateCadDrawings,
+  cadDrawingViewScale,
+  cadDrawingProjectionOptions,
+  updateCadDrawingDetailViews,
+  updateCadDrawingProjection,
+} from './cad-drawing-data.js';
 import { cadDrawingUpdatedPosition, cadDrawingRescaledPosition } from './cad-drawing-layout.js';
 import { createCadDrawingNative } from './cad-drawing-native.js';
 
@@ -635,6 +641,7 @@ export async function updateCadAssociative(
         if (
           sameKind &&
           old.projection &&
+          old.scale === undefined &&
           oldSheet.scale !== sheet.scale &&
           view.position.every((v, k) => v === old.position[k])
         )
@@ -1086,6 +1093,7 @@ export async function updateCadAssociative(
       for (const viewId of sheet.views
         .filter(
           (view) =>
+            view.kind !== 'detail' &&
             !deferred(sheet.id, view.id) &&
             (boundSubset
               ? boundSubset.drawingViews.some((v) => v.sheetId === sheet.id && v.viewId === view.id)
@@ -1095,12 +1103,8 @@ export async function updateCadAssociative(
         .map((view) => view.id)) {
         aborted();
         const view = sheet.views.find((view) => view.id === viewId),
-          next = projection(result.project, {
-            ids: view.sourceIds,
-            view: view.kind,
-            ...(view.kind === 'section' ? { section: view.section } : {}),
-          }),
-          position = cadDrawingUpdatedPosition(view.position, view.projection, next, sheet.scale);
+          next = projection(result.project, cadDrawingProjectionOptions(view)),
+          position = cadDrawingUpdatedPosition(view.position, view.projection, next, cadDrawingViewScale(view, sheet));
         sheet = updateCadDrawingProjection(sheet, viewId, next);
         sheet.views.find((view) => view.id === viewId).position = position;
         drawingReport.updatedViewIds.push(viewId);
@@ -1108,6 +1112,8 @@ export async function updateCadAssociative(
         if (automaticViews.has(JSON.stringify([sheet.id, viewId])))
           updatedAutomaticViews.push({ sheetId: sheet.id, viewId });
       }
+      if (sheet.views.some((view) => view.kind === 'detail'))
+        sheet = updateCadDrawingDetailViews(sheet).sheet;
       result.project.drawings.sheets[index] = sheet;
       drawingReport.updatedSheetIds.push(sheet.id);
     }

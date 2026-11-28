@@ -12,13 +12,13 @@ mehrere ausgewählte Teile und bearbeitbare Gruppenquellen. Bei geneigten
 Arbeitsebenen beziehen sich X und Y auf deren Achsen. Auch die vorhandenen
 Verschiebepfeile zeigen die Abstände in der Arbeitsebene an.
 
-Beim Loslassen verschwinden die Maßlinien. Die Bewegung bleibt wie bisher ein
-Rückgängig-Schritt; Escape oder ein abgebrochener Zeigerkontakt verwerfen die
-Vorschau. Ein Auswahlklick ohne Ziehen öffnet keine Verschiebemaße. Beim Ziehen
-der Größengriffe erscheinen weiterhin Breite, Tiefe und Höhe.
+Beim Loslassen wird die Bewegung als Rückgängig-Schritt übernommen. Bei einer
+freien Verschiebung bleiben X und Y anschließend zur direkten Eingabe verfügbar.
+Escape oder ein abgebrochener Zeigerkontakt verwerfen eine laufende Vorschau.
+Ein Auswahlklick ohne Ziehen öffnet keine Verschiebemaße. Beim Ziehen der
+Größengriffe erscheinen Breite, Tiefe und Höhe.
 
 Die Anzeige projiziert die ursprüngliche Auswahlbegrenzung und die tatsächlich
 verwendete Transformationsmatrix. Sie fragt keinen Geometriekern ab und ändert
-keine Projekt-, Quellen- oder Exportdaten. Beim Loslassen, Abbrechen und
-Entfernen der Ansicht wird sie beendet. Kein neues Dateiformat und keine neuen
-Einstellungen erforderlich.
+keine Projekt-, Quellen- oder Exportdaten. Abbrechen und Entfernen der Ansicht
+blenden die Maßlinien aus.

@@ -1,6 +1,6 @@
 const fs=require('node:fs/promises'),path=require('node:path'),{createReadStream}=require('node:fs'),{createHash,randomUUID}=require('node:crypto');
 const MODEL=Object.freeze({file:'ggml-large-v3-turbo-q5_0.bin',bytes:574041195,sha256:'394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2',url:'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin'});
-function createModelStore({directory,model=MODEL,fetchImpl=globalThis.fetch,timeoutMs=30*60*1000}={}){
+function createModelStore({directory,model=MODEL,fetchImpl=globalThis.fetch,timeoutMs=30*60*1000,resourceName="das Sprachmodell",resourceTitle="Das Sprachmodell"}={}){
  let job=null,lastError=null,verified=null;
  const target=path.join(directory,model.file);
  async function installed({allowCached=false}={}){
@@ -15,7 +15,7 @@ function createModelStore({directory,model=MODEL,fetchImpl=globalThis.fetch,time
  function progress(){return {downloading:!!job,downloadedBytes:job?.received??0,modelBytes:model.bytes,downloadError:lastError};}
  function cancel(){if(!job)return false;job.controller.abort();return true;}
  async function download(){
-  if(job)throw Error('Das Sprachmodell wird bereits heruntergeladen.');
+  if(job)throw Error(resourceTitle+' wird bereits heruntergeladen.');
   const current={controller:new AbortController(),received:0};job=current;lastError=null;
   current.done=(async()=>{
    const {signal}=current.controller;let temporary,handle;
@@ -26,18 +26,18 @@ function createModelStore({directory,model=MODEL,fetchImpl=globalThis.fetch,time
     temporary=path.join(directory,'.'+model.file+'.'+randomUUID()+'.part');
     const response=await fetchImpl(model.url,{signal,redirect:'follow',credentials:'omit'});
     if(!response.ok||!response.body)throw Error('Download nicht möglich (HTTP '+response.status+').');
-    const size=response.headers.get('content-length');if(size!==null&&Number(size)!==model.bytes)throw Error('Unerwartete Größe des Sprachmodells.');
+    const size=response.headers.get('content-length');if(size!==null&&Number(size)!==model.bytes)throw Error('Unerwartete Dateigröße für '+resourceName+'.');
     handle=await fs.open(temporary,'wx');const hash=createHash('sha256');
     for await(const chunk of response.body){
      signal.throwIfAborted();current.received+=chunk.length;
-     if(current.received>model.bytes)throw Error('Das Sprachmodell überschreitet die erwartete Größe.');
-     hash.update(chunk);let offset=0;while(offset<chunk.length){const r=await handle.write(chunk,offset,chunk.length-offset);if(!r.bytesWritten)throw Error('Sprachmodell konnte nicht gespeichert werden.');offset+=r.bytesWritten;}
+     if(current.received>model.bytes)throw Error(resourceTitle+' überschreitet die erwartete Größe.');
+     hash.update(chunk);let offset=0;while(offset<chunk.length){const r=await handle.write(chunk,offset,chunk.length-offset);if(!r.bytesWritten)throw Error(resourceTitle+' konnte nicht gespeichert werden.');offset+=r.bytesWritten;}
     }
     if(current.received!==model.bytes||hash.digest('hex')!==model.sha256)throw Error('Download unvollständig oder Prüfsumme falsch. Bitte erneut herunterladen.');
     await handle.sync();await handle.close();handle=null;signal.throwIfAborted();
     await fs.rename(temporary,target);temporary=null;verified=null;
     return {installed:true};
-   }catch(error){lastError=signal.aborted?'Download abgebrochen.':error.code==='ENOSPC'?'Nicht genügend Speicherplatz für das Sprachmodell.':error.message;throw Error(lastError);}
+   }catch(error){lastError=signal.aborted?'Download abgebrochen.':error.code==='ENOSPC'?'Nicht genügend Speicherplatz für '+resourceName+'.':error.message;throw Error(lastError);}
    finally{clearTimeout(timer);await handle?.close().catch(()=>{});if(temporary)await fs.rm(temporary,{force:true}).catch(()=>{});if(job===current)job=null;}
   })();
   return current.done;

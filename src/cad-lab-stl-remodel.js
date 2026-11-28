@@ -5,6 +5,174 @@ import { runCadAIRequest } from './cad-ai-request.js';
 import { cadIdentity } from './cad-affine.js';
 import { cadStlAscii } from './cad-mesh-formats.js';
 import { STL_COORDINATES, stlBoundsMM } from './cad-converter-ai.js';
+import {
+  ASSEMBLY_LIMITS,
+  evaluateAssemblyDeviation,
+  cameraHolderProjectNodes,
+  cameraHolderDraftRecord,
+} from './camera-holder-assembly.js';
+
+const R05_NATIVE_FEATURE_COUNT = 8;
+
+function fixedAssemblyStructureError() {
+  return Object.assign(Error('Eine sichtbare native CAD-Gruppe mit genau einem Körper und editierbaren Quellen ist erforderlich.'), {
+    code: 'AI_STL_RESULT_STRUCTURE',
+  });
+}
+
+function nativeSourceCount(node) {
+  const enabled = !node.suppressed && !node.locked;
+  if (node.children) {
+    const count = node.children.reduce((sum, child) => sum + nativeSourceCount(child), 0);
+    return enabled ? count : 0;
+  }
+  if (node.source !== 'native' || !node.recipe) throw fixedAssemblyStructureError();
+  return enabled ? 1 : 0;
+}
+
+async function exportCandidateMesh(cad, bodyId, signal) {
+  const { data } = await cad.exportModel({
+    format: 'stl',
+    ids: [bodyId],
+    quality: { deflection: 0.005, angleDegrees: 2 },
+  });
+  signal.throwIfAborted();
+  const buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+  return (await prepareMeshImport(buffer, { unit: 1, repair: false, simplify: false }, { signal })).mesh;
+}
+
+// Fixed geometry enters the regular preview and is checked before applying.
+async function admitFixedAssembly({
+  cad, templateId, prepared, assembly, nativeAssembly, verifyFeatures, benchmark, createController, signal,
+}) {
+  if (nativeAssembly && (nativeAssembly.kind !== 'cad' || nativeAssembly.source !== 'group'))
+    throw fixedAssemblyStructureError();
+  const project = cad.snapshot();
+  const nodes = nativeAssembly
+    ? [{ ...nativeAssembly, layerId: project.activeLayerId, folderId: project.activeFolderId }]
+    : cameraHolderProjectNodes(assembly);
+  const [node] = nodes;
+  project.nodes.push(...nodes);
+  const proposal = await cad.preview(undefined, {
+    project,
+    revision: cad.revision(),
+    label: 'Gemessene Baugruppe prüfen',
+  });
+  const original = {
+    verts: Array.from(prepared.mesh.verts),
+    triangles: Array.from(prepared.mesh.triangles),
+  };
+  let surface = null,
+    surfacePassed = false;
+  if (!nativeAssembly) {
+    try {
+      const proof = await cad.checkPreview(proposal.previewId, [
+        { kind: 'surfaceDeviation', target: node.id, other: templateId, expected: ASSEMBLY_LIMITS.budgetMM },
+      ]);
+      surface = proof.checks[0]?.actual;
+      surfacePassed = true;
+    } catch (error) {
+      if (!/^AI_(RESULT_MISMATCH|CHECK_)/.test(error.code ?? '')) throw error;
+      surface = error.feedback?.actual;
+    }
+  }
+  signal.throwIfAborted();
+  const features = [];
+  const copy = createController();
+  const stopCopy = () => copy.cancel();
+  signal.addEventListener('abort', stopCopy, { once: true });
+  let body, candidate, steps;
+  try {
+    await copy.open(cad.getPreview(proposal.previewId).project, { label: 'Gemessene Baugruppe prüfen' });
+    signal.throwIfAborted();
+    const snapshot = copy.snapshot();
+    body = snapshot.nodes.find((item) => item.id === node.id);
+    if (nativeAssembly) {
+      if (snapshot.nodes.length !== 2 || body?.kind !== 'cad' || body.source !== 'group' ||
+        !body.solid || body.hidden || body.locked || body.suppressed || body.stats?.solids !== 1)
+        throw fixedAssemblyStructureError();
+      steps = nativeSourceCount(body);
+      if (steps < 2) throw fixedAssemblyStructureError();
+      candidate = await exportCandidateMesh(copy, body.id, signal);
+    } else {
+      candidate = body.mesh;
+      steps = (assembly.sources?.arm ? 1 : 0) + (assembly.sources?.plate ? 1 : 0) +
+        (assembly.sources?.bores ?? []).reduce((sum, source) => sum + source.stages.length, 0) +
+        (assembly.sources?.groove ? 1 : 0);
+    }
+    const revision = copy.revision();
+    await verifyFeatures(copy, body, null, (label, passed, actual) => features.push({ label, passed: !!passed, actual }));
+    if (copy.revision() !== revision)
+      throw Object.assign(Error('Prüfprojekt während der Merkmalsprüfung geändert.'), { code: 'STALE_REVISION' });
+    signal.throwIfAborted();
+  } finally {
+    signal.removeEventListener('abort', stopCopy);
+    copy.dispose();
+  }
+  const evaluation = evaluateAssemblyDeviation({ original, candidate });
+  signal.throwIfAborted();
+  const failed = features.filter((feature) => !feature.passed);
+  const enoughFeatures = !nativeAssembly || features.length === R05_NATIVE_FEATURE_COUNT;
+  const featuresPassed = enoughFeatures && failed.length === 0;
+  const passed = evaluation.passed && featuresPassed;
+  const source = nativeAssembly ? 'measured-native-assembly' : 'measured-assembly';
+  const evidence = {
+    originalSha256: prepared.report.sourceSha256,
+    candidateTriangles: candidate.triangles.length / 3,
+  };
+  let reason = null;
+  if (!evaluation.passed) {
+    const raw = evaluation.decidedBy === 'raw';
+    const label = raw ? 'STL-Abweichung' : 'Außenhaut-Abweichung';
+    const deviation = raw ? evaluation.rawMaximumMM : evaluation.outerSkinMaximumMM;
+    reason = label + ' ' + deviation + ' mm über dem Budget 0,15 mm.';
+  } else if (!enoughFeatures) {
+    reason = 'Die Funktionsprüfung der gemessenen Baugruppe ist unvollständig.';
+  } else if (failed.length) {
+    reason = 'Merkmalsprüfung an der gemessenen Baugruppe fehlgeschlagen.';
+  }
+  benchmark?.recordPreview({
+    id: proposal.previewId,
+    bodyId: body.id,
+    passed,
+    runGeometryCheck: true,
+    sampledMaximumMM: evaluation.outerSkinMaximumMM,
+    directions: evaluation.outerSkin,
+    features,
+    rawMaximumMM: evaluation.rawMaximumMM,
+    decidedBy: evaluation.decidedBy,
+    ...evidence,
+  });
+  benchmark?.recordProgramCheck?.('Gemessene Baugruppe bleibt im Budget', evaluation.passed);
+  benchmark?.recordProgramCheck?.('Funktionsprüfung der gemessenen Baugruppe', featuresPassed);
+  const result = {
+    passed,
+    ...(!nativeAssembly ? { draftRecord: cameraHolderDraftRecord(assembly), cuts: assembly.cuts } : {}),
+    reason,
+    source,
+    bodyId: body.id,
+    deviation: evaluation.outerSkinMaximumMM,
+    rawDeviation: evaluation.rawMaximumMM,
+    decidedBy: evaluation.decidedBy,
+    proven: evaluation.proven,
+    directions: evaluation.outerSkin,
+    rawDirections: evaluation.raw,
+    runs: evaluation.runs,
+    features,
+    ...(surface ? { surface } : {}),
+    ...(failed.length ? { failedFeatures: failed } : {}),
+    steps,
+    ...evidence,
+  };
+  if (!passed) {
+    cad.discard(proposal.previewId);
+    return result;
+  }
+  cad.apply(proposal);
+  benchmark?.recordApplied(proposal);
+  return { ...result, saved: cad.serialize(), ...(!nativeAssembly && !surfacePassed ? { surfaceCheck: 'unconfirmed' } : {}) };
+}
+
 
 async function measureSections(cad, id, bounds, signal) {
   const profiles = [];
@@ -65,8 +233,9 @@ async function measureSteps(cad, id, signal) {
 }
 
 export async function remodelStl(bytes, { createController, generate, signal, showReference, benchmark, sectionProfiles,
-  modelCheckConfig, captureDiagnostics = false },
+  modelCheckConfig, captureDiagnostics = false, assembly = null, nativeAssembly = null },
   label, verifyFeatures, taskHint = '') {
+  if (assembly && nativeAssembly) throw fixedAssemblyStructureError();
   const cad = createController();
   const stop = () => cad.cancel();
   signal.addEventListener('abort', stop, { once: true });
@@ -88,6 +257,17 @@ export async function remodelStl(bytes, { createController, generate, signal, sh
     });
     const imported = await cad.preview(undefined, { project, revision: cad.revision(), label: 'STL-Netz laden' });
     cad.apply(imported);
+    if (assembly || nativeAssembly) {
+      benchmark?.recordContext?.({
+        sectionProfiles: assembly?.sources?.arm ? 1 : 0,
+        variant: nativeAssembly ? 'measured-native-assembly' : 'measured-assembly',
+      });
+      const result = await admitFixedAssembly({
+        cad, templateId: id, prepared, assembly, nativeAssembly, verifyFeatures, benchmark, createController, signal,
+      });
+      if (result.passed) await showLabProject({ signal, showReference }, cad, { role: 'result', ids: [result.bodyId] });
+      return result;
+    }
     const scene = await cad.describe();
     const access = createCadAutomationAccess({
       controller: cad,

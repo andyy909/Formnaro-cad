@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip"><img src="https://img.shields.io/badge/F%C3%BCr_Windows_laden-0.150.0--r2-C8892B?style=for-the-badge&logo=windows&logoColor=white&labelColor=1D2329" alt="Formnaro 0.150.0-r2 für Windows laden"></a>
+  <a href="https://github.com/andyy909/Formnaro-cad/releases/download/v0.157.0-r2/Formnaro-v0.157.0-r2-Windows.zip"><img src="https://img.shields.io/badge/F%C3%BCr_Windows_laden-0.157.0--r2-C8892B?style=for-the-badge&logo=windows&logoColor=white&labelColor=1D2329" alt="Formnaro 0.157.0-r2 für Windows laden"></a>
   <a href="https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk"><img src="https://img.shields.io/badge/Android--Tablet-0.4.0-2F5D8C?style=for-the-badge&logo=android&logoColor=white&labelColor=1D2329" alt="Formnaro CAD 0.4.0 für Android laden"></a>
 </p>
 
@@ -39,7 +39,7 @@ Formnaro ist ein **portables Programm für Windows x64**. Keine Installation, ke
 
 | Version | Inhalt | Download |
 | --- | --- | --- |
-| **0.150.0-r2** · regulär | Direkte Skizzenmaße, Tablet-Übertragung und gemeinsamer Agenten-Chat | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-v0.150.0-r2-Windows.zip)** (ca. 742 MB) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.150.0-r2) · [SHA-256](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/SHA256SUMS.txt) |
+| **0.157.0-r2** · regulär | STEP-Baugruppen, schnellere CAD-Anzeige und portabler KI-Erststart | **[Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.157.0-r2/Formnaro-v0.157.0-r2-Windows.zip)** · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.157.0-r2) · [SHA-256](https://github.com/andyy909/Formnaro-cad/releases/download/v0.157.0-r2/SHA256SUMS.txt) |
 | **0.148.0-r5** · Nightly | Tablet-Kopplung, direkter Teiletransfer mit Android-Pilot 35 r32 und Korrektur der Orca-3MF-Naht | [Windows x64 ZIP](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-v0.148.0-r5-Windows.zip) · [Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.148.0-r5) · [SHA-256](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/SHA256SUMS.txt) |
 | **Android 0.4.0** · Tablet | Am Tablet zeichnen, am PC weiterbauen – Android 10 oder neuer | [APK](https://github.com/andyy909/Formnaro-Android/releases/download/v0.4.0/Formnaro-CAD-0.4.0.apk) (ca. 19 MB) · [Versionshinweise](https://github.com/andyy909/Formnaro-Android/releases/tag/v0.4.0) |
 
@@ -50,7 +50,7 @@ Das ZIP vollständig in einen beschreibbaren Ordner entpacken und **Formnaro sta
 
 | Version | Formnaro | FreeCAD | CAD-Kern |
 | --- | --- | --- | --- |
-| **0.150.0-r2** | [Formnaro](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-Quellcode-v0.150.0-r2.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD-Kern](https://github.com/andyy909/Formnaro-cad/releases/download/v0.150.0-r2/Formnaro-CAD-Quellen.zip) |
+| **0.157.0-r2** | [Formnaro](https://github.com/andyy909/Formnaro-cad/releases/download/v0.157.0-r2/Formnaro-Quellcode-v0.157.0-r2.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.157.0-r2/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD-Kern](https://github.com/andyy909/Formnaro-cad/releases/download/v0.157.0-r2/Formnaro-CAD-Quellen.zip) |
 | **0.148.0-r5** | [Formnaro](https://github.com/andyy909/Formnaro-cad/archive/refs/tags/v0.148.0-r5.zip) | [FreeCAD](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-FreeCAD-Quellen-1.1.4.zip) | [CAD-Kern](https://github.com/andyy909/Formnaro-cad/releases/download/v0.148.0-r5/Formnaro-CAD-Quellen.zip) |
 
 </details>
@@ -133,7 +133,7 @@ Ein offenes Getriebekonzept etwa für einen langsamen Drehteller. Nur die Antrie
 
 | | |
 | --- | --- |
-| **Aktuelle Version** | Formnaro 0.150.0-r2 für Windows x64 · Formnaro CAD 0.4.0 für Android 10+ |
+| **Aktuelle Version** | Formnaro 0.157.0-r2 für Windows x64 · Formnaro CAD 0.4.0 für Android 10+ |
 | **Installation** | Keine – portables ZIP, FreeCAD und Python enthalten |
 | **Internet** | Zum Modellieren nicht nötig; nur für optionale Cloud-KI |
 | **Kosten** | Kostenlos und quelloffen (MIT), kein Konto |
@@ -158,11 +158,11 @@ Die [Spracheingabe im KI-Chat](docs/SPRACHEINGABE.md) nutzt Windows-Diktat oder 
 | Entwicklung | [Bauanleitung](docs/BUILD.md) · [Architektur](docs/ARCHITECTURE.md) · [Mitwirken](CONTRIBUTING.md) |
 
 <!-- formnaro-development-status:start -->
-## Neu in 0.150.0-r2
+## Neu in 0.157.0-r2
 
-Skizzenmaße lassen sich direkt eingeben, Teile gehen vom Android-Tablet über das lokale Netzwerk an den PC, und der Agenten-Chat läuft auf beiden Geräten weiter.
+Diese Ausgabe bringt STEP-Baugruppenaustausch, eine vereinfachte CAD-Ansicht und den portablen KI-Erststart. Sie beschleunigt das Laden von FNPACK und schützt Gelenkbezüge beim Umgruppieren.
 
-[Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.150.0-r2) · [Source-Tag](https://github.com/andyy909/Formnaro-cad/tree/v0.150.0-r2) · [Ausgaben und Abnahme](docs/AKTUELLER-STAND.md)
+[Versionshinweise](https://github.com/andyy909/Formnaro-cad/releases/tag/v0.157.0-r2) · [Source-Tag](https://github.com/andyy909/Formnaro-cad/tree/v0.157.0-r2) · [Ausgaben und Abnahme](docs/AKTUELLER-STAND.md)
 
 <!-- formnaro-development-status:end -->
 

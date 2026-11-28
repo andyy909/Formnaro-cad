@@ -1,5 +1,6 @@
 import { curveBeziers } from './cad-curves.js';
 import { inspectCompositePath } from './cad-composite-path.js';
+import { isCadCurve } from './cad-curves.js';
 // These operations run only on explicit preview/rebuild. Results are normal BReps.
 import {
   cadVolume,

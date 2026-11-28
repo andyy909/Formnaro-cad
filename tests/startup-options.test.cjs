@@ -106,6 +106,7 @@ const VERIFY_PRECEDENCE = [
   '--verify-workspace=',
   '--verify-mesh=',
   '--verify-mixed=',
+  '--verify-photo-mode=',
   '--verify-stl-integration=',
   '--verify-local=',
 ];
@@ -162,7 +163,7 @@ test('Mehrere Flags bleiben getrennt und Phasen werden gelesen', () => {
 });
 
 test('Vorrang: in jeder Paarung gewinnt das frühere Flag', () => {
-  assert.equal(VERIFY_PRECEDENCE.length, 63);
+  assert.equal(VERIFY_PRECEDENCE.length, 64);
   for (let index = 0; index < VERIFY_PRECEDENCE.length - 1; index++) {
     const first = VERIFY_PRECEDENCE[index];
     const second = VERIFY_PRECEDENCE[index + 1];
@@ -287,7 +288,8 @@ test('electron.cjs importiert den Parser und führt Weiche/Verify-Pfade unverän
 
   // Profil-, Fenster- und Verify-Weiche bleiben beim Aufrufer.
   assert.ok(electron.includes("path.join(path.dirname(verifyPath),'offlinecad-verification-profile')"));
-  assert.ok(electron.includes('dataDirectory(app,{verificationPath:verifyPath})'));
+  assert.ok(electron.includes('dataDirectory(app,{verificationPath:verifyPath,root:companion?profilePath:undefined})'));
+  assert.ok(electron.includes("companion&&!verifyPath&&!diagnosticHost?path.join(profilePath,'Projekte')"));
   assert.ok(electron.includes('projectDirectory(app,{verificationPath:verifyPath})'));
   assert.ok(electron.includes('const layoutRoot=practiceChild?practiceDirectory:diagnosticHost?diagnosticHome:undefined;'));
   assert.ok(electron.includes('layoutDirectory(app,{root:layoutRoot,verificationPath:verifyPath})'));

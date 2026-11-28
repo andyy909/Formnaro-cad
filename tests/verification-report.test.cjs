@@ -52,6 +52,7 @@ const MIGRATED = [
   'u05VerifyArg',
   'k08VerifyArg',
   'drawingsVerifyArg',
+  "drawingsVerifyArg&&process.env.FORMNARO_VERIFY_PROFILE_EXCHANGE==='1'",
 ];
 test('electron.cjs loads the helper lazily only inside the verification branch',()=>{
   assert.equal(electronSource.split(CALL).length-1,MIGRATED.length,`${MIGRATED.length} verification branches write through the helper`);

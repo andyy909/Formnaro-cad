@@ -131,6 +131,29 @@ export function createCadInterface({
     node.addEventListener(event, fn);
     listeners.push(() => node.removeEventListener(event, fn));
   };
+  async function setObjectHidden({ rootId, path }, hidden, options) {
+    if (!!cadSourceAtPath(project(), rootId, path).hidden === hidden) return;
+    return mutate(
+      (draft) => {
+        cadSourceAtPath(draft, rootId, path).hidden = hidden;
+      },
+      'CAD-Sichtbarkeit ändern',
+      options,
+    );
+  }
+  async function setContainerHidden(id, hidden, options) {
+    const container = (value) => [...value.layers, ...value.folders].find((item) => item.id === id);
+    const current = container(project());
+    if (!current) throw Error('Der Ordner oder Layer ist nicht mehr verfügbar.');
+    if (current.hidden === hidden) return;
+    return mutate(
+      (draft) => {
+        container(draft).hidden = hidden;
+      },
+      'Containerstatus ändern',
+      options,
+    );
+  }
   function bind(id, event, fn) {
     bound($(id), event, (event) => safe(() => fn(event)));
   }
@@ -1518,6 +1541,8 @@ export function createCadInterface({
     settings,
     library,
     actions,
+    setObjectHidden,
+    setContainerHidden,
     changeParameter: (key, value) => form({ params: { [key]: value } }),
     dispose: () => {
       disposed = true;

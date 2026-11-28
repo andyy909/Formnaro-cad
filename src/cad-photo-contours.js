@@ -36,7 +36,7 @@ export function compactPhotoContour(points, tolerance) {
 
 // A two-colour orthographic image can provide the actual pixel boundaries,
 // including recesses and inner contours. Ambiguous masks use the usual hull.
-export function suggestPhotoSilhouette({ data, width, height }) {
+export function suggestPhotoSilhouette({ data, width, height }, { alpha = false } = {}) {
   if (
     !(data instanceof Uint8ClampedArray) ||
     width < 4 ||
@@ -49,21 +49,30 @@ export function suggestPhotoSilhouette({ data, width, height }) {
   const background = color(0),
     mask = new Uint8Array(width * height);
   let foreground = null;
+  let opaque = false;
   for (let y = 0; y < height; y++)
     for (let x = 0; x < width; x++) {
       const index = y * width + x,
         offset = index * 4;
-      if (data[offset + 3] !== 255) return null;
-      const pixel = color(offset);
-      if (pixel === background) continue;
+      const opacity = data[offset + 3];
+      if (alpha) {
+        if (opacity < 128) continue;
+        opaque ||= opacity === 255;
+      } else {
+        if (opacity !== 255) return null;
+        const pixel = color(offset);
+        if (pixel === background) continue;
+        foreground ??= pixel;
+        if (pixel !== foreground) return null;
+      }
       if (x === 0 || y === 0 || x === width - 1 || y === height - 1) return null;
-      foreground ??= pixel;
-      if (pixel !== foreground) return null;
       mask[index] = 1;
     }
   if (
-    foreground === null ||
-    Math.hypot(...[16, 8, 0].map((shift) => ((background >> shift) & 255) - ((foreground >> shift) & 255))) < 64
+    alpha
+      ? !opaque
+      : foreground === null ||
+        Math.hypot(...[16, 8, 0].map((shift) => ((background >> shift) & 255) - ((foreground >> shift) & 255))) < 64
   )
     return null;
   const stride = width + 1,
@@ -105,7 +114,7 @@ export function suggestPhotoSilhouette({ data, width, height }) {
     const corners = loop
       .filter((point, i) => point - loop.at(i - 1) !== loop[(i + 1) % loop.length] - point)
       .map((point) => [point % stride, Math.floor(point / stride)]);
-    if (corners.length < 4 || corners.length > 16) return null;
+    if (corners.length < 4 || (!alpha && corners.length > 16)) return null;
     const area =
       corners.reduce((sum, [x, y], i) => {
         const [nextX, nextY] = corners[(i + 1) % corners.length];
@@ -114,8 +123,9 @@ export function suggestPhotoSilhouette({ data, width, height }) {
     if (Math.abs(area) < 9) return null;
     if (area > 0) {
       if (outline) return null;
-      outline = corners;
-    } else {
+      outline = alpha && corners.length > 16 ? compactPhotoContour(corners, 1) : corners;
+      if (outline.length > 256) return null;
+    } else if (!alpha) {
       if (openings.length >= 4) return null;
       openings.push(corners);
     }

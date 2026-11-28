@@ -92,8 +92,9 @@ export function sandboxFrameSource(
   channel,
   { bootstrap = `(${sandboxWorkerMain.toString()})();`, blobConnections = false } = {},
 ) {
-  const frame = (token, workerSource) => {
-    const worker = new Worker(URL.createObjectURL(new Blob([workerSource], { type: 'text/javascript' })));
+  const frame = () => {
+    const token = CHANNEL,
+      worker = new Worker(URL.createObjectURL(new Blob([BOOTSTRAP], { type: 'text/javascript' })));
     worker.onmessage = (e) => parent.postMessage({ channel: token, ...e.data }, '*');
     worker.onerror = (e) =>
       parent.postMessage(
@@ -109,7 +110,10 @@ export function sandboxFrameSource(
     });
     parent.postMessage({ channel: token, type: 'ready' }, '*');
   };
-  const source = '(' + frame.toString() + ')(' + JSON.stringify(channel) + ', ' + JSON.stringify(bootstrap) + ');';
+  const source =
+    '(' +
+    frame.toString().replace('CHANNEL', JSON.stringify(channel)).replace('BOOTSTRAP', JSON.stringify(bootstrap)) +
+    ')();';
   return (
     '<!doctype html><meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; script-src &#39;unsafe-inline&#39; &#39;unsafe-eval&#39; blob:; worker-src blob:; connect-src ' +
     (blobConnections ? 'blob:' : '&#39;none&#39;') +

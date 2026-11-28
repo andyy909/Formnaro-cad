@@ -32,6 +32,12 @@ test('Group root translations shift all source worlds; source edits, annotations
   const next=structuredClone(baseline);next.nodes[0].transform[12]=40;next.nodes[0].transform[13]=-15;
   const prepared=prepareCadTranslationView(baseline,next,view,cadProjectRevision(next));assert.deepEqual(prepared.scene,router.scene(await service.rebuild(next)));
   const child=structuredClone(next);child.nodes[0].children[1].transform[12]=3;assert.equal(prepareCadTranslationView(baseline,child,view,'new'),null);
+  const childRole=structuredClone(next);childRole.nodes[0].children[1].solid=true;
+  assert.equal(prepareCadTranslationView(baseline,childRole,view,'new',{rootRoles:true,simplified:true}),null);
+  const rootRole=structuredClone(next);rootRole.nodes[0].solid=false;
+  const roleView=prepareCadTranslationView(baseline,rootRole,view,cadProjectRevision(rootRole),{rootRoles:true,simplified:true});
+  assert.deepEqual(roleView.scene,router.scene(await service.rebuild(rootRole)));
+  assert.equal(roleView.meshes[0].mesh,view.meshes[0].mesh);
   const annotated=structuredClone(baseline);annotated.nodes[0].annotations=[{}];assert.equal(prepareCadTranslationView(annotated,next,view,'new'),null);
   const referenced=structuredClone(baseline);referenced.workplane.reference={};assert.equal(prepareCadTranslationView(referenced,next,view,'new'),null);
  }finally{service.dispose();}

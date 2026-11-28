@@ -4,7 +4,7 @@ const path=require('node:path');
 const fs=require('node:fs'),os=require('node:os');
 const practiceChildren=new Map();
 function cleanupPractice(directory){const record=practiceChildren.get(directory);if(!record)return;try{const resolved=fs.realpathSync(directory),root=fs.realpathSync(record.tempRoot);if(fs.lstatSync(directory).isSymbolicLink()||path.dirname(resolved)!==root||!/^formnaro-practice-[A-Za-z0-9]+$/.test(path.basename(resolved)))return;fs.rmSync(resolved,{recursive:true,force:true,maxRetries:4,retryDelay:50});practiceChildren.delete(directory);}catch(error){if(error.code==='ENOENT')practiceChildren.delete(directory);}}
-process.once('exit',()=>{for(const [directory,record]of practiceChildren){try{if(record.child&&!record.child.killed)record.child.kill();}catch{ /* Continue removing temporary profiles if a child has already exited. */ }cleanupPractice(directory);}});
+process.once('exit',()=>{for(const [directory,record]of practiceChildren){try{if(record.child&&!record.child.killed)record.child.kill();}catch{}cleanupPractice(directory);}});
 const SHAPES=new Set(require('../ai/OfflineCAD-KI-Kontext.json').shapes.map(s=>s.type));
 const {isPracticeUICommand}=require('./practice-ui-policy.cjs');
 const {validatePracticeProjectCopy,validatePracticeResultProject}=require('./practice-project-copy.cjs');
@@ -17,6 +17,12 @@ const photoPoints=value=>Array.isArray(value)&&value.length>=1&&value.length<=16
   typeof n==='number'&&n>=0&&n<=16000000&&/^\d+(?:\.\d{1,6})?$/.test(String(n))));
 const FIELDS=new Set(['size-0','size-1','size-2','pos-0','pos-1','pos-2']);
 const exact=(v,keys)=>v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).every(k=>keys.includes(k));
+function rejectUnknownField(value,keys,path){
+ const unknown=Object.keys(value).find(key=>!keys.includes(key));
+ if(unknown===undefined)return;
+ const field=/^[A-Za-z0-9_-]{1,80}$/.test(unknown)?'.'+unknown:'['+JSON.stringify(unknown.slice(0,80))+']';
+ throw Error(path+field+' ist unbekannt. Erlaubt: '+keys.join(', ')+'.');
+}
 const PRACTICE_CONTINUATION_LIMIT=7;
 // Up to50 steps can contain real multi-body observations; the project payload
 // is validated separately and is never part of this bounded report allowance.
@@ -29,7 +35,11 @@ function practiceAliasState(state){
 }
 function validatePracticePlan(value,initialCount=0,continuation){
  if(typeof value?.title==='string'&&value.title.length>200)throw Error('plan.title ist zu lang: '+value.title.length+' Zeichen, höchstens 200. Nur eine kurze Überschrift verwenden; eine Erklärung gehört in das oberste diagnosis-Feld.');
- if(!exact(value,['version','title','actions'])||value.version!==1||typeof value.title!=='string'||!value.title.trim()||value.title.length>200||!Array.isArray(value.actions)||!value.actions.length||value.actions.length>50)throw Error('Ungültiger Übungsplan.');
+ if(!value||typeof value!=='object'||Array.isArray(value))throw Error('plan muss ein Objekt sein.');
+ rejectUnknownField(value,['version','title','actions'],'plan');
+ if(value.version!==1)throw Error('plan.version muss 1 sein.');
+ if(typeof value.title!=='string'||!value.title.trim())throw Error('plan.title benötigt eine kurze Überschrift.');
+ if(!Array.isArray(value.actions)||!value.actions.length||value.actions.length>50)throw Error('plan.actions muss 1 bis 50 Übungsschritte enthalten.');
  if(!Number.isSafeInteger(initialCount)||initialCount<0||initialCount>8)throw Error('Ungültige Übungsauswahl.');
  let selected=Array.from({length:initialCount},(_,index)=>'existing-'+(index+1));
  const state=continuation===undefined?null:practiceAliasState(continuation);
@@ -39,15 +49,28 @@ function validatePracticePlan(value,initialCount=0,continuation){
  for(const [index,a] of value.actions.entries()){
   if(!a||typeof a!=='object'||Array.isArray(a)||a.text!==undefined&&(typeof a.text!=='string'||a.text.length>600))throw Error('Ungültiger Übungsschritt.');
   if(a.kind==='shape'){if(!exact(a,['kind','type','as','text'])||!SHAPES.has(a.type))throw Error('Unbekannte Übungsform.');add(a.as);}
-  else if(a.kind==='set'){if(!exact(a,['kind','field','value','text'])||!FIELDS.has(a.field)||typeof a.value!=='number'||!Number.isFinite(a.value)||Math.abs(a.value)>10000||!/^[-]?(?:\d+)(?:\.\d{1,6})?$/.test(String(a.value))||a.field.startsWith('size-')&&a.value<=0||selected.length!==1)throw Error('Ungültiges Übungsmaß oder keine Einzelauswahl.');}
+  else if(a.kind==='set'){
+   rejectUnknownField(a,['kind','field','value','text'],`plan.actions[${index}]`);
+   const step=`Übungsschritt ${index+1}`;
+   if(!FIELDS.has(a.field))throw Error(`${step}: field muss size-0/1/2 oder pos-0/1/2 sein.`);
+   if(!Number.isFinite(a.value)||Math.abs(a.value)>10000||!/^[-]?(?:\d+)(?:\.\d{1,6})?$/.test(String(a.value)))throw Error(`${step}: value für ${a.field} muss eine Zahl zwischen -10000 und 10000 mit höchstens sechs Nachkommastellen sein.`);
+   if(a.field.startsWith('size-')&&a.value<=0)throw Error(`${step}: value für ${a.field} muss größer als 0 sein.`);
+   if(selected.length!==1)throw Error(`${step}: Für ${a.field} genau ein Teil auswählen (aktuell ${selected.length}).`);
+  }
   else if(a.kind==='role'){if(!exact(a,['kind','value','text'])||!['solid','hole'].includes(a.value)||selected.length!==1)throw Error('Ungültige Übungsrolle.');}
   else if(a.kind==='select'){if(!exact(a,['kind','targets','text'])||!Array.isArray(a.targets)||!a.targets.length||a.targets.length>8||new Set(a.targets).size!==a.targets.length||a.targets.some(x=>!aliases.has(x)))throw Error('Ungültige Übungsauswahl.');selected=[...a.targets];}
   else if(a.kind==='group'){if(!exact(a,['kind','as','text'])||selected.length<2)throw Error('Zum Gruppieren mindestens zwei Übungsformen wählen.');for(const alias of selected)aliases.delete(alias);add(a.as);}
   else if(a.kind==='ui'){
+   rejectUnknownField(a,['kind','action','target','value','text'],`plan.actions[${index}]`);
+   if(!['click','point','set','choose','drag'].includes(a.action)){
+    const action=typeof a.action==='string'&&/^[A-Za-z0-9_-]{1,40}$/.test(a.action)?' '+JSON.stringify(a.action):'';
+    throw Error(`Übungsschritt ${index+1}: action${action} ist ungültig. Erlaubt: click, point, set, choose, drag. Für Checkboxen set mit value "true" oder "false" verwenden.`);
+   }
    const needsValue=['set','choose','drag'].includes(a.action);
    if(needsValue&&typeof a.value!=='string')throw Error(`Übungsschritt ${index+1}: ${a.action} benötigt value als Text. Verwende click ohne value für eine Schaltfläche.`);
    if(needsValue&&a.value.length>200)throw Error(`Übungsschritt ${index+1}: value darf höchstens 200 Zeichen haben (erhalten: ${a.value.length}).`);
-   if(!exact(a,['kind','action','target','value','text'])||!['click','point','set','choose','drag'].includes(a.action)||typeof a.target!=='string'||a.target.length>240||!/^(?:ui:(?:id|label|tool|menu|view):[^\r\n\x00]+|(?:menu|tool|view):[A-Za-z][A-Za-z0-9_-]{0,199})$/.test(a.target)||!a.target.startsWith('ui:label:')&&!/^(?:ui:)?(?:id|tool|menu|view):[A-Za-z][A-Za-z0-9_-]{0,199}$/.test(a.target)||!needsValue&&a.value!==undefined||a.text!==undefined&&(typeof a.text!=='string'||a.text.length>600))throw Error('Ungültige sichtbare Formnaro-Bedienung.');
+   if(typeof a.target!=='string'||a.target.length>240||!/^(?:ui:(?:id|label|tool|menu|view):[^\r\n\x00]+|(?:menu|tool|view):[A-Za-z][A-Za-z0-9_-]{0,199})$/.test(a.target)||!a.target.startsWith('ui:label:')&&!/^(?:ui:)?(?:id|tool|menu|view):[A-Za-z][A-Za-z0-9_-]{0,199}$/.test(a.target))throw Error(`Übungsschritt ${index+1}: target muss ein registriertes sichtbares Formnaro-Bedienelement sein.`);
+   if(!needsValue&&a.value!==undefined)throw Error(`Übungsschritt ${index+1}: value für ${a.action} weglassen.`);
   }
   else if(a.kind==='photo-points'){if(!exact(a,['kind','points','text'])||!photoPoints(a.points)||a.text!==undefined&&(typeof a.text!=='string'||a.text.length>600))throw Error('Ungültige Fotopunkte in Originalpixeln.');}
   else if(a.kind==='sketch-gesture'){if(!exact(a,['kind','point','to','add','text'])||!sketchPoint(a.point)||a.to!==undefined&&!sketchPoint(a.to)||a.add!==undefined&&typeof a.add!=='boolean'||a.text!==undefined&&(typeof a.text!=='string'||a.text.length>600))throw Error('Ungültige Skizzengeste. Punkte in Millimetern angeben.');}
@@ -116,7 +139,7 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
     if(projectCopy?.sketchDraft){closingSketchResult=value;return;}
     finish(null,value);
    };
-   const startClock=()=>{started=Date.now();timer=setTimeout(()=>{try{child.kill();}catch{ /* Report the timeout even if the child exits before it can be killed. */ }finish(Error('Übung hat das aktive Zeitlimit erreicht und wurde beendet.'));},Math.max(1,remaining));};
+   const startClock=()=>{started=Date.now();timer=setTimeout(()=>{try{child.kill();}catch{}finish(Error('Übung hat das aktive Zeitlimit erreicht und wurde beendet.'));},Math.max(1,remaining));};
    const pauseClock=()=>{if(paused||finished)return;paused=true;if(timer)clearTimeout(timer);timer=null;remaining=Math.max(1,remaining-(Date.now()-started));};
    const resumeClock=()=>{if(!paused||finished)return;paused=false;startClock();};startClock();
    const session={child,nonce,finish,ready:false,cancelRequested:false,resume(input){
@@ -130,10 +153,10 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
     return new Promise((resolve,reject)=>{
      reply={resolve,reject};
      try{child.send({type:'continue',nonce,...next});}
-     catch(error){finish(error);try{child.kill();}catch{ /* Keep the send error even if the child is already gone. */ }}
+     catch(error){finish(error);try{child.kill();}catch{}}
     });
    }};
-   active=session;child.once('error',err=>{trace({state:'error',code:err.code});if(active?.child===child)active=null;if(child.pid){try{child.kill();}catch{ /* An errored child may exit before it can be killed. */ }}else cleanupPractice(profileDirectory);finish(err);});child.once('exit',code=>{
+   active=session;child.once('error',err=>{trace({state:'error',code:err.code});if(active?.child===child)active=null;if(child.pid){try{child.kill();}catch{}}else cleanupPractice(profileDirectory);finish(err);});child.once('exit',code=>{
     trace({state:'exit',code});
     if(active?.child===child)active=null;
     cleanupPractice(profileDirectory);
@@ -151,7 +174,7 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
     if(!reply||recovery&&msg.round!==retries)return;
     if(!exact(msg.value,['ok','steps','report','reason'])||typeof msg.value.ok!=='boolean'||Buffer.byteLength(JSON.stringify(msg.value),'utf8')>PRACTICE_REPORT_MAX_BYTES){
      finish(Error('Ungültiger Übungsbericht.'));
-     try{child.send({type:'cancel',nonce});}catch{ /* The invalid report has already been rejected. The child may be disconnected. */ }
+     try{child.send({type:'cancel',nonce});}catch{}
      return;
     }
     trace({state:'result',ok:msg.value.ok,round:retries});
@@ -178,11 +201,11 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
       const pending=reply;reply=null;
       idleTimer=setTimeout(()=>{
        finish(Error('Übung wartet zu lange auf eine Korrektur.'));
-       try{child.send({type:'cancel',nonce});}catch{ /* The timeout has already been reported. The child may be disconnected. */ }
+       try{child.send({type:'cancel',nonce});}catch{}
       },300000);
       idleTimer.unref?.();
       return pending.resolve({...msg.value,continuationId:continuation.id,...(image?{image}:{})});
-     }catch(error){finish(error);try{child.send({type:'cancel',nonce});}catch{ /* The failure has already been reported. The child may be disconnected. */ }return;}
+     }catch(error){finish(error);try{child.send({type:'cancel',nonce});}catch{}return;}
     }
     if(msg.project!==undefined){
      try{
@@ -201,7 +224,7 @@ function installPracticeRunner(win,{ipcMain,app,spawnChild=spawn,timeoutMs=18000
   return done(await active.resume(input));
  }catch(error){return fail(error);}});
  const cancel=()=>{if(!active)return false;active.cancelRequested=true;if(active.ready)active.child.send({type:'cancel',nonce:active.nonce});return true;};
- win.once?.('closed',()=>{retainedResult=null;const current=active;if(!current)return;try{current.child.kill();}catch{ /* Finish the session even if its child has already exited. */ }current.finish(Error('Hauptfenster wurde geschlossen. Übung beendet.'));});
+ win.once?.('closed',()=>{retainedResult=null;const current=active;if(!current)return;try{current.child.kill();}catch{}current.finish(Error('Hauptfenster wurde geschlossen. Übung beendet.'));});
  ipcMain.handle('cad-practice:cancel',async(e)=>{try{if(!trusted(e))throw Error('Ungültiges Fenster.');return done(cancel());}catch(error){return fail(error);}});
  return {cancel};
 }

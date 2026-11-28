@@ -1,6 +1,7 @@
 import { zipSync, strToU8 } from 'fflate';
 import { Color } from 'three';
 import { cadExportTriangleNormal } from './cad-export-triangles.js';
+import { CAD_GLTF_PART_ID_KEY } from './cad-gltf-node-identity.js';
 import { gltfToGlb } from './exchange-formats.js';
 
 const xml = (value) =>
@@ -32,6 +33,7 @@ function valid(parts) {
     if (
       typeof part.name !== 'string' ||
       part.name.length > 1000 ||
+      (part.id !== undefined && (typeof part.id !== 'string' || !part.id || part.id.length > 1000)) ||
       (part.color !== undefined && !/^#[\da-f]{6}$/i.test(part.color)) ||
       (part.opacity !== undefined && (!Number.isFinite(part.opacity) || part.opacity < 0 || part.opacity > 1))
     )
@@ -45,6 +47,204 @@ function normal(a, b, c) {
 }
 const point = (vertices, index) => vertices.slice(index * 3, index * 3 + 3);
 const asciiName = (name) => name.replace(/[\r\n\x00-\x1f]/g, ' ').trim() || 'CAD';
+
+function gltfDataUri(bytes) {
+  let binary = '';
+  for (let k = 0; k < bytes.length; k += 8192) binary += String.fromCharCode(...bytes.subarray(k, k + 8192));
+  return 'data:application/octet-stream;base64,' + btoa(binary);
+}
+
+// Clip times are given in seconds and shared by both motion track types.
+function gltfTrackTimes(times, label) {
+  if (!Array.isArray(times) || times.length < 2) throw Error(`GLTF-${label}sspur benötigt mindestens zwei Zeitpunkte.`);
+  let previous = -Infinity;
+  for (const time of times) {
+    if (!Number.isFinite(time) || time < 0 || time <= previous)
+      throw Error(`GLTF-${label}szeiten müssen nicht negativ und aufsteigend sein.`);
+    previous = time;
+  }
+  // Time accessors are stored as Float32. Distinct inputs must stay distinct
+  // after that conversion, otherwise a sampler would silently repeat a key.
+  let stored = -Infinity;
+  for (const time of times) {
+    const single = Math.fround(time);
+    if (!Number.isFinite(single) || single <= stored)
+      throw Error(`GLTF-${label}szeiten müssen als Float32 darstellbar und eindeutig sein.`);
+    stored = single;
+  }
+}
+
+// A translation clip is given in seconds and CAD world axes in millimetres,
+// relative to the part's static exported pose. It is resolved by the stable
+// part ID only; display names may be equal across parts.
+function gltfTranslationTrack(parts, clip) {
+  if (clip === undefined || clip === null) return null;
+  if (typeof clip !== 'object' || Array.isArray(clip)) throw Error('Ungültige GLTF-Translationsspur.');
+  if (typeof clip.partId !== 'string' || !clip.partId)
+    throw Error('GLTF-Translationsspur benötigt eine gültige Teile-ID.');
+  if (clip.name !== undefined && (typeof clip.name !== 'string' || !clip.name || clip.name.length > 1000))
+    throw Error('Ungültiger GLTF-Translationsspurname.');
+  const { times, offsets } = clip;
+  gltfTrackTimes(times, 'Translation');
+  if (!Array.isArray(offsets) || offsets.length !== times.length)
+    throw Error('GLTF-Translationsspur benötigt je Zeitpunkt einen Versatz.');
+  for (const offset of offsets)
+    if (!Array.isArray(offset) || offset.length !== 3 || offset.some((value) => !Number.isFinite(value)))
+      throw Error('Ungültiger GLTF-Translationsversatz.');
+  const nodes = parts.flatMap((part, index) => (part.id === clip.partId ? [index] : []));
+  if (!nodes.length) throw Error('GLTF-Translationsspur verweist auf kein exportiertes Teil.');
+  return { nodes, times, offsets, name: clip.name ?? parts[nodes[0]].name };
+}
+
+// A rotation clip carries relative world orientations in CAD world axes (XYZW)
+// plus a CAD-millimetre pivot on the part. Every sample rotates around that
+// world point; the static exported pose supplies the CAD-to-glTF conversion.
+function gltfRotationTrack(parts, clip) {
+  if (clip === undefined || clip === null) return null;
+  if (typeof clip !== 'object' || Array.isArray(clip)) throw Error('Ungültige GLTF-Rotationsspur.');
+  if (typeof clip.partId !== 'string' || !clip.partId)
+    throw Error('GLTF-Rotationsspur benötigt eine gültige Teile-ID.');
+  if (clip.name !== undefined && (typeof clip.name !== 'string' || !clip.name || clip.name.length > 1000))
+    throw Error('Ungültiger GLTF-Rotationsspurname.');
+  const { times, quaternions, pivot } = clip;
+  gltfTrackTimes(times, 'Rotation');
+  if (!Array.isArray(quaternions) || quaternions.length !== times.length)
+    throw Error('GLTF-Rotationsspur benötigt je Zeitpunkt eine Quaternion.');
+  const normalized = quaternions.map((quaternion) => {
+    if (!Array.isArray(quaternion) || quaternion.length !== 4 || quaternion.some((value) => !Number.isFinite(value)))
+      throw Error('Ungültige GLTF-Rotationsquaternion.');
+    const length = Math.hypot(...quaternion);
+    if (!(length > 1e-12)) throw Error('Ungültige GLTF-Rotationsquaternion.');
+    return quaternion.map((value) => value / length);
+  });
+  if (!Array.isArray(pivot) || pivot.length !== 3 || pivot.some((value) => !Number.isFinite(value)))
+    throw Error('GLTF-Rotationsspur benötigt einen Drehpunkt in CAD-Millimetern.');
+  const nodes = parts.flatMap((part, index) => (part.id === clip.partId ? [index] : []));
+  if (!nodes.length) throw Error('GLTF-Rotationsspur verweist auf kein exportiertes Teil.');
+  return { nodes, times, quaternions: normalized, pivot, name: clip.name ?? parts[nodes[0]].name };
+}
+
+const quaternionProduct = ([ax, ay, az, aw], [bx, by, bz, bw]) => [
+  aw * bx + ax * bw + ay * bz - az * by,
+  aw * by - ax * bz + ay * bw + az * bx,
+  aw * bz + ax * by - ay * bx + az * bw,
+  aw * bw - ax * bx - ay * by - az * bz,
+];
+
+const quaternionConjugate = ([x, y, z, w]) => [-x, -y, -z, w];
+
+function quaternionRotate([x, y, z, w], [vx, vy, vz]) {
+  const tx = 2 * (y * vz - z * vy),
+    ty = 2 * (z * vx - x * vz),
+    tz = 2 * (x * vy - y * vx);
+  return [vx + w * tx + (y * tz - z * ty), vy + w * ty + (z * tx - x * tz), vz + w * tz + (x * ty - y * tx)];
+}
+
+// CAD world point in millimetres to glTF world metres (Z-up to Y-up).
+const gltfPoint = ([x, y, z]) => [x / 1000, z / 1000, -y / 1000];
+
+// Builds one animation for the optional tracks. A rotation that does not pass
+// through the exported geometry centre shifts the node analytically at every
+// sample, so the pivot stays fixed in world space. If both clips address the
+// same node, the offset is applied after the rotation around the pivot.
+function gltfAnimation(out, translationTrack, rotationTrack) {
+  if (!translationTrack && !rotationTrack) return null;
+  const translationNodes = new Set(translationTrack?.nodes ?? []),
+    rotationNodes = new Set(rotationTrack?.nodes ?? []);
+  if (
+    translationTrack &&
+    rotationTrack &&
+    [...translationNodes].some((node) => rotationNodes.has(node)) &&
+    (translationTrack.times.length !== rotationTrack.times.length ||
+      translationTrack.times.some((time, index) => time !== rotationTrack.times[index]))
+  )
+    throw Error('Gemeinsame Translations- und Rotationsspur benötigt identische Zeitpunkte.');
+
+  const buffer = out.buffers.length,
+    chunks = [],
+    samplers = [],
+    channels = [],
+    pivot = rotationTrack && gltfPoint(rotationTrack.pivot);
+  let byteLength = 0;
+  const accessor = (values, type, bounded = false) => {
+    const bufferView = out.bufferViews.length,
+      index = out.accessors.length,
+      components = type === 'SCALAR' ? 1 : type === 'VEC3' ? 3 : 4;
+    out.bufferViews.push({ buffer, byteOffset: byteLength, byteLength: values.byteLength });
+    out.accessors.push({
+      bufferView,
+      componentType: 5126,
+      count: values.length / components,
+      type,
+      ...(bounded ? { min: [values[0]], max: [values[values.length - 1]] } : {}),
+    });
+    chunks.push(values);
+    byteLength += values.byteLength;
+    return index;
+  };
+  const timeAccessor = (track) => accessor(new Float32Array(track.times), 'SCALAR', true),
+    translationTime = translationTrack && timeAccessor(translationTrack),
+    rotationTime = rotationTrack && timeAccessor(rotationTrack),
+    append = (node, path, input, output) => {
+      channels.push({ sampler: samplers.length, target: { node, path } });
+      samplers.push({ input, output, interpolation: 'LINEAR' });
+    };
+
+  out.nodes.forEach((node, nodeIndex) => {
+    const hasTranslation = translationNodes.has(nodeIndex),
+      hasRotation = rotationNodes.has(nodeIndex),
+      base = node.translation;
+    if (!hasTranslation && !hasRotation) return;
+    let translations;
+    if (hasRotation) {
+      // Keep the static CAD-to-glTF node rotation and compose the relative CAD
+      // world rotation after it: q = qStatic * qRelative.
+      const rotations = rotationTrack.quaternions.map((relative) => quaternionProduct(node.rotation, relative)),
+        // Convert the same rotation into glTF world space for the pivot shift.
+        worldRotations = rotations.map((rotation) => quaternionProduct(rotation, quaternionConjugate(node.rotation)));
+      translations = worldRotations.map((rotation, sample) => {
+        const offset = quaternionRotate(rotation, [base[0] - pivot[0], base[1] - pivot[1], base[2] - pivot[2]]),
+          value = [pivot[0] + offset[0], pivot[1] + offset[1], pivot[2] + offset[2]];
+        if (hasTranslation) {
+          const [x, y, z] = translationTrack.offsets[sample];
+          value[0] += x / 1000;
+          value[1] += z / 1000;
+          value[2] -= y / 1000;
+        }
+        return value;
+      });
+      append(nodeIndex, 'rotation', rotationTime, accessor(new Float32Array(rotations.flat()), 'VEC4'));
+    } else {
+      translations = translationTrack.offsets.map(([x, y, z]) => [
+        base[0] + x / 1000,
+        base[1] + z / 1000,
+        base[2] - y / 1000,
+      ]);
+    }
+    // A rotation around the geometry centre needs no extra translation channel.
+    if (
+      hasTranslation ||
+      translations.some(
+        ([x, y, z]) => Math.abs(x - base[0]) > 1e-9 || Math.abs(y - base[1]) > 1e-9 || Math.abs(z - base[2]) > 1e-9,
+      )
+    )
+      append(
+        nodeIndex,
+        'translation',
+        hasRotation ? rotationTime : translationTime,
+        accessor(new Float32Array(translations.flat()), 'VEC3'),
+      );
+  });
+
+  const bytes = new Uint8Array(byteLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength), offset);
+    offset += chunk.byteLength;
+  }
+  out.buffers.push({ byteLength, uri: gltfDataUri(bytes) });
+  return { name: (rotationTrack ?? translationTrack).name, samplers, channels };
+}
 
 // ASCII STL carries round-trip double coordinates, avoiding the binary STL
 // float32 loss at large world offsets. Separate solids are retained as blocks.
@@ -133,9 +333,11 @@ export function cadThreeMf(parts) {
   });
 }
 
-export function cadGltf(parts, { roundingBudget = 0.005 } = {}) {
+export function cadGltf(parts, { roundingBudget = 0.005, translationClip, rotationClip } = {}) {
   valid(parts);
   if (!Number.isFinite(roundingBudget) || roundingBudget <= 0) throw Error('Ungültiges GLTF-Genauigkeitsbudget.');
+  const translationTrack = gltfTranslationTrack(parts, translationClip),
+    rotationTrack = gltfRotationTrack(parts, rotationClip);
   const out = {
     asset: { version: '2.0', generator: 'Formnaro CAD' },
     scene: 0,
@@ -168,9 +370,7 @@ export function cadGltf(parts, { roundingBudget = 0.005 } = {}) {
     const bytes = new Uint8Array(positions.byteLength + indices.byteLength);
     bytes.set(new Uint8Array(positions.buffer));
     bytes.set(new Uint8Array(indices.buffer), positions.byteLength);
-    let binary = '';
-    for (let k = 0; k < bytes.length; k += 8192) binary += String.fromCharCode(...bytes.subarray(k, k + 8192));
-    out.buffers.push({ byteLength: bytes.length, uri: 'data:application/octet-stream;base64,' + btoa(binary) });
+    out.buffers.push({ byteLength: bytes.length, uri: gltfDataUri(bytes) });
     const view = out.bufferViews.length,
       accessor = out.accessors.length;
     out.bufferViews.push(
@@ -209,12 +409,15 @@ export function cadGltf(parts, { roundingBudget = 0.005 } = {}) {
     out.meshes.push({ primitives: [{ attributes: { POSITION: accessor }, indices: accessor + 1, material: i }] });
     out.nodes.push({
       name: part.name,
+      ...(part.id === undefined ? {} : { extras: { [CAD_GLTF_PART_ID_KEY]: part.id } }),
       mesh: i,
       rotation: [-Math.SQRT1_2, 0, 0, Math.SQRT1_2],
       translation: [center[0] / 1000, center[2] / 1000, -center[1] / 1000],
     });
     out.scenes[0].nodes.push(i);
   });
+  const animation = gltfAnimation(out, translationTrack, rotationTrack);
+  if (animation) out.animations = [animation];
   return JSON.stringify(out);
 }
 

@@ -52,3 +52,25 @@ test('Missing joint-reply closing brace produces precise feedback without repair
  assert.throws(()=>JSON.parse(text));assert.match(jsonSyntaxFeedback(text),/1 unclosed/);assert.match(jsonSyntaxFeedback(text),/delimiters at the end: }/);assert.throws(()=>JSON.parse(text));
  assert.match(jsonSyntaxFeedback('{"text":"literal } and \\" quote","actions":[]}'),/one complete JSON object/);
 });
+test('Unattended lab ends a focus-lost practice pause as interrupted instead of burning the trial budget',()=>{
+ const {createFocusGuard,FOCUS_LOST_CODE}=require('../backend/ai-practice-focus-guard.cjs'),{failureClass}=require('../backend/ai-lab-storage.cjs');
+ const timers=[];let now=0;const setTimer=(fn,ms)=>{const t={fn,at:now+ms,live:true};timers.push(t);return t;},clearTimer=t=>{if(t)t.live=false;};
+ const advance=ms=>{now+=ms;for(const t of timers)if(t.live&&t.at<=now){t.live=false;t.fn();}};
+ const expired=[];const guard=createFocusGuard({graceMs:30000,onExpire:e=>expired.push(e),setTimer,clearTimer});
+ guard.observe({phase:'paused',reason:'practice-status'});advance(60000);assert.equal(expired.length,0,'only focus loss arms the guard');
+ guard.observe({phase:'paused',reason:'focus-lost'});advance(29000);guard.observe({phase:'resumed'});advance(60000);assert.equal(expired.length,0,'a resume within the grace period keeps the trial');
+ guard.observe({phase:'paused',reason:'focus-lost'});guard.observe({phase:'result'});advance(60000);assert.equal(expired.length,0,'a completed playback cancels the grace timer');
+ guard.observe({phase:'paused',reason:'focus-lost'});guard.observe({phase:'exit'});advance(60000);assert.equal(expired.length,0,'the grace timer does not survive a closed playback window');
+ guard.observe({phase:'paused',reason:'focus-lost'});advance(10000);guard.observe({phase:'paused',reason:'focus-lost'});advance(25000);assert.equal(expired.length,1,'repeated focus loss does not restart the grace period');
+ assert.equal(expired[0].code,FOCUS_LOST_CODE);assert.match(expired[0].message,/Fokus/);
+ guard.observe({phase:'paused',reason:'focus-lost'});advance(60000);assert.equal(expired.length,1,'expires at most once');guard.stop();
+ const stopped=createFocusGuard({graceMs:1000,onExpire:e=>expired.push(e),setTimer,clearTimer});stopped.observe({phase:'paused',reason:'focus-lost'});stopped.stop();advance(5000);assert.equal(expired.length,1,'stop clears a pending timer');
+ assert.equal(failureClass({status:'interrupted',error:{code:FOCUS_LOST_CODE},cleanExit:true,failurePhase:'execution'}),'interrupted','not counted as model failure and does not stop the series');
+});
+test('Focus-lost abort reason maps to interrupted, a plain budget timeout stays timeout',()=>{
+ const {abortStatus,FOCUS_LOST_CODE}=require('../backend/ai-practice-focus-guard.cjs');
+ assert.equal(abortStatus({code:FOCUS_LOST_CODE}),'interrupted');
+ assert.equal(abortStatus(Object.assign(Error('t'),{name:'TimeoutError'})),'timeout');
+ assert.equal(abortStatus({code:'MONITOR_STOP'}),'monitor-stopped');
+ assert.equal(abortStatus(Error('x')),'cancelled');
+});

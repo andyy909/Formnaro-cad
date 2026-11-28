@@ -243,7 +243,7 @@ export function installCadPracticeRunner({desktop,controller,access,getSelection
     if(!ids.every(id=>result.children?.some(child=>child.id===id)))throw Error('Gruppierung enthält nicht die ausgewählten Quellen.');aliases.set(action.as,result.id);checks.push({kind:'group',id:result.id,sources:ids,solids:result.stats?.solids,volume:result.stats?.volume});
    }else if(action.kind==='model'){
     if(!access||!Array.isArray(action.commands)||!action.commands.length||action.commands.length>200)throw Error('Modellierauftrag oder lokale Übungsschnittstelle fehlt.');
-    caption.textContent=prefix+(action.label??'Formnaro-Werkzeuge im Übungsprojekt ausführen.');pointer.style.display='none';
+    caption.textContent=prefix+(action.label??'Formnaro-Werkzeuge im Übungsprojekt ausführen.');pointer.style.display='none';let proposal;
     const next=plan.actions[i+1],holdMotion=next?.kind==='model'&&next.commands?.every(c=>c.op==='joint'&&c.action==='move');const result=await modelUI.run(action,{holdMotion});checks.push({kind:'model',commands:action.commands.length,objectCount:project().nodes.length,joints:project().joints?.joints.length??0,couplings:project().joints?.gears?.length??0,...result});if(!background)await playback.delay(650);await checkpoint();
    }else if(action.kind==='sketch-gesture'){
     await input({target:'sketch-board',action:action.to?'drag':'click',point:action.point,to:action.to,add:action.add},action.text??prefix+'Auf der Skizzenfläche zeichnen oder auswählen.');

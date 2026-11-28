@@ -18,7 +18,8 @@ try {
   } else {
     python cad-kernel-build/fetch-image.py
     if($LASTEXITCODE -ne 0) {throw 'Verifizierter OCI-Download fehlgeschlagen.'}
-    $cadLinuxProject=wsl --distribution $Distribution -- wslpath -a $cadProject
+    $cadWindowsProject=$cadProject.Replace('\','/')
+    $cadLinuxProject=wsl --distribution $Distribution -- wslpath -a $cadWindowsProject
     if($LASTEXITCODE -ne 0) {throw 'Vorhandene WSL-Distribution ist nicht erreichbar.'}
     $cadLinuxRunner=$cadLinuxProject.TrimEnd('/')+'/cad-kernel-build/run-image-linux.py'
     wsl --distribution $Distribution -- python3 $cadLinuxRunner

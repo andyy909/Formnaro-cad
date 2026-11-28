@@ -13,6 +13,12 @@ The main application is a portable Windows desktop app. Electron starts the loca
 
 Project files retain editable construction sources and model metadata. Native CAD operations use BReps. Mesh tools and the display also work with triangle data. The geometry package uses a versioned container and an independently versioned project model. [Geometry packages](FNPACK.md)
 
-The [Android Mini sources](../mini/ANDROID.md) are a separate project. The former SolidCraft integration is documented under [parametric](../parametric) for older saved projects.
+Project format 40 stores each exploded drawing view with a snapshot of its source parts’ explosion directions and distance. Native projection applies those saved offsets for the drawing. The view refresh uses its own snapshot, and assembly placement stays in the model. The local AI context reports the project parser’s supported formats.
+
+Project and library format 41 stores item balloons with a projected edge reference and the placement ID. The balloon reads its number from the active parts-list row, including after projection refresh. The sheet marks a lost placement or edge reference and blocks technical export until it is resolved.
+
+The Parts & Material panel edits existing component definitions through the native Preview/Apply transaction. It can detach one complete placement or change the shared nominal length of simple native cylinders or tubes. Preview preserves installed transforms and checks all affected parts before applying the operation.
+
+The former SolidCraft integration is documented under [parametric](../parametric) for older saved projects.
 
 For dated development and verification notes, see the [technical project history](PROJEKTKONTEXT.md). For the portable Windows package, see the [current release](AKTUELLER-STAND.md).

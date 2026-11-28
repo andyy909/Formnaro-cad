@@ -46,9 +46,9 @@ export function mountCadWelcome({ root, open, safe, t = (v) => v }) {
     image.width = 240;
     image.height = 160;
     const name = document.createElement('strong');
-    name.textContent = t(example.name);
+    name.textContent = example.name;
     const detail = document.createElement('span');
-    detail.textContent = t(example.detail);
+    detail.textContent = example.detail;
     button.append(image, name, detail);
     button.onclick = () =>
       safe(async () => {

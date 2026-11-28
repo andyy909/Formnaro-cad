@@ -63,8 +63,10 @@ export function createSidebarSizing({ panels, contents, t = (v) => v, canResize,
         right -= (excess * (right - rmin)) / room;
       }
     }
-    main.style.setProperty('--sidebar-left', Math.round(left) + 'px');
-    main.style.setProperty('--sidebar-right', Math.round(right) + 'px');
+    const leftPanel = value.librarySide === 'left' ? 'library' : 'inspector';
+    const rightPanel = leftPanel === 'library' ? 'inspector' : 'library';
+    main.style.setProperty('--sidebar-left', (value.grid?.[leftPanel] ? 0 : Math.round(left)) + 'px');
+    main.style.setProperty('--sidebar-right', (value.grid?.[rightPanel] ? 0 : Math.round(right)) + 'px');
     const chat = document.getElementById('ai-chat');
     if (chat) {
       chat.style.setProperty('--chat-height', clamp('chatHeight', value.chatHeight ?? 620) + 'px');

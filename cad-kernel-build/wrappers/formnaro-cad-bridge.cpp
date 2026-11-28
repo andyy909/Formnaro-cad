@@ -21,6 +21,7 @@
 #include <TopoDS.hxx>
 #include <gp_GTrsf.hxx>
 #include <gp_Lin.hxx>
+#include <gp_Trsf.hxx>
 #include <cmath>
 #include <cstdint>
 #include <iomanip>
@@ -77,16 +78,46 @@ public:
         << std::setw(2) << int(std::round(b*255)) << "\",\"opacity\":" << std::dec << rgba.Alpha() << "}";
       return out.str();
     };
+    // A TDF entry is the native, document-unique label path ("0:1:1:2:1").
+    // Definition labels are shared by all their occurrences; occurrence labels
+    // are the individual component labels. No STEP text or name is consulted.
+    auto entry = [](const TDF_Label& label) {
+      TCollection_AsciiString value; TDF_Tool::Entry(label,value); return std::string(value.ToCString());
+    };
+    // The local placement is one occurrence's own XCAF location, never the
+    // accumulated parent chain. Twelve row-major values describe the 3x4 affine
+    // gp_Trsf so a reader can rebuild the exact definition placement.
+    auto placement = [](const TopLoc_Location& location) {
+      const gp_Trsf transform=location.Transformation();
+      std::ostringstream out; out << std::setprecision(17) << '[';
+      for(int row=1;row<=3;++row) for(int column=1;column<=4;++column) {
+        if(row>1 || column>1) out << ',';
+        out << transform.Value(row,column);
+      }
+      return out.str()+']';
+    };
+    // Only a real definition label name is reported. STEP marks references with
+    // a "=>" prefix; those and empty labels stay "not cleanly available" so the
+    // occurrence title or the plain fallback keeps carrying the display name.
+    auto definitionTitle = [&](const TDF_Label& label) {
+      std::string value=name(label);
+      if(value.empty() || value.rfind("=>",0)==0) return std::string();
+      return value;
+    };
     int count=0, leaves=0; std::uint64_t brepBytes=0; std::set<std::string> visiting;
-    std::function<std::string(const TDF_Label&,const TopLoc_Location&,int,const std::string&)> visit;
-    visit = [&](const TDF_Label& occurrence,const TopLoc_Location& parent,int depth,const std::string& inherited) {
+    std::function<std::string(const TDF_Label&,const TopLoc_Location&,int,const std::string&,const std::string&)> visit;
+    visit = [&](const TDF_Label& occurrence,const TopLoc_Location& parent,int depth,
+                const std::string& inherited,const std::string& parentPath) {
       if (++count>1000 || depth>11) throw Standard_Failure("STEP assembly exceeds tree limits");
       TDF_Label definition=occurrence;
       const bool reference=shapes->GetReferredShape(occurrence,definition);
       TopLoc_Location location=parent;
       if(reference) location=parent*shapes->GetLocation(occurrence);
-      TCollection_AsciiString key; TDF_Tool::Entry(definition,key);
-      if(!visiting.insert(key.ToCString()).second) throw Standard_Failure("Cyclic STEP assembly");
+      const std::string definitionId=entry(definition);
+      if(!visiting.insert(definitionId).second) throw Standard_Failure("Cyclic STEP assembly");
+      // Prefixing each shared-definition level with the usage entry keeps the
+      // path unique even when a whole subassembly is used more than once.
+      const std::string occurrencePath=parentPath.empty()?entry(occurrence):parentPath+"/"+entry(occurrence);
       std::string title=name(occurrence);
       if(title.empty() || title.rfind("=>",0)==0) title=name(definition);
       if(title.empty()) title="STEP";
@@ -96,21 +127,33 @@ public:
       if(colors->GetInstanceColor(occurrenceShape,XCAFDoc_ColorSurf,color) ||
          colors->GetColor(occurrence,XCAFDoc_ColorSurf,color) || colors->GetColor(occurrence,XCAFDoc_ColorGen,color) ||
          colors->GetColor(definition,XCAFDoc_ColorSurf,color) || colors->GetColor(definition,XCAFDoc_ColorGen,color)) style=appearance(color);
-      std::string result="{\"name\":"+quote(title)+",\"appearance\":"+style;
+      std::string result="{\"name\":"+quote(title)+",\"appearance\":"+style
+        +",\"definitionId\":"+quote(definitionId)
+        +",\"occurrencePath\":"+quote(occurrencePath)
+        +",\"localTransform\":"+(reference?placement(shapes->GetLocation(occurrence)):placement(TopLoc_Location()));
       TDF_LabelSequence children;
       if(shapes->GetComponents(definition,children,false) && children.Length()) {
         result+=",\"children\":[";
-        for(int i=1;i<=children.Length();++i) {if(i>1)result+=",";result+=visit(children.Value(i),location,depth+1,style);}
+        for(int i=1;i<=children.Length();++i) {if(i>1)result+=",";result+=visit(children.Value(i),location,depth+1,style,occurrencePath);}
         result+="]";
       } else {
         if(++leaves>500) throw Standard_Failure("STEP contains more than 500 parts");
+        // The definition shape exactly as authored. Its own XCAF location stays
+        // part of this intrinsic pose; no occurrence placement is baked in.
+        // Every occurrence carries only its localTransform, so the same
+        // definition geometry is shipped once and the accumulated build pose is
+        // parent * localTransform down the tree. Never both: that would place a
+        // part twice.
         TopoDS_Shape local=shapes->GetShape(definition);
         if(local.IsNull())throw Standard_Failure("STEP component has no geometry");
-        // Bake the exact instance placement into BRep, retaining analytic faces.
-        const TopoDS_Shape placed=local.Moved(location);
-        const std::string brep=WriteNoTriangles(placed); brepBytes+=brep.size();
+        const std::string brep=WriteNoTriangles(local); brepBytes+=brep.size();
         if(brep.size()>12*1024*1024 || brepBytes>40*1024*1024)throw Standard_Failure("STEP BRep exceeds project byte limits");
-        result+=",\"brep\":"+quote(brep)+",\"faceColors\":[";
+        // brepVersion 2 documents the meaning of "brep" above. Version 1 is the
+        // implicit former contract with the instance placement baked in.
+        result+=",\"brepVersion\":2,\"brep\":"+quote(brep);
+        const std::string definitionName=definitionTitle(definition);
+        if(!definitionName.empty()) result+=",\"definitionName\":"+quote(definitionName);
+        result+=",\"faceColors\":[";
         NCollection_IndexedMap<TopoDS_Shape,TopTools_ShapeMapHasher> faces;
         TopExp::MapShapes(local,TopAbs_FACE,faces); if(faces.Extent()>40000)throw Standard_Failure("STEP exceeds face color limit"); bool first=true;
         for(int i=1;i<=faces.Extent();++i) {
@@ -121,12 +164,12 @@ public:
         }
         result+="]";
       }
-      visiting.erase(key.ToCString()); return result+"}";
+      visiting.erase(definitionId); return result+"}";
     };
     TDF_LabelSequence roots; shapes->GetFreeShapes(roots);
     if(!roots.Length())throw Standard_Failure("Empty STEP assembly");
     std::string result="[";
-    for(int i=1;i<=roots.Length();++i){if(i>1)result+=",";result+=visit(roots.Value(i),TopLoc_Location(),0,"{}");}
+    for(int i=1;i<=roots.Length();++i){if(i>1)result+=",";result+=visit(roots.Value(i),TopLoc_Location(),0,"{}","");}
     return result+"]";
   }
   // CAD point classification confirms containment/disjointness after native

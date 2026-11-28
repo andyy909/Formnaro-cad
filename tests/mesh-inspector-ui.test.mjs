@@ -6,7 +6,7 @@ import {importRendererModule,installTestDocument} from './fixtures/renderer-test
 const {createCadMeshInspectorUI}=await importRendererModule(new URL('../src/cad-mesh-inspector-ui.js',import.meta.url));
 function harness(service){
  const node={id:'mesh',kind:'mesh',name:'Diagnose',transform:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],layerId:'default',folderId:null,mesh:{verts:[0,0,0,10,0,0,0,10,0],triangles:[0,1,2]}},project={nodes:[node],layers:[{id:'default',hidden:false,locked:false}],folders:[]},controls=new Map(),notices=[];let selection=[{rootId:'mesh',path:[]}],overlay=null,options=null,focus=null;
- const control=id=>({id,value:id==='mesh-inspector-threshold'?'20':id==='mesh-inspector-focus-kind'?'boundary':'',checked:true,disabled:false,textContent:'',classList:{toggle(){}},innerHTML:'',setAttribute(){}});
+ const control=id=>({id,value:id==='mesh-inspector-threshold'?'20':id==='mesh-inspector-focus-kind'?'boundary':'',checked:true,disabled:false,textContent:'',classList:{toggle(){}},innerHTML:'',setAttribute(){},querySelectorAll:()=>[]});
  const panel={hidden:true,setAttribute(){},addEventListener(){},remove(){},querySelector:s=>controls.get(s.slice(1)),set innerHTML(value){controls.clear();for(const m of value.matchAll(/id="([^"]+)"/g))controls.set(m[1],control(m[1]));}};
  const view={canvas:{parentElement:{append(){}}},allows:()=>true,meshInspectionAvailable:()=>true,setMeshInspection(r,o){overlay=r?structuredClone(r):null;options=o;},focusWorldPoints:p=>{focus=p;}};
  const restoreDocument=installTestDocument({createElement:()=>panel});

@@ -1,6 +1,63 @@
 // UI localization keeps authored text separately from rendered translations.
 // Project names, user object names and plugin metadata are never rewritten.
 const pairs = `
+Dateien|Files
+Rechtsklick|Right click
+Darstellung für diese Sitzung|Appearance for this session
+Wie Windows (Startstandard)|Follow Windows (startup default)
+STL-Ansicht|STL display
+Nur die Ansicht ändert sich. Gespeicherte Modellfarben und Export bleiben erhalten.|Only the display changes. Saved model colors and exports stay the same.
+Anzeigequalität|Display quality
+Detaildarstellung|Display detail
+Eigene Anzeigequalität|Custom display quality
+Vollständige Anzeige (Standard)|Full detail (default)
+Vereinfachte Anzeige|Simplified display
+Die vereinfachte Vorschau zeigt jeden CAD-Körper in seiner Teilefarbe. Teilnamen, Gewinde und exakte CAD-Exportgeometrie bleiben erhalten.|The simplified preview shows each CAD body in its part color. Part names, threads and exact CAD export geometry are preserved.
+Technisch · Blau|Technical · Blue
+Technisch · Weiß|Technical · White
+Matt · Sand|Matte · Sand
+Graphit · Hell umrandet|Graphite · Light edges
+Fusion-inspiriert|Fusion-inspired
+SolidWorks-inspiriert|SolidWorks-inspired
+Exportiert werden dauerhaft sichtbare Teile. STL und OBJ enthalten CAD-Körper und Netzteile. 3MF, GLB und glTF enthalten zusätzlich Ansichtsvorlagen. STEP enthält native CAD-Körper. Lose Lochteile werden ausgelassen. Die Auswahlisolation begrenzt nur die Ansicht.|Exports include permanently visible parts. STL and OBJ include CAD solids and mesh parts. 3MF, GLB and glTF also include view presets. STEP includes native CAD solids. Standalone hole objects are omitted. Selection isolation only limits the view.
+STL · 3D-Druck|STL · 3D printing
+STEP · CAD-Körper|STEP · CAD solids
+3MF · Farben|3MF · Colors
+glTF · Darstellung|glTF · Visualization
+SVG · CAD- und Netzprojektion|SVG · CAD and mesh projection
+Export-Abweichung (mm)|Export deflection (mm)
+Export-Winkel (Grad)|Export angle (degrees)
+Exportieren|Export
+Skizze auf Teilfläche …|Sketch on part face …
+Konturverknüpfungen …|Linked contours …
+Entformungsschräge …|Draft angle …
+Merkmale entfernen …|Remove features …
+Rotation …|Revolve …
+Randkurvenfläche …|Boundary surface …
+Flächenübergang …|Surface transition …
+Flächen vernähen …|Sew surfaces …
+Prägung / Vertiefung …|Emboss / recess …
+Zahnräder einrasten|Snap gears
+Zahnrad-Einrastwinkel|Gear snap angle
+15°-Raster|15° increments
+Frei · Zwischenwinkel|Free · Intermediate angles
+Passende native Zahnräder: 15°-Positionsraster oder frei, 1 mm Fangbereich am Eingriffsabstand, Zahnstellung und Drehung automatisch koppeln|Matching native gears: snap at 15° increments or freely within 1 mm of the meshing distance, with automatic tooth alignment and coupled rotation
+Projektfotos|Project photos
+KI-Merkmalsbezüge|AI feature references
+FreeCAD-Merkmale|FreeCAD features
+ATLAS-5-Fräse|ATLAS-5 milling machine
+Mit Schwenkrundtisch|With tilting rotary table
+Schraubstock|Vise
+Präzisionsschraubstock|Precision vise
+Schräggetriebe|Helical gearbox
+Zwei Stufen · 6:1|Two stages · 6:1
+Ziehe eine Form auf die Arbeitsfläche oder klicke links auf einen Grundkörper.|Drag a shape onto the workplane or click a basic shape on the left.
+Ziehe eine Form von rechts auf die Arbeitsfläche oder klicke auf einen Grundkörper.|Drag a shape from the right onto the workplane or click a basic shape.
+Beschreibe dein Teil, stelle Fragen zu Formnaro oder lass dir Werkzeuge und Menüs zeigen.|Describe your part, ask about Formnaro, or have tools and menus demonstrated.
+Stelle anhängen|Attach model feature
+Vorschlag verworfen.|Proposal discarded.
+Beispiel geladen. Änderungen als eigenes Projekt speichern.|Example loaded. Save changes as a separate project.
+Beispielprojekt konnte nicht geladen werden.|The example project could not be loaded.
 Mitwachsende Bohrung|Associative hole
 Bohrung bearbeiten|Edit hole
 Die Bohrungen werden aus der erhaltenen Originalquelle berechnet. „Gruppe auflösen“ würde die Bohrungen entfernen. Nutze „Bohrung bearbeiten“ für Maße und Muster.|The holes are calculated from the retained original source. Ungrouping would remove the holes. Use “Edit hole” to change dimensions and patterns.
@@ -388,6 +445,8 @@ Eigenschaften|Properties
 Ansichtswerkzeuge|View tools
 Bewegungswerkzeuge|Movement tools
 Bereich an einen markierten Platz ziehen|Drag this group to a marked dock
+Bereich an eine Rasterposition ziehen|Drag this group to a grid position
+Auf dem Raster|On the grid
 Links andocken|Dock left
 Rechts andocken|Dock right
 Oben andocken|Dock at top
@@ -402,6 +461,7 @@ Ungültiger Platz für dieses Werkzeug.|Invalid position for this tool.
 Ordne Leisten und Bereiche nach deinen Wünschen an. Die Anordnung bleibt nach einem Neustart erhalten.|Arrange toolbars and panels as you like. The layout is retained after restart.
 Die Formenbibliothek und die Eigenschaften können die Seiten tauschen. Obere Taster lassen sich auch zwischen den beiden Leisten verschieben. Alle Werkzeuge bleiben erreichbar.|The shape library and properties can swap sides. Top buttons can also move between the two toolbars. All tools remain accessible.
 Taster ziehen und an der Markierung loslassen. Bereiche am Griff in einen Andockplatz ziehen. Pfeiltasten verschieben den fokussierten Griff.|Drag buttons and release at the marker. Drag groups by their handles to a dock. Arrow keys move the focused handle.
+Werkzeuge und Bereiche im Raster platzieren. Alt + Pfeiltasten verschiebt um ein Feld. Pos1 dockt wieder an.|Place tools and panels on the grid. Alt + arrow keys moves one cell. Home docks the selection again.
 ✦ KI|✦ AI
 KI / API|AI / API
 KI-Werkstatt|AI Workshop
@@ -426,6 +486,7 @@ Auf Fläche ansehen|View on canvas
 Änderungen übernehmen|Apply changes
 Verwerfen|Discard
 KI-Vorschau · Original unverändert|AI preview · original unchanged
+Lokales Modell einrichten|Set up local model
 API-Schlüssel hier selbst eintragen. Lokale Modelle und externe KI-Steuerung benötigen keinen Cloud-Schlüssel.|Enter your API key here. Local models and external AI control do not require a cloud key.
 API-Format|API format
 OpenAI-kompatibles Chat-API|OpenAI-compatible Chat API
@@ -711,6 +772,23 @@ Anordnung erstellen|Create array
 Das Original wird an die erste Kreisposition gesetzt. 360° verteilt ohne doppelte Endposition; Teilkreise schließen beide Enden ein.|The original moves to the first circle position. 360° avoids duplicate endpoints; partial circles include both endpoints.
 Anzahl oben = Spalten; X-Abstand aus der linearen Reihe. Original ist links unten.|Count above = columns; X spacing comes from the linear array. The original is at the bottom left.
 Modell exportieren|Export model
+SVG · Schnittkontur 1:1|SVG · 1:1 cut profile
+DXF · Schnittkontur 1:1|DXF · 1:1 cut profile
+STEP · Baugruppenbaum|STEP · assembly tree
+DXF · Geschlossene Polylinien 1:1|DXF · 1:1 closed polylines
+Konturquelle|Profile source
+Ebene CAD-Fläche anklicken|Pick a planar CAD face
+Ausgewählte Skizze|Selected sketch
+Fläche wählen|Pick face
+Schnittkontur 1:1|1:1 cut profile
+Schnittkonturformat|Cut profile format
+DXF als Skizze importieren|Import DXF as sketch
+Einheit aus der Datei übernommen.|Units read from the file.
+Einheit wählen|Choose units
+Skizze öffnen|Open sketch
+Bearbeitbare Skizze (1:1)|Editable sketch (1:1)
+SVG-Ansicht|SVG view
+Ebene CAD-Fläche für die Schnittkontur anklicken. Esc bricht ab.|Pick a planar CAD face for the cut profile. Press Esc to cancel.
 Umfang|Scope
 Alle sichtbaren Körper|All visible solids
 Nur ausgewählte Körper|Selected solids only
@@ -750,6 +828,8 @@ Einstellungen gelten für dieses Programm und bleiben nach einem Neustart erhalt
 Rasterfang|Grid snapping
 Drehfang|Rotation snapping
 Griffgröße|Handle size
+Seiten- und Höhengriffe|Side and height handles
+Eckgriffgröße|Corner handle size
 Qualität neuer Formen|Quality of new shapes
 Raster und Arbeitsebene anzeigen|Show grid and workplane
 Neue Standardqualität gilt nur für neu hinzugefügte Formen. Vorhandene Modelle behalten ihre Qualität.|Default quality applies only to new shapes. Existing models keep their quality.
@@ -867,6 +947,35 @@ Wanddickenkarte|Wall thickness map
 Ansicht & Prüfen|View & Inspect
 Ansichten|Views
 Schnittansicht|Section view
+Bauteildefinition|Component definition
+Länge (lokale Z-Achse, mm)|Length (local Z axis, mm)
+Gemeinsame Länge ändern …|Change shared length …
+Verwendung lösen …|Detach placement …
+Teilenummer der gelösten Verwendung (optional)|Detached placement part number (optional)
+Bauteildefinition wird geprüft …|Checking component definition …
+Bauteildefinition übernommen.|Component definition applied.
+Vorschau bereit. Alle verknüpften Platzierungen behalten ihre Einbaulage.|Preview ready. Every linked placement keeps its installed position.
+Vorschau bereit. Die gewählte Platzierung erhält eine eigene Definition.|Preview ready. The selected placement receives its own definition.
+Eine vollständige Bauteilplatzierung wählen.|Select a complete component placement.
+Das gewählte Teil hat keine gemeinsame Bauteildefinition.|The selected part has no shared component definition.
+Eine Platzierung der Definition ist unterdrückt.|A placement of this definition is suppressed.
+Eine Platzierung der Definition ist ausgeblendet.|A placement of this definition is hidden.
+Gemeinsame Länge ist nur für einfache native Zylinder und Rohre verfügbar.|Shared length is available for simple native cylinders and tubes.
+Die Platzierungen haben unterschiedliche Nennlängen.|The placements use different nominal lengths.
+Länge zwischen 0,01 und 10 000 mm eingeben.|Enter a length between 0.01 and 10,000 mm.
+Eine andere Länge eingeben.|Enter a different length.
+Positionsballon|Item balloon
+Positionsballon · Bauteilkante anklicken|Item balloon · click a part edge
+Eine Kante des Bauteils anklicken. Die Nummer kommt aus der Stückliste auf dem Blatt.|Click a part edge. The number comes from the parts list on the sheet.
+Positionsballon: Bezug verloren|Item balloon: reference lost
+Zeichnung: Positionsballon: Bezug verloren. Platzierung, Ansicht und Stückliste prüfen oder den Ballon entfernen.|Drawing: Item balloon reference lost. Check the placement, view and parts list, or remove the balloon.
+Zeichnung: Zuerst eine Stückliste auf das Blatt setzen.|Drawing: Add a parts list to the sheet first.
+Zeichnung: Eine projizierte Kante mit eindeutigem Platzierungsbezug wählen.|Drawing: Choose a projected edge with an unambiguous placement reference.
+Explosionsansicht|Exploded view
+Für eine Explosionsansicht zuerst eine Montageansicht wählen.|Choose an assembly view first to add an exploded view.
+Zeichnung: Eine gespeicherte Explosionsdarstellung mit Abstand wird benötigt.|Drawing: A saved exploded arrangement with a positive distance is required.
+Zeichnung: Für die gewählten Quellen sind keine Explosionsrichtungen gespeichert.|Drawing: The selected sources have no saved explosion directions.
+Explosionsdarstellung geändert. Blatt aktualisieren.|The exploded arrangement changed. Update the sheet.
 Modell prüfen|Inspect model
 Vorlagen|Templates
 ☆ Favoriten|☆ Favorites
@@ -1170,6 +1279,7 @@ export function translateText(text, language) {
       [/^Linealursprung ([UVNXYZ])$/, (_, v) => 'Ruler origin ' + v],
       [/^(Breite|Tiefe|Höhe) direkt am Modell$/, (_, v) => EN[v] + ' on model'],
       [/^(Größe|Position|Drehung) ([XYZ])$/, (_, v, a) => EN[v] + ' ' + a],
+      [/^(.* · )(\d+) Platzierung(?:en)?$/, (_, prefix, count) => prefix + count + (count === '1' ? ' placement' : ' placements')],
       [/^(.*) hinzufügen$/, (_, v) => 'Add ' + translateText(v, language)],
       [
         /^(Körper|Loch) in der Modellhistorie bearbeiten$/,

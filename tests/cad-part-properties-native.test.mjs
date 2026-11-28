@@ -4,6 +4,11 @@ import {Worker} from 'node:worker_threads';
 import {createCadController} from '../src/cad-controller.js';
 import {createPartPropertiesService} from '../src/cad-part-properties-service.js';
 import {paintPartFaces} from '../src/cad-part-properties.js';
+import {
+  changeCadComponentDefinitionLength,
+  createComponentDefinitionFromNode,
+  placeComponentInstance,
+} from '../src/cad-component-definitions.js';
 import {loadCadKernel} from '../src/cad-kernel-loader.js';
 import {stepAssemblyFixture} from '../scripts/step-assembly-fixture.mjs';
 const worker=file=>()=>{const w=new Worker(new URL(file,import.meta.url)),a={postMessage:m=>w.postMessage(m),terminate:()=>w.terminate()};w.on('message',data=>a.onmessage?.({data}));w.on('error',e=>a.onerror?.(e));return a;};
@@ -33,4 +38,42 @@ test('Actual mesh worker proves an asymmetric tetrahedron; mirror, density omiss
   p=c.snapshot();p.nodes[0].metadata.partProperties.material.densityGcm3=null;let proposal=await c.preview(undefined,{project:p});c.apply(proposal);const b=await service.measure();assert.equal(b.complete,false);assert.equal(b.totalMassG,null);near(b.rows[0].volumeMm3,16);
   p=c.snapshot();p.nodes[0].mesh.triangles.splice(0,3);delete p.nodes[0].metadata.partProperties.surfaces;proposal=await c.preview(undefined,{project:p});c.apply(proposal);const open=await service.measure();assert.equal(open.rows[0].volumeMm3,null);assert.equal(open.centerMm,null);
  }finally{c.dispose();}
+});
+
+test('B03 shared tube length rebuilds native geometry and preserves part metadata and placement', async () => {
+  const controller = make();
+  try {
+    await controller.execute({ kind: 'batch', commands: [
+      { op: 'create', type: 'tube', size: [12, 12, 20], params: { wall: 2 }, pos: [5, 0, 10] },
+    ] });
+    const source = controller.snapshot().nodes[0];
+    const { project: defined, definition } = createComponentDefinitionFromNode(controller.snapshot(), source.id, {
+      id: 'shared-tube',
+      partNumber: 'H12',
+    });
+    const transform = [...source.transform];
+    transform[12] = 25;
+    const { project: two } = placeComponentInstance(defined, definition.id, { id: 'second-tube', transform });
+    two.nodes[1].metadata.partProperties.partNumber = 'Physical part label';
+    await controller.open(two);
+
+    const before = controller.snapshot();
+    const resized = changeCadComponentDefinitionLength(before, source.id, 35);
+    const preview = await controller.preview(undefined, { project: resized.project });
+    assert.deepEqual(controller.snapshot(), before);
+    controller.apply(preview);
+
+    const after = controller.snapshot();
+    for (const [index, node] of after.nodes.entries()) {
+      assert.equal(node.recipe.size[2], 35);
+      assert.deepEqual(node.transform, before.nodes[index].transform);
+      assert.deepEqual(node.metadata, before.nodes[index].metadata);
+      assert.equal(node.recipe.params.wall, 2);
+      near(node.stats.bounds.max[2] - node.stats.bounds.min[2], 35);
+      const geometry = await controller.query('partProperties', { id: node.id });
+      near(geometry.volumeMm3, Math.PI * (6 ** 2 - 4 ** 2) * 35);
+    }
+  } finally {
+    controller.dispose();
+  }
 });

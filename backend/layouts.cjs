@@ -39,7 +39,7 @@ function createLayoutStore(directory,{write=writeAtomic}={}){
     try{return await read();}catch(error){
       const stat=await fs.stat(filename);if(!stat.isFile()||stat.size>MAX_BYTES)throw error;
       const bytes=await fs.readFile(filename);if(bytes.length>MAX_BYTES)throw error;
-      const {emptyLayouts}=await schema;let value;try{value=JSON.parse(bytes.toString('utf8'));}catch{ /* The existing recovery below handles a layout file with invalid JSON. */ }
+      const {emptyLayouts}=await schema;let value;try{value=JSON.parse(bytes.toString('utf8'));}catch{}
       const newer=Number.isInteger(value?.version)&&value.version>1;
       return {data:emptyLayouts(),revision:crypto.createHash('sha256').update(bytes).digest('hex'),exists:true,directory:path.dirname(filename),recoveryRequired:true,warning:newer?'Die Layoutdatei stammt aus einer neueren Programmversion. Sie bleibt unverändert. Bei Bedarf die Datei sichern und zurücksetzen.':error.message};
     }

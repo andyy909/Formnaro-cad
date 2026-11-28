@@ -37,7 +37,12 @@ function runStorageProcess(utilityProcess,job,signal){
     try{child.postMessage({job});}catch(error){child.kill();reject(error);}
     return;
    }
-   if(started)result.ok?resolve(result.value):reject(Object.assign(Error(result.error),{code:result.code}));
+   if(started){
+    if(result.ok)resolve(result.value);
+    else reject(Object.assign(Error(result.error),{code:result.code}));
+    // The utility keeps its port alive until the result has reached the parent.
+    child.kill();
+   }
   });
   child.once('exit',()=>reject(startError??(signal?.aborted?abortError():Error('Die automatische Sicherung wurde vorzeitig beendet.'))));
  }).finally(()=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);});

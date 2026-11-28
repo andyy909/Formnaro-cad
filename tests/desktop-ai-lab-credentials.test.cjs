@@ -23,7 +23,22 @@ test('credential renewal failure through the desktop adapter sends no model requ
 });
 test('both frozen suites include and detect changes to the desktop provider adapter',t=>{
  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'formnaro-desktop-suite-'));t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));
- for(const name of ['benchmark-core-v1.json','benchmark-advanced-v2.json']){const suite=require('../ai/'+name);assert(suite.dependencies.some(d=>d.path==='backend/desktop-ai.cjs'));for(const d of suite.dependencies){const dest=path.join(directory,d.path);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(path.join(__dirname,'..',d.path),dest);}}
- fs.appendFileSync(path.join(directory,'backend/desktop-ai.cjs'),'\n// changed adapter');
- for(const id of ['core','advanced'])assert.throws(()=>require('../backend/ai-lab-benchmark.cjs').verifySuite(directory,id),/desktop-ai.cjs/);
+ const {createHash}=require('node:crypto');
+ const {verifySuite}=require('../backend/ai-lab-benchmark.cjs');
+ const adapter='backend/desktop-ai.cjs';
+ const fixture=path.join(directory,adapter);
+ const original=fs.readFileSync(path.join(__dirname,'..',adapter));
+ fs.mkdirSync(path.dirname(fixture),{recursive:true});
+ fs.writeFileSync(fixture,original);
+ for(const [id,name] of [['core','benchmark-core-v1.json'],['advanced','benchmark-advanced-v2.json']]){
+  const suite=require('../ai/'+name);
+  const dependencies=suite.dependencies;
+  assert(dependencies.some(d=>d.path===adapter));
+  // Isolate this dependency so unrelated source changes cannot mask the tested failure.
+  suite.dependencies=[{path:adapter,sha256:createHash('sha256').update(original).digest('hex')}];
+  t.after(()=>{suite.dependencies=dependencies;});
+  assert.doesNotThrow(()=>verifySuite(directory,id));
+ }
+ fs.appendFileSync(fixture,'\n// changed adapter');
+ for(const id of ['core','advanced'])assert.throws(()=>verifySuite(directory,id),/desktop-ai.cjs/);
 });

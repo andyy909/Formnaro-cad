@@ -1,11 +1,16 @@
-// A translation preserves exact native geometry, volume, topology and extrema.
+import { projectObjectCapabilities } from './project-objects.js';
+
+// A translation and a standalone role change preserve exact native geometry.
 // Only a view previously produced by the native worker for this exact baseline
 // may supply its proofs. Display triangles never establish a geometry proof.
-function equal(a, b) {
+export function equalCadViewInput(a, b) {
   if (a === b) return true;
   if (!a || !b || typeof a !== 'object' || typeof b !== 'object' || Array.isArray(a) !== Array.isArray(b)) return false;
   const keys = Object.keys(a);
-  return keys.length === Object.keys(b).length && keys.every((key) => Object.hasOwn(b, key) && equal(a[key], b[key]));
+  return (
+    keys.length === Object.keys(b).length &&
+    keys.every((key) => Object.hasOwn(b, key) && equalCadViewInput(a[key], b[key]))
+  );
 }
 const unsupported = (node) =>
   node.kind !== 'cad' ||
@@ -13,7 +18,7 @@ const unsupported = (node) =>
   node.partition ||
   node.extraction ||
   node.children?.some(unsupported);
-export function prepareCadTranslationView(baseline, project, view, revision) {
+export function prepareCadTranslationView(baseline, project, view, revision, { rootRoles, simplified } = {}) {
   if (
     !view?.scene ||
     view.scene.revision !== view.revision ||
@@ -25,13 +30,15 @@ export function prepareCadTranslationView(baseline, project, view, revision) {
     return null;
   const { nodes: oldNodes, ...oldGlobals } = baseline,
     { nodes, ...globals } = project;
-  if (!equal(oldGlobals, globals)) return null;
+  if (!equalCadViewInput(oldGlobals, globals)) return null;
+  const canReuseRole = rootRoles && !baseline.contourLinks && !baseline.linkedPatterns && !baseline.projectParameters;
   const deltas = new Map();
   for (let i = 0; i < nodes.length; i++) {
-    const { transform: oldMatrix, ...old } = oldNodes[i],
-      { transform: nextMatrix, ...next } = nodes[i];
+    const { transform: oldMatrix, solid: oldSolid, ...old } = oldNodes[i],
+      { transform: nextMatrix, solid: nextSolid, ...next } = nodes[i];
     if (
-      !equal(old, next) ||
+      !equalCadViewInput(old, next) ||
+      (oldSolid !== nextSolid && (!canReuseRole || (old.multicolor && !simplified))) ||
       oldMatrix.some((value, k) => (k < 12 || k > 14 ? value !== nextMatrix[k] : !Number.isFinite(nextMatrix[k])))
     )
       return null;
@@ -61,9 +68,13 @@ export function prepareCadTranslationView(baseline, project, view, revision) {
     const bounds = object.worldBounds,
       worldBounds = { ...bounds };
     for (const key of ['min', 'max', 'center']) worldBounds[key] = bounds[key].map((value, k) => value + delta[k]);
+    const root = object.target.path.length ? null : roots.get(object.id);
     return {
       ...object,
-      transform: object.target.path.length ? object.transform : roots.get(object.id).transform,
+      ...(root && root.solid !== object.solid
+        ? { solid: root.solid, capabilities: projectObjectCapabilities(root) }
+        : {}),
+      transform: root ? root.transform : object.transform,
       worldMatrix: translatedMatrix(object.worldMatrix, delta),
       worldBounds,
     };

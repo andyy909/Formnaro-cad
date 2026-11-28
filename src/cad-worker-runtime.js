@@ -23,6 +23,7 @@ import {updateCadProjectParameters} from './cad-project-parameters-native.js';
 import {updateCadParameterPatterns} from './cad-linked-pattern-update-native.js';
 import {planCadParameterPatterns} from './cad-linked-pattern-update-data.js';
 import {createCadLinkedContoursNative,updateCadAssociative} from './cad-linked-contours-native.js';
+import {cadSketchFaceHit} from './cad-sketch-attachment-native.js';
 import {createCadClickMeasureNative} from './cad-click-measure-native.js';
 import {createCadAIReferencesNative} from './cad-ai-feature-references-native.js';
 import {editCadAIFeaturesNative} from './cad-ai-feature-edits-native.js';
@@ -93,11 +94,15 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
           if(request.query?.kind==='featureReference'){result=createCadAIReferencesNative({oc:kernel,service})(project,request.query.options);break;}
           if(request.query?.kind==='drawingProjection'){result=createCadDrawingNative({oc:kernel,service})(project,request.query.options);break;}
           if(request.query?.kind==='linkedFaceCandidate'){result=createCadLinkedContoursNative({oc:kernel,service}).candidate(project,request.query.options);break;}
-          if(request.query?.kind==='faceSketch'){
-            const options=request.query.options??{};if(Object.keys(options).some(k=>!['nodeId','faceIndex'].includes(k)))throw Error('CAD-Flächenkontur benötigt Teil und Fläche.');
+          if(['faceSketch','tabletFaceSketch'].includes(request.query?.kind)){
+            const options=request.query.options??{},tablet=request.query.kind==='tabletFaceSketch';
+            const keys=tablet?['nodeId','faceIndex','viewAxes']:['nodeId','faceIndex'];
+            if(Object.keys(options).some(k=>!keys.includes(k))||(tablet&&!options.viewAxes))
+              throw Error('CAD-Flächenkontur benötigt Teil und Fläche.');
             const node=project.nodes.find(n=>n.id===options.nodeId);if(!node||node.kind!=='cad'||!node.solid)throw Error('Sichtbares natives CAD-Materialteil auswählen.');
             const visible=service.productionNodes(project,{ids:[node.id]});if(!visible.length)throw Error('Sichtbares natives CAD-Materialteil auswählen.');
-            const shape=service.worldShape(node);try{result=faceSketchNative(kernel,shape,options.faceIndex);}finally{shape.delete();}break;
+            const shape=service.worldShape(node);try{result=faceSketchNative(kernel,shape,options.faceIndex,
+              tablet?{viewAxes:options.viewAxes}:undefined);}finally{shape.delete();}break;
           }
           if(request.query?.kind==='sketchOffset'){result=offsetSketchContour(kernel,request.query.options);break;}
           if(request.query?.kind==='jointCollisionSurface'){const options=request.query.options;if(!options||Object.keys(options).some(k=>k!=='id')||typeof options.id!=='string')throw Error('Ein CAD-Teil für die diskrete Kollisionsprüfung wählen.');const copied=cadMeshCopyNative(kernel,project,{target:{rootId:options.id,path:[]},quality:{deflection:.01,angleDegrees:5},readOnly:true});if(copied.node.mesh.triangles.length/3>200000)throw Error('Diskrete Kollisionsprüfung: höchstens 200.000 Dreiecke je CAD-Oberfläche.');result={node:copied.node,quality:copied.report.quality};break;}
@@ -106,10 +111,17 @@ export function createCadWorkerRuntime({createKernel,postMessage,makeRecipe=nati
             result=service.display({...project,nodes:[node],workplane:{...project.workplane,reference:null}},request.query.options.quality,{colored:false})[0];
             if(result.mesh.triangles.length/3>200000)throw Error('Mehr als 200.000 Anzeigedreiecke. Anzeigequalität reduzieren.');break;
           }
+          if(request.query?.kind==='tabletSketchPlane'){
+            const {id,point,normal}=request.query.options;
+            const support=project.nodes.find(node=>node.id===id&&node.kind==='cad'&&node.solid&&!node.suppressed);
+            if(!support)throw Error('Der CAD-Bezugskörper ist nicht mehr verfügbar.');
+            result=cadSketchFaceHit(kernel,service,support,point,normal);
+            break;
+          }
           if(['clickSurface','clickSurfaceDistance'].includes(request.query?.kind)){const measurement=createCadClickMeasureNative({oc:kernel,service});result=measurement[request.query.kind==='clickSurface'?'pick':'distance']({...request.query.options,project});break;}
           if(request.query?.kind==='fontInfo'){result=await cadFontInfo(request.query.options?.base64);break;}
           if(request.query?.kind==='fontLibrary'){fonts=validateCadFontLibrary(request.query.options?.fonts);result={count:fonts.length};break;}
-          if(request.query?.kind==='scene'){result=router.scene(project,request.query.options?.selection);break;}
+          if(request.query?.kind==='scene'){result=router.scene(project,request.query.options?.selection,request.sceneRootIds);break;}
           if(request.query?.kind==='bore'){const check=validateAIResultChecks([{...request.query.options,kind:'bore'}])[0],scene=router.scene(project);result=measureCadBore({oc:kernel,project,object:resolveAIResultTarget(scene,check.target),check});break;}
           if(request.query?.kind==='aiResultChecks'){result=checkCadAIResultNative({oc:kernel,project,scene:router.scene(project),checks:request.query.options?.checks,aliases:request.query.options?.aliases});break;}
           if(request.query?.kind==='bounds'&&request.query.options?.targets){result=router.bounds(project,request.query.options);break;}

@@ -87,5 +87,5 @@ exports.verifyProjectParameters=async(win,{directory,files}={})=>{
   fs.writeFileSync(path.join(directory,'parameters-final.ocad'),await run('return a.serialize();'));
   fs.writeFileSync(path.join(directory,'parameters-expected.json'),JSON.stringify({baseWidth:26,variantWidth:42,depths:Array.from({length:10},(_,i)=>10+i),height:5,boundParts:10,unrelatedBox:[12,8,4],baseFirstVolume:1300,variantFirstVolume:2100},null,2));
   return {ok:true,checks};
- }catch(error){try{fs.writeFileSync(path.join(directory,'project-parameters-failure.png'),(await win.webContents.capturePage()).toPNG());fs.writeFileSync(path.join(directory,'project-parameters-failure-state.json'),JSON.stringify(await run('return {parameters:u?.state(),controller:a.controller.state()};'),null,2));}catch{ /* Failure evidence is optional. Preserve the original verification error. */ }throw error;}finally{clearInterval(watchdog);}
+ }catch(error){try{fs.writeFileSync(path.join(directory,'project-parameters-failure.png'),(await win.webContents.capturePage()).toPNG());fs.writeFileSync(path.join(directory,'project-parameters-failure-state.json'),JSON.stringify(await run('return {parameters:u?.state(),controller:a.controller.state()};'),null,2));}catch{}throw error;}finally{clearInterval(watchdog);}
 };

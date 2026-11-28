@@ -6,7 +6,7 @@ export function createPartPropertiesService(controller) {
   const cache = new Map();
   let hits = 0,
     misses = 0;
-  async function measure({ ids = null } = {}) {
+  async function measure({ ids = null, grouped = false, mode = grouped ? 'grouped' : 'single' } = {}) {
     if (
       ids !== null &&
       (!Array.isArray(ids) ||
@@ -31,19 +31,27 @@ export function createPartPropertiesService(controller) {
         (node.kind === 'mesh' && node.meshRole === 'hole')
       )
         continue;
-      const material = node.metadata?.partProperties?.material,
-        row = {
-          id: node.id,
-          name: node.name,
-          kind: node.kind,
-          material: material?.name ?? null,
-          densityGcm3: material?.densityGcm3 ?? null,
-          volumeMm3: null,
-          massG: null,
-          centerMm: null,
-          status: 'Nicht geprüft',
-          surfaceGroups: partSurfaceState(node),
-        };
+      const def = node.definitionId
+        ? source.componentDefinitions?.definitions?.find((d) => d.id === node.definitionId)
+        : null;
+      const partNumber = def?.partNumber ?? node.metadata?.partProperties?.partNumber ?? null;
+      const material = node.metadata?.partProperties?.material ?? def?.metadata?.partProperties?.material;
+      const row = {
+        id: node.id,
+        name: node.name,
+        kind: node.kind,
+        partNumber,
+        definitionId: node.definitionId ?? null,
+        recipe: node.recipe ?? null,
+        variant: node.recipe?.variant ?? null,
+        material: material?.name ?? null,
+        densityGcm3: material?.densityGcm3 ?? null,
+        volumeMm3: null,
+        massG: null,
+        centerMm: null,
+        status: 'Nicht geprüft',
+        surfaceGroups: partSurfaceState(node),
+      };
       try {
         const key = JSON.stringify([
           'part-properties-v1',
@@ -77,7 +85,7 @@ export function createPartPropertiesService(controller) {
       rows.push(row);
     }
     if (controller.revision() !== revision) throw Error('Projekt während der Teileprüfung geändert.');
-    return { ...summarizeParts(rows), revision };
+    return { ...summarizeParts(rows, { grouped, mode }), revision };
   }
   return {
     measure,

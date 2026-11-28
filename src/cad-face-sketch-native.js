@@ -60,7 +60,19 @@ function selectedFace(oc, shape, index) {
   }
 }
 
-function faceFrame(oc, face) {
+function screenUpInPlane(viewAxes, normal) {
+  const { right, up } = viewAxes;
+  const vertical = dot(up, normal);
+  const fromRight = cross(normal, right);
+  // Fit both screen axes while keeping the sketch exactly on the face plane.
+  const upInPlane = up.map((v, k) => v - vertical * normal[k]);
+  const fitted = upInPlane.map((v, k) => v + fromRight[k]);
+  const direction = Math.hypot(...fitted) > TOLERANCE ? fitted : upInPlane;
+  const length = Math.hypot(...direction);
+  return length > TOLERANCE ? direction.map(v => v / length) : null;
+}
+
+function faceFrame(oc, face, viewAxes) {
   return scope((keep) => {
     const adapter = keep(new oc.BRepAdaptor_Surface(face, false));
     if (value(adapter.GetType()) !== value(oc.GeomAbs_SurfaceType.GeomAbs_Plane))
@@ -73,10 +85,12 @@ function faceFrame(oc, face) {
     // A mirrored native plane may have a left-handed gp_Ax3. Its parametric
     // normal is U cross V, not necessarily the stored main-axis direction.
     const origin = xyz(location),
-      x = xyz(xDirection),
+      nativeX = xyz(xDirection),
       sign = value(face.Orientation()) === value(oc.TopAbs_Orientation.TopAbs_REVERSED) ? -1 : 1,
-      z = cross(x, xyz(yDirection)).map((v) => sign * v),
-      y = cross(z, x);
+      z = cross(nativeX, xyz(yDirection)).map((v) => sign * v),
+      screenUp = viewAxes && screenUpInPlane(viewAxes, z),
+      y = screenUp ?? cross(z, nativeX),
+      x = screenUp ? cross(y, z) : nativeX;
     if ([...origin, ...x, ...y, ...z].some((v) => !Number.isFinite(v)))
       fail('FACE_SKETCH_INVALID_PLANE', 'Die CAD-Fläche besitzt keine endliche Ebene.');
     const project = (point) => {
@@ -174,7 +188,7 @@ function orderLoop(elements) {
  * Returned frame is a right-handed world matrix; sketch coordinates lie on Z0.
  * Only analytic lines/circles/arcs are copied, including independent hole loops.
  */
-export function faceSketchNative(oc, worldShape, faceIndex, { height = 3, maxElements = 128, edgeKey } = {}) {
+export function faceSketchNative(oc, worldShape, faceIndex, { height = 3, maxElements = 128, edgeKey, viewAxes } = {}) {
   if (!Number.isSafeInteger(faceIndex) || faceIndex < 1 || faceIndex > 8000)
     fail('FACE_SKETCH_INVALID_FACE', 'Eine gültige CAD-Fläche für die Konturübernahme wählen.');
   if (
@@ -190,9 +204,15 @@ export function faceSketchNative(oc, worldShape, faceIndex, { height = 3, maxEle
     fail('FACE_SKETCH_INVALID_SHAPE', 'Ein vorhandener CAD-Körper für die Konturübernahme ist erforderlich.');
   if (edgeKey !== undefined && typeof edgeKey !== 'function')
     fail('FACE_SKETCH_INVALID_OPTIONS', 'Interne Kantenherkunft benötigt eine native Prüffunktion.');
+  if (viewAxes !== undefined) {
+    const unitAxis = axis => Array.isArray(axis) && axis.length === 3 && axis.every(Number.isFinite) &&
+      Math.abs(Math.hypot(...axis) - 1) < TOLERANCE;
+    if (!unitAxis(viewAxes?.right) || !unitAxis(viewAxes?.up) || Math.abs(dot(viewAxes.right, viewAxes.up)) > TOLERANCE)
+      fail('FACE_SKETCH_INVALID_OPTIONS', 'Die Modellansicht hat keine gültigen Bildschirmachsen.');
+  }
   return scope((keep) => {
     const face = keep(selectedFace(oc, worldShape, faceIndex)),
-      { frame, project, z } = faceFrame(oc, face),
+      { frame, project, z } = faceFrame(oc, face, viewAxes),
       outer = keep(oc.BRepTools.OuterWire(face));
     if (outer.IsNull())
       fail('FACE_SKETCH_INVALID_WIRE', 'Die gewählte CAD-Fläche besitzt keine geschlossene Außenkontur.');

@@ -9,7 +9,7 @@ import {cadBounds,validateCadSolid} from '../src/cad-native-kernel.js';
 const oc=await loadCadKernel({print:()=>{},printErr:()=>{}});
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} versus ${b}`);
 
-test('Moving a colored bored plate reuses native proofs and meshes; sources, quality and styles invalidate them',async()=>{
+test('Moving a colored bored plate reuses native proofs and meshes; only applicable changes invalidate the cache',async()=>{
   const service=createCadService({oc,maxEntries:8,maxBytes:1024*1024}),router=createCadCommandRouter({oc,service});
   const reader=oc.BRepToolsWrapper.Read;let reads=0;
   try{
@@ -31,7 +31,11 @@ test('Moving a colored bored plate reuses native proofs and meshes; sources, qua
     const proof=service.inspect(p.nodes[0]);proof.worldBounds.min[0]=999;
     assert.deepEqual(service.display(p,undefined,{colored:true})[0].mesh,original[0].mesh);assert.notEqual(service.inspect(p.nodes[0]).worldBounds.min[0],999);
     service.display(p,{deflection:.005,angleDegrees:3},{colored:true});assert.ok(reads>0);reads=0;
-    p.nodes[0].children[0].color='#2486c1';const styled=service.display(p,undefined,{colored:true});assert.ok(styled.some(r=>r.color==='#2486c1'));assert.ok(reads>0);reads=0;
+    p.nodes[0].children[0].color='#2486c1';
+    const styled=service.display(p,undefined,{colored:true});
+    assert.deepEqual(styled.map(r=>r.color), ['#2486c1']);
+    assert.deepEqual(styled.map(r=>r.mesh), original.map(r=>r.mesh));
+    assert.equal(reads,0,'Recoloring the only solid source reuses the finished mesh');
     p.nodes[0].children[1].recipe.size=[8,8,12];p=await service.rebuild(p);assert.notEqual(p.nodes[0].brep.data,brep);assert.ok(reads>0);
     const edited=router.scene(p).objects[0];assert.ok(edited.volume<scene.objects[0].volume);
     // A new general linear map needs fresh native proof. Compare against the

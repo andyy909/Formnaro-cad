@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createCadDrawingSheet,validateCadDrawings,validateCadDrawingProjection,cadDrawingPaperSize,cadDrawingViewFrame,cadDrawingProblems,cadDrawingDimension,cadDrawingSourceSignatures,selectCadDrawings,remapCadDrawings} from '../src/cad-drawing-data.js';
+import {createCadDrawingSheet,validateCadDrawings,validateCadDrawingProjection,cadDrawingPaperSize,cadDrawingViewFrame,cadDrawingProblems,cadDrawingDimension,cadDrawingSourceSignatures,selectCadDrawings,remapCadDrawings,cadDrawingPartsListSize,cadDrawingPartsListDefaultPosition} from '../src/cad-drawing-data.js';
 const signature='a'.repeat(64);
 const projection=(view='front',curves=[{id:'edge',kind:'line',hidden:false,a:[0,0],b:[40,0]}],section)=>({kind:'cad-drawing-projection',view,frame:cadDrawingViewFrame(view,section),curves,bounds:{min:[0,0],max:[40,20]},sourceSignatures:[{id:'body',signature}],tolerance:.001,approximation:'exact-native-curves'});
 function sheet(){const s=createCadDrawingSheet({id:'s',sourceIds:['body']});s.views=s.views.slice(0,1);s.views[0].id='front';s.views[0].projection=projection();return s;}
@@ -12,6 +12,24 @@ test('drawing document validates strict bounded portable data and preserves call
 });
 test('A4 and A3 paper dimensions and orientation are exact millimetres',()=>{
  for(const [paper,orientation,size]of [['A4','portrait',[210,297]],['A4','landscape',[297,210]],['A3','portrait',[297,420]],['A3','landscape',[420,297]]])assert.deepEqual(cadDrawingPaperSize({paper,orientation}),size);
+});
+test('B05: six-row parts list is placed from its real height above the title block and growing rows stay on paper',()=>{
+ const s=createCadDrawingSheet({paper:'A4',orientation:'landscape'}),
+  margin=10,
+  size=rows=>cadDrawingPartsListSize(Array.from({length:rows}));
+ let [width,height]=size(6),[x,y]=cadDrawingPartsListDefaultPosition(s,6);
+ assert.equal(height,46,'Sechs Zeilen sind 46 mm hoch');
+ assert.ok(x>=margin&&x+width<=297-margin,'Tabelle bleibt rechts im 10-mm-Rand');
+ assert.equal(y-height,margin,'Tabellenoberkante liegt am oberen 10-mm-Rand');
+ assert.ok(y<=210-40,'Tabelle endet oberhalb des Titelblocks');
+ for(const rows of [10,20]){
+   [width,height]=size(rows);
+   [x,y]=cadDrawingPartsListDefaultPosition(s,rows);
+   assert.ok(x>=margin&&x+width<=297-margin);
+   assert.equal(y-height,margin,'Wachsende Zeilenzahl wächst nach unten statt aus dem Blatt');
+   assert.ok(y<=210-40,'Wachsende Tabelle bleibt oberhalb des Titelblocks');
+ }
+ assert.throws(()=>cadDrawingPartsListDefaultPosition(s,40),/passt nicht auf das Zeichenblatt/);
 });
 test('all three orthographic frames and section origin match explicit native coordinate system',()=>{
  for(const [kind,x,y]of [['front',[1,0,0],[0,0,1]],['side',[0,1,0],[0,0,1]],['top',[1,0,0],[0,1,0]]]){const f=cadDrawingViewFrame(kind);assert.deepEqual(f.slice(0,3),x);assert.deepEqual(f.slice(4,7),y);}

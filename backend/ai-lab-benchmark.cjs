@@ -7,11 +7,18 @@ const guided=require('../ai/benchmark-guided-v1.json');
 const getSuite=id=>{if(!id||id==='core'||id===suite.id)return suite;if(id==='advanced'||id===advanced.id)return advanced;if(id==='guided'||id===guided.id)return guided;throw Error('Unbekannte Benchmark-Suite.');};
 const hash=v=>crypto.createHash('sha256').update(typeof v==='string'||Buffer.isBuffer(v)?v:JSON.stringify(v)).digest('hex');
 const uuid=/^[a-f0-9-]{36}$/;
+function describeSuite(suite){
+ return {label:suite.label??'Grundbenchmark',available:suite.id!==advanced.id||suite.calibration?.status==='passed',suiteId:suite.id,suiteVersion:suite.version,suiteHash:hash(suite),cases:suite.cases.map(({taskHash,...c})=>c),limits:{...suite.limits},planned:suite.cases.length*2,...(suite.ladder?{ladder:true}:{}),challenge:{available:false,reason:'Halter-Grenztest: Aufgaben und native Prüfer noch nicht kalibriert.'}};
+}
 function verifySuite(root=path.resolve(__dirname,'..'),suiteId='core'){
  const suite=getSuite(suiteId);
  for(const c of suite.cases)if(hash(taskInstance(c.caseId))!==c.taskHash)throw Error('Benchmarkaufgabe verändert: '+c.caseId+'. Neue Suite-Version erforderlich.');
  for(const f of suite.dependencies)if(hash(fs.readFileSync(path.join(root,f.path)))!==f.sha256)throw Error('Benchmark-Prüfer oder Werkzeugauskunft verändert: '+f.path+'. Suite erneut kalibrieren.');
- return {label:suite.label??'Grundbenchmark',available:suite.id!==advanced.id||suite.calibration?.status==='passed',suiteId:suite.id,suiteVersion:suite.version,suiteHash:hash(suite),cases:suite.cases.map(({taskHash,...c})=>c),limits:{...suite.limits},planned:suite.cases.length*2,...(suite.ladder?{ladder:true}:{}),challenge:{available:false,reason:'Halter-Grenztest: Aufgaben und native Prüfer noch nicht kalibriert.'}};
+ return describeSuite(suite);
+}
+function suiteStatus(suiteId){
+ try{return verifySuite(undefined,suiteId);}
+ catch(error){return {...describeSuite(getSuite(suiteId)),available:false,reason:error.message};}
 }
 function benchmarkPlan({effort='high',monitor='off',roles,suiteId='core'}={}){
  const suite=getSuite(suiteId),checked=verifySuite(undefined,suiteId);if(!checked.available)throw Error('Aufbau-Benchmark benötigt zuerst die native Prüferkalibrierung.');if(!require('./ai-lab-roles.cjs').EFFORTS.includes(effort)||!['off','shadow'].includes(monitor))throw Error('Ungültige Benchmark-Denkstufe oder Überwachung.');
@@ -23,7 +30,7 @@ const median=v=>{const a=v.filter(Number.isFinite).sort((a,b)=>a-b);return a.len
 function classifyBenchmarkTrial(r){
   if(!r)return 'pending';
   const noPracticeResult=r.verificationSkipped==='no-practice-result'||r.verificationError==='Kein abgeschlossenes Übungsmodell verfügbar; Ausgangsmodell ist kein Endergebnis.';
-  if(require('./ai-lab-storage.cjs').failureClass(r)==='infrastructure'||r.failurePhase==='preparation'||r.error?.code==='AI_PROVIDER_QUOTA'||r.close?.forced||r.verificationFailure==='checker-error'||r.verificationError&&!noPracticeResult)return 'infrastructure';
+  if(['infrastructure','provider-context-limit'].includes(require('./ai-lab-storage.cjs').failureClass(r))||r.failurePhase==='preparation'||r.error?.code==='AI_PROVIDER_QUOTA'||r.close?.forced||r.verificationFailure==='checker-error'||r.verificationError&&!noPracticeResult)return 'infrastructure';
   const usage=(r.events??[]).filter(e=>e.type==='usage'&&e.role!=='supervisor');
   if(!usage.length||usage.some(e=>!e.returnedModel||e.returnedModel!==r.requestedModel)||r.modelIdentity?.exactMatch!==true)return 'model-unverified';
   if(r.verification?.passed===false)return 'failed';
@@ -47,7 +54,10 @@ function createBenchmarks({directory,getRecords,getRoles,getSource,runSeries,rev
  let running=false;
  const read=id=>{if(!uuid.test(id))throw Error('Ungültige Benchmarkkennung.');return JSON.parse(fs.readFileSync(path.join(directory,'Benchmark-'+id+'.json'),'utf8'));};
  const save=m=>{const file=path.join(directory,'Benchmark-'+m.id+'.json');fs.writeFileSync(file+'.tmp',JSON.stringify(m,null,2));fs.renameSync(file+'.tmp',file);};
- const state=()=>({busy:running,suite:verifySuite(),suites:[verifySuite(undefined,'advanced'),verifySuite(),verifySuite(undefined,'guided')],runs:fs.readdirSync(directory).filter(n=>/^Benchmark-[a-f0-9-]{36}\.json$/.test(n)).map(n=>{const m=read(n.slice(10,-5));return summarizeBenchmark(m,getRecords());}).sort((a,b)=>a.createdAt.localeCompare(b.createdAt))});
+ const state=()=>{
+  const current=suiteStatus('core');
+  return {busy:running,suite:current,suites:[suiteStatus('advanced'),current,suiteStatus('guided')],runs:fs.readdirSync(directory).filter(n=>/^Benchmark-[a-f0-9-]{36}\.json$/.test(n)).map(n=>{const m=read(n.slice(10,-5));return summarizeBenchmark(m,getRecords());}).sort((a,b)=>a.createdAt.localeCompare(b.createdAt))};
+ };
  function preview(args={}){const plan=benchmarkPlan({...args,roles:getRoles()});return {...verifySuite(undefined,args.suiteId),plan,trials:plans.expandPlan(plan).trials,limits:plan.limits};}
  async function start(args={}){
   if(running||isBusy())throw Error('Zuerst die laufende Prüfung beenden.');let m;

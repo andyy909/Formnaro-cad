@@ -26,5 +26,9 @@
   "python-runtime/security-pillow",
   "licenses/analysis-python/security-pillow-13",
   "mini/package.json",
-  "mini/package-lock.json"
+  "mini/package-lock.json",
+  "mini/LIES-MICH.txt",
+  "mini-cad/package.json",
+  "mini-cad/package-lock.json",
+  "mini-cad/LIES-MICH.txt"
 ]

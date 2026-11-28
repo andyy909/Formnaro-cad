@@ -40,7 +40,15 @@ exports.verifyPhotoPerspective=async(win,{directory})=>{
   const disk=fs.readFileSync(path.join(directory,'synthetic-reference.ocad'),'utf8');await js('window.__cadTest.controller.open('+JSON.stringify(disk)+')');await js('window.__cadTest.settled()');
   check(await js('window.__cadTest.controller.serialize()')===saved,'A real disk .ocad roundtrip preserves original bytes, markers and calibration');
   await click('#ai-chat-new');await click('#ai-chat-project-photos');check(await js("document.querySelectorAll('.photo-project-row').length")===1,'Project references remain available after a new provider chat');
-  await shot('project-photos-light');await click('.photo-project-row button');await until("!document.getElementById('photo-project-dialog')");
+  await shot('project-photos-light');
+  await js(`(() => {
+    const buttons = [...document.querySelectorAll('.photo-project-row button')];
+    const attachActions = buttons.filter(button => button.textContent === 'An Chat anhängen');
+    if (attachActions.length !== 1) throw Error('Project photo attach action is not unique');
+    attachActions[0].id = 'perspective-project-photo-attach';
+  })()`);
+  await click('#perspective-project-photo-attach');
+  await until("!document.getElementById('photo-project-dialog')");
   const restored=await js('window.__cadTest.aiUI.chat.state().photoReferences[0]');assert.deepEqual(restored,r);check(true,'Reattaching a saved photo restores exact editable marks and reference provenance');
   await click('#ai-chat-attachments .photo-measure-button');await until("document.getElementById('photo-assistant')?.open");await set('photo-calibration-mode','perspective','change');await click('#photo-suggest');await click('#photo-accept-suggestion');
   check(!await js("document.getElementById('photo-status').classList.contains('ai-error')")&&await js("document.getElementById('photo-accept-suggestion').disabled"),'Explicit contour confirmation promotes a valid editable proposal');

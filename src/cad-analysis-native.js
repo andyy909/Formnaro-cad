@@ -42,6 +42,46 @@ export function cadCollisionNative(oc, left, right) {
   }
 }
 
+function cadColorStyle(node, inherited = { opacity: 1 }) {
+  return { name: node.name, color: node.color ?? inherited.color, opacity: node.opacity ?? inherited.opacity };
+}
+
+function* cadColorSources(children, inherited, parentMatrix) {
+  for (const source of children) {
+    if (source.kind !== 'cad') throw Error('Referenzmesh ist keine CAD-Farbquelle.');
+    if (source.suppressed || !source.solid) continue;
+    const style = cadColorStyle(source, inherited);
+    const matrix = parentMatrix && multiplyCadMatrices(parentMatrix, source.transform);
+    if (source.multicolor && source.children) yield* cadColorSources(source.children, style, matrix);
+    else yield { source, matrix, style };
+  }
+}
+
+function matchesRootColor(style, rootStyle) {
+  return style.color === rootStyle.color && style.opacity === rootStyle.opacity;
+}
+
+// This is a display proof. Production exports still partition material so
+// independent source names survive even where every source uses one style.
+export function cadUniformSourceStyle(node) {
+  const rootStyle = cadColorStyle(node);
+  const sources = [...cadColorSources(node.children, rootStyle)];
+  const sourceStyle = sources[0]?.style ?? rootStyle;
+  if (!sources.every(({ style }) => matchesRootColor(style, sourceStyle))) return null;
+  if (matchesRootColor(sourceStyle, rootStyle)) return rootStyle;
+
+  // A plain union takes all of its material from the direct solid sources.
+  // Cutting tools remove material. There is no region for the root fallback
+  // unless a later operation adds material or a nested group splits colors.
+  const plainUnion =
+    node.source === 'group' && node.operation === 'union' && !node.finish && !node.drill;
+  const nestedColors = node.children.some(
+    (source) => source.solid && !source.suppressed && source.multicolor && source.children,
+  );
+  if (!plainUnion || nestedColors) return null;
+  return { ...rootStyle, color: sourceStyle.color, opacity: sourceStyle.opacity };
+}
+
 // Color priority follows source order. Each region is intersected with the
 // finished result, then removed from the unassigned remainder, so holes and
 // overlapping sources never produce double material in colored exports.
@@ -84,7 +124,7 @@ export function cadColorPartsNative(oc, node, { display = false, regionCache } =
   const output = [];
   let remainder;
   try {
-    const rootStyle = { name: node.name, color: node.color, opacity: node.opacity ?? 1 };
+    const rootStyle = cadColorStyle(node);
     if (hasCurrentPartSurfaceGroups(node) || !node.multicolor || !node.children) {
       output.push({
         shape: placed(oc, node),
@@ -93,28 +133,10 @@ export function cadColorPartsNative(oc, node, { display = false, regionCache } =
       });
       return output;
     }
-    const sources = [];
-    function visit(source, parent, inherited) {
-      if (source.kind !== 'cad') throw Error('Referenzmesh ist keine CAD-Farbquelle.');
-      if (source.suppressed || !source.solid) return;
-      const matrix = multiplyCadMatrices(parent, source.transform),
-        style = {
-          name: source.name,
-          color: source.color ?? inherited.color,
-          opacity: source.opacity ?? inherited.opacity,
-        };
-      if (source.multicolor && source.children) {
-        for (const child of source.children) visit(child, matrix, style);
-      } else sources.push({ source, matrix, style });
-    }
-    for (const source of node.children)
-      visit(source, node.transform, { color: node.color, opacity: node.opacity ?? 1 });
+    const sources = [...cadColorSources(node.children, rootStyle, node.transform)];
     // Display needs no internal color boundary when every region, including
     // any finish remainder, has the same style. Export retains source names.
-    if (
-      display &&
-      sources.every(({ style }) => style.color === rootStyle.color && style.opacity === rootStyle.opacity)
-    ) {
+    if (display && sources.every(({ style }) => matchesRootColor(style, rootStyle))) {
       output.push({ shape: placed(oc, node), ...rootStyle });
       return output;
     }
